@@ -89,7 +89,7 @@ export.database: exports database structure and data to xml files.
   <property name="friendlyWarnings" value="false"/>
   <property name="checkTranslationConsistency" value="true"/>
   <property name="buildValidation" value="true"/>
-  <property name="modules" value=""/> 
+  <property name="modules" value=""/>
   <property name="minimizeJSandCSS" value="false"/>
   <condition property="xdoclint.missing" value="" else="-Xdoclint:-missing">
     <equals arg1="${ant.java.version}" arg2="1.7"/>
@@ -135,7 +135,7 @@ export.database: exports database structure and data to xml files.
       <equals arg1="true" arg2="${obx.export.CS}" />
     </or>
   </condition>
-  
+
   <condition property="obx.exp.validate">
     <or>
       <equals arg1="yes" arg2="${obx.export.validate}" />
@@ -284,7 +284,7 @@ export.database: exports database structure and data to xml files.
       <include name="*/lib/**" />
     </fileset>
   </path>
-  
+
   <!-- This classpath is needed only for the apply.module task-->
   <path id="apply.module.runtime.classpath">
     <dirset dir="${base.modules}">
@@ -329,7 +329,7 @@ export.database: exports database structure and data to xml files.
       <include name="*/build/classes/" />
     </dirset>
   </path>
-  
+
   <macrodef name="updatesystemstatus">
      <attribute name="v" default="NOT SET"/>
      <sequential>
@@ -340,7 +340,7 @@ export.database: exports database structure and data to xml files.
        </sql>
      </sequential>
   </macrodef>
-  
+
   <macrodef name="updatesystemstatuswhennot">
     <attribute name="v" default="NOT SET"/>
     <attribute name="previous" default="NOT SET"/>
@@ -352,7 +352,7 @@ export.database: exports database structure and data to xml files.
        </sql>
      </sequential>
   </macrodef>
-  
+
   <target name="init">
     <fail if="root.user" message="Don't run ant tasks with the root user" />
     <fail if="no.java.home" message="The environment variable JAVA_HOME is not set." />
@@ -414,7 +414,7 @@ export.database: exports database structure and data to xml files.
     <taskdef name="CheckSumCondition" classname="org.openbravo.utils.CheckSumCondition">
       <classpath refid="project.class.path" />
     </taskdef>
-    
+
     <CheckSumCondition obDir="${basedir}"
                        type="md5.wad"
                        property="test.md5.wad"/>
@@ -500,17 +500,17 @@ export.database: exports database structure and data to xml files.
   </target>
 
   <target name="buildvalidation" depends="init, core.lib">
-    <updatesystemstatus v="RB11"/> 
+    <updatesystemstatus v="RB11"/>
     <condition property="buildValidation.var">
       <istrue value="${buildValidation}"  />
     </condition>
     <ant dir="src-util/buildvalidation" target="buildvalidation" inheritAll="true" inheritRefs="true" />
   </target>
-  
+
   <target name="compile.buildvalidation" depends="init, core.lib">
     <ant dir="src-util/buildvalidation" target="compile" inheritAll="true" inheritRefs="true" />
   </target>
-  
+
   <target name="compile.modulescript" depends="init, core.lib">
     <ant dir="src-util/modulescript" target="compile" inheritAll="true" inheritRefs="true" />
   </target>
@@ -521,7 +521,7 @@ export.database: exports database structure and data to xml files.
     <taskdef name="CheckSumCondition" classname="org.openbravo.utils.CheckSumCondition">
       <classpath refid="project.class.path" />
     </taskdef>
-    
+
     <CheckSumCondition obDir="${basedir}"
                            type="md5.wad"
                            property="test.md5.wad"/>
@@ -620,21 +620,21 @@ export.database: exports database structure and data to xml files.
     <ant dir="${base.src.test}" target="run.test" inheritAll="true" inheritRefs="true" />
   </target>
 
-  <target name="run.api.test.model" 
+  <target name="run.api.test.model"
           description="Checks current xml db model and dictionary API for not-allowed changes. Requires stableDBdir parameter">
     <taskdef name="checkAPI" classname="org.openbravo.ddlutils.task.CheckAPIDistribution">
       <classpath refid="project.class.path" />
     </taskdef>
-    <checkAPI driver="${bbdd.driver}" 
-                  url="${bbdd.owner.url}" 
-                  user="${bbdd.user}" 
-                  password="${bbdd.password}" 
+    <checkAPI driver="${bbdd.driver}"
+                  url="${bbdd.owner.url}"
+                  user="${bbdd.user}"
+                  password="${bbdd.password}"
                   stableDBdir="${stableDBdir}"
                   testDBdir="${basedir}"
                   modules="${modules}"
-    />    
+    />
   </target>
-  
+
   <target name="compile.src" depends="init">
     <ant dir="${base.src}" target="compile.src" inheritAll="true" inheritRefs="true" />
   </target>
@@ -675,9 +675,8 @@ export.database: exports database structure and data to xml files.
   <target name="install.source" depends="init, cleanSubfolders, create.database, wad.lib, trl.lib, compile.complete.deploy">
     <echo message="applying modules" />
     <antcall inheritall="true" inheritrefs="true" target="apply.module" />
-
     <antcall inheritall="true" target="import.sample.data" />
-    <updatesystemstatus v="RB51"/> 
+    <updatesystemstatus v="RB51"/>
     <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
   </target>
 
@@ -723,9 +722,67 @@ export.database: exports database structure and data to xml files.
     <antcall inheritall="true" inheritrefs="true" target="apply.module" />
     <antcall target="import.sample.data" />
   </target>
-  
+
+  <condition property="module.not.provided">
+    <equals arg1="${module}" arg2="%" />
+  </condition>
+
+  <target name="modules.dirs.check">
+    <condition property="module.dir.exists">
+        <available file="${base.modules}/${module}" type="dir" />
+    </condition>
+  </target>
+
+  <target name="module.provided.exists.check" depends="modules.dirs.check">
+    <condition property="module.provided.exists">
+      <istrue value="${module.dir.exists}" />
+    </condition>
+  </target>
+
+  <target name="check.module.exists" depends="module.provided.exists.check" unless="module.provided.exists">
+    <fail message="The provided module '${module}' does not exists." />
+  </target>
+
+  <target name="checkmodule"  if="module.not.provided">
+    <fail>You need to specify a module using the command line parameter '-Dmodule=javapackage'</fail>
+  </target>
+
+  <target name="install.translation" depends="checkmodule, check.module.exists">
+    <echo message="Installing module translation ${module}" />
+    <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="abort" autocommit="true">
+      <classpath>
+        <path refid="project.class.path" />
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        UPDATE AD_MODULE SET STATUS='I' WHERE STATUS='A' AND JAVAPACKAGE='${module}';
+      </transaction>
+    </sql>
+  </target>
+
+
+  <target name="apply.modules">
+
+    <condition property="apply.modules.complete.compilation.var">
+      <istrue value="${apply.modules.complete.compilation}"  />
+    </condition>
+
+    <condition property="apply.modules.simple.compilation.var">
+      <isfalse value="${apply.modules.complete.compilation.var}" />
+    </condition>
+
+    <updatesystemstatus v="RB43"/>
+    <antcall target="apply.modules.compile"/>
+
+    <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
+
+  </target>
+
   <target name="apply.module.forked">
-    <!-- 
+    <!--
     Note: set reinitializeModel to false because otherwise the dal is re-initialized with classes and a model
     which are not in sync (see issue: https://issues.openbravo.com/view.php?id=9376)
     Note: applyModule can also be moved to a java task to fork it (to prevent this from occuring)
@@ -736,12 +793,12 @@ export.database: exports database structure and data to xml files.
     </taskdef>
     <applyModule userId="0" adminMode="true" forceRefData="${forceRefData}" propertiesFile="${base.config}/Openbravo.properties"/>
   </target>
-  
+
   <target name="compile.apply.module" depends="init">
     <updatesystemstatus v="RB31"/>
     <ant dir="${base.src}" target="compile.apply.module" inheritAll="true" inheritRefs="true" />
   </target>
-  
+
   <!--
   This task uses a special classpath.
   This classpath is equivalent to the normal project.class.path, except for the fact that that the normal build folder
@@ -805,28 +862,28 @@ export.database: exports database structure and data to xml files.
 
     <validateModules moduleJavaPackage="${module}" failOnError="true" userId="0" adminMode="true" propertiesFile="${base.config}/Openbravo.properties" type="module" />
   </target>
-  
+
   <target name="package.module">
     <taskdef name="extractModule" classname="org.openbravo.erpCommon.modules.ExtractModuleTask">
       <classpath refid="project.class.path" />
     </taskdef>
-    
+
     <antcall target="obx.export.validateModules" />
     <antcall target="obx.export.database" />
     <antcall target="obx.export.config.script" />
 
-    <extractModule moduleName="${module}" 
-                   userId="0" 
-                   adminMode="true" 
-                   propertiesFile="${base.config}/Openbravo.properties" 
-                   exportRD="${obx.export.RD}" 
+    <extractModule moduleName="${module}"
+                   userId="0"
+                   adminMode="true"
+                   propertiesFile="${base.config}/Openbravo.properties"
+                   exportRD="${obx.export.RD}"
                    addAllDependencies="${obx.export.allDeps}"/>
   </target>
-  
+
   <target name="setup.compile">
 	<mkdir dir="build/classes" />
     <javac srcdir="src/org/openbravo/configuration" destdir="build/classes" fork="true" deprecation="off" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
-      <classpath refid="project.class.path"/>  
+      <classpath refid="project.class.path"/>
     </javac>
   </target>
 
@@ -864,13 +921,13 @@ export.database: exports database structure and data to xml files.
   <target name="check.module.consistency">
     <fail message="Use ./gradlew dependencies" />
   </target>
-  
+
   <target name="cleanSubfolders" depends="init">
       <ant dir="${base.src.core}" target="clean" inheritAll="true" inheritRefs="true" />
       <ant dir="${base.src.trl}" target="clean" inheritAll="true" inheritRefs="true" />
       <ant dir="${base.src.wad}" target="clean" inheritAll="true" inheritRefs="true" />
   </target>
-  
+
   <target name="activate.instance" depends="init"
           description="Activates the instance with the provided public key">
    <taskdef name="activateInstace" classname="org.openbravo.erpCommon.obps.ActivationTask">
@@ -879,15 +936,15 @@ export.database: exports database structure and data to xml files.
    <property name="purpose" value="" />
    <property name="publicKey" value="" />
    <property name="publicKeyFile" value="" />
-    
+
    <activateInstace purpose="${purpose}"
                     publicKey="${publicKey}"
                     publicKeyFile="${publicKeyFile}"
-                    userId="0" 
-                    adminMode="true" 
+                    userId="0"
+                    adminMode="true"
                     propertiesFile="${base.config}/Openbravo.properties"/>
   </target>
-  
+
   <target name="host.name"
           description="Prints this machine's name. This name can be used to overwrite common Openbravo.properties by machine.name.Openbravo properties file">
     <mkdir dir="build/classes"/>

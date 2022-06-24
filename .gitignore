@@ -20,7 +20,6 @@ src-db/build/
 src-trl/build/
 src-wad/build/
 src-test/build/
-modules_core/**/build
 !src-core/.classpath
 !src-db/database/.ant-targets-build.xml
 !src-gen/.keep
