@@ -59,7 +59,7 @@ static def getVersionSuffix( versionTs ) {
     }
 }
 
-version = '22.1.1' + getVersionSuffix( versionTs )
+version = '22.1.2' + getVersionSuffix( versionTs )
 
 def artifactID = 'etendo-core'
 def javaPackage = group + '.' + artifactID
@@ -173,8 +173,8 @@ task configPublishZIP(){
         }
 
         publishing.repositories.maven.credentials {
-            username = "$mavenUser"
-            password = "$mavenPassword"
+            username = "$nexusUser"
+            password = "$nexusPassword"
         }
     }
 }
@@ -250,8 +250,8 @@ task configPublishJAR(){
             publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-releases/"
         }
         publishing.repositories.maven.credentials {
-            username = "$mavenUser"
-            password = "$mavenPassword"
+            username = "$nexusUser"
+            password = "$nexusPassword"
         }
     }
 }
