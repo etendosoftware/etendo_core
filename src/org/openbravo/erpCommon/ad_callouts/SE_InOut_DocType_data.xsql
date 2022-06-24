@@ -57,4 +57,26 @@
     </Sql>
     <Parameter name="cInvoiceId"/>
   </SqlMethod>
+  <SqlMethod name="selectDoctypetargetinout" type="preparedStatement" return="string">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql>
+        <![CDATA[
+          SELECT C_DOCTYPE_ID
+          FROM M_INOUT
+          WHERE M_INOUT_ID = ?
+        ]]>
+      </Sql>
+      <Parameter name="m_InOutId"/>
+    </SqlMethod>
+    <SqlMethod name="selectDocumentnoInOut" type="preparedStatement" return="string">
+          <SqlMethodComment></SqlMethodComment>
+          <Sql>
+            <![CDATA[
+              SELECT DOCUMENTNO
+              FROM M_INOUT
+              WHERE M_INOUT_ID = ?
+            ]]>
+          </Sql>
+          <Parameter name="m_InOutId"/>
+        </SqlMethod>
 </SqlClass>

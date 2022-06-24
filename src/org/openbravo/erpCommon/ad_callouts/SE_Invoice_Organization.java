@@ -21,10 +21,22 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import javax.servlet.ServletException;
 
+import com.etendoerp.sequences.NextSequenceValue;
+import com.etendoerp.sequences.UINextSequenceValueInterface;
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.RequestFilter;
 import org.openbravo.base.filter.ValueListFilter;
+import org.openbravo.client.kernel.RequestContext;
+import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.CashVATUtil;
+import org.openbravo.model.ad.ui.Field;
+import org.openbravo.model.ad.ui.Tab;
+
+import java.util.List;
 
 public class SE_Invoice_Organization extends SimpleCallout {
   private static final RequestFilter filterYesNo = new ValueListFilter("Y", "N");
@@ -36,8 +48,24 @@ public class SE_Invoice_Organization extends SimpleCallout {
     final String strBPartnerId = info.getStringParameter("inpcBpartnerId", IsIDFilter.instance);
     final String strBPartnerLocationId = info.getStringParameter("inpcBpartnerLocationId",
         IsIDFilter.instance);
+    final String strInvoice = info.getStringParameter("C_Invoice_ID", IsIDFilter.instance);
 
     info.addResult("inpiscashvat",
         CashVATUtil.isCashVAT(strinpissotrx, strOrgId, strBPartnerId, strBPartnerLocationId));
+
+    /* Check Document No. */
+    if (StringUtils.isBlank(strInvoice)) {
+      Field field = Utilities.getField(info);
+      if (field != null) {
+        UINextSequenceValueInterface sequenceHandler = null;
+        sequenceHandler = NextSequenceValue.getInstance()
+            .getSequenceHandler(field.getColumn().getReference().getId());
+        if (sequenceHandler != null) {
+          String documentNo = sequenceHandler.generateNextSequenceValue(field,
+              RequestContext.get());
+          info.addResult("inpdocumentno", "<" + documentNo + ">");
+        }
+      }
+    }
   }
 }
