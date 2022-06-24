@@ -1966,6 +1966,14 @@ OB.ViewFormProperties = {
       storedFocusItem = this.getFocusItem();
     }
 
+    // if not all data is loaded, remove the sort to ensure the new record is stored
+    // in the first position of the grid
+    if (
+      this.view.viewGrid.getTotalRows() > this.view.viewGrid.data.cachedRows
+    ) {
+      this.view.viewGrid.unsort();
+    }
+
     if (this.view.viewGrid.isGrouped && this.isNew) {
       // If a new record is added in a grouped grid,
       // the grid has to be refreshed after the record has been actually saved
