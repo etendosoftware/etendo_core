@@ -132,6 +132,10 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       selectClause.append(" COALESCE(ips.expectedDate, ops.expectedDate) as expectedDate, ");
       selectClause.append(" max(COALESCE(ips.amount, ops.amount)) as expectedAmount, ");
       selectClause.append(" max(COALESCE(inv.grandTotalAmount, 0)) as invoicedAmount, ");
+      selectClause.append(" inv.createdBy.username as createdBy, ");
+      selectClause.append(" inv.updatedBy.username as updatedBy, ");
+      selectClause.append(" inv.creationDate as created, ");
+      selectClause.append(" inv.updated as updated, ");
     } else if ("O".equals(transactionType)) {
       selectClause.append(" ord.documentNo as salesOrderNo, ");
       selectClause.append(getAggregatorFunction(" case when (inv."
@@ -145,6 +149,10 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       selectClause.append(" COALESCE(ops.expectedDate, ips.expectedDate) as expectedDate, ");
       selectClause.append(" max(COALESCE(ips.amount, ops.amount)) as expectedAmount, ");
       selectClause.append(" sum(COALESCE(inv.grandTotalAmount, 0)) as invoicedAmount, ");
+      selectClause.append(" ord.createdBy.username as createdBy, ");
+      selectClause.append(" ord.updatedBy.username as updatedBy, ");
+      selectClause.append(" ord.creationDate as created, ");
+      selectClause.append(" ord.updated as updated, ");
     } else {
       selectClause.append(" ord.documentNo as salesOrderNo, ");
       selectClause.append(" case when (inv." + Invoice.PROPERTY_SALESTRANSACTION
@@ -158,6 +166,10 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       selectClause.append(" COALESCE(ips.expectedDate, ops.expectedDate) as expectedDate, ");
       selectClause.append(" max(COALESCE(ips.amount, ops.amount)) as expectedAmount, ");
       selectClause.append(" max(COALESCE(inv.grandTotalAmount, 0)) as invoicedAmount, ");
+      selectClause.append(" COALESCE(inv.createdBy.username, ord.createdBy.username) as createdBy, ");
+      selectClause.append(" COALESCE(inv.updatedBy.username, ord.updatedBy.username) as updatedBy, ");
+      selectClause.append(" COALESCE(inv.creationDate, ord.creationDate) as created, ");
+      selectClause.append(" COALESCE(inv.updated, ord.updated) as updated, ");
     }
     selectClause.append(" bp.id as businessPartner, ");
     selectClause.append(" bp.name as businessPartnerName, ");
@@ -172,6 +184,7 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       selectClause
           .append(" case when max(fp.id) is not null then true else false end as OB_Selected ");
     }
+
     return selectClause;
   }
 
@@ -279,6 +292,8 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       groupByClause.append(" oinfo.organization, ");
       groupByClause.append(" oinfo.aPRMPaymentDescription, ");
       groupByClause.append(" inv.orderReference, ");
+      groupByClause.append(" inv.createdBy.username, ");
+      groupByClause.append(" inv.updatedBy.username, ");
     } else if ("O".equals(transactionType)) {
       groupByClause.append(" ord.id, ");
       groupByClause.append(" ord.documentNo, ");
@@ -287,6 +302,8 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       groupByClause.append(" COALESCE(opsfp.name, ipsfp.name), ");
       groupByClause.append(" COALESCE(ops.expectedDate, ips.expectedDate), ");
       groupByClause.append(" COALESCE(opriority.priority, ipriority.priority), ");
+      groupByClause.append(" ord.createdBy.username, ");
+      groupByClause.append(" ord.updatedBy.username, ");
     } else {
       groupByClause.append(" inv.id, ");
       groupByClause.append(" inv.documentNo, ");
@@ -302,9 +319,12 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       groupByClause.append(" oinfo.organization, ");
       groupByClause.append(" oinfo.aPRMPaymentDescription, ");
       groupByClause.append(" inv.orderReference, ");
+      groupByClause.append(" COALESCE(inv.createdBy.username, ord.createdBy.username), ");
+      groupByClause.append(" COALESCE(inv.updatedBy.username, ord.updatedBy.username), ");
     }
     groupByClause.append(" bp.id, ");
     groupByClause.append(" bp.name ");
+
     return groupByClause;
   }
 
