@@ -21,6 +21,7 @@ package org.openbravo.scheduling;
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.openbravo.dal.core.OBContext;
@@ -55,7 +56,7 @@ public class ClusterInstanceProcessAccess {
     try {
       AbstractTrigger<?> trigger = (AbstractTrigger<?>) delegate.selectTrigger(conn, triggerKey);
       JobDataMap jobDataMap = trigger.getJobDataMap();
-      ProcessBundle processBundle = (ProcessBundle) jobDataMap.get(ProcessBundle.KEY);
+      ProcessBundle processBundle = ProcessBundle.mapToObject((Map<String, Object>) jobDataMap.get(ProcessBundle.KEY));
       List<String> bannedClusterInstanceNames = processBundle.getBannedClusterInstanceNames();
       return hasAccess(bannedClusterInstanceNames);
     } catch (Exception e) {

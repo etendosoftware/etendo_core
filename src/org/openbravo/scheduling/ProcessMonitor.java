@@ -143,6 +143,8 @@ class ProcessMonitor implements SchedulerListener, JobListener, TriggerListener 
       jec.put(EXECUTION_ID, executionId);
       jec.put(ProcessBundle.CONNECTION, getConnection());
       jec.put(ProcessBundle.CONFIG_PARAMS, getConfigParameters());
+      bundle.setConnection(getConnection());
+      jec.getMergedJobDataMap().put(ProcessBundle.KEY, bundle.getMap());
 
     } catch (final ServletException | SchedulerException e) {
       log.error(e.getMessage(), e);
@@ -220,7 +222,7 @@ class ProcessMonitor implements SchedulerListener, JobListener, TriggerListener 
           trigger.getJobDataMap().getString(Process.PROCESS_NAME), trigger.getStartTime());
 
       final String executionId = SequenceIdData.getUUID();
-      ProcessBundle bundle = (ProcessBundle) trigger.getJobDataMap().get(ProcessBundle.KEY);
+      ProcessBundle bundle = ProcessBundle.mapToObject((Map<String, Object>) trigger.getJobDataMap().get(ProcessBundle.KEY));
       ProcessContext ctx = bundle.getContext();
 
       ProcessRunData.insert(getConnection(), ctx.getOrganization(), ctx.getClient(), ctx.getUser(),
@@ -263,9 +265,9 @@ class ProcessMonitor implements SchedulerListener, JobListener, TriggerListener 
             .equals(trigger.getJobDataMap().get(Process.PROCESS_ID))
             && !job.getJobInstance().equals(jec.getJobInstance())) {
 
-          ProcessBundle jobAlreadyScheduled = (ProcessBundle) job.getTrigger()
+          ProcessBundle jobAlreadyScheduled = ProcessBundle.mapToObject((Map<String, Object>) job.getTrigger()
               .getJobDataMap()
-              .get(ProcessBundle.KEY);
+              .get(ProcessBundle.KEY));
 
           final ProcessBundle newJob = ProcessBundle.mapToObject((Map<String, Object>) trigger.getJobDataMap().get(ProcessBundle.KEY));
 
