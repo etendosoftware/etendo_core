@@ -17,17 +17,22 @@
  ************************************************************************
 */
 /* Blue */
-/* Light Blue */
-/* Darker Blue */
 /* Gray */
-/* Darker Gray  */
 /* Yellow */
 /* White */
+/* Darker Gray  */
+/* Light Blue */
+/* Darker Blue */
 /* Light Blue (20%) */
+/* Gray used for read-only input lettering. */
+/* Gray used for non-focused tab titles. */
+/* Black for font of grid items. */
 /* Light Green */
 /* Light Blue (20%) */
 /* light Blue (10%) */
 /* Gray 10 % */
+/* Yellow: Record shading */
+/* Used to determine the padding of the grid form. (Custom padding 4px -- Standar padding 10px) */
 .tabStyleActive {
   background-color: #202452;
 }
@@ -58,7 +63,7 @@
  * View Form Styles 
 =======================================================================*/
 .OBViewForm {
-  margin: 5px 25px 0px 25px;
+  margin: 5px 20px 0px 20px;
   padding: 0px 0px 20px 0px;
 }
 
@@ -253,7 +258,7 @@
 .OBFlyoutLayout .OBFormFieldNumberInputRequiredHint {
   border-radius: 5px;
   height: auto;
-  padding: 10px;
+  padding: 4px;
 }
 
 .OBFormFieldDateInputRequired,
@@ -883,34 +888,39 @@ html[data-useragent*="MSIE 7.0"] .OBFormFieldError .OBFormFieldDateInputHint {
 .OBFormButtonSelectedFocusedOver,
 .OBFormButtonDisabled,
 .OBFormButtonSelectedDisabled {
-  padding: 5px 20px 5px;
+  background-color: #fad614;
+  border-radius: 7px;
+  color: #202452;
   font-family: "Poppins", "lucida sans", sans-serif;
-  font-size: 12px;
-  color: #ffffff;
-  cursor: pointer;
-  background-color: #202452;
-  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 15px;
+  text-transform: uppercase;
+  display: block;
+  margin: 1px auto;
 }
-.OBFormButton :hover,
-.OBFormButtonOver :hover,
-.OBFormButtonFocused :hover,
-.OBFormButtonFocusedOver :hover,
-.OBFormButtonDown :hover,
-.OBFormButtonFocusedDown :hover,
-.OBFormButtonSelected :hover,
-.OBFormButtonSelectedFocused :hover,
-.OBFormButtonSelectedDown :hover,
-.OBFormButtonSelectedFocusedDown :hover,
-.OBFormButtonSelectedOver :hover,
-.OBFormButtonSelectedFocusedOver :hover,
-.OBFormButtonDisabled :hover,
-.OBFormButtonSelectedDisabled :hover {
+.OBFormButton:hover,
+.OBFormButtonOver:hover,
+.OBFormButtonFocused:hover,
+.OBFormButtonFocusedOver:hover,
+.OBFormButtonDown:hover,
+.OBFormButtonFocusedDown:hover,
+.OBFormButtonSelected:hover,
+.OBFormButtonSelectedFocused:hover,
+.OBFormButtonSelectedDown:hover,
+.OBFormButtonSelectedFocusedDown:hover,
+.OBFormButtonSelectedOver:hover,
+.OBFormButtonSelectedFocusedOver:hover,
+.OBFormButtonDisabled:hover,
+.OBFormButtonSelectedDisabled:hover {
   opacity: 80%;
 }
 
 .OBFormButtonDisabled,
 .OBFormButtonSelectedDisabled {
-  background-color: #ffffff;
+  background-color: #202452;
+  color: #202452;
+  cursor: default;
 }
 
 .OBFormButtonTitle,

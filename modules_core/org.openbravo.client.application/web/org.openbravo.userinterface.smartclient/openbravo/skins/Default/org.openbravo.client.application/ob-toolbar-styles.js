@@ -19,7 +19,7 @@
 
 isc.OBToolbar.addProperties({
   width: '100%',
-  height: 52,
+  height: 54,
   leftMargin: 23,
   rightMargin: 4,
   leftMembersMargin: 4,
@@ -28,11 +28,11 @@ isc.OBToolbar.addProperties({
 
 isc.OBToolbarIconButton.addProperties({
   width: 51,
-  height: 51,
+  height: 32,
   menuButtonImage: OB.Styles.skinsPath + 'Default/org.openbravo.client.application/images/toolbar/iconButton-menu-unfold.png' /** There is a CSS hack to avoid showing it when no menu available. this.menuButtonImage inside initWidget doesn't run **/
 });
 
 isc.OBToolbarTextButton.addProperties({
-  height: 51,
+  height: 32,
   autoFit: true
 });

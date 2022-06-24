@@ -283,9 +283,9 @@ export.database: exports database structure and data to xml files.
     <dirset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
       <include name="*/build/classes/" />
     </dirset>
-    <fileset dir="${extra.modules.location}" erroronmissingdir="false" >
+    <dirset dir="${extra.modules.location}" erroronmissingdir="false" >
       <include name="*/build/classes/" />
-    </fileset>
+    </dirset>
 
     <pathelement path="${basedir}/src-util/modulescript/build/classes/" />
     <pathelement path="${base.config}" />
