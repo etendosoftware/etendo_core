@@ -82,6 +82,10 @@ left outer join psd.organization as org
 left outer join org.organizationInformationList as oinfo
 left outer join psd.paymentDetails as pd 
 left outer join pd.finPayment as fp
+left outer join inv.createdBy as invCreatedBy
+left outer join ord.createdBy as ordCreatedBy
+left outer join inv.updatedBy as invUpdatedBy
+left outer join ord.updatedBy as ordUpdatedBy
 @joinClause@
 where @additional_filters@
 and @whereClause@
