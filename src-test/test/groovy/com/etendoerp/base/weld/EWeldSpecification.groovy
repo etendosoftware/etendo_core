@@ -26,7 +26,7 @@ import javax.enterprise.inject.spi.BeanManager
 import javax.enterprise.util.AnnotationLiteral
 import javax.inject.Inject
 
-@RunWith(Arquillian.class)
+//@RunWith(Arquillian.class)
 class EWeldSpecification extends EBaseSpecification {
     private static final Logger log = LogManager.getLogger();
 

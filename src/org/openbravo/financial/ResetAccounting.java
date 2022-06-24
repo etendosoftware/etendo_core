@@ -103,7 +103,11 @@ public class ResetAccounting {
             final String tableName = OBDal.getInstance()
                 .getProxy(Table.class, tableId)
                 .getIdentifier();
-            throw new OBException("@NotDocumentTypeDefinedForTable@: " + tableName);
+            updated = OBDal.getInstance()
+                .getSession()
+                .createNativeQuery(updateTableOneRecord(tableName, tableName + "_Id", tableId))
+                .setParameter("recordID", localRecordId)
+                .executeUpdate();
           }
           //@formatter:off
           String myQuery = 

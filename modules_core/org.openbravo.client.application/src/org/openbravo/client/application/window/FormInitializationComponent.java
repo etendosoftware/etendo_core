@@ -1371,13 +1371,11 @@ public class FormInitializationComponent extends BaseActionHandler {
     }
 
     try {
-      String fieldId = null;
+      String fieldId = "inp" + Sqlc.TransformaNombreColumna(field.getColumn().getDBColumnName());
       if (field.getProperty() != null && !field.getProperty().isEmpty()) {
         fieldId = "inp" + "_propertyField_"
             + Sqlc.TransformaNombreColumna(field.getName()).replace(" ", "") + "_"
             + field.getColumn().getDBColumnName();
-      } else {
-        fieldId = "inp" + Sqlc.TransformaNombreColumna(field.getColumn().getDBColumnName());
       }
       RequestContext.get()
           .setRequestParameter(fieldId,
@@ -1396,8 +1394,15 @@ public class FormInitializationComponent extends BaseActionHandler {
       if (field.getColumn() == null) {
         continue;
       }
-      inpFields.put("inp" + Sqlc.TransformaNombreColumna(field.getColumn().getDBColumnName()),
-          field);
+      String fieldId = null;
+      if (field.getProperty() != null && !field.getProperty().isEmpty()) {
+        fieldId = "inp" + "_propertyField_"
+            + Sqlc.TransformaNombreColumna(field.getName()).replace(" ", "") + "_"
+            + field.getColumn().getDBColumnName();
+      } else {
+        fieldId = "inp" + Sqlc.TransformaNombreColumna(field.getColumn().getDBColumnName());
+      }
+      inpFields.put(fieldId, field);
     }
     return inpFields;
   }

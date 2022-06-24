@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
+import com.etendoerp.properties.EtendoPropertiesProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
@@ -173,21 +174,6 @@ public class OBPropertiesProvider {
   }
 
   private File getFileFromDevelopmentPath(String fileName) {
-    // get the location of the current class file
-    final URL url = this.getClass().getResource(getClass().getSimpleName() + ".class");
-    File f = new File(url.getPath());
-    File propertiesFile = null;
-    while (f.getParentFile() != null && f.getParentFile().exists()) {
-      f = f.getParentFile();
-      final File configDirectory = new File(f, "config");
-      if (configDirectory.exists()) {
-        propertiesFile = new File(configDirectory, fileName);
-        if (propertiesFile.exists()) {
-          // found it and break
-          break;
-        }
-      }
-    }
-    return propertiesFile;
+    return EtendoPropertiesProvider.getInstance().getFileFromDevelopmentPath(fileName);
   }
 }

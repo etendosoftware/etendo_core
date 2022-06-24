@@ -39,16 +39,16 @@ import org.openbravo.test.base.OBBaseTest;
 
 /**
  * Base class for Json test Rest http requests. To test the {@link JsonRestServlet}. This test class
- * requires a running Openbravo instance on http://localhost:8080/openbravo.
+ * requires a running Openbravo instance on http://localhost:8080/etendo.
  * 
  * @author mtaal
  */
 public class JsonRestTest extends OBBaseTest {
   private static final Logger log = LogManager.getLogger();
 
-  private static final String OB_URL = "http://localhost:8080/openbravo";
-  private static final String LOGIN = "Openbravo";
-  private static final String PWD = "openbravo";
+  private static final String OB_URL = "http://localhost:8080/etendo";
+  private static final String LOGIN = "admin";
+  private static final String PWD = "admin";
 
   protected JSONObject doRequest(String wsPart, String testContent, String method,
       int responseCode) {

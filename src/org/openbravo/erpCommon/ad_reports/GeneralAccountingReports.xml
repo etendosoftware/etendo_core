@@ -46,6 +46,7 @@
   <PARAMETER id="fieldCheck" name="check" default="Y"/>
   <PARAMETER id="fieldConImporte" name="conImporte" boolean="checked" withId="fieldCheck"/>
   <PARAMETER id="fieldConCodigo" name="conCodigo" boolean="checked" withId="fieldCheck"/>
+  <PARAMETER id="fieldLandscape" name="printInLandscape" boolean="checked" withId="fieldCheck"/>
   <PARAMETER id="fieldCompareTo" name="compareTo" boolean="checked" withId="fieldCheck"/>
   <PARAMETER id="fieldC_ElementValue_ID" name="C_ElementValue_ID"/>
   <PARAMETER id="fieldC_Org_ID" name="C_Org_ID"/>

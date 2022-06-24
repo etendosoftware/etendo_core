@@ -30,6 +30,7 @@ import org.apache.commons.lang.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.expression.Evaluator;
+import org.openbravo.base.gen.Utilities;
 import org.openbravo.base.model.domaintype.AbsoluteDateTimeDomainType;
 import org.openbravo.base.model.domaintype.AbsoluteTimeDomainType;
 import org.openbravo.base.model.domaintype.BasePrimitiveDomainType;
@@ -690,6 +691,7 @@ public class Property {
     if (imports.contains(typeName)) {
       return simpleName;
     }
+
     return typeName;
   }
 
@@ -1478,4 +1480,11 @@ public class Property {
   public void setDeprecated(final Boolean deprecated) {
     isDeprecated = deprecated;
   }
+
+  public String getTableName(String className) {
+    final String newClassName = Utilities.toCamelCase(getTargetEntity().getTableName());
+    final String packagePlusNewClass = className.substring(0, className.lastIndexOf('.')) + "." + newClassName;
+    return packagePlusNewClass;
+  }
+
 }

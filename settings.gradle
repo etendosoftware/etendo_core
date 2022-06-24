@@ -1,0 +1,21 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven {
+            url 'https://repo.futit.cloud/repository/maven-public-releases'
+        }
+        maven {
+            url 'https://repo.futit.cloud/repository/maven-public-snapshots'
+        }
+    }
+}
+
+// Add modules subprojects
+new File("${this.rootDir}/modules").listFiles().each {
+    if (it.directory && new File(it, 'build.gradle').exists()) {
+        include(":modules:${it.name}")
+    }
+}
+
+rootProject.name = "core"

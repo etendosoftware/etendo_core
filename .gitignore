@@ -1,6 +1,7 @@
 .run
 .gradle
 gradle.properties
+
 \${env.CATALINA_HOME}
 
 .backup
@@ -20,7 +21,6 @@ src-db/build/
 src-trl/build/
 src-wad/build/
 src-test/build/
-modules_core/**/build
 !src-core/.classpath
 !src-db/database/.ant-targets-build.xml
 !src-gen/.keep
@@ -84,8 +84,9 @@ node_modules
 node_modules_global
 test-reports
 
-# ignore all modules 
+# ignore all modules
 # except those ones included in OB3 distribution
+/modules/*
 !/modules_core/org.openbravo.advpaymentmngt
 !/modules_core/org.openbravo.apachejdbcconnectionpool
 !/modules_core/org.openbravo.base.weld

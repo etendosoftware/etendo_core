@@ -14,7 +14,7 @@ In this section you can read the [System Requirements](https://docs.etendo.softw
 ```bash
 cp gradle.properties.template gradle.properties
 ```
-2. You can edith `gradle.properties` file updating the variables or use the default values 
+2. You can edit `gradle.properties` file updating the variables or use the default values 
 
 | Variable | Description |
 | --- | --- |

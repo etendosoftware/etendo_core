@@ -12,17 +12,14 @@
 package org.openbravo.modulescript;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.openbravo.buildvalidation.BuildValidationHandler;
+import org.openbravo.ddlutils.util.ModulesUtil;
 
 public class ModuleScriptHandler extends Task {
   private static final Logger log4j = LogManager.getLogger();
@@ -34,26 +31,49 @@ public class ModuleScriptHandler extends Task {
   @Override
   public void execute() {
     List<String> classes = new ArrayList<String>();
+
+    // Update the modules dir to search
+    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+    File auxBasedir = basedir;
+
+    // The core is in Jar
+    if (!ModulesUtil.coreInSources) {
+      auxBasedir = new File(ModulesUtil.getProjectRootDir());
+    }
+
     if (moduleJavaPackage != null) {
       // We will only be executing the ModuleScripts of a specific module
-      File moduleDir = new File(basedir, "modules_core/" + moduleJavaPackage + "/build/classes");
-      if (!moduleDir.exists()) { 
-        moduleDir = new File(basedir, "modules/" + moduleJavaPackage + "/build/classes"); 
+      for (String module : ModulesUtil.moduleDirs) {
+        File moduleDir = new File(auxBasedir, module + File.separator + moduleJavaPackage + "/build/classes");
+        if (moduleDir.exists()) {
+          log4j.info("Module Script Handler - Reading class files from: " + moduleDir.getAbsolutePath());
+          BuildValidationHandler.readClassFiles(classes, moduleDir);
+          break;
+        }
       }
-      BuildValidationHandler.readClassFiles(classes, moduleDir);
+
     } else {
+
+      /**
+       * basedir should point to the base dir where the build.xml file is found.
+       */
       File coreBuildFolder = new File(basedir, "src-util/modulescript/build/classes");
       BuildValidationHandler.readClassFiles(classes, coreBuildFolder);
-      File coreModuleFolder = new File(basedir, "modules_core");
-      File moduleFolder = new File(basedir, "modules");
-      File modFoldersA[] = moduleFolder.listFiles();
+
       ArrayList<File> modFolders = new ArrayList<File>();
-      for (File f : coreModuleFolder.listFiles()) {
-        modFolders.add(f);
+
+      /**
+       * auxBaseDir is the root dir of the project
+       */
+      for (String module : ModulesUtil.moduleDirs) {
+        File auxModule = new File(auxBasedir, module);
+        if (auxModule.exists() && auxModule.isDirectory()) {
+          log4j.info("Module Script Handler - Adding modules directories from: " + auxModule.getAbsolutePath());
+          modFolders.addAll(Arrays.asList(auxModule.listFiles()));
+        }
       }
-      for (File f : modFoldersA) {
-        modFolders.add(f);
-      }
+
       Collections.sort(modFolders);
       for (File modFolder : modFolders) {
         if (modFolder.isDirectory()) {
@@ -63,6 +83,7 @@ public class ModuleScriptHandler extends Task {
           }
         }
       }
+
     }
     for (String s : classes) {
       try {

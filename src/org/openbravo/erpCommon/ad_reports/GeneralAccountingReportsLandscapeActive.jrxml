@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="GeneralAccountingReportsLandscapeActive" pageWidth="595" pageHeight="842" whenNoDataType="NoPages" columnWidth="595" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="206db32e-71ab-4edc-9aa1-2cb48e611ad9">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.6500000000000001"/>
+	<property name="ireport.x" value="277"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<style name="CustSatIndexMarkup" forecolor="#000000" pattern="###0.00;-###0.00" isBlankWhenNull="false" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean(new BigDecimal($F{elementLevel}).intValue() == 1)]]></conditionExpression>
+			<style fontSize="12" isBold="true"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean(new BigDecimal($F{elementLevel}).intValue() == 2)]]></conditionExpression>
+			<style fontSize="11" isBold="false"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean(new BigDecimal($F{elementLevel}).intValue() == 3)]]></conditionExpression>
+			<style fontSize="10" isBold="false"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean(new BigDecimal($F{elementLevel}).intValue() >= 4)]]></conditionExpression>
+			<style fontSize="9" isBold="false"/>
+		</conditionalStyle>
+	</style>
+	<parameter name="REPORT_SUBTITLE" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="TOTAL" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<parameter name="pageNo" class="java.lang.String"/>
+	<parameter name="qty" class="java.lang.String"/>
+	<parameter name="qtyRef" class="java.lang.String"/>
+	<parameter name="elementLevel" class="java.lang.String"/>
+	<parameter name="groupname" class="java.lang.String"/>
+	<parameter name="name" class="java.lang.String"/>
+	<parameter name="compareTo" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="name" class="java.lang.String"/>
+	<field name="qty" class="java.lang.String"/>
+	<field name="qtyRef" class="java.lang.String"/>
+	<field name="elementLevel" class="java.lang.String"/>
+	<field name="groupname" class="java.lang.String"/>
+	<field name="pagebreak" class="java.lang.String"/>
+	<field name="compareTo" class="java.lang.String"/>
+	<group name="group" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{groupname}]]></groupExpression>
+	</group>
+	<detail>
+		<band height="19" splitType="Prevent">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="staticText-7" style="CustSatIndexMarkup" positionType="Float" stretchType="RelativeToTallestObject" x="1" y="0" width="220" height="14" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="735ad739-a933-455a-9e7d-99cd9b395232"/>
+				<textElement textAlignment="Left" markup="none">
+					<font fontName="DejaVu Sans"/>
+					<paragraph leftIndent="0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new BigDecimal($F{elementLevel}).intValue()>=4 ? "      " + $F{name}: new BigDecimal($F{elementLevel}).intValue()==3 ? "     " + $F{name}: new BigDecimal($F{elementLevel}).intValue()==2 ? "  " + $F{name}:$F{name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="staticText-7" stretchType="RelativeToTallestObject" x="223" y="0" width="67" height="14" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="01aee813-34cc-45a7-bcbb-2f5182893b71">
+					<printWhenExpression><![CDATA[$P{compareTo}.equals("Y")]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" markup="none">
+					<font fontName="DejaVu Sans" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{qty}!=null) ? $P{NUMBERFORMAT}.format(new BigDecimal($F{qty})).toString() : new String(" ")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="staticText-7" stretchType="RelativeToTallestObject" x="302" y="0" width="67" height="14" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="d3ffdf0b-5d5d-4263-9ba5-c4bd76ae726d">
+					<printWhenExpression><![CDATA[$P{compareTo}.equals("Y")]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" markup="none">
+					<font fontName="DejaVu Sans" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{qtyRef}!=null) ? $P{NUMBERFORMAT}.format(new BigDecimal($F{qtyRef})).toString() : new String(" ")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="staticText-7" stretchType="RelativeToTallestObject" x="221" y="0" width="146" height="14" isRemoveLineWhenBlank="true" isPrintWhenDetailOverflows="true" uuid="fc5162ed-04a0-42bd-94bc-6ae5539e587f">
+					<printWhenExpression><![CDATA[$P{compareTo}.equals("N")]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right" markup="none">
+					<font fontName="DejaVu Sans" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{qty}!=null) ? $P{NUMBERFORMAT}.format(new BigDecimal($F{qty})).toString() : new String(" ")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

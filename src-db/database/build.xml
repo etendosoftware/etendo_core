@@ -40,19 +40,23 @@ export.database.structure: Exports the database structure in the xml's files.
     <dirset dir="${base.modules}">
       <include name="*/build/classes/" />
     </dirset>
-    <dirset dir="${base.modules_core}">
+    <dirset dir="${base.modules_core}" erroronmissingdir="false">
       <include name="*/build/classes/" />
     </dirset>
-    <fileset dir="${base.modules_core}" includes="org.openbravo.apachejdbcconnectionpool/lib/runtime/*.jar" />
+    <dirset dir="${extra.modules.location}" erroronmissingdir="false">
+      <include name="*/build/classes" />
+    </dirset>
+    <fileset dir="${base.modules_core}" includes="org.openbravo.apachejdbcconnectionpool/lib/runtime/*.jar" erroronmissingdir="false" />
     <pathelement path="${basedir}/../../src-util/modulescript/build/classes/" />
-    <fileset dir="./lib">
+    <pathelement path="${build}" />
+    <fileset dir="./lib" erroronmissingdir="isSourceJar">
       <include name="**/*.jar" />
       <exclude name="**/dbsourcemanagerlight.jar" />
     </fileset>
-    <pathelement path="${build}" />
-    <fileset dir="${base.lib}">
+    <fileset dir="${base.lib}" erroronmissingdir="false">
       <include name="**/*.jar" />
     </fileset>
+    <pathelement path="${gradle.custom.dependencies}"/>
     <pathelement path="${base.config}" />
   </path>
 
@@ -71,13 +75,13 @@ export.database.structure: Exports the database structure in the xml's files.
 
   <target name="export.config.script">
     <exportconfigscript driver="${bbdd.driver}" url="${bbdd.owner.url}" user="${bbdd.user}" filter="com.openbravo.db.OpenbravoMetadataFilter" password="${bbdd.password}" excludeobjects="com.openbravo.db.OpenbravoExcludeFilter" moduledir="${base.modules}" model="model" coreData="${base.db}/sourcedata" industryTemplate="${industryTemplate}" />
-    <antcall target="update.dbupdate.timestamp" />
+    <antcall target="update.dbupdate.timestamp" inheritrefs="true" inheritall="true"/>
   </target>
 
   <target name="update.database">
     <alterdatabasedataall driver="${bbdd.driver}" url="${bbdd.owner.url}" user="${bbdd.user}" password="${bbdd.password}" excludeobjects="com.openbravo.db.OpenbravoExcludeFilter" model="model" filter="com.openbravo.db.OpenbravoMetadataFilter" input="sourcedata" object="${bbdd.object}" failonerror="false" basedir="${base.modules}/" dirFilter="*/src-db/database/model" datadir="${base.modules}/" dataFilter="*/src-db/database/sourcedata" userId="0" adminMode="true" propertiesFile="${base.config}/Openbravo.properties" force="${force}" onlyIfModified="${onlyIfModified}" forcedRecreation="${forcedRecreation}" executeModuleScripts="${execute.modulescripts}" threads="${max.threads}" systemUser="${bbdd.systemUser}" systemPassword="${bbdd.systemPassword}"/>
-    <antcall target="database.postupdate.${bbdd.rdbms}" />
-    <antcall target="update.dbupdate.timestamp" />
+    <antcall target="database.postupdate.${bbdd.rdbms}" inheritall="true" inheritrefs="true" />
+    <antcall target="update.dbupdate.timestamp" inheritrefs="true" inheritall="true" />
   </target>
 
   <target name="update.database.java">
@@ -88,7 +92,8 @@ export.database.structure: Exports the database structure in the xml's files.
       <arg value="${bbdd.password}"/>
       <arg value="com.openbravo.db.OpenbravoExcludeFilter"/>
       <arg value="model"/>
-      <arg value="com.openbravo.db.OpenbravoMetadataFilter"/>
+<!--      <arg value="com.openbravo.db.OpenbravoMetadataFilter"/>-->
+      <arg value="${isSourceJar}" />
       <arg value="sourcedata"/>
       <arg value="${bbdd.object}"/>
       <arg value="false"/>
@@ -109,8 +114,8 @@ export.database.structure: Exports the database structure in the xml's files.
       </syspropertyset>
       <sysproperty key="javax.xml.parsers.SAXParserFactory" value="com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl" />
     </java>
-    <antcall target="database.postupdate.${bbdd.rdbms}" />
-    <antcall target="update.dbupdate.timestamp" />
+    <antcall target="database.postupdate.${bbdd.rdbms}" inheritrefs="true" inheritall="true" />
+    <antcall target="update.dbupdate.timestamp" inheritrefs="true" inheritall="true"/>
   </target>
 
   <target name="create.database.script">
@@ -141,7 +146,7 @@ export.database.structure: Exports the database structure in the xml's files.
       </syspropertyset>
       <sysproperty key="javax.xml.parsers.SAXParserFactory" value="com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl" />
     </java>
-    <antcall target="update.dbupdate.timestamp" />
+    <antcall target="update.dbupdate.timestamp" inheritall="true" inheritrefs="true" />
   </target>
 
   <target name="export.sample.data">
@@ -169,16 +174,17 @@ export.database.structure: Exports the database structure in the xml's files.
       <classpath refid="runtime-classpath" />
     </taskdef>
     <importsampledata driver="${bbdd.driver}" url="${bbdd.owner.url}" user="${bbdd.user}" password="${bbdd.password}" basedir="${basedir}/../../" executeModuleScripts="${execute.modulescripts}" rdbms="${bbdd.rdbms}" threads="${max.threads}"/>
-    <antcall target="database.postupdate.${bbdd.rdbms}" />
+    <antcall target="database.postupdate.${bbdd.rdbms}" inheritrefs="true" inheritall="true"/>
   </target>
 
   <target name="database.postupdate.ORACLE">
     <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="abort" autocommit="true">
       <classpath>
-        <fileset dir="${base.lib}">
+        <fileset dir="${base.lib}" erroronmissingdir="isSourceJar">
           <include name="**/*.jar">
           </include>
         </fileset>
+        <path refid="project.class.path" />
       </classpath>
       <transaction>
           CALL AD_UPDATE_ACCESS();
@@ -192,10 +198,11 @@ export.database.structure: Exports the database structure in the xml's files.
   <target name="database.postupdate.POSTGRE">
     <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="abort" autocommit="true">
       <classpath>
-        <fileset dir="${base.lib}">
+        <fileset dir="${base.lib}" erroronmissingdir="isSourceJar">
           <include name="**/*.jar">
           </include>
         </fileset>
+        <path refid="project.class.path" />
       </classpath>
       <transaction>
           SELECT AD_UPDATE_ACCESS();
@@ -209,10 +216,11 @@ export.database.structure: Exports the database structure in the xml's files.
   <target name="setApplied">
     <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="abort" autocommit="true">
       <classpath>
-        <fileset dir="${base.lib}">
+        <fileset dir="${base.lib}" erroronmissingdir="isSourceJar">
           <include name="**/*.jar">
           </include>
         </fileset>
+        <path refid="project.class.path" />
       </classpath>
       <transaction>
           UPDATE AD_MODULE SET STATUS='A' WHERE STATUS='P';
@@ -224,10 +232,11 @@ export.database.structure: Exports the database structure in the xml's files.
   <target name="update.dbupdate.timestamp">
     <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
       <classpath>
-        <fileset dir="${base.lib}">
+        <fileset dir="${base.lib}" erroronmissingdir="isSourceJar">
           <include name="**/*.jar">
           </include>
         </fileset>
+        <path refid="project.class.path" />
       </classpath>
       <transaction>
           UPDATE AD_SYSTEM_INFO SET LAST_DBUPDATE = NOW(), ANT_VERSION = SUBSTR('${ant.version}', 1, 60)

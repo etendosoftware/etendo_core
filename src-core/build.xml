@@ -29,6 +29,7 @@ build: compile the project and generates the jar
   <fileset dir="${base.lib}">
       <include name="**/*.jar"/>
     </fileset>
+    <path refid="project.class.path"/>
   </path>
 
   <target name="init">

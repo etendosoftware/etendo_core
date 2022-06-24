@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import com.etendoerp.properties.EtendoPropertiesProvider;
 import org.apache.log4j.Logger;
 import org.openbravo.database.CPStandAlone;
 import org.openbravo.database.ConnectionProvider;
@@ -143,6 +144,13 @@ public abstract class ExecutionLimitBaseProcess {
 
   protected File getPropertiesFile() {
     File fProp = null;
+    fProp = EtendoPropertiesProvider.getInstance().getFileFromDevelopmentPath("Openbravo.properties");
+
+    if (fProp.exists()) {
+      log4j.info("Loading Etendo properties file from: " + fProp.getAbsolutePath());
+      return fProp;
+    }
+
     if (baseDir != null && baseDir.exists()) {
       log4j.debug("Base dir: " + baseDir.getAbsolutePath());
       fProp = new File(baseDir, PATH_CONFIG);

@@ -15,16 +15,13 @@ import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.database.CPStandAlone;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.modulescript.OpenbravoVersion;
 
 public class BuildValidationHandler {
@@ -45,20 +42,50 @@ public class BuildValidationHandler {
     log4j.debug("basedir = " + basedir + ", propertiesFile = " + propertiesFile);
     List<String> classes = new ArrayList<String>();
     ArrayList<File> modFolders = new ArrayList<File>();
+
+    // Update the modules dir to search
+    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+    File auxBasedir = basedir;
+
+    // The core is in Jar
+    if (!ModulesUtil.coreInSources) {
+      auxBasedir = new File(ModulesUtil.getProjectRootDir());
+    }
+
     if (module != null && !module.equals("%")) {
       String[] javapackages = module.split(",");
       for (String javapackage : javapackages) {
-        File moduleFolder = new File(basedir, "modules/" + javapackage);
-        modFolders.add(moduleFolder);
+
+        // Search in each modules directories the module with the java package
+        for (String module : ModulesUtil.moduleDirs) {
+          File moduleFolder = new File(auxBasedir, module + File.separator + javapackage);
+          if (moduleFolder.exists()) {
+            modFolders.add(moduleFolder);
+            break;
+          }
+        }
+
       }
       Collections.sort(modFolders);
     } else {
+      /**
+       * basedir should point to the location of the build.xml
+       */
       File coreBuildFolder = new File(basedir, "src-util/buildvalidation/build/classes");
       readClassFiles(classes, coreBuildFolder);
-      File moduleFolder = new File(basedir, "modules");
-      for (File f : moduleFolder.listFiles()) {
-        modFolders.add(f);
+
+      /**
+       * auxBaseDir should point to the root project
+       */
+      for (String module : ModulesUtil.moduleDirs) {
+        File moduleFolder = new File(auxBasedir, module);
+        if (moduleFolder.exists() && moduleFolder.isDirectory() && moduleFolder.listFiles() != null) {
+          log4j.info("Build Validation Handler - Adding modules directories from: " + moduleFolder.getAbsolutePath());
+          modFolders.addAll(Arrays.asList(moduleFolder.listFiles()));
+        }
       }
+
       Collections.sort(modFolders);
     }
 

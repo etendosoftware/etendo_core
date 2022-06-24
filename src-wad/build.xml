@@ -38,15 +38,18 @@ build: compile the project, including the xsql's files and generates the jar
 
   <path id="wad.class.path">
     <pathelement path="../src-core/build/classes" />
-    <fileset dir="${base.lib}">
+    <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
       <include name="**/*.jar" />
     </fileset>
     <pathelement path="${base.config}" />
+    <path refid="project.class.path" />
   </path>
 
   <target name="init">
     <mkdir dir="${build.wad}" />
     <mkdir dir="${build.wad.sqlc}" />
+    <mkdir dir="${build.wad.sqlc}/src" />
+    <mkdir dir="${build.wad.src}" />
   </target>
 
   <target name="clean">
@@ -64,7 +67,7 @@ build: compile the project, including the xsql's files and generates the jar
         <propertyref name="java.security.egd" />
       </syspropertyset>
     </java>
-  	
+
   	<java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules_core}' '${build.wad.sqlc}'/src */src-wad false" />
   	  <classpath refid="wad.class.path" />
@@ -72,6 +75,14 @@ build: compile the project, including the xsql's files and generates the jar
          <propertyref name="java.security.egd" />
       </syspropertyset>
   	</java>
+
+    <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <arg line="'${base.config}'/Openbravo.properties .xsql '${extra.modules.location}' '${build.wad.sqlc}'/src */src-wad false" />
+      <classpath refid="wad.class.path" />
+      <syspropertyset>
+        <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
 
     <java classname="org.openbravo.data.Sqlc" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules}' '${build.wad.sqlc}'/src */src-wad false" />
@@ -93,7 +104,10 @@ build: compile the project, including the xsql's files and generates the jar
     <dirset dir="../modules">
       <include name="*/src-wad" />
     </dirset>
-    <dirset dir="../modules_core">
+    <dirset dir="../modules_core" erroronmissingdir="${isSourceJar}">
+      <include name="*/src-wad" />
+    </dirset>
+    <dirset dir="${extra.modules.location}" erroronmissingdir="false" >
       <include name="*/src-wad" />
     </dirset>
   </path>
@@ -105,8 +119,8 @@ build: compile the project, including the xsql's files and generates the jar
     </javac>
 
     <copy todir="${build.wad}" encoding="UTF-8">
-      <fileset dir="${build.wad.src}" includes="**/*xml" />
-      <fileset dir="${build.wad.src}" includes="**/*html" />
+      <fileset dir="${build.wad.src}" includes="**/*xml" erroronmissingdir="${isSourceJar}" />
+      <fileset dir="${build.wad.src}" includes="**/*html" erroronmissingdir="${isSourceJar}" />
     </copy>
     <copy todir="${build.wad}" encoding="UTF-8">
       <fileset dir="${base.modules}">
@@ -114,7 +128,12 @@ build: compile the project, including the xsql's files and generates the jar
           <exclude name="*/src-wad/**/*.java" />
           <exclude name="*/src-wad/**/*.xsql" />
       </fileset>
-      <fileset dir="${base.modules_core}">
+      <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+        <include name="*/src-wad/**/*" />
+        <exclude name="*/src-wad/**/*.java" />
+        <exclude name="*/src-wad/**/*.xsql" />
+      </fileset>
+      <fileset dir="${extra.modules.location}" erroronmissingdir="false">
         <include name="*/src-wad/**/*" />
         <exclude name="*/src-wad/**/*.java" />
         <exclude name="*/src-wad/**/*.xsql" />

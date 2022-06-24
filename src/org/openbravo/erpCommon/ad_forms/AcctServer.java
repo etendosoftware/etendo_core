@@ -439,8 +439,6 @@ public abstract class AcctServer {
       }
       if (log4j.isDebugEnabled() && data != null) {
         log4j.debug("AcctServer - Run -" + data.length + " IDs [" + strIDs + "]");
-        // Create Automatic Matching
-        // match (vars, this,con);
       }
     } catch (NoConnectionAvailableException ex) {
       throw new ServletException("@CODE=NoConnectionAvailable", ex);
@@ -610,12 +608,6 @@ public abstract class AcctServer {
           acct.AD_Table_ID = "800168";
           acct.reloadAcctSchemaArray();
           break;
-        // case 473: acct = new
-        // DocMatchPO (AD_Client_ID); acct.strDateColumn = "MovementDate";
-        // acct.reloadAcctSchemaArray(); break; case DocProjectIssue.AD_TABLE_ID: acct = new
-        // DocProjectIssue (AD_Client_ID); acct.strDateColumn = "MovementDate";
-        // acct.reloadAcctSchemaArray(); break;
-
       }
     } else {
       AcctServerData[] acctinfo = AcctServerData.getTableInfo(connectionProvider, AD_Table_ID);
@@ -758,7 +750,6 @@ public abstract class AcctServer {
         }
       } catch (Exception e) {
         errors++;
-        Status = AcctServer.STATUS_Error;
         save(conn, vars.getUser());
         log4j.error("An error ocurred posting RecordId: " + strClave + " - tableId: " + AD_Table_ID,
             e);
@@ -790,19 +781,9 @@ public abstract class AcctServer {
     if (data == null || data.length == 0) {
       return false;
     }
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - Post - Antes de getAcctSchemaArray - C_CURRENCY_ID = "
-    // + C_Currency_ID);
-    // Create Fact per AcctSchema
-    // if (log4j.isDebugEnabled()) log4j.debug("POSTLOADING ARRAY: " +
-    // AD_Client_ID);
     if (!String.valueOf(data[0].getField("multiGl")).equals("N")) {
-      // m_as = AcctSchema.getAcctSchemaArray(conn, AD_Client_ID, AD_Org_ID);
       reloadAcctSchemaArray(AD_Org_ID);
     }
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - Post - Antes de new Fact - C_CURRENCY_ID = "
-    // + C_Currency_ID);
     m_fact = new Fact[m_as.length];
     // AcctSchema Table check
     boolean isTableActive = false;
@@ -898,7 +879,6 @@ public abstract class AcctServer {
             if (m_fact[i] != null && m_fact[i].save(con, conn, vars)) {
               ;
             } else {
-              // conn.releaseRollbackConnection(con);
               unlock(conn);
               Status = AcctServer.STATUS_Error;
             }
@@ -907,16 +887,12 @@ public abstract class AcctServer {
       }
       // Commit Doc
       if (!save(conn, vars.getUser())) { // contains unlock
-        // conn.releaseRollbackConnection(con);
         unlock(conn);
-        // Status = AcctServer.STATUS_Error;
       }
-      // conn.releaseCommitConnection(con);
       // *** Transaction End ***
     } catch (Exception e) {
       log4j.warn("AcctServer - postCommit" + e);
       Status = AcctServer.STATUS_Error;
-      // conn.releaseRollbackConnection(con);
       unlock(conn);
     }
     return Status;
@@ -1007,8 +983,6 @@ public abstract class AcctServer {
     if (!loadDocumentDetails(data, conn)) {
       loadDocumentType();
     }
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - loadDocument - DocumentDetails Loaded");
     if ((DateAcct == null || DateAcct.equals("")) && (DateDoc != null && !DateDoc.equals(""))) {
       DateAcct = DateDoc;
     } else if ((DateDoc == null || DateDoc.equals(""))
@@ -1018,15 +992,8 @@ public abstract class AcctServer {
     // DocumentNo (or Name)
     if (DocumentNo == null || DocumentNo.length() == 0) {
       DocumentNo = Name;
-      // if (DocumentNo == null || DocumentNo.length() ==
-      // 0)(DateDoc.equals("") && !DateAcct.equals(""))
-      // DocumentNo = "";
     }
-
     // Check Mandatory Info
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - loadDocument - C_Currency_ID : " +
-    // C_Currency_ID);
     String error = "";
     if (AD_Table_ID == null || AD_Table_ID.equals("")) {
       error += " AD_Table_ID";
@@ -1076,13 +1043,10 @@ public abstract class AcctServer {
         log4j.warn(e);
         e.printStackTrace();
       }
-      // if (log4j.isDebugEnabled()) log4j.debug("post - deleted=" + no);
     } else if (Posted.equals("Y")) {
       log4j.warn("AcctServer - loadDocument - " + DocumentNo + " - Document already posted");
       return false;
     }
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - loadDocument -finished");
     return true;
   } // loadDocument
 
@@ -1091,9 +1055,6 @@ public abstract class AcctServer {
   }
 
   public void loadDocumentType(boolean supressWarnings) {
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - loadDocumentType - DocumentType: " +
-    // DocumentType + " - C_DocType_ID : " + C_DocType_ID);
     try {
       if (/* DocumentType.equals("") && */C_DocType_ID != null && C_DocType_ID != "") {
         AcctServerData[] data = AcctServerData.selectDocType(connectionProvider, C_DocType_ID);
@@ -1162,14 +1123,9 @@ public abstract class AcctServer {
     if (!isConvertible(m_as[index], conn)) {
       return STATUS_NotConvertible;
     }
-
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - Before isPeriodOpen");
     // rejectPeriodClosed
     if (!isPeriodOpen()) {
       return STATUS_PeriodClosed;
-      // if (log4j.isDebugEnabled())
-      // log4j.debug("AcctServer - After isPeriodOpen");
     }
 
     // createFacts
@@ -1208,29 +1164,18 @@ public abstract class AcctServer {
 
     // Distinguish multi-currency Documents
     MultiCurrency = m_fact[index].isMulticurrencyDocument();
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - Before balanceSource");
     // balanceSource
     if (!MultiCurrency && !m_fact[index].isSourceBalanced()) {
       m_fact[index].balanceSource(conn);
-      // if (log4j.isDebugEnabled())
-      // log4j.debug("AcctServer - After balanceSource");
     }
-
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - Before isSegmentBalanced");
     // balanceSegments
     if (!MultiCurrency && !m_fact[index].isSegmentBalanced(conn)) {
       m_fact[index].balanceSegments(conn);
-      // if (log4j.isDebugEnabled())
-      // log4j.debug("AcctServer - After isSegmentBalanced");
     }
-
     // balanceAccounting
     if (!m_fact[index].isAcctBalanced()) {
       m_fact[index].balanceAccounting(conn);
     }
-
     // Here processes defined to be executed at posting time, when existing, will be executed
     AcctServerData[] data = AcctServerData.selectAcctProcess(conn, as.m_C_AcctSchema_ID);
     for (int i = 0; data != null && i < data.length; i++) {
@@ -1289,8 +1234,6 @@ public abstract class AcctServer {
       throws ServletException {
     // No Currency in document
     if (NO_CURRENCY.equals(C_Currency_ID)) {
-      // if (log4j.isDebugEnabled())
-      // log4j.debug("AcctServer - isConvertible (none) - " + DocumentNo);
       return true;
     }
     // Get All Currencies
@@ -1305,24 +1248,15 @@ public abstract class AcctServer {
 
     // just one and the same
     if (set.size() == 1 && acctSchema.m_C_Currency_ID.equals(C_Currency_ID)) {
-      // if (log4j.isDebugEnabled()) log4j.debug
-      // ("AcctServer - isConvertible (same) Cur=" + C_Currency_ID + " - "
-      // + DocumentNo);
       return true;
     }
     boolean convertible = true;
     for (int i = 0; i < set.size() && convertible == true; i++) {
-      // if (log4j.isDebugEnabled()) log4j.debug
-      // ("AcctServer - get currency");
       String currency = (String) set.elementAt(i);
       if (currency == null) {
         currency = "";
       }
-      // if (log4j.isDebugEnabled()) log4j.debug
-      // ("AcctServer - currency = " + currency);
       if (!currency.equals(acctSchema.m_C_Currency_ID)) {
-        // if (log4j.isDebugEnabled()) log4j.debug
-        // ("AcctServer - get converted amount (init)");
         String amt = "";
         OBQuery<ConversionRateDoc> conversionQuery = null;
         int conversionCount = 0;
@@ -1378,8 +1312,6 @@ public abstract class AcctServer {
           amt = getConvertedAmt("1", currency, acctSchema.m_C_Currency_ID, getConversionDate(),
               acctSchema.m_CurrencyRateType, AD_Client_ID, AD_Org_ID, conn);
         }
-        // if (log4j.isDebugEnabled()) log4j.debug
-        // ("get converted amount (end)");
         if (amt == null || ("").equals(amt)) {
           convertible = false;
           log4j.warn("AcctServer - isConvertible NOT from " + currency + " - " + DocumentNo);
@@ -1388,9 +1320,6 @@ public abstract class AcctServer {
         }
       }
     }
-    // if (log4j.isDebugEnabled()) log4j.debug
-    // ("AcctServer - isConvertible=" + convertible + ", AcctSchemaCur=" +
-    // acctSchema.m_C_Currency_ID + " - " + DocumentNo);
     return convertible;
   } // isConvertible
 
@@ -1484,10 +1413,6 @@ public abstract class AcctServer {
       }
     }
     if (data == null || data.length == 0) {
-      /*
-       * log4j.error("No conversion ratio"); throw new
-       * ServletException("No conversion ratio defined!");
-       */
       return "";
     } else {
       if (log4j.isDebugEnabled()) {
@@ -1536,10 +1461,6 @@ public abstract class AcctServer {
    * @return true if period is open
    */
   public boolean isPeriodOpen() {
-    // if (log4j.isDebugEnabled())
-    // log4j.debug(" ***************************** AD_Client_ID - " +
-    // AD_Client_ID + " -- DateAcct - " + DateAcct + " -- DocumentType - " +
-    // DocumentType);
     setC_Period_ID();
     boolean open = (!C_Period_ID.equals(""));
     if (open) {
@@ -1612,8 +1533,6 @@ public abstract class AcctServer {
    * @return number of records created
    */
   public int match(VariablesSecureApp vars, ConnectionProvider conn, Connection con) {
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - Match--Starting");
     int counter = 0;
     // (a) Direct Matches
     AcctServerData[] data = null;
@@ -1626,9 +1545,6 @@ public abstract class AcctServer {
         if (qty.toString().equals("0")) {
           continue;
         }
-        // if (log4j.isDebugEnabled())
-        // log4j.debug("AcctServer - Match--dateTrx1 :->" + data[i].datetrx1
-        // + "Match--dateTrx2: ->" + data[i].datetrx2);
         String dateTrx1 = data[i].datetrx1;
         String dateTrx2 = data[i].datetrx2;
         String compare = "";
@@ -1660,9 +1576,6 @@ public abstract class AcctServer {
       log4j.warn(e);
       e.printStackTrace();
     }
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - Matcher.match - Client_ID=" + AD_Client_ID
-    // + ", Records created=" + counter);
     return counter;
   } // match
 
@@ -1688,10 +1601,6 @@ public abstract class AcctServer {
   private int createMatchInv(String aD_Client_ID, String aD_Org_ID, String M_InOutLine_ID,
       String C_InvoiceLine_ID, String m_Product_ID, String DateTrx, String qty,
       VariablesSecureApp vars, ConnectionProvider conn, Connection con) {
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - createMatchInv - InvLine=" +
-    // C_InvoiceLine_ID + ",Rec=" + M_InOutLine_ID + ", Qty=" + Qty + ", " +
-    // DateTrx);
     int no = 0;
     try {
       String M_MatchInv_ID = SequenceIdData.getUUID();
@@ -1717,30 +1626,18 @@ public abstract class AcctServer {
   public final Account getAccount(String AcctType, AcctSchema as, ConnectionProvider conn) {
     BigDecimal AMT = null;
     AcctServerData[] data = null;
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("*******************************getAccount 1: AcctType:-->"
-    // + AcctType);
     try {
       /** Account Type - Invoice */
       if (AcctType.equals(ACCTTYPE_Charge)) { // see getChargeAccount in
         // DocLine
-        // if (log4j.isDebugEnabled())
-        // log4j.debug("AcctServer - *******************amount(AMT);-->"
-        // + getAmount(AMTTYPE_Charge));
         AMT = new BigDecimal(getAmount(AMTTYPE_Charge));
-        // if (log4j.isDebugEnabled())
-        // log4j.debug("AcctServer - *******************AMT;-->" + AMT);
         int cmp = AMT.compareTo(BigDecimal.ZERO);
-        // if (log4j.isDebugEnabled())
-        // log4j.debug("AcctServer - ******************* CMP: " + cmp);
         if (cmp == 0) {
           return null;
         } else if (cmp < 0) {
           data = AcctServerData.selectExpenseAcct(conn, C_Charge_ID, as.getC_AcctSchema_ID());
         } else {
           data = AcctServerData.selectRevenueAcct(conn, C_Charge_ID, as.getC_AcctSchema_ID());
-          // if (log4j.isDebugEnabled())
-          // log4j.debug("AcctServer - *******************************getAccount 2");
         }
       } else if (AcctType.equals(ACCTTYPE_V_Liability)) {
         data = AcctServerData.selectLiabilityAcct(conn, C_BPartner_ID, as.getC_AcctSchema_ID());
@@ -1826,8 +1723,6 @@ public abstract class AcctServer {
         log4j.warn("AcctServer - getAccount - Not found AcctType=" + AcctType);
         return null;
       }
-      // if (log4j.isDebugEnabled())
-      // log4j.debug("AcctServer - *******************************getAccount 3");
     } catch (ServletException e) {
       log4j.warn(e);
       e.printStackTrace();
@@ -1844,8 +1739,6 @@ public abstract class AcctServer {
       log4j.warn("AcctServer - getAccount - NO account Type=" + AcctType + ", Record=" + Record_ID);
       return null;
     }
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - *******************************getAccount 4");
     // Return Account
     Account acct = null;
     try {
@@ -2268,7 +2161,6 @@ public abstract class AcctServer {
 
   public String getInfo(VariablesSecureApp vars) {
     return (Utility.messageBD(connectionProvider, "Created", vars.getLanguage()) + "=" + success
-    // + ", " + Utility . messageBD ( this , "Errors" , vars . getLanguage ( ) ) + "=" + errors
     );
   } // end of getInfo() method
 
@@ -2290,8 +2182,6 @@ public abstract class AcctServer {
     }
     AcctServerData[] docTypes = AcctServerData.selectDocTypes(connectionProvider, AD_Table_ID,
         AD_Client_ID);
-    // if (log4j.isDebugEnabled())
-    // log4j.debug("AcctServer - AcctSchema length-" + (this.m_as).length);
     final Set<String> orgSet = OBContext.getOBContext()
         .getOrganizationStructureProvider(AD_Client_ID)
         .getChildTree(AD_Org_ID, true);
@@ -2517,37 +2407,6 @@ public abstract class AcctServer {
     }
     return null;
   }
-
-  // public BigDecimal convertAmount(BigDecimal _amount, boolean isReceipt, String dateAcct,
-  // String conversionDate, String currencyIDFrom, String currencyIDTo, DocLine line,
-  // AcctSchema as, Fact fact, String Fact_Acct_Group_ID, String seqNo, ConnectionProvider conn)
-  // throws ServletException {
-  // BigDecimal amount = _amount;
-  // if (log4j.isDebugEnabled())
-  // log4j.debug("Amount:" + amount + " curr from:" + currencyIDFrom + " Curr to:" + currencyIDTo
-  // + " convDate:" + conversionDate + " DateAcct:" + dateAcct);
-  // if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
-  // return amount;
-  // }
-  // if (currencyIDFrom.equals(currencyIDTo)) {
-  // return amount;
-  // }
-  // MultiCurrency = true;
-  // BigDecimal amt = new BigDecimal(getConvertedAmt(amount.toString(), currencyIDFrom,
-  // currencyIDTo, conversionDate, "", AD_Client_ID, AD_Org_ID, conn));
-  // BigDecimal amtTo = new BigDecimal(getConvertedAmt(amount.toString(), currencyIDFrom,
-  // currencyIDTo, dateAcct, "", AD_Client_ID, AD_Org_ID, conn));
-  // BigDecimal amtDiff = (amtTo).subtract(amt);
-  // if ((isReceipt && amtDiff.compareTo(BigDecimal.ZERO) == 1)
-  // || (!isReceipt && amtDiff.compareTo(BigDecimal.ZERO) == -1)) {
-  // fact.createLine(line, getAccount(AcctServer.ACCTTYPE_ConvertGainDefaultAmt, as, conn),
-  // currencyIDTo, "", amtDiff.abs().toString(), Fact_Acct_Group_ID, seqNo, DocumentType, conn);
-  // } else {
-  // fact.createLine(line, getAccount(AcctServer.ACCTTYPE_ConvertChargeDefaultAmt, as, conn),
-  // currencyIDTo, amtDiff.abs().toString(), "", Fact_Acct_Group_ID, seqNo, DocumentType, conn);
-  // }
-  // return amt;
-  // }
 
   public BigDecimal convertAmount(BigDecimal _amount, boolean isReceipt, String acctDate,
       String table_ID, String record_ID, String currencyIDFrom, String currencyIDTo, DocLine line,
@@ -2781,7 +2640,7 @@ public abstract class AcctServer {
       } else if (docType.equals(EXCHANGE_DOCTYPE_Transaction)) {
         APRM_FinaccTransactionV a = OBDal.getInstance()
             .get(APRM_FinaccTransactionV.class, recordId);
-        if (a.getForeignCurrency() != null) { // && !a.getForeignCurrency().getId().equals(CurTo_ID)
+        if (a.getForeignCurrency() != null) {
           amt = a.getForeignAmount().toString();
           data = AcctServerData.currencyConvert(conn, amt, a.getForeignCurrency().getId(), CurTo_ID,
               localConvDate, localRateType, client, org);
@@ -2816,10 +2675,6 @@ public abstract class AcctServer {
       OBContext.restorePreviousMode();
     }
     if (data == null || data.length == 0) {
-      /*
-       * log4j.error("No conversion ratio"); throw new
-       * ServletException("No conversion ratio defined!");
-       */
       return "";
     } else {
       if (log4j.isDebugEnabled()) {

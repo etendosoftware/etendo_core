@@ -159,6 +159,10 @@ public class StaticResourceComponent extends BaseComponent {
     return KernelConstants.RESOURCE_COMPONENT_ID;
   }
 
+  public String getStaticResourceFileName() {
+    return getStaticResourceFileName(false);
+  }
+
   /**
    * @param directResource If this value is true the function returns js resource, else the generated file md5
    * @return all static resources needed by the application and placed in the top of the application

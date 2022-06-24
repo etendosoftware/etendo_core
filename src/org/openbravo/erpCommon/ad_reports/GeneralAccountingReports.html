@@ -443,7 +443,7 @@ function onResizeDo(){
                   </select></td>
                   <td class="ContentCell"></td>
                   <td class="TitleCell"><span class="LabelText">Show Account codes</span></td>
-                  <td class="Radio_Check_ContentCell"><input name="inpConCodigo" type="checkbox" id="fieldConCodigo" value="Y"></input></td>
+                  <td class="Radio_Check_ContentCell"><input name="inpConCodigo" type="checkbox" id="fieldConCodigo" value="Y"/></td>
                 </tr>
 
                 <tr>
@@ -451,6 +451,9 @@ function onResizeDo(){
                   <td class="Combo_ContentCell" colspan="2"> <select name="inpOrganizacion" id="inpOrganizacion" class="ComboKey Combo_TwoCells_width" onchange="refreshComboYears(); logChanges(this); return true;">
                       <option value=""></option><div id="reportC_Org_ID"></div>
                     </select></td>
+                  <td class="ContentCell"></td>
+                  <td class="TitleCell"><span class="LabelText">Show Landscape mode</span></td>
+                  <td class="Radio_Check_ContentCell"><input name="inpLandscape" type="checkbox" id="fieldLandscape" value="Y"/></td>
                 </tr>
                 <td class="TitleCell"><span class="LabelText">Account Level</span></td>
                   <td class="Combo_ContentCell"> <select name="inpLevel" id="inpLevel" class="ComboKey Combo_OneCell_width" onchange="logChanges(this);return true;">

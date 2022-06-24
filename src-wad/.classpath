@@ -7,8 +7,8 @@
 	<classpathentry kind="lib" path="/openbravo/lib/runtime/xercesImpl-2.9.0-patched.jar"/>
 	<classpathentry kind="lib" path="/openbravo/lib/build/servlet-api.jar"/>
 	<classpathentry kind="lib" path="/openbravo/lib/runtime/ant-1.9.2.jar"/>
-	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-1.2-api-2.11.1.jar"/>
-	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-api-2.11.1.jar"/>
-	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-core-2.11.1.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-1.2-api-2.16.0.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-api-2.16.0.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-core-2.16.0.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2001-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2001-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -33,6 +33,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
@@ -66,6 +68,8 @@ import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.erpCommon.utility.WindowTreeData;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.accounting.OrganizationClosing;
+import org.openbravo.model.financialmgmt.accounting.coa.ElementValue;
+import org.openbravo.model.financialmgmt.accounting.report.AccountingReport;
 import org.openbravo.model.financialmgmt.calendar.Calendar;
 import org.openbravo.model.financialmgmt.calendar.Year;
 import org.openbravo.service.db.DalConnectionProvider;
@@ -74,6 +78,13 @@ import org.openbravo.xmlEngine.XmlDocument;
 public class GeneralAccountingReports extends HttpSecureAppServlet {
   private static final long serialVersionUID = 1L;
   private static final String C_ELEMENT_VALUE_TABLE_ID = "188";
+  private static final String ACCESSIBLEORGTREE = "#AccessibleOrgTree";
+  private static final String GENERAL_ACCOUNTING_REPORTS = "GeneralAccountingReports";
+  private static final String ENDINGDATE = "endingDate";
+  private static final String CONTENT_TYPE = "text/html; charset=UTF-8";
+  private static final String SQL_DATE_FORMAT = "#AD_SqlDateFormat";
+  private static final String STARTINGDATE = "startingDate";
+  private static final String USER_CLIENT = "#User_Client";
 
   @Override
   public void doPost(final HttpServletRequest request, final HttpServletResponse response)
@@ -117,6 +128,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         "GeneralAccountingReports|conImporte", "N");
     final String strConCodigo = vars.getGlobalVariable("inpConCodigo",
         "GeneralAccountingReports|conCodigo", "N");
+    final String strIsLandscape = vars.getGlobalVariable("inpLandscape",
+        "GeneralAccountingReports|printInLandscape", "N");
     /* Improved Balance Sheet */
     final String strCompareTo = vars.getGlobalVariable("inpCompareTo",
         "GeneralAccountingReports|compareTo", "Y");
@@ -125,7 +138,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         "");
     printPageDataSheet(response, vars, "", "", strDateFrom, strDateTo, strPageNo, strDateFromRef,
         strDateToRef, strAsDateTo, strAsDateToRef, strElementValue, strConImporte, "", strLevel,
-        strConCodigo, "", strCompareTo);
+        strConCodigo, "", strCompareTo, strIsLandscape);
   }
 
   private void commandFindFunctionality(final HttpServletRequest request,
@@ -157,6 +170,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         "GeneralAccountingReports|conImporte");
     final String strConCodigo = vars.getRequestGlobalVariable("inpConCodigo",
         "GeneralAccountingReports|conCodigo");
+    final String strIsLandscape = vars.getRequestGlobalVariable("inpLandscape",
+        "GeneralAccountingReports|printInLandscape");
     /* Improved Balance Sheet */
     final String strCompareTo = vars.getRequestGlobalVariable("inpCompareTo",
         "GeneralAccountingReports|compareTo");
@@ -166,7 +181,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         "GeneralAccountingReports|level");
     printPagePDF(request, response, vars, strAgno, strAgnoRef, strDateFrom, strDateTo,
         strDateFromRef, strDateToRef, strAsDateTo, strAsDateToRef, strElementValue, strConImporte,
-        strOrg, strLevel, strConCodigo, strcAcctSchemaId, strPageNo, strCompareTo);
+        strOrg, strLevel, strConCodigo, strcAcctSchemaId, strPageNo, strCompareTo, strIsLandscape);
   }
 
   private void commandLedgerFunctionality(final HttpServletResponse response,
@@ -176,7 +191,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
       strOrg = vars.getOrg();
     }
     final String strcAcctSchemaId = OBLedgerUtils.getOrgLedger(strOrg);
-    response.setContentType("text/html; charset=UTF-8");
+    response.setContentType(CONTENT_TYPE);
     final PrintWriter out = response.getWriter();
     out.print(StringEscapeUtils.escapeHtml(strcAcctSchemaId));
     out.close();
@@ -206,7 +221,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     final GeneralAccountingReportsData[] data = GeneralAccountingReportsData.selectOrgsDouble(
         readOnlyCP, vars.getClient(), strOrgList.toString(), strAccSchema, strAcctRpt);
     final String combobox = getJSONComboBox(data, strOrg, false);
-    response.setContentType("text/html; charset=UTF-8");
+    response.setContentType(CONTENT_TYPE);
     final PrintWriter out = response.getWriter();
     out.println("objson = " + combobox);
     out.close();
@@ -217,10 +232,10 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     final String strOrg = vars.getStringParameter("inpOrganizacion", "");
     final String strAgno = vars.getStringParameter("inpAgno", "");
     final ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
-    final GeneralAccountingReportsData[] data = GeneralAccountingReportsData
-        .selectYearsDouble(readOnlyCP, vars.getUserClient(), strOrg);
+    final GeneralAccountingReportsData[] data = GeneralAccountingReportsData.selectYearsDouble(
+        readOnlyCP, vars.getUserClient(), strOrg);
     final String combobox = getJSONComboBox(data, strAgno, false);
-    response.setContentType("text/html; charset=UTF-8");
+    response.setContentType(CONTENT_TYPE);
     final PrintWriter out = response.getWriter();
     out.println("objson = " + combobox);
     out.close();
@@ -268,7 +283,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
       final String strDateToRef, final String strAsDateTo, final String strAsDateToRef,
       final String strElementValue, final String strConImporte, final String strOrg,
       final String strLevel, final String strConCodigo, final String strcAcctSchemaId,
-      final String strPageNo, final String strCompareTo) throws IOException, ServletException {
+      final String strPageNo, final String strCompareTo, final String strIsLandscape)
+      throws IOException, ServletException {
     String localStrElementValue = strElementValue;
     String localStrDateToRef = strDateToRef;
     String localStrDateFrom = strDateFrom;
@@ -281,8 +297,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     String strCalculateOpening = localStrElementValue.substring(0, 1);
     localStrElementValue = localStrElementValue.substring(1, localStrElementValue.length());
     final ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
-    final GeneralAccountingReportsData[] strGroups = GeneralAccountingReportsData
-        .selectGroups(readOnlyCP, localStrElementValue);
+    final GeneralAccountingReportsData[] strGroups = GeneralAccountingReportsData.selectGroups(
+        readOnlyCP, localStrElementValue);
 
     try {
       strGroups[strGroups.length - 1].pagebreak = "";
@@ -293,8 +309,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
             "strElementValue:" + localStrElementValue + " - strGroups.length:" + strGroups.length);
       }
       for (int i = 0; i < strGroups.length; i++) {
-        final GeneralAccountingReportsData[] strElements = GeneralAccountingReportsData
-            .selectElements(readOnlyCP, strGroups[i].id);
+        final GeneralAccountingReportsData[] strElements = GeneralAccountingReportsData.selectElements(
+            readOnlyCP, strGroups[i].id);
         strElementValueDes[i] = new String[strElements.length];
         if (log4j.isDebugEnabled()) {
           log4j.debug("strElements.length:" + strElements.length);
@@ -338,7 +354,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
           localStrDateToRef = strAsDateToRef;
           localStrDateFrom = "";
           localStrDateFromRef = "";
-          String[] yearsInfo = getYearsToClose(startingEndingDate.get("startingDate"), strOrg,
+          String[] yearsInfo = getYearsToClose(startingEndingDate.get(STARTINGDATE), strOrg,
               year.getCalendar(), strcAcctSchemaId);
           strYearsToClose = yearsInfo[0];
           openingEntryOwner = yearsInfo[1];
@@ -348,7 +364,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
           }
           /* Improved Balance Sheet */
           if (StringUtils.equals(strCompareTo, "Y")) {
-            yearsInfo = getYearsToClose(startingEndingDateRef.get("startingDate"), strOrg,
+            yearsInfo = getYearsToClose(startingEndingDateRef.get(STARTINGDATE), strOrg,
                 yearRef.getCalendar(), strcAcctSchemaId);
             strYearsToCloseRef = yearsInfo[0];
             openingEntryOwnerRef = yearsInfo[1];
@@ -359,8 +375,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
           }
         }
         // Income summary amount is calculated and included in the balance sheet data
-        final String strIncomeSummaryAccount = GeneralAccountingReportsData
-            .incomesummary(readOnlyCP, strcAcctSchemaId);
+        final String strIncomeSummaryAccount = GeneralAccountingReportsData.incomesummary(
+            readOnlyCP, strcAcctSchemaId);
 
         for (int i = 0; i < strGroups.length; i++) {
           // All account tree is obtained
@@ -373,9 +389,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
           // For each account with movements in the year, debit and credit total amounts are
           // calculated according to fact_acct movements.
           AccountTreeData[] accounts = AccountTreeData.selectFactAcct(readOnlyCP,
-              Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree",
-                  "GeneralAccountingReports"),
-              Utility.getContext(readOnlyCP, vars, "#User_Client", "GeneralAccountingReports"),
+              Utility.getContext(readOnlyCP, vars, ACCESSIBLEORGTREE, GENERAL_ACCOUNTING_REPORTS),
+              Utility.getContext(readOnlyCP, vars, USER_CLIENT, GENERAL_ACCOUNTING_REPORTS),
               localStrDateFrom, DateTimeData.nDaysAfter(readOnlyCP, localStrDateTo, "1"),
               strcAcctSchemaId, Tree.getMembers(readOnlyCP, strTreeOrg, strOrg),
               "'" + year.getFiscalYear() + "'" + strYearsToClose, openingEntryOwner, strCompareTo,
@@ -417,7 +432,14 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
           }
         }
 
-        final String strReportName = "@basedesign@/org/openbravo/erpCommon/ad_reports/GeneralAccountingReportsPDF.jrxml";
+        String strReportName = "@basedesign@/org/openbravo/erpCommon/ad_reports/";
+
+        if (StringUtils.equals(strIsLandscape, "Y")) {
+          strReportName += "GeneralAccountingReportsLandscapePDF.jrxml";
+        } else {
+          strReportName += "GeneralAccountingReportsPDF.jrxml";
+        }
+
         final HashMap<String, Object> parameters = new HashMap<>();
 
         parameters.put("group", strGroups);
@@ -433,18 +455,18 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
             GeneralAccountingReportsData.companyName(readOnlyCP, vars.getClient()));
         parameters.put("date", DateTimeData.today(readOnlyCP));
         if (StringUtils.isEmpty(localStrDateFrom)) {
-          localStrDateFrom = OBDateUtils.formatDate(startingEndingDate.get("startingDate"));
+          localStrDateFrom = OBDateUtils.formatDate(startingEndingDate.get(STARTINGDATE));
         }
         if (StringUtils.isEmpty(localStrDateTo)) {
-          localStrDateTo = OBDateUtils.formatDate(startingEndingDate.get("endingDate"));
+          localStrDateTo = OBDateUtils.formatDate(startingEndingDate.get(ENDINGDATE));
         }
         /* Improved Balance Sheet */
         if (StringUtils.equals(strCompareTo, "Y")) {
           if (StringUtils.isEmpty(localStrDateFromRef)) {
-            localStrDateFromRef = OBDateUtils.formatDate(startingEndingDateRef.get("startingDate"));
+            localStrDateFromRef = OBDateUtils.formatDate(startingEndingDateRef.get(STARTINGDATE));
           }
           if (StringUtils.isEmpty(localStrDateToRef)) {
-            localStrDateToRef = OBDateUtils.formatDate(startingEndingDateRef.get("endingDate"));
+            localStrDateToRef = OBDateUtils.formatDate(startingEndingDateRef.get(ENDINGDATE));
           }
         }
         parameters.put("period", localStrDateFrom + " - " + localStrDateTo);
@@ -452,11 +474,10 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         parameters.put("agnoInitial", year.getFiscalYear());
         parameters.put("agnoRef", yrRef);
         parameters.put("compareTo", StringUtils.equals(strCompareTo, "Y") ? "Y" : "N");
-        parameters.put("principalTitle",
-            StringUtils.equals(strCalculateOpening, "Y")
-                ? GeneralAccountingReportsData.rptTitle(readOnlyCP, localStrElementValue)
-                    + " (Provisional)"
-                : GeneralAccountingReportsData.rptTitle(readOnlyCP, localStrElementValue));
+        parameters.put("principalTitle", StringUtils.equals(strCalculateOpening, "Y") ?
+            GeneralAccountingReportsData.rptTitle(readOnlyCP,
+                localStrElementValue) + " (Provisional)" :
+            GeneralAccountingReportsData.rptTitle(readOnlyCP, localStrElementValue));
 
         parameters.put("pageNo", strPageNo);
 
@@ -465,7 +486,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
           trees[i] = acct[i].getAccounts();
         }
 
-        final List<HashMap<String, String>> hashMapList = new ArrayList<>();
+        final List<HashMap<String, String>> hashMapListActive = new ArrayList<>();
+        final List<HashMap<String, String>> hashMapListPAndPN = new ArrayList<>();
 
         for (int i = 0; i < trees.length; i++) {
           for (int j = 0; j < trees[i].length; j++) {
@@ -477,11 +499,35 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
             hashMap.put("groupname", strGroups[i].name);
             hashMap.put("pagebreak", strGroups[i].pagebreak);
 
-            hashMapList.add(hashMap);
+            ElementValue elementValue = OBDal.getInstance().get(ElementValue.class, trees[i][j].id);
+            if (StringUtils.equalsIgnoreCase(elementValue.getAccountType(),
+                "A") || !StringUtils.equals(strIsLandscape, "Y")) {
+              hashMapListActive.add(hashMap);
+            } else {
+              hashMapListPAndPN.add(hashMap);
+            }
+
           }
         }
-        final FieldProvider[] data = FieldProviderFactory.getFieldProviderArray(hashMapList);
-        renderJR(vars, response, strReportName, "pdf", parameters, data, null);
+
+        if (!StringUtils.equals(strIsLandscape, "Y")) {
+          final FieldProvider[] data = FieldProviderFactory.getFieldProviderArray(
+              hashMapListActive);
+          renderJR(vars, response, strReportName, "pdf", parameters, data, null);
+        } else {
+          JRDataSource dataSourceActive = new JRBeanCollectionDataSource(hashMapListActive);
+          JRDataSource dataSourcePNAndP = new JRBeanCollectionDataSource(hashMapListPAndPN);
+
+          parameters.put("SUBREPORT_DATA_ACTIVE", dataSourceActive);
+          parameters.put("SUBREPORT_DATA", dataSourcePNAndP);
+
+          AccountingReport accountingReport = OBDal.getInstance()
+              .get(AccountingReport.class, localStrElementValue);
+          parameters.put("reportType", accountingReport.getReportType());
+          parameters.put("balanced", accountingReport.isBalanced());
+
+          renderJR(vars, response, strReportName, "pdf", parameters, null, null);
+        }
 
       } finally {
         OBContext.restorePreviousMode();
@@ -507,7 +553,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         }
       }
     }
-    final String[] result = { Utility.getInStrSet(notClosedYears), openingEntryOwner };
+    final String[] result = {Utility.getInStrSet(notClosedYears), openingEntryOwner};
     return result;
   }
 
@@ -546,14 +592,14 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     final ArrayList<Year> result = new ArrayList<>();
     //@formatter:off
     final String hql =
-                  "select y" +
-                  "  from FinancialMgmtYear y" +
-                  "    , FinancialMgmtPeriod as p" +
-                  " where p.year.id = y.id" +
-                  "   and p.endingDate < :date " +
-                  "   and y.calendar.id = :calendarId" +
-                  " order by p.startingDate";
-    
+        "select y" +
+            "  from FinancialMgmtYear y" +
+            "    , FinancialMgmtPeriod as p" +
+            " where p.year.id = y.id" +
+            "   and p.endingDate < :date " +
+            "   and y.calendar.id = :calendarId" +
+            " order by p.startingDate";
+
     //@formatter:on
     final Query<Year> query = OBDal.getReadOnlyInstance()
         .getSession()
@@ -570,14 +616,14 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
 
   private HashMap<String, Date> getStartingEndingDate(final Year year) {
     final HashMap<String, Date> result = new HashMap<>();
-    result.put("startingDate", null);
-    result.put("endingDate", null);
+    result.put(STARTINGDATE, null);
+    result.put(ENDINGDATE, null);
     //@formatter:off
     final String hql =
-                  "select min(p.startingDate) as startingDate" +
-                  "  , max(p.endingDate) as endingDate" +
-                  "  from FinancialMgmtPeriod as p" +
-                  " where p.year.id = :yearId";
+        "select min(p.startingDate) as startingDate" +
+            "  , max(p.endingDate) as endingDate" +
+            "  from FinancialMgmtPeriod as p" +
+            " where p.year.id = :yearId";
     //@formatter:on
 
     final Query<Object[]> query = OBDal.getReadOnlyInstance()
@@ -585,16 +631,16 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         .createQuery(hql, Object[].class)
         .setParameter("yearId", year.getId());
     for (Object[] values : query.list()) {
-      result.put("startingDate", (Date) values[0]);
-      result.put("endingDate", (Date) values[1]);
+      result.put(STARTINGDATE, (Date) values[0]);
+      result.put(ENDINGDATE, (Date) values[1]);
     }
     return result;
   }
 
   private AccountTreeData[] appendRecords(final AccountTreeData[] data,
       final String strIncomeSummary, final String strISyear, final String strISyearRef) {
-    if (data == null || StringUtils.isEmpty(strIncomeSummary) || StringUtils.isEmpty(strISyear)
-        || StringUtils.isEmpty(strISyearRef)) {
+    if (data == null || StringUtils.isEmpty(strIncomeSummary) || StringUtils.isEmpty(
+        strISyear) || StringUtils.isEmpty(strISyearRef)) {
       return data;
     }
     final AccountTreeData[] data2 = new AccountTreeData[data.length + 1];
@@ -607,8 +653,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
         data[i].qty = (new BigDecimal(data[i].qty).subtract(isYear)).toPlainString();
         data[i].qtycredit = (new BigDecimal(data[i].qtycredit).add(isYear)).toPlainString();
         data[i].qtyRef = (new BigDecimal(data[i].qtyRef).subtract(isYearRef)).toPlainString();
-        data[i].qtycreditRef = (new BigDecimal(data[i].qtycreditRef).add(isYearRef))
-            .toPlainString();
+        data[i].qtycreditRef = (new BigDecimal(data[i].qtycreditRef).add(
+            isYearRef)).toPlainString();
       }
       data2[i] = data[i];
     }
@@ -648,15 +694,14 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
       final String strDateToRef, final String strAsDateTo, final String strAsDateToRef,
       final String strElementValue, final String strConImporte, final String strOrg,
       final String strLevel, final String strConCodigo, final String strcAcctSchemaId,
-      final String strCompareTo) throws IOException, ServletException {
+      final String strCompareTo, final String strIsLandscape) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: dataSheet");
     }
-    final XmlDocument xmlDocument = xmlEngine
-        .readXmlTemplate("org/openbravo/erpCommon/ad_reports/GeneralAccountingReports")
-        .createXmlDocument();
+    final XmlDocument xmlDocument = xmlEngine.readXmlTemplate(
+        "org/openbravo/erpCommon/ad_reports/GeneralAccountingReports").createXmlDocument();
     final ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
-    final ToolBar toolbar = new ToolBar(readOnlyCP, vars.getLanguage(), "GeneralAccountingReports",
+    final ToolBar toolbar = new ToolBar(readOnlyCP, vars.getLanguage(), GENERAL_ACCOUNTING_REPORTS,
         false, "", "", "", false, "ad_reports", strReplaceWith, false, true);
     toolbar.prepareSimpleToolBarTemplate();
     xmlDocument.setParameter("toolbar", toolbar.toString());
@@ -678,8 +723,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
-    final OBError myMessage = vars.getMessage("GeneralAccountingReports");
-    vars.removeMessage("GeneralAccountingReports");
+    final OBError myMessage = vars.getMessage(GENERAL_ACCOUNTING_REPORTS);
+    vars.removeMessage(GENERAL_ACCOUNTING_REPORTS);
     if (myMessage != null) {
       xmlDocument.setParameter("messageType", myMessage.getType());
       xmlDocument.setParameter("messageTitle", myMessage.getTitle());
@@ -691,26 +736,27 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     xmlDocument.setParameter("agno", strAgno);
     xmlDocument.setParameter("agnoRef", strAgnoRef);
     xmlDocument.setParameter("dateFrom", strDateFrom);
-    xmlDocument.setParameter("dateFromdisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("dateFromsaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+    xmlDocument.setParameter("dateFromdisplayFormat", vars.getSessionValue(SQL_DATE_FORMAT));
+    xmlDocument.setParameter("dateFromsaveFormat", vars.getSessionValue(SQL_DATE_FORMAT));
     xmlDocument.setParameter("dateTo", strDateTo);
-    xmlDocument.setParameter("dateTodisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("dateTosaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+    xmlDocument.setParameter("dateTodisplayFormat", vars.getSessionValue(SQL_DATE_FORMAT));
+    xmlDocument.setParameter("dateTosaveFormat", vars.getSessionValue(SQL_DATE_FORMAT));
     xmlDocument.setParameter("dateFromRef", strDateFromRef);
-    xmlDocument.setParameter("dateFromRefdisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("dateFromRefsaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+    xmlDocument.setParameter("dateFromRefdisplayFormat", vars.getSessionValue(SQL_DATE_FORMAT));
+    xmlDocument.setParameter("dateFromRefsaveFormat", vars.getSessionValue(SQL_DATE_FORMAT));
     xmlDocument.setParameter("dateToRef", strDateToRef);
     xmlDocument.setParameter("PageNo", strPageNo);
-    xmlDocument.setParameter("dateToRefdisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("dateToRefsaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+    xmlDocument.setParameter("dateToRefdisplayFormat", vars.getSessionValue(SQL_DATE_FORMAT));
+    xmlDocument.setParameter("dateToRefsaveFormat", vars.getSessionValue(SQL_DATE_FORMAT));
     xmlDocument.setParameter("asDateTo", strAsDateTo);
-    xmlDocument.setParameter("asDateTodisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("asDateTosaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+    xmlDocument.setParameter("asDateTodisplayFormat", vars.getSessionValue(SQL_DATE_FORMAT));
+    xmlDocument.setParameter("asDateTosaveFormat", vars.getSessionValue(SQL_DATE_FORMAT));
     xmlDocument.setParameter("asDateToRef", strAsDateToRef);
-    xmlDocument.setParameter("asDateToRefdisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("asDateToRefsaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+    xmlDocument.setParameter("asDateToRefdisplayFormat", vars.getSessionValue(SQL_DATE_FORMAT));
+    xmlDocument.setParameter("asDateToRefsaveFormat", vars.getSessionValue(SQL_DATE_FORMAT));
     xmlDocument.setParameter("conImporte", strConImporte);
     xmlDocument.setParameter("conCodigo", strConCodigo);
+    xmlDocument.setParameter("isLandscape", strIsLandscape);
     /* Improved Balance Sheet */
     xmlDocument.setParameter("compareTo", strCompareTo);
     xmlDocument.setParameter("C_Org_ID", strOrg);
@@ -719,27 +765,26 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     xmlDocument.setParameter("cAcctschemaId", strcAcctSchemaId);
     xmlDocument.setData("reportC_ACCTSCHEMA_ID", "liststructure",
         AccountingSchemaMiscData.selectC_ACCTSCHEMA_ID(readOnlyCP,
-            Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "GeneralAccountingReports"),
-            Utility.getContext(readOnlyCP, vars, "#User_Client", "GeneralAccountingReports"),
+            Utility.getContext(readOnlyCP, vars, ACCESSIBLEORGTREE, GENERAL_ACCOUNTING_REPORTS),
+            Utility.getContext(readOnlyCP, vars, USER_CLIENT, GENERAL_ACCOUNTING_REPORTS),
             strcAcctSchemaId));
     try {
       final ComboTableData comboTableData = new ComboTableData(vars, readOnlyCP, "LIST", "",
           "C_ElementValue level", "",
-          Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "GeneralAccountingReports"),
-          Utility.getContext(readOnlyCP, vars, "#User_Client", "GeneralAccountingReports"), 0);
-      Utility.fillSQLParameters(readOnlyCP, vars, null, comboTableData, "GeneralAccountingReports",
+          Utility.getContext(readOnlyCP, vars, ACCESSIBLEORGTREE, GENERAL_ACCOUNTING_REPORTS),
+          Utility.getContext(readOnlyCP, vars, USER_CLIENT, GENERAL_ACCOUNTING_REPORTS), 0);
+      Utility.fillSQLParameters(readOnlyCP, vars, null, comboTableData, GENERAL_ACCOUNTING_REPORTS,
           "");
       xmlDocument.setData("reportLevel", "liststructure", comboTableData.select(false));
     } catch (Exception ex) {
       throw new ServletException(ex);
     }
     xmlDocument.setParameter("orgs", Utility.arrayDobleEntrada("arrOrgs", new FieldProvider[0]));
-    xmlDocument.setParameter("accountingReports",
-        Utility.arrayDobleEntrada("arrAccountingReports",
-            GeneralAccountingReportsData.selectRptDouble(readOnlyCP, Utility.getContext(readOnlyCP,
-                vars, "#AccessibleOrgTree", "GeneralAccountingReports"))));
+    xmlDocument.setParameter("accountingReports", Utility.arrayDobleEntrada("arrAccountingReports",
+        GeneralAccountingReportsData.selectRptDouble(readOnlyCP,
+            Utility.getContext(readOnlyCP, vars, ACCESSIBLEORGTREE, GENERAL_ACCOUNTING_REPORTS))));
     xmlDocument.setParameter("years", Utility.arrayDobleEntrada("arrYears", new FieldProvider[0]));
-    response.setContentType("text/html; charset=UTF-8");
+    response.setContentType(CONTENT_TYPE);
     PrintWriter out = response.getWriter();
     out.println(xmlDocument.print());
     out.close();
@@ -750,9 +795,9 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
       OBContext.setAdminMode(false);
       //@formatter:off
       final String hql =
-                    " select organization.id" +
-                    " from ADRoleOrganization" +
-                    " where role.id = :roleId";
+          " select organization.id" +
+              " from ADRoleOrganization" +
+              " where role.id = :roleId";
       //@formatter:on
 
       return OBDal.getReadOnlyInstance()

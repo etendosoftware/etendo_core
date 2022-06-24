@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.utility.DataSet;
@@ -103,11 +104,30 @@ public class ExportReferenceData extends HttpSecureAppServlet {
       final String xml = DataExportService.getInstance()
           .exportDataSetToXML(myDataset, data[0].adModuleId,
               new java.util.HashMap<String, Object>());
+
+      String sourcePath = vars.getSessionValue("#sourcePath");
+      log4j.info("Export reference data source path: " + sourcePath);
+
+      // Update module dirs to scan
+      ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources(sourcePath), sourcePath);
+
+      String modLocation = File.separator + ModulesUtil.MODULES_BASE + File.separator;
+
+      for (String modDir : ModulesUtil.moduleDirs) {
+        // Obtains the module location in the possible modules directories.
+        log4j.info("Looking for module to export reference data in: " + modDir);
+        File modDirLocation = new File(sourcePath, modDir + File.separator + module[0].javapackage);
+        if (modDirLocation.exists()) {
+          modLocation = File.separator + modDir + File.separator;
+          break;
+        }
+      }
+
       File myFolder = new File(vars.getSessionValue("#sourcePath")
-          + (data[0].adModuleId.equals("0") ? "" : "/modules/" + module[0].javapackage)
+          + (data[0].adModuleId.equals("0") ? "" : modLocation + module[0].javapackage)
           + "/referencedata/standard");
       File myFile = new File(vars.getSessionValue("#sourcePath")
-          + (data[0].adModuleId.equals("0") ? "" : "/modules/" + module[0].javapackage)
+          + (data[0].adModuleId.equals("0") ? "" : modLocation + module[0].javapackage)
           + "/referencedata/standard/" + Utility.wikifiedName(data[0].name) + ".xml");
       if (!myFolder.exists()) {
         myFolder.mkdirs();

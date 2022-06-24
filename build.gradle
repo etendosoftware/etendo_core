@@ -5,12 +5,38 @@ plugins {
     id 'war'
     id 'idea'
     id 'groovy'
+    id "me.champeau.jmh" version "0.6.5"
+    id 'com.etendoerp.gradleplugin' version '1.0.0'
+    id 'org.kordamp.gradle.jandex' version '0.11.0'
 }
 compileJava.options.encoding = "UTF-8"
-apply from: 'https://repo.futit.cloud/repository/static-public-releases/com/etendo/etendo/latest/etendo-latest.gradle'
 apply from: 'tests.gradle'
+apply from: "artifacts.list.COMPILATION.gradle"
 
-group = 'com.smf.classic.core'
+repositories {
+    gradlePluginPortal()
+    mavenCentral()
+}
+
+/**
+ * Jandex is used to index the .class files containing annotations.
+ * This generates a file called 'jandex.inx', and is stored in the 'META-INF' dir of the core jar.
+ * Weld uses this file to scan all the beans when tomcat is started.
+ */
+jandex {
+    includeInJar true
+}
+
+/**
+ * This dependency version is equal to the one located in the 'lib/runtime' dir
+ */
+dependencies {
+    jandex 'org.jboss:jandex:2.0.5.Final'
+}
+
+final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
+final String PROD_URL = "https://repo.futit.cloud/repository/maven-releases/"
+group = 'com.etendoerp.platform'
 def versionTs = 0;
 if (file('version.properties').exists()) {
     def props = new Properties()
@@ -19,12 +45,56 @@ if (file('version.properties').exists()) {
         versionTs = props['version.ts']
     }
 }
-version = '21.4.0'
 
-def artifactID = 'ob'
+static def getVersionSuffix( versionTs ) {
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    if ("master" != branch) {
+        return '.' + versionTs + "-SNAPSHOT"
+    } else {
+        return ""
+    }
+}
+
+version = '22.1.0' + getVersionSuffix( versionTs )
+
+def artifactID = 'etendo-core'
 def javaPackage = group + '.' + artifactID
 
-java.sourceCompatibility = JavaVersion.VERSION_11
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+}
+
+jar{
+    archiveBaseName.set("${javaPackage}")
+    zip64 = true
+}
+
+jmh {
+    zip64 = true
+}
+// hack so that the jmhJar task configures the zip64 property
+project.tasks.findByName("jmhJar").configure {
+    it.zip64 = true
+    it.manifest {
+        // make lo4j2 work in the generated jar
+        attributes 'Multi-Release': 'true'
+    }
+}
+
+sourceSets {
+    jmh {
+        java {
+            srcDirs 'src-jmh'
+        }
+        resources {
+            srcDirs 'src-jmh/resources'
+        }
+    }
+}
 
 def whiteSyncCoreList = [
         'legal/**',
@@ -47,13 +117,17 @@ def whiteSyncCoreList = [
         'build.xml'
 ]
 dependencies {
+
+    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.28'
+    jmh 'org.jboss.weld.se:weld-se-core:3.1.8.Final'
+    jmhAnnotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.28')
+    annotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.28')
     compile 'org.redisson:redisson:3.15.4'
 }
 
 publishing {
     publications {
         core(MavenPublication) {
-            artifact file("$buildDir/libs/" + "$javaPackage" + "-" + "$version" + ".zip")
             artifactId = artifactID
             groupId = group
             version = project.version
@@ -79,31 +153,115 @@ task exportProjectVersion doLast {
  */
 task assembleArtifact(type: Zip) {
     System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
-    archiveName javaPackage + "-" + project.version + '.zip'
+    archiveName artifactID + "-" + project.version + '.zip'
     destinationDir file("$buildDir/libs/")
     include(whiteSyncCoreList)
     from "."
     into "."
+}
 
-    if(project.version.endsWith('-SNAPSHOT')) {
-        publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-snapshots"
-    }
-    else {
-        publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-releases"
-    }
-
+task configPublishZIP(){
     doLast {
-        if (!project.hasProperty('mavenUser') && !project.hasProperty('mavenPassword')) {
-            askNexusCredentials()
+        def publishTask = tasks.findByName("publishCorePublicationToMavenRepository") as AbstractPublishToMaven
+        publishTask.publication.artifact( file("$buildDir/libs/" + "$artifactID" + "-" + "$version"+ ".zip"))
+        publishTask.publication.version(project.version +'-ZIP')
+        if(project.version.endsWith('-SNAPSHOT')) {
+            publishing.repositories.maven.url = DEV_URL
         }
+        else {
+            publishing.repositories.maven.url = PROD_URL
+        }
+
         publishing.repositories.maven.credentials {
-            username project.hasProperty('mavenUser') ? "$mavenUser" : project.ext.get("nexusUser")
-            password project.hasProperty('mavenPassword') ? "$mavenPassword" : project.ext.get("nexusPassword")
+            username = "$mavenUser"
+            password = "$mavenPassword"
         }
     }
 }
 
-task publishCore(dependsOn: [assembleArtifact, publishCorePublicationToMavenRepository]) { }
+Node generateCoreDependenciesNode() {
+    List<String> dependenciesCompilation = project.findProperty("dependenciesListCOMPILATION") as List<String>
+    List<String> dependenciesTest = project.findProperty("dependenciesListTEST") as List<String>
+
+    def dependenciesNode = new Node(null, "dependencies")
+
+    if (dependenciesCompilation) {
+        loadCoreDependenciesNode(dependenciesCompilation, dependenciesNode)
+    }
+
+    if (dependenciesTest) {
+        loadCoreDependenciesNode(dependenciesTest, dependenciesNode, "test")
+    }
+
+    return dependenciesNode
+}
+
+static void loadCoreDependenciesNode(List<String> dependencies, Node dependenciesNode, String scope = null) {
+    for (String dependency : dependencies) {
+        def splitId = dependency.split(":")
+
+        def dependencyNode = dependenciesNode.appendNode("dependency")
+        dependencyNode.appendNode("groupId", splitId[0])
+        dependencyNode.appendNode("artifactId", splitId[1])
+        dependencyNode.appendNode("version", splitId[2])
+
+        if (scope) {
+            dependencyNode.appendNode("scope", scope)
+        }
+
+        // Exclude transitive dependencies
+        dependencyNode.append(generateExclusionNode())
+    }
+}
+
+static Node generateExclusionNode() {
+    def exclusionsNode = new Node(null, "exclusions")
+    def exclusionNode = exclusionsNode.appendNode("exclusion")
+
+    exclusionNode.appendNode("groupId", "*")
+    exclusionNode.appendNode("artifactId", "*")
+
+    return exclusionsNode
+}
+
+
+task configPublishJAR(){
+    dependsOn(assembleArtifact)
+    doLast {
+        def publishTask = tasks.findByName("publishCorePublicationToMavenRepository") as AbstractPublishToMaven
+        publishTask.publication.artifact(file("$buildDir/libs/$artifactID-$version"+".zip"))
+        publishTask.publication.artifact jar
+        publishTask.publication.artifact sourcesJar
+
+        // Generate the dependencies node.
+        List<String> dependenciesCompilation = project.findProperty("dependenciesListCOMPILATION") as List<String>
+        List<String> dependenciesTest = project.findProperty("dependenciesListTEST") as List<String>
+        if (dependenciesCompilation || dependenciesTest) {
+            Node dependenciesNode = generateCoreDependenciesNode()
+            publishTask.publication.pom.withXml {
+                it.asNode().append(dependenciesNode)
+            }
+        }
+
+        if(project.version.endsWith('-SNAPSHOT')) {
+            publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-snapshots/"
+        }
+        else {
+            publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-releases/"
+        }
+        publishing.repositories.maven.credentials {
+            username = "$mavenUser"
+            password = "$mavenPassword"
+        }
+    }
+}
+
+task publishCoreJar(dependsOn: [sourcesJar, jar, configPublishJAR, publishCorePublicationToMavenRepository]) {
+    mustRunAfter sourcesJar, jar
+}
+
+//Deprecated
+task publishCoreZip(dependsOn: [assembleArtifact,configPublishZIP, publishCorePublicationToMavenRepository]) { }
 
 idea {
     module {
@@ -113,28 +271,11 @@ idea {
 
 task call_sass(type: Exec) {}
 
-task css_compile() doLast {
+task deploySkin (dependsOn: ["cssCompile", "deploy.skin"]) doLast {
 
-    def gen_css = []
-    def lookupAt = ['modules_core', 'modules', 'web']
-    lookupAt.forEach({dirName ->
-        FileTree tree = fileTree(dirName).matching {
-            include '**/*.scss'
-        }.each {
-            def less_fl = it.toString()
-            def css_fl = less_fl.replaceAll(".scss", ".css")
-            if(file(less_fl).lastModified() > file(css_fl).lastModified()) {
-                println(it)
-                gen_css.add(css_fl)
-                exec {
-                    executable "sass"
-                    args "$less_fl", "$css_fl"
-                }
-            }
-        }
-    })
 }
 
-task deploySkin (dependsOn: [css_compile, "deploy.skin"]) doLast {
-
+task djmh(type: JavaExec, dependsOn: jmhCompileGeneratedClasses) {
+    main = project.hasProperty("benchmark") ? project.getProperty("benchmark") : null
+    classpath = sourceSets.jmh.compileClasspath + sourceSets.jmh.runtimeClasspath
 }

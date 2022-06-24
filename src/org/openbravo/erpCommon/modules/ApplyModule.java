@@ -36,6 +36,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.CPStandAlone;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.erpCommon.ad_forms.TranslationManager;
 import org.openbravo.erpCommon.reference.PInstanceProcessData;
 import org.openbravo.erpCommon.utility.BasicUtility;
@@ -188,6 +189,27 @@ public class ApplyModule {
         // Import language modules
         for (int i = 0; i < data.length; i++) {
           String folder = obDir + "/modules/" + data[i].javapackage + "/referencedata/translation";
+          File folderLocation = new File(folder);
+
+          /**
+           * If the location does not exists, search in other possible modules dir location
+           */
+          if (!folderLocation.exists()) {
+            // Update modules dir locations
+            ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+            String rootDir = ModulesUtil.getProjectRootDir();
+
+            for (String moduleDir : ModulesUtil.moduleDirs) {
+              folder = rootDir + File.separator + moduleDir + File.separator + data[i].javapackage + "/referencedata/translation";
+              File location = new File(folder);
+              if (location.exists()) {
+                log4j.info("Module translation data location: " + location.getAbsolutePath());
+                break;
+              }
+            }
+          }
+
           log4j.info("Importing language " + data[i].adLanguage + " from module " + data[i].name
               + " from folder: " + folder);
           TranslationManager.importTrlDirectory(pool, folder, data[i].adLanguage, "0", null);
@@ -256,7 +278,28 @@ public class ApplyModule {
     if (ds.adModuleId.equals("0")) {
       strPath = obDir + "/referencedata/standard";
     } else {
+
       strPath = obDir + "/modules/" + ds.javapackage + "/referencedata/standard";
+      File strPathLocation = new File(strPath);
+
+      /**
+       * If the location does not exists, search in other possible modules dir location
+       */
+      if (!strPathLocation.exists()) {
+        // Update modules dir locations
+        ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+
+        String rootDir = ModulesUtil.getProjectRootDir();
+
+        for (String moduleDir : ModulesUtil.moduleDirs) {
+          strPath = rootDir + File.separator + moduleDir + File.separator + ds.javapackage + "/referencedata/standard";
+          File location = new File(strPath);
+          if (location.exists()) {
+            log4j.info("Module reference data location: " + location.getAbsolutePath());
+            break;
+          }
+        }
+      }
     }
 
     strPath = strPath + "/" + BasicUtility.wikifiedName(ds.dsName) + ".xml";

@@ -22,10 +22,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.FileNotFoundException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 import org.openbravo.base.ExecutionLimits;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.ddlutils.util.ModulesUtil;
 import org.openbravo.modulescript.OpenbravoVersion;
 
 /**
@@ -140,12 +138,18 @@ public class MergeDependenciesCheck extends BuildValidation {
     final File modulesCoreDir = getModulesCoreDir();
     final List<MergedModule> mergedModules = getMergedModules();
 
+    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+    String rootDir = ModulesUtil.getProjectRootDir();
+
     for (final String module : getInstalledModules()) {
-      final File moduleDir = new File(modulesDir, module);
-      File adModuleDependencyFile = new File(moduleDir, AD_MODULE_DEPENDENCY_PATH);
-      if(!adModuleDependencyFile.exists()) {
-        adModuleDependencyFile = new File(moduleCoreDir, AD_MODULE_DEPENDENCY_PATH);
+      File adModuleDependencyFile = null;
+      for (String modDir : ModulesUtil.moduleDirs) {
+        adModuleDependencyFile = new File(rootDir + File.separator + modDir + File.separator + module + File.separator + AD_MODULE_DEPENDENCY_PATH);
+        if (adModuleDependencyFile.exists()) {
+          break;
+        }
       }
+
       if (adModuleDependencyFile != null && adModuleDependencyFile.exists()
           && adModuleDependencyFile.isFile()) {
         for (final MergedModule mergedModule : mergedModules) {
@@ -217,20 +221,30 @@ public class MergeDependenciesCheck extends BuildValidation {
    * modules). It looks at the modules folder (not into the database)
    */
   private String[] getInstalledModules() {
-    final File modulesDir = getModulesDir();
+    ModulesUtil.checkCoreInSources(ModulesUtil.coreInSources());
+    File rootDir = new File(ModulesUtil.getProjectRootDir());
+    List<String> modulesDirList = new ArrayList<>();
 
-    if (modulesDir.exists()) {
-      return modulesDir.list(new FilenameFilter() {
+    for (String module : ModulesUtil.moduleDirs) {
+      if (module.contains(ModulesUtil.MODULES_CORE)) {
+        continue;
+      }
+      File moduleDirLocation = new File(rootDir + File.separator + module);
+      String[] modDirs = moduleDirLocation.list(new FilenameFilter() {
         @Override
         public boolean accept(File current, String name) {
           final File currentFile = new File(current, name);
           return currentFile.exists() && currentFile.isDirectory()
-              && !OPENBRAVO3MODULESLIST.contains(currentFile.getName());
+                  && !OPENBRAVO3MODULESLIST.contains(currentFile.getName());
         }
       });
-    }
 
-    return null;
+      if (modDirs != null) {
+        Collections.addAll(modulesDirList, modDirs);
+      }
+
+    }
+    return modulesDirList.toArray(new String[0]);
   }
 
   /**
@@ -252,7 +266,7 @@ public class MergeDependenciesCheck extends BuildValidation {
    * Return the openbravo/modules directory for this instance
    */
   private File getModulesCoreDir() {
-    return new File(getOpenbravoCoreDir(), MODULES_CORE_DIRNAME);
+    return new File(getOpenbravoDir(), MODULES_CORE_DIRNAME);
   }
 
   @Override

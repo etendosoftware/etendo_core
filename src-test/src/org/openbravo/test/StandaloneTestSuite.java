@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2009-2021 Openbravo SLU
- * All Rights Reserved. 
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -154,7 +154,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 /**
  * This test class is called from the ant task run.all.tests by the CI server. It contains all the
  * test cases which are runnable and valid and do not require Tomcat to be running.
- * 
+ *
  * Test cases requiring Tomcat (ie. testing web service requests) should be inclued in
  * {@link WebserviceTestSuite}.
  *
@@ -165,6 +165,44 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+
+    // dal
+    IssuesTest.class, //
+
+    // security
+    AllowedOrganizationsTest.class, //
+
+    // Price List
+    PriceListTest.class, //
+
+    // CopyFromOrders refactor
+    CopyLinesFromOrdersTest.class,
+
+    // Create Lines From refactor
+    CreateLinesFromTest.class,
+
+    // AD_IsOrgIncluded
+    Ad_isorgincludedTest.class, //
+    ADOrgTreeTest.class, //
+
+    // C_Order_Post
+    OrderProcessTest.class,
+
+    // grid configuration
+    ConfigurableTransactionalFilters.class,
+
+    // costing
+    TestCosting.class, //
+
+    // Taxes
+    TaxesTest.class, //
+    ModifyTaxesTest.class, //
+
+    // Referenced Inventory
+    ReferencedInventoryTestSuite.class,
+
+    // AD_Org Persist Information
+    ADOrgPersistInfoTestSuite.class,
 
     // authentication
     AuthenticationManagerTest.class, //
@@ -180,7 +218,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     DalLockingTest.class, //
     CentralBrokerTest.class, //
     DalUtilTest.class, //
-    IssuesTest.class, //
     DalConnectionProviderTest.class, //
     DynamicEntityTest.class, //
     HiddenUpdateTest.class, //
@@ -206,7 +243,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     OneToManyTest.class, //
     UniqueConstraintTest.class, //
     ClassLoaderTest.class, //
-    IndexesTest.class, //
     TrlColumnsOraTypeTest.class, //
     ADCSInitialization.class, //
     ADCSTest.class, //
@@ -220,7 +256,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // security
     AccessLevelTest.class, //
-    AllowedOrganizationsTest.class, //
     EntityAccessTest.class, //
     WritableReadableOrganizationClientTest.class, //
     StandardCrossOrganizationReference.class, //
@@ -246,7 +281,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     PasswordHashing.class, //
 
     // xml
-    ClientExportImportTest.class, //
     EntityXMLImportTestBusinessObject.class, //
     EntityXMLImportTestReference.class, //
     EntityXMLImportTestSingle.class, //
@@ -264,15 +298,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     RecordID2Test.class, //
     PostDocumentTest.class, //
 
-    // Taxes
-    TaxesTest.class, //
-    ModifyTaxesTest.class, //
-
-    // Price List
-    PriceListTest.class, //
-
-    // costing
-    TestCosting.class, //
 
     // Inventory Status
     InventoryStatusTest.class, //
@@ -294,19 +319,11 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     DalPersistanceEventTest.class, //
 
     // client application
-    ApplicationTest.class, //
+//    ApplicationTest.class, //
     DynamicExpressionParserTest.class, //
-    GenerateTypesJSTest.class, //
     MenuTest.class, //
-    MenuTemplateTest.class, //
     DisplayLogicAtServerLevelTest.class, //
     CSSMinifier.class, //
-
-    // client kernel
-    FreemarkerTemplateProcessorTest.class, //
-    GenerateComponentTest.class, //
-    LabelTest.class, //
-    CompressionTest.class, //
 
     // buildValidations and moduleScripts
     ExecutionLimitsTest.class, //
@@ -325,10 +342,8 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ViewGenerationWithDifferentConfigLevelTest.class, //
     GCSequenceNumberTests.class, //
     SortingFilteringGridConfiguration.class, //
-    ConfigurableTransactionalFilters.class,
 
     // jasper
-    JasperReportsCompilation.class, //
     AllJrxmlCompilation.class, //
     CompiledReportsCacheTest.class,
 
@@ -340,32 +355,13 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // others
     DocumentNumberGeneration.class, //
     GridExport.class, //
-    ViewGeneration.class,
+
 
     // Cancel and Replace Tests
     CancelAndReplaceTest.class, //
 
-    // AD_IsOrgIncluded
-    Ad_isorgincludedTest.class, //
-    ADOrgTreeTest.class, //
-
-    // CopyFromOrders refactor
-    CopyLinesFromOrdersTest.class,
-
-    // Create Lines From refactor
-    CreateLinesFromTest.class,
-
-    // Referenced Inventory
-    ReferencedInventoryTestSuite.class,
-
-    // AD_Org Persist Information
-    ADOrgPersistInfoTestSuite.class,
-
     // Automatic Invoice from Goods Shipment
     InvoiceFromShipmentTest.class,
-
-    // C_Order_Post
-    OrderProcessTest.class,
 
     // Conversion Rate Document Unique constraint refactor
     ConversionRateDocUniqueTestSuite.class
