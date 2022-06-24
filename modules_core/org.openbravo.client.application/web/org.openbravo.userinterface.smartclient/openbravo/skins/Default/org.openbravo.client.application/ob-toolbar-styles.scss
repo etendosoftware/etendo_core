@@ -304,22 +304,16 @@
 .OBToolbarTextButtonParentSelectedFocusedDown,
 .OBToolbarTextButtonParentDisabled,
 .OBToolbarTextButtonParentSelectedDisabled {
-    background-color: #fad614;
+    background-color: $backgroundColor2;
     border-radius: 7px;
-    color: #202452;
+    color: $color1;
     font-family: "Poppins","lucida sans",sans-serif;
     font-size: 13px;
     font-weight: 700;
-    padding-bottom: 5px;
-    padding-left: 15px;
-    padding-right: 15px;
-    padding-top: 5px;
-    text-transform: d;
-    display: block;
-    margin: 10px auto;
-    vertical-align: middle;
+    padding: 5px 15px;
     text-transform: uppercase;
-
+    display: block;
+    margin: 1px auto;
     &:hover {
         opacity: 80%;
     }

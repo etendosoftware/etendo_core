@@ -190,7 +190,7 @@ public class DataSourceProperty {
       qry.setParameter("languageId", userLanguageId);
       for (Object[] row : qry.list()) {
         for (RefListEntry entry : translatedValues) {
-          if (entry.getValue().equalsIgnoreCase((String) row[0])) {
+          if (entry.getValue().equals((String) row[0])) {
             entry.setLabel((String) row[1]);
           }
         }

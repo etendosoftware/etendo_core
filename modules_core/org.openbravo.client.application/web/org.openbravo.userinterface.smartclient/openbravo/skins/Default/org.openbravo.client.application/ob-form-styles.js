@@ -48,7 +48,9 @@ isc.OBFormContainerLayout.addProperties({
 
 isc.OBFormButton.addProperties({
   baseStyle: 'OBFormButton',
-  titleStyle: 'OBFormButtonTitle'
+  titleStyle: 'OBFormButtonTitle',
+  height: 32,
+  autoFit: true
 });
 
 OB.Styles.OBFormField = {};

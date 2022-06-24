@@ -17,17 +17,22 @@
  ************************************************************************
  */
 /* Blue */
-/* Light Blue */
-/* Darker Blue */
 /* Gray */
-/* Darker Gray  */
 /* Yellow */
 /* White */
+/* Darker Gray  */
+/* Light Blue */
+/* Darker Blue */
 /* Light Blue (20%) */
+/* Gray used for read-only input lettering. */
+/* Gray used for non-focused tab titles. */
+/* Black for font of grid items. */
 /* Light Green */
 /* Light Blue (20%) */
 /* light Blue (10%) */
 /* Gray 10 % */
+/* Yellow: Record shading */
+/* Used to determine the padding of the grid form. (Custom padding 4px -- Standar padding 10px) */
 .tabStyleActive {
   background-color: #202452;
 }
@@ -83,7 +88,7 @@ body {
 .normal {
   font-family: "Poppins", "lucida sans", sans-serif;
   font-size: 12px;
-  color: #333333;
+  color: #111;
 }
 
 .normal:focus {
