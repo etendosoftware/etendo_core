@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="UpdateGrandTotalData" package="org.openbravo.modulescript">
+ <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' AS grossAmount
+      FROM DUAL
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateInvoiceLineTax" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+     <![CDATA[
+        UPDATE c_invoicelinetax
+        SET taxamt=0
+        WHERE c_invoiceline_id IN (
+            SELECT c_invoiceline_id
+            FROM c_invoiceline il
+            WHERE il.line_gross_amount <> '0'
+            AND il.C_Invoice_ID IN (
+                SELECT C_Invoice_ID
+                FROM C_Invoice i
+                WHERE i.docstatus = 'VO'
+                AND i.totallines = '0'
+                AND i.grandtotal <> '0'
+            )
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateInvoiceTax" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+     <![CDATA[ 
+        UPDATE c_invoicetax it
+        SET taxamt=0
+        WHERE it.C_Invoice_ID IN (
+            SELECT C_Invoice_ID
+            FROM C_Invoice i
+            WHERE i.docstatus = 'VO'
+            AND i.totallines = '0'
+            AND i.grandtotal <> '0'
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateInvoiceLine" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+     <![CDATA[ 
+        UPDATE c_invoiceline il
+ 		SET line_gross_amount=0
+ 		WHERE il.line_gross_amount <> '0'
+ 		AND il.C_Invoice_ID IN (
+        	SELECT C_Invoice_ID
+        	FROM C_Invoice i
+        	WHERE i.docstatus = 'VO'
+        	AND i.totallines = '0'
+        	AND i.grandtotal <> '0'
+ 		)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateInvoice" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+     <![CDATA[ 
+        UPDATE c_invoice i
+ 		SET grandtotal=0
+ 		WHERE i.docstatus = 'VO'
+        AND i.totallines = '0'
+        AND i.grandtotal <> '0'
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="isExecuted" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as exist
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_preference
+                      WHERE attribute = 'GrossUpdated')
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+      <SqlMethodComment></SqlMethodComment>
+       <Sql> 
+       <![CDATA[ 
+           INSERT INTO ad_preference (
+           ad_preference_id, ad_client_id, ad_org_id, isactive,
+           createdby, created, updatedby, updated,attribute
+           ) VALUES (
+           get_uuid(), '0', '0', 'Y', '0', NOW(), '0', NOW(),'GrossUpdated')
+         ]]>
+        </Sql>
+   </SqlMethod>
+</SqlClass>

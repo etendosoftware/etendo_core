@@ -1,0 +1,660 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_GET_STOCK_PARAM">
+    <function name="M_GET_STOCK_PARAM" type="NULL">
+      <parameter name="p_uuid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_recordid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_quantity" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_productid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_locatorid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_warehouseid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_prioritywarehouseid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_orgid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_attributesetinstanceid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_ad_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_clientid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_warehouse_rule_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_uomid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_productuomid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_tableid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_auxid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_lineno" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_processid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_reservation_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_calledfromapp" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_result" type="NUMERIC" mode="out">
+        <default/>
+      </parameter>
+      <parameter name="p_message" type="VARCHAR" mode="out">
+        <default/>
+      </parameter>
+      <parameter name="p_avail" type="CHAR" mode="in">
+        <default><![CDATA[Y]]></default>
+      </parameter>
+      <parameter name="p_nett" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <parameter name="p_overissue" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2015-2020 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  -- Logistice
+  v_Message VARCHAR2(2000):='';
+  v_Record_ID VARCHAR2(32);
+
+  
+  -- Parameter
+  TYPE RECORD IS REF CURSOR;
+  Cur_Stock RECORD;
+  cur_warehouse RECORD;
+  cur_allocated RECORD;
+
+  -- Parameter Variables
+  v_Quantity NUMBER;
+  v_ProductID   VARCHAR2(32);
+  v_LocatorID   VARCHAR2(32);
+  v_WarehouseID VARCHAR2(32) ;
+  v_PriorityWarehouseID VARCHAR2(32);
+  v_OrgID VARCHAR2(32) ;
+  v_AttributesetinstanceID  VARCHAR2(32) ;
+  v_AD_User_ID VARCHAR2(32) ;
+  v_ClientID VARCHAR2(32) ;
+  v_warehouse_rule_id VARCHAR2(32);
+  v_UomID VARCHAR2(32) ;
+  v_ProductUomID VARCHAR2(32) ;
+  v_TableID  VARCHAR2(32):='-1';
+  v_AuxID VARCHAR2(32):='-1';
+  v_LineNo NUMBER;
+  v_Count NUMBER:=1;
+  v_ProcessID VARCHAR2(32) ;
+  v_Reservation_ID VARCHAR2(32);
+  v_avail CHAR;
+  v_nett CHAR;
+  v_overissue CHAR;
+  
+BEGIN
+
+  -- Get Parameters
+  p_message:='ReadingParameters';
+  p_result :=1;
+  v_Record_ID:=p_recordId;
+  DBMS_OUTPUT.PUT_LINE('  v_Record_ID=' || coalesce(v_Record_ID, '')) ;
+  v_AD_User_ID:=p_AD_User_ID;
+  DBMS_OUTPUT.PUT_LINE('  v_AD_User_ID=' || coalesce(v_AD_User_ID, '')) ;
+  v_Quantity:=p_Quantity;
+  DBMS_OUTPUT.PUT_LINE('  v_Quantity=' || coalesce(v_Quantity, 0)) ;
+  v_ProductID:=p_ProductID;
+  DBMS_OUTPUT.PUT_LINE('  v_ProductID=' || coalesce(v_ProductID, '')) ;
+  v_UomID:=p_UomID;
+  DBMS_OUTPUT.PUT_LINE('  v_UomID=' || coalesce(v_UomID, '')) ;
+  v_ProductUomID:=p_ProductUomID;
+  DBMS_OUTPUT.PUT_LINE('  v_ProductUomID=' || coalesce(v_ProductUomID, '')) ;
+  v_LocatorID:=p_LocatorID;
+  DBMS_OUTPUT.PUT_LINE('  v_LocatorID=' || coalesce(v_LocatorID, '')) ;
+  v_WarehouseID:=p_WarehouseID;
+  DBMS_OUTPUT.PUT_LINE('  v_WarehouseID=' || coalesce(v_WarehouseID, '')) ;
+  v_PriorityWarehouseID:=p_PriorityWarehouseID;
+  DBMS_OUTPUT.PUT_LINE('  v_PriorityWarehouseID=' || coalesce(v_PriorityWarehouseID, '')) ;
+  v_ClientID:=p_ClientID;
+  DBMS_OUTPUT.PUT_LINE('  v_ClientID=' || coalesce(v_ClientID, '')) ;
+  v_OrgID:=p_OrgID;
+  DBMS_OUTPUT.PUT_LINE('  v_OrgID=' || coalesce(v_OrgID, '')) ;
+  v_AttributesetinstanceID:=p_AttributesetinstanceID;
+  DBMS_OUTPUT.PUT_LINE('  v_AttributesetinstanceID=' || coalesce(v_AttributesetinstanceID, '')) ;
+  v_warehouse_rule_id:=p_warehouse_rule_id;
+  DBMS_OUTPUT.PUT_LINE('  v_warehouse_rule_id=' || coalesce(v_warehouse_rule_id, '')) ;
+  v_avail:=p_avail;
+  DBMS_OUTPUT.PUT_LINE('  v_avail=' || coalesce(v_avail, '')) ;
+    v_nett:=p_nett;
+  DBMS_OUTPUT.PUT_LINE('  v_nett=' || coalesce(v_nett, '')) ;
+    v_overissue:=p_overissue;
+  DBMS_OUTPUT.PUT_LINE('  v_overissue=' || coalesce(v_overissue, '')) ;
+  IF (p_TableID IS NOT NULL) THEN
+    v_TableID:=p_TableID;
+  END IF;
+  IF (p_AuxID IS NOT NULL) THEN
+    v_AuxID:=p_AuxID;
+  END IF;
+  v_LineNo:=p_LineNo;
+  v_ProcessID:=p_ProcessID;
+  v_reservation_id:=p_reservation_id;
+  DBMS_OUTPUT.PUT_LINE('  Record_ID=' || v_Record_ID) ;
+
+  IF (v_reservation_id IS NOT NULL) THEN
+    -- If a reservation is given first consume allocated stock.
+    FOR cur_allocated IN (
+        SELECT rs.quantity, rs.releasedqty, sd.m_storage_detail_id
+        FROM m_reservation_stock rs
+            JOIN m_reservation r ON rs.m_reservation_id = r.m_reservation_id
+            JOIN m_storage_detail sd ON sd.m_product_id = r.m_product_id
+                                        AND sd.c_uom_id = r.c_uom_id
+                                        AND sd.m_product_uom_id IS NULL
+                                        AND sd.m_locator_id = rs.m_locator_id
+                                        AND sd.m_attributesetinstance_id = rs.m_attributesetinstance_id
+            JOIN m_locator l ON l.m_locator_id = sd.m_locator_id
+            JOIN m_inventorystatus invs ON (invs.m_inventorystatus_id = l.m_inventorystatus_id)
+        WHERE r.m_reservation_id = v_reservation_id
+          AND rs.isallocated = 'Y'
+          AND rs.quantity > 0
+          AND rs.quantity <> COALESCE(rs.releasedqty, 0)
+          AND rs.m_locator_id IS NOT NULL
+          AND COALESCE(v_avail, invs.available) = invs.available
+          AND COALESCE(v_nett, invs.nettable) = invs.nettable
+    ) LOOP
+      INSERT INTO m_stock_proposed (
+          m_stock_proposed_id, ad_client_id, ad_org_id, isactive, 
+          created , createdby, updated, updatedby,
+          ad_pinstance_id, priority, m_storage_detail_id, quantity, qtyorder,
+          isfinal
+      ) VALUES (
+          get_uuid(), v_ClientID, v_OrgID, 'Y',
+          now(), v_AD_User_ID, now(), v_AD_User_ID,
+          p_uuid, v_Count, cur_allocated.m_storage_detail_id, cur_allocated.quantity - COALESCE(cur_allocated.releasedqty, 0), null,
+          'Y'
+      );
+      v_Count:=v_Count+1;
+    END LOOP;
+  END IF;
+
+  -- Insert Values from Auxiliar STOCK
+  FOR Cur_Stock IN (
+      SELECT ms.m_storage_detail_id, COALESCE(ms.quantity, 0) AS qty, ms.qtyorder AS qtyorder, ms.UPDATED AS lastupdated
+      FROM m_storage_detail t
+          JOIN m_stock_aux ms ON t.m_storage_detail_id = ms.m_storage_detail_id
+          JOIN m_locator l ON t.m_locator_id = l.m_locator_id
+          JOIN m_warehouse w ON l.m_warehouse_id = w.m_warehouse_id
+          JOIN ad_org_warehouse ow ON w.m_warehouse_id = ow.m_warehouse_id
+          LEFT JOIN m_attributesetinstance asi ON t.m_attributesetinstance_id = asi.m_attributesetinstance_id
+          LEFT JOIN m_product_uom pu ON t.m_product_uom_id = pu.m_product_uom_id
+          LEFT JOIN c_uom u ON pu.c_uom_id = u.c_uom_id
+          JOIN m_inventorystatus invs ON (invs.m_inventorystatus_id = l.m_inventorystatus_id)
+      WHERE t.m_product_id = v_productid
+        AND ms.aux_id = v_auxid
+        AND ms.ad_table_id = v_tableid
+        AND ms.line < v_lineno
+        AND COALESCE(t.c_uom_id, '-1') = COALESCE(v_uomid, t.c_uom_id, '-1')
+        AND COALESCE(t.m_product_uom_id, '-1') = COALESCE(v_productuomid, t.m_product_uom_id, '-1')
+        AND t.m_attributesetinstance_id = COALESCE(v_attributesetinstanceid, t.m_attributesetinstance_id)
+        AND COALESCE(l.m_locator_id, '-1') = COALESCE(v_locatorid, l.m_locator_id, '-1')
+        AND COALESCE(w.m_warehouse_id, '-1') = COALESCE(v_warehouseid, w.m_warehouse_id, '-1')
+        AND ow.ad_org_id = v_orgid
+        AND COALESCE(ms.quantity, 0)>0
+        AND COALESCE(v_avail, invs.available) = invs.available
+        AND COALESCE(v_nett, invs.nettable) = invs.nettable
+      ORDER BY CASE w.m_warehouse_id WHEN COALESCE(v_PriorityWarehouseID, '-1') THEN 0 ELSE 1 END, ow.priority, l.priorityno, asi.created, t.created
+  ) LOOP
+    INSERT INTO m_stock_proposed (
+        m_stock_proposed_id, ad_client_id, ad_org_id, isactive, 
+        created , createdby, updated, updatedby,
+        ad_pinstance_id, priority, m_storage_detail_id, quantity, qtyorder,
+        isfinal
+    ) VALUES (
+        get_uuid(), v_ClientID, v_OrgID, 'Y',
+        now(), v_AD_User_ID, now(), v_AD_User_ID,
+        p_uuid, v_Count, Cur_Stock.M_STORAGE_DETAIL_ID, Cur_Stock.Qty, Cur_Stock.qtyorder,
+        'Y'
+    );
+    v_Count:=v_Count+1;
+  END LOOP;
+
+  -- Insert Values from Storage Detail
+  FOR Cur_Stock  IN (
+      SELECT t.m_storage_detail_id, t.qtyonhand - (CASE WHEN COUNT(rs.m_reservation_id) > 0 THEN t.allocatedqty ELSE t.reservedqty END) AS qty, 
+      t.qtyorderonhand AS qtyorder, l.priorityno, t.UPDATED AS lastupdated, t.qtyonhand, 
+      (CASE WHEN COUNT(rs.m_reservation_id) > 0 THEN t.allocatedqty ELSE t.reservedqty END) as reservedqty
+      FROM m_storage_detail t 
+          JOIN m_locator l ON t.m_locator_id=l.m_locator_id
+          JOIN m_warehouse w ON l.m_warehouse_id = w.m_warehouse_id
+          JOIN ad_org_warehouse ow ON w.m_warehouse_id = ow.m_warehouse_id
+          LEFT JOIN m_attributesetinstance asi ON t.m_attributesetinstance_id = asi.m_attributesetinstance_id
+          LEFT JOIN m_product_uom pu ON t.m_product_uom_id = pu.m_product_uom_id
+          LEFT JOIN c_uom u ON pu.c_uom_id = u.c_uom_id
+          LEFT JOIN m_reservation r ON r.m_reservation_id = v_reservation_id AND r.m_product_id = t.m_product_id AND r.c_uom_id = t.c_uom_id
+          LEFT JOIN m_reservation_stock rs ON rs.m_reservation_id = v_reservation_id AND rs.m_attributesetinstance_id = t.m_attributesetinstance_id AND rs.m_locator_id = t.m_locator_id
+          JOIN m_inventorystatus invs ON (l.m_inventorystatus_id = invs.m_inventorystatus_id)
+      WHERE t.m_product_id=v_productid
+        AND t.c_uom_id = COALESCE(v_uomid, t.c_uom_id)
+        AND COALESCE(t.m_product_uom_id, '-1') = COALESCE(v_productuomid, t.m_product_uom_id, '-1')
+        AND t.m_attributesetinstance_id = COALESCE(v_attributesetinstanceid, t.m_attributesetinstance_id)
+        AND l.m_locator_id = COALESCE(v_locatorid, l.m_locator_id)
+        AND w.m_warehouse_id = COALESCE(v_warehouseid, w.m_warehouse_id)
+        AND ow.ad_org_id = v_orgid
+        AND COALESCE(t.qtyonhand, 0)>0
+        AND t.qtyonhand - (CASE WHEN rs.m_reservation_id IS NOT NULL THEN t.allocatedqty ELSE t.reservedqty END)  > 0
+        AND w.m_warehouse_id = COALESCE(r.m_warehouse_id, w.m_warehouse_id)
+        AND l.m_locator_id = COALESCE(r.m_locator_id, l.m_locator_id)
+        AND asi.m_attributesetinstance_id = COALESCE(r.m_attributesetinstance_id, asi.m_attributesetinstance_id)
+        AND COALESCE(v_avail, invs.available) = invs.available
+        AND COALESCE(v_nett, invs.nettable) = invs.nettable
+      GROUP BY w.m_warehouse_id, ow.priority, l.priorityno, asi.created, t.created, t.m_storage_detail_id, t.qtyonhand, t.allocatedqty, t.reservedqty, t.qtyorderonhand, t.updated
+      ORDER BY CASE w.m_warehouse_id WHEN COALESCE(v_PriorityWarehouseID, '-1') THEN 0 ELSE 1 END, ow.priority, l.priorityno, asi.created, t.created
+  ) LOOP
+    IF (cur_stock.qtyonhand > cur_stock.reservedqty) THEN
+      INSERT INTO m_stock_proposed (
+          m_stock_proposed_id, ad_client_id, ad_org_id, isactive, 
+          created , createdby, updated, updatedby,
+          ad_pinstance_id, priority, m_storage_detail_id, quantity, qtyorder,
+          isfinal
+      ) VALUES (
+          get_uuid(), v_ClientID, v_OrgID, 'Y',
+          now(), v_AD_User_ID, now(), v_AD_User_ID,
+          p_uuid, v_Count, Cur_Stock.M_STORAGE_DETAIL_ID, Cur_Stock.Qty, Cur_Stock.QtyOrder,
+          'Y'
+      );
+      v_Count:=v_Count+1;
+    END IF;
+  END LOOP;
+
+  --M_Get_Stock - Deprecated- Finish Process Extension Point
+  --This extension point is deprecated as requires the usage of pinstance and pinstance_para
+  SELECT count(*) INTO v_count
+  FROM DUAL
+  WHERE EXISTS (SELECT 1 FROM ad_ep_procedures WHERE ad_extension_points_id = 'FF80818132FDD74F0132FDF278430029');
+  IF (v_count=1) THEN
+    DECLARE
+      v_ep_instance VARCHAR2(32);
+      v_extension_point_id VARCHAR2(32) := 'FF80818132FDD74F0132FDF278430029';
+    BEGIN
+      SELECT count(*) INTO v_count
+      FROM DUAL
+      WHERE EXISTS (SELECT 1 FROM AD_PInstance where ad_pinstance_id = p_uuid);
+      IF(v_count=0) THEN 
+	      INSERT INTO ad_pinstance (ad_pinstance_id, ad_process_id, record_id, isactive, ad_user_id, ad_client_id, ad_org_id, created, createdby, updated, updatedby) 
+	      VALUES (p_uuid, 'FF80818132C964E30132C9747257002E', p_recordId, 'Y', p_AD_User_ID, p_ClientID, p_OrgID, now(), p_AD_User_ID, now(), p_AD_User_ID
+	      );
+	  
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '10', 'AD_Client_ID', p_ClientID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '20', 'AD_Org_ID', p_OrgID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '30', 'M_Product_ID', p_ProductID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '40', 'C_Uom_ID', p_UomID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '50', 'M_Product_Uom_ID', p_ProductUomID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '60', 'M_Warehouse_ID', p_WarehouseID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '70', 'M_Locator_ID', p_LocatorID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '80', 'M_AttributesetInstance_ID', p_AttributesetinstanceID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '90', 'Quantity', null, null, p_Quantity, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '100', 'Priority_Warehouse_ID', v_PriorityWarehouseID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '110', 'M_Warehouse_Rule_ID', v_warehouse_rule_id, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '120', 'TableId', v_TableID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '130', 'AuxID', v_AuxID, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '140', 'LineNo', null, null, v_LineNo, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '150', 'M_Reservation_ID', v_reservation_id, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '160', 'Available', v_avail, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '170', 'Nettable', v_nett, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '180', 'OverIssue', v_overissue, null, null, null, null, null);
+	      AD_PINSTANCE_PARA_INSERT(p_uuid, '190', 'ProcessID', v_ProcessID, null, null, null, null, null);
+      END IF;
+      v_ep_instance := get_uuid();
+
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'AD_Pinstance_Stock_ID',
+        p_uuid, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Record_ID',
+        v_Record_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'User',
+        v_AD_User_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Message',
+        NULL, NULL, NULL, NULL, NULL, NULL, v_Message);
+      AD_EXTENSION_POINT_HANDLER(v_ep_instance, v_extension_point_id);
+      
+      SELECT p_text INTO v_Message
+      FROM ad_ep_instance_para
+      WHERE ad_ep_instance_id = v_ep_instance
+      AND parametername LIKE 'Message';
+
+      DELETE FROM ad_ep_instance_para
+      WHERE ad_ep_instance_id = v_ep_instance;
+      IF(v_count=0) THEN 
+        DELETE FROM ad_pinstance
+        WHERE ad_pinstance_id = p_uuid;
+      END IF;
+    END;
+  END IF;
+  --M_Get_Stock - Finish Process Extension Point (To get performance improvement use this extension point as requires no usage of pinstance and pinstance para
+  SELECT count(*) INTO v_count
+  FROM DUAL
+  WHERE EXISTS (SELECT 1 FROM ad_ep_procedures WHERE ad_extension_points_id = '931282171E0E4E07A946AD80D9A16E08');
+  IF (v_count=1) THEN
+    DECLARE
+      v_ep_instance VARCHAR2(32);
+      v_extension_point_id VARCHAR2(32) := '931282171E0E4E07A946AD80D9A16E08';
+    BEGIN
+      v_ep_instance := get_uuid();
+
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'AD_Pinstance_Stock_ID',
+        p_uuid, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Record_ID',
+        v_Record_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'User',
+        v_AD_User_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'AD_Client_ID',
+        p_ClientID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'AD_Org_ID',
+        p_OrgID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'M_Product_ID',
+        p_ProductID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'C_Uom_ID',
+        p_UomID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'M_Product_Uom_ID',
+        p_ProductUomID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'M_Warehouse_ID',
+        p_WarehouseID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'M_Locator_ID',
+        p_LocatorID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'M_AttributesetInstance_ID',
+        p_AttributesetinstanceID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Quantity',
+        NULL, NULL, p_Quantity, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Priority_Warehouse_ID',
+        v_PriorityWarehouseID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'M_Warehouse_Rule_ID',
+        v_warehouse_rule_id, NULL, NULL, NULL, NULL, NULL, NULL);
+	  AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'TableId',
+	    v_TableID, NULL, NULL, NULL, NULL, NULL, NULL);
+	  AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'AuxID',
+	    v_AuxID, NULL, NULL, NULL, NULL, NULL, NULL);
+	  AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'LineNo',
+	    NULL, NULL, v_LineNo, NULL, NULL, NULL, NULL);
+	  AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'M_Reservation_ID',
+	    v_reservation_id, NULL, NULL, NULL, NULL, NULL, NULL);
+	  AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Available',
+	    v_avail, NULL, NULL, NULL, NULL, NULL, NULL);
+	  AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Nettable',
+	    v_nett, NULL, NULL, NULL, NULL, NULL, NULL);
+	  AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'OverIssue',
+	    v_overissue, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'ProcessID',
+        v_ProcessID, NULL, NULL, NULL, NULL, NULL, NULL);
+      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Message',
+        NULL, NULL, NULL, NULL, NULL, NULL, v_Message);
+      AD_EXTENSION_POINT_HANDLER(v_ep_instance, v_extension_point_id);
+      
+      SELECT p_text INTO v_Message
+      FROM ad_ep_instance_para
+      WHERE ad_ep_instance_id = v_ep_instance
+      AND parametername LIKE 'Message';
+
+      DELETE FROM ad_ep_instance_para
+      WHERE ad_ep_instance_id = v_ep_instance;
+    END;
+  END IF;
+    
+  -- Apply stock rules only if a quantity is given
+  IF (v_Quantity IS NULL) THEN
+    RETURN;
+  END IF;
+  DECLARE
+    v_sql VARCHAR2(2000);
+    v_finalqty NUMBER;
+    v_totalqty NUMBER;
+    v_availableqty NUMBER;
+    v_AuxResult NUMBER;
+    v_AuxMessage VARCHAR2(2000):='';
+    v_productname M_PRODUCT.NAME%TYPE;
+    v_parameters VARCHAR2(2000);
+  BEGIN
+    SELECT SUM(quantity) INTO v_availableqty
+    FROM m_stock_proposed
+    WHERE ad_pinstance_id = p_uuid;
+DBMS_OUTPUT.PUT_LINE( 'v_warehouse_rule_id: ' || coalesce(v_warehouse_rule_id,''));
+    FOR cur_warehouse IN (
+        SELECT l.m_warehouse_id, wr.procedurename, wr.m_warehouse_rule_id, wr.type, MAX(sp.priority) AS priority, w.name
+        FROM m_stock_proposed sp
+            JOIN m_storage_detail sd ON sp.m_storage_detail_id = sd.m_storage_detail_id
+            JOIN m_locator l ON sd.m_locator_id = l.m_locator_id
+            JOIN m_warehouse w ON l.m_warehouse_id = w.m_warehouse_id
+            LEFT JOIN m_warehouse_rule wr ON wr.m_warehouse_rule_id = COALESCE(v_warehouse_rule_id, w.m_warehouse_rule_id)
+        WHERE ad_pinstance_id = p_uuid
+        GROUP BY l.m_warehouse_id, wr.m_warehouse_rule_id, wr.procedurename, w.name, wr.type
+        ORDER BY MIN(sp.priority)
+    ) LOOP
+      IF (cur_warehouse.procedurename IS NOT NULL AND cur_warehouse.TYPE = 'I') THEN
+      	SELECT count(*) INTO v_count
+      	FROM DUAL
+      	WHERE EXISTS (SELECT 1 FROM AD_PInstance where ad_pinstance_id = p_uuid);
+      	IF(v_count=0) THEN 
+  	      INSERT INTO ad_pinstance (ad_pinstance_id, ad_process_id, record_id, isactive,ad_user_id, ad_client_id, ad_org_id, created, createdby, updated, updatedby) 
+  	      VALUES (p_uuid, 'FF80818132C964E30132C9747257002E', p_recordId, 'Y',p_AD_User_ID, p_ClientID, p_OrgID, now(), p_AD_User_ID, now(), p_AD_User_ID);
+  
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '10', 'AD_Client_ID', p_ClientID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '20', 'AD_Org_ID', p_OrgID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '30', 'M_Product_ID', p_ProductID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '40', 'C_Uom_ID', p_UomID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '50', 'M_Product_Uom_ID', p_ProductUomID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '60', 'M_Warehouse_ID', p_WarehouseID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '70', 'M_Locator_ID', p_LocatorID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '80', 'M_AttributesetInstance_ID', p_AttributesetinstanceID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '90', 'Quantity', null, null, p_Quantity, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '100', 'Priority_Warehouse_ID', v_PriorityWarehouseID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '110', 'M_Warehouse_Rule_ID', v_warehouse_rule_id, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '120', 'TableId', v_TableID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '130', 'AuxID', v_AuxID, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '140', 'LineNo', null, null, v_LineNo, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '150', 'M_Reservation_ID', v_reservation_id, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '160', 'Available', v_avail, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '170', 'Nettable', v_nett, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '180', 'OverIssue', v_overissue, null, null, null, null, null);
+  	      AD_PINSTANCE_PARA_INSERT(p_uuid, '190', 'ProcessID', v_ProcessID, null, null, null, null, null);
+
+  	      AD_UPDATE_PINSTANCE(p_uuid, NULL, 'N', 1, '', p_calledfromapp) ;
+        END IF;
+        IF (AD_GET_RDBMS() = 'ORACLE') THEN
+          v_Sql := 'CALL ' || cur_warehouse.procedurename || '('''||p_uuid||''', '''||cur_warehouse.m_warehouse_id||''')';
+        ELSE
+          v_Sql := 'SELECT ' || cur_warehouse.procedurename || '('''||p_uuid||''', '''||cur_warehouse.m_warehouse_id||''') FROM DUAL';
+        END IF;
+        BEGIN
+          EXECUTE IMMEDIATE v_Sql;
+        EXCEPTION WHEN OTHERS THEN
+          DBMS_OUTPUT.PUT_LINE('ERROR EXECUTING STOCK RULE PROCEDURE');
+        END;
+        SELECT result, errormsg INTO v_auxresult, v_auxmessage
+        FROM ad_pinstance
+        WHERE ad_pinstance_id = p_uuid;
+        DBMS_OUTPUT.PUT_LINE('v_auxresult: ' || v_auxresult || ' v_auxmessage: ' || v_auxmessage);
+        v_message := v_message || ' ' || cur_warehouse.name || ': ' || COALESCE(v_auxmessage, '@Success@');
+    	IF(v_count=0) THEN 
+        DELETE FROM ad_pinstance
+        WHERE ad_pinstance_id = p_uuid;
+      END IF;
+        
+      ELSIF (cur_warehouse.procedurename IS NOT NULL AND cur_warehouse.TYPE = 'P') THEN
+      v_parameters:= ''''||p_uuid||''', '''||p_ClientID||''', '''||p_OrgID
+          ||''', '''||p_ProductID||''', '''||p_UomID||'''';
+      IF(p_ProductUomID IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||p_ProductUomID||'''';
+      END IF;
+      IF(cur_warehouse.m_warehouse_id IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||cur_warehouse.m_warehouse_id||'''';
+      END IF;
+      IF(p_LocatorID IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||p_LocatorID||'''';
+      END IF;
+      IF(p_AttributesetinstanceID IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||p_AttributesetinstanceID||'''';
+      END IF;
+      IF(p_Quantity IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '||p_Quantity;
+      END IF;
+      IF(v_PriorityWarehouseID IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_PriorityWarehouseID||'''';
+      END IF;
+      IF(v_warehouse_rule_id IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_warehouse_rule_id||'''';
+      END IF;
+      IF(v_TableID IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_TableID||'''';
+      END IF;
+      IF(v_AuxID IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_AuxID||'''';
+      END IF;
+      IF(v_LineNo IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '||v_LineNo;
+      END IF;
+      IF(v_reservation_id IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_reservation_id||'''';
+      END IF;
+      IF(v_avail IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_avail||'''';
+      END IF;
+      IF(v_nett IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_nett||'''';
+      END IF;
+      IF(v_overissue IS NULL) THEN
+        v_parameters:= v_parameters || ', NULL';
+      ELSE
+        v_parameters:= v_parameters ||', '''||v_overissue||'''';
+      END IF;
+      DBMS_OUTPUT.PUT_LINE( 'v_parameters: ' || coalesce(v_parameters,''));
+        IF (AD_GET_RDBMS() = 'ORACLE') THEN
+          v_Sql := 'CALL ' || cur_warehouse.procedurename || ' (' || v_parameters ||', v_auxresult, v_auxmessage)';
+        ELSE
+          v_Sql := 'SELECT * FROM ' || cur_warehouse.procedurename || ' (' || v_parameters ||') ';
+        END IF;
+        BEGIN
+        IF (AD_GET_RDBMS() = 'ORACLE') THEN
+          EXECUTE IMMEDIATE v_Sql;     
+        ELSE
+          EXECUTE IMMEDIATE v_Sql  INTO v_auxresult, v_auxmessage;
+        END IF;
+        EXCEPTION WHEN OTHERS THEN
+          DBMS_OUTPUT.PUT_LINE('ERROR EXECUTING STOCK RULE PROCEDURE2: ' || cur_warehouse.procedurename);
+          DBMS_OUTPUT.PUT_LINE( v_Sql);
+        END;
+        v_message := v_message || ' ' || cur_warehouse.name || ': ' || COALESCE(v_auxmessage, '@Success@');
+      END IF;
+      -- Check if there is enough final quantity.
+      SELECT COALESCE(SUM(quantity), 0) INTO v_finalqty
+      FROM m_stock_proposed
+      WHERE ad_pinstance_id = p_uuid
+        AND priority <= cur_warehouse.priority
+        AND isfinal = 'Y';
+      IF (v_quantity - v_finalqty <= 0) THEN
+        DELETE FROM m_stock_proposed
+        WHERE ad_pinstance_id = p_uuid
+          AND (priority > cur_warehouse.priority
+              OR isfinal = 'N');
+        EXIT;
+      END IF;
+    END LOOP;
+    SELECT SUM(CASE isfinal WHEN 'Y' THEN quantity ELSE 0 END), SUM(quantity)
+      INTO v_finalqty, v_totalqty
+    FROM m_stock_proposed
+    WHERE ad_pinstance_id = p_uuid;
+    IF (v_totalqty < v_quantity AND v_availableqty >= v_quantity) THEN
+      IF (v_message IS NULL OR v_message = '') THEN
+        SELECT name INTO v_productname
+        FROM m_product
+        WHERE m_product_id = v_productid;
+        v_message := '@NotEnoughStockedDueWHRule@' || v_productname;
+      END IF;
+      DBMS_OUTPUT.PUT_LINE( v_message); --OBTG:-20000--
+      p_result := 2;
+    END IF;
+    IF (v_totalqty > v_finalqty) THEN
+      -- IF these quantities are different there is some proposed stock with the isFinal flag = 'N'
+      p_result := 2;
+    END IF;
+  END;
+  p_message:= v_message;
+  RETURN;
+EXCEPTION
+WHEN OTHERS THEN
+  DBMS_OUTPUT.PUT_LINE(p_message) ; --OBTG:VARCHAR2--
+  IF (SQLERRM LIKE '@ERROR=%') THEN
+    p_message:= SQLERRM;
+  ELSE
+    p_message:= '@ERROR=' || SQLERRM;
+  END IF;
+  p_message:= v_message;
+  DBMS_OUTPUT.PUT_LINE(p_message) ; --OBTG:VARCHAR2--
+  DBMS_OUTPUT.PUT_LINE(SQLERRM) ; --OBTG:VARCHAR2--
+  p_result:=0;
+  IF (p_calledfromapp = 'Y') THEN
+    RETURN;
+  ELSE
+    RAISE;
+    RETURN;
+  END IF;
+END M_GET_STOCK_PARAM
+]]></body>
+    </function>
+  </database>

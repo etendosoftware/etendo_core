@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_PROMOTION_ADD">
+    <function name="M_PROMOTION_ADD" type="NULL">
+      <parameter name="p_type" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_line_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_rule_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_taxincluded" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_newgrossprice" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_newgrossamt" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_newnetprice" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_newnetamt" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_total_amt" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_displayed_amt" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_baseprice" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations 
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_nextLineNum NUMBER;
+  v_newUnitPrice NUMBER;
+  v_newGrossAmt NUMBER;
+  v_promotionDiscounted NUMBER;
+  v_client VARCHAR(32);
+  v_org VARCHAR(32);
+BEGIN
+  if (p_taxIncluded = 'Y') then
+     v_newUnitPrice := p_newgrossprice;
+     v_newGrossAmt := p_newGrossAmt;
+     v_promotionDiscounted := p_basePrice - v_newUnitPrice;
+  else
+     v_newUnitPrice := 0;
+     v_newGrossAmt := 0;
+     v_promotionDiscounted := p_basePrice - p_newnetprice;
+  end if;
+
+  if (p_type ='O') then
+     select coalesce(max(line), 0) + 10
+			 into v_nextLineNum
+			 from c_orderline_offer
+			where c_orderline_id = p_line_id;
+
+		select ad_client_id, ad_org_id
+			into v_client, v_org
+			from c_orderline
+		 where c_orderline_id = p_line_id;
+  
+		 update c_orderline 
+				set gross_unit_price = v_newUnitPrice,
+						line_gross_amount = v_newGrossAmt,
+						priceactual = p_newnetprice,
+						linenetamt = p_newNetAmt
+      where c_orderline_id = p_line_id;
+
+    if (p_taxIncluded = 'Y') then
+			insert into c_orderline_offer
+				(c_orderline_offer_id, ad_client_id, ad_org_id,                         
+				 isactive, createdby, updatedby,           
+				 c_orderline_id, line, m_offer_id,          
+				 priceoffergross, amtoffer, 
+			   totalamt, displayedtotalamt)
+			 values
+				(get_uuid(), v_client, v_org,
+				 'Y', p_user_id, p_user_id,
+				 p_line_id, v_nextLineNum, p_rule_id,
+				 p_basePrice, v_promotionDiscounted,
+			   p_total_amt, p_displayed_amt);
+	   else
+       insert into c_orderline_offer
+				(c_orderline_offer_id, ad_client_id, ad_org_id,                         
+				 isactive, createdby, updatedby,           
+				 c_orderline_id, line, m_offer_id,          
+				 priceoffer, amtoffer, 
+			   totalamt, displayedtotalamt)
+			 values
+				(get_uuid(), v_client, v_org,
+				 'Y', p_user_id, p_user_id,
+				 p_line_id, v_nextLineNum, p_rule_id,
+				 p_basePrice, v_promotionDiscounted,
+			   p_total_amt, p_displayed_amt);
+	   end if;
+	 else
+		 select coalesce(max(line), 0) + 10
+			 into v_nextLineNum
+			 from c_invoiceline_offer
+			where c_invoiceline_id = p_line_id;
+
+		select ad_client_id, ad_org_id
+			into v_client, v_org
+			from c_invoiceline
+		 where c_invoiceline_id = p_line_id;
+
+		 update c_invoiceline 
+				set gross_unit_price = v_newUnitPrice,
+						line_gross_amount = v_newGrossAmt,
+						priceactual = p_newnetprice,
+						linenetamt = p_newNetAmt
+			where c_invoiceline_id = p_line_id;
+
+    if (p_taxIncluded = 'Y') then
+      insert into c_invoiceline_offer
+				(c_invoiceline_offer_id, ad_client_id, ad_org_id,                         
+				 isactive, createdby, updatedby,           
+				 c_invoiceline_id, line, m_offer_id,          
+				 priceoffergross, amtoffer, 
+			 totalamt, displayedtotalamt)
+			 values
+				(get_uuid(), v_client, v_org,
+				 'Y', p_user_id, p_user_id,
+				 p_line_id, v_nextLineNum, p_rule_id,
+				 p_basePrice, v_promotionDiscounted,
+			   p_total_amt, p_displayed_amt);
+    else
+			insert into c_invoiceline_offer
+				(c_invoiceline_offer_id, ad_client_id, ad_org_id,                         
+				 isactive, createdby, updatedby,           
+				 c_invoiceline_id, line, m_offer_id,          
+				 priceoffer, amtoffer, 
+			 totalamt, displayedtotalamt)
+			 values
+				(get_uuid(), v_client, v_org,
+				 'Y', p_user_id, p_user_id,
+				 p_line_id, v_nextLineNum, p_rule_id,
+				 p_basePrice, v_promotionDiscounted,
+			   p_total_amt, p_displayed_amt);
+		 end if;
+	 end if;
+END M_PROMOTION_ADD
+]]></body>
+    </function>
+  </database>

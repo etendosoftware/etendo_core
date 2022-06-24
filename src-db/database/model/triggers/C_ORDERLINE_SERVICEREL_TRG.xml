@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_ORDERLINE_SERVICEREL_TRG">
+    <trigger name="C_ORDERLINE_SERVICEREL_TRG" table="C_ORDERLINE_SERVICERELATION" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+/*************************************************************************
+  * The contents of this file are subject to the Compiere Public
+  * License 1.1 ("License"); You may not use this file except in
+  * compliance with the License. You may obtain a copy of the License in
+  * the legal folder of your Openbravo installation.
+  * Software distributed under the License is distributed on an
+  * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing rights
+  * and limitations under the License.
+  * The Original Code is  Compiere  ERP &  Business Solution
+  * The Initial Developer of the Original Code is Jorg Janke and ComPiere, Inc.
+  * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke,
+  * parts created by ComPiere are Copyright (C) ComPiere, Inc.;
+  * All Rights Reserved.
+  * Contributor(s): Openbravo SLU
+  * Contributions are Copyright (C) 2018-2019 Openbravo, S.L.U.
+  *
+  * Specifically, this derivative work is based upon the following Compiere
+  * file and version.
+  *************************************************************************/
+
+  v_organization_id VARCHAR(32);  --OBTG: varchar2--
+  v_orderline_id VARCHAR(32);  --OBTG: varchar2--
+  v_related_orderline_id VARCHAR(32);  --OBTG: varchar2--
+
+  v_product_id VARCHAR(32); --OBTG: varchar2--
+  v_taxcategory_id VARCHAR(32); --OBTG: varchar2--
+  v_tax_id VARCHAR(32); --OBTG: varchar2--
+  v_new_grossprice NUMBER;
+
+  v_productcategory_id VARCHAR(32); --OBTG: varchar2--
+  v_productservice_id VARCHAR(32); --OBTG: varchar2--
+  v_dateordered DATE;
+  v_warehouse_id VARCHAR(32); --OBTG: varchar2--
+  v_bill_location_id VARCHAR(32); --OBTG: varchar2--
+  v_shiplocation_id VARCHAR(32); --OBTG: varchar2--
+  v_issotrx CHAR(1);
+  v_iscashvat CHAR(1);
+  v_istaxincluded CHAR(1);
+  v_line_rate_prev NUMBER;
+  v_linerate NUMBER;
+  v_grossprice NUMBER;
+  v_gross_pricelist NUMBER;
+  v_price_precision NUMBER;
+BEGIN
+
+  IF AD_isTriggerEnabled()='N' THEN RETURN;
+  END IF;
+
+  IF (INSERTING OR UPDATING) THEN
+    v_organization_id := :NEW.AD_ORG_ID;
+    v_orderline_id := :NEW.C_ORDERLINE_ID;
+    v_related_orderline_id := :NEW.C_ORDERLINE_RELATED_ID;
+  ELSE
+    v_organization_id := :OLD.AD_ORG_ID;    
+    v_orderline_id := :OLD.C_ORDERLINE_ID;
+    v_related_orderline_id := :OLD.C_ORDERLINE_RELATED_ID;      
+  END IF;
+
+  -- Find configuration
+  SELECT P.M_PRODUCT_CATEGORY_ID 
+  INTO v_productcategory_id 
+  FROM C_ORDERLINE OL
+  JOIN M_PRODUCT P ON OL.M_PRODUCT_ID = P.M_PRODUCT_ID  
+  WHERE OL.C_ORDERLINE_ID = v_related_orderline_id;
+  
+  SELECT OL.M_PRODUCT_ID 
+  INTO v_productservice_id 
+  FROM C_ORDERLINE OL 
+  WHERE OL.C_ORDERLINE_ID = v_orderline_id;
+
+  BEGIN
+    SELECT PSL.C_TAXCATEGORY_ID
+    INTO v_taxcategory_id
+    FROM M_PRODUCT_SERVICELINKED PSL 
+    WHERE PSL.M_PRODUCT_ID = v_productservice_id 
+    AND PSL.M_PRODUCT_CATEGORY_ID = v_productcategory_id;
+  EXCEPTION WHEN NO_DATA_FOUND THEN
+    v_taxcategory_id := NULL;
+  END;
+  IF (v_taxcategory_id IS NULL) THEN
+    RETURN;
+  END IF;
+
+  IF (DELETING) THEN
+    -- In case of DELETE, force to use the tax category of the product.
+    v_taxcategory_id := NULL;
+  END IF;
+
+  SELECT O.DATEORDERED, O.M_WAREHOUSE_ID, COALESCE(O.BILLTO_ID, O.C_BPARTNER_LOCATION_ID),
+    O.C_BPARTNER_LOCATION_ID, O.ISSOTRX, O.ISCASHVAT,
+    O.ISTAXINCLUDED, C.PRICEPRECISION
+  INTO v_dateordered, v_warehouse_id, v_bill_location_id, 
+    v_shiplocation_id, v_issotrx, v_iscashvat, 
+    v_istaxincluded, v_price_precision
+  FROM C_ORDER O
+  JOIN C_ORDERLINE OL ON O.C_ORDER_ID = OL.C_ORDER_ID
+  JOIN C_CURRENCY C ON O.C_CURRENCY_ID = C.C_CURRENCY_ID
+  WHERE OL.C_ORDERLINE_ID = v_orderline_id;
+
+  SELECT  OL.M_PRODUCT_ID, OL.GROSS_UNIT_PRICE / OL.PRICEACTUAL, OL.GROSS_UNIT_PRICE,
+    OL.GROSSPRICELIST
+  INTO v_product_id, v_line_rate_prev, v_grossprice, 
+    v_gross_pricelist
+  FROM C_ORDERLINE OL
+  WHERE OL.C_ORDERLINE_ID = v_related_orderline_id;
+
+  -- Update ORDERLINE TAX
+  v_tax_id := C_GETTAX(v_product_id, v_dateordered, v_organization_id, v_warehouse_id, v_bill_location_id, v_shiplocation_id, NULL, v_issotrx, NULL, v_iscashvat, v_taxcategory_id);
+  UPDATE c_orderline 
+  SET c_tax_id = v_tax_id 
+  WHERE C_ORDERLINE_ID = v_related_orderline_id; 
+
+  IF (v_istaxincluded = 'Y') THEN
+    IF (v_taxcategory_id IS NULL) THEN
+      v_new_grossprice := v_gross_pricelist; -- old price gross pricelist
+    ELSE
+      SELECT GROSS_UNIT_PRICE / PRICEACTUAL INTO v_linerate FROM C_ORDERLINE WHERE C_ORDERLINE_ID = v_related_orderline_id;		
+      v_new_grossprice := ROUND(ROUND(v_grossprice * ROUND(v_linerate, v_price_precision), v_price_precision) / ROUND(v_line_rate_prev, v_price_precision), v_price_precision);
+    END IF;
+    UPDATE c_orderline SET gross_unit_price = v_new_grossprice WHERE C_ORDERLINE_ID = v_related_orderline_id;
+  END IF;
+
+  END C_ORDERLINE_SERVICEREL_TRG
+]]></body>
+    </trigger>
+  </database>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ ******************************************************************************
+ * The contents of this file are subject to the   Compiere License  Version 1.1
+ * ("License"); You may not use this file except in compliance with the License
+ * You may obtain a copy of the License at http://www.compiere.org/license.html
+ * Software distributed under the License is distributed on an  "AS IS"  basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * The Original Code is                  Compiere  ERP & CRM  Business Solution
+ * The Initial Developer of the Original Code is Jorg Janke  and ComPiere, Inc.
+ * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke, parts
+ * created by ComPiere are Copyright (C) ComPiere, Inc.;   All Rights Reserved.
+ * Contributor(s): Openbravo SLU
+ * Contributions are Copyright (C) 2001-2015 Openbravo S.L.U.
+ ******************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="DocLineGLJournalData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT 
+            JL.GL_JOURNALLINE_ID,
+            JL.AD_CLIENT_ID,
+            JL.AD_ORG_ID,
+            JL.LINE,
+            JL.DESCRIPTION,
+            JL.C_CURRENCY_ID,
+            JL.AMTSOURCEDR,
+            JL.AMTSOURCECR,
+            JL.CURRENCYRATETYPE,
+            JL.CURRENCYRATE,
+            J.DATEACCT,JL.AMTACCTDR,
+            JL.AMTACCTCR,
+            JL.C_UOM_ID,
+            JL.Qty,
+            VC.C_ACCTSCHEMA_ID,
+            VC.C_VALIDCOMBINATION_ID,
+            JL.ACCOUNT_ID  AS M_C_GLITEM_ID,
+            VC.AD_ORGTRX_ID,
+            VC.C_LOCFROM_ID,
+            VC.C_LOCTO_ID,
+            COALESCE(JL.M_PRODUCT_ID, VC.M_PRODUCT_ID) AS M_PRODUCT_ID,
+            COALESCE(JL.C_BPARTNER_ID, VC.C_BPARTNER_ID) AS C_BPARTNER_ID,
+            COALESCE(JL.C_SALESREGION_ID,VC.C_SALESREGION_ID) AS C_SALESREGION_ID,
+            COALESCE(JL.C_PROJECT_ID,VC.C_PROJECT_ID) AS C_PROJECT_ID,
+            COALESCE(JL.C_CAMPAIGN_ID,VC.C_CAMPAIGN_ID) AS C_CAMPAIGN_ID,
+            COALESCE(JL.C_ACTIVITY_ID,VC.C_ACTIVITY_ID) AS C_ACTIVITY_ID,
+            COALESCE(JL.USER1_ID,VC.USER1_ID) AS USER1_ID,
+            COALESCE(JL.USER2_ID,VC.USER2_ID) AS USER2_ID,
+            JL.C_COSTCENTER_ID,JL.A_ASSET_ID,
+            JL.C_DEBT_PAYMENT_ID,JL.C_WITHHOLDING_ID,
+            JL.C_TAX_ID,
+            '' AS GLITEM_DEBIT_ACCT,
+            '' as GLITEM_CREDIT_ACCT 
+        FROM  
+            GL_JOURNALLINE JL INNER JOIN GL_JOURNAL J ON J.GL_JOURNAL_ID = JL.GL_JOURNAL_ID 
+            LEFT JOIN C_VALIDCOMBINATION VC ON VC.C_VALIDCOMBINATION_ID=JL.C_VALIDCOMBINATION_ID
+        WHERE  JL.GL_JOURNAL_ID = ? AND JL.ISACTIVE='Y' AND ((VC.ISFULLYQUALIFIED='Y' AND 
+        JL.C_VALIDCOMBINATION_ID IS NOT NULL) OR (JL.C_VALIDCOMBINATION_ID IS NULL) ) ORDER BY JL.LINE]]>
+     </Sql>
+     <Parameter name="GL_Journal_ID"/>
+   </SqlMethod>
+   
+   <SqlMethod name="selectGlitem" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+    SELECT GLITEM_DEBIT_ACCT, GLITEM_CREDIT_ACCT
+    FROM C_GLITEM_ACCT 
+    WHERE C_GLITEM_id = ?
+    AND C_ACCTSCHEMA_id = ?
+     ]]>
+     </Sql>
+     <Parameter name="C_Glitem_ID"/>
+     <Parameter name="C_AcctSchema_ID"/>
+   </SqlMethod>
+
+   </SqlClass>

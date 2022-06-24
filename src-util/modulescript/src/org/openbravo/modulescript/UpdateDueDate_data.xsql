@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="UpdateDueDateData" package="org.openbravo.modulescript">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        select 1 as count from dual
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="needsUpdate" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        select count(1) as count from dual
+        where exists(select 1 from fin_payment_schedule
+                        where origduedate is not null)
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="updateExpectedDate" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        update fin_payment_schedule set expecteddate=duedate
+        where origduedate is not null
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="updateDueDate" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        update fin_payment_schedule set duedate=origduedate
+        where origduedate is not null
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="updateOrigDueDate" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        update fin_payment_schedule set origduedate=null
+        where origduedate is not null
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

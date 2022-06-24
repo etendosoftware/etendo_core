@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2019 Openbravo SLU
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="ReportValuationStockData" package="org.openbravo.erpCommon.ad_reports">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT CATEGORY_NAME, M_PRODUCT_ID, PRODUCT_NAME, PRODUCT_SEARCHKEY, SUM(QTY) AS QTY, UOM_NAME, CASE ISCOSTCALCULATED
+                       WHEN 'Y' THEN SUM(TOTAL_COST) / SUM(QTY)
+                       ELSE NULL
+                     END AS AVERAGE_COST,
+               SUM(TOTAL_COST) AS TOTAL_COST,
+               COSTTYPE as COST_TYPE,
+               SUM(QTY) * COSTTYPE as VALUATION_TYPE,
+               ZZ.WAREHOUSE as WAREHOUSE,
+               '' as ID, '' as PADRE , '' AS NAME
+        FROM (SELECT M_PRODUCT_CATEGORY.NAME AS CATEGORY_NAME, A.M_PRODUCT_ID, AD_COLUMN_IDENTIFIER (to_char('M_Product'),to_char(M_PRODUCT.M_PRODUCT_ID),to_char(?)) AS PRODUCT_NAME, 
+              M_PRODUCT.VALUE AS PRODUCT_SEARCHKEY, A.QTY, C_UOM.NAME AS UOM_NAME,
+                     CASE a.iscostcalculated
+                       WHEN 'Y' THEN C_CURRENCY_CONVERT_PRECISION (Suma,A.c_currency_id,?,A.MOVEMENTDATE,NULL,A.AD_CLIENT_ID,?,'C')
+                       ELSE NULL
+                     END AS TOTAL_COST,  A.ISCOSTCALCULATED, A.AD_CLIENT_ID, A.MOVEMENTDATE, A.C_CURRENCY_ID,
+                     CASE a.iscostcalculated
+                       WHEN 'Y' THEN C_CURRENCY_CONVERT_PRECISION (P.COST,P.c_currency_id,?,to_date(?),NULL,A.AD_CLIENT_ID,?,'C')
+                       ELSE NULL
+                     END AS COSTTYPE, A.WAREHOUSE AS WAREHOUSE
+              FROM M_PRODUCT_CATEGORY,
+                   (SELECT trx.M_PRODUCT_ID, sum(trx.MOVEMENTQTY) AS QTY, sum(CASE WHEN trx.MOVEMENTQTY < 0 THEN- tc.trxcost ELSE tc.trxcost END) AS Suma, 
+                   trx.C_UOM_ID, trx.AD_CLIENT_ID, trx.iscostcalculated, tc.c_currency_id, trx.movementdate, WH.NAME AS WAREHOUSE, WH.M_WAREHOUSE_ID 
+                    FROM M_TRANSACTION trx 
+                      JOIN M_LOCATOR l ON trx.M_LOCATOR_ID = l.M_LOCATOR_ID
+                      INNER JOIN M_WAREHOUSE WH ON l.M_WAREHOUSE_ID = WH.M_WAREHOUSE_ID
+                      LEFT JOIN (SELECT sum(cost) AS trxcost, m_transaction_id, c_currency_id
+                                 FROM M_TRANSACTION_COST
+                                 WHERE dateacct < to_date(?)
+                                   AND dateacct > to_date(?)
+                                 GROUP BY m_transaction_id, c_currency_id) tc ON trx.m_transaction_id = tc.m_transaction_id
+                    WHERE TRUNC(trx.MOVEMENTDATE) < to_date(?)
+                    AND TRUNC(trx.MOVEMENTDATE) > to_date(?)
+                    AND trx.TRXPROCESSDATE >= to_timestamp(?, ?)
+                    AND trx.ad_org_id IN ('1')
+                    AND 0=0
+                    GROUP BY trx.M_PRODUCT_ID, trx.C_UOM_ID, trx.AD_CLIENT_ID, trx.iscostcalculated, tc.c_currency_id, trx.movementdate, WH.NAME, WH.M_WAREHOUSE_ID 
+                    UNION ALL
+                    SELECT agg.m_product_id, stock as qty, valuation as Suma, agg.c_uom_id, agg.ad_client_id, CASE WHEN valuation <> 0 THEN 'Y' ELSE 'N' END,
+                      agg.c_currency_id, dateto, wh.name as warehouse, WH.M_WAREHOUSE_ID 
+                    FROM m_valued_stock_agg agg
+                      JOIN m_locator l ON (agg.m_locator_id = l.m_locator_id)
+                      JOIN m_warehouse wh ON (l.m_warehouse_id = wh.m_warehouse_id)
+                    WHERE agg.dateto = (SELECT MAX(agg2.dateto)
+                                       FROM m_valued_stock_agg agg2
+                                       WHERE agg2.dateto < TO_DATE(?)
+                                       AND agg2.ad_org_id IN ('1'))
+                      AND agg.ad_org_id IN ('1')
+                      AND 3=3
+                    ) A,
+                    C_UOM,
+                    M_PRODUCT LEFT JOIN (SELECT mc.COST as COST, mc.DATEFROM, mc.M_PRODUCT_ID, mc.c_currency_id, MC.M_WAREHOUSE_ID
+                                        FROM M_COSTING mc
+                                          JOIN (SELECT mc2.M_PRODUCT_ID, max(mc2.DATEFROM) AS datefrom, MC2.M_WAREHOUSE_ID
+                                                FROM M_COSTING mc2
+                                                WHERE mc2.DATEFROM < to_date(?)
+                                                  AND 2 = 2
+                                                  AND mc2.COSTTYPE IN ('1')
+                                                GROUP BY mc2.M_PRODUCT_ID, MC2.M_WAREHOUSE_ID) dc ON (mc.DATEFROM = dc.DATEFROM AND mc.M_PRODUCT_ID = dc.M_PRODUCT_ID
+                                                  AND ((? = 'N' AND DC.M_WAREHOUSE_ID IS NULL) OR (? = 'Y' AND MC.M_WAREHOUSE_ID = DC.M_WAREHOUSE_ID)))
+                                        WHERE mc.DATETO> mc.DATEFROM
+                                       AND 9 = 9
+                                       ) P
+                               ON M_PRODUCT.M_PRODUCT_ID = P.M_PRODUCT_ID
+              WHERE A.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
+              AND   ((? = 'N' AND P.M_WAREHOUSE_ID IS NULL) OR (? = 'Y' AND A.M_WAREHOUSE_ID = P.M_WAREHOUSE_ID))
+              AND   A.C_UOM_ID = C_UOM.C_UOM_ID
+              AND   M_PRODUCT.M_PRODUCT_CATEGORY_ID = M_PRODUCT_CATEGORY.M_PRODUCT_CATEGORY_ID
+              AND   1 = 1
+              AND   (A.QTY <> 0 OR A.Suma <> 0)) ZZ
+        GROUP BY ZZ.M_PRODUCT_ID, CATEGORY_NAME, ZZ.WAREHOUSE, PRODUCT_NAME, PRODUCT_SEARCHKEY, UOM_NAME, ISCOSTCALCULATED, COSTTYPE
+        HAVING SUM(QTY) <> 0
+        ORDER BY WAREHOUSE, CATEGORY_NAME, PRODUCT_NAME
+     ]]></Sql>
+      <Field name="rownum" value="count"/>
+      <Parameter name="adLanguage"/>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="legalEntity"/>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="reportDate"/>
+      <Parameter name="legalEntity"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="processTime"/>
+      <Parameter name="dateTimeFormat"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND trx.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 0=0"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="datePlus"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg2.ad_org_id IN (" text="'1'"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 3=3"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="datePlus"/>
+      <Parameter name="costOrg" optional="true" after="AND 2 = 2"><![CDATA[ AND mc2.AD_ORG_ID IN (?,'0') ]]></Parameter>
+      <Parameter name="costClient" optional="true" after="AND 2 = 2"><![CDATA[ AND mc2.ad_client_id = ? ]]></Parameter>
+      <Parameter name="costType" type="replace" optional="true" after="AND mc2.COSTTYPE IN (" text="'1'"/>
+      <Parameter name="warehouseDimension"/>
+      <Parameter name="warehouseDimension"/>
+      <Parameter name="costOrg" optional="true" after="AND 9 = 9"><![CDATA[ AND mc.AD_ORG_ID IN (?,'0') ]]></Parameter>
+      <Parameter name="warehouseDimension"/>
+      <Parameter name="warehouseDimension"/>
+      <Parameter name="categoryProduct" optional="true" after="AND   1 = 1"><![CDATA[ AND M_PRODUCT.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+  </SqlMethod>
+  
+  <SqlMethod name="selectClusteredByWarehouse" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+  SELECT CATEGORY_NAME, zz.M_PRODUCT_ID,
+     AD_COLUMN_IDENTIFIER (to_char('M_Product'),to_char(zz.M_PRODUCT_ID),to_char(?)) AS PRODUCT_NAME,
+     PRODUCT_SEARCHKEY, zz.QTY AS QTY, C_UOM.NAME AS UOM_NAME,
+     ROUND(TOTAL_COST / zz.QTY, c_currency.costingprecision) AS AVERAGE_COST,
+     TOTAL_COST AS TOTAL_COST,
+     C_CURRENCY_CONVERT_PRECISION (c.COST,c.c_currency_id, c_currency.c_currency_id,to_date(?),NULL,c.AD_CLIENT_ID,?,'C') AS COST_TYPE,
+     ROUND(zz.QTY *  C_CURRENCY_CONVERT_PRECISION (c.COST,c.c_currency_id, c_currency.c_currency_id,to_date(?),NULL,c.AD_CLIENT_ID,?,'C'), c_currency.stdprecision) as VALUATION_TYPE,
+     'ALL Warehouses' as WAREHOUSE,
+     '' as ID, '' as PADRE , '' AS NAME
+  FROM (
+    SELECT pc.NAME AS CATEGORY_NAME,
+        A.M_PRODUCT_ID, 
+        p.VALUE AS PRODUCT_SEARCHKEY, SUM(A.QTY) AS QTY, a.c_uom_id,
+        SUM(C_CURRENCY_CONVERT_PRECISION(Suma, A.c_currency_id, ?, a.dateacct, NULL, A.AD_CLIENT_ID, ?,'C')) AS TOTAL_COST
+    FROM M_PRODUCT_CATEGORY pc
+      JOIN M_PRODUCT p ON pc.m_product_category_id = p.m_product_category_id
+      JOIN (
+          SELECT trx.M_PRODUCT_ID,
+              sum(CASE WHEN tc.m_costadjustmentline_id IS NULL THEN trx.MOVEMENTQTY ELSE 0 END) AS QTY,
+              sum(CASE WHEN trx.MOVEMENTQTY < 0 THEN -tc.cost ELSE tc.cost END) AS Suma, 
+              trx.C_UOM_ID, trx.AD_CLIENT_ID, tc.c_currency_id, tc.dateacct
+          FROM M_TRANSACTION trx 
+            JOIN M_LOCATOR l ON trx.M_LOCATOR_ID = l.M_LOCATOR_ID
+            JOIN M_PRODUCT p ON trx.m_product_id = p.m_product_id
+            JOIN M_TRANSACTION_COST tc ON trx.m_transaction_id = tc.m_transaction_id AND tc.dateacct < to_date(?)
+              AND tc.dateacct > to_date(?)
+          WHERE TRUNC(trx.MOVEMENTDATE) < to_date(?)
+            AND TRUNC(trx.MOVEMENTDATE) > to_date(?)
+            AND trx.TRXPROCESSDATE >= to_timestamp(?, ?)
+            AND trx.ad_org_id IN ('1')
+            AND trx.iscostcalculated = 'Y'
+            AND 0 = 0 
+          GROUP BY trx.M_PRODUCT_ID, trx.C_UOM_ID, trx.AD_CLIENT_ID, tc.c_currency_id, tc.dateacct
+          UNION ALL
+          SELECT agg.m_product_id, stock as qty, valuation as Suma, agg.c_uom_id, agg.ad_client_id, agg.c_currency_id, dateto
+                    FROM m_valued_stock_agg agg
+                      JOIN m_locator l ON (agg.m_locator_id = l.m_locator_id)
+                      JOIN m_product p ON (agg.m_product_id = p.m_product_id)
+                    WHERE agg.dateto = (SELECT MAX(agg2.dateto)
+                                       FROM m_valued_stock_agg agg2
+                                       WHERE agg2.dateto < TO_DATE(?)
+                                       AND agg2.ad_org_id IN ('1'))
+                      AND agg.ad_org_id IN ('1')
+                      AND 8=8
+        ) A ON a.m_product_id = p.m_product_id
+    WHERE 1 = 1
+      AND (A.QTY <> 0 OR A.Suma <> 0)
+  GROUP BY a.M_PRODUCT_ID, pc.NAME, p.VALUE, a.c_uom_id
+  HAVING SUM(A.QTY) <>0
+  ) ZZ
+    JOIN C_UOM ON c_uom.c_uom_id = zz.c_uom_id
+    LEFT JOIN (
+        SELECT AVG(c.COST) as COST, c.DATEFROM, c.M_PRODUCT_ID, c.c_currency_id, c.ad_client_id
+        FROM M_COSTING c
+        LEFT JOIN M_WAREHOUSE w ON (c.m_warehouse_id = w.m_warehouse_id)
+          JOIN (SELECT c2.M_PRODUCT_ID, max(c2.DATEFROM) AS datefrom
+                FROM M_COSTING c2
+                WHERE c2.DATEFROM < to_date(?)
+                  AND 4 = 4
+                  AND c2.costtype IN ('1')
+                GROUP BY c2.M_PRODUCT_ID) dc ON (c.DATEFROM = dc.DATEFROM AND c.M_PRODUCT_ID = dc.M_PRODUCT_ID)
+        WHERE c.DATETO > c.DATEFROM
+          AND 5 = 5
+          AND c.costtype IN ('1')
+          AND ((? = 'N' AND c.m_warehouse_id IS NULL) OR (? = 'Y' AND ad_isorgincluded(w.ad_org_id, ?, w.ad_client_id) <> -1))
+        GROUP BY c.DATEFROM, c.M_PRODUCT_ID, c.c_currency_id, c.ad_client_id
+    ) C ON C.M_PRODUCT_ID = ZZ.M_PRODUCT_ID
+    JOIN c_currency ON c_currency.c_currency_id = ?
+  UNION ALL
+  SELECT pc.name AS category_name,
+      stock.m_product_id,
+      AD_COLUMN_IDENTIFIER (to_char('M_Product'),to_char(stock.M_PRODUCT_ID),to_char(?)) AS PRODUCT_NAME,
+      stock.value AS PRODUCT_SEARCHKEY,
+      stock.QTY AS QTY,
+      uom.name as UOM_NAME,
+      null AS AVERAGE_COST,
+      null AS TOTAL_COST,
+      null as COST_TYPE,
+      null as VALUATION_TYPE,
+      'ALL Warehouses' as WAREHOUSE,
+      '' as ID, '' as PADRE , '' AS NAME
+  FROM m_product_category pc
+    LEFT JOIN (
+      SELECT sum(trx.movementqty) as QTY, p.m_product_id, p.value, p.m_product_category_id, trx.c_uom_id
+      FROM m_product p
+        JOIN m_transaction trx ON trx.m_product_id = p.m_product_id
+        JOIN m_locator l ON trx.m_locator_id = l.m_locator_id
+      WHERE trx.iscostcalculated = 'N'
+        AND TRUNC(trx.MOVEMENTDATE) < to_date(?)
+        AND TRUNC(trx.MOVEMENTDATE) > to_date(?)
+        AND trx.TRXPROCESSDATE >= to_timestamp(?, ?)
+        AND  trx.ad_org_id IN ('2')
+        AND 2 = 2
+      GROUP BY p.m_product_id, p.value, p.m_product_category_id, trx.c_uom_id
+      HAVING sum(trx.movementqty) <> 0
+    ) stock ON pc.m_product_category_id = stock.m_product_category_id
+    JOIN c_uom uom ON stock.c_uom_id = uom.c_uom_id
+    JOIN c_currency ON c_currency.c_currency_id = ?
+  WHERE 3 = 3
+  ORDER BY CATEGORY_NAME, PRODUCT_NAME
+     ]]></Sql>
+      <Field name="rownum" value="count"/>
+      <Parameter name="adLanguage"/>
+      <Parameter name="reportDate"/>
+      <Parameter name="legalEntity"/>
+      <Parameter name="reportDate"/>
+      <Parameter name="legalEntity"/>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="legalEntity"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="processTime"/>
+      <Parameter name="dateTimeFormat"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND trx.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 0 = 0"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="AND 0 = 0"><![CDATA[ AND p.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="datePlus"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg2.ad_org_id IN (" text="'1'"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 8=8"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="AND 8=8"><![CDATA[ AND p.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="WHERE 1 = 1"><![CDATA[ AND pc.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="datePlus"/>
+      <Parameter name="costOrg" optional="true" after="AND 4 = 4"><![CDATA[ AND c2.AD_ORG_ID IN (?,'0') ]]></Parameter>
+      <Parameter name="costClient" optional="true" after="AND 4 = 4"><![CDATA[ AND c2.ad_client_id = ? ]]></Parameter>
+      <Parameter name="costType" type="replace" optional="true" after="AND c2.costtype IN (" text="'1'"/>
+      <Parameter name="costOrg" optional="true" after="AND 5 = 5"><![CDATA[ AND c.AD_ORG_ID IN (?,'0') ]]></Parameter>
+      <Parameter name="costClient" optional="true" after="AND 5 = 5"><![CDATA[ AND c.ad_client_id = ? ]]></Parameter>
+      <Parameter name="costType" type="replace" optional="true" after="AND c.costtype IN (" text="'1'"/>
+      <Parameter name="warehouseDimension"/>
+      <Parameter name="warehouseDimension"/>
+      <Parameter name="filterOrgId"/>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="adLanguage"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="processTime"/>
+      <Parameter name="dateTimeFormat"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND  trx.ad_org_id IN (" text="'2'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 2 = 2"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="AND 2 = 2"><![CDATA[ AND p.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="categoryProduct" optional="true" after="WHERE 3 = 3"><![CDATA[ AND pc.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+  </SqlMethod>
+  
+  <SqlMethod name="selectWithoutCost" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT CATEGORY_NAME, M_PRODUCT_ID, PRODUCT_NAME, PRODUCT_SEARCHKEY, SUM(QTY) AS QTY, UOM_NAME, CASE ISCOSTCALCULATED
+                       WHEN 'Y' THEN SUM(TOTAL_COST) / SUM(QTY)
+                       ELSE NULL
+                     END AS AVERAGE_COST,
+               SUM(TOTAL_COST) AS TOTAL_COST,
+               ZZ.WAREHOUSE as WAREHOUSE
+        FROM (SELECT M_PRODUCT_CATEGORY.NAME AS CATEGORY_NAME, A.M_PRODUCT_ID, AD_COLUMN_IDENTIFIER (to_char('M_Product'),to_char(M_PRODUCT.M_PRODUCT_ID),to_char(?)) AS PRODUCT_NAME, 
+              M_PRODUCT.VALUE AS PRODUCT_SEARCHKEY, A.QTY, C_UOM.NAME AS UOM_NAME,
+                     CASE a.iscostcalculated
+                       WHEN 'Y' THEN C_CURRENCY_CONVERT_PRECISION (Suma,A.c_currency_id,?,A.movementdate,NULL,A.AD_CLIENT_ID,?,'C')
+                       ELSE NULL
+                     END AS TOTAL_COST,  A.ISCOSTCALCULATED, A.AD_CLIENT_ID, A.MOVEMENTDATE, A.C_CURRENCY_ID, A.WAREHOUSE AS WAREHOUSE
+              FROM M_PRODUCT_CATEGORY,
+                   (SELECT trx.M_PRODUCT_ID, sum(trx.MOVEMENTQTY) AS QTY, sum(CASE WHEN trx.MOVEMENTQTY < 0 THEN- tc.trxcost ELSE tc.trxcost END) AS Suma, 
+                   trx.C_UOM_ID, trx.AD_CLIENT_ID, trx.iscostcalculated, tc.c_currency_id, trx.movementdate, WH.NAME AS WAREHOUSE
+                    FROM M_TRANSACTION trx 
+                      JOIN M_LOCATOR l ON trx.M_LOCATOR_ID = l.M_LOCATOR_ID
+                      INNER JOIN M_WAREHOUSE WH ON l.M_WAREHOUSE_ID = WH.M_WAREHOUSE_ID
+                      LEFT JOIN (SELECT sum(cost) AS trxcost, m_transaction_id, c_currency_id
+                                 FROM M_TRANSACTION_COST
+                                 WHERE dateacct < to_date(?)
+                                   AND dateacct > to_date(?)
+                                 GROUP BY m_transaction_id, c_currency_id) tc ON trx.m_transaction_id = tc.m_transaction_id
+                    WHERE TRUNC(trx.MOVEMENTDATE) < to_date(?)
+                    AND TRUNC(trx.MOVEMENTDATE) > to_date(?)
+                    AND trx.TRXPROCESSDATE >= to_timestamp(?, ?)
+                    AND trx.ad_org_id IN ('1')
+                    AND 0=0
+                    GROUP BY trx.M_PRODUCT_ID, trx.C_UOM_ID, trx.AD_CLIENT_ID, trx.iscostcalculated, tc.c_currency_id, trx.movementdate, WH.NAME
+                    UNION ALL
+                    SELECT agg.m_product_id, stock as qty, valuation as Suma, agg.c_uom_id, agg.ad_client_id, CASE WHEN valuation <> 0 THEN 'Y' ELSE 'N' END,
+                      agg.c_currency_id, dateto, wh.name as warehouse
+                    FROM m_valued_stock_agg agg
+                      JOIN m_locator l ON (agg.m_locator_id = l.m_locator_id)
+                      JOIN m_warehouse wh ON (l.m_warehouse_id = wh.m_warehouse_id)
+                    WHERE agg.dateto = (SELECT MAX(agg2.dateto)
+                                       FROM m_valued_stock_agg agg2
+                                       WHERE agg2.dateto < TO_DATE(?)
+                                       AND agg2.ad_org_id IN ('1'))
+                      AND agg.ad_org_id IN ('1')
+                      AND 2=2) A,
+                   C_UOM,
+                   M_PRODUCT
+              WHERE A.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
+              AND   A.C_UOM_ID = C_UOM.C_UOM_ID
+              AND   M_PRODUCT.M_PRODUCT_CATEGORY_ID = M_PRODUCT_CATEGORY.M_PRODUCT_CATEGORY_ID
+              AND   1 = 1
+              AND   (A.QTY <> 0 OR A.Suma <> 0)) ZZ
+        GROUP BY ZZ.M_PRODUCT_ID, CATEGORY_NAME, ZZ.WAREHOUSE, PRODUCT_NAME, PRODUCT_SEARCHKEY, UOM_NAME, ISCOSTCALCULATED
+        HAVING SUM(QTY) <> 0
+        ORDER BY WAREHOUSE, CATEGORY_NAME, PRODUCT_NAME
+     ]]></Sql>
+      <Field name="rownum" value="count"/>
+      <Parameter name="adLanguage"/>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="legalEntity"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="processTime"/>
+      <Parameter name="dateTimeFormat"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND trx.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 0=0"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="datePlus"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg2.ad_org_id IN (" text="'1'"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 2=2"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="AND   1 = 1"><![CDATA[ AND M_PRODUCT.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+  </SqlMethod>
+  
+  <SqlMethod name="selectClusteredByWarehouseWithoutCost" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+  SELECT CATEGORY_NAME, zz.M_PRODUCT_ID,
+     AD_COLUMN_IDENTIFIER (to_char('M_Product'),to_char(zz.M_PRODUCT_ID),to_char(?)) AS PRODUCT_NAME,
+     PRODUCT_SEARCHKEY, zz.QTY AS QTY, C_UOM.NAME AS UOM_NAME,
+     ROUND(TOTAL_COST / zz.QTY, c_currency.costingprecision) AS AVERAGE_COST,
+     TOTAL_COST AS TOTAL_COST,
+     'ALL Warehouses' as WAREHOUSE
+  FROM (
+    SELECT pc.NAME AS CATEGORY_NAME,
+        A.M_PRODUCT_ID, 
+        p.VALUE AS PRODUCT_SEARCHKEY, SUM(A.QTY) AS QTY, a.c_uom_id,
+        SUM(C_CURRENCY_CONVERT_PRECISION(Suma, A.c_currency_id, ?, a.dateacct, NULL, A.AD_CLIENT_ID, ?,'C')) AS TOTAL_COST
+    FROM M_PRODUCT_CATEGORY pc
+      JOIN M_PRODUCT p ON pc.m_product_category_id = p.m_product_category_id
+      JOIN (
+          SELECT trx.M_PRODUCT_ID,
+              sum(CASE WHEN tc.m_costadjustmentline_id IS NULL THEN trx.MOVEMENTQTY ELSE 0 END) AS QTY,
+              sum(CASE WHEN trx.MOVEMENTQTY < 0 THEN -tc.cost ELSE tc.cost END) AS Suma, 
+              trx.C_UOM_ID, trx.AD_CLIENT_ID, tc.c_currency_id, tc.dateacct
+          FROM M_TRANSACTION trx 
+            JOIN M_LOCATOR l ON trx.M_LOCATOR_ID = l.M_LOCATOR_ID
+            JOIN M_PRODUCT p ON trx.m_product_id = p.m_product_id
+            JOIN M_TRANSACTION_COST tc ON trx.m_transaction_id = tc.m_transaction_id 
+              AND tc.dateacct < to_date(?) AND tc.dateacct > to_date(?)
+          WHERE TRUNC(trx.MOVEMENTDATE) < to_date(?)
+            AND TRUNC(trx.MOVEMENTDATE) > to_date(?)
+            AND trx.TRXPROCESSDATE >= to_timestamp(?, ?)
+            AND trx.ad_org_id IN ('1')
+            AND trx.iscostcalculated = 'Y'
+            AND 0 = 0 
+          GROUP BY trx.M_PRODUCT_ID, trx.C_UOM_ID, trx.AD_CLIENT_ID, tc.c_currency_id, tc.dateacct
+          UNION ALL
+          SELECT agg.m_product_id, stock as qty, valuation as Suma, agg.c_uom_id, agg.ad_client_id, agg.c_currency_id, dateto
+          FROM m_valued_stock_agg agg
+            JOIN m_locator l ON (agg.m_locator_id = l.m_locator_id)
+            JOIN m_product p ON (agg.m_product_id = p.m_product_id)
+          WHERE agg.dateto = (SELECT MAX(agg2.dateto)
+                              FROM m_valued_stock_agg agg2
+                              WHERE agg2.dateto < TO_DATE(?)
+                              AND agg2.ad_org_id IN ('1'))
+            AND agg.ad_org_id IN ('1')
+           AND 4=4
+        ) A ON a.m_product_id = p.m_product_id
+    WHERE 1 = 1
+      AND (A.QTY <> 0 OR A.Suma <> 0)
+  GROUP BY a.M_PRODUCT_ID, pc.NAME, p.VALUE, a.c_uom_id
+  HAVING SUM(A.QTY) <>0
+  ) ZZ
+    JOIN C_UOM ON c_uom.c_uom_id = zz.c_uom_id
+    JOIN c_currency ON c_currency.c_currency_id = ?
+  UNION ALL
+  SELECT pc.name AS category_name,
+      stock.m_product_id,
+      AD_COLUMN_IDENTIFIER (to_char('M_Product'),to_char(stock.M_PRODUCT_ID),to_char(?)) AS PRODUCT_NAME,
+      stock.value AS PRODUCT_SEARCHKEY,
+      stock.QTY AS QTY,
+      uom.name as UOM_NAME,
+      null AS AVERAGE_COST,
+      null AS TOTAL_COST,
+      'ALL Warehouses' as WAREHOUSE
+  FROM m_product_category pc
+    JOIN (
+      SELECT sum(trx.movementqty) as QTY, p.m_product_id, p.value, p.m_product_category_id, trx.c_uom_id
+      FROM m_product p
+        JOIN m_transaction trx ON trx.m_product_id = p.m_product_id
+        JOIN m_locator l ON trx.m_locator_id = l.m_locator_id
+      WHERE trx.iscostcalculated = 'N'
+        AND TRUNC(trx.MOVEMENTDATE) < to_date(?)
+        AND TRUNC(trx.MOVEMENTDATE) > to_date(?)
+        AND trx.TRXPROCESSDATE >= to_timestamp(?, ?)
+        AND  trx.ad_org_id IN ('2')
+        AND 2 = 2
+      GROUP BY p.m_product_id, p.value, p.m_product_category_id, trx.c_uom_id
+      HAVING sum(trx.movementqty) <> 0
+    ) stock ON pc.m_product_category_id = stock.m_product_category_id
+    JOIN c_uom uom ON stock.c_uom_id = uom.c_uom_id
+    JOIN c_currency ON c_currency.c_currency_id = ?
+  WHERE 3 = 3
+  ORDER BY CATEGORY_NAME, PRODUCT_NAME
+     ]]></Sql>
+      <Field name="rownum" value="count"/>
+      <Parameter name="adLanguage"/>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="legalEntity"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="processTime"/>
+      <Parameter name="dateTimeFormat"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND trx.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 0 = 0"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="AND 0 = 0"><![CDATA[ AND p.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="datePlus"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg2.ad_org_id IN (" text="'1'"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND agg.ad_org_id IN (" text="'1'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 4=4"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="AND 4=4"><![CDATA[ AND p.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="WHERE 1 = 1"><![CDATA[ AND pc.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="adLanguage"/>
+      <Parameter name="datePlus"/>
+      <Parameter name="maxaggDate"/>
+      <Parameter name="processTime"/>
+      <Parameter name="dateTimeFormat"/>
+      <Parameter name="organization" type="replace" optional="true" after="AND  trx.ad_org_id IN (" text="'2'"/>
+      <Parameter name="warehouse" type="argument" optional="true" after="AND 2 = 2"><![CDATA[ AND l.M_WAREHOUSE_ID IN ]]></Parameter>
+      <Parameter name="categoryProduct" optional="true" after="AND 2 = 2"><![CDATA[ AND p.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+      <Parameter name="cCurrencyConv"/>
+      <Parameter name="categoryProduct" optional="true" after="WHERE 3 = 3"><![CDATA[ AND pc.M_PRODUCT_CATEGORY_ID= ? ]]></Parameter>
+  </SqlMethod>
+  
+  <SqlMethod name="getCostingMigrationDate" type="preparedStatement" return="date">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+       SELECT MIN(updated) as costingMigrationDate
+       FROM m_costing_rule
+       WHERE created = (SELECT MIN(created) FROM m_costing_rule WHERE ad_client_id = ?)
+       AND ad_client_id = ?
+      ]]>
+    </Sql>
+    <Parameter name="adClient"/>
+    <Parameter name="adClient"/>
+  </SqlMethod>
+  
+  <SqlMethod name="selectWhsDouble" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+       SELECT o.AD_ORG_ID AS PADRE, w.M_WAREHOUSE_ID AS ID, w.NAME
+       FROM AD_ORG o, M_WAREHOUSE w
+       WHERE ad_isorgincluded(w.AD_ORG_ID, o.AD_ORG_ID, o.AD_CLIENT_ID) <> -1
+       AND o.AD_CLIENT_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="adClient"/>
+  </SqlMethod>
+  
+    <SqlMethod name="selectMaxAggregatedDate" type="preparedStatement" return="date">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+       SELECT MAX(dateto)
+       FROM m_valued_stock_agg agg
+       WHERE ad_client_id = ?
+       AND dateto < to_date(?)
+       AND ad_org_id IN ('1')
+      ]]>
+    </Sql>
+    <Parameter name="adClient"/>
+    <Parameter name="dateFilter"/>
+    <Parameter name="organization" type="replace" optional="true" after="AND ad_org_id IN (" text="'1'"/>
+  </SqlMethod>
+  
+</SqlClass>

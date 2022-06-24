@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_PRODUCT_CATEGORY_TRG">
+    <trigger name="M_PRODUCT_CATEGORY_TRG" table="M_PRODUCT_CATEGORY" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+    /*************************************************************************
+    * The contents of this file are subject to the Compiere Public
+    * License 1.1 ("License"); You may not use this file except in
+    * compliance with the License. You may obtain a copy of the License in
+    * the legal folder of your Openbravo installation.
+    * Software distributed under the License is distributed on an
+    * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+    * implied. See the License for the specific language governing rights
+    * and limitations under the License.
+    * The Original Code is  Compiere  ERP &  Business Solution
+    * The Initial Developer of the Original Code is Jorg Janke and ComPiere, Inc.
+    * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke,
+    * parts created by ComPiere are Copyright (C) ComPiere, Inc.;
+    * All Rights Reserved.
+    * Contributor(s): Openbravo SLU
+    * Contributions are Copyright (C) 2001-2017 Openbravo, S.L.U.
+    *
+    * Specifically, this derivative work is based upon the following Compiere
+    * file and version.
+    *************************************************************************
+    * New Accounting Defaults
+    */
+   TYPE RECORD IS REF CURSOR;
+  Cur_Defaults RECORD;
+  v_xTree_ID AD_ClientInfo.AD_Tree_Product_Category_ID%TYPE;
+  v_count NUMBER;
+    
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+
+  IF (INSERTING) THEN
+    FOR Cur_Defaults IN
+      (
+      SELECT *
+      FROM C_AcctSchema_Default d
+      WHERE EXISTS
+        (
+      SELECT 1 
+      FROM AD_Org_AcctSchema
+      WHERE (AD_IsOrgIncluded(AD_Org_ID, :new.AD_ORG_ID, :new.AD_Client_ID)<>-1
+	OR AD_IsOrgIncluded(:new.AD_ORG_ID, AD_Org_ID, :new.AD_Client_ID)<>-1)
+      AND IsActive = 'Y'
+      AND AD_Org_AcctSchema.C_AcctSchema_ID = d.C_AcctSchema_ID
+      AND AD_Org_AcctSchema.AD_Client_ID=:new.AD_Client_ID
+        )
+      )
+    LOOP
+      INSERT
+      INTO M_Product_Category_Acct
+        (
+          M_Product_Category_Acct_ID, M_Product_Category_ID, C_AcctSchema_ID, AD_Client_ID,
+          AD_Org_ID, IsActive, Created,
+          CreatedBy, Updated, UpdatedBy,
+          P_Revenue_Acct, P_Def_Revenue_Acct, P_Expense_Acct, P_Def_Expense_Acct, P_Asset_Acct,
+          P_COGS_Acct, P_PurchasePriceVariance_Acct, P_InvoicePriceVariance_Acct,
+          P_TradeDiscountRec_Acct, P_TradeDiscountGrant_Acct,
+          P_COGS_Return_Acct, P_Revenue_Return_Acct
+        )
+        VALUES
+        (
+          get_uuid(), :new.M_Product_Category_ID, Cur_Defaults.C_AcctSchema_ID, :new.AD_Client_ID,
+          :new.AD_ORG_ID,  'Y', now(),
+          :new.CreatedBy, now(), :new.UpdatedBy,
+          Cur_Defaults.P_Revenue_Acct, Cur_Defaults.P_Def_Revenue_Acct, Cur_Defaults.P_Expense_Acct, Cur_Defaults.P_Def_Expense_Acct, Cur_Defaults.P_Asset_Acct,
+          Cur_Defaults.P_COGS_Acct, Cur_Defaults.P_PurchasePriceVariance_Acct, Cur_Defaults.P_InvoicePriceVariance_Acct,
+          Cur_Defaults.P_TradeDiscountRec_Acct, Cur_Defaults.P_TradeDiscountGrant_Acct,
+          Cur_Defaults.P_COGS_Return_Acct, Cur_Defaults.P_Revenue_Return_Acct
+        )
+        ;
+    END LOOP;
+    
+    --  Create TreeNode --
+    SELECT c.AD_Tree_Product_Category_ID
+    INTO v_xTree_ID
+    FROM AD_ClientInfo c
+    WHERE c.AD_Client_ID=:new.AD_Client_ID;
+
+    --  Insert into TreeNode
+    INSERT
+    INTO AD_TreeNode
+      (
+        ad_treeNode_Id, AD_Client_ID, AD_Org_ID, IsActive,
+        Created, CreatedBy, Updated,
+        UpdatedBy, AD_Tree_ID, Node_ID,
+        Parent_ID, SeqNo
+      )
+      VALUES
+      (
+        get_uuid(), :new.AD_Client_ID, :new.AD_Org_ID, :new.IsActive,
+        :new.Created, :new.CreatedBy, :new.Updated,
+        :new.UpdatedBy, v_xTree_ID, :new.M_Product_Category_ID,
+        '0',(
+        CASE :new.IsSummary
+          WHEN 'Y'
+          THEN 100
+          ELSE 999
+        END
+        )
+      )
+      ;
+  ELSIF (UPDATING) THEN
+    UPDATE M_PRODUCT_CATEGORY_ACCT SET AD_ORG_ID = :new.AD_ORG_ID
+    WHERE M_PRODUCT_CATEGORY_ID = :new.M_PRODUCT_CATEGORY_ID;
+
+    SELECT c.AD_Tree_Product_Category_ID
+    INTO v_xTree_ID
+    FROM AD_ClientInfo c
+    WHERE c.AD_Client_ID=:new.AD_Client_ID;
+	
+    UPDATE AD_TREENODE
+    SET AD_ORG_ID = :new.AD_ORG_ID
+    WHERE AD_CLIENT_ID=:new.AD_Client_ID
+      AND AD_Tree_ID=v_xTree_ID
+      AND Node_ID=:new.M_Product_Category_ID;
+  ELSIF (DELETING) THEN
+    --  Delete TreeNode --
+    --  get AD_Tree_ID
+    SELECT c.AD_Tree_Product_Category_ID
+    INTO v_xTree_ID
+    FROM AD_ClientInfo c
+    WHERE c.AD_Client_ID=:old.AD_Client_ID;
+    select COUNT(*) INTO v_count from AD_TREENODE where parent_id=:old.M_Product_Category_ID
+    and AD_TREE_ID=v_xTree_ID;
+    IF(v_count>0) THEN
+        RAISE_APPLICATION_ERROR(-20000, '@ChildProductCategoryCheck@') ;
+    END IF;
+    DELETE
+    FROM AD_TREENODE
+    WHERE AD_CLIENT_ID=:old.AD_Client_ID
+      AND AD_Tree_ID=v_xTree_ID
+      AND Node_ID=:old.M_Product_Category_ID;     
+  END IF;
+END M_PRODUCT_CATEGORY_TRG
+]]></body>
+    </trigger>
+  </database>

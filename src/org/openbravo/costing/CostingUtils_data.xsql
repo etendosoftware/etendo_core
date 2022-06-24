@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014-2017 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+
+<SqlClass name="CostingUtilsData" package="org.openbravo.costing">
+  <SqlClassComment></SqlClassComment>
+   <SqlMethod name="selectTransactionsInClosedPeriod" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql>
+      <![CDATA[
+        SELECT min(T.DATEMOVEMENT) AS minDateMovement, '' as period
+        FROM (
+            SELECT trunc(TRX.MOVEMENTDATE) AS DATEMOVEMENT
+            FROM M_TRANSACTION TRX
+            INNER JOIN M_PRODUCT P
+            ON TRX.M_PRODUCT_ID = P.M_PRODUCT_ID            
+            WHERE TRX.ISCOSTCALCULATED = 'N'
+            AND P.PRODUCTTYPE = 'I'
+            AND P.ISSTOCKED = 'Y'
+            AND P.AD_ORG_ID IN ('1')
+            AND TRX.MOVEMENTDATE >= ?
+            AND TRX.AD_ORG_ID IN ('1')
+            GROUP BY trunc(TRX.MOVEMENTDATE)
+        ) T
+        WHERE EXISTS (
+            SELECT 1
+            FROM C_PERIODCONTROL PC
+            INNER JOIN C_PERIOD PE
+            ON PC.C_PERIOD_ID = PE.C_PERIOD_ID
+            WHERE PC.PERIODSTATUS <> 'O'
+            AND PE.AD_CLIENT_ID = ?
+            AND PC.AD_ORG_ID = ?
+            AND T.DATEMOVEMENT >= PE.STARTDATE
+            AND T.DATEMOVEMENT < PE.ENDDATE + 1
+        )
+      ]]>
+      </Sql>
+      <Parameter name="Porgs" optional="true" type="replace" after="AND P.AD_ORG_ID IN (" text="'1'"/>      
+      <Parameter name="StartingDate"/>      
+      <Parameter name="ChildOrgs" optional="true" type="replace" after="AND TRX.AD_ORG_ID IN (" text="'1'"/>      
+      <Parameter name="Client"/>
+      <Parameter name="Org"/>
+   </SqlMethod>
+    <SqlMethod name="periodClosed" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql>
+      <![CDATA[
+        SELECT p.c_period_id as period 
+        FROM C_PERIOD P, C_YEAR Y, 
+            (SELECT Y.YEAR, P.PERIODNO, P.AD_ORG_ID
+                          FROM C_PERIOD P, C_YEAR Y
+                          WHERE P.AD_ORG_ID = ?
+                          AND P.STARTDATE <= to_date(?)
+                          AND P.ENDDATE >= to_date(?)
+                          AND P.C_YEAR_ID = Y.C_YEAR_ID) P1, 
+            (SELECT Y.YEAR, P.PERIODNO, P.AD_ORG_ID
+                          FROM C_PERIOD P, C_YEAR Y
+                          WHERE P.AD_ORG_ID = ?
+                          AND P.STARTDATE <= to_date(?)
+                          AND P.ENDDATE >= to_date(?)
+                          AND P.C_YEAR_ID = Y.C_YEAR_ID) P2
+        WHERE P.AD_CLIENT_ID = ?
+        AND P.AD_ORG_ID = P1.AD_ORG_ID             
+        AND P.C_YEAR_ID = Y.C_YEAR_ID
+        AND (Y.YEAR = P1.YEAR AND P.PERIODNO >= P1.PERIODNO
+             OR Y.YEAR > P1.YEAR)
+        AND P.AD_ORG_ID = P2.AD_ORG_ID
+        AND (Y.YEAR = P2.YEAR AND P.PERIODNO <= P2.PERIODNO
+             OR Y.YEAR < P2.YEAR)
+        AND NOT EXISTS (SELECT 1 FROM C_PERIODCONTROL PC
+                        WHERE PC.C_PERIOD_ID = P.C_PERIOD_ID
+                        AND PC.DOCBASETYPE =?
+                        AND PC.AD_ORG_ID = P.AD_ORG_ID
+                        AND PC.PERIODSTATUS = 'O')
+        AND P.PERIODTYPE <> 'A'
+      ]]>
+      </Sql>
+      <Parameter name="Org"/>
+      <Parameter name="StartDateAcct"/>
+      <Parameter name="StartDateAcct"/>
+      <Parameter name="Org"/>
+      <Parameter name="EndDateAcct"/>
+      <Parameter name="EndDateAcct"/>
+      <Parameter name="AD_Client_ID"/>
+      <Parameter name="DocumentType"/>
+   </SqlMethod>   
+  </SqlClass>

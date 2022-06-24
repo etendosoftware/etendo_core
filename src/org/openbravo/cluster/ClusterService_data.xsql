@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2018 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="ClusterServiceData" package="org.openbravo.cluster">
+   <SqlClassComment></SqlClassComment>
+
+   <SqlMethod name="getNodeHandlingService" type="preparedStatement" connection="true" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql>
+        <![CDATA[
+            SELECT NODE_ID AS NODE_ID, NODE_NAME AS NODE_NAME
+            FROM AD_CLUSTER_SERVICE
+            WHERE SERVICE = ?
+        ]]>
+      </Sql>
+      <Parameter name="service"/>
+   </SqlMethod>
+   
+   <SqlMethod name="getServiceTimeout" type="preparedStatement" connection="true" return="String">
+     <SqlMethodComment></SqlMethodComment>
+     <Sql>
+       <![CDATA[
+            SELECT TIMEOUT AS TIMEOUT
+            FROM AD_CLUSTER_SERVICE_SETTINGS
+            WHERE SERVICE = ?
+        ]]>
+     </Sql>
+     <Parameter name="service"/>
+   </SqlMethod>
+
+   <SqlMethod name="deregisterService" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+           DELETE FROM AD_CLUSTER_SERVICE
+           WHERE SERVICE = ?
+           AND NODE_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="service"/>
+    <Parameter name="nodeId"/>
+  </SqlMethod>
+
+</SqlClass>

@@ -1,0 +1,655 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2017-2021 Openbravo SLU
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+/* Blue */
+/* Light Blue */
+/* Darker Blue */
+/* Gray */
+/* Darker Gray  */
+/* Yellow */
+/* White */
+/* Light Blue (20%) */
+/* Light Green */
+/* Light Blue (20%) */
+/* light Blue (10%) */
+/* Gray 10 % */
+* {
+  margin: 0px;
+  padding: 0px;
+}
+
+body {
+  margin-top: 0px;
+  font-family: arial, sans-serif;
+  font-size: 12px;
+  font-weight: normal;
+  color: #000000;
+  background-color: #FFFFFF;
+  overflow: auto;
+}
+
+/*
+ *************************************************************************
+ * HTML5 CSS hacks
+ *************************************************************************
+*/
+input {
+  box-shadow: none;
+}
+
+input:-moz-ui-valid {
+  box-shadow: none;
+}
+
+input:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/*
+ *************************
+ * Button
+ *************************
+*/
+.Button_width {
+  width: 72px;
+}
+
+button.ButtonLink, button.ButtonLink:active, button.ButtonLink:hover, button.ButtonLink:visited, button.ButtonLink:link, button.ButtonLink:focus, button.ButtonLink_default, button.ButtonLink_disabled {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+}
+
+button.ButtonLink_hover, button.ButtonLink_hover:active, button.ButtonLink_hover:hover, button.ButtonLink_hover:visited, button.ButtonLink_hover:link, button.ButtonLink_hover:focus {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+}
+
+button.ButtonLink_active, button.ButtonLink_active:active, button.ButtonLink_active:hover, button.ButtonLink_active:visited, button.ButtonLink_active:link, button.ButtonLink_active:focus {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+}
+
+button.ButtonLink_focus, button.ButtonLink_focus:active, button.ButtonLink_focus:hover, button.ButtonLink_focus:visited, button.ButtonLink_focus:link, button.ButtonLink_focus:focus {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+}
+
+button.ButtonLink_default, button.ButtonLink_default:active, button.ButtonLink_default:hover, button.ButtonLink_default:visited, button.ButtonLink_default:link, button.ButtonLink_default:focus {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  outline: none;
+}
+
+button.ButtonLink table.Button, .Button {
+  border-collapse: collapse;
+  font-family: tahoma, arial, helvetica, sans-serif;
+  font-size: 8pt;
+  color: #000000;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: transparent;
+  background-image: none;
+  border: 0px none;
+}
+
+button.ButtonLink table.Button .Button_left, table.Button .Button_left {
+  width: 15px;
+  height: 30px;
+  background-repeat: no-repeat;
+  background-position: center right;
+  /*~RTL   background-position: center left;  */
+  background-image: url(Common/Button/buttonLeft.normal.png);
+  text-align: right;
+  /*~RTL   text-align: left; */
+  vertical-align: middle;
+}
+
+button.ButtonLink table.Button .Button_text, table.Button .Button_text {
+  background-repeat: repeat-x;
+  background-position: center center;
+  background-image: url(Common/Button/buttonBody.normal.png);
+  text-align: center;
+  height: 30px;
+  font-family: "lucida sans", sans-serif;
+  font-size: 1.2em;
+  font-weight: normal;
+  text-align: center;
+}
+
+button.ButtonLink table.Button .Button_right, table.Button .Button_right {
+  width: 15px;
+  height: 30px;
+  background-repeat: no-repeat;
+  background-position: center left;
+  background-image: url(Common/Button/buttonRight.normal.png);
+}
+
+button.ButtonLink_hover table.Button, .Button_hover {
+  border-collapse: collapse;
+  text-align: center;
+  font-family: tahoma, arial, helvetica, sans-serif;
+  font-size: 8pt;
+  color: #000000;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: transparent;
+  background-image: none;
+  border: 0px none;
+}
+
+button.ButtonLink_hover table.Button .Button_left, table.Button_hover .Button_left {
+  background-repeat: no-repeat;
+  background-position: center right;
+  /*~RTL   background-position: center left; */
+  background-image: url(Common/Button/buttonLeft.rollover.png);
+  width: 15px;
+  height: 30px;
+}
+
+button.ButtonLink_hover table.Button .Button_text, table.Button_hover .Button_text {
+  background-repeat: repeat-x;
+  background-position: center center;
+  background-image: url(Common/Button/buttonBody.rollover.png);
+  height: 30px;
+  font-family: "lucida sans", sans-serif;
+  font-size: 1.2em;
+  font-weight: normal;
+}
+
+button.ButtonLink_hover table.Button .Button_right, table.Button_hover .Button_right {
+  background-repeat: no-repeat;
+  background-position: center left;
+  background-image: url(Common/Button/buttonRight.rollover.png);
+  width: 15px;
+  height: 30px;
+}
+
+button.ButtonLink_active table.Button, .Button_active {
+  color: #000000;
+}
+
+button.ButtonLink_active table.Button .Button_left, .Button_active .Button_left {
+  width: 15px;
+  height: 30px;
+  background-image: url(Common/Button/buttonLeft.pressed.png);
+}
+
+button.ButtonLink_active table.Button .Button_text, table.Button_active .Button_text {
+  background-image: url(Common/Button/buttonBody.pressed.png);
+  height: 30px;
+  font-family: "lucida sans", sans-serif;
+  font-size: 1.2em;
+  font-weight: normal;
+}
+
+button.ButtonLink_active table.Button .Button_right, table.Button_active .Button_right {
+  width: 15px;
+  height: 30px;
+  background-image: url(Common/Button/buttonRight.pressed.png);
+}
+
+button.ButtonLink_focus table.Button .Button_left, .Button_focus .Button_left {
+  background-repeat: no-repeat;
+  background-position: center right;
+  /*~RTL   background-position: center left; */
+  background-image: url(Common/Button/buttonLeft.focused.png);
+  width: 15px;
+  height: 30px;
+}
+
+button.ButtonLink_focus table.Button .Button_text, table.Button_focus .Button_text {
+  background-repeat: repeat-x;
+  background-position: center center;
+  background-image: url(Common/Button/buttonBody.focused.png);
+  height: 30px;
+  font-family: "lucida sans", sans-serif;
+  font-size: 1.2em;
+  font-weight: normal;
+}
+
+button.ButtonLink_focus table.Button .Button_right, table.Button_focus .Button_right {
+  background-repeat: no-repeat;
+  background-position: center left;
+  background-image: url(Common/Button/buttonRight.focused.png);
+  width: 15px;
+  height: 30px;
+}
+
+button.ButtonLink_default table.Button, .Button_default {
+  border-collapse: collapse;
+  text-align: center;
+  font-family: tahoma, arial, helvetica, sans-serif;
+  font-size: 8pt;
+  color: #000000;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: transparent;
+  background-image: none;
+  border: 0px none;
+}
+
+button.ButtonLink_default table.Button .Button_left, .Button_default .Button_left {
+  background-repeat: no-repeat;
+  background-position: center right;
+  /*~RTL   background-position: center left; */
+  background-image: url(Common/Button/buttonLeft.default.png);
+  width: 15px;
+  height: 30px;
+}
+
+button.ButtonLink_default table.Button .Button_text, table.Button_default .Button_text {
+  background-repeat: repeat-x;
+  background-position: center center;
+  background-image: url(Common/Button/buttonBody.default.png);
+  height: 30px;
+  font-family: "lucida sans", sans-serif;
+  font-size: 1.2em;
+  font-weight: normal;
+}
+
+button.ButtonLink_default table.Button .Button_right, table.Button_default .Button_right {
+  background-repeat: no-repeat;
+  background-position: center left;
+  background-image: url(Common/Button/buttonRight.default.png);
+  width: 15px;
+  height: 30px;
+}
+
+button.ButtonLink_disabled table.Button, .Button_disabled {
+  border-collapse: collapse;
+  text-align: center;
+  font-family: tahoma, arial, helvetica, sans-serif;
+  font-size: 8pt;
+  color: #777777;
+  font-weight: bold;
+  cursor: default;
+  background-color: transparent;
+  background-image: none;
+  border: 0px none;
+}
+
+button.ButtonLink_disabled table.Button .Button_left, .Button_disabled .Button_left {
+  background-repeat: no-repeat;
+  background-position: center right;
+  /*~RTL    background-position: center left; */
+  background-image: url(Common/Button/buttonLeft.disabled.png);
+  width: 15px;
+  height: 30px;
+}
+
+button.ButtonLink_disabled table.Button .Button_text, table.Button_disabled .Button_text {
+  background-repeat: repeat-x;
+  background-position: center center;
+  background-image: url(Common/Button/buttonBody.disabled.png);
+  height: 30px;
+  font-family: "lucida sans", sans-serif;
+  font-size: 1.2em;
+  font-weight: normal;
+}
+
+button.ButtonLink_disabled table.Button .Button_right, table.ButtonLink_disabled .Button_right {
+  background-repeat: no-repeat;
+  background-position: center left;
+  background-image: url(Common/Button/buttonRight.disabled.png);
+  width: 15px;
+  height: 30px;
+}
+
+.Button_Icon {
+  width: 0px;
+  height: 0px;
+  display: none;
+}
+
+/*
+ *************************
+ * TextBox
+ *************************
+*/
+.dojoValidateValid_focus {
+  background-repeat: repeat-x !important;
+  background-position: top left !important;
+  background-image: url(../../Default/Common/TextBox/textField.background.focused.png);
+}
+
+.dojoValidateEmpty,
+.dojoValidateInvalid,
+.dojoValidateRange,
+.dojoValidateValid,
+.dojoValidateEmpty_focus,
+.dojoValidateValid_focus,
+.dojoValidateInvalid_focus,
+.dojoValidateRange_focus {
+  border: 1px solid #e1e1e1;
+  font-family: arial, sans-serif;
+  font-size: 12px;
+  color: #333333;
+  background-color: #F5F7F1 !important;
+  background-image: none;
+  padding: 1px 1px 1px 4px;
+  /*~RTL   padding: 1px 4px 1px 1px; */
+  _padding: 2px 1px 1px 4px;
+  /*~RTL   _padding: 2px 4px 1px 1px; */
+  height: 21px;
+  resize: none;
+  /* CSS3 Property to avoid the browser capability of resize textareas */
+}
+
+.dojoValidateEmpty_focus,
+.dojoValidateValid_focus,
+.dojoValidateInvalid_focus,
+.dojoValidateRange_focus .readonly_focus_required_focus,
+.TextBox_focus,
+.required_focus,
+.readonly_focus_required_focus {
+  border: 1px solid #FA962F;
+  background-color: #F5F7F1;
+  background-image: none;
+}
+
+/*
+ *************************
+ * Label
+ *************************
+*/
+.LabelText {
+  font-family: "lucida sans", sans-serif;
+  color: #333333;
+  font-size: 8pt;
+  font-weight: bold;
+}
+
+/*
+ *************************************************************************
+ * Login window specific CSS
+ *************************************************************************
+*/
+.Login_Img_Link img {
+  border: 0;
+}
+
+.Login_Main {
+  background: url(../../Default/Login/Login-bg.png) repeat-x center 128px;
+  background-color: #FFFFFF;
+  width: 100%;
+  height: 100%;
+}
+
+.Login_Container {
+  background: url(../../Default/Login/Login-bgLogo.png) no-repeat 0 89px;
+  width: 770px;
+  padding-top: 10px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  /*~RTL   right: 50%; */
+  margin-left: -375px;
+  /*~RTL   margin-right: -395px; */
+}
+
+.Login_LogForm {
+  background: url(../../Default/Login/LoginBox-bg.png) repeat-x scroll left bottom transparent;
+  left: 162px;
+  position: absolute;
+  top: 10px;
+  border: 3px solid #B4B4B4;
+  height: 360px;
+  margin: 0 auto;
+  width: 440px;
+  z-index: 99;
+}
+
+.Login_LogForm dl {
+  padding-left: 80px;
+  /*~RTL   padding-right: 80px; */
+  position: relative;
+}
+
+.Login_LogForm dt {
+  margin-bottom: 0.2em;
+}
+
+.Login_LogForm dd {
+  margin-bottom: 1em;
+}
+
+.Login_LogForm_CompanyLogo_Container {
+  height: 115px;
+  text-align: center;
+}
+
+.Login_LogForm_CompanyLogo {
+  padding-top: 25px;
+}
+
+.Login_LogForm_Input_Container {
+  height: 162px;
+}
+
+.Login_LogForm_Button_Container {
+  text-align: center;
+  height: 83px;
+}
+
+.Login_LogForm_Button {
+  margin-top: 10px;
+}
+
+.Login_TopLogos_Container_Support {
+  position: relative;
+  padding-top: 290px;
+  text-align: center;
+  width: 100%;
+}
+
+.Login_TopLogos_Container_None {
+  position: relative;
+  padding-top: 366px;
+  text-align: center;
+  width: 100%;
+}
+
+.Login_TopLogos_Container_Support .Login_TopLogos_SupportLogo_Container {
+  left: 616px;
+}
+
+.Login_TopLogos_Container_Forge .Login_TopLogos_ForgeLogo_Container {
+  left: -90px;
+}
+
+.Login_TopLogos_Container_Forge .Login_TopLogos_SupportLogo_Container {
+  display: none;
+}
+
+.Login_TopLogos_Container_None .Login_TopLogos_ForgeLogo_Container {
+  display: none;
+}
+
+.Login_TopLogos_Container_None .Login_TopLogos_SupportLogo_Container {
+  display: none;
+}
+
+.Login_TopLogos_SupportLogo_Container {
+  width: 260px;
+  position: relative;
+  float: left;
+}
+
+.Login_TopLogos_SupportLogo_Text {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.Login_TopLogos_SupportLogo_Logo_Container {
+  text-align: center;
+}
+
+.Login_TopLogos_ForgeLogo_Container {
+  width: 260px;
+  position: relative;
+  float: left;
+}
+
+.Login_TopLogos_ForgeLogo_Text {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.Login_TopLogos_ForgeLogo_Logo_Container {
+  text-align: center;
+}
+
+.Login_BottomLogos_Container {
+  position: relative;
+  clear: left;
+  padding-top: 10px;
+  left: 250px;
+  /*~RTL   right: 250px; */
+}
+
+.Login_BottomLogos_Openbravo_Logo_Container {
+  position: relative;
+  height: 70px;
+}
+
+.Login_BottomLogos_CopyrightText_Container {
+  position: relative;
+  clear: left;
+  padding-top: 5px;
+  padding-left: 50px;
+  /*~RTL   padding-right: 60px; */
+  background-color: white;
+}
+
+.Login_BottomLogos_CopyrightText {
+  display: block;
+  color: #afafaf;
+  font-size: 0.9em;
+  line-height: 0.9em;
+  text-align: center;
+}
+
+.Login_ErrorMsg_Container {
+  position: absolute;
+  overflow: auto;
+  height: 66px;
+  bottom: 0;
+  left: 80px;
+  /*~RTL   right: 80px; */
+  margin-bottom: 72px;
+  margin-right: 64px;
+  /*~RTL   margin-left: 64px; */
+}
+
+.Login_ErrorMsg_Title {
+  color: red !important;
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.Login_ErrorMsg_Content {
+  color: red !important;
+  font-weight: normal;
+  font-size: 10px;
+}
+
+.Login_LabelText {
+  font-size: 9pt;
+}
+
+.Login_TextBox,
+.Login_TextBox_focus {
+  background-color: #FFFFFF !important;
+  width: 280px;
+  height: 25px;
+  _padding-top: 4px;
+  outline: none;
+  -moz-outline-style: none;
+}
+
+.Login_TextBox {
+  border-color: #AFBE95;
+}
+
+.Login_Home_Logo_Icon {
+  display: block;
+  margin: auto;
+  padding: 50px 0px 0px 0px;
+  width: 520px;
+  height: 120px;
+  background: url(../../../../../utility/ShowImageLogo?logo=yourcompanybig) no-repeat center center;
+}
+
+.error-text {
+  margin: 0 auto;
+  padding: 50px 0px 0px 0px;
+  text-align: center;
+  font-family: lucida sans unicode;
+  font-size: 28px;
+  color: red;
+}
+
+@media all and (max-width: 650px) {
+  .Login_Home_Logo_Icon {
+    padding: 7.5vw 0px 0px 0px;
+    width: 82%;
+  }
+
+  .error-text {
+    padding: 7.5vw 0px 0px 0px;
+    font-size: 4.3vw;
+  }
+}
+/*
+ *************************************************************************
+ * Logos
+ *************************************************************************
+*/
+.Login_Logo_Openbravo {
+  width: 260px;
+  height: 70px;
+  background: url(../../../../images/openbravoLogo.svg) no-repeat center center;
+}
+
+.Login_Logo_Company {
+  width: 197px;
+  height: 55px;
+  background: url(../../../../../utility/ShowImageLogo?logo=yourcompanylogin) no-repeat center center;
+}
+
+.Login_Logo_Support {
+  width: 197px;
+  height: 55px;
+  background: url(../../../../../utility/ShowImageLogo?logo=youritservicelogin) no-repeat center center;
+}
+
+/*# sourceMappingURL=loginStyles.css.map */

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2012 - 2017 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+<SqlClass name="StockUtilsData" package="org.openbravo.materialmgmt">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="select" type="preparedStatement" return="multiple">
+     <Sql>
+       select 1 as a from dual
+     </Sql>
+   </SqlMethod>
+   <SqlMethod name="getStock" type="callableStatement" connection="true" return="object" object="CSResponseGetStockParam">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_GET_STOCK_PARAM(?, ?, to_number(?), 
+        ?, ?, ?, 
+        ?, ?, ?, 
+        ?, ?, ?, 
+        ?, ?, ?, ?,
+        to_number(?), ?, ?, 
+        ?, ?, ?,
+        ?, ?, ?)
+      ]]></Sql>
+      <Parameter name="p_uuid"/>
+      <Parameter name="p_recordid"/>
+      <Parameter name="p_quantity"/>
+      
+      <Parameter name="p_productid"/>
+      <Parameter name="p_locatorid"/>
+      <Parameter name="p_warehouseid"/>
+      
+      <Parameter name="p_prioritywarehouseid"/>
+      <Parameter name="p_orgid"/>
+      <Parameter name="p_attributesetinstanceid"/>
+      
+      <Parameter name="p_ad_user_id"/>
+      <Parameter name="p_clientid"/>
+      <Parameter name="p_warehouse_rule_id"/>
+      
+      <Parameter name="p_uomid"/>
+      <Parameter name="p_productuomid"/>
+      <Parameter name="p_table"/>
+      <Parameter name="p_auxid"/>
+
+      <Parameter name="p_lineno"/>
+      <Parameter name="p_processid"/>
+      <Parameter name="p_reservation_id"/>
+      
+      <Parameter name="p_calledfromapp"/>
+
+      <Parameter name="p_result" type="out"/>
+      <Parameter name="p_message" type="out"/>
+      
+      <Parameter name="p_avail" type="in"/>
+      <Parameter name="p_nett" type="in"/>
+      <Parameter name="p_overissue" type="in"/>
+   </SqlMethod>
+</SqlClass>

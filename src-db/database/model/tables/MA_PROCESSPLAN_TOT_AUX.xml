@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+  <database name="TABLE MA_PROCESSPLAN_TOT_AUX">
+    <table name="MA_PROCESSPLAN_TOT_AUX" primaryKey="MA_PROCESSPLAN_TOT_AUX_KEY">
+      <column name="MA_PROCESSPLAN_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="MA_PROCESSPLAN_VERSION_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PRODUCED" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PROQTY" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DEPENDANTPRODUCT" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DEPQTY" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="MA_PROCESSPLAN_TOT_AUX_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="MA_PROCESSPLAN" name="MA_PROCESSPLAN_TOT_AUX_PP">
+        <reference local="MA_PROCESSPLAN_ID" foreign="MA_PROCESSPLAN_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="MA_PROCESSPLAN_VERSION" name="MA_PROCESSPLAN_TOT_AUX_PPV">
+        <reference local="MA_PROCESSPLAN_VERSION_ID" foreign="MA_PROCESSPLAN_VERSION_ID"/>
+      </foreign-key>
+    </table>
+  </database>

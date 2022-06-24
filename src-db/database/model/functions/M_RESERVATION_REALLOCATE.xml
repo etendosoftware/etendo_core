@@ -1,0 +1,355 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_RESERVATION_REALLOCATE">
+    <function name="M_RESERVATION_REALLOCATE" type="NULL">
+      <parameter name="p_reservation_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_locator_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_attributesetinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_qty" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_result" type="NUMERIC" mode="out">
+        <default/>
+      </parameter>
+      <parameter name="p_message" type="VARCHAR" mode="out">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2013-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+  v_ResultStr VARCHAR2(2000):='';
+  v_pendingtoreallocate  NUMBER;
+  v_Message 						VARCHAR2(2000):='';
+  v_Result						 NUMBER;
+  v_warehouse_id        VARCHAR2(32);
+  v_product_id          VARCHAR2(32);
+  v_uom_id              VARCHAR2(32);
+  v_res_stock_id        VARCHAR2(32);
+  v_storage_detail_id   VARCHAR2(32);
+  v_dim_warehouse_id    VARCHAR2(32);
+  v_dim_locator_id      VARCHAR2(32);
+  v_dim_asi_id          VARCHAR2(32);
+  v_res_status          M_RESERVATION.RES_STATUS%TYPE;
+  v_this_notreserved    NUMBER;
+  v_this_reservedqty    NUMBER;
+  v_this_releasedqty    NUMBER;
+  v_this_allocated      NUMBER;
+  v_this_noalloc        NUMBER;
+  v_this_sd_alloc       NUMBER;
+  v_this_sd_noalloc     NUMBER;
+  v_stock_onhand        NUMBER;
+  v_stock_res           NUMBER;
+  v_stock_alloc         NUMBER;
+  v_qtytorelease        NUMBER;
+  v_qtytounreserve      NUMBER;
+  v_qtytounreserve_aux  NUMBER;
+  v_qtyavailabletoreserve        NUMBER;
+  v_newreservedqty      NUMBER;
+  v_availablestock      NUMBER;
+  v_attr_description    VARCHAR2(255);
+  v_product_value       M_PRODUCT.value%type;
+  v_locator_value       M_LOCATOR.value%type;
+  v_uom_value           C_UOM.uomsymbol%type;
+  v_attributesetinstance_id VARCHAR2(32);
+  v_warehouse_rule_id     VARCHAR2(32);
+
+  
+  v_pinstance_id          VARCHAR2(32) := get_uuid();
+
+  TYPE RECORD IS REF CURSOR;
+  cur_reserved_stock       RECORD;
+  cur_not_allocated_stock  RECORD;
+BEGIN
+  IF (p_result IS NULL) THEN
+    p_result := 1;
+  END IF;
+  SELECT r.m_product_id, r.c_uom_id, COALESCE(r.reservedqty, 0), COALESCE(r.releasedqty, 0), r.quantity - COALESCE(r.reservedqty, 0),
+      COALESCE(SUM(alloc.quantity - COALESCE(alloc.releasedqty, 0)), 0),
+      r.m_warehouse_id, r.m_locator_id, r.m_attributesetinstance_id, r.res_status
+    INTO v_product_id, v_uom_id, v_this_reservedqty, v_this_releasedqty, v_this_notreserved,
+      v_this_allocated,
+      v_dim_warehouse_id, v_dim_locator_id, v_dim_asi_id, v_res_status
+  FROM m_reservation r
+      LEFT JOIN m_reservation_stock alloc ON r.m_reservation_id = alloc.m_reservation_id AND alloc.isallocated = 'Y'
+  WHERE r.m_reservation_id = p_reservation_id
+  GROUP BY r.m_product_id, r.c_uom_id, r.reservedqty, COALESCE(r.releasedqty,0), r.quantity,
+      r.m_warehouse_id, r.m_locator_id, r.m_attributesetinstance_id, r.res_status;
+  v_this_noalloc := v_this_reservedqty - v_this_allocated;
+
+  SELECT value
+    INTO v_product_value
+  FROM M_Product
+  WHERE M_Product_ID = v_product_id;
+
+  IF(p_attributesetinstance_id IS NOT NULL) THEN
+    SELECT description
+      INTO v_attr_description
+    FROM M_AttributeSetInstance
+    WHERE M_AttributeSetInstance_ID = p_attributesetinstance_id;
+    v_attributesetinstance_id := p_attributesetinstance_id;
+  ELSE
+    v_attributesetinstance_id := '0';
+  END IF;
+
+  SELECT uomsymbol
+    INTO v_uom_value
+  FROM C_Uom
+  WHERE C_Uom_ID = v_uom_id;
+
+  IF (p_locator_id IS NOT NULL) THEN
+    SELECT value
+      INTO v_locator_value
+    FROM M_Locator
+    WHERE M_Locator_ID = p_locator_id;
+  END IF;
+    
+  IF (v_res_status = 'HO') THEN
+    RAISE_APPLICATION_ERROR(-20000, '@CannotConsumeHoldReservation@'||' @of@'||' @Product@: '||v_product_value||', @AttributeSetInstance@: '||COALESCE(v_attr_description, '-')||', @UOM@: '||v_uom_value||' @And@'||' @StorageBin@: '||COALESCE(v_locator_value, '-'));
+  END IF;
+
+  SELECT sd.qtyonhand, sd.m_storage_detail_id, loc.m_warehouse_id
+    INTO v_stock_onhand, v_storage_detail_id, v_warehouse_id
+  FROM m_storage_detail sd
+    JOIN m_locator loc ON sd.m_locator_id = loc.m_locator_id
+  WHERE sd.m_product_id = v_product_id
+    AND sd.c_uom_id = v_uom_id
+    AND sd.m_attributesetinstance_id = v_attributesetinstance_id
+    AND sd.m_locator_id = p_locator_id;
+    
+  SELECT COALESCE(SUM(rs.quantity - COALESCE(rs.releasedqty, 0)), 0),
+      COALESCE(SUM(CASE rs.isallocated WHEN 'Y' THEN rs.quantity - COALESCE(rs.releasedqty,0) ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN r.m_reservation_id = p_reservation_id AND rs.isallocated = 'Y' THEN rs.quantity - COALESCE(rs.releasedqty,0) ELSE 0 END), 0),
+      COALESCE(SUM(CASE WHEN r.m_reservation_id = p_reservation_id AND rs.isallocated = 'N' THEN rs.quantity - COALESCE(rs.releasedqty,0) ELSE 0 END), 0)
+    INTO v_stock_res, v_stock_alloc, v_this_sd_alloc, v_this_sd_noalloc
+  FROM m_reservation_stock rs
+    JOIN m_reservation r ON rs.m_reservation_id = r.m_reservation_id
+  WHERE r.m_product_id = v_product_id
+    AND r.res_status NOT IN ('CL', 'DR')
+    AND r.c_uom_id = v_uom_id
+    AND rs.m_locator_id = p_locator_id
+    AND rs.m_attributesetinstance_id = v_attributesetinstance_id;
+
+  IF (COALESCE(v_dim_warehouse_id, v_warehouse_id) <> v_warehouse_id
+      OR COALESCE(v_dim_locator_id, p_locator_id) <> p_locator_id
+      OR COALESCE(v_dim_asi_id, v_attributesetinstance_id) <> v_attributesetinstance_id) THEN
+    RAISE_APPLICATION_ERROR(-20000, '@WrongStockDimensionMismatch@'||' @of@'||' @Product@: '||v_product_value||', @AttributeSetInstance@: '||COALESCE(v_attr_description, '-')||', @UOM@: '||v_uom_value||' @And@'||' @StorageBin@: '||COALESCE(v_locator_value, '-'));
+  END IF;
+
+  v_pendingtoreallocate := p_qty;
+  IF (v_pendingtoreallocate > v_this_reservedqty + v_this_notreserved - v_this_releasedqty) THEN
+    v_pendingtoreallocate := v_this_reservedqty + v_this_notreserved - v_this_releasedqty;
+    p_result := 2;
+    p_message := '@MoreQuantityToReleaseThanPending@'||' @of@'||' @Product@: '||v_product_value||', @AttributeSetInstance@: '||COALESCE(v_attr_description, '-')|| ', @UOM@: '||v_uom_value||' @And@'||' @StorageBin@: '||COALESCE(v_locator_value, '-');
+  END IF;
+
+  IF (v_pendingtoreallocate > v_stock_onhand) THEN
+    RAISE_APPLICATION_ERROR(-20000, '@NotEnoughAvailableStock@'||' @of@'||' @Product@: '||v_product_value||', @AttributeSetInstance@: '||COALESCE(v_attr_description, '-')|| ', @UOM@: '||v_uom_value||' @And@'||' @StorageBin@: '||COALESCE(v_locator_value, '-'));
+  END IF;
+
+  -- Check that quantity to release is lower than available quantity considering other reservations allocated stock.
+  IF (v_pendingtoreallocate > v_stock_onhand - (v_stock_alloc - v_this_sd_alloc)) THEN
+    RAISE_APPLICATION_ERROR(-20000, '@CannotReallocateAllQuantity@'||' @of@'||' @Product@: '||v_product_value||', @AttributeSetInstance@: '||COALESCE(v_attr_description, '-')|| ', @UOM@: '||v_uom_value||' @And@'||' @StorageBin@: '||COALESCE(v_locator_value, '-'));
+  END IF;
+
+  IF (v_pendingtoreallocate > v_this_sd_alloc + v_this_noalloc + v_this_notreserved) THEN
+    -- The quantity to release is higher than the currently allocated stock with given dimensions and the no allocated
+    -- reserved stock.
+    RAISE_APPLICATION_ERROR(-20000, '@CannotModifyAllocatedReserve@'||' @of@'||' @Product@: '||v_product_value||', @AttributeSetInstance@: '||COALESCE(v_attr_description, '-')|| ', @UOM@: '||v_uom_value||' @And@'||' @StorageBin@: '||COALESCE(v_locator_value, '-'));
+  END IF;
+
+  -- Remove quantity already reserved on given storage bin and attributes
+  v_pendingtoreallocate := v_pendingtoreallocate - v_this_sd_alloc - v_this_sd_noalloc;
+  
+  IF (v_pendingtoreallocate <= 0) THEN
+    RETURN;
+  END IF;
+  -- There is not reserved stock available.
+  v_qtyavailabletoreserve := LEAST(v_stock_onhand - v_stock_res, v_pendingtoreallocate);
+  
+  -- If exists not reserved stock reserve in current reservation.
+  v_ResultStr := 'Reserve and release available stock';
+  IF (v_qtyavailabletoreserve > 0) THEN
+    -- Reserve available stock
+    
+    IF (v_this_notreserved >= v_qtyavailabletoreserve) THEN
+      -- The available stock is used to reserve the pending quantity so there is no need to unreserve other no allocated stock.
+      v_this_notreserved := v_this_notreserved - v_qtyavailabletoreserve;
+    ELSE
+      v_qtytounreserve := v_qtyavailabletoreserve - v_this_notreserved;
+      v_this_notreserved := 0;
+
+      --If exists not allocated stock it has to be unreserved before reserving the new one.
+      FOR cur_reserved_stock IN (
+          SELECT m_reservation_stock_id, quantity - COALESCE(releasedqty, 0) AS reservedqty
+          FROM m_reservation_stock
+          WHERE m_reservation_id = p_reservation_id
+            AND isallocated = 'N'
+            AND quantity <> COALESCE(releasedqty,0)
+            AND (m_attributesetinstance_id <> v_attributesetinstance_id OR m_locator_id <> p_locator_id)
+          ORDER BY quantity - COALESCE(releasedqty,0)
+      ) LOOP
+        v_qtytounreserve_aux := LEAST(v_qtytounreserve, cur_reserved_stock.reservedqty);
+        UPDATE m_reservation_stock
+        SET quantity = quantity - v_qtytounreserve_aux
+        WHERE m_reservation_stock_id = cur_reserved_stock.m_reservation_stock_id;
+        v_qtytounreserve := v_qtytounreserve - v_qtytounreserve_aux;
+
+        IF (v_qtytounreserve = 0) THEN
+          EXIT;
+        END IF;
+      END LOOP;
+    END IF;
+
+    M_RESERVE_STOCK_MANUAL(p_reservation_id, 'SD', v_storage_detail_id, v_qtyavailabletoreserve, p_user_id, 'N', v_res_stock_id);
+    v_pendingtoreallocate := v_pendingtoreallocate - v_qtyavailabletoreserve;
+  END IF;
+
+  IF (v_pendingtoreallocate <= 0) THEN
+    -- Reallocation completed
+    -- Delete records with quantity 0 that might be left.
+    DELETE FROM m_reservation_stock
+    WHERE m_reservation_id = p_reservation_id
+      AND quantity = 0;
+    RETURN;
+  END IF;
+  -- Finally take other reservation's not allocated stock.
+  v_ResultStr := 'Reserve other reservations stock';
+  FOR cur_not_allocated_stock IN (
+      SELECT r.m_reservation_id, rs.quantity, COALESCE(rs.releasedqty,0) as releasedqty, rs.m_reservation_stock_id, r.reservedqty, r.quantity as quantitytoreserve,
+             r.ad_client_id, r.ad_org_id, r.m_product_id, r.c_uom_id, r.m_attributesetinstance_id, r.m_locator_id, r.m_warehouse_id,
+             r.c_orderline_id
+      FROM m_reservation_stock rs
+          JOIN m_reservation r ON rs.m_reservation_id = r.m_reservation_id
+      WHERE r.m_reservation_id <> p_reservation_id
+        AND r.m_product_id = v_product_id
+        AND r.c_uom_id = v_uom_id
+        AND rs.m_locator_id = p_locator_id
+        AND rs.m_attributesetinstance_id = v_attributesetinstance_id
+        AND rs.isallocated = 'N'
+        AND r.res_status NOT IN ('HO', 'CL', 'DR')
+        AND rs.quantity <> COALESCE(rs.releasedqty,0)
+  ) LOOP
+    v_qtytorelease := LEAST(v_pendingtoreallocate, cur_not_allocated_stock.quantity - cur_not_allocated_stock.releasedqty);
+    
+    IF (v_this_notreserved >= v_qtytorelease) THEN
+      v_this_notreserved := v_this_notreserved - v_qtytorelease;
+    ELSE
+      --The new reserved stock is higher than the pending quantity to reserve, other reserved stock must be unreserved.
+      v_qtytounreserve := v_qtytorelease - v_this_notreserved;
+      v_this_notreserved := 0;
+      FOR cur_reserved_stock IN (
+          SELECT m_reservation_stock_id, quantity - COALESCE(releasedqty, 0) AS reservedqty
+          FROM m_reservation_stock
+          WHERE m_reservation_id = p_reservation_id
+            AND isallocated = 'N'
+            AND (m_attributesetinstance_id <> v_attributesetinstance_id OR m_locator_id <> p_locator_id)
+            AND quantity <> COALESCE(releasedqty,0)
+      ) LOOP
+
+        v_qtytounreserve_aux := LEAST(v_qtytounreserve, cur_reserved_stock.reservedqty);
+        UPDATE m_reservation_stock
+        SET quantity = quantity - v_qtytounreserve_aux
+        WHERE m_reservation_stock_id = cur_reserved_stock.m_reservation_stock_id;
+        v_qtytounreserve := v_qtytounreserve - v_qtytounreserve_aux;
+
+        IF (v_qtytounreserve = 0) THEN
+          EXIT;
+        END IF;
+      END LOOP;
+    END IF;
+
+    UPDATE m_reservation_stock
+    SET quantity = quantity - v_qtytorelease
+    WHERE m_reservation_stock_id = cur_not_allocated_stock.m_reservation_stock_id;
+      
+    M_RESERVE_STOCK_MANUAL(p_reservation_id, 'SD', v_storage_detail_id, v_qtytorelease, p_user_id, 'N', v_res_stock_id);
+
+    IF (cur_not_allocated_stock.c_orderline_id IS NOT NULL) THEN
+      SELECT m_warehouse_rule_id INTO v_warehouse_rule_id
+      FROM c_orderline
+      WHERE c_orderline_id = cur_not_allocated_stock.c_orderline_id;
+    END IF;
+
+    m_get_stock_param(v_pinstance_ID, p_reservation_id, cur_not_allocated_stock.quantitytoreserve, cur_not_allocated_stock.m_product_id, cur_not_allocated_stock.m_locator_id, cur_not_allocated_stock.m_warehouse_id, null, cur_not_allocated_stock.ad_org_id, cur_not_allocated_stock.m_attributesetinstance_id, p_User_ID, cur_not_allocated_stock.ad_client_id, v_warehouse_rule_id, cur_not_allocated_stock.c_uom_id, null, null, null, null, '---', p_reservation_id, 'N', v_Result, v_Message, 'Y', null, null);
+    IF (v_Result = 0) THEN
+      -- Error on m_get_stock
+      RAISE_APPLICATION_ERROR(-20000, v_Message);
+    END IF;
+    SELECT sum(quantity) INTO v_availablestock
+    FROM m_stock_proposed
+    WHERE ad_pinstance_id = v_pinstance_id;
+    DELETE FROM m_stock_proposed
+    WHERE ad_pinstance_id = v_pinstance_id;
+    
+    IF (v_availablestock >= v_qtytorelease) THEN
+      M_RESERVE_STOCK_AUTO(cur_not_allocated_stock.m_reservation_id, p_user_id, v_newreservedqty);
+      DBMS_OUTPUT.PUT_LINE('M_Reserve_Stock_Auto: ' || v_newreservedqty);
+      v_pendingtoreallocate := v_pendingtoreallocate - v_qtytorelease;
+      IF (v_pendingtoreallocate <= 0) THEN
+        -- Reallocation completed
+        -- Delete records with quantity 0 that might be left.
+        DELETE FROM m_reservation_stock
+        WHERE m_reservation_id = p_reservation_id
+          AND quantity = 0;
+        DELETE FROM m_reservation_stock
+        WHERE quantity = 0
+          AND m_reservation_stock_id = cur_not_allocated_stock.m_reservation_stock_id;
+        RETURN;
+      END IF;
+    ELSE
+      --Not enough available stock has been able to reallocate using new stock, undo reallocation.
+      UPDATE m_reservation_stock
+      SET quantity = COALESCE(quantity,0) - v_qtytorelease,
+          updated = now(),
+          updatedby = p_user_id
+      WHERE m_reservation_stock_id = v_res_stock_id;
+
+      UPDATE m_reservation_stock
+      SET quantity = quantity + v_qtytorelease
+      WHERE m_reservation_stock_id = cur_not_allocated_stock.m_reservation_stock_id;
+    END IF;
+    DELETE FROM m_reservation_stock
+    WHERE quantity = 0
+      AND m_reservation_stock_id = cur_not_allocated_stock.m_reservation_stock_id;
+  END LOOP;
+
+  IF (v_pendingtoreallocate > 0) THEN
+    RAISE_APPLICATION_ERROR(-20000, '@CannotReallocateAllQuantity@'||' @of@'||' @Product@: '||v_product_value||', @AttributeSetInstance@: '||COALESCE(v_attr_description, '-')||', @UOM@: '||v_uom_value||' @And@'||' @StorageBin@: '||COALESCE(v_locator_value, '-'));
+  END IF;
+
+  -- Delete records with quantity 0 that might be left.
+  DELETE FROM m_reservation_stock
+  WHERE m_reservation_id = p_reservation_id
+    AND quantity = 0;
+EXCEPTION
+WHEN OTHERS THEN
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  v_ResultStr:= '@ERROR=' || SQLERRM;
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  RAISE;
+END M_RESERVATION_REALLOCATE
+]]></body>
+    </function>
+  </database>

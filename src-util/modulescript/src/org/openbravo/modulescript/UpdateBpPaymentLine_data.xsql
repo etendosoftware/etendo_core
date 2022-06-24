@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014-2015 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="UpdateBpPaymentLineData" package="org.openbravo.modulescript">
+   <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' as exist FROM DUAL
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateBpPaymentLineInvoice" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+				update fin_payment_scheduledetail psd
+				set c_bpartner_id = (select c_bpartner_id from c_invoice i, fin_payment_schedule ps
+				                     where ps.fin_payment_schedule_id = fin_payment_schedule_invoice 
+				                     and ps.c_invoice_id = i.c_invoice_id)
+				where c_bpartner_id is null and fin_payment_schedule_invoice is not null 
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateBpPaymentLineOrder" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+				update fin_payment_scheduledetail psd
+				set c_bpartner_id = (select c_bpartner_id from c_order o, fin_payment_schedule ps
+				                     where ps.fin_payment_schedule_id = fin_payment_schedule_order 
+				                     and ps.c_order_id = o.c_order_id)
+				where c_bpartner_id is null and fin_payment_schedule_order is not null
+					and fin_payment_schedule_invoice is null
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="isModuleScriptExecuted" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+    SELECT count(*) as exist
+    FROM ad_preference
+    WHERE attribute = 'UpdateBpPaymentLine2' and isactive = 'Y'
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+    INSERT INTO ad_preference (
+    ad_preference_id, ad_client_id, ad_org_id, isactive,
+    createdby, created, updatedby, updated, attribute
+    ) VALUES (
+    get_uuid(), '0', '0', 'Y', 
+    '0', NOW(), '0', NOW(), 'UpdateBpPaymentLine2')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="createInvoiceIndex" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        alter table c_invoice add constraint c_invoice_key primary key (c_invoice_id)    
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="dropInvoiceIndex" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        alter table c_invoice drop constraint c_invoice_key cascade    
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="analyzeInvoice" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        ANALYZE c_invoice  
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

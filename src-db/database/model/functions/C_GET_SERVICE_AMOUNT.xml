@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_GET_SERVICE_AMOUNT">
+    <function name="C_GET_SERVICE_AMOUNT" type="NUMERIC" volatility="STABLE">
+      <parameter name="v_c_orderline_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2015-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_TotalAmount NUMBER;
+  v_TotalQantity NUMBER;
+  v_IsPriceRuleBased M_PRODUCT.ISPRICERULEBASED%TYPE;
+  v_M_Product_ID M_PRODUCT.M_PRODUCT_ID%TYPE;
+  v_Dateordered C_ORDER.dateordered%TYPE;
+  v_stdPrecision C_CURRENCY.STDPRECISION%TYPE;
+  v_PriceList m_productprice.pricelist%type;
+  v_OrderPricelist C_ORDER.M_PRICELIST_ID%TYPE;
+  -- Parameter
+  TYPE RECORD IS REF CURSOR;
+  Cur_Rule RECORD;
+  Cur_Range RECORD;
+  BEGIN
+    SELECT SUM(AMOUNT), SUM(QUANTITY), ISPRICERULEBASED, M_PRODUCT.M_PRODUCT_ID, C_ORDER.DATEORDERED, STDPRECISION, C_ORDER.M_PRICELIST_ID
+      INTO v_TotalAmount, v_TotalQantity, v_IsPriceRuleBased, v_M_Product_ID,  v_Dateordered, v_stdPrecision, v_OrderPricelist
+    FROM C_ORDERLINE_SERVICERELATION, C_ORDERLINE, M_PRODUCT, C_ORDER, C_CURRENCY
+    WHERE C_ORDERLINE_SERVICERELATION.C_ORDERLINE_ID = C_ORDERLINE.C_ORDERLINE_ID
+    AND C_ORDER.C_ORDER_ID = C_ORDERLINE.C_ORDER_ID
+    AND C_ORDER.C_CURRENCY_ID =  C_CURRENCY.C_CURRENCY_ID
+    AND C_ORDERLINE.M_PRODUCT_id =  M_PRODUCT.M_PRODUCT_ID
+    AND C_ORDERLINE.C_ORDERLINE_ID =  v_c_orderline_id
+    GROUP BY ISPRICERULEBASED, M_PRODUCT.M_PRODUCT_ID, C_ORDER.DATEORDERED, STDPRECISION, C_ORDER.M_PRICELIST_ID;
+		
+    IF(v_IsPriceRuleBased = 'Y') THEN
+      FOR Cur_Rule IN
+	(SELECT  RULETYPE, AFTERDISCOUNTS, PERCENTAGE, M_SERVICEPRICERULE.M_SERVICEPRICERULE_ID
+	 FROM M_SERVICEPRICERULE_VERSION, M_SERVICEPRICERULE
+	 WHERE M_SERVICEPRICERULE_VERSION.M_SERVICEPRICERULE_ID =  M_SERVICEPRICERULE.M_SERVICEPRICERULE_ID
+	 AND M_PRODUCT_ID = v_M_Product_ID
+	 AND VALIDFROM <=  v_Dateordered
+	 ORDER BY VALIDFROM DESC
+	)
+      LOOP
+        IF(Cur_Rule.RULETYPE = 'P') THEN
+          RETURN  round(v_TotalAmount * Cur_Rule.percentage / 100, v_stdPrecision);
+        ELSE
+	  FOR Cur_Range IN
+            (SELECT  RULETYPE, AFTERDISCOUNTS, PERCENTAGE, M_PRICELIST_ID
+	     FROM m_servicepricerule_range
+	     WHERE m_servicepricerule_ID  = Cur_Rule.M_SERVICEPRICERULE_ID
+	     AND coalesce(amountupto, v_TotalAmount)  >=  v_TotalAmount
+	     ORDER BY amountupto
+	    )
+	  LOOP
+	    IF(Cur_Range.RULETYPE = 'P') THEN
+	      RETURN  ROUND(v_TotalAmount * Cur_Range.percentage / 100, v_stdPrecision);
+	    ELSE
+	      SELECT PRICELIST 
+		INTO v_PriceList
+	      FROM M_PRODUCTPRICE
+	      WHERE M_PRICELIST_VERSION_ID = M_GET_PRICELIST_VERSION(Cur_Range.M_PRICELIST_ID, v_Dateordered)
+	      AND M_PRODUCT_ID = v_M_Product_ID;
+              RETURN ROUND(v_PriceList * v_TotalQantity, v_stdPrecision);
+	    END IF;
+	  END LOOP;
+	  RAISE_APPLICATION_ERROR(-20000, '@NoMatchingRange@');
+        END IF;
+      END LOOP;
+      RAISE_APPLICATION_ERROR(-20000, '@NoMatchingPriceRule@');
+    ELSE
+      SELECT PRICELIST 
+        INTO v_PriceList
+      FROM M_PRODUCTPRICE
+      WHERE M_PRICELIST_VERSION_ID = M_GET_PRICELIST_VERSION(v_OrderPricelist, v_Dateordered)
+      AND M_PRODUCT_ID = v_M_Product_ID;
+      RETURN ROUND(v_PriceList * v_TotalQantity, v_stdPrecision);
+    END IF;
+END C_GET_SERVICE_AMOUNT
+]]></body>
+    </function>
+  </database>

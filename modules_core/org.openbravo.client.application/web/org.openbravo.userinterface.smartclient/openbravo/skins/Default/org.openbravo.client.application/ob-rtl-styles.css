@@ -1,0 +1,274 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an 'AS IS'
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2011-2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+
+/* ob-application-menu-styles.css */
+
+.OBApplicationMenuTreeItemCellTitleField,
+.OBApplicationMenuTreeItemCellTitleFieldSelected,
+.OBApplicationMenuTreeItemCellTitleFieldOver,
+.OBApplicationMenuTreeItemCellTitleFieldSelectedOver,
+.OBApplicationMenuTreeItemCellTitleFieldDisabled {
+  padding: 0px 6px 0px 20px;
+}
+
+.OBApplicationMenuTreeItemCellIcon,
+.OBApplicationMenuTreeItemCellIconField,
+.OBApplicationMenuTreeItemCellIconFieldSelected,
+.OBApplicationMenuTreeItemCellIconFieldOver,
+.OBApplicationMenuTreeItemCellIconFieldSelectedOver,
+.OBApplicationMenuTreeItemCellIconFieldDisabled {
+  padding: 0px 5px 0px 4px;
+  border-width: 0px 0px 0px 1px;
+}
+
+.OBApplicationMenuTreeItemCellIconFieldDisabled {
+  border-width: 0px;
+  padding: 0px 25px 0px 0px;
+  background-position: right center;
+  background-image: url(./images/application-menu/menuSeparator-RTL.png);
+}
+
+.OBApplicationMenuTreeItemCellKeysField,
+.OBApplicationMenuTreeItemCellKeysFieldSelected,
+.OBApplicationMenuTreeItemCellKeysFieldOver,
+.OBApplicationMenuTreeItemCellKeysFieldSelectedOver,
+.OBApplicationMenuTreeItemCellKeysFieldDisabled,
+.OBApplicationMenuTreeItemCellSubmenuField,
+.OBApplicationMenuTreeItemCellSubmenuFieldSelected,
+.OBApplicationMenuTreeItemCellSubmenuFieldOver,
+.OBApplicationMenuTreeItemCellSubmenuFieldSelectedOver,
+.OBApplicationMenuTreeItemCellSubmenuFieldDisabled {
+  padding-left: 6px;
+  padding-right: 0px;
+  text-align: left;
+}
+
+
+/* ob-form-styles.css */
+
+.OBFormFieldSelectInputRequired,
+.OBFormFieldSelectInputRequiredDisabled,
+.OBFormFieldSelectInputRequiredFocused,
+.OBFormFieldSelectInputRequiredError,
+.OBFormFieldSelectInputRequiredHint,
+
+.OBFormFieldSelectInput,
+.OBFormFieldSelectInputError,
+.OBFormFieldSelectInputSelectedFocused,
+.OBFormFieldSelectInputFocused,
+.OBFormFieldSelectInputDisabled {
+  border-width: 1px 1px 1px 0px;
+}
+
+
+/* ob-grid-styles.css */
+
+.OBGridCell,
+.OBGridCellOver,
+.OBGridCellDark,
+.OBGridCellOverDark,
+.OBGridCellSelected,
+.OBGridCellSelectedDark,
+.OBGridCellSelectedOver,
+.OBGridCellSelectedOverDark,
+.OBGridCellDisabled,
+.OBGridCellDisabledDark,
+
+.OBGridCellSelectedViewInactive,
+.OBGridCellSelectedViewInactiveDark,
+
+.OBGridCellEdit,
+.OBGridCellEditOver,
+.OBGridCellEditDark,
+.OBGridCellEditOverDark,
+.OBGridCellEditSelected,
+.OBGridCellEditSelectedDark,
+.OBGridCellEditSelectedOver,
+.OBGridCellEditSelectedOverDark,
+.OBGridCellEditDisabled,
+.OBGridCellEditDisabledDark,
+
+.OBGridCellError,
+.OBGridCellErrorOver,
+.OBGridCellErrorDark,
+.OBGridCellErrorOverDark,
+.OBGridCellErrorSelected,
+.OBGridCellErrorSelectedDark,
+.OBGridCellErrorSelectedOver,
+.OBGridCellErrorSelectedOverDark,
+.OBGridCellErrorDisabled,
+.OBGridCellErrorDisabledDark,
+
+.OBGridCellErrorEdit,
+.OBGridCellErrorEditOver,
+.OBGridCellErrorEditDark,
+.OBGridCellErrorEditOverDark,
+.OBGridCellErrorEditSelected,
+.OBGridCellErrorEditSelectedDark,
+.OBGridCellErrorEditSelectedOver,
+.OBGridCellErrorEditSelectedOverDark,
+.OBGridCellErrorEditDisabled,
+.OBGridCellErrorEditDisabledDark {
+  border-width: 0px 0px 1px 1px;
+}
+
+.OBGridFilterCell {
+  border-width: 0px 0px 0px 1px;
+}
+
+.OBGridHeaderCellTitle,
+.OBGridHeaderCellTitleOver,
+.OBGridHeaderCellTitleDown,
+.OBGridHeaderCellTitleSelected,
+.OBGridHeaderCellTitleSelectedOver,
+.OBGridHeaderCellTitleSelectedDown,
+.OBGridHeaderCellTitleDisabled,
+.OBGridHeaderCellTitleSelectedDisabled {
+  border-width: 0px 0px 0px 1px;
+}
+
+.OBGridSummaryCell,
+.OBGridSummaryCell_sum,
+.OBGridSummaryCell_avg,
+.OBGridSummaryCell_count {
+  border-width: 0px 0px 1px 1px;
+}
+
+.OBGridLinkCell,
+.OBGridLinkCellOver,
+.OBGridLinkCellSelected,
+.OBGridLinkCellSelectedOver,
+.OBGridLinkCellDark,
+.OBGridLinkCellOverDark,
+.OBGridLinkCellSelectedDark,
+.OBGridLinkCellSelectedOverDark {
+  border-width: 0px 0px 1px 1px;
+  padding: 0px 3px 1px 0px;
+}
+
+
+/* ob-messagebar-styles.css */
+
+.OBMessageBarDescriptionText {
+  margin: 4px 6px 2px 2px;
+}
+
+.OBMessageBarCloseIconOver,
+.OBMessageBarCloseIcon {
+  margin: 2px 0px 0px 2px;
+}
+
+.OBMessageBarLeftMsgContainer {
+  float: right;
+}
+
+.OBMessageBarRightMsgContainer {
+  float: left;
+}
+
+
+/* ob-navigation-bar-styles.css */
+
+.OBNavBarToolStrip {
+  margin-left: 0px;
+  margin-right: 4px;
+}
+
+.OBNavBarComponent {
+  background-position: left;
+}
+
+.OBNavBarComponent:hover {
+  border-width: 1px 1px 1px 0px;
+
+  margin-left: 0px;
+  margin-right: -1px;
+
+  background-position: left;
+}
+
+.OBNavBarComponentSelected {
+  border-width: 1px 1px 0px 0px;
+
+  margin-left: 0px;
+  margin-right: -1px;
+
+  background-position: left;
+}
+
+
+/* ob-personalization-styles.css */
+
+.OBPersonalizationPullDownMenuCellIcon,
+.OBPersonalizationPullDownMenuCellIconSelected,
+.OBPersonalizationPullDownMenuCellIconOver,
+.OBPersonalizationPullDownMenuCellIconSelectedOver,
+.OBPersonalizationPullDownMenuCellIconDisabled {
+  border-width: 0px 0px 0px 1px;
+}
+
+.OBFormPersonalizerPreviewPanel {
+  border-width: 0px 5px 0px 0px;
+}
+
+
+/* ob-popup-styles.css */
+
+.OBPopupHeaderIcon {
+  margin: 0px 4px 0px 0px;
+}
+
+.OBPopupIconMinimize,
+.OBPopupIconMinimizeOver,
+.OBPopupIconMinimizeDown,
+.OBPopupIconMinimizeDisabled {
+  margin: 0px 0px 0px 4px;
+}
+
+.OBPopupIconMaximize,
+.OBPopupIconMaximizeOver,
+.OBPopupIconMaximizeDown,
+.OBPopupIconMaximizeDisabled {
+  margin: 0px 0px 0px 4px;
+}
+
+.OBPopupIconRestore,
+.OBPopupIconRestoreOver,
+.OBPopupIconRestoreDown,
+.OBPopupIconRestoreDisabled {
+  margin: 0px 0px 0px 4px;
+}
+
+.OBPopupIconClose,
+.OBPopupIconCloseOver,
+.OBPopupIconCloseDown,
+.OBPopupIconCloseDisabled {
+  margin: 0px 0px 0px 4px;
+}
+
+
+/* ob-statusbar-styles.css */
+
+.OBStatusBarTextLabel {
+  text-align: right;
+}
+
+.OBStatusBarIconButtonBar {
+  margin: 0px 0px 0px 20px;
+}

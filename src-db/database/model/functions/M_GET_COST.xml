@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_GET_COST">
+    <function name="M_GET_COST" type="NUMERIC" volatility="STABLE">
+      <parameter name="p_product_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_movementdate" type="TIMESTAMP" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_costtype" type="CHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_org_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_client_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_warehouse_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_currency_from" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_currency_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_islegalentity" type="CHAR" mode="in">
+        <default><![CDATA[N]]></default>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+v_Cost     NUMBER;
+BEGIN
+  v_Cost := COALESCE (M_GET_NO_TRX_PRODUCT_COST(p_product_id ,p_movementdate, p_costtype, p_org_id, p_warehouse_id, p_currency_id),
+  C_CURRENCY_CONVERT_PRECISION(M_GET_PRODUCT_COST(p_product_id, p_movementdate, p_costtype),p_currency_from, p_currency_id, TO_DATE(p_movementdate), NULL, p_client_id, p_org_id,'C'));
+  RETURN v_Cost;
+END M_GET_COST
+]]></body>
+    </function>
+  </database>

@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<data>
+<!--53389C2060AD4DBEA1F9009A3C82B63F--><OBCQL_WIDGET_QUERY>
+<!--53389C2060AD4DBEA1F9009A3C82B63F-->  <OBCQL_WIDGET_QUERY_ID><![CDATA[53389C2060AD4DBEA1F9009A3C82B63F]]></OBCQL_WIDGET_QUERY_ID>
+<!--53389C2060AD4DBEA1F9009A3C82B63F-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--53389C2060AD4DBEA1F9009A3C82B63F-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--53389C2060AD4DBEA1F9009A3C82B63F-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--53389C2060AD4DBEA1F9009A3C82B63F-->  <OBKMO_WIDGET_CLASS_ID><![CDATA[5B41A19E11494C519BE33BBED6012DAE]]></OBKMO_WIDGET_CLASS_ID>
+<!--53389C2060AD4DBEA1F9009A3C82B63F-->  <HQL><![CDATA[select Organization.name as store, Warehouse.name as warehouse,Organization.id as orgid, Product.searchKey as identifier,Product.name as product,Product.id as pid, ProductCategory.name as category, ProductCategory.id as pcid,UOM.name as uom, sum(ps.quantityOnHand) as qtyonhand,AttributeSetInstance.description as attr,Warehouse.id as whid
+from ProductStockView ps left outer join ps.product as Product
+left outer join ps.storageBin as Locator
+left outer join Locator.warehouse as Warehouse
+left outer join Product.productCategory as ProductCategory
+left outer join Warehouse.organization as Organization
+left outer join ps.uOM as UOM
+left outer join ps.attributeSetValue as AttributeSetInstance
+where ps.client.id=:client
+and ps.organization.id IN (:organizationList)
+and Product.stocked='Y'
+and @optional_filters@
+group by Organization.name, Warehouse.name, Organization.id, Product.searchKey, Product.name, Product.id, ProductCategory.name, ProductCategory.id, UOM.name, AttributeSetInstance.description,Warehouse.id
+order by Warehouse.name, Product.name, sum(ps.quantityOnHand) desc]]></HQL>
+<!--53389C2060AD4DBEA1F9009A3C82B63F-->  <TYPE><![CDATA[HQL]]></TYPE>
+<!--53389C2060AD4DBEA1F9009A3C82B63F--></OBCQL_WIDGET_QUERY>
+
+<!--97FD9C124D5D409DB94BB6500A418A60--><OBCQL_WIDGET_QUERY>
+<!--97FD9C124D5D409DB94BB6500A418A60-->  <OBCQL_WIDGET_QUERY_ID><![CDATA[97FD9C124D5D409DB94BB6500A418A60]]></OBCQL_WIDGET_QUERY_ID>
+<!--97FD9C124D5D409DB94BB6500A418A60-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--97FD9C124D5D409DB94BB6500A418A60-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--97FD9C124D5D409DB94BB6500A418A60-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--97FD9C124D5D409DB94BB6500A418A60-->  <OBKMO_WIDGET_CLASS_ID><![CDATA[5291D3D3B07B4CFC87928071377740E8]]></OBKMO_WIDGET_CLASS_ID>
+<!--97FD9C124D5D409DB94BB6500A418A60-->  <HQL><![CDATA[select orgname as store, warehouseName as warehouse, organization.id as orgid, searchKey as identifier, productName as product, product.id as pid, productCategoryName as category, productCategory.id as pcid, uOMName as uom, quantityOnHand as qtyonhand, description as attr, warehouse.id as whid
+from OBWCL_StockByWarehouseView sbw
+where sbw.client.id=:client
+and sbw.organization.id IN (:organizationList)
+and @optional_filters@
+order by qtyonhand desc]]></HQL>
+<!--97FD9C124D5D409DB94BB6500A418A60-->  <TYPE><![CDATA[HQL]]></TYPE>
+<!--97FD9C124D5D409DB94BB6500A418A60--></OBCQL_WIDGET_QUERY>
+
+<!--CFDF8EE593F04CFE9709F5AD19A3A573--><OBCQL_WIDGET_QUERY>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573-->  <OBCQL_WIDGET_QUERY_ID><![CDATA[CFDF8EE593F04CFE9709F5AD19A3A573]]></OBCQL_WIDGET_QUERY_ID>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573-->  <OBKMO_WIDGET_CLASS_ID><![CDATA[CD1B06C4ED974B5F905A5A01B097DF4E]]></OBKMO_WIDGET_CLASS_ID>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573-->  <HQL><![CDATA[select product.id as id,product.name as pname, sum(orderedQuantity) as qty, product.uOM.name as uom, product.uOM.id as uomid
+from OrderLine ol
+where ol.salesOrder.documentStatus = 'CO'
+and ol.salesOrder.salesTransaction = 'Y'
+and @optional_filters@
+and ol.client.id = :client
+and ol.product.name like :pname
+and ol.organization.id in (:organizationList)
+group by product.name, product.uOM.name, product.id, product.uOM.id 
+order by sum(orderedQuantity) desc]]></HQL>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573-->  <TYPE><![CDATA[HQL]]></TYPE>
+<!--CFDF8EE593F04CFE9709F5AD19A3A573--></OBCQL_WIDGET_QUERY>
+
+<!--D2003CD3F9984BF39457BA1F2FFF01C9--><OBCQL_WIDGET_QUERY>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9-->  <OBCQL_WIDGET_QUERY_ID><![CDATA[D2003CD3F9984BF39457BA1F2FFF01C9]]></OBCQL_WIDGET_QUERY_ID>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9-->  <OBKMO_WIDGET_CLASS_ID><![CDATA[862EEC18D6FC4FA68E7867E3CF337CC7]]></OBKMO_WIDGET_CLASS_ID>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9-->  <HQL><![CDATA[select 
+       tel.expenseSheet.documentNo as documentNo,
+       tel.expenseSheet.id as expenseSheetId,
+       tel.description as description,
+       case when tel.expenseDate is not null then tel.expenseDate  else tel.expenseSheet.reportDate end as expenseDate,
+       tel.product.id as productId,
+       tel.product.name as productName,
+       tel.quantity as quantity,
+       tel.uOM.name as uomName,
+       p.id as projectId,
+       p.name as projectName,
+       tel.expenseSheet.processed as processed
+from
+	TimeAndExpenseSheetLine as tel
+	LEFT JOIN tel.project as p,
+	ADUser as u
+	where (month(current_date()) = month(tel.expenseDate) or (month(current_date()) = month(tel.expenseSheet.reportDate) and tel.expenseDate = null))
+	and (year(current_date()) = year(tel.expenseDate) or (year(current_date()) = year(tel.expenseSheet.reportDate) and tel.expenseDate = null))
+	and tel.timeSheet = 'Y'
+	and tel.client.id=:client
+	and tel.expenseSheet.businessPartner=u.businessPartner
+	and u.id=:user
+order by  tel.expenseSheet.reportDate, tel.expenseSheet.documentNo]]></HQL>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9-->  <TYPE><![CDATA[HQL]]></TYPE>
+<!--D2003CD3F9984BF39457BA1F2FFF01C9--></OBCQL_WIDGET_QUERY>
+
+</data>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2013 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="UpdateReservationQtysData" package="org.openbravo.modulescript">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="existsPreference" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as exist
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_preference
+                      WHERE attribute = 'Reservation_Qtys_Updated')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="deleteNotReleased" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        DELETE FROM m_reservation_stock
+        WHERE m_reservation_id IN
+              (SELECT m.m_reservation_id FROM m_reservation m, c_orderline ol, c_order o
+               WHERE m.c_orderline_id = ol.c_orderline_id
+                     AND ol.c_order_id = o.c_order_id
+                     AND ol.qtyordered = 0
+                     AND o.docstatus = 'CL'
+                     AND (m.quantity != 0 OR m.reservedqty != 0 OR m.releasedqty != 0))
+              AND COALESCE(releasedqty, 0) = 0
+      ]]>
+    </Sql>
+  </SqlMethod>
+    <SqlMethod name="updateReleased" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE m_reservation_stock
+        SET quantity = releasedqty
+        WHERE m_reservation_id IN
+              (SELECT m.m_reservation_id FROM m_reservation m, c_orderline ol, c_order o
+               WHERE m.c_orderline_id = ol.c_orderline_id
+                     AND ol.c_order_id = o.c_order_id
+                     AND ol.qtyordered = 0
+                     AND o.docstatus = 'CL'
+                     AND (m.quantity != 0 OR m.reservedqty != 0 OR m.releasedqty != 0))
+              AND COALESCE(releasedqty, 0) != 0
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateReservationQtys" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE m_reservation
+        SET quantity = 0
+        WHERE m_reservation_id IN
+              (SELECT m.m_reservation_id FROM m_reservation m, c_orderline ol, c_order o
+               WHERE m.c_orderline_id = ol.c_orderline_id
+                     AND ol.c_order_id = o.c_order_id
+                     AND ol.qtyordered = 0
+                     AND o.docstatus = 'CL'
+                     AND (m.quantity != 0 OR m.reservedqty != 0 OR m.releasedqty != 0))
+      ]]>
+    </Sql>
+  </SqlMethod>
+    <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO ad_preference (
+          ad_preference_id, ad_client_id, ad_org_id, isactive,
+          createdby, created, updatedby, updated,
+          attribute
+        ) VALUES (
+          get_uuid(), '0', '0', 'Y',
+          '0', NOW(), '0', NOW(),
+          'Reservation_Qtys_Updated'
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

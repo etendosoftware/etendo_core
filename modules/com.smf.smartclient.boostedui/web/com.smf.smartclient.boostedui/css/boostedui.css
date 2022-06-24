@@ -1,0 +1,10 @@
+/* multi view */
+.darksplitbar{
+	background: black;
+}
+
+.OBToolbarIconButton_icon_gridAndFilter {
+    background-image: url('../../web/com.smf.smartclient.boostedui/img/gridForm.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+}

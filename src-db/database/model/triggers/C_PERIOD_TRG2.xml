@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_PERIOD_TRG2">
+    <trigger name="C_PERIOD_TRG2" table="C_PERIOD" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+    /*************************************************************************
+    * The contents of this file are subject to the Compiere Public
+    * License 1.1 ("License"); You may not use this file except in
+    * compliance with the License. You may obtain a copy of the License in
+    * the legal folder of your Openbravo installation.
+    * Software distributed under the License is distributed on an
+    * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+    * implied. See the License for the specific language governing rights
+    * and limitations under the License.
+    * The Original Code is  Compiere  ERP &  Business Solution
+    * The Initial Developer of the Original Code is Jorg Janke and ComPiere, Inc.
+    * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke,
+    * parts created by ComPiere are Copyright (C) ComPiere, Inc.;
+    * All Rights Reserved.
+    * Contributor(s): Openbravo SLU
+    * Contributions are Copyright (C) 2001-2016 Openbravo, S.L.U.
+    *
+    * Specifically, this derivative work is based upon the following Compiere
+    * file and version.
+    *************************************************************************
+    * Calculate End Date
+    */
+    v_DateNull DATE := TO_DATE('01-01-1900','DD-MM-YYYY');
+    V_NEVER_OPENED NUMBER;
+
+BEGIN
+
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+   IF(UPDATING) THEN
+     IF COALESCE(:old.StartDate, v_DateNull) <> COALESCE(:NEW.StartDate, v_DateNull) THEN
+        IF (:new.EndDate IS NULL) THEN
+           :new.EndDate:= ADD_MONTHS(TRUNC(:new.StartDate, 'MM'), 1) -1;
+	END If;
+     END IF;
+   END IF;
+
+   IF(INSERTING) THEN
+	IF (:new.EndDate IS NULL) THEN
+           :new.EndDate:= ADD_MONTHS(TRUNC(:new.StartDate, 'MM'), 1) -1;
+	END If;
+   END IF;
+
+   -- Validating dates period
+   IF(UPDATING OR INSERTING) THEN
+
+	IF (INSERTING AND :NEW.PERIODTYPE = 'C_YEARPERIOD') THEN
+		-- Creating periods from procedure, no need to check dates
+		:NEW.PERIODTYPE := 'S';
+	Else
+		IF (:NEW.STARTDATE > :NEW.ENDDATE) THEN
+			RAISE_APPLICATION_ERROR(-20000, '@DatesWrong@');
+		End If;
+	END IF;
+   END IF;
+   
+   IF (UPDATING) THEN
+     IF((COALESCE(:OLD.STARTDATE, v_DateNull) <> COALESCE(:NEW.STARTDATE, v_DateNull))
+      OR (COALESCE(:OLD.ENDDATE, v_DateNull) <> COALESCE(:NEW.ENDDATE, v_DateNull))
+      OR (COALESCE(:OLD.PERIODNO, '0') <> COALESCE(:NEW.PERIODNO, '0'))
+      OR (COALESCE(:OLD.PERIODTYPE, '0') <> COALESCE(:NEW.PERIODTYPE, '0')))
+    THEN
+    
+      SELECT 1
+      INTO V_NEVER_OPENED
+      FROM DUAL
+      WHERE EXISTS (SELECT C_PERIODCONTROL_ID
+                    FROM C_PERIODCONTROL
+                    WHERE C_PERIOD_ID = COALESCE(:OLD.C_PERIOD_ID, :NEW.C_PERIOD_ID)
+                    AND PERIODSTATUS <> 'N');
+      IF (V_NEVER_OPENED IS NOT NULL) THEN
+        RAISE_APPLICATION_ERROR(-20000, '@PeriodAlreadyUsed@') ;
+      END IF;
+      
+    END IF;
+   END IF;
+
+   IF DELETING THEN
+        DELETE FROM C_PeriodControl_log
+	WHERE periodno=:old.C_Period_ID;
+
+	DELETE FROM C_PeriodControl
+	WHERE C_Period_ID=:old.C_Period_ID;
+   END IF;
+
+END C_PERIOD_TRG2
+]]></body>
+    </trigger>
+  </database>

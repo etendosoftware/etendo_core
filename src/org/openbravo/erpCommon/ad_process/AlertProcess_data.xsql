@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2014 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="AlertProcessData" package="org.openbravo.erpCommon.ad_process">
+   <SqlMethod name="select" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        SELECT '' AS AD_CLIENT_ID,
+               '' AS AD_ORG_ID,
+               '' AS CREATED,
+               '' AS CREATEDBY,
+               '' AS UPDATED,
+               '' AS UPDATEDBY,
+               '' AS ISACTIVE,
+               '' AS AD_USER_ID,
+               '' AS AD_ROLE_ID,
+               '' AS RECORD_ID,
+               '' AS DESCRIPTION,
+               '' AS REFERENCEKEY_ID, 
+               '' AS AD_ALERTRULE_ID,
+               '' AS SQL,
+               '' AS NAME,
+               '' AS AD_LANGUAGE
+          FROM DUAL
+    ]]></Sql>
+   </SqlMethod>
+   
+   <SqlMethod name="selectSQL" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        SELECT AD_ALERTRULE_ID, SQL, NAME, AD_CLIENT_ID, AD_ORG_ID
+          FROM AD_ALERTRULE
+         WHERE ISACTIVE = 'Y'
+    ]]></Sql>
+   </SqlMethod>
+
+   <SqlMethod name="selectSQL" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        SELECT AD_ALERTRULE_ID, SQL, NAME, AD_CLIENT_ID, AD_ORG_ID
+          FROM AD_ALERTRULE
+         WHERE ISACTIVE = 'Y'
+           AND AD_CLIENT_ID = ?
+    ]]></Sql>
+    <Parameter name="adClientId"/>
+   </SqlMethod>
+
+   <SqlMethod name="updateAlert" type="preparedStatement" return="rowcount"> 
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        UPDATE AD_ALERT
+           SET STATUS    = 'SOLVED',
+               UPDATED   = NOW(),
+               UPDATEDBY = 0
+         WHERE AD_ALERTRULE_ID = ?
+           AND COALESCE(STATUS, 'NEW') != 'SOLVED'
+           AND NOT EXISTS 
+                   (SELECT 1 FROM (SELECT '' AS AD_REFERENCEKEY_ID FROM DUAL) A WHERE 1=1
+                              AND A.REFERENCEKEY_ID = AD_ALERT.REFERENCEKEY_ID)
+    ]]></Sql>
+   <Parameter name="alertRuleId"/>
+   <Parameter name="sql" type="replace" optional="true" after="(SELECT 1 FROM (" text="SELECT '' AS AD_REFERENCEKEY_ID FROM DUAL"/>
+   </SqlMethod>
+   
+</SqlClass>

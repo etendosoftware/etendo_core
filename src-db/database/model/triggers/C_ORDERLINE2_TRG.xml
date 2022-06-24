@@ -1,0 +1,245 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_ORDERLINE2_TRG">
+    <trigger name="C_ORDERLINE2_TRG" table="C_ORDERLINE" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+
+
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2001-2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_ID                 VARCHAR2(32);
+  v_QtyReserved        NUMBER;
+  v_QtyOrderReserved   NUMBER;
+  V_STOCKED            NUMBER;
+  v_DocStatus          VARCHAR(60);
+  v_isSOTrx            CHAR(1);
+  v_QtyReservedPO      NUMBER;
+  v_QtyOrderReservedPO NUMBER;
+  v_count              NUMBER;
+  v_UOM_ID             VARCHAR2(32);
+
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+
+  IF(UPDATING) THEN
+    IF(:NEW.M_PRODUCT_ID IS NOT NULL) THEN
+    v_ID:=:old.C_Order_ID;
+    SELECT DocStatus, isSOTrx
+    INTO v_DocStatus, v_isSOTrx
+    FROM c_Order
+    WHERE c_order_id = v_ID;
+      IF(v_DocStatus <> 'DR') THEN
+        IF((COALESCE(:old.QtyDelivered, 0) <> COALESCE(:NEW.QtyDelivered, 0))) THEN
+          -- Get ID
+          v_ID:=:new.C_Order_ID;
+          IF (v_isSOTrx = 'Y') THEN
+            v_QtyReserved := -(:new.qtydelivered - :old.qtydelivered);
+            IF (:old.qtydelivered=0 AND :new.qtydelivered=:new.qtyordered) THEN
+              v_QtyOrderReserved := -:new.QuantityOrder;
+            ELSIF (:new.M_Product_UOM_ID IS NOT NULL) THEN
+              SELECT c_uom_id
+              INTO v_UOM_ID
+              FROM m_product_uom
+              WHERE m_product_uom_id = :new.m_product_uom_id;
+              v_QtyOrderReserved := C_Uom_Convert(v_QtyReserved, :new.C_UOM_ID, v_UOM_ID, 'Y');
+            END IF;
+          ELSE
+            v_QtyReserved := 0;
+            v_QtyOrderReserved := null;
+          END IF;
+          SELECT COUNT(*)
+          INTO V_STOCKED
+          FROM M_PRODUCT
+          WHERE M_Product_ID=:NEW.M_PRODUCT_ID
+            AND IsStocked='Y'
+            AND ProductType='I';
+          IF V_STOCKED > 0 THEN
+            M_UPDATE_STORAGE_PENDING(:new.AD_Client_ID, :new.AD_Org_ID, :new.UpdatedBy, :new.M_Product_ID, :new.M_Warehouse_ID, :new.M_AttributeSetInstance_ID, :new.C_UOM_ID, :new.M_PRODUCT_UOM_ID, v_QtyReserved, v_QtyOrderReserved, 0, NULL) ;
+          END IF;
+        END IF;
+      END IF;
+      
+      -- Close reservations if QtyDelivered >= qtyordered
+      IF (:new.QtyDelivered IS NOT NULL AND :new.QtyDelivered <> COALESCE(:old.QtyDelivered, 0) 
+        AND :new.QtyDelivered > 0 AND :new.QtyDelivered >= COALESCE(:new.qtyordered, 0)) THEN
+         DECLARE
+           TYPE RECORD IS REF CURSOR;
+           cur_reservations RECORD;
+
+         BEGIN
+           FOR cur_reservations IN (
+             SELECT res.m_reservation_id as m_reservation_id
+             FROM m_reservation res
+             WHERE res.C_ORDERLINE_ID = :new.C_ORDERLINE_ID
+             AND res.RES_STATUS IN ('CO', 'HO')
+           ) LOOP
+               M_RESERVATION_POST(null, cur_reservations.m_reservation_id, 'CL', :new.updatedBy);
+             END LOOP;
+         END;
+      END IF;
+    END IF;
+  END IF;
+
+  IF(UPDATING OR DELETING) THEN
+    v_ID:=:old.C_Order_ID;
+    SELECT DocStatus, isSOTrx
+    INTO v_DocStatus, v_isSOTrx
+    FROM c_Order
+    WHERE c_order_id = v_ID;
+    IF(v_DocStatus = 'IP') THEN
+      IF(v_isSOTrx = 'Y') THEN
+        v_QtyReserved := -:old.qtyordered;
+        v_QtyOrderReserved := -:old.quantityorder;
+        v_QtyReservedPO := 0;
+        v_QtyOrderReservedPO := null;
+      ELSE
+        v_QtyReserved := 0;
+        v_QtyOrderReserved := null;
+        v_QtyReservedPO := -:old.qtyordered;
+        v_QtyOrderReservedPO := -:old.quantityorder;
+      END IF;
+      SELECT COUNT(*)
+        INTO V_STOCKED
+        FROM M_PRODUCT
+        WHERE M_Product_ID=:old.M_PRODUCT_ID
+          AND IsStocked='Y'
+          AND ProductType='I';
+      IF V_STOCKED > 0 THEN
+        M_UPDATE_STORAGE_PENDING(:old.AD_Client_ID, :old.AD_Org_ID, :old.UpdatedBy, :old.M_Product_ID, :old.M_Warehouse_ID, :old.M_AttributeSetInstance_ID, :old.C_UOM_ID, :old.M_Product_UOM_ID, v_QtyReserved, v_QtyOrderReserved, v_QtyReservedPO, v_QtyOrderReservedPO);
+      END IF;
+    END IF;
+  END IF;
+
+  IF(INSERTING OR UPDATING) THEN
+    v_ID:=:new.C_Order_ID;
+    SELECT DocStatus, isSOTrx
+    INTO v_DocStatus, v_isSOTrx
+    FROM c_Order
+    WHERE c_order_id = v_ID;
+    IF(v_DocStatus = 'IP') THEN
+      IF(v_isSOTrx = 'Y') THEN
+        v_QtyReserved := :new.qtyordered;
+        v_QtyOrderReserved := :new.quantityorder;
+        v_QtyReservedPO := 0;
+        v_QtyOrderReservedPO := null;
+      ELSE
+        v_QtyReserved := 0;
+        v_QtyOrderReserved := null;
+        v_QtyReservedPO := :new.qtyordered;
+        v_QtyOrderReservedPO := :new.quantityorder;
+      END IF;
+      SELECT COUNT(*)
+      INTO V_STOCKED
+      FROM M_PRODUCT
+      WHERE M_Product_ID=:NEW.M_PRODUCT_ID
+        AND IsStocked='Y'
+        AND ProductType='I';
+      IF V_STOCKED > 0 THEN
+        M_UPDATE_STORAGE_PENDING(:new.AD_Client_ID, :new.AD_Org_ID, :new.UpdatedBy, :new.M_Product_ID, :new.M_Warehouse_ID, :new.M_AttributeSetInstance_ID, :new.C_UOM_ID, :new.M_Product_UOM_ID, v_QtyReserved, v_QtyOrderReserved, v_QtyReservedPO, v_QtyOrderReservedPO);
+      END IF;
+    END IF;
+  END IF;
+  
+  IF (UPDATING) THEN
+    -- Update Requisition ordered quantity when needed.
+    SELECT count(*) INTO v_count
+    FROM DUAL
+    WHERE EXISTS (SELECT 1 FROM m_requisitionorder WHERE c_orderline_id = :old.c_orderline_id);
+    IF (v_count > 0 AND :old.qtyordered > :new.qtyordered) THEN
+      -- Quantity order decrease. Remove quantity from requisitions.
+      DECLARE
+        TYPE RECORD IS REF CURSOR;
+        cur_requisitions      RECORD;
+
+        v_requisitionqty      NUMBER;
+        v_qtypendingtoremove  NUMBER;
+        v_qtytoremove         NUMBER;
+      BEGIN
+        SELECT sum(qty) INTO v_requisitionqty
+        FROM m_requisitionorder
+        WHERE c_orderline_id = :OLD.c_orderline_id;
+        IF (v_requisitionqty > :NEW.qtyordered) THEN
+          v_qtypendingtoremove := v_requisitionqty - :new.qtyordered;
+          FOR cur_requisitions IN (
+            SELECT ro.m_requisitionorder_id, ro.qty
+            FROM m_requisitionorder ro
+                JOIN m_requisitionline rl ON ro.m_requisitionline_id = rl.m_requisitionline_id
+            WHERE ro.c_orderline_id = :old.c_orderline_id
+            ORDER BY CASE rl.reqstatus WHEN 'O' THEN 0 ELSE 1 END, rl.needbydate DESC, rl.created DESC
+          ) LOOP
+            v_qtytoremove := LEAST(v_qtypendingtoremove, cur_requisitions.qty);
+            -- Do not remove if quantity is set to zero to keep relation
+            UPDATE m_requisitionorder
+            SET qty = qty - v_qtytoremove
+            WHERE m_requisitionorder_id = cur_requisitions.m_requisitionorder_id;
+            v_qtypendingtoremove := v_qtypendingtoremove - v_qtytoremove;
+            IF (v_qtypendingtoremove = 0) THEN
+              EXIT;
+            END IF;
+          END LOOP;
+        END IF;
+      END;
+    ELSIF (v_count > 0 AND :old.qtyordered < :new.qtyordered) THEN
+      -- Quantity order increase. Add quantity to requisitions.
+      DECLARE
+        TYPE RECORD IS REF CURSOR;
+        cur_requisitions          RECORD;
+
+        v_requisitionpendingqty   NUMBER;
+        v_qtypendingtoadd         NUMBER;
+        v_qtytoadd                NUMBER;
+      BEGIN
+        SELECT sum(rl.qty - rl.orderedqty) INTO v_requisitionpendingqty
+        FROM m_requisitionline rl 
+        WHERE rl.m_requisitionline_id IN (SELECT ro.m_requisitionline_id 
+                                          FROM m_requisitionorder ro
+                                          WHERE c_orderline_id = :old.c_orderline_id)
+          AND rl.qty > rl.orderedqty;
+        IF (v_requisitionpendingqty > 0) THEN
+          v_qtypendingtoadd := LEAST(v_requisitionpendingqty, :new.qtyordered - :old.qtyordered);
+          FOR cur_requisitions IN (
+            SELECT MAX(m_requisitionorder_id) AS m_requisitionorder_id, rl.qty - rl.orderedqty AS pendingqty
+            FROM m_requisitionorder ro
+                JOIN m_requisitionline rl ON ro.m_requisitionline_id = rl.m_requisitionline_id
+            WHERE ro.c_orderline_id = :old.c_orderline_id
+              AND rl.qty > rl.orderedqty
+              AND rl.reqstatus = 'O'
+            GROUP BY rl.m_requisitionline_id, rl.needbydate, rl.created, rl.qty, rl.orderedqty, rl.reqstatus
+            ORDER BY rl.needbydate ASC, rl.created ASC
+          ) LOOP
+            v_qtytoadd := LEAST(v_qtypendingtoadd, cur_requisitions.pendingqty);
+            UPDATE m_requisitionorder
+            SET qty = qty + v_qtytoadd
+            WHERE m_requisitionorder_id = cur_requisitions.m_requisitionorder_id;
+            v_qtypendingtoadd := v_qtypendingtoadd - v_qtytoadd;
+            IF (v_qtypendingtoadd = 0) THEN
+              EXIT;
+            END IF;
+          END LOOP;
+        END IF;
+      END;
+    END IF;
+  END IF;
+
+END C_ORDERLINE2_TRG
+]]></body>
+    </trigger>
+  </database>

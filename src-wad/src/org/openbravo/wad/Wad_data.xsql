@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2018 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="WadData" package="org.openbravo.wad">
+  <SqlMethod name="dummy" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Dummy method used to set up all WadData fields</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      select 
+        '' as id, '' as name, '' as classname, '' as displayname,
+        '' as loadonstartup, '' as value, '' as line, '' as auth,
+        '' as buildxml, '' as tabId, '' as windowName, '' as tabName,
+        '' as windowPackage, '' as windowmodule, '' as tabPackage,
+        '' as tabmodule, '' as key, '' as tablevel, '' as location,
+        '' as errortype
+      from dual
+      ]]>      
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT AD_MODEL_OBJECT_ID as ID, (COALESCE(ACTION, '') || AD_MODEL_OBJECT_ID) AS NAME, o.CLASSNAME, o.CLASSNAME AS DISPLAYNAME, LOADONSTARTUP
+      FROM AD_MODEL_OBJECT o LEFT JOIN ad_process p ON o.ad_process_id = p.ad_process_id AND p.isReport='N'
+      WHERE o.ISACTIVE = 'Y'
+      AND OBJECT_TYPE = 'S'
+      AND ACTION != 'W'
+      AND COALESCE(p.uiPattern,'M') = 'M'
+      AND AD_CALLOUT_ID IS NULL
+      ORDER BY NAME
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="selectAllTabs" type="preparedStatement" return="multiple">
+    <Sql>
+      <![CDATA[
+        select t.ad_tab_id as tabId, AD_MAPPING_FORMAT(to_char(w.name)) as windowName, 
+               AD_MAPPING_FORMAT(to_char(t.name)) as tabName, 
+               m2.javapackage as windowPackage, m2.ad_module_id as windowmodule,
+               m.javapackage as tabPackage, m.ad_module_id as tabmodule,
+               t.ad_window_id as key, t.tablevel
+          from ad_tab t, ad_window w, ad_module m, ad_module m2
+         where t.ad_module_id = m.ad_module_id
+           and w.ad_module_id = m2.ad_module_id
+           and w.ad_window_id = t.ad_window_id
+           and t.isactive='Y'
+           and w.isactive='Y'
+           order by w.name, t.seqno
+      ]]>
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="selectMapping" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT MAX(MO.ACTION || MO.AD_MODEL_OBJECT_ID) AS NAME, MOM.MAPPINGNAME AS CLASSNAME, MO.CLASSNAME AS DISPLAYNAME 
+      FROM AD_MODEL_OBJECT_MAPPING MOM, 
+           AD_MODEL_OBJECT MO LEFT JOIN AD_Process p ON mo.AD_Process_ID = p.AD_Process_ID AND p.isReport='N'
+      WHERE mo.ISACTIVE = 'Y' 
+      AND MO.OBJECT_TYPE = 'S' 
+      AND MO.ACTION != 'W'
+      AND MO.AD_MODEL_OBJECT_ID = MOM.AD_MODEL_OBJECT_ID
+      AND COALESCE(p.uiPattern,'M') = 'M'
+      AND AD_CALLOUT_ID IS NULL
+      GROUP BY MO.CLASSNAME, MOM.MAPPINGNAME
+      ORDER BY NAME
+      ]]>
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="selectFilter" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT MAX(COALESCE(ACTION, '') || AD_MODEL_OBJECT_ID) AS NAME, MAX(AD_MODEL_OBJECT_ID) as ID, CLASSNAME, CLASSNAME AS DISPLAYNAME
+      FROM AD_MODEL_OBJECT 
+      WHERE ISACTIVE = 'Y' 
+      AND OBJECT_TYPE = 'F'
+      GROUP BY SEQNO,CLASSNAME
+      ORDER BY SEQNO,NAME
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="selectSessionTimeOut" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT P.VALUE
+      FROM AD_MODEL_OBJECT O, AD_MODEL_OBJECT_PARA P
+      WHERE O.ISACTIVE = 'Y' 
+      AND O.OBJECT_TYPE = 'ST'
+      AND P.AD_MODEL_OBJECT_ID = O.AD_MODEL_OBJECT_ID
+      AND UPPER(P.NAME) = 'TIMEOUT' 
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="selectResource" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT NAME, CLASSNAME, (SELECT MAX(VALUE)
+                                 FROM AD_MODEL_OBJECT_PARA P
+                                WHERE O.AD_MODEL_OBJECT_ID = P.AD_MODEL_OBJECT_ID
+                                  AND UPPER(P.NAME) = 'AUTH') AS AUTH 
+      FROM AD_MODEL_OBJECT  O
+      WHERE ISACTIVE = 'Y' 
+      AND OBJECT_TYPE = 'R'
+      ORDER BY seqno
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="selectFilterMapping" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT MAX(MO.ACTION || MO.AD_MODEL_OBJECT_ID) AS NAME, MOM.MAPPINGNAME AS CLASSNAME, MO.CLASSNAME AS DISPLAYNAME 
+      FROM AD_MODEL_OBJECT MO, AD_MODEL_OBJECT_MAPPING MOM
+      WHERE MO.ISACTIVE = 'Y'
+      AND MO.OBJECT_TYPE = 'F' 
+      AND MO.AD_MODEL_OBJECT_ID = MOM.AD_MODEL_OBJECT_ID 
+      AND MOM.ISACTIVE = 'Y'
+      AND MO.ACTION != 'W'
+      GROUP BY MO.CLASSNAME, MOM.MAPPINGNAME, MO.SEQNO 
+      ORDER BY SEQNO,NAME
+      ]]>
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="selectContextParams" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Selects all model object parameters of object type C</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT P.NAME, P.VALUE
+      FROM AD_MODEL_OBJECT MO, AD_MODEL_OBJECT_PARA P
+      WHERE MO.ISACTIVE = 'Y'
+      AND MO.OBJECT_TYPE = 'C' 
+      AND MO.AD_MODEL_OBJECT_ID = P.AD_MODEL_OBJECT_ID 
+      AND P.ISACTIVE = 'Y'
+      ORDER BY MO.SEQNO, P.LINE, P.NAME
+      ]]>
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="selectParams" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT MAX(LINE) AS  LINE, P.NAME, MAX(P.VALUE) AS VALUE
+      FROM AD_MODEL_OBJECT MO, AD_MODEL_OBJECT_PARA P
+      WHERE MO.ISACTIVE = 'Y'
+      AND MO.OBJECT_TYPE = ? 
+      AND MO.CLASSNAME = ?
+      and mo.ad_model_object_id = ?
+      AND MO.AD_MODEL_OBJECT_ID = P.AD_MODEL_OBJECT_ID 
+      AND P.ISACTIVE = 'Y'
+      GROUP BY P.NAME 
+      ORDER BY LINE, NAME
+      ]]>
+    </Sql>
+    <Parameter name="objectType"/>
+    <Parameter name="classname"/>
+    <Parameter name="id"/>
+  </SqlMethod>
+
+  <SqlMethod name="selectListener" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT COALESCE(ACTION, '') || AD_MODEL_OBJECT_ID AS NAME, CLASSNAME, CLASSNAME AS DISPLAYNAME
+      FROM AD_MODEL_OBJECT 
+      WHERE ISACTIVE = 'Y' 
+      AND OBJECT_TYPE = 'L'
+      AND AD_MODEL_OBJECT_ID != ?
+      ORDER BY SEQNO, NAME
+      ]]>
+    </Sql>
+    <Parameter name="excludeObject"/>
+  </SqlMethod>
+  
+  <SqlMethod name="genereteWebXml" type="preparedStatement" return="boolean" default="true">
+    <Sql>
+      <![CDATA[
+         select (case when count(*)=0 then 0 else 1 end) as buildxml
+          from ad_system_info
+         where last_build < (select max(updated)
+                               from (select max(updated) as updated
+                                       from ad_model_object
+                                      union
+                                     select max(updated) 
+                                       from ad_model_object_mapping
+                                      union
+                                     select max(updated)
+                                       from ad_model_object_para) upd) 
+           or exists (select 1 
+                        from ad_preference
+                       where isactive = 'Y'
+                         and property = 'OBUIAPP_UseClassicMode'
+                         and updated > last_build)
+                                      
+      ]]>
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="updateIdentifiers" type="callableStatement" return="object" object="WadData">
+      <SqlMethodComment>procedure AD_Update_Table_Identifier</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Update_Table_Identifier(NULL, ?)
+      ]]></Sql>
+      <Parameter name="quick"/>
+  </SqlMethod>
+   
+  <SqlMethod name="updateAuditTrail" type="callableStatement" return="object" object="WadData">
+    <SqlMethodComment>procedure AD_Update_Table_Identifier</SqlMethodComment>
+    <Sql><![CDATA[
+      CALL AD_Create_Audit_Triggers(null)
+    ]]></Sql>
+  </SqlMethod>
+
+  <SqlMethod name="selectGenericErrorPages" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Select the active generic Error pages (with no code or exception parameters)</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      select coalesce(o.name, o.ad_model_object_id) as name, p.value as location, 'generic' as errortype
+      from  ad_model_object_para p, 
+            ad_model_object o
+      where o.object_type = 'E'
+      and o.isactive = 'Y'
+      and p.isactive='Y'
+      and p.ad_model_object_id = o.ad_model_object_id
+      and p.name = 'location' 
+      and not exists (
+         select 1 from ad_model_object_para op where
+         op.isactive = 'Y'
+         and op.name IN ('exception-type', 'error-code')
+         and op.ad_model_object_id = o.ad_model_object_id
+      )
+      order by o.seqno
+    ]]>
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="selectErrorPages" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Select the active error pages of the type given (it can be either exception-type or error code)</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      select coalesce(o.name, o.ad_model_object_id) as name, p.value as value, p.name as errortype,
+        (select max(value)
+         from ad_model_object_para lp 
+         where lp.ad_model_object_id = o.ad_model_object_id
+         and lp.isactive = 'Y'
+         and lp.name = 'location'
+        ) as location
+      from  ad_model_object_para p, ad_model_object o
+      where o.object_type = 'E'
+      and o.isactive = 'Y'
+      and p.isactive = 'Y'
+      and p.ad_model_object_id = o.ad_model_object_id
+      and p.name = ?
+      and p.value is not null
+      order by o.seqno
+      ]]> 
+    </Sql>
+    <Parameter name="errorType"/>
+  </SqlMethod>
+
+</SqlClass>

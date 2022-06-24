@@ -1,0 +1,199 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an 'AS IS'
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2010-2013 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+/* Blue */
+/* Light Blue */
+/* Darker Blue */
+/* Gray */
+/* Darker Gray  */
+/* Yellow */
+/* White */
+/* Light Blue (20%) */
+/* Light Green */
+/* Light Blue (20%) */
+/* light Blue (10%) */
+/* Gray 10 % */
+.tabStyleActive, .OBTabBarButtonChildTopOver, .OBTabBarButtonChildTopSelectedInactive,
+.OBTabBarButtonChildTopSelectedFocusedInactive,
+.OBTabBarButtonChildTopSelectedFocusedOverInactive,
+.OBTabBarButtonChildTopSelectedFocusedDownInactive,
+.OBTabBarButtonChildTopSelectedDownInactive,
+.OBTabBarButtonChildTopSelectedDisabledInactive,
+.OBTabBarButtonChildTopSelectedOverInactive, .OBTabBarButtonMainTopSelectedInactive,
+.OBTabBarButtonMainTopSelectedFocusedInactive,
+.OBTabBarButtonMainTopSelectedFocusedOverInactive,
+.OBTabBarButtonMainTopSelectedFocusedDownInactive,
+.OBTabBarButtonMainTopSelectedDownInactive,
+.OBTabBarButtonMainTopSelectedDisabledInactive,
+.OBTabBarButtonMainTopSelectedOverInactive {
+  background-color: #202452;
+}
+
+.tabStyleActiveSelected, .OBTabBarButtonChildTopSelected,
+.OBTabBarButtonChildTopSelectedFocused,
+.OBTabBarButtonChildTopSelectedFocusedOver,
+.OBTabBarButtonChildTopSelectedFocusedDown,
+.OBTabBarButtonChildTopSelectedDown,
+.OBTabBarButtonChildTopSelectedDisabled,
+.OBTabBarButtonChildTopSelectedOver, .OBTabBarButtonMainTopSelected,
+.OBTabBarButtonMainTopSelectedFocused,
+.OBTabBarButtonMainTopSelectedFocusedOver,
+.OBTabBarButtonMainTopSelectedFocusedDown,
+.OBTabBarButtonMainTopSelectedDown,
+.OBTabBarButtonMainTopSelectedDisabled,
+.OBTabBarButtonMainTopSelectedOver {
+  background-color: #202452;
+  border-top: 4px solid #fad614;
+}
+
+.tabStyleInactive, .OBTabBarButtonChildTopOverInactive, .OBTabBarButtonChildTop,
+.OBTabBarButtonChildTopDown,
+.OBTabBarButtonChildTopDisabled,
+.OBTabBarButtonChildTopInactive,
+.OBTabBarButtonChildTopDownInactive,
+.OBTabBarButtonChildTopDisabledInactive, .OBTabBarButtonMainTopOverInactive, .OBTabBarButtonMainTopOver, .OBTabBarButtonMainTopInactive,
+.OBTabBarButtonMainTopDownInactive,
+.OBTabBarButtonMainTopDisabledInactive, .OBTabBarButtonMainTop,
+.OBTabBarButtonMainTopDown,
+.OBTabBarButtonMainTopDisabled {
+  background-color: #e1e1e1;
+  color: #a5aab7;
+}
+
+/*============================================================
+ 1) Main Tab Headers
+============================================================*/
+.OBTabBarMain, .OBTabBarChild {
+  background-color: #eff1f7;
+  background-position: center top;
+  background-repeat: repeat-x;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.OBTabSetMainContainer {
+  margin-top: 1px;
+  border-top: 1px solid #202452;
+}
+
+/* styles for simple css-styled tabs*/
+/* note only the top styles are present here because in Openbravo tabs in forms are shown in the top
+if the tab headers are on the right, left or bottom the same styles can be used */
+.OBTabBarButtonMainTitle, .OBTabBarButtonChildTitle, .OBTabBarButtonChildTitleInactive,
+.OBTabBarButtonChildTitleOverInactive,
+.OBTabBarButtonChildTitleDownInactive,
+.OBTabBarButtonChildTitleFocusedInactive,
+.OBTabBarButtonChildTitleFocusedOverInactive,
+.OBTabBarButtonChildTitleFocusedDownInactive,
+.OBTabBarButtonChildTitleDisabledInactive,
+.OBTabBarButtonChildTitleOver,
+.OBTabBarButtonChildTitleDown,
+.OBTabBarButtonChildTitleFocused,
+.OBTabBarButtonChildTitleFocusedOver,
+.OBTabBarButtonChildTitleFocusedDown,
+.OBTabBarButtonChildTitleDisabled, .OBTabBarButtonMainTitleInactive,
+.OBTabBarButtonMainTitleOverInactive,
+.OBTabBarButtonMainTitleDownInactive,
+.OBTabBarButtonMainTitleFocusedInactive,
+.OBTabBarButtonMainTitleFocusedOverInactive,
+.OBTabBarButtonMainTitleFocusedDownInactive,
+.OBTabBarButtonMainTitleDisabledInactive,
+.OBTabBarButtonMainTitleOver,
+.OBTabBarButtonMainTitleDown,
+.OBTabBarButtonMainTitleFocused,
+.OBTabBarButtonMainTitleFocusedOver,
+.OBTabBarButtonMainTitleFocusedDown,
+.OBTabBarButtonMainTitleDisabled {
+  color: #ababab;
+  padding-top: 8px;
+}
+
+.OBTabBarButtonMainTitleSelected, .OBTabBarButtonChildTitleSelected, .OBTabBarButtonChildTitleSelectedInactive,
+.OBTabBarButtonChildTitleSelectedFocusedInactive,
+.OBTabBarButtonChildTitleSelectedOverInactive,
+.OBTabBarButtonChildTitleSelectedFocusedOverInactive,
+.OBTabBarButtonChildTitleSelectedDownInactive,
+.OBTabBarButtonChildTitleSelectedFocusedDownInactive,
+.OBTabBarButtonChildTitleSelectedDisabledInactive,
+.OBTabBarButtonChildTitleSelectedFocused,
+.OBTabBarButtonChildTitleSelectedOver,
+.OBTabBarButtonChildTitleSelectedFocusedOver,
+.OBTabBarButtonChildTitleSelectedDown,
+.OBTabBarButtonChildTitleSelectedFocusedDown,
+.OBTabBarButtonChildTitleSelectedDisabled, .OBTabBarButtonMainTitleSelectedInactive,
+.OBTabBarButtonMainTitleSelectedFocusedInactive,
+.OBTabBarButtonMainTitleSelectedOverInactive,
+.OBTabBarButtonMainTitleSelectedFocusedOverInactive,
+.OBTabBarButtonMainTitleSelectedDownInactive,
+.OBTabBarButtonMainTitleSelectedFocusedDownInactive,
+.OBTabBarButtonMainTitleSelectedDisabledInactive,
+.OBTabBarButtonMainTitleSelectedFocused,
+.OBTabBarButtonMainTitleSelectedOver,
+.OBTabBarButtonMainTitleSelectedFocusedOver,
+.OBTabBarButtonMainTitleSelectedDown,
+.OBTabBarButtonMainTitleSelectedFocusedDown,
+.OBTabBarButtonMainTitleSelectedDisabled {
+  color: #ffffff;
+  padding-top: 8px;
+}
+
+/*
+.OBTabBarButtonMainTitleSelected,
+.OBTabBarButtonMainTitleSelectedDown,
+.OBTabBarButtonMainTitleSelectedOver,
+.OBTabBarButtonMainTitleFocusedOver,
+.OBTabBarButtonMainTitleSelectedFocusedOver {
+  @extend .OBTabBarButtonMainTitle;
+}
+
+.OBTabBarButtonMainTitleSelectedInactive,
+.OBTabBarButtonMainTitleDownInactive,
+.OBTabBarButtonMainTitleSelectedOverInactive,
+.OBTabBarButtonMainTitleFocusedOverInactive,
+.OBTabBarButtonMainTitleSelectedFocusedOverInactive {
+  @extend .OBTabBarButtonMainTitleInactive;
+}
+.OBTabBarButtonMainTitleOver {
+  @extend .OBTabBarButtonMainTitle;
+}
+.OBTabBarButtonMainTitleOverInactive {
+  @extend .OBTabBarButtonMainTitleInactive;
+}
+
+.OBTabBarButtonMainTitleDisabled,
+.OBTabBarButtonMainTitleSelectedDisabled,
+
+.OBTabBarButtonMainTitleDisabledInactive,
+.OBTabBarButtonMainTitleSelectedDisabledInactive {
+  @extend .OBTabBarButtonMainTitleInactive;
+}
+*/
+/*============================================================
+ 2) Child Tab Headers
+============================================================*/
+.OBTabSetChildContainer {
+  margin-top: 0px;
+  border-top: 0px solid #202452;
+}
+
+/* styles for simple css-styled tabs*/
+/* note only the top styles are present here because in Openbravo tabs in forms are shown in the top
+if the tab headers are on the right, left or bottom the same styles can be used */
+
+/*# sourceMappingURL=ob-tab-styles.css.map */

@@ -1,0 +1,35 @@
+.OBToolbarIconButton_icon_ob-upload-import-bp-in-bp-set {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/toolbar/iconButton-import.png);
+}
+
+.OBToolbarIconButton_icon_ob-upload-import-bp-in-bp-setProgress {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/toolbar/iconButton-progress.gif);  /* Generated @ http://www.ajaxload.info/ */ /* Indicator type: 'Snake' - Background color: #64932D - Transparent background - Foreground color: #FFFFFF */
+}
+
+.OBToolbarIconButton_icon_ob-upload-import-bp-in-bp-set-line {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/toolbar/iconButton-import.png);
+}
+
+.OBToolbarIconButton_icon_ob-upload-import-bp-in-bp-set-lineProgress {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/toolbar/iconButton-progress.gif);  /* Generated @ http://www.ajaxload.info/ */ /* Indicator type: 'Snake' - Background color: #64932D - Transparent background - Foreground color: #FFFFFF */
+}
+
+.OBToolbarIconButton_icon_ob-upload-import-product-in-discount {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/toolbar/iconButton-import.png);
+}
+
+.OBToolbarIconButton_icon_ob-upload-import-product-in-discountProgress {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/toolbar/iconButton-progress.gif);  /* Generated @ http://www.ajaxload.info/ */ /* Indicator type: 'Snake' - Background color: #64932D - Transparent background - Foreground color: #FFFFFF */
+}

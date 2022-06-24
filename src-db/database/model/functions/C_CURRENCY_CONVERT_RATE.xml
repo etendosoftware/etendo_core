@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_CURRENCY_CONVERT_RATE">
+    <function name="C_CURRENCY_CONVERT_RATE" type="NUMERIC" volatility="STABLE">
+      <parameter name="p_amount" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_curfrom_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_curto_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_convdate" type="TIMESTAMP" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_ratetype" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_client_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_org_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_convrate" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012-2019 Openbravo SLU
+ * All Rights Reserved.
+************************************************************************/
+
+BEGIN
+  IF (p_convrate IS NULL) THEN
+    RETURN C_CURRENCY_CONVERT_PRECISION(p_amount, p_curfrom_id, p_curto_id, p_convdate, p_ratetype, p_client_id, p_org_id, 'A');
+  ELSE
+    -- Return Amount
+    IF(p_Amount=0 OR p_curfrom_id=p_curto_id) THEN
+      RETURN p_Amount;
+    END IF;
+    -- Return NULL
+    IF(p_Amount IS NULL OR p_curfrom_id IS NULL OR p_curto_id IS NULL) THEN
+      RETURN NULL;
+    END IF;
+    -- Standard Precision
+    RETURN ROUND(p_amount * p_convrate, C_GET_CURRENCY_PRECISION(p_curto_id, 'A')) ;
+  END IF;
+EXCEPTION
+WHEN OTHERS THEN
+  DBMS_OUTPUT.PUT_LINE(SQLERRM) ;
+  RAISE;
+  RETURN NULL;
+END C_CURRENCY_CONVERT_RATE
+]]></body>
+    </function>
+  </database>

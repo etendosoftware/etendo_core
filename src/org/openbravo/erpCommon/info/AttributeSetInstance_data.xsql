@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2014 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="AttributeSetInstanceData" package="org.openbravo.erpCommon.info">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="select" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT A_S.M_ATTRIBUTESET_ID, A_S.NAME, A_S.DESCRIPTION, A_S.GUARANTEEDAYS, A_S.ISGUARANTEEDATE, A_S.ISLOT, A_S.ISSERNO, 
+        A_S.M_LOTCTL_ID, A_S.M_SERNOCTL_ID, A.ISLIST, A.NAME AS ELEMENTNAME, A.M_ATTRIBUTE_ID, 
+        A_S.ISLOCKABLE, A.ISINSTANCEATTRIBUTE, '' AS M_ATTRIBUTESETINSTANCE_ID, '' as GUARANTEEDATE, '' as LOT, '' as SERNO, 
+        '' as M_ATTRIBUTEVALUE_ID, '' as VALUE, A.ISMANDATORY, '' AS ISLOCKED, '' AS LOCK_DESCRIPTION ,  A_S.Isoneattrsetvalrequired
+        FROM M_ATTRIBUTESET A_S left join (M_ATTRIBUTEUSE A_U 
+                                           join M_ATTRIBUTE A on A_U.M_ATTRIBUTE_ID = A.M_ATTRIBUTE_ID
+                                                                 and A_U.ISACTIVE= 'Y'
+                                                                 and A.ISACTIVE= 'Y')
+                                on a_s.M_ATTRIBUTESET_ID = a_u.M_ATTRIBUTESET_ID
+        WHERE A_S.ISACTIVE = 'Y'
+        AND A_S.M_ATTRIBUTESET_ID = ? 
+        ORDER BY A_U.SEQNO
+      ]]></Sql>
+        <Parameter name="mAttributesetId"/>
+   </SqlMethod>
+   <SqlMethod name="selectInstance" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT A_S.DESCRIPTION, A_S.GUARANTEEDATE, A_S.LOT, A_S.SERNO, A_S.M_ATTRIBUTESET_ID, 
+        A.M_ATTRIBUTEVALUE_ID, A.M_ATTRIBUTE_ID, A.VALUE, A_S.ISLOCKED, A_S.LOCK_DESCRIPTION 
+        FROM M_ATTRIBUTESETINSTANCE A_S left join M_ATTRIBUTEINSTANCE A on A_S.M_ATTRIBUTESETINSTANCE_ID = A.M_ATTRIBUTESETINSTANCE_ID
+        WHERE A_S.M_ATTRIBUTESETINSTANCE_ID = ?
+      ]]></Sql>
+        <Parameter name="mAttributesetinstanceId"/>
+   </SqlMethod>
+   <SqlMethod name="selectList" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT M_ATTRIBUTEVALUE_ID AS VALUE, NAME, DESCRIPTION 
+        FROM M_ATTRIBUTEVALUE
+        WHERE M_ATTRIBUTE_ID = ?
+        AND ISACTIVE='Y'
+        ORDER BY NAME
+      ]]></Sql>
+        <Parameter name="mAttributeId"/>
+   </SqlMethod>
+   <SqlMethod name="selectDescription" type="preparedStatement" return="String" default="">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT DESCRIPTION FROM M_ATTRIBUTESETINSTANCE WHERE M_ATTRIBUTESETINSTANCE_ID = ?
+      ]]></Sql>
+        <Parameter name="mAttributesetinstanceId"/>
+   </SqlMethod>
+   <SqlMethod name="selectNextLot" type="preparedStatement" return="String" default="0">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT COALESCE(TO_CHAR(PREFIX),'') || CURRENTNEXT || COALESCE(TO_CHAR(SUFFIX),'') AS TOTAL
+        FROM M_LOTCTL 
+        WHERE M_LOTCTL_ID = ?
+      ]]></Sql>
+        <Parameter name="mLotctlId"/>
+   </SqlMethod>
+   <SqlMethod name="selectNextSerNo" type="preparedStatement" return="String" default="0">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT COALESCE(TO_CHAR(PREFIX),'') || CURRENTNEXT || COALESCE(TO_CHAR(SUFFIX),'') AS TOTAL
+        FROM M_SERNOCTL 
+        WHERE M_SERNOCTL_ID = ?
+      ]]></Sql>
+        <Parameter name="mSernoctlId"/>
+   </SqlMethod>
+   
+   <SqlMethod name="selectProductAttr" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT m_attributeset_id, m_attributesetinstance_id FROM M_PRODUCT WHERE m_product_id=?
+      ]]></Sql>
+        <Parameter name="mProductId"/>
+   </SqlMethod>
+   <SqlMethod name="selectAttributeSet" type="preparedStatement" return="String" default="">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT s.M_ATTRIBUTESET_ID
+        FROM M_ATTRIBUTESETINSTANCE s
+        WHERE s.M_ATTRIBUTESETINSTANCE_ID = ?
+      ]]></Sql>
+        <Parameter name="mAttributesetinstanceId"/>
+   </SqlMethod>
+   <SqlMethod name="isInstanceAttribute" type="preparedStatement" return="String" default="0">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql> <![CDATA[
+        SELECT (CASE A_S.ISLOCKABLE WHEN 'Y' THEN 1 ELSE (CASE A_S.ISLOT WHEN 'Y' THEN 1 ELSE (CASE A_S.ISSERNO WHEN 'Y' THEN 1 ELSE (CASE A_S.ISGUARANTEEDATE WHEN 'Y' THEN 1 ELSE 
+        (CASE (SELECT MAX(ISINSTANCEATTRIBUTE) FROM M_ATTRIBUTE, M_ATTRIBUTEUSE 
+                WHERE M_ATTRIBUTE.M_ATTRIBUTE_ID = M_ATTRIBUTEUSE.M_ATTRIBUTE_ID
+                AND M_ATTRIBUTEUSE.M_ATTRIBUTESET_ID = A_S.M_ATTRIBUTESET_ID) WHEN 'Y' THEN 1 ELSE 0 END) END) END) END) END) AS TOTAL 
+        FROM M_ATTRIBUTESET A_S
+        WHERE A_S.ISACTIVE = 'Y'
+        AND A_S.M_ATTRIBUTESET_ID = ? 
+      ]]></Sql>
+        <Parameter name="mAttributesetId"/>
+   </SqlMethod>
+</SqlClass>

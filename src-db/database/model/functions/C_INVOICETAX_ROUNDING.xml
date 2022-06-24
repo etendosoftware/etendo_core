@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_INVOICETAX_ROUNDING">
+    <function name="C_INVOICETAX_ROUNDING" type="NULL">
+      <parameter name="p_invoice_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_grandtotal" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_totallines" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_stdprecision" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+-- Variables
+  v_ResultStr VARCHAR(2000):=''; 
+  v_current_gross_amt NUMBER;
+  v_count NUMBER;
+  TYPE RECORD IS REF CURSOR;
+  cur_invoicetax RECORD;
+
+BEGIN --BODY
+
+  SELECT count(1) INTO v_count
+  FROM c_invoicetax
+  WHERE c_invoice_id = p_invoice_id;
+  IF (v_count > 0) THEN
+    SELECT COALESCE(p_totallines, 0) + COALESCE(SUM(taxamt),0) INTO v_current_gross_amt
+    FROM c_invoicetax
+    WHERE c_invoice_id = p_invoice_id
+    AND recalculate = 'Y';
+  END IF;
+  
+  IF (p_grandtotal <> v_current_gross_amt) THEN
+    -- Adjust the tax that stays closest to the original amount (the one with the lowest rounded tax amount - not rounded tax amount + adjustment amount)
+    FOR cur_invoicetax IN (
+      SELECT it.c_invoicetax_id
+      FROM c_invoicetax it
+      JOIN c_tax t
+      ON it.c_tax_id = t.c_tax_id
+      WHERE it.c_invoice_id = p_invoice_id
+      AND it.recalculate = 'Y'
+      ORDER BY ABS(it.taxamt - (round(it.taxbaseamt, p_stdprecision) * (t.rate/100)) - (v_current_gross_amt - COALESCE(p_grandtotal, 0))) ASC, ABS(it.taxamt) DESC, t.line DESC
+    ) LOOP
+      UPDATE c_invoicetax
+      SET taxamt = taxamt - (v_current_gross_amt - COALESCE(p_grandtotal, 0))
+      WHERE c_invoicetax_id  = cur_invoicetax.c_invoicetax_id ;
+      EXIT;
+    END LOOP;
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+  v_ResultStr:= '@ERROR=' || SQLERRM;
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  RAISE;
+END C_INVOICETAX_ROUNDING
+]]></body>
+    </function>
+  </database>

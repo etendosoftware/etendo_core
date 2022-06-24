@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012-2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="Issue21640WrongMatchInvAccountingData" package="org.openbravo.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' AS m_matchinv_id, '' AS ad_client_id, '' AS ad_org_id, '' as matchinv, '' as ad_role_id
+      FROM DUAL
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="select2" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT DISTINCT mi.m_matchinv_id, mi.ad_org_id, ad_column_identifier('m_matchinv', fa.record_id, 'en_US') as matchinv
+      FROM fact_acct fa JOIN m_matchinv mi ON fa.record_id = mi.m_matchinv_id
+      WHERE fa.ad_table_id = '472'
+        AND fa.ad_client_id = ?
+      GROUP BY fa.fact_acct_group_id, mi.m_matchinv_id, mi.ad_org_id, fa.record_id
+      HAVING count(*) > 3
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="select1" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT DISTINCT mi.m_matchinv_id, mi.ad_org_id, ad_column_identifier('m_matchinv', fa.record_id, 'en_US') as matchinv
+      FROM fact_acct fa
+          JOIN m_matchinv mi ON fa.record_id = mi.m_matchinv_id
+          JOIN m_inoutline iol ON mi.m_inoutline_id = iol.m_inoutline_id
+          JOIN c_invoiceline il ON mi.c_invoiceline_id = il.c_invoiceline_id
+          LEFT JOIN fact_acct far ON far.line_id = iol.m_inoutline_id AND far.account_id = fa.account_id
+          LEFT JOIN fact_acct fi ON fi.line_id = il.c_invoiceline_id AND fi.account_id = fa.account_id AND fi.ad_table_id = '318'
+      WHERE (round((select movementqty from m_inoutline where m_inoutline_id=mi.m_inoutline_id),2) = 
+            round((select qtyinvoiced from c_invoiceline where c_invoiceline_id=mi.c_invoiceline_id),2))     
+        AND fa.ad_table_id = '472'
+        AND (COALESCE(far.amtacctcr + far.amtacctdr, fa.amtacctdr + fa.amtacctcr) <> (fa.amtacctdr + fa.amtacctcr)
+            OR COALESCE(fi.amtacctcr + fi.amtacctdr, fa.amtacctdr + fa.amtacctcr) <> (fa.amtacctdr + fa.amtacctcr))
+        AND fa.ad_client_id = ?
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="getClients" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT DISTINCT ad_client_id
+      FROM c_acctschema_table
+      WHERE ad_table_id = '472'
+        AND isactive = 'Y'
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="getAlertRuleId" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT MAX(ad_alertrule_id) AS name
+       FROM AD_ALERTRULE
+       WHERE NAME LIKE ?
+         AND ISACTIVE = 'Y'
+         AND AD_CLIENT_ID = ?
+      ]]></Sql>
+    <Parameter name="name"/>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="existsAlertRule" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERTRULE
+       WHERE NAME = ?
+         AND ISACTIVE = 'Y'
+         AND AD_CLIENT_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="alertRule"/>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="existsAlert" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERT
+       WHERE AD_ALERTRULE_ID = ?
+         AND REFERENCEKEY_ID = ?
+         AND ISFIXED = 'N'
+      ]]>
+    </Sql>
+    <Parameter name="alertRule"/>
+    <Parameter name="matchinv"/>
+  </SqlMethod>
+  <SqlMethod name="getRoleIds" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT distinct ad_role_id
+       FROM ad_window_access
+       WHERE ad_window_id = ?
+       AND AD_CLIENT_ID = ?
+         AND ISACTIVE = 'Y'
+      ]]></Sql>
+    <Parameter name="window"/>
+    <Parameter name="clientId"/>
+  </SqlMethod>
+  <SqlMethod name="insertAlertRule" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      INSERT INTO AD_ALERTRULE (
+        AD_ALERTRULE_ID, AD_CLIENT_ID, AD_ORG_ID,ISACTIVE,
+        CREATED, CREATEDBY,  UPDATED, UPDATEDBY,
+        NAME, AD_TAB_ID, FILTERCLAUSE, TYPE,
+        SQL
+      ) VALUES (
+        get_uuid(), ?, '0', 'Y',
+        now(), '100', now(), '100',
+        ?, ?, '', 'E',
+        ?
+      )
+    ]]></Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="name"/>
+    <Parameter name="tabId"/>
+    <Parameter name="sql"/>
+  </SqlMethod>
+  <SqlMethod name="updateAlertRule" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE AD_AlertRule 
+        SET SQL='', TYPE='E' WHERE AD_Client_ID = ? AND NAME = ?
+      ]]>
+    </Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="name"/>
+  </SqlMethod>
+  <SqlMethod name="insertAlert" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      INSERT INTO AD_Alert (
+        AD_Alert_ID, AD_Client_ID, AD_Org_ID, IsActive,
+        Created, CreatedBy, Updated, UpdatedBy,
+        Description, AD_AlertRule_ID, Record_Id, Referencekey_ID
+      ) VALUES (
+        get_uuid(), ?, ?, 'Y',
+        NOW(), '0', NOW(), '0',
+        ?, ?, ?, ?)
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+    <Parameter name="org"/>
+    <Parameter name="description" />
+    <Parameter name="adAlertRuleId" />
+    <Parameter name="recordId" />
+    <Parameter name="referencekey_id" />
+  </SqlMethod>
+  <SqlMethod name="insertAlertRecipient" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+    INSERT INTO ad_alertrecipient(
+            ad_user_id, ad_client_id, ad_org_id, isactive, created, createdby, 
+            updated, updatedby, ad_alertrecipient_id, ad_alertrule_id, ad_role_id, 
+            sendemail)
+    VALUES (null, ?, ?, 'Y', now(), '100', 
+            now(), '100', get_uuid(), ?, ?, 
+            'N')
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+    <Parameter name="org"/>
+    <Parameter name="adAlertRuleId" />
+    <Parameter name="role" />
+  </SqlMethod>
+</SqlClass>

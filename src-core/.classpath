@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/commons-dbcp-1.4.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/commons-pool-1.5.6.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/commons-fileupload-1.4.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/xercesImpl-2.9.0-patched.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/nekohtml.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/commons-codec-1.11.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/build/servlet-api.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/ant-1.9.2.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-1.2-api-2.11.1.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-api-2.11.1.jar"/>
+	<classpathentry kind="lib" path="/openbravo/lib/runtime/log4j-core-2.11.1.jar"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>

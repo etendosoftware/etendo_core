@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<provider>
+  <bean>
+      <name>kernel</name>
+      <class>com.smf.securewebservices.service.KernelServlet</class>
+      <singleton>true</singleton>
+  </bean>
+  <bean>
+      <name>datasource</name>
+      <class>com.smf.securewebservices.service.DataSourceServlet</class>
+      <singleton>true</singleton>
+  </bean>
+  <bean>
+      <name>contextInfo</name>
+      <class>com.smf.securewebservices.service.ContextInfoServlet</class>
+      <singleton>true</singleton>
+  </bean>
+  <bean>
+      <name>obRest</name>
+      <class>com.smf.securewebservices.rsql.OBRestServlet</class>
+      <singleton>true</singleton>
+  </bean>
+</provider>

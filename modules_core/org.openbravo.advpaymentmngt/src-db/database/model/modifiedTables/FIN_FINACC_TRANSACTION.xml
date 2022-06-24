@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE FIN_FINACC_TRANSACTION">
+    <table name="FIN_FINACC_TRANSACTION" primaryKey="FIN_FINACC_TRANSACTION_KEY">
+      <column name="EM_APRM_PROCESSED" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[P]]></default>
+        <onCreateDefault><![CDATA['R']]></onCreateDefault>
+      </column>
+      <column name="EM_APRM_FINACC_TRANS_ORIGIN" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="FIN_FINACC_TRANSACTION" name="EM_APRM_FINACC_TRANS_ORIGIN_FK">
+        <reference local="EM_APRM_FINACC_TRANS_ORIGIN" foreign="FIN_FINACC_TRANSACTION_ID"/>
+      </foreign-key>
+    </table>
+  </database>

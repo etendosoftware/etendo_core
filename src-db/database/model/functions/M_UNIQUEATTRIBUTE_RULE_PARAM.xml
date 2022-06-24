@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_UNIQUEATTRIBUTE_RULE_PARAM">
+    <function name="M_UNIQUEATTRIBUTE_RULE_PARAM" type="NULL">
+      <parameter name="pinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_clientid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_orgid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_productid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_uomid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_productuomid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_warehouse_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_locatorid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_attributesetinstanceid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_quantity" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_priority_warehouse_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_m_warehouse_rule_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_tableid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_auxid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_lineno" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_m_reservation_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_result" type="NUMERIC" mode="out">
+        <default/>
+      </parameter>
+      <parameter name="p_message" type="VARCHAR" mode="out">
+        <default/>
+      </parameter>
+      <parameter name="p_avail" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <parameter name="p_nett" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <parameter name="p_overissue" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_ResultStr VARCHAR2(2000):='';
+  v_Message VARCHAR2(2000):='';
+
+  TYPE RECORD IS REF CURSOR;
+  Cur_MStock    RECORD;
+
+  v_quantity NUMBER;
+  v_ProductID   VARCHAR2(32);
+  v_SelectedAttSetInstanceID VARCHAR2(32) ;
+  v_ProductName M_Product.NAME%TYPE;
+BEGIN
+
+  v_ResultStr:='ReadingParameters';
+  v_Quantity:=p_quantity;
+  v_ProductID:=p_productid;
+
+  DELETE FROM m_stock_proposed ms
+  WHERE ad_pinstance_id = pinstance_id
+    AND EXISTS (SELECT 1
+                FROM m_storage_detail t
+                WHERE t.m_storage_detail_id = ms.m_storage_detail_id
+                AND t.m_attributesetinstance_id = '0');
+  v_SelectedAttSetInstanceID := NULL;
+
+  FOR Cur_MStock IN (
+      SELECT A.m_attributesetinstance_id
+      FROM (
+        SELECT SUM(ms.quantity) AS qty, t.m_attributesetinstance_id, MIN(priority) AS priority
+        FROM m_stock_proposed ms
+             JOIN m_storage_detail t ON ms.m_storage_detail_id = t.m_storage_detail_id
+        WHERE ad_pinstance_id = pinstance_id
+        GROUP BY t.m_attributesetinstance_id
+        HAVING sum(ms.quantity) >= v_quantity
+        ) A
+      ORDER BY A.priority
+  ) LOOP
+    v_selectedattsetinstanceid := cur_mstock.m_attributesetinstance_id;
+    EXIT;
+  END LOOP;
+
+  DELETE FROM m_stock_proposed
+  WHERE m_stock_proposed_id IN (SELECT m_stock_proposed_id
+                                FROM m_stock_proposed ms
+                                    JOIN m_storage_detail sd ON ms.m_storage_detail_id = sd.m_storage_detail_id
+                                    JOIN m_locator l ON sd.m_locator_id = l.m_locator_id
+                                WHERE ms.ad_pinstance_id = pinstance_id
+                                  AND sd.m_attributesetinstance_id <> COALESCE(v_selectedattsetinstanceid, '-1')
+                                  AND l.m_warehouse_id = p_warehouse_id);
+
+  IF (v_selectedattsetinstanceid IS NULL) THEN
+    SELECT name INTO v_productname
+    FROM m_product
+    WHERE m_product_id = v_productid;
+    v_Message := '@Product@: ' || v_productname ||'. @NotEnoughAttUniqueStock@';
+    p_message:=v_Message;
+    p_result:=0;
+    RETURN;
+  END IF;
+
+  p_message:=v_ResultStr;
+  p_result:=1;
+  RETURN;
+  
+EXCEPTION
+WHEN OTHERS THEN
+  v_ResultStr:= '@ERROR=' || SQLERRM;
+  p_message:=v_ResultStr;
+  p_result:=0;
+  RETURN;
+END M_UNIQUEATTRIBUTE_RULE_PARAM
+]]></body>
+    </function>
+  </database>

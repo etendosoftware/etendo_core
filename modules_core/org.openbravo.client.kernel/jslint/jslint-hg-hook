@@ -1,0 +1,42 @@
+#!/bin/bash
+# *************************************************************************
+# * The contents of this file are subject to the Openbravo  Public  License
+# * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+# * Version 1.1  with a permitted attribution clause; you may not  use this
+# * file except in compliance with the License. You  may  obtain  a copy of
+# * the License at http://www.openbravo.com/legal/license.html
+# * Software distributed under the License  is  distributed  on  an "AS IS"
+# * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# * License for the specific  language  governing  rights  and  limitations
+# * under the License.
+# * The Original Code is Openbravo ERP.
+# * The Initial Developer of the Original Code is Openbravo SLU
+# * All portions are Copyright (C) 2019 Openbravo SLU
+# * All Rights Reserved.
+# * Contributor(s):  ______________________________________.
+# ************************************************************************
+#
+
+# Starting from PR19Q3, Javascript linter and formatter migrated to
+# ESLint and Prettier replacing JSLint and JSBeautify respectively.
+#
+# There are multiple scenarios when it comes to commit code to Openbravo:
+# - Commit to Core using the new linter
+# - Commit to a module using the new linter
+# - Commit to Core using the old linter
+# - Commit to a module using the old linter
+# This script is intended to be a single hook that cover all those cases.
+# To use it, add the following in user's global Mercurial config:
+#
+# [hooks]
+# pretxncommit = <path_to_this_script>/jslint-hg-hook.sh
+#
+if [[ -d ./modules/org.openbravo.client.kernel/jsformatter ]]; then
+  ./modules/org.openbravo.client.kernel/jslint/jslint-hg
+elif [[ -d ../org.openbravo.client.kernel/jsformatter ]]; then
+  ../org.openbravo.client.kernel/jslint/jslint-hg
+elif [[ -d ./modules/org.openbravo.client.kernel/jsbeautify ]]; then
+  ./modules/org.openbravo.client.kernel/jslint/jscheck-hg
+elif [[ -d ../org.openbravo.client.kernel/jsbeautify ]]; then
+  ../org.openbravo.client.kernel/jslint/jscheck-module-hg
+fi

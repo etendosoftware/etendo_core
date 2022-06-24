@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CashFlowForecastLines" pageWidth="555" pageHeight="802" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="1300d746-b52d-41b8-b049-6e6f683f2fec">
+	<property name="ireport.zoom" value="1.3310000000000106"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="default" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="6">
+		<box leftPadding="5" rightPadding="5"/>
+	</style>
+	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="6" isBold="true">
+		<box leftPadding="5">
+			<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+		</box>
+	</style>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="18" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="GroupHeader_Gray" mode="Opaque" backcolor="#999999"/>
+	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
+	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11" isBold="false"/>
+	<style name="Report_Footer" isDefault="true" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="14" isBold="true"/>
+	<style name="Group_Data_Field" fontName="Bitstream Vera Sans" fontSize="14"/>
+	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Footer" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<parameter name="FIN_FINANCIAL_ACCOUNT_ID" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="AMOUNTFORMAT" class="java.text.DecimalFormat" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new DecimalFormat()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_ORG" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["(0)"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_CLIENT" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["(1000000)"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="CURRENT_BALANCE" class="java.math.BigDecimal"/>
+	<parameter name="DatePlanned" class="java.util.Date"/>
+	<parameter name="fieldProviderSubReport" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<parameter name="OUTPUT_FORMAT" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="FIN_FINANCIAL_ACCOUNT_ID" class="java.lang.String"/>
+	<field name="FINANCIALACCOUNT" class="java.lang.String"/>
+	<field name="CURRENTBALANCE" class="java.math.BigDecimal"/>
+	<field name="ACCOUNTNO" class="java.lang.String"/>
+	<field name="ISRECEIPT" class="java.lang.String"/>
+	<field name="DUEDATE" class="java.util.Date"/>
+	<field name="DATEINVOICED" class="java.util.Date"/>
+	<field name="INVOICENO" class="java.lang.String"/>
+	<field name="C_INVOICE_ID" class="java.lang.String"/>
+	<field name="FIN_PAYMENT_ID" class="java.lang.String"/>
+	<field name="PAYMENT_DESC" class="java.lang.String"/>
+	<field name="PAYMENTNO" class="java.lang.String"/>
+	<field name="BPNAME" class="java.lang.String"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<field name="CONVERTEDAMOUNT" class="java.math.BigDecimal"/>
+	<field name="TRXCUR" class="java.lang.String"/>
+	<field name="FACUR" class="java.lang.String"/>
+	<field name="TRANS_DESCRIP" class="java.lang.String"/>
+	<field name="ORIGINALAMOUNT" class="java.math.BigDecimal"/>
+	<field name="RECORDID" class="java.lang.String"/>
+	<field name="TABTOOPEN" class="java.lang.String"/>
+	<field name="FIN_FINACC_TRANSACTION_ID" class="java.lang.String"/>
+	<variable name="Accum" class="java.math.BigDecimal" resetType="Group" resetGroup="DueDate" calculation="Sum">
+		<variableExpression><![CDATA[$F{CONVERTEDAMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="AMOUNT_TOTAL" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{CONVERTEDAMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="AMOUNT_TOTAL_IN" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{ISRECEIPT}.equals("Y")?$F{CONVERTEDAMOUNT}:BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="AMOUNT_TOTAL_OUT" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{ISRECEIPT}.equals("N")?$F{CONVERTEDAMOUNT}:BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="OPEN_INVOICE_TAB" class="java.lang.String">
+		<variableExpression><![CDATA[$F{ISRECEIPT}.equals("Y")?"263":"290"]]></variableExpression>
+	</variable>
+	<variable name="OPEN_PAYMENT_TAB" class="java.lang.String">
+		<variableExpression><![CDATA[$F{ISRECEIPT}.equals("Y")?"C4B6506838E14A349D6717D6856F1B56":"F7A52FDAAA0346EFA07D53C125B40404"]]></variableExpression>
+	</variable>
+	<variable name="OPEN_SUITABLE_TAB" class="java.lang.String">
+		<variableExpression><![CDATA[$F{ISRECEIPT}.equals("Y")?($F{TABTOOPEN}.equals("InvoicePlan")?"60825C9E68644DBC9C530DDCABE05A6E":($F{TABTOOPEN}.equals("PaymentLine")?"34DA12C2E9E3424E9A853563BEFDE81F":"23691259D1BD4496BCC5F32645BCA4B9")):($F{TABTOOPEN}.equals("InvoicePlan")?"7A8D43541F8C49F1BD8A431A0041BF89":($F{TABTOOPEN}.equals("PaymentLine")?"809C66481863428C8D714F2018644CC6":"23691259D1BD4496BCC5F32645BCA4B9"))]]></variableExpression>
+	</variable>
+	<variable name="TRANS_DESCRIP_V" class="java.lang.String">
+		<variableExpression><![CDATA[($F{TRANS_DESCRIP}!=null)?"23691259D1BD4496BCC5F32645BCA4B9":$V{OPEN_PAYMENT_TAB}]]></variableExpression>
+	</variable>
+	<group name="FinancialAccount">
+		<groupExpression><![CDATA[$F{FINANCIALACCOUNT}]]></groupExpression>
+		<groupHeader>
+			<band height="42">
+				<staticText>
+					<reportElement style="Detail_Header" stretchType="RelativeToBandHeight" x="65" y="27" width="75" height="15" forecolor="#010101" backcolor="#CBCBCB" uuid="8a000c52-25f3-491c-9c76-9469029deecd"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineColor="#959595"/>
+						<rightPen lineColor="#959595"/>
+					</box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+					<text><![CDATA[Invoice No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement style="Detail_Header" stretchType="RelativeToBandHeight" x="295" y="27" width="125" height="15" forecolor="#010101" backcolor="#CBCBCB" uuid="fcecd6a5-cf2f-4de3-8242-bc48de2a1f13"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineColor="#959595"/>
+						<rightPen lineColor="#959595"/>
+					</box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+					<text><![CDATA[Description]]></text>
+				</staticText>
+				<staticText>
+					<reportElement style="Detail_Header" stretchType="RelativeToBandHeight" x="10" y="27" width="55" height="15" forecolor="#010101" backcolor="#CBCBCB" uuid="079a1cb0-27c4-4e12-b0ea-d4793da0e01e"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineColor="#959595"/>
+						<rightPen lineColor="#959595"/>
+					</box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+					<text><![CDATA[Invoiced]]></text>
+				</staticText>
+				<staticText>
+					<reportElement style="Detail_Header" stretchType="RelativeToBandHeight" x="140" y="27" width="155" height="15" forecolor="#010101" backcolor="#CBCBCB" uuid="9224c2a2-894f-4643-abfd-2e82ed606aff"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineColor="#959595"/>
+						<rightPen lineColor="#959595"/>
+					</box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+					<text><![CDATA[Business Partner]]></text>
+				</staticText>
+				<staticText>
+					<reportElement style="Detail_Header" stretchType="RelativeToBandHeight" x="420" y="27" width="75" height="15" forecolor="#010101" backcolor="#CBCBCB" uuid="21e5fe74-135b-42f1-aa1f-357b517ac1f5"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineColor="#959595"/>
+						<rightPen lineColor="#959595"/>
+					</box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+					<text><![CDATA[Orig. Amount]]></text>
+				</staticText>
+				<staticText>
+					<reportElement style="Detail_Header" stretchType="RelativeToBandHeight" x="495" y="27" width="59" height="15" forecolor="#010101" backcolor="#CBCBCB" uuid="3217f2fe-f7f5-414a-a246-78af5b466dcf"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineColor="#959595"/>
+						<rightPen lineColor="#959595"/>
+					</box>
+					<textElement>
+						<font size="6"/>
+					</textElement>
+					<text><![CDATA[Amount]]></text>
+				</staticText>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="42" uuid="d8999859-a650-47aa-9ee1-ad751141d410"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="42" uuid="2bf87764-489b-4b25-afe1-31ff78ae82d4"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<textField>
+					<reportElement x="10" y="3" width="545" height="15" uuid="a08ba2cd-b8fa-4680-b085-2815d80cab94"/>
+					<textFieldExpression><![CDATA[$F{FINANCIALACCOUNT}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement x="0" y="0" width="555" height="1" uuid="c6a35c7f-18d5-492b-b1c3-bb19070ac05f"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="13">
+				<line>
+					<reportElement x="0" y="5" width="555" height="1" uuid="368906bc-aef7-4de4-a006-2542e322830f"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="5" uuid="bcd9a70c-4ced-4e25-9b3c-29aad0d086f5"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="5" uuid="11f61ee7-42c0-4914-8f5f-65f18573de60"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="DueDate">
+		<groupExpression><![CDATA[$F{DUEDATE}]]></groupExpression>
+		<groupHeader>
+			<band height="15">
+				<textField pattern="">
+					<reportElement style="default" stretchType="RelativeToBandHeight" x="100" y="0" width="454" height="15" uuid="e6f47c97-e44a-44d6-924c-4180265e495a"/>
+					<box leftPadding="5" rightPadding="5">
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement verticalAlignment="Bottom">
+						<font size="6"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{DUEDATE}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement style="Detail_Header" stretchType="RelativeToBandHeight" x="10" y="0" width="90" height="15" forecolor="#010101" backcolor="#CBCBCB" uuid="36a7dae6-590d-4327-b81c-0afa6f300d43"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineColor="#959595"/>
+						<rightPen lineColor="#959595"/>
+					</box>
+					<textElement verticalAlignment="Bottom">
+						<font size="6"/>
+					</textElement>
+					<text><![CDATA[Date Planned]]></text>
+				</staticText>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="15" uuid="2143b7d1-e5c4-4596-851c-3314c9b3da9d"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="15" uuid="1229b1c2-7725-4c87-846f-11845f2b4e22"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement x="10" y="0" width="544" height="1" uuid="229907ae-cc01-4c26-96ad-8f6d55c77b86"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="10" y="0" width="1" height="15" uuid="47ae914e-18b1-45f6-a768-545ff0b59d05"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="15">
+				<textField evaluationTime="Group" evaluationGroup="isReceipt" pattern="##0.00" isBlankWhenNull="true">
+					<reportElement key="textField-14" mode="Opaque" x="10" y="0" width="490" height="15" backcolor="#CBCBCB" uuid="c1a536f1-f34f-49df-a469-bf7e89f80717"/>
+					<box leftPadding="5" rightPadding="10">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="6"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Total Amount Incoming - Payments ("+$F{FACUR}+")"]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="isReceipt" pattern="##0.00" isBlankWhenNull="true">
+					<reportElement key="textField" mode="Opaque" x="500" y="0" width="54" height="15" backcolor="#CBCBCB" uuid="e6f5dab0-b6fb-4564-b1a9-fb4676af342d"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="6"/>
+					</textElement>
+					<textFieldExpression><![CDATA[($V{Accum}!=null)?$P{AMOUNTFORMAT}.format($V{Accum}):new String(" ")]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="15" uuid="92b550ad-a0de-4e54-a101-927e0397b2ae"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="15" uuid="fe5af48d-ce09-4e9f-8354-895aa061a7f7"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="isReceipt">
+		<groupExpression><![CDATA[$F{ISRECEIPT}]]></groupExpression>
+		<groupHeader>
+			<band height="13">
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="13" uuid="68ad6411-e1f6-4b86-86a5-b0f3204f9097"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="13" uuid="1ee47cc9-7d0f-4930-84dc-53fc9d261834"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<staticText>
+					<reportElement style="GroupHeader_Gray" x="10" y="0" width="544" height="13" backcolor="#FFFFFF" uuid="e436a934-349d-4465-aebf-371b0f0d1cf4">
+						<printWhenExpression><![CDATA[!$F{ISRECEIPT}.equals("Y")]]></printWhenExpression>
+					</reportElement>
+					<box leftPadding="5" rightPadding="5">
+						<pen lineWidth="1.0" lineColor="#959595"/>
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Bitstream Vera Sans" size="7" isBold="true"/>
+					</textElement>
+					<text><![CDATA[PAYMENT]]></text>
+				</staticText>
+				<staticText>
+					<reportElement style="GroupHeader_Gray" x="11" y="0" width="544" height="13" backcolor="#FFFFFF" uuid="fb16b0ab-961c-4938-935f-8d90e99e9300">
+						<printWhenExpression><![CDATA[$F{ISRECEIPT}.equals("Y")]]></printWhenExpression>
+					</reportElement>
+					<box leftPadding="5" rightPadding="5">
+						<pen lineWidth="1.0" lineColor="#959595"/>
+						<topPen lineWidth="1.0" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Bitstream Vera Sans" size="7" isBold="true"/>
+					</textElement>
+					<text><![CDATA[INCOME]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<detail>
+		<band height="13">
+			<textField isStretchWithOverflow="true">
+				<reportElement style="default" positionType="Float" stretchType="RelativeToTallestObject" x="420" y="0" width="75" height="13" uuid="6bb0262b-5842-4aea-844f-06f342cd1b49">
+					<printWhenExpression><![CDATA[!$F{TRXCUR}.equals($F{FACUR})]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="5" rightPadding="5">
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{AMOUNTFORMAT}.format($F{ORIGINALAMOUNT}) + " ("+$F{TRXCUR}+")"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true" hyperlinkType="Reference">
+				<reportElement style="default" positionType="Float" stretchType="RelativeToTallestObject" x="65" y="0" width="75" height="13" forecolor="#0000FF" uuid="39798b79-0b1e-44da-9e44-71e069e0c6ad">
+					<propertyExpression name="net.sf.jasperreports.style.forecolor"><![CDATA[$P{OUTPUT_FORMAT}.equals("HTML")?"#0000FF":"#000000"]]></propertyExpression>
+				</reportElement>
+				<box leftPadding="5" rightPadding="5">
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement>
+					<font size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{INVOICENO}]]></textFieldExpression>
+				<hyperlinkReferenceExpression><![CDATA["javascript:top.OB.Utilities.openDirectTab('" + $V{OPEN_INVOICE_TAB} + "', '" + $F{C_INVOICE_ID} + "');"]]></hyperlinkReferenceExpression>
+				<hyperlinkWhenExpression><![CDATA[$P{OUTPUT_FORMAT}.equalsIgnoreCase("HTML")? Boolean.TRUE: Boolean.FALSE]]></hyperlinkWhenExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true" hyperlinkType="Reference">
+				<reportElement style="default" positionType="Float" stretchType="RelativeToTallestObject" x="295" y="0" width="125" height="13" forecolor="#0000FF" uuid="7599d262-3cf4-4dd5-a079-7dee46897720">
+					<propertyExpression name="net.sf.jasperreports.style.forecolor"><![CDATA[$P{OUTPUT_FORMAT}.equals("HTML")?"#0000FF":"#000000"]]></propertyExpression>
+				</reportElement>
+				<box topPadding="1" leftPadding="5" rightPadding="5">
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement>
+					<font size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TRANS_DESCRIP}!=null)?$F{TRANS_DESCRIP}:$F{PAYMENT_DESC}]]></textFieldExpression>
+				<hyperlinkReferenceExpression><![CDATA["javascript:top.OB.Utilities.openDirectTab('" + $V{TRANS_DESCRIP_V} + "', '" + $F{FIN_PAYMENT_ID} + "');"]]></hyperlinkReferenceExpression>
+				<hyperlinkWhenExpression><![CDATA[$P{OUTPUT_FORMAT}.equalsIgnoreCase("HTML")? Boolean.TRUE: Boolean.FALSE]]></hyperlinkWhenExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="default" positionType="Float" stretchType="RelativeToTallestObject" x="140" y="0" width="155" height="13" uuid="8d490ac9-7dd7-4e36-8308-b0d0ed352897"/>
+				<box leftPadding="5" rightPadding="5">
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement>
+					<font size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{BPNAME}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement style="default" positionType="Float" stretchType="RelativeToTallestObject" x="10" y="0" width="55" height="13" uuid="865288c9-f49f-4360-b510-0ac472532a02"/>
+				<box leftPadding="5" rightPadding="5">
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement>
+					<font size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DATEINVOICED}]]></textFieldExpression>
+			</textField>
+			<textField hyperlinkType="Reference">
+				<reportElement style="default" positionType="Float" stretchType="RelativeToTallestObject" x="495" y="0" width="59" height="13" forecolor="#0000FF" uuid="99334768-711c-4e4f-8aff-7ed8447d7dd3">
+					<propertyExpression name="net.sf.jasperreports.style.forecolor"><![CDATA[$P{OUTPUT_FORMAT}.equals("HTML") && !$F{TABTOOPEN}.equals("PaymentLine")?"#0000FF":"#000000"]]></propertyExpression>
+				</reportElement>
+				<box leftPadding="5" rightPadding="5">
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{AMOUNTFORMAT}.format($F{CONVERTEDAMOUNT})]]></textFieldExpression>
+				<hyperlinkReferenceExpression><![CDATA["javascript:top.OB.Utilities.openDirectTab('" + $V{OPEN_SUITABLE_TAB} + "', '" + $F{RECORDID} + "');"]]></hyperlinkReferenceExpression>
+				<hyperlinkWhenExpression><![CDATA[$P{OUTPUT_FORMAT}.equalsIgnoreCase("HTML") && !$F{TABTOOPEN}.equals("PaymentLine")? Boolean.TRUE: Boolean.FALSE]]></hyperlinkWhenExpression>
+			</textField>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="13" uuid="33b8d819-be22-4944-9d0b-b5b51977711b"/>
+				<graphicElement>
+					<pen lineColor="#959595"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="13" uuid="68a20ece-f444-448f-9f31-5c5df0c63056"/>
+				<graphicElement>
+					<pen lineColor="#959595"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement positionType="FixRelativeToBottom" x="10" y="12" width="544" height="1" uuid="4d98c9b6-2a0d-4972-b581-3de6e2435179"/>
+				<graphicElement>
+					<pen lineColor="#959595"/>
+				</graphicElement>
+			</line>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

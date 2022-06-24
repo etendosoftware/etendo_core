@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2015 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="GLJournalAccountingCheckData" package="org.openbravo.buildvalidation">
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' AS ad_client_id, '' AS ad_role_id, '' as recordinfo, '' AS gl_journal_id
+      FROM DUAL
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="getModuleVersion" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT version
+        FROM ad_module
+        WHERE ad_module_id = '0'        
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="hasPreference" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as existpreference
+        FROM ad_preference
+        WHERE attribute = 'GLJournalAccountingCheck'        
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="getWrongGLJournalAccountingClients" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+         SELECT DISTINCT t1.ad_client_id
+         FROM gl_journalline t1, fact_acct t2
+         WHERE t1.gl_journal_id = t2.record_id
+         AND t1.gl_journalline_id = t2.line_id
+         AND t1.c_validcombination_id IS NOT NULL
+         AND AD_Table_ID = '224'
+         AND ((t1.amtsourcedr - t1.amtsourcecr) <> (t2.amtsourcedr - t2.amtsourcecr)
+         OR  (t1.amtacctdr - t1.amtacctcr) <> (t2.amtacctdr - t2.amtacctcr))
+      ]]>
+    </Sql>
+  </SqlMethod>  
+  <SqlMethod name="insertAlertRule" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      INSERT INTO AD_ALERTRULE (
+        AD_ALERTRULE_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+        CREATED, CREATEDBY,  UPDATED, UPDATEDBY,
+        NAME, AD_TAB_ID, FILTERCLAUSE, TYPE, SQL
+      ) VALUES (
+        get_uuid(), ?, '0', 'Y',
+        now(), '100', now(), '100',
+        ?, ?, '', 'E', ''
+      )
+    ]]></Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="name"/>
+    <Parameter name="tabId"/>
+  </SqlMethod>
+  <SqlMethod name="existsAlertRule" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERTRULE
+       WHERE NAME = ?
+       AND ISACTIVE = 'Y'
+       AND AD_CLIENT_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="alertRule"/>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="getAlertRuleId" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT MAX(ad_alertrule_id) AS name
+       FROM AD_ALERTRULE
+       WHERE NAME LIKE ?
+       AND AD_CLIENT_ID = ?
+       AND ISACTIVE = 'Y'
+      ]]></Sql>
+    <Parameter name="name"/>
+    <Parameter name="client"/>
+  </SqlMethod> 
+  <SqlMethod name="getWrongGLJournalAccountingDocuments" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT DISTINCT t1.gl_journal_id, ad_column_identifier('GL_JOURNAL', t1.gl_journal_id, 'en_US') as recordinfo
+      FROM gl_journalline t1, fact_acct t2
+      WHERE t1.gl_journal_id = t2.record_id
+      AND t1.gl_journalline_id = t2.line_id
+      AND t1.c_validcombination_id IS NOT NULL
+      AND t1.ad_client_id = ?
+      AND AD_Table_ID = '224'
+      AND ((t1.amtsourcedr - t1.amtsourcecr) <> (t2.amtsourcedr - t2.amtsourcecr)
+      OR  (t1.amtacctdr - t1.amtacctcr) <> (t2.amtacctdr - t2.amtacctcr))
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="existsAlert" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERT
+       WHERE AD_ALERTRULE_ID = ?
+       AND REFERENCEKEY_ID = ?
+       AND ISFIXED = 'N'
+      ]]>
+    </Sql>
+    <Parameter name="alertRule"/>
+    <Parameter name="referencekey_id"/>
+  </SqlMethod>
+  <SqlMethod name="insertAlert" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      INSERT INTO AD_Alert (
+        AD_Alert_ID, AD_Client_ID, AD_Org_ID, IsActive,
+        Created, CreatedBy, Updated, UpdatedBy,
+        Description, AD_AlertRule_ID, AD_Role_ID, Record_Id, Referencekey_ID
+      ) VALUES (
+        get_uuid(), ?, '0', 'Y',
+        NOW(), '0', NOW(), '0',
+        ?, ?, '0', ?, ?)
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+    <Parameter name="description" />
+    <Parameter name="adAlertRuleId" />
+    <Parameter name="recordId" />
+    <Parameter name="referencekey_id" />
+  </SqlMethod>
+  <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO ad_preference (
+          ad_preference_id, ad_client_id, ad_org_id, isactive,
+          createdby, created, updatedby, updated,
+          attribute
+        ) VALUES (
+          get_uuid(), '0', '0', 'Y',
+          '0', NOW(), '0', NOW(),
+          'GLJournalAccountingCheck'
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

@@ -1,0 +1,250 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_EXPLODEBOMNOTSTOCK">
+    <function name="M_EXPLODEBOMNOTSTOCK" type="NULL">
+      <parameter name="p_pinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_orderline_id" type="VARCHAR" mode="in">
+        <default><![CDATA[null]]></default>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2013-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  -- Logistice
+  v_explode CHAR(1);
+  v_orderID VARCHAR2(32);
+  v_PriceList_Version_ID VARCHAR2(32);
+  v_Record_ID VARCHAR2(32);
+  v_C_Tax_ID VARCHAR2(32) ;
+  TYPE RECORD IS REF CURSOR;
+  Cur_Parameter RECORD;
+  Cur_MPriceListVersion RECORD;
+  CUR_BOM_Line RECORD;
+  CUR_BOM RECORD;
+  v_Line NUMBER:=0;
+  v_ResultStr VARCHAR2(2000):='';
+  v_result NUMBER:= 1;  
+  v_Precision NUMBER;
+  v_gross_unit_price NUMBER;
+  v_line_gross_amount NUMBER;
+  v_price_actual NUMBER;
+  v_gross_price_list NUMBER;
+  v_line_net_amt NUMBER;
+  v_istaxincluded CHAR(1);
+  v_BaseAmount  VARCHAR2(32);
+  v_orderline_ID  VARCHAR2(32);
+  v_aum C_ORDERLINE.C_AUM%TYPE;
+  v_aumqty NUMBER;
+  v_uom_preference AD_PREFERENCE.VALUE%TYPE;
+  
+  BEGIN
+  IF (p_PInstance_ID IS NOT NULL) THEN
+      --  Update AD_PInstance
+      DBMS_OUTPUT.PUT_LINE('Updating PInstance - Processing ' || p_PInstance_ID) ;
+      v_ResultStr:='PInstanceNotFound';
+      AD_UPDATE_PINSTANCE(p_PInstance_ID, NULL, 'Y', NULL, NULL) ;
+      -- Get Parameters
+      v_ResultStr:='ReadingParameters';
+      FOR Cur_Parameter IN
+        (SELECT i.Record_ID, i.AD_User_ID, p.ParameterName, p.P_String,
+          p.P_Number, p.P_Date
+        FROM AD_PINSTANCE i
+        LEFT JOIN AD_PINSTANCE_PARA p
+          ON i.AD_PInstance_ID=p.AD_PInstance_ID
+        WHERE i.AD_PInstance_ID=p_PInstance_ID
+        ORDER BY p.SeqNo
+        )
+      LOOP
+        v_Record_ID:=Cur_Parameter.Record_ID;
+      END LOOP; -- Get Parameter
+  ELSE
+      v_Record_ID:=p_Orderline_ID;
+  END IF;
+    DBMS_OUTPUT.PUT_LINE('  Record_ID=' || v_Record_ID) ;
+  BEGIN --BODY
+     
+    SELECT C_ORDER.c_order_id, c_orderline.explode
+      INTO v_orderID, v_explode
+    FROM C_ORDER JOIN c_orderline ON c_order.c_order_id = c_orderline.c_order_id
+    WHERE c_orderline.c_orderline_id=v_Record_ID  FOR UPDATE;
+
+    IF (v_explode = 'Y') THEN
+      v_ResultStr:='@ProdExploded@';
+      RAISE_APPLICATION_ERROR(-20000, '@ProdExploded@') ;
+    END IF;
+    
+    v_ResultStr:='Exploding';
+
+    -- Get Price List Version
+    FOR Cur_MPriceListVersion IN
+      (SELECT v.M_PriceList_Version_ID AS PriceList_Version_ID, o.M_PriceList_ID,
+      p.IsTaxIncluded
+       FROM M_PRICELIST_VERSION v, C_ORDER o, M_PriceList p
+       WHERE v.M_PriceList_ID=o.M_PriceList_ID
+         AND v.M_PriceList_ID = p.M_PriceList_ID
+         AND v.ValidFrom<=o.DateOrdered
+         AND v.IsActive='Y'
+         AND o.C_Order_ID=v_orderID
+       ORDER BY v.ValidFrom DESC
+      )
+    LOOP
+      v_PriceList_Version_ID:=Cur_MPriceListVersion.PriceList_Version_ID;
+      v_IsTaxIncluded:=Cur_MPriceListVersion.IsTaxIncluded;
+      EXIT;
+    END LOOP;
+
+    -- Get AUM
+    v_uom_preference := 'N';      
+    BEGIN
+      v_uom_preference := AD_GET_PREFERENCE_VALUE('UomManagement', 'Y', NULL, NULL, NULL, NULL, NULL);
+    EXCEPTION
+      WHEN OTHERS THEN
+      -- Nothing to do, v_uom_preference = 'N'
+      DBMS_OUTPUT.PUT_LINE('The preference UomManagement was not found') ;
+    END;
+
+    -- Replace Lines
+    v_ResultStr:='Inserting lines';
+    For Cur_Bom_Line In
+      (SELECT l.*,o.M_Warehouse_ID as ord_m_warehouse_id,o.C_BPartner_Location_ID as ord_C_BPartner_Location_ID,o.issotrx, o.c_doctypetarget_id as ord_c_doctype_id
+       FROM C_ORDERLINE l,c_order o
+       WHERE l.C_Orderline_ID=v_Record_ID
+         AND l.c_order_id=o.c_order_id
+         AND l.IsActive='Y'
+         AND EXISTS
+           (SELECT *
+            FROM M_PRODUCT p
+            WHERE l.M_Product_ID=p.M_Product_ID
+              AND p.IsBOM='Y'
+              AND p.IsStocked='N' 
+            )
+       ORDER BY l.Line
+       )
+    LOOP
+      v_Line:=CUR_BOM_Line.Line;
+      -- Create New Lines
+      FOR CUR_BOM IN
+        (SELECT b.M_ProductBOM_ID, p.C_UOM_ID, b.BOMQty, b.Description
+         FROM M_PRODUCT_BOM b
+              INNER JOIN M_PRODUCT p ON (b.M_ProductBOM_ID=p.M_Product_ID)
+         WHERE b.M_Product_ID=CUR_BOM_Line.M_Product_ID
+           AND b.isactive='Y'
+         ORDER BY Line
+         )
+      LOOP
+        V_C_Tax_Id:=C_Gettax(Cur_Bom.M_Productbom_Id, Cur_Bom_Line.Dateordered, 
+        Cur_Bom_Line.Ad_Org_Id, Cur_Bom_Line.Ord_M_Warehouse_Id, Cur_Bom_Line.Ord_C_Bpartner_Location_Id, 
+        CUR_BOM_Line.ord_C_BPartner_Location_ID, null, CUR_BOM_Line.issotrx) ;
+
+        SELECT PricePrecision INTO v_Precision FROM C_Currency WHERE
+        C_Currency_ID = CUR_BOM_Line.C_Currency_ID;
+
+        IF(v_IsTaxIncluded='Y') THEN
+					v_gross_unit_price:=M_BOM_PriceStd(CUR_BOM.M_ProductBOM_ID, v_PriceList_Version_ID);
+					v_gross_price_list:=M_BOM_PriceList(CUR_BOM.M_ProductBOM_ID, v_PriceList_Version_ID);
+					v_line_gross_amount:=ROUND(CUR_BOM_Line.QtyOrdered*CUR_BOM.BOMQty*v_gross_unit_price, v_Precision);
+					v_price_actual:=0;
+					v_line_net_amt:=0;
+				ELSE
+					v_gross_unit_price:=0;
+					v_line_gross_amount:=0;
+					v_gross_price_list:=0;
+					v_price_actual:=M_BOM_PriceStd(CUR_BOM.M_ProductBOM_ID, v_PriceList_Version_ID);
+					v_line_net_amt:=ROUND(CUR_BOM_Line.QtyOrdered*CUR_BOM.BOMQty*v_gross_unit_price, v_Precision);
+				END IF;				
+    
+        v_Aum := NULL;
+        v_AumQty := NULL;
+        IF (v_uom_preference = 'Y') THEN
+          v_aum := M_GET_DEFAULT_AUM_FOR_DOCUMENT(CUR_BOM.M_ProductBOM_ID, CUR_BOM_Line.ord_c_doctype_id);
+          v_aumqty := M_GET_CONVERTED_QTY(CUR_BOM.M_ProductBOM_ID, CUR_BOM_Line.QtyOrdered, v_aum); 
+        END IF;
+      
+        v_Line:=v_Line + 1;
+        v_orderline_ID:=get_uuid();
+        INSERT
+        INTO C_ORDERLINE
+          (
+            C_OrderLine_ID, AD_Client_ID, AD_Org_ID, IsActive,
+            Created, CreatedBy, Updated, UpdatedBy,
+            C_Order_ID, Line, C_BPartner_ID, C_BPartner_Location_ID,
+            DateOrdered, DatePromised, DateDelivered, DateInvoiced,
+            Description, M_Product_ID, M_Warehouse_ID, DirectShip,
+            C_UOM_ID, QtyOrdered, QtyReserved, QtyDelivered,
+            QtyInvoiced, M_Shipper_ID, C_Currency_ID,
+            PriceList,
+            PriceActual, PriceLimit, LineNetAmt, Discount,
+            FreightAmt, C_Charge_ID, ChargeAmt, C_Tax_ID,
+            QuantityOrder, M_Product_Uom_ID, PriceStd,
+            c_project_id, a_asset_id, c_costcenter_id,
+            user1_id, user2_id, bom_parent_id,
+            gross_unit_price, grosspricelist, line_gross_amount, grosspricestd,
+            c_aum, aumqty
+          )
+        VALUES
+          (
+            v_orderline_ID, CUR_BOM_Line.AD_Client_ID, CUR_BOM_Line.AD_Org_ID, CUR_BOM_Line.IsActive,
+            now(), '0', now(), '0',
+            CUR_BOM_Line.C_Order_ID, v_Line, CUR_BOM_Line.C_BPartner_ID, CUR_BOM_Line.C_BPartner_Location_ID,
+            CUR_BOM_Line.DateOrdered, CUR_BOM_Line.DatePromised, CUR_BOM_Line.DateDelivered, CUR_BOM_Line.DateInvoiced,
+            CUR_BOM.Description, CUR_BOM.M_ProductBOM_ID, CUR_BOM_Line.M_Warehouse_ID, CUR_BOM_Line.DirectShip,
+            CUR_BOM.C_UOM_ID, CUR_BOM_Line.QtyOrdered*CUR_BOM.BOMQty, CUR_BOM_Line.QtyReserved*CUR_BOM.BOMQty, CUR_BOM_Line.QtyDelivered*CUR_BOM.BOMQty,
+            CUR_BOM_Line.QtyInvoiced*CUR_BOM.BOMQty, CUR_BOM_Line.M_Shipper_ID, CUR_BOM_Line.C_Currency_ID,
+            M_BOM_PriceList(CUR_BOM.M_ProductBOM_ID, v_PriceList_Version_ID),
+            v_price_actual, M_BOM_PriceLimit(CUR_BOM.M_ProductBOM_ID, v_PriceList_Version_ID),
+            v_line_net_amt, CUR_BOM_Line.Discount,
+            CUR_BOM_Line.FreightAmt, CUR_BOM_Line.C_Charge_ID, CUR_BOM_Line.ChargeAmt, coalesce(v_C_Tax_ID,CUR_BOM_Line.c_tax_id),
+            CUR_BOM_Line.QuantityOrder, CUR_BOM_Line.M_Product_UOM_ID, M_BOM_PriceStd(CUR_BOM.M_ProductBOM_ID, v_PriceList_Version_ID),
+            CUR_BOM_Line.c_project_id, CUR_BOM_Line.a_asset_id, CUR_BOM_Line.c_costcenter_id,
+            CUR_BOM_Line.user1_id, CUR_BOM_Line.user2_id, v_Record_ID,
+            v_gross_unit_price, v_gross_price_list, v_line_gross_amount, v_gross_unit_price,
+            v_aum, v_aumqty*CUR_BOM.BOMQty
+          );
+          SELECT BASEAMOUNT
+          INTO v_BaseAmount
+          FROM C_TAX
+          WHERE C_TAX_ID = V_C_Tax_Id;
+          IF (v_BaseAmount='TBA' OR v_BaseAmount='TBATAX') THEN
+           UPDATE C_ORDERLINE SET Taxbaseamt= M_BOM_PriceStd(CUR_BOM.M_ProductBOM_ID, v_PriceList_Version_ID) where C_ORDERLINE_id=v_orderline_ID;
+         END IF;
+
+      END LOOP; -- Create New Lines
+      UPDATE c_orderline set explode='Y' where c_orderline_id = v_Record_ID;
+    END LOOP; -- Replace Lines
+
+    IF (v_orderline_ID IS NOT NULL) THEN
+      M_EXPLODEBOMNOTSTOCK(null, v_orderline_ID); 
+    END IF;
+    
+    IF (p_PInstance_ID IS NOT NULL) THEN
+      DBMS_OUTPUT.PUT_LINE('Updating PInstance - Finished ');
+      AD_UPDATE_PINSTANCE(p_pinstance_id, NULL, 'N', v_result, '');
+    END IF;
+   
+  END; --BODY
+EXCEPTION
+WHEN OTHERS THEN
+ DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+ v_ResultStr:= '@ERROR=' || SQLERRM;
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  IF(p_PInstance_ID IS NOT NULL) THEN
+    ROLLBACK;
+    AD_UPDATE_PINSTANCE(p_pinstance_id, NULL, 'N', 0, v_resultstr);
+   END IF;
+END M_EXPLODEBOMNOTSTOCK
+]]></body>
+    </function>
+  </database>

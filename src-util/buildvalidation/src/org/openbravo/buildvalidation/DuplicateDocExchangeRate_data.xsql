@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012-2019 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+<SqlClass name="DuplicateDocExchangeRateData" package="org.openbravo.buildvalidation">
+  <SqlMethod name="dummy" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' AS documentno, '' AS referencekey_id, '' AS isreceipt, '' AS ad_client_id,
+             '' AS ad_org_id, '' AS ad_role_id, '' AS issotrx, '' AS recordinfo
+      FROM DUAL
+    ]]></Sql>
+  </SqlMethod>
+  <SqlMethod name="selectDupInvoiceExcRate" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+             select crd.c_invoice_id as referencekey_id, i.issotrx, crd.ad_client_id, crd.ad_org_id,
+                    ad_column_identifier('C_INVOICE', crd.c_invoice_id,'en_US') as recordinfo
+             from c_conversion_rate_document crd join c_invoice i on (crd.c_invoice_id = i.c_invoice_id)
+             where crd.fin_payment_id is null and crd.aprm_finacc_transaction_v_id is null
+             group by crd.c_currency_id, crd.c_currency_id_to, crd.c_invoice_id, crd.fin_payment_id,
+                      crd.aprm_finacc_transaction_v_id, crd.ad_org_id, crd.ad_client_id, i.issotrx
+             having count(*) > 1
+      ]]></Sql>
+   </SqlMethod>
+   <SqlMethod name="selectDupPaymentExcRate" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+             select crd.fin_payment_id as referencekey_id, p.isreceipt, crd.ad_client_id, crd.ad_org_id,
+                    ad_column_identifier('FIN_PAYMENT', crd.fin_payment_id,'en_US') as recordinfo
+             from c_conversion_rate_document crd join fin_payment p on (crd.fin_payment_id = p.fin_payment_id)
+             where crd.c_invoice_id is null and crd.aprm_finacc_transaction_v_id is null
+             group by crd.c_currency_id, crd.c_currency_id_to, crd.c_invoice_id, crd.fin_payment_id, crd.aprm_finacc_transaction_v_id,
+                      crd.ad_org_id, crd.ad_client_id, p.isreceipt
+             having count(*) > 1
+      ]]></Sql>
+   </SqlMethod>
+   <SqlMethod name="selectDupTrxExcRate" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+             select crd.aprm_finacc_transaction_v_id as referencekey_id, crd.ad_client_id, crd.ad_org_id,
+                    ad_column_identifier('FIN_FINACC_TRANSACTION', crd.aprm_finacc_transaction_v_id,'en_US') as recordinfo
+             from c_conversion_rate_document crd join fin_finacc_transaction ft on (crd.aprm_finacc_transaction_v_id = ft.fin_finacc_transaction_id)
+             where crd.c_invoice_id is null and crd.fin_payment_id is null
+             group by crd.c_currency_id, crd.c_currency_id_to, crd.c_invoice_id, crd.fin_payment_id, crd.aprm_finacc_transaction_v_id,
+                      crd.ad_org_id, crd.ad_client_id
+             having count(*) > 1
+      ]]></Sql>
+   </SqlMethod>
+   <SqlMethod name="getAlertRuleId" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT MAX(ad_alertrule_id) AS name
+       FROM AD_ALERTRULE
+       WHERE NAME = ?
+         AND ISACTIVE = 'Y'
+         AND AD_CLIENT_ID = ?
+      ]]></Sql>
+    <Parameter name="name"/>
+    <Parameter name="client"/>
+  </SqlMethod>
+    <SqlMethod name="existsAlert" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERT
+       WHERE AD_ALERTRULE_ID = ?
+       AND REFERENCEKEY_ID = ?
+       AND ISFIXED = 'N'
+      ]]>
+    </Sql>
+    <Parameter name="alertRule"/>
+    <Parameter name="payment"/>
+  </SqlMethod>
+  <SqlMethod name="existsAlertRule" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERTRULE
+       WHERE NAME = ?
+         AND ISACTIVE = 'Y'
+         AND AD_CLIENT_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="alertRule"/>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="insertAlertRule" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      INSERT INTO AD_ALERTRULE (
+        AD_ALERTRULE_ID, AD_CLIENT_ID, AD_ORG_ID,ISACTIVE,
+        CREATED, CREATEDBY,  UPDATED, UPDATEDBY,
+        NAME, AD_TAB_ID, FILTERCLAUSE, TYPE,
+        SQL
+      ) VALUES (
+        get_uuid(), ?, ?, 'Y',
+        now(), '100', now(), '100',
+        ?, ?, '', 'D',
+        ?
+      )
+    ]]></Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="orgId"/>
+    <Parameter name="name"/>
+    <Parameter name="tabId"/>
+    <Parameter name="sql"/>
+  </SqlMethod>
+  <SqlMethod name="insertAlert" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      INSERT INTO AD_Alert (
+        AD_Alert_ID, AD_Client_ID, AD_Org_ID, IsActive,
+        Created, CreatedBy, Updated, UpdatedBy,
+        Description, AD_AlertRule_ID, Record_Id, Referencekey_ID
+      ) VALUES (
+        get_uuid(), ?, '0', 'Y',
+        NOW(), '0', NOW(), '0',
+        ?, ?, ?, ?)
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+    <Parameter name="description" />
+    <Parameter name="adAlertRuleId" />
+    <Parameter name="recordId" />
+    <Parameter name="referencekey_id" />
+  </SqlMethod>
+  <SqlMethod name="getRoleId" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT distinct r.ad_role_id
+       FROM ad_window_access wa join ad_role r on (wa.ad_role_id=r.ad_role_id)
+       WHERE wa.ad_window_id = ?
+             AND wa.ad_client_id = ?
+             AND wa.isactive = 'Y'
+             AND r.isactive = 'Y'
+             AND r.ismanual = 'Y'
+      ]]></Sql>
+    <Parameter name="window"/>
+    <Parameter name="clientId"/>
+  </SqlMethod>
+  <SqlMethod name="insertAlertRecipient" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+    INSERT INTO ad_alertrecipient(
+            ad_user_id, ad_client_id, ad_org_id, isactive, created, createdby, 
+            updated, updatedby, ad_alertrecipient_id, ad_alertrule_id, ad_role_id, 
+            sendemail)
+    VALUES (null, ?, ?, 'Y', now(), '100', 
+            now(), '100', get_uuid(), ?, ?, 
+            'N')
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+    <Parameter name="org"/>
+    <Parameter name="adAlertRuleId" />
+    <Parameter name="role" />
+  </SqlMethod>
+  <SqlMethod name="existConvRateDoctable" type="preparedStatement" return="boolean">
+    <SqlMethodComment>Check if the C_Conversion_Rate_Document table exist</SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT count(*) AS EXISTING
+       FROM ad_table
+       WHERE ad_table_id = 'FF808181308EA42301308FB5F7BC0049'
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

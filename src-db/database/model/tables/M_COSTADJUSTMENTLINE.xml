@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_COSTADJUSTMENTLINE">
+    <table name="M_COSTADJUSTMENTLINE" primaryKey="M_COSTADJUSTMENTLINE_KEY">
+      <column name="M_COSTADJUSTMENTLINE_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_COSTADJUSTMENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_TRANSACTION_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ADJUSTMENT_AMOUNT" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISSOURCE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="NEEDSPOSTING" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="DATEACCT" primaryKey="false" required="false" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISRELATEDTRXADJUSTED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="PARENT_COSTADJUSTMENTLINE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="LINE" primaryKey="false" required="true" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_CURRENCY_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISUNITCOST" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault><![CDATA['Y']]></onCreateDefault>
+      </column>
+      <column name="ISBACKDATEDTRX" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="ISNEGATIVESTOCKCORRECTION" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="C_CURRENCY" name="C_COSTADJLINE_C_CURRENCY">
+        <reference local="C_CURRENCY_ID" foreign="C_CURRENCY_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_COSTADJUSTMENTLINE" name="M_COSTADJLINE_PARENTLINE">
+        <reference local="PARENT_COSTADJUSTMENTLINE_ID" foreign="M_COSTADJUSTMENTLINE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_CLIENT" name="M_COSTADJUSTMENTLINE_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_COSTADJUSTMENT" name="M_COSTADJUSTMENTLINE_COSTADJ">
+        <reference local="M_COSTADJUSTMENT_ID" foreign="M_COSTADJUSTMENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_COSTADJUSTMENTLINE_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_TRANSACTION" name="M_COSTADJUSTMENTLINE_TRX">
+        <reference local="M_TRANSACTION_ID" foreign="M_TRANSACTION_ID"/>
+      </foreign-key>
+      <index name="M_COSTADJLINE_COSTADJ_IDX" unique="false">
+        <index-column name="M_COSTADJUSTMENT_ID"/>
+      </index>
+      <index name="M_COSTADJLINE_PARENT_IDX" unique="false">
+        <index-column name="PARENT_COSTADJUSTMENTLINE_ID"/>
+        <whereClause><![CDATA[PARENT_COSTADJUSTMENTLINE_ID IS NOT NULL]]></whereClause>
+      </index>
+      <index name="M_COSTADJLINE_TRX_IDX" unique="false">
+        <index-column name="M_TRANSACTION_ID"/>
+        <whereClause><![CDATA[M_TRANSACTION_ID IS NOT NULL]]></whereClause>
+      </index>
+      <check name="M_COSTADJLINE_ACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="M_COSTADJLINE_POSTING_CHK"><![CDATA[NEEDSPOSTING IN ('Y', 'N')]]></check>
+      <check name="M_COSTADJLINE_SOURCE_CHK"><![CDATA[ISSOURCE IN ('Y', 'N')]]></check>
+      <check name="M_COSTADJUSTMENTLINE_RELTRXADJ"><![CDATA[ISRELATEDTRXADJUSTED IN ('Y', 'N')]]></check>
+      <check name="M_COSTADJUSTMENTLINE_UNITCOST"><![CDATA[ISUNITCOST IN ('Y', 'N')]]></check>
+    </table>
+  </database>

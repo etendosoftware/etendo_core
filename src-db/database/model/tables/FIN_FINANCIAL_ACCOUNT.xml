@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+  <database name="TABLE FIN_FINANCIAL_ACCOUNT">
+    <table name="FIN_FINANCIAL_ACCOUNT" primaryKey="FIN_FINANCIAL_ACCOUNT_KEY">
+      <column name="FIN_FINANCIAL_ACCOUNT_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="C_CURRENCY_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="NAME" primaryKey="false" required="true" type="NVARCHAR" size="60" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DESCRIPTION" primaryKey="false" required="false" type="NVARCHAR" size="255" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TYPE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[B]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="C_BPARTNER_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_LOCATION_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ROUTINGNO" primaryKey="false" required="false" type="NVARCHAR" size="20" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SWIFTCODE" primaryKey="false" required="false" type="NVARCHAR" size="20" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CODEBANK" primaryKey="false" required="false" type="NVARCHAR" size="4" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CODEBRANCH" primaryKey="false" required="false" type="NVARCHAR" size="4" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="BANK_DIGITCONTROL" primaryKey="false" required="false" type="NVARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="INE_NUMBER" primaryKey="false" required="false" type="NVARCHAR" size="9" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ACCOUNT_DIGITCONTROL" primaryKey="false" required="false" type="NVARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CODEACCOUNT" primaryKey="false" required="false" type="NVARCHAR" size="10" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ACCOUNTNO" primaryKey="false" required="false" type="NVARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CURRENTBALANCE" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="INITIALBALANCE" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREDITLIMIT" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="IBAN" primaryKey="false" required="false" type="NVARCHAR" size="34" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISDEFAULT" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="FIN_MATCHING_ALGORITHM_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TYPEWRITEOFF" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="WRITEOFFLIMIT" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="GENERICACCOUNTNO" primaryKey="false" required="false" type="NVARCHAR" size="100" autoIncrement="false">
+        <default/>
+        <onCreateDefault><![CDATA[ACCOUNTNO]]></onCreateDefault>
+      </column>
+      <column name="C_COUNTRY_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="BANKFORMAT" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
+        <default/>
+        <onCreateDefault><![CDATA[CASE WHEN TYPE='B' AND ACCOUNTNO IS NOT NULL THEN 'GENERIC' ELSE NULL END]]></onCreateDefault>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="FIN_AD_CLIENT_ACCOUNT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="FIN_AD_ORG_ACCOUNT">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_CURRENCY" name="FIN_C_CURRENCY_ACCOUNT">
+        <reference local="C_CURRENCY_ID" foreign="C_CURRENCY_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_BPARTNER" name="FIN_FINACC_BPARTNER">
+        <reference local="C_BPARTNER_ID" foreign="C_BPARTNER_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_COUNTRY" name="FIN_FINACC_C_COUNTRY">
+        <reference local="C_COUNTRY_ID" foreign="C_COUNTRY_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_LOCATION" name="FIN_FINACC_LOCATION">
+        <reference local="C_LOCATION_ID" foreign="C_LOCATION_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="FIN_MATCHING_ALGORITHM" name="FIN_FINACC_MATCH_ALGORITHM">
+        <reference local="FIN_MATCHING_ALGORITHM_ID" foreign="FIN_MATCHING_ALGORITHM_ID"/>
+      </foreign-key>
+      <check name="FIN_FINACC_DEFAULT_CHECK"><![CDATA[ISDEFAULT IN ('Y', 'N')]]></check>
+      <check name="FIN_FINACC_SHOWGENERIC_CHK"><![CDATA[UPPER(BANKFORMAT) = UPPER('GENERIC') AND GENERICACCOUNTNO IS NOT NULL OR UPPER(BANKFORMAT) <> UPPER('GENERIC')]]></check>
+      <check name="FIN_FINACC_SHOWIBAN_CHK"><![CDATA[UPPER(BANKFORMAT) = UPPER('IBAN') AND IBAN IS NOT NULL OR UPPER(BANKFORMAT) <> UPPER('IBAN')]]></check>
+      <check name="FIN_FINACC_SHOWSWIFT_CHK"><![CDATA[UPPER(BANKFORMAT) = UPPER('SWIFT') AND SWIFTCODE IS NOT NULL AND GENERICACCOUNTNO IS NOT NULL OR UPPER(BANKFORMAT) <> UPPER('SWIFT')]]></check>
+      <check name="FIN_FINACC_SPANISH_CHK"><![CDATA[UPPER(BANKFORMAT) = UPPER('SPANISH') AND CODEBANK IS NOT NULL AND CODEBRANCH IS NOT NULL AND BANK_DIGITCONTROL IS NOT NULL AND ACCOUNT_DIGITCONTROL IS NOT NULL AND CODEACCOUNT IS NOT NULL OR UPPER(BANKFORMAT) <> UPPER('SPANISH')]]></check>
+    </table>
+  </database>

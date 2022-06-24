@@ -1,0 +1,68 @@
+
+# Enable or disable the backups ( yes / no )
+BACKUP_ENABLED=yes
+
+# Enable rotation of backups, this will mantain the number of backups specified and delete old ones
+ROTATION_ENABLED=yes
+ROTATION_NUM_TO_MAINTAIN=1
+
+### ADVANCED OPTIONS ###
+
+### TOMCAT FOLDER ###
+# To include the tomcat folder, the backup must be run with the -PincludeWebapp flag
+# This variable should have the absolute path of the webapp folder
+# The folder to compress will be obtained from the gradle.properties file, context.name property
+TOMCAT_PATH=/var/lib/tomcat8/webapps/
+
+### USER - GROUP ###
+# This properties are used to verify that the current user running the backup is correct.
+USER=
+GROUP=
+
+### ALTERNATIVE PATHS ###
+BACKUPS_DIR=/backups
+BACKUPS_TMP_DIR=/tmp
+
+### EMAIL OPTIONS ###
+# An email will be send when the backup is running in 'auto' mode
+EMAIL_FROM=
+EMAIL_SERVER=
+EMAIL_PORT=
+EMAIL_TLS=True
+EMAIL_USER=
+EMAIL_PASSWORD=
+EMAIL_ENVIRONMENT=
+EMAIL_TEMP_FILE=/tmp/mail-text.log
+
+# Path to python scrip to send email in case of 'gradle' fails
+EMAIL_PYTHON_LOCATION=
+
+# Send the email to multiples accounts, Ex: EMAIL_ERROR_CC=user1@smfconsulting.es;user2@smfconsulting.es
+EMAIL_ERROR_TO=
+EMAIL_ERROR_CC=
+EMAIL_ERROR_SUBJECT=ERROR on Etendo backup.
+
+SEND_EMAIL_ON_WARNING=yes
+EMAIL_WARNING_TO=
+EMAIL_WARNING_CC=
+EMAIL_WARNING_SUBJECT=WARNING on Etendo backup.
+
+SEND_EMAIL_ON_SUCCESS=no
+EMAIL_SUCCESS_TO=
+EMAIL_SUCCESS_CC=
+EMAIL_SUCCESS_SUBJECT=SUCCESS on Etendo backup.
+
+
+### COPY ATTACHMENTS ###
+# External attachments
+ATTACH_COPY=yes
+# Sources attachments
+ATTACH_IN_BKP=yes
+
+### EXEC DB FIX SCRIPT - Mandatory if running old versions of Openbravo ###
+EXEC_FIX_SCRIPT=no
+
+### The script file and the output directory MUST exists.
+SCRIPT_FILE=
+# the output file for the script
+OUTPUT_FILE=

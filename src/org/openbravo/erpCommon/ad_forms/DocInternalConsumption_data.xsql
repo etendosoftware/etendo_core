@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+
+
+
+<SqlClass name="DocInternalConsumptionData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT I.AD_CLIENT_ID, I.AD_ORG_ID, I.AD_ORGTRX_ID, I.C_PROJECT_ID, I.C_CAMPAIGN_ID,
+        I.C_ACTIVITY_ID, I.USER1_ID, I.USER2_ID, I.C_COSTCENTER_ID, I.NAME, I.POSTED,
+        I.MOVEMENTDATE, '' AS M_WAREHOUSE_ID
+        FROM M_INTERNAL_CONSUMPTION I
+        WHERE AD_CLIENT_ID=?
+        AND M_INTERNAL_CONSUMPTION_ID=?
+     ]]>
+     </Sql>
+     <Parameter name="client"/>
+     <Parameter name="id"/>
+   </SqlMethod>
+  <SqlMethod name="selectWarehouse" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT M_WAREHOUSE_ID FROM M_LOCATOR
+        WHERE M_LOCATOR_ID = ?
+     ]]>
+     </Sql>
+     <Parameter name="M_LOCATOR_ID"/>
+   </SqlMethod>
+</SqlClass>

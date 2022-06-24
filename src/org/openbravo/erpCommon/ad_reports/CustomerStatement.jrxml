@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
+<!-- 2019-03-20T17:42:19 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Customer Statement" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="497a0ae3-5aac-448b-a8a4-4b6619407498">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.2100000000000006"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="net.sf.jasperreports.export.xls.detect.cell.type" value="true"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="org.openbravo.erpCommon.ReportsUtility"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<style name="default" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="10"/>
+	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle">
+		<box leftPadding="5">
+			<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+		</box>
+	</style>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="14">
+		<box leftPadding="5"/>
+	</style>
+	<style name="GroupHeader_Gray" mode="Opaque" backcolor="#999999"/>
+	<style name="Detail_Line">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()%2==1)]]></conditionExpression>
+			<style mode="Opaque" backcolor="#CCCCCC"/>
+		</conditionalStyle>
+	</style>
+	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
+	<parameter name="ATTACH" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="BASE_WEB" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["http://localhost:8080/openbravo/web"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BASE_DESIGN" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/home/openbravo/servers/tomcat6/webapps/openbravo/src-loc/design"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="LANGUAGE" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["en_US"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_CLIENT" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["('1000000')"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_ORG" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["('0')"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="REPORT_TITLE" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["REPORT TITLE"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="REPORT_SUBTITLE" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="LOCALE" class="java.util.Locale" isForPrompting="false"/>
+	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<parameter name="C_BPartner_ID" class="java.lang.String"/>
+	<parameter name="C_AcctSchema_ID" class="java.lang.String"/>
+	<parameter name="DateFrom" class="java.lang.String"/>
+	<parameter name="DateTo" class="java.lang.String"/>
+	<parameter name="AD_Org_ID" class="java.lang.String"/>
+	<parameter name="DATEFORMAT" class="java.text.DateFormat">
+		<defaultValueExpression><![CDATA[$P{REPORT_FORMAT_FACTORY}.createDateFormat("", $P{REPORT_LOCALE}, $P{REPORT_TIME_ZONE})]]></defaultValueExpression>
+	</parameter>
+	<parameter name="reportType" class="java.lang.String"/>
+	<parameter name="sumInitialBalance" class="java.lang.String"/>
+	<parameter name="Multicurrency" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT trunc(f.dateacct) as dateacct,
+        CASE WHEN f.c_doctype_id IS NOT NULL THEN (SELECT MIN(name)
+                                       FROM c_doctype
+                                       WHERE c_doctype_id = f.c_doctype_id)
+        ELSE (SELECT MIN(name)
+              FROM ad_ref_list
+              WHERE ad_reference_id = '183'
+              AND value = f.docbasetype)
+        END as documenttype,
+    f.description,
+    (CASE WHEN $P{Multicurrency} = 'Y' THEN f.amtsourcedr ELSE f.amtacctdr END) as debit,
+    (CASE WHEN $P{Multicurrency} = 'Y' THEN f.amtsourcecr ELSE f.amtacctcr END) as credit,
+    (CASE WHEN $P{Multicurrency} = 'Y' THEN (f.amtsourcedr - f.amtsourcecr) ELSE (f.amtacctdr - f.amtacctcr) END) as net,
+    (CASE WHEN $P{Multicurrency} = 'Y' THEN f.c_currency_id ELSE NULL END) as currency_id,
+    curr.iso_code as currency_code,
+    curr.description as currency_name,
+    bp.name as bpname, o.ad_org_id as organizationid,
+    loc.address1 || ' ' || COALESCE(TO_CHAR(loc.address2), TO_CHAR('')) as org_address,
+    loc.city || ', ' || ad_column_identifier('C_Region', loc.c_region_id, 'en_US') || ' ' || loc.postal
+    || ' ' || ad_column_identifier('C_Country', loc.c_country_id, 'en_US') AS org_postal,
+    (SELECT MAX(email) FROM ad_user WHERE ad_user_id=oinfo.ad_user_id) as email,
+    (SELECT MAX(phone) FROM ad_user WHERE ad_user_id=oinfo.ad_user_id) as phone,
+    issotrx.issotrx as issotrx
+FROM fact_acct f
+    JOIN c_currency curr ON (f.c_currency_id = curr.c_currency_id)
+    LEFT JOIN c_acctschema acct ON (f.c_acctschema_id=acct.c_acctschema_id)
+    LEFT JOIN c_bpartner bp ON (f.c_bpartner_id=bp.c_bpartner_id)
+    JOIN (SELECT ad_org_id
+          FROM ad_org
+          WHERE ad_isorgincluded(ad_org_id, $P{AD_Org_ID}, ad_client_id) <> -1) org ON (f.ad_org_id=org.ad_org_id), ad_org o
+    LEFT JOIN ad_orginfo oinfo ON (o.ad_org_id=oinfo.ad_org_id)
+    LEFT JOIN c_location loc ON (oinfo.c_location_id=loc.c_location_id), (SELECT CASE WHEN value=1 THEN 'Y' ELSE 'N' END AS issotrx
+                                                                          FROM ad_integer
+                                                                          WHERE value < 3) issotrx
+WHERE o.ad_org_id=$P{AD_Org_ID}
+    AND (($P{reportType} IN ('cus','both')
+    AND account_id IN
+        (SELECT account_id
+         FROM c_validcombination
+         WHERE c_acctschema_id = $P{C_AcctSchema_ID}
+             AND (c_validcombination_id IN
+                (SELECT c_receivable_acct
+                 FROM c_bp_customer_acct
+                 WHERE c_bpartner_id = $P{C_BPartner_ID}
+                 AND c_acctschema_id = $P{C_AcctSchema_ID})
+             OR c_validcombination_id IN
+                (SELECT c_prepayment_acct
+                 FROM c_bp_customer_acct
+                 WHERE c_bpartner_id = $P{C_BPartner_ID}
+                 AND c_acctschema_id = $P{C_AcctSchema_ID})))
+    AND issotrx.issotrx='Y')
+   OR ($P{reportType} IN ('ven','both')
+   AND account_id IN
+        (SELECT account_id
+         FROM c_validcombination
+         WHERE c_acctschema_id = $P{C_AcctSchema_ID}
+             AND (c_validcombination_id IN
+                (SELECT v_liability_acct
+                 FROM c_bp_vendor_acct
+                 WHERE c_bpartner_id = $P{C_BPartner_ID}
+                 AND c_acctschema_id = $P{C_AcctSchema_ID})
+             OR c_validcombination_id IN
+                (SELECT v_prepayment_acct
+                 FROM c_bp_vendor_acct
+                 WHERE c_bpartner_id = $P{C_BPartner_ID}
+                 AND c_acctschema_id = $P{C_AcctSchema_ID})))
+    AND issotrx.issotrx='N'))
+    AND f.c_bpartner_id =  $P{C_BPartner_ID}
+    AND f.c_acctschema_id = $P{C_AcctSchema_ID}
+    AND trunc(f.dateacct) >= (CASE WHEN ($P{DateFrom} IS NULL OR $P{DateFrom}='') THEN TO_DATE('01-01-0001')
+        ELSE TO_DATE($P{DateFrom}) END)
+    AND trunc(f.dateacct) <= (CASE WHEN ($P{DateTo} IS NULL OR $P{DateTo}='') THEN TO_DATE('09-09-9999')
+        ELSE TO_DATE($P{DateTo}) END)
+    AND f.ad_table_id not IN ('145')
+ORDER BY currency_id, issotrx, f.dateacct, f.created]]>
+	</queryString>
+	<field name="org_address" class="java.lang.String"/>
+	<field name="org_postal" class="java.lang.String"/>
+	<field name="dateacct" class="java.util.Date"/>
+	<field name="organizationid" class="java.lang.String"/>
+	<field name="documenttype" class="java.lang.String"/>
+	<field name="description" class="java.lang.String"/>
+	<field name="bpname" class="java.lang.String"/>
+	<field name="email" class="java.lang.String"/>
+	<field name="phone" class="java.lang.String"/>
+	<field name="debit" class="java.math.BigDecimal"/>
+	<field name="credit" class="java.math.BigDecimal"/>
+	<field name="net" class="java.math.BigDecimal"/>
+	<field name="currency_id" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="currency_code" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="currency_name" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="issotrx" class="java.lang.String"/>
+	<variable name="SUM" class="java.math.BigDecimal" resetType="Group" resetGroup="Sales / Purchase" calculation="Sum">
+		<variableExpression><![CDATA[$F{net}]]></variableExpression>
+	</variable>
+	<variable name="DateFrom" class="java.util.Date" calculation="Lowest">
+		<variableExpression><![CDATA[$F{dateacct}]]></variableExpression>
+	</variable>
+	<variable name="DateTo" class="java.util.Date" calculation="Highest">
+		<variableExpression><![CDATA[$F{dateacct}]]></variableExpression>
+	</variable>
+	<variable name="customerInitialBalance" class="java.math.BigDecimal" resetType="Group" resetGroup="Currency">
+		<variableExpression><![CDATA[ReportsUtility.getBeginningBalance($P{AD_Org_ID}, $P{C_AcctSchema_ID}, $P{C_BPartner_ID}, $P{DateFrom}, true, $F{currency_id})]]></variableExpression>
+	</variable>
+	<variable name="customerBalance" class="java.math.BigDecimal" resetType="Group" resetGroup="Sales / Purchase">
+		<variableExpression><![CDATA[$V{customerInitialBalance}.add($V{SUM})]]></variableExpression>
+	</variable>
+	<variable name="vendorInitialBalance" class="java.math.BigDecimal" resetType="Group" resetGroup="Currency">
+		<variableExpression><![CDATA[ReportsUtility.getBeginningBalance($P{AD_Org_ID}, $P{C_AcctSchema_ID}, $P{C_BPartner_ID}, $P{DateFrom}, false, $F{currency_id})]]></variableExpression>
+	</variable>
+	<variable name="vendorBalance" class="java.math.BigDecimal" resetType="Group" resetGroup="Sales / Purchase">
+		<variableExpression><![CDATA[$V{vendorInitialBalance}.add($V{SUM})]]></variableExpression>
+	</variable>
+	<variable name="TOTALSUM" class="java.math.BigDecimal" resetType="Group" resetGroup="Currency" calculation="Sum">
+		<variableExpression><![CDATA[$F{net}]]></variableExpression>
+	</variable>
+	<variable name="totalBalance" class="java.math.BigDecimal" resetType="Group" resetGroup="Currency">
+		<variableExpression><![CDATA[$V{TOTALSUM}.add($V{customerInitialBalance}).add($V{vendorInitialBalance})]]></variableExpression>
+	</variable>
+	<variable name="totalInitialBalance" class="java.math.BigDecimal" resetType="Group" resetGroup="Currency">
+		<variableExpression><![CDATA[$V{vendorInitialBalance}.add($V{customerInitialBalance})]]></variableExpression>
+	</variable>
+	<group name="PrintLarge" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[]]></groupExpression>
+	</group>
+	<group name="PrintMedium" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[]]></groupExpression>
+	</group>
+	<group name="Currency" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{currency_id}]]></groupExpression>
+		<groupHeader>
+			<band height="65">
+				<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+				<printWhenExpression><![CDATA["Y".equals($P{Multicurrency})]]></printWhenExpression>
+				<textField>
+					<reportElement x="80" y="34" width="47" height="29" uuid="688616ea-456f-4d6f-bc04-0c3e5066ae6b">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans" size="16"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{currency_code}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="127" y="34" width="243" height="29" uuid="f8b29d19-412a-4998-8f35-03550e7d78eb">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans" size="16"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{currency_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="34" width="80" height="29" uuid="003bd68e-0af5-4a3d-a985-7aefb853337f"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans" size="16" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Currency]]></text>
+				</staticText>
+				<line>
+					<reportElement x="0" y="30" width="555" height="1" uuid="3928cbc2-8a16-499c-8baa-fb72b379b792"/>
+				</line>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="67">
+				<printWhenExpression><![CDATA[$P{reportType}.equals("both")]]></printWhenExpression>
+				<line>
+					<reportElement x="236" y="47" width="320" height="3" uuid="382bf123-c27c-426b-a320-1a2df3a239e9"/>
+				</line>
+				<line>
+					<reportElement x="236" y="45" width="320" height="3" uuid="5d70d63d-44fd-446f-ba3f-04bfa9101df7"/>
+				</line>
+				<staticText>
+					<reportElement positionType="Float" mode="Opaque" x="236" y="32" width="210" height="15" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="4b7939f4-7137-4121-a9e9-687b1e20cc84"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<text><![CDATA[Business Partner Balance :]]></text>
+				</staticText>
+				<line>
+					<reportElement x="236" y="17" width="320" height="1" uuid="cd37578f-91ec-4417-ad1c-e1f2889f6d6a"/>
+				</line>
+				<textField evaluationTime="Group" evaluationGroup="Sales / Purchase" pattern="" isBlankWhenNull="true">
+					<reportElement positionType="Float" mode="Transparent" x="446" y="32" width="110" height="15" forecolor="#000000" backcolor="#FFFFFF" uuid="3d009a3e-d394-4eba-a4f7-7b29d5b99f74"/>
+					<box rightPadding="5"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{totalBalance}.compareTo(BigDecimal.ZERO) < 0 ? $V{totalBalance}.abs() : $V{totalBalance}]]></textFieldExpression>
+					<patternExpression><![CDATA[$V{totalBalance}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<staticText>
+					<reportElement x="236" y="3" width="210" height="14" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="62499066-a0e4-46b3-bd28-3e611823c5dd"/>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Business Partner Initial Balance :]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="Sales / Purchase" pattern="" isBlankWhenNull="true">
+					<reportElement style="Detail_Line" stretchType="RelativeToTallestObject" mode="Transparent" x="446" y="3" width="110" height="14" forecolor="#000000" backcolor="#FFFFFF" uuid="db8ea373-d4a6-4a80-9543-edb9914382c4"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{totalInitialBalance}.compareTo(BigDecimal.ZERO) < 0 ? $V{totalInitialBalance}.abs() : $V{totalInitialBalance}]]></textFieldExpression>
+					<patternExpression><![CDATA[$V{totalInitialBalance}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="Sales / Purchase" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{issotrx}]]></groupExpression>
+		<groupHeader>
+			<band height="78">
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="Sales / Purchase" pattern="" isBlankWhenNull="true">
+					<reportElement style="Detail_Line" stretchType="RelativeToTallestObject" mode="Transparent" x="446" y="56" width="110" height="14" forecolor="#000000" backcolor="#FFFFFF" uuid="bab14b42-0911-481b-84b2-200ab637a727">
+						<printWhenExpression><![CDATA[($P{reportType}.equals("cus")) || ($P{reportType}.equals("both") && $F{issotrx}.equals("Y"))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{customerInitialBalance}.compareTo(BigDecimal.ZERO) < 0 ?  $V{customerInitialBalance}.abs() : $V{customerInitialBalance}]]></textFieldExpression>
+					<patternExpression><![CDATA[$V{customerInitialBalance}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<staticText>
+					<reportElement x="331" y="56" width="115" height="14" forecolor="#000000" backcolor="#FFFFFF" uuid="b7fa0a14-eaf8-4ba3-8f63-b539a95d5c7f"/>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Initial Balance :]]></text>
+				</staticText>
+				<line>
+					<reportElement x="331" y="70" width="225" height="1" uuid="0324ab00-5242-4117-bc12-2413a8568017"/>
+				</line>
+				<staticText>
+					<reportElement x="0" y="7" width="330" height="20" forecolor="#595959" uuid="bfae711e-d1a9-41a6-ab3e-ee8818f58e76">
+						<printWhenExpression><![CDATA[$P{reportType}.equals("both") && $F{issotrx}.equals("Y")]]></printWhenExpression>
+					</reportElement>
+					<textElement>
+						<font fontName="DejaVu Sans" size="16"/>
+					</textElement>
+					<text><![CDATA[Customer Statement]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="128" y="36" width="202" height="13" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="6c954583-0980-4275-b5c6-94726deb66fb"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Description]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="36" width="47" height="13" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="41e42641-3f87-4355-9e24-f48fe98633d1"/>
+					<textElement verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="47" y="36" width="81" height="13" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="2684e5bb-9e7f-4006-9a50-334a26bc8144"/>
+					<textElement textAlignment="Left" verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Document Type]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="330" y="36" width="75" height="13" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="1a9426e0-9cd4-444a-84e4-2ef7f31d0115"/>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Debit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="405" y="36" width="75" height="13" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="a6803da0-801c-473c-9122-0fdae0ad6b4c"/>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Credit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="480" y="36" width="75" height="13" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="550e60d2-54e1-410d-8059-90e8bc32ac01"/>
+					<textElement textAlignment="Right" verticalAlignment="Top">
+						<font fontName="DejaVu Sans" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Net]]></text>
+				</staticText>
+				<line>
+					<reportElement x="0" y="49" width="555" height="1" uuid="750cccdd-cdc1-4e35-8fef-cd0bc3440eff"/>
+				</line>
+				<staticText>
+					<reportElement stretchType="RelativeToBandHeight" x="1" y="7" width="330" height="20" forecolor="#595959" uuid="fcaab7ce-176e-4b44-81c4-a9df9f2bb719">
+						<printWhenExpression><![CDATA[$P{reportType}.equals("both") && $F{issotrx}.equals("N")]]></printWhenExpression>
+					</reportElement>
+					<textElement markup="html">
+						<font fontName="DejaVu Sans" size="16"/>
+					</textElement>
+					<text><![CDATA[Vendor Statement]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" evaluationTime="Group" evaluationGroup="Sales / Purchase" pattern="" isBlankWhenNull="true">
+					<reportElement style="Detail_Line" stretchType="RelativeToTallestObject" mode="Transparent" x="446" y="56" width="110" height="14" forecolor="#000000" backcolor="#FFFFFF" uuid="0af3ed56-3508-44dd-aeb6-4e3ff0c30acd">
+						<printWhenExpression><![CDATA[($P{reportType}.equals("ven")) || ($P{reportType}.equals("both") && $F{issotrx}.equals("N"))]]></printWhenExpression>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{vendorInitialBalance}.compareTo(BigDecimal.ZERO) < 0 ? $V{vendorInitialBalance}.abs() : $V{vendorInitialBalance}]]></textFieldExpression>
+					<patternExpression><![CDATA[$V{vendorInitialBalance}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="44">
+				<textField evaluationTime="Group" evaluationGroup="Sales / Purchase" pattern="" isBlankWhenNull="true">
+					<reportElement positionType="Float" mode="Transparent" x="445" y="12" width="110" height="15" forecolor="#000000" backcolor="#FFFFFF" uuid="a75fd489-5f32-4dba-adc8-d961d69350fe">
+						<printWhenExpression><![CDATA[($P{reportType}.equals("cus")) || ($P{reportType}.equals("both") && $F{issotrx}.equals("Y"))]]></printWhenExpression>
+					</reportElement>
+					<box rightPadding="5"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{customerBalance}.compareTo(BigDecimal.ZERO) < 0 ? $V{customerBalance}.abs() : $V{customerBalance}]]></textFieldExpression>
+					<patternExpression><![CDATA[$V{customerBalance}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<staticText>
+					<reportElement positionType="Float" mode="Opaque" x="330" y="12" width="115" height="15" isPrintWhenDetailOverflows="true" forecolor="#000000" backcolor="#FFFFFF" uuid="8d228eb8-2fde-4f0a-9bfb-b6ee85f1eb54"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<text><![CDATA[Balance :]]></text>
+				</staticText>
+				<line>
+					<reportElement x="330" y="27" width="225" height="1" uuid="ba5bc91e-a835-4136-8823-f5bffa8b544b"/>
+				</line>
+				<line>
+					<reportElement x="330" y="29" width="225" height="1" uuid="d705d5a1-56f8-4f10-80fb-171f41cf12a9"/>
+				</line>
+				<textField evaluationTime="Group" evaluationGroup="Sales / Purchase" pattern="" isBlankWhenNull="true">
+					<reportElement positionType="Float" mode="Transparent" x="445" y="12" width="110" height="15" forecolor="#000000" backcolor="#FFFFFF" uuid="5ebb7055-46fa-4b7a-bf93-a40c5a017d07">
+						<printWhenExpression><![CDATA[($P{reportType}.equals("ven")) || ($P{reportType}.equals("both") && $F{issotrx}.equals("N"))]]></printWhenExpression>
+					</reportElement>
+					<box rightPadding="5"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle" rotation="None" markup="none">
+						<font fontName="DejaVu Sans" size="10" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
+						<paragraph lineSpacing="Single"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{vendorBalance}.compareTo(BigDecimal.ZERO) < 0 ? $V{vendorBalance}.abs() : $V{vendorBalance}]]></textFieldExpression>
+					<patternExpression><![CDATA[$V{vendorBalance}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="141" splitType="Stretch">
+			<rectangle>
+				<reportElement key="" x="0" y="0" width="559" height="77" isPrintInFirstWholeBand="true" forecolor="#FFFFFF" backcolor="#FFFFFF" uuid="a61f942d-14ea-46fc-865a-0fd446b65e6f"/>
+			</rectangle>
+			<image scaleImage="RetainShape" hAlign="Center" vAlign="Middle" isUsingCache="true">
+				<reportElement key="image-1" x="10" y="4" width="205" height="55" uuid="73a5995d-9060-4607-b691-814fd83574d6"/>
+				<imageExpression><![CDATA[org.openbravo.erpCommon.utility.Utility.showImageLogo("yourcompanylegal", $F{organizationid})]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement x="490" y="48" width="59" height="11" uuid="715f1869-f95e-466f-9cb4-bf0ae163334c"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[DateFormat.getDateInstance(DateFormat.SHORT,
+        $P{LOCALE}).format(new Date())]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="101" width="371" height="12" uuid="9c171589-afee-4689-82e1-1bf6ef256481"/>
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{bpname}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="10" y="59" width="301" height="12" isPrintInFirstWholeBand="true" isPrintWhenDetailOverflows="true" forecolor="#595959" uuid="714e47f3-816e-4fc3-ae02-57bb0a15be40"/>
+				<textElement>
+					<font fontName="DejaVu Sans" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{org_address}.equals(null)?" ":$F{org_address}) + " " + ($F{org_postal}.equals(null)?" ":$F{org_postal})]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="236" y="4" width="313" height="20" forecolor="#595959" uuid="d4dc815c-b252-4559-ad05-71cf8cb0029a">
+					<printWhenExpression><![CDATA[$P{reportType}.equals("cus") && $F{issotrx}.equals("Y")]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="DejaVu Sans" size="16"/>
+				</textElement>
+				<text><![CDATA[Customer Statement]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="371" y="48" width="119" height="11" isPrintWhenDetailOverflows="true" forecolor="#595959" uuid="27172c38-5715-434d-9031-b5e0bde7fb17"/>
+				<textElement textAlignment="Right">
+					<font fontName="DejaVu Sans" size="9"/>
+				</textElement>
+				<text><![CDATA[Issued]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="515" y="101" width="12" height="12" uuid="a47d2f0f-04c2-44f0-b11d-d0a2a91b159d"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="483" y="101" width="32" height="12" isPrintWhenDetailOverflows="true" uuid="9a3bae21-c7d1-4187-a004-43f58364b284"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[Page]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="527" y="101" width="11" height="12" uuid="7f781088-a5a6-4588-a67e-87ab7281fb70"/>
+				<textElement textAlignment="Justified" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<text><![CDATA[of]]></text>
+			</staticText>
+			<textField evaluationTime="Report">
+				<reportElement positionType="Float" x="538" y="101" width="12" height="12" uuid="e5239722-8262-456f-901e-2e2f2b4d6c72"/>
+				<textElement textAlignment="Justified" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="124" width="32" height="12" uuid="bfddfcad-55b3-4e95-9f35-d3fd940bb3b8"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[From]]></text>
+			</staticText>
+			<textField evaluationTime="Report">
+				<reportElement x="80" y="124" width="45" height="12" uuid="0d10c075-8588-4aba-b65a-7216a84b11ad"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{DateFrom} != null ? DateFormat.getDateInstance(DateFormat.SHORT,$P{LOCALE}).format($P{DATEFORMAT}.parse($P{DateFrom}))  : DateFormat.getDateInstance(DateFormat.SHORT,$P{LOCALE}).format($V{DateFrom})]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" isBlankWhenNull="true">
+				<reportElement x="143" y="124" width="45" height="12" uuid="92cbe9ad-289f-4912-b262-215fae340e01"/>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{DateTo}  != null ? DateFormat.getDateInstance(DateFormat.SHORT,$P{LOCALE}).format($P{DATEFORMAT}.parse($P{DateTo})) : DateFormat.getDateInstance(DateFormat.SHORT,$P{LOCALE}).format($V{DateTo})]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="125" y="124" width="18" height="12" uuid="5cf7ca7b-3437-4ecb-8a88-06fdc9224186"/>
+				<textElement textAlignment="Center" verticalAlignment="Bottom">
+					<font fontName="DejaVu Sans" size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[to]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="235" y="4" width="314" height="20" isPrintWhenDetailOverflows="true" forecolor="#595959" uuid="994be6a7-05b5-4ef9-9577-2ed953b20190">
+					<printWhenExpression><![CDATA[$P{reportType}.equals("ven") && $F{issotrx}.equals("N")]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="DejaVu Sans" size="16"/>
+				</textElement>
+				<text><![CDATA[Vendor Statement]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="17">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="0" y="0" width="47" height="14" uuid="9c631d3f-0a97-4b1a-91da-50e30e36d6f5"/>
+				<box leftPadding="3"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="8"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[DateFormat.getDateInstance(DateFormat.SHORT,
+        $P{LOCALE}).format($F{dateacct})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="47" y="0" width="81" height="14" uuid="e2f6368f-f0af-4bf7-83a2-79d74f1f5b6a"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="8"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{documenttype}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="128" y="0" width="202" height="14" uuid="67088f29-11e9-4552-8f4f-bf88390a29d8"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="8"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{description}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="405" y="0" width="75" height="14" uuid="37b11b94-f0ef-4332-a602-0addfc0a8980"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="8"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{credit}.compareTo(BigDecimal.ZERO) < 0 ? $F{credit}.abs() : $F{credit}]]></textFieldExpression>
+				<patternExpression><![CDATA[$F{credit}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="330" y="0" width="75" height="14" uuid="b9cb19fe-6b55-4c0c-9089-a3c3c8e88223"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="8"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{debit}.compareTo(BigDecimal.ZERO) < 0 ? $F{debit}.abs() : $F{debit}]]></textFieldExpression>
+				<patternExpression><![CDATA[$F{debit}.compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement stretchType="RelativeToTallestObject" x="480" y="0" width="75" height="14" uuid="50a77f9b-8c48-4f56-837c-590c02bf0166"/>
+				<box rightPadding="3"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans" size="8"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Y".equals($P{sumInitialBalance}) ? new BigDecimal("Y".equals($F{issotrx}) ? $V{customerInitialBalance}.toString() : $V{vendorInitialBalance}.toString()).add($V{SUM}).abs() : $V{SUM}.abs()]]></textFieldExpression>
+				<patternExpression><![CDATA[new BigDecimal("Y".equals($P{sumInitialBalance}) ? new BigDecimal("Y".equals($F{issotrx}) ? $V{customerInitialBalance}.toString() : $V{vendorInitialBalance}.toString()).add($V{SUM}).toString() : $V{SUM}.toString()).compareTo(BigDecimal.ZERO) < 0 ? ("("+$P{NUMBERFORMAT}.toPattern()+")") : $P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

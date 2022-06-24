@@ -1,0 +1,986 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
+<!-- 2017-03-02T13:16:17 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportInvoiceCustomerDimensionalAnalysesXLS" pageWidth="1900" pageHeight="842" orientation="Landscape" columnWidth="1900" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" isIgnorePagination="true" uuid="59be190b-97b3-4951-842b-79d4e9d2d71b">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="587"/>
+	<property name="ireport.y" value="0"/>
+	<property name="net.sf.jasperreports.export.xls.detect.cell.type" value="true"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<style name="default" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true">
+		<box leftPadding="5">
+			<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+		</box>
+	</style>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="18" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="GroupHeader_Gray" mode="Opaque" backcolor="#999999"/>
+	<style name="Detail_Line" fontName="Bitstream Vera Sans" fontSize="11">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()%2==0)]]></conditionExpression>
+			<style mode="Opaque" backcolor="#CCCCCC"/>
+		</conditionalStyle>
+	</style>
+	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
+	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11" isBold="false"/>
+	<style name="Report_Footer" isDefault="true" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="14" isBold="true"/>
+	<style name="Group_Data_Field" fontName="Bitstream Vera Sans" fontSize="14"/>
+	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Footer" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<parameter name="ATTACH" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="BASE_WEB" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="BASE_DESIGN" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/opt/Apps230/src"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="LANGUAGE" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["en_US"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_CLIENT" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["'0','1000000'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_client" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{USER_CLIENT}.equals("") ? " " : " AND C_INVOICE.AD_CLIENT_ID IN(" + $P{USER_CLIENT} + ")"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_ORG" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["'1000000','1000001'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="REPORT_SUBTITLE" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new DecimalFormat("###,##0.00", new DecimalFormatSymbols())]]></defaultValueExpression>
+	</parameter>
+	<parameter name="LOCALE" class="java.util.Locale" isForPrompting="false"/>
+	<parameter name="strDateFormat" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["dd/MM/yyyy"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="ORGANIZATION" class="java.lang.String"/>
+	<parameter name="BPGROUP" class="java.lang.String"/>
+	<parameter name="PRODUCTGROUP" class="java.lang.String"/>
+	<parameter name="C_CURRENCY_ID" class="java.lang.String"/>
+	<parameter name="AD_ORG_ID" class="java.lang.String"/>
+	<parameter name="aux_org" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{AD_ORG_ID}.equals("") ? " " : " AND C_INVOICE.AD_ORG_ID IN(" + $P{AD_ORG_ID} + ")"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="DateFrom" class="java.lang.String"/>
+	<parameter name="DateTo" class="java.lang.String"/>
+	<parameter name="aux_DateFrom" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{DateFrom} == null || $P{DateFrom}.equals("")) ? "" : "AND C_INVOICE.DATEINVOICED >= TO_DATE('" + $P{DateFrom} + "', 'YYYY-MM-DD')"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_DateTo" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{DateTo} == null || $P{DateTo}.equals("")) ? "" : "AND C_INVOICE.DATEINVOICED <= TO_DATE('" + $P{DateTo} + "', 'YYYY-MM-DD')"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="C_BP_GROUP_ID" class="java.lang.String"/>
+	<parameter name="aux_bpgroup" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{C_BP_GROUP_ID}.equals("") ? " " : " AND C_BPARTNER.C_BP_GROUP_ID = '" + $P{C_BP_GROUP_ID} + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="C_BPARTNER_ID" class="java.lang.String"/>
+	<parameter name="aux_partner" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{C_BPARTNER_ID}.equals("") ? " " : " AND C_BPARTNER.C_BPARTNER_ID IN" + $P{C_BPARTNER_ID}]]></defaultValueExpression>
+	</parameter>
+	<parameter name="M_PRODUCT_CATEGORY_ID" class="java.lang.String"/>
+	<parameter name="aux_productcategory" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{M_PRODUCT_CATEGORY_ID}.equals("") ? " " : " AND M_PRODUCT_CATEGORY.M_PRODUCT_CATEGORY_ID IN" + $P{M_PRODUCT_CATEGORY_ID}]]></defaultValueExpression>
+	</parameter>
+	<parameter name="M_PRODUCT_ID" class="java.lang.String"/>
+	<parameter name="aux_product" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{M_PRODUCT_ID}.equals("") ? " " : "  AND M_PRODUCT.M_PRODUCT_ID IN" + $P{M_PRODUCT_ID}]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SALESREP_ID" class="java.lang.String"/>
+	<parameter name="aux_salesrep" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{SALESREP_ID}.equals("") ? " " : " AND C_INVOICE.SALESREP_ID = '" + $P{SALESREP_ID} + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="PARTNER_SALESREP_ID" class="java.lang.String"/>
+	<parameter name="aux_partnersalesrep" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{PARTNER_SALESREP_ID}.equals("") ? " " : " AND CB.C_BPARTNER_ID = '" + $P{PARTNER_SALESREP_ID} + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="C_PROJECT_ID" class="java.lang.String"/>
+	<parameter name="aux_project" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{C_PROJECT_ID}.equals("") ? " " : " AND C_INVOICE.C_PROJECT_ID = '" + $P{C_PROJECT_ID} + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="PRODUCTTYPE" class="java.lang.String"/>
+	<parameter name="aux_producttype" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{PRODUCTTYPE}.equals("") ? " " : " AND M_PRODUCT.PRODUCTTYPE = '" + $P{PRODUCTTYPE} + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="C_DOCTYPE_ID" class="java.lang.String"/>
+	<parameter name="aux_doctype" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{C_DOCTYPE_ID}.equals("") ? " " : " AND C_INVOICE.C_DOCTYPE_ID IN" + $P{C_DOCTYPE_ID}]]></defaultValueExpression>
+	</parameter>
+	<parameter name="DOCSTATUS" class="java.lang.String"/>
+	<parameter name="aux_docstatus" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{DOCSTATUS}.equals("") ? " " : " AND C_INVOICE.DOCSTATUS <> '" + $P{DOCSTATUS} + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SR_LINES" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT ORG, DOCTYPENAME, PARTNERGROUP, PARTNER, DOCUMENTNO, INVOICEDATE, PRODCATEGORY, PRODUCT, SEARCHKEY, UNITPRICE,
+        AMOUNT, COST, (AMOUNT - COST) AS PROFIT, CASE WHEN AMOUNT <> 0 THEN ROUND((100 * (AMOUNT - COST) / AMOUNT), 2) ELSE 0 END AS MARGIN,
+        WEIGHT, QTY, CONTACT, SALESREP, PROJECT, ADDRESS
+        FROM (
+          SELECT AD_ORG.NAME AS ORG,
+            C_DOCTYPE.NAME AS DOCTYPENAME,
+            C_BP_GROUP.NAME AS PARTNERGROUP,
+            C_BPARTNER.NAME AS PARTNER,
+            C_INVOICE.DOCUMENTNO AS DOCUMENTNO,
+            TO_DATE(COALESCE(C_INVOICE.DATEINVOICED, NOW())) AS INVOICEDATE,
+            M_PRODUCT_CATEGORY.NAME AS PRODCATEGORY,
+            M_PRODUCT.NAME AS PRODUCT,
+        M_PRODUCT.VALUE AS SEARCHKEY,
+            CASE WHEN C_INVOICELINE.QTYINVOICED = 0 THEN 0 ELSE C_INVOICELINE.LINENETAMT/C_INVOICELINE.QTYINVOICED END AS UNITPRICE,
+            CASE WHEN C_DOCTYPE.DOCBASETYPE = 'ARC' THEN C_CURRENCY_CONVERT(C_INVOICELINE.LINENETAMT*-1, C_INVOICE.C_CURRENCY_ID, ?, TO_DATE(COALESCE(C_INVOICE.DATEINVOICED, NOW())), NULL, C_INVOICE.AD_CLIENT_ID, C_INVOICE.AD_ORG_ID) ELSE C_CURRENCY_CONVERT(C_INVOICELINE.LINENETAMT, C_INVOICE.C_CURRENCY_ID, ?, TO_DATE(COALESCE(C_INVOICE.DATEINVOICED, NOW())), NULL, C_INVOICE.AD_CLIENT_ID, C_INVOICE.AD_ORG_ID) END AS AMOUNT,
+            CASE WHEN (M_PRODUCT.ISSTOCKED='Y' AND M_PRODUCT.PRODUCTTYPE='I') THEN (CASE WHEN trx.movementqty = 0 THEN 0 ELSE COALESCE(C_CURRENCY_CONVERT_PRECISION (ROUND(trxcost.cost/abs(trx.movementqty)*c_invoiceline.qtyinvoiced, C_GET_CURRENCY_PRECISION(trxcost.c_currency_id, 'C')), trxcost.c_currency_id,?,trx.movementdate,NULL,trx.ad_client_id,trx.ad_org_id,'C'), 0) END)    ELSE (COALESCE(M_GET_NO_TRX_PRODUCT_COST(M_PRODUCT.M_PRODUCT_ID, C_INVOICE.DATEINVOICED, 'STA', ad_org.ad_org_id, null, C_INVOICE.C_CURRENCY_ID), 0)*C_INVOICELINE.QTYINVOICED) END AS COST,
+            C_INVOICELINE.QTYINVOICED*M_PRODUCT.WEIGHT AS WEIGHT,
+            C_INVOICELINE.QTYINVOICED AS QTY,
+            (SELECT U.NAME FROM AD_USER U WHERE U.AD_USER_ID = C_INVOICE.AD_USER_ID) AS CONTACT,
+            (SELECT SR.NAME FROM AD_USER SR WHERE SR.AD_USER_ID = C_INVOICE.SALESREP_ID) AS SALESREP,
+            (SELECT P.NAME FROM C_PROJECT P WHERE P.C_PROJECT_ID = C_INVOICE.C_PROJECT_ID) AS PROJECT,
+            (SELECT PL.NAME FROM C_BPARTNER_LOCATION PL WHERE PL.C_BPARTNER_LOCATION_ID = C_INVOICE.C_BPARTNER_LOCATION_ID) AS ADDRESS
+            FROM C_INVOICELINE
+                join C_INVOICE on C_INVOICE.C_INVOICE_ID = C_INVOICELINE.C_INVOICE_ID
+                join C_BPARTNER on C_INVOICE.C_BPARTNER_ID = C_BPARTNER.C_BPARTNER_ID
+                join C_BP_GROUP on C_BPARTNER.C_BP_GROUP_ID = C_BP_GROUP.C_BP_GROUP_ID
+                join AD_ORG on C_INVOICE.AD_ORG_ID = AD_ORG.AD_ORG_ID
+                left join C_BPARTNER CB on C_BPARTNER.SALESREP_ID = CB.C_BPARTNER_ID
+                left join AD_USER on C_INVOICE.SALESREP_ID = AD_USER.AD_USER_ID
+                left join C_PROJECT on C_INVOICE.C_PROJECT_ID = C_PROJECT.C_PROJECT_ID
+                left join C_DOCTYPE on C_INVOICE.C_DOCTYPE_ID=C_DOCTYPE.C_DOCTYPE_ID
+                left join M_PRODUCT on C_INVOICELINE.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
+                left join C_UOM on C_INVOICELINE.C_UOM_ID = C_UOM.C_UOM_ID
+                left join M_PRODUCT_CATEGORY on M_PRODUCT.M_PRODUCT_CATEGORY_ID = M_PRODUCT_CATEGORY.M_PRODUCT_CATEGORY_ID
+                left join M_INOUTLINE on C_INVOICELINE.M_INOUTLINE_ID = M_INOUTLINE.M_INOUTLINE_ID
+                left join M_INOUT ON M_INOUTLINE.M_INOUT_ID = M_INOUT.M_INOUT_ID
+                left join m_transaction trx ON trx.m_inoutline_id = m_inoutline.m_inoutline_id
+                left join (SELECT SUM(cost) as cost, m_transaction_id, c_currency_id
+                           FROM m_transaction_cost
+                           GROUP BY m_transaction_id, c_currency_id
+                          ) trxcost ON trx.m_transaction_id = trxcost.m_transaction_id
+          WHERE C_INVOICE.ISSOTRX = 'Y'
+            AND C_INVOICE.PROCESSED = 'Y'
+            AND C_INVOICE.AD_ORG_ID IN ('1')
+            AND C_INVOICE.AD_CLIENT_ID IN ('7')
+            AND 1=1
+          AND 1=1) AA
+          ORDER BY ORG, DOCUMENTNO, INVOICEDATE]]>
+	</queryString>
+	<field name="ORG" class="java.lang.String"/>
+	<field name="DOCTYPENAME" class="java.lang.String"/>
+	<field name="PARTNERGROUP" class="java.lang.String"/>
+	<field name="PARTNER" class="java.lang.String"/>
+	<field name="DOCUMENTNO" class="java.lang.String"/>
+	<field name="INVOICEDATE" class="java.util.Date"/>
+	<field name="PRODCATEGORY" class="java.lang.String"/>
+	<field name="PRODUCT" class="java.lang.String"/>
+	<field name="SEARCHKEY" class="java.lang.String"/>
+	<field name="UNITPRICE" class="java.math.BigDecimal"/>
+	<field name="QTY" class="java.math.BigDecimal"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<field name="COST" class="java.math.BigDecimal"/>
+	<field name="PROFIT" class="java.math.BigDecimal"/>
+	<field name="MARGIN" class="java.math.BigDecimal"/>
+	<field name="WEIGHT" class="java.math.BigDecimal"/>
+	<field name="CONTACT" class="java.lang.String"/>
+	<field name="SALESREP" class="java.lang.String"/>
+	<field name="PROJECT" class="java.lang.String"/>
+	<field name="ADDRESS" class="java.lang.String"/>
+	<variable name="totalQty" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{QTY}]]></variableExpression>
+	</variable>
+	<variable name="totalPrice" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{UNITPRICE}]]></variableExpression>
+	</variable>
+	<variable name="totalAmt" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+	<variable name="totalCost" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{COST}]]></variableExpression>
+	</variable>
+	<variable name="totalProfit" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{PROFIT}]]></variableExpression>
+	</variable>
+	<variable name="totalMargin" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[($V{totalAmt}.compareTo(BigDecimal.ZERO)==0)? BigDecimal.ZERO: $V{totalProfit}.divide($V{totalAmt}, 10, BigDecimal.ROUND_HALF_UP).abs().multiply(new BigDecimal("100")).multiply(new BigDecimal($V{totalProfit}.signum()))]]></variableExpression>
+	</variable>
+	<variable name="totalWeight" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{WEIGHT}]]></variableExpression>
+	</variable>
+	<group name="DocumentType">
+		<groupFooter>
+			<band height="16">
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="900" y="0" width="100" height="16" uuid="ad71c59c-13fd-4a50-a2bf-229163d449ef"/>
+					<box rightPadding="2"/>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{totalQty}]]></textFieldExpression>
+					<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="1100" y="0" width="100" height="16" uuid="7a0dc66f-1e1d-4dba-81b7-016d70c9bc69"/>
+					<box rightPadding="2"/>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{totalAmt}]]></textFieldExpression>
+					<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="1200" y="0" width="100" height="16" uuid="6601ab30-4e55-4798-af99-86ac9a0360fa"/>
+					<box rightPadding="2"/>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{totalCost}]]></textFieldExpression>
+					<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="1300" y="0" width="100" height="16" uuid="a95e6755-6bce-4449-8f95-ea982b8a5bef"/>
+					<box rightPadding="2"/>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{totalProfit}]]></textFieldExpression>
+					<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="1400" y="0" width="50" height="16" uuid="a53f8c90-bfaa-4ce7-94dd-033ca0e10da6"/>
+					<box rightPadding="2"/>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[($V{totalMargin}!=null)?$V{totalMargin}:BigDecimal.ZERO]]></textFieldExpression>
+					<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="1450" y="0" width="50" height="16" uuid="e9aaf868-723e-4e05-80df-27c71e96d54e"/>
+					<box rightPadding="2"/>
+					<textElement textAlignment="Right">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{totalWeight}]]></textFieldExpression>
+					<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+				</textField>
+				<staticText>
+					<reportElement x="800" y="0" width="100" height="16" uuid="a30644d0-a0c3-4836-960a-5fb330742476"/>
+					<box leftPadding="2"/>
+					<textElement>
+						<font size="9" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Total ]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="34" splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement x="140" y="0" width="660" height="15" uuid="2cc6c224-f056-4695-ac3f-d02e7887244a">
+					<property name="local_mesure_unitheight" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ORGANIZATION} + " and any child organization"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement x="910" y="0" width="390" height="15" uuid="ed92f5e1-fec8-401c-97e9-b9980a2edd3a">
+					<property name="local_mesure_unitheight" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<printWhenExpression><![CDATA[!$P{BPGROUP}.equals("")]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{BPGROUP}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="false">
+				<reportElement x="1370" y="0" width="530" height="15" uuid="79cb48af-e2bd-4646-9461-d2d091ab1568">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<printWhenExpression><![CDATA[!$P{PRODUCTGROUP}.equals("")]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{PRODUCTGROUP}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="0" width="80" height="15" uuid="482f8312-1ee5-465b-87aa-70745d8e560f"/>
+				<box leftPadding="2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Secondary filters - ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="80" y="0" width="60" height="15" uuid="a4c40ab4-0841-4245-a85c-97b0d2494c74"/>
+				<box leftPadding="2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Organization- ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="800" y="0" width="110" height="15" uuid="e4223a04-47fe-43af-a868-4f816bfbbdda">
+					<printWhenExpression><![CDATA[!$P{BPGROUP}.equals("")]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Business Partner Group- ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1300" y="0" width="70" height="15" uuid="a9aa0ee0-0b21-4060-bd27-1a3a0bc421f3">
+					<printWhenExpression><![CDATA[!$P{PRODUCTGROUP}.equals("")]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Product Group- ]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<staticText>
+				<reportElement key="element-1" style="Detail_Header" x="0" y="0" width="100" height="15" forecolor="#FFFFFF" uuid="cd51c2ad-6129-4915-a018-d59ea5544085"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Organization]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-2" style="Detail_Header" x="100" y="0" width="100" height="15" uuid="0261fe4d-2cd6-40ae-82a9-0279aedcfb01"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Business Partner Group]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-3" style="Detail_Header" x="200" y="0" width="100" height="15" uuid="dc740f96-6337-4087-a525-494136318473"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Business Partner]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-4" style="Detail_Header" x="400" y="0" width="100" height="15" uuid="9861ee48-d09d-4b31-b036-1a3d3014a703"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Document No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-5" style="Detail_Header" x="500" y="0" width="100" height="15" uuid="40655256-630b-488d-8967-b58181cf809e"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Invoice Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-6" style="Detail_Header" x="600" y="0" width="100" height="15" uuid="af419a01-d9c3-4725-acef-426540c2c0e9"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Product Category]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-7" style="Detail_Header" x="700" y="0" width="100" height="15" uuid="3ccf0b09-7d81-45f5-bf17-af0dcd6da846"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Product]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-7-1" style="Detail_Header" x="800" y="0" width="100" height="15" uuid="190e7d16-6a2d-4e22-9575-5652f07f714e"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Product Search Key]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-7-3" style="Detail_Header" x="900" y="0" width="100" height="15" uuid="5d38d7b2-1aa8-4082-8ad8-2aa8a0f6aee6"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Quantity]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-7-2" style="Detail_Header" x="1000" y="0" width="100" height="15" uuid="2a41a8fb-6da1-4aa5-b2fc-1ed82d84c41d"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Unit Price]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-8" style="Detail_Header" x="1100" y="0" width="100" height="15" uuid="b03c90c1-ca4b-421c-b3c0-691a98e114f5"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Amount]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-9" style="Detail_Header" x="1200" y="0" width="100" height="15" uuid="4723d7ac-6850-430e-a4aa-577e94984f44"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Cost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-10" style="Detail_Header" x="1300" y="0" width="100" height="15" uuid="5695ba74-05af-4c6b-8ea4-3a9ef0c6109b"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Profit]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-11" style="Detail_Header" x="1400" y="0" width="50" height="15" uuid="9f789559-d1de-4a31-80ac-8052c7080088"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[M.%]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-12" style="Detail_Header" x="1450" y="0" width="50" height="15" uuid="209d378a-71bc-48eb-a71a-83c2948f9286"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Weight]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-13" style="Detail_Header" x="1500" y="0" width="100" height="15" uuid="b7720fd1-f58b-43af-996f-ce19d09ca9bf"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Quantity]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-14" style="Detail_Header" x="1500" y="0" width="100" height="15" uuid="7cdf0b1e-d288-4be0-be37-f0f44e74e6a1"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Contact]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-15" style="Detail_Header" x="1600" y="0" width="100" height="15" uuid="d40acb18-ce14-465b-9427-c99a5c192c24"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Sales rep.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-16" style="Detail_Header" x="1700" y="0" width="100" height="15" uuid="46e9cfee-0663-4bcc-99e2-559fe0c31be0"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Project]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-17" style="Detail_Header" x="1803" y="0" width="100" height="15" uuid="bd9a2711-395d-4ebd-856b-14005795d9d8"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Ship to address]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-3" style="Detail_Header" x="300" y="0" width="100" height="15" uuid="fcf8760c-2b97-4031-a7f4-f30760a1f69b"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#333333"/>
+				</box>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Document Type]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="18" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-1" stretchType="RelativeToBandHeight" x="0" y="0" width="100" height="13" uuid="851d4da9-ad71-4aed-a01c-afe8a961473a"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ORG}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-2" stretchType="RelativeToBandHeight" x="100" y="0" width="100" height="13" uuid="a1766026-b7ac-4c79-8f63-1c652af55b9d"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PARTNERGROUP}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-3" stretchType="RelativeToBandHeight" x="200" y="0" width="100" height="13" uuid="53c1067c-2ebc-464e-9563-7f03c27f90c5"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PARTNER}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-4" stretchType="RelativeToBandHeight" x="400" y="0" width="100" height="13" uuid="3d74edea-7b72-4e14-87d8-5ba66dc82eaa"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DOCUMENTNO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="false">
+				<reportElement key="textField-5" stretchType="RelativeToBandHeight" x="500" y="0" width="100" height="13" uuid="a6dca618-0c58-4e52-b1a0-f7a8f6ce91c5"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[(new SimpleDateFormat($P{strDateFormat})).format($F{INVOICEDATE})]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-6" stretchType="RelativeToBandHeight" x="600" y="0" width="100" height="13" uuid="a21dd594-d4ed-488a-a144-9c9d0a81b50e"/>
+				<box rightPadding="2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRODCATEGORY}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-7" stretchType="RelativeToBandHeight" x="700" y="0" width="100" height="13" uuid="681a5d1e-9a9f-45b1-940a-4fb1b48b09c4"/>
+				<box rightPadding="2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRODUCT}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField-13" stretchType="RelativeToBandHeight" x="900" y="0" width="100" height="13" uuid="7c39b6bd-ff8d-48bf-b221-602d8c43900f"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{QTY}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="false">
+				<reportElement key="textField-8" stretchType="RelativeToBandHeight" x="1100" y="0" width="100" height="13" uuid="09f0aa65-d2eb-4ee4-a68f-a368840c5904"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{AMOUNT}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="false">
+				<reportElement key="textField-9" stretchType="RelativeToBandHeight" x="1200" y="0" width="100" height="13" uuid="485e1ead-f9d9-4b7e-9b69-de548e006df9"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{COST}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="false">
+				<reportElement key="textField-10" stretchType="RelativeToBandHeight" x="1300" y="0" width="100" height="13" uuid="98e73443-30bf-4370-9c33-c03f18722331"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PROFIT}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="false">
+				<reportElement key="textField-11" stretchType="RelativeToBandHeight" x="1400" y="0" width="50" height="13" uuid="3d0815a2-b760-434e-bb63-ec856afae135"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MARGIN}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField-12" stretchType="RelativeToBandHeight" x="1450" y="0" width="50" height="13" uuid="d9693cbb-9d69-418a-becf-e47130fcc0a3"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{WEIGHT}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{NUMBERFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-14" stretchType="RelativeToBandHeight" x="1500" y="0" width="100" height="13" uuid="79490dd4-4d29-4e5a-9301-aeb669776a2d"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CONTACT}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-15" stretchType="RelativeToBandHeight" x="1600" y="0" width="100" height="13" uuid="bc1efd65-c636-44b1-b917-d996463d5051"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SALESREP}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-16" stretchType="RelativeToBandHeight" x="1700" y="0" width="100" height="13" uuid="6ebe8fea-d158-42b0-858d-92dcd3018570"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PROJECT}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-17" stretchType="RelativeToBandHeight" x="1803" y="0" width="100" height="13" uuid="ba9df64a-1e05-46b2-ae62-7ac93a7698af"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ADDRESS}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement key="textField-13" stretchType="RelativeToBandHeight" x="1000" y="0" width="100" height="13" uuid="7a941f8e-beb0-405b-bd1b-b9983ac7468c"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{UNITPRICE}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement key="textField-7" stretchType="RelativeToBandHeight" x="800" y="0" width="100" height="13" uuid="f7c4ec5a-007d-406a-aa77-fd7b277b9d2a"/>
+				<box rightPadding="2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SEARCHKEY}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-3" stretchType="RelativeToBandHeight" x="300" y="0" width="100" height="13" uuid="ddc76007-be7b-4320-be09-f792d467a1de"/>
+				<box leftPadding="5" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DOCTYPENAME}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<lastPageFooter>
+		<band height="58"/>
+	</lastPageFooter>
+	<summary>
+		<band height="60" splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="5" width="600" height="50" uuid="7614471a-bdd5-4c59-a488-1015898d2283">
+					<property name="local_mesure_unitheight" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<subreportParameter name="USER_CLIENT">
+					<subreportParameterExpression><![CDATA[$P{aux_client}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AD_ORG_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_org}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_CURRENCY_ID">
+					<subreportParameterExpression><![CDATA[$P{C_CURRENCY_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="DATEFROM">
+					<subreportParameterExpression><![CDATA[$P{DateFrom}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="DATETO">
+					<subreportParameterExpression><![CDATA[$P{DateTo}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BP_GROUP_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_bpgroup}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_BPARTNER_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_partner}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="M_PRODUCT_CATEGORY_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_productcategory}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="M_PRODUCT_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_product}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="SALESREP_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_salesrep}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PARTNER_SALESREP_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_partnersalesrep}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_PROJECT_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_project}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="PRODUCTTYPE">
+					<subreportParameterExpression><![CDATA[$P{aux_producttype}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="C_DOCTYPE_ID">
+					<subreportParameterExpression><![CDATA[$P{aux_doctype}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="DOCSTATUS">
+					<subreportParameterExpression><![CDATA[$P{aux_docstatus}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="LANGUAGE">
+					<subreportParameterExpression><![CDATA[$P{LANGUAGE}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SR_LINES}]]></subreportExpression>
+			</subreport>
+		</band>
+	</summary>
+</jasperReport>

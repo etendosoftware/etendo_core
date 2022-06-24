@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBUIAPP_GC_SYSTEM">
+    <table name="OBUIAPP_GC_SYSTEM" primaryKey="OBUIAPP_GC_SYSTEM_KEY">
+      <column name="OBUIAPP_GC_SYSTEM_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISFILTERABLE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="ISSORTABLE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="TEXT_FILTER_BEHAVIOR" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[IC]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="THRESHOLD_TO_FILTER" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default><![CDATA[500]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="ISLAZYFILTERING" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="FILTERONCHANGE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="ALLOWFILTERBYIDENTIFIER" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault><![CDATA['Y']]></onCreateDefault>
+      </column>
+      <column name="ISFKDROPDOWNUNFILTERED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="DISABLEFKCOMBO" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="SEQNO" primaryKey="false" required="true" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default><![CDATA[10]]></default>
+        <onCreateDefault><![CDATA['10']]></onCreateDefault>
+      </column>
+      <column name="ALLOWSUMMARYFUNCTIONS" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="ALLOWTRANSACTIONALFILTERS" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="OBUIAPP_GC_SYSTEM_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="OBUIAPP_GC_SYSTEM_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <check name="OBUIAPP_GC_SYS_DISCOMBO_CHK"><![CDATA[DISABLEFKCOMBO IN ('Y', 'N')]]></check>
+      <check name="OBUIAPP_GC_SYS_ISFILT_CHK"><![CDATA[ISFILTERABLE IN ('Y', 'N')]]></check>
+      <check name="OBUIAPP_GC_SYS_ISLAZY_CHK"><![CDATA[ISLAZYFILTERING IN ('Y', 'N')]]></check>
+      <check name="OBUIAPP_GC_SYS_ISSORT_CHK"><![CDATA[ISSORTABLE IN ('Y', 'N')]]></check>
+      <check name="OBUIAPP_GC_SYS_ONCHNG_CHK"><![CDATA[FILTERONCHANGE IN ('Y', 'N')]]></check>
+      <check name="OBUIAPP_GC_SYS_SUMMARY_CHK"><![CDATA[ALLOWSUMMARYFUNCTIONS IN ('Y', 'N')]]></check>
+      <check name="OBUIAPP_GC_SYS_TRANSFILT_CHK"><![CDATA[ALLOWTRANSACTIONALFILTERS IN ('Y', 'N')]]></check>
+      <check name="OBUIAPP_GC_SYS_UNFILTDD_CHK"><![CDATA[ISFKDROPDOWNUNFILTERED IN ('Y', 'N')]]></check>
+    </table>
+  </database>

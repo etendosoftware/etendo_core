@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="RptC_Invoice_TaxLines" pageWidth="482" pageHeight="842" columnWidth="482" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="9d194431-1513-4b4e-9cb7-66fdacf30268">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<style name="default" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="8"/>
+	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18"/>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14"/>
+	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11" isBold="false"/>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="12" isBold="true"/>
+	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Group_Data_Field" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="10" isBold="true"/>
+	<style name="Detail_Line" fontName="Bitstream Vera Sans" fontSize="8">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()%2==1)]]></conditionExpression>
+			<style mode="Opaque" backcolor="#CCCCCC"/>
+		</conditionalStyle>
+	</style>
+	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
+	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="10" isBold="true"/>
+	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="10"/>
+	<style name="Group_Footer" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Footer" isDefault="true" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<parameter name="C_INVOICE_ID" class="java.lang.String"/>
+	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<parameter name="LOCALE" class="java.util.Locale" isForPrompting="false"/>
+	<parameter name="ISTAXINCLUDED" class="java.lang.String"/>
+	<parameter name="TOTAL_LINENET" class="java.math.BigDecimal"/>
+	<queryString>
+		<![CDATA[SELECT C_INVOICE_ID, C_TAX.NAME, C_INVOICETAX.TAXBASEAMT, C_INVOICETAX.TAXAMT
+        FROM C_INVOICETAX, C_TAX
+        WHERE C_INVOICETAX.C_TAX_ID = C_TAX.C_TAX_ID
+        AND C_INVOICETAX.C_INVOICE_ID = $P{C_INVOICE_ID}
+        ORDER BY C_INVOICETAX.LINE, C_TAX.RATE]]>
+	</queryString>
+	<field name="C_INVOICE_ID" class="java.lang.String"/>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="TAXBASEAMT" class="java.math.BigDecimal"/>
+	<field name="TAXAMT" class="java.math.BigDecimal"/>
+	<variable name="TOTAL_TAXAMT" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{TAXAMT}]]></variableExpression>
+	</variable>
+	<group name="C_INVOICE_ID">
+		<groupExpression><![CDATA[$F{C_INVOICE_ID}]]></groupExpression>
+		<groupHeader>
+			<band splitType="Stretch"/>
+		</groupHeader>
+		<groupFooter>
+			<band height="5" splitType="Stretch">
+				<line>
+					<reportElement key="line-1" x="0" y="0" width="482" height="1" uuid="5008f953-da31-4ca1-a36c-fdfca574357d"/>
+				</line>
+			</band>
+			<band height="27">
+				<printWhenExpression><![CDATA[$P{ISTAXINCLUDED}.equals("N")]]></printWhenExpression>
+				<textField evaluationTime="Band" pattern="" isBlankWhenNull="true">
+					<reportElement key="textField" mode="Opaque" x="399" y="6" width="82" height="17" backcolor="#CCCCCC" uuid="111e6ae2-636b-48da-8da4-8a4600bd5cb2"/>
+					<box>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[($P{TOTAL_LINENET}.add($V{TOTAL_TAXAMT})!=null)?$P{NUMBERFORMAT}.format($P{TOTAL_LINENET}.add($V{TOTAL_TAXAMT})):new String(" ")]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement key="staticText-14" style="Report_Footer" x="315" y="6" width="84" height="17" uuid="b36c7cef-ba9c-4fcc-b5ff-170d2afe5076"/>
+					<textElement textAlignment="Right"/>
+					<text><![CDATA[TOTAL:]]></text>
+				</staticText>
+				<line>
+					<reportElement key="line-39" style="Report_Footer" x="315" y="5" width="167" height="1" uuid="b8b9f9e4-0e6d-4a73-85ac-51e0b686d31e"/>
+				</line>
+				<line>
+					<reportElement key="line-40" style="Report_Footer" x="315" y="23" width="167" height="1" uuid="68c2e748-b119-4de4-96b7-5edcd34ce7a5"/>
+				</line>
+				<line>
+					<reportElement key="line-41" style="Report_Footer" x="315" y="5" width="1" height="19" uuid="0177d4b3-e901-4cc1-969e-a9d3aba65b7b"/>
+				</line>
+				<line>
+					<reportElement key="line-42" style="Report_Footer" x="481" y="6" width="1" height="18" uuid="ff05513f-3bb2-43fa-8291-4bd4460e92ee"/>
+				</line>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="16" splitType="Stretch">
+			<line>
+				<reportElement key="line-2" style="Report_Footer" x="0" y="0" width="482" height="1" uuid="860332fc-b280-41f8-a229-85f17b480f4f"/>
+			</line>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField" style="default" x="0" y="0" width="400" height="16" forecolor="#000000" uuid="cb1c590e-e0ab-418d-8e26-55538c19aa01"/>
+				<box>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textFieldExpression><![CDATA[" " + $F{NAME}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" style="default" x="400" y="0" width="82" height="16" forecolor="#000000" uuid="93f930bf-5af3-4a20-a12d-df775f6d0605"/>
+				<box>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[($F{TAXAMT}!=null)?$P{NUMBERFORMAT}.format($F{TAXAMT}):new String(" ")]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement key="line-3" style="Report_Footer" stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="16" uuid="718ea088-d6bd-46b6-8a1f-9e75f37eecc1"/>
+			</line>
+			<line>
+				<reportElement key="line-4" style="Report_Footer" stretchType="RelativeToBandHeight" x="482" y="0" width="1" height="16" uuid="3524c562-1c0c-441b-a178-1ec05ab3f195"/>
+			</line>
+			<textField>
+				<reportElement x="310" y="0" width="82" height="16" uuid="27150cfc-8671-435f-b874-3994a5978091">
+					<printWhenExpression><![CDATA[$P{ISTAXINCLUDED}.equals("Y")]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{TAXBASEAMT}!=null)?$P{NUMBERFORMAT}.format($F{TAXBASEAMT}):new String(" ")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

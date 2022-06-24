@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_TRANSACTION_COST">
+    <table name="M_TRANSACTION_COST" primaryKey="M_TRANSACTION_COST_KEY">
+      <column name="M_TRANSACTION_COST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="M_TRANSACTION_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COST" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="COSTDATE" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="C_CURRENCY_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_COSTADJUSTMENTLINE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISUNITCOST" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault><![CDATA['Y']]></onCreateDefault>
+      </column>
+      <column name="DATEACCT" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault><![CDATA[select to_date('01/01/1970', 'DD/MM/YYYY') from dual]]></onCreateDefault>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="M_TRANSACTION_COST_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_COSTADJUSTMENTLINE" name="M_TRANSACTION_COST_COSTADJL">
+        <reference local="M_COSTADJUSTMENTLINE_ID" foreign="M_COSTADJUSTMENTLINE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_TRANSACTION_COST_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_TRANSACTION" name="M_TRANSACTION_COST_TRANSACTION">
+        <reference local="M_TRANSACTION_ID" foreign="M_TRANSACTION_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_CURRENCY" name="M_TRANSCOST_CURRENCY">
+        <reference local="C_CURRENCY_ID" foreign="C_CURRENCY_ID"/>
+      </foreign-key>
+      <index name="M_TRANSACTION_COST_DATEACCT" unique="false">
+        <index-column name="DATEACCT"/>
+      </index>
+      <index name="M_TRANSACTION_COST_TRX" unique="false">
+        <index-column name="M_TRANSACTION_ID"/>
+      </index>
+      <index name="M_TRXCOST_COSTADJLINE_IDX" unique="false">
+        <index-column name="M_COSTADJUSTMENTLINE_ID"/>
+        <whereClause><![CDATA[M_COSTADJUSTMENTLINE_ID IS NOT NULL]]></whereClause>
+      </index>
+      <check name="M_TRANSACTION_COST_ACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="M_TRANSACTION_COST_UNITCOST"><![CDATA[ISUNITCOST IN ('Y', 'N')]]></check>
+    </table>
+  </database>

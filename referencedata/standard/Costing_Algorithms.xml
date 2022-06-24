@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <LandedCostDistributionAlgorithm id="CF9B55BD159B474A9F79849C48715540" identifier="Distribution by Amount">
+    <id>CF9B55BD159B474A9F79849C48715540</id>
+    <active>true</active>
+    <name>Distribution by Amount</name>
+    <description xsi:nil="true"/>
+    <javaClassName>org.openbravo.costing.LandedCostDistributionByAmount</javaClassName>
+  </LandedCostDistributionAlgorithm>
+  <CostingAlgorithm id="6A39D8B46CD94FE682D48758D3B7726B" identifier="Standard Algorithm">
+    <id>6A39D8B46CD94FE682D48758D3B7726B</id>
+    <active>true</active>
+    <name>Standard Algorithm</name>
+    <description>Algorithm that implements Standard Cositng management.</description>
+    <javaClassName>org.openbravo.costing.StandardAlgorithm</javaClassName>
+  </CostingAlgorithm>
+  <CostingAlgorithm id="B069080A0AE149A79CF1FA0E24F16AB6" identifier="Average Algorithm">
+    <id>B069080A0AE149A79CF1FA0E24F16AB6</id>
+    <active>true</active>
+    <name>Average Algorithm</name>
+    <description>Algorithm that implements average costing management</description>
+    <javaClassName>org.openbravo.costing.AverageAlgorithm</javaClassName>
+  </CostingAlgorithm>
+</ob:Openbravo>

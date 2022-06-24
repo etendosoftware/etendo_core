@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER S_TIMEEXPENSE_TRG">
+    <trigger name="S_TIMEEXPENSE_TRG" table="S_TIMEEXPENSE" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+
+
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2001-2016 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+    
+BEGIN
+    
+  IF AD_isTriggerEnabled()='N' THEN RETURN;
+  END IF;
+  
+  IF (INSERTING) THEN
+    IF (:NEW.PROCESSED = 'Y') THEN
+      RAISE_APPLICATION_ERROR(-20000, '@20501@');
+    END IF;
+  ELSE IF (UPDATING) THEN
+    IF (:OLD.PROCESSED = 'Y' AND (:NEW.DocumentNo<>:OLD.DocumentNo
+      OR :NEW.C_BPartner_ID<>:OLD.C_BPartner_ID
+      OR :NEW.DATEREPORT<>:OLD.DATEREPORT
+      OR :NEW.AD_ORG_ID<>:OLD.AD_ORG_ID)) THEN
+        RAISE_APPLICATION_ERROR(-20000, '@20501@');
+    END IF;
+    
+    IF(COALESCE(:OLD.POSTED, 'N')='Y' AND ((COALESCE(:OLD.C_Project_ID, '0') <> COALESCE(:NEW.C_Project_ID, '0'))
+      OR (COALESCE(:OLD.C_Costcenter_ID, '0') <> COALESCE(:NEW.C_Costcenter_ID, '0'))
+      OR (COALESCE(:OLD.A_Asset_ID, '0') <> COALESCE(:NEW.A_Asset_ID, '0'))
+      OR (COALESCE(:OLD.User1_ID, '0') <> COALESCE(:NEW.User1_ID, '0'))
+      OR (COALESCE(:OLD.User2_ID, '0') <> COALESCE(:NEW.User2_ID, '0'))))
+    THEN
+      RAISE_APPLICATION_ERROR(-20000, '@20501@');
+    END IF;
+  END IF;
+ END IF;
+
+END S_TIMEEXPENSE_TRG
+]]></body>
+    </trigger>
+  </database>

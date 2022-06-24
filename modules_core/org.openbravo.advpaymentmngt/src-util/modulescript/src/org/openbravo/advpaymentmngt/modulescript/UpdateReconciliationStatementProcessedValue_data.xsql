@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+<SqlClass name="UpdateReconciliationStatementProcessedValueData" package="org.openbravo.advpaymentmngt.modulescript">
+  <SqlClassComment></SqlClassComment>
+     <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        select 1 as name from dual
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateFinancialAccount" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE FIN_FINANCIAL_ACCOUNT SET EM_APRM_MatchTrans_Force = em_aprm_matchtransactions
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateStatement" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE FIN_BANKSTATEMENT SET em_aprm_process_bs_force = em_aprm_process_bs 
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateReconciliation" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE FIN_RECONCILIATION SET EM_APRM_Process_Rec_Force = em_aprm_process_rec 
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

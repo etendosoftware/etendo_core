@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+*************************************************************************
+ * Copyright (C) 2016 Openbravo S.L.U.
+ * Licensed under the Openbravo Commercial License version 1.0
+ * You may obtain a copy of the License at http://www.openbravo.com/legal/obcl.html
+ * or in the legal folder of this module distribution.
+************************************************************************
+-->
+<REPORT>
+  <template file="ReportValuationStock2.html"/>
+  <PARAMETER id="paramToolBar" name="toolbar" default=""/>
+  <PARAMETER id="fieldCalendar" name="calendar" attribute="src" replace="es" default="en"/>
+  <PARAMETER id="paramDirectory" name="directory" default=""/>
+  <PARAMETER id="paramLanguage" name="paramLanguage" default=""/>
+  <PARAMETER id="paramDate" name="dateFromdisplayFormat" attribute="displayformat" replace="xx"/>
+  <PARAMETER id="paramDate" name="dateFromsaveFormat" attribute="saveformat" replace="yy"/>
+  <PARAMETER id="paramDate" name="date" attribute="value"/>
+  <PARAMETER id="paramAD_ORGID" name="adOrgId" attribute="value"/>
+  <PARAMETER id="paramM_WAREHOUSE_ID" name="mWarehouseId" attribute="value"/>
+  <PARAMETER id="paramArrayWh" name="warehouses"/>  
+  <PARAMETER id="paramWhwh" name="whwh" attribute="value"/>  
+  <PARAMETER id="paramSelectedWh" name="warehouseId" attribute="value"/>  
+  <PARAMETER id="paramM_PRODUCT_CATEGORY_ID" name="categoryProduct" attribute="value"/>
+  <PARAMETER id="paramCSS" name="theme" attribute="href" replace="Default"/>
+  <PARAMETER id="tdleftTabs" name="leftTabs" default=""/>
+  <PARAMETER id="paramParentTabContainer" name="parentTabContainer" default=" "/>
+  <PARAMETER id="paramMainTabContainer" name="mainTabContainer" default=" "/>
+  <PARAMETER id="paramChildTabContainer" name="childTabContainer" default=" "/>
+  <PARAMETER id="tdtopButtons" name="navigationBar" default=""/>
+  <PARAMETER id="messageBoxID" name="messageType" attribute="class" replace="yy" default="HIDDEN"/>
+  <PARAMETER id="messageBoxIDTitle" name="messageTitle" default=""/>
+  <PARAMETER id="messageBoxIDMessage" name="messageMessage" default=""/>
+  <PARAMETER id="param2" name="param2" default="2"/>
+  <structure name="structure1">
+    <FIELD id="fieldRownum1">rownum</FIELD>
+    <FUNCTION id="funcEvenOddRow1xx" name="MODULE" arg1="fieldRownum1" arg2="param2" format="integerEdition" attribute="class" replace="yy"/>
+    <FIELD id="fieldWarehouse">warehouse</FIELD>
+    <FIELD id="fieldCategoryName">categoryName</FIELD>
+    <FIELD id="idfieldmProductId" attribute="onclick" replace="xx">mProductId</FIELD>
+    <FIELD id="fieldProductName">productName</FIELD>
+    <FIELD id="fieldQty" format="euroInform">qty</FIELD>
+    <FIELD id="fieldUomName">uomName</FIELD>
+    <FIELD id="fieldAverageCost" format="generalQtyEdition">averageCost</FIELD>
+    <FIELD id="fieldTotalCost" format="euroInform">totalCost</FIELD>
+    <SUBREPORT id="reportM_Warehouse_ID" name="reportM_Warehouse_ID" report="org/openbravo/erpCommon/reference/List">
+      <ARGUMENT name="parameterListSelected" withId="paramWarehouse"/>
+    </SUBREPORT>
+    <SUBREPORT id="reportM_PRODUCT_CATEGORYID" name="reportM_PRODUCT_CATEGORYID" report="org/openbravo/erpCommon/reference/List">
+      <ARGUMENT name="parameterListSelected" withId="paramM_PRODUCT_CATEGORY_ID"/>
+    </SUBREPORT>
+    <FUNCTION id="fieldSumCost" name="SUM" format="euroInform">totalCost</FUNCTION>
+    <FUNCTION id="fieldSumCostTotal" name="SUM" format="euroInform">totalCost</FUNCTION>
+    <FUNCTION id="fieldSumCostWh" name="SUM" format="euroInform">totalCost</FUNCTION>
+    <SECTION id="sectionCategoryProduct" field="categoryName"/>
+    <SECTION id="sectionDetail"/>    
+  </structure> 
+ <SUBREPORT id="reportAD_ORGID" name="reportAD_ORGID" report="org/openbravo/erpCommon/reference/List">
+    <ARGUMENT name="parameterListSelected" withId="paramAD_ORGID"/>
+  </SUBREPORT>
+  <PARAMETER id="inpWarehouseConsolidation" name="warehouseConsolidation" boolean="checked" withId="inpWarehouseConsolidation" default="0"/>
+  <SUBREPORT id="reportM_WAREHOUSEID" name="reportM_WAREHOUSEID" report="org/openbravo/erpCommon/reference/List">
+    <ARGUMENT name="parameterListSelected" withId="paramM_WAREHOUSE_ID"/>
+  </SUBREPORT>
+  <PARAMETER id="paramC_Currency_ID" name="ccurrencyid" attribute="value"/>
+  <SUBREPORT id="reportC_Currency_ID" name="reportC_Currency_ID" report="org/openbravo/erpCommon/reference/List">
+    <ARGUMENT name="parameterListSelected" withId="paramC_Currency_ID"/>
+  </SUBREPORT>
+</REPORT>

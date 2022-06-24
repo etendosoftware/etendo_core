@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="DeleteDuplicateCommissionDetailData" package="org.openbravo.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT CAMT.C_COMMISSIONAMT_ID, 
+              CAMT.C_COMMISSIONRUN_ID, 
+              CASE WHEN (((CAMT.ACTUALQTY - CLINE.QTYSUBTRACT) * CLINE.QTYMULTIPLIER) < 0 AND CLINE.ISPOSITIVEONLY = 'Y') THEN 0 ELSE ((CAMT.ACTUALQTY - CLINE.QTYSUBTRACT) * CLINE.QTYMULTIPLIER) END 
+              + CASE WHEN (((CAMT.CONVERTEDAMT - CLINE.AMTSUBTRACT) * CLINE.AMTMULTIPLIER) < 0 AND CLINE.ISPOSITIVEONLY = 'Y') THEN 0 ELSE ((CAMT.CONVERTEDAMT - CLINE.AMTSUBTRACT) * CLINE.AMTMULTIPLIER) END AS AMTRESULT 
+       FROM C_COMMISSIONAMT CAMT 
+       JOIN C_COMMISSIONLINE CLINE ON CAMT.C_COMMISSIONLINE_ID = CLINE.C_COMMISSIONLINE_ID
+      ]]></Sql>
+  </SqlMethod>
+  <SqlMethod name="deleteDuplicateCommissionDetail" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      DELETE FROM C_COMMISSIONDETAIL 
+         WHERE C_COMMISSIONDETAIL_ID IN (
+         SELECT DISTINCT T2.C_COMMISSIONDETAIL_ID 
+         FROM C_COMMISSIONDETAIL T1, C_COMMISSIONDETAIL T2 
+         WHERE T1.C_COMMISSIONAMT_ID = T2.C_COMMISSIONAMT_ID AND T1.C_INVOICELINE_ID = T2.C_INVOICELINE_ID 
+         AND T1.C_COMMISSIONDETAIL_ID  < T2.C_COMMISSIONDETAIL_ID 
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateCommissionQty" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      UPDATE C_COMMISSIONAMT CAMT
+      SET ACTUALQTY = CASE WHEN (SELECT SUM(ACTUALQTY)
+                      FROM C_COMMISSIONDETAIL
+                      WHERE C_COMMISSIONAMT_ID = CAMT.C_COMMISSIONAMT_ID) IS NULL THEN 0
+                      ELSE ((SELECT SUM(ACTUALQTY)
+                      FROM C_COMMISSIONDETAIL
+                      WHERE C_COMMISSIONAMT_ID = CAMT.C_COMMISSIONAMT_ID)) END,
+          CONVERTEDAMT = CASE WHEN (SELECT SUM(CONVERTEDAMT)
+                         FROM C_COMMISSIONDETAIL
+                         WHERE C_COMMISSIONAMT_ID = CAMT.C_COMMISSIONAMT_ID) IS NULL THEN 0
+                         ELSE ((SELECT SUM(CONVERTEDAMT)
+                         FROM C_COMMISSIONDETAIL
+                         WHERE C_COMMISSIONAMT_ID = CAMT.C_COMMISSIONAMT_ID)) END
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateCommissionAmount" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      UPDATE C_COMMISSIONAMT 
+      SET COMMISSIONAMT = TO_NUMBER(?) 
+      WHERE C_COMMISSIONAMT_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="amount"/>
+    <Parameter name="commissionAmtId"/>
+  </SqlMethod>
+  <SqlMethod name="updateCommissionPayment" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      UPDATE C_COMMISSIONRUN
+      SET GRANDTOTAL = TO_NUMBER(?)
+      WHERE C_COMMISSIONRUN_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="amount"/>
+    <Parameter name="commissionRunId"/>
+  </SqlMethod>
+  <SqlMethod name="isDeleteDuplicateCommissionDetailExecuted" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as exist
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_preference
+                      WHERE attribute = 'DeleteDuplicateCommissionDetail')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+      <SqlMethodComment></SqlMethodComment>
+       <Sql> 
+       <![CDATA[ 
+           INSERT INTO ad_preference (
+           ad_preference_id, ad_client_id, ad_org_id, isactive,
+           createdby, created, updatedby, updated,attribute
+           ) VALUES (
+           get_uuid(), '0', '0', 'Y', '0', NOW(), '0', NOW(),'DeleteDuplicateCommissionDetail')
+         ]]>
+        </Sql>
+   </SqlMethod>
+</SqlClass>

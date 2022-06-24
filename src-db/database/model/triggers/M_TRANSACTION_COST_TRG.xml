@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_TRANSACTION_COST_TRG">
+    <trigger name="M_TRANSACTION_COST_TRG" table="M_TRANSACTION_COST" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2014 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+  v_org_id               VARCHAR2(32);
+  v_legal_org_id         VARCHAR2(32);
+  v_client_id            VARCHAR2(32);
+  v_product_id           VARCHAR2(32);
+  v_transaction_id       VARCHAR2(32);
+  v_old_transaction_id   VARCHAR2(32);
+  v_warehouse_id         VARCHAR2(32);
+  v_currency_id          VARCHAR2(32);
+  v_currency_to_id       VARCHAR2(32);
+  v_sign                 NUMBER;
+  v_updatestockvaluation NUMBER;
+  v_valuation            NUMBER;
+
+BEGIN
+
+  IF AD_isTriggerEnabled()='N' THEN RETURN;
+  END IF;
+
+  IF (INSERTING) THEN
+    v_transaction_id := :NEW.m_transaction_id;
+    v_org_id := :NEW.ad_org_id;
+    v_client_id := :NEW.ad_client_id;
+    v_currency_id := :NEW.c_currency_id;
+  ELSIF (DELETING) THEN
+    v_old_transaction_id := :OLD.m_transaction_id;
+    v_org_id := :OLD.ad_org_id;
+    v_client_id := :OLD.ad_client_id;
+    v_currency_id := :OLD.c_currency_id;
+  ELSIF (UPDATING AND :OLD.cost <> :NEW.cost) THEN
+    v_transaction_id := :NEW.m_transaction_id;
+    v_old_transaction_id := :OLD.m_transaction_id;
+    v_org_id := :OLD.ad_org_id;
+    v_client_id := :OLD.ad_client_id;
+    v_currency_id := :OLD.c_currency_id;
+  END IF;
+
+  --Update m_stock_valuation
+  SELECT COUNT(*) INTO v_updatestockvaluation
+  FROM DUAL
+  WHERE EXISTS (SELECT 1 FROM ad_preference
+                WHERE property = 'UnitaryCost'
+                  AND ad_client_id IN (v_client_id, '0')
+                  AND TO_CHAR(value) = 'Y');
+
+  IF (v_updatestockvaluation > 0) THEN
+    SELECT o.ad_org_id, COALESCE(o.c_currency_id, c.c_currency_id)
+      INTO v_legal_org_id, v_currency_to_id
+    FROM ad_org o JOIN ad_client c ON o.ad_client_id = c.ad_client_id
+    WHERE o.ad_org_id = ad_get_org_le_bu(v_org_id,'LE');
+
+    IF (v_transaction_id IS NOT NULL) THEN
+      SELECT t.m_product_id, l.m_warehouse_id, CASE WHEN t.movementqty < 0 THEN -1 ELSE 1 END
+        INTO v_product_id, v_warehouse_id, v_sign
+      FROM m_transaction t
+        JOIN m_locator l ON t.m_locator_id = l.m_locator_id
+      WHERE m_transaction_id = v_transaction_id;
+
+      v_valuation := c_currency_convert_precision(COALESCE(:NEW.cost, 0), v_currency_id, v_currency_to_id, :NEW.costdate, NULL, v_client_id, v_legal_org_id, 'C');
+      v_valuation := v_valuation * v_sign;
+      M_UPDATE_STOCK_VALUATION(v_client_id, v_legal_org_id, :NEW.createdby, v_warehouse_id, v_product_id, 0, v_valuation);
+    END IF;
+
+    IF (v_old_transaction_id IS NOT NULL) THEN
+      SELECT t.m_product_id, l.m_warehouse_id, CASE WHEN t.movementqty < 0 THEN -1 ELSE 1 END
+        INTO v_product_id, v_warehouse_id, v_sign
+      FROM m_transaction t
+        JOIN m_locator l ON (t.m_locator_id = l.m_locator_id)
+      WHERE m_transaction_id = v_old_transaction_id;
+
+      v_valuation := c_currency_convert_precision(:OLD.cost, v_currency_id, v_currency_to_id, :OLD.costdate, NULL, v_client_id, v_legal_org_id, 'C');
+      v_valuation := v_valuation * v_sign;
+      M_UPDATE_STOCK_VALUATION(v_client_id, v_legal_org_id, :OLD.createdby, v_warehouse_id, v_product_id, 0, - v_valuation);
+    END IF;
+  END IF;
+
+  END M_TRANSACTION_COST_TRG
+]]></body>
+    </trigger>
+  </database>

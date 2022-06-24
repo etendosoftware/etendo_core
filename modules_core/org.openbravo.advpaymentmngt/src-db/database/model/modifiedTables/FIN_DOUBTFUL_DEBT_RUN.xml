@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE FIN_DOUBTFUL_DEBT_RUN">
+    <table name="FIN_DOUBTFUL_DEBT_RUN" primaryKey="FIN_DOUBTFUL_DEBT_RUN_KEY">
+      <column name="EM_APRM_PROCESS" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[P]]></default>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>

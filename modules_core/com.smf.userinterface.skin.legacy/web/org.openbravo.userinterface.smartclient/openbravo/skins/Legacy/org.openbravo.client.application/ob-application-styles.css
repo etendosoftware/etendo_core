@@ -1,0 +1,132 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2010-2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+ */
+/*
+ * Contains a limited set of Smartclient styles which are overridden.
+ */
+html {
+  font-size: 62.5%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background-color: #fff;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'lucida sans', sans-serif;
+  font-size: 1em;
+  color: #333;
+}
+
+* :focus { /* Fixes completely issue: https://issues.openbravo.com/view.php?id=18501 */
+  outline: none;
+}
+
+.pageBackground {
+  color: #333333;
+  background: #FAFAFA;
+}
+
+/* default text */
+.normal {
+  font-family: 'lucida sans', sans-serif;
+  font-size: 12px;
+  color: #333333;
+}
+
+.normal:focus {
+  outline: none;
+  -moz-outline-style: none;
+}
+
+.imgButton,
+.imgButtonOver,
+.imgButtonFocused,
+.imgButtonFocusedOver,
+.imgButtonDown,
+.imgButtonFocusedDown,
+.imgButtonSelected,
+.imgButtonSelectedFocused,
+.imgButtonSelectedDown,
+.imgButtonSelectedFocusedDown,
+.imgButtonSelectedOver,
+.imgButtonSelectedFocusedOver {
+  line-height: 100%; /* To avoid strange effect in some Firefox where the imgButtons are 1px moved down */
+}
+
+.imgHeaderButton,
+.imgHeaderButtonOver,
+.imgHeaderButtonFocused,
+.imgHeaderButtonFocusedOver,
+.imgHeaderButtonDown,
+.imgHeaderButtonFocusedDown,
+.imgHeaderButtonSelected,
+.imgHeaderButtonSelectedFocused,
+.imgHeaderButtonSelectedDown,
+.imgHeaderButtonSelectedFocusedDown,
+.imgHeaderButtonSelectedOver,
+.imgHeaderButtonSelectedFocusedOver {
+  background-size: auto; /* To avoid that the header in a PickList be shown without image in case of being a data-uri */
+}
+
+/* menuMain changes to avoid UI defects due to the CSS3 attributes introduced by SmartClient 8.3d 03-May-2012 */
+.menuMain {
+  background: #FFFFFF url(../../web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/smartclient/images/Menu/menu_background.png) repeat-y scroll;
+  filter: none;
+  -ms-filter: none;
+}
+.menuMainRTL {
+  background: #FFFFFF url(../../web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/smartclient/images/Menu/menu_background_rtl.png) repeat-y right scroll;
+  filter: none;
+  -ms-filter: none;
+}
+
+/*============================================================
+ Top Layout
+ ============================================================*/
+
+.OBTopLayout {
+  background-color: #FFFFFF;
+}
+
+/*============================================================
+ Active view
+ ============================================================*/
+.OBViewActive {
+  background-color: #FA962F;
+}
+
+.OBViewInActive {
+  background-color: #CDD7BB;
+}
+
+/*============================================================
+ Loading prompts
+ ============================================================*/
+.OBLoadingPromptLabel {
+  font-family: 'Arial';
+  font-size: 12px;
+  color: #ccd0d4;
+}
+
+.OBLoadingPromptModalMask {
+  background-color: #7f7f7f;
+}

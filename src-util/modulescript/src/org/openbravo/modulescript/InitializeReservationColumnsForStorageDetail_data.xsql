@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2015 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+<SqlClass name="InitializeReservationColumnsForStorageDetailData" package="org.openbravo.modulescript">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="selectReservationAmounts" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        select r.m_product_id, rs.m_locator_id, rs.m_attributesetinstance_id, r.c_uom_id, SUM(rs.quantity - rs.releasedqty) as reservedqty, 
+        SUM(CASE WHEN rs.isallocated = 'Y' THEN (rs.quantity - rs.releasedqty) ELSE 0 END) as allocatedqty
+        from m_reservation r, m_reservation_stock rs
+        where r.m_reservation_id = rs.m_reservation_id
+        group by r.m_product_id, rs.m_locator_id, rs.m_attributesetinstance_id, r.c_uom_id
+        having SUM(rs.quantity - rs.releasedqty) <> 0
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateStorageDetail" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        update M_Storage_Detail set reservedqty = to_number(?), allocatedqty = to_number(?)
+        where m_attributesetinstance_id = ?
+        and m_locator_id = ?
+        and m_product_id = ?
+        and c_uom_id = ?
+        and m_product_uom_id is null
+      ]]>
+    </Sql>
+    <Parameter name="reservedqty"/>
+    <Parameter name="allocatedqty"/>
+    <Parameter name="mAttributesetinstanceId"/>
+    <Parameter name="mLocatorId"/>
+    <Parameter name="mProductId"/>
+    <Parameter name="cUomId"/>
+  </SqlMethod>
+   <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+      <SqlMethodComment></SqlMethodComment>
+       <Sql> 
+       <![CDATA[ 
+           INSERT INTO ad_preference (
+           ad_preference_id, ad_client_id, ad_org_id, isactive,
+           createdby, created, updatedby, updated,attribute
+           ) VALUES (
+           get_uuid(), '0', '0', 'Y', '0', NOW(), '0', NOW(),'InitializeReservationColumnsForStorageDetail')
+         ]]>
+        </Sql>
+   </SqlMethod>
+     <SqlMethod name="isMigrated" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as exist
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_preference
+                      WHERE attribute = 'InitializeReservationColumnsForStorageDetail')
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

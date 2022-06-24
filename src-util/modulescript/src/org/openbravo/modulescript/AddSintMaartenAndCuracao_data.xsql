@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2021 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="AddSintMaartenAndCuracaoData" package="org.openbravo.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' as ad_client_id FROM DUAL
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="deactivateNetherlandAntilles" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        UPDATE c_country SET isactive='N' WHERE c_country_id='260' AND isactive='Y'
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="addSintMaartenCountry" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        INSERT INTO c_country(
+	        c_country_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, 
+	        name, description, countrycode, hasregion, regionname, displaysequence, 
+	        haspostal_add, isdefault, c_currency_id)
+	    SELECT '56589EEE91534A9C8AA2DDF487EF542D', '0', '0', 'Y', now(), '0', now(), '0',
+	        'Sint Maarten', 'Sint Maarten', 'SX', 'N', 'State', '@C@,  @P@', 
+	        'N', 'N', '284'
+	    FROM DUAL
+	    WHERE NOT EXISTS
+		(SELECT 1 FROM c_country WHERE c_country_ID = '56589EEE91534A9C8AA2DDF487EF542D')
+      ]]>
+    </Sql>    
+  </SqlMethod>
+  <SqlMethod name="addCuracaoCountry" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        INSERT INTO c_country(
+			c_country_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, 
+			name, description, countrycode, hasregion, regionname, displaysequence, 
+			haspostal_add, isdefault, c_currency_id)
+		SELECT '911EFDC31736411FB27977333E9D2F35', '0', '0', 'Y', now(), '0', now(), '0',
+			'Curaçao', 'Curaçao', 'CW', 'N', 'State', '@C@,  @P@', 
+			'N', 'N', '284'
+		FROM DUAL
+		WHERE NOT EXISTS
+		(SELECT 1 FROM c_country WHERE c_country_ID = '911EFDC31736411FB27977333E9D2F35')
+      ]]>
+    </Sql>    
+  </SqlMethod>
+</SqlClass>

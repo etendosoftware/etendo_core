@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE OBUIAPP_PROCESS">
+    <table name="OBUIAPP_PROCESS" primaryKey="OBUIAPP_PROC_KEY">
+      <column name="EM_SMFMU_SCAN" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>

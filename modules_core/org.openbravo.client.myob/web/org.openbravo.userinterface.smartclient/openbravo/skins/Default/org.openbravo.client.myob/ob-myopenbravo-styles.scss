@@ -1,0 +1,162 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being  the  Mozilla  Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2011-2016 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+ */ 
+@import 'module.scss';
+
+.OBMyOpenbravo {
+  background-color: #FFFFFF;
+}
+
+
+/* Portal part*/
+.OBMyOBPortal {
+  padding-top: 15px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 10px;
+}
+
+
+/* Left Column*/
+.OBMyOBLeftColumn {
+  padding-top: 40px;
+  padding-left: 40px;
+  padding-right: 40px;
+  background-color: $backgroundColor3;
+}
+
+.OBMyOBLeftColumnLinkOver,
+.OBMyOBLeftColumnLinkFocusedOver,
+.OBMyOBLeftColumnLinkFocused,
+.OBMyOBLeftColumnLink {
+  color: $color1;
+  padding-top: 10px;
+  padding-left: 4px;
+  cursor: pointer;
+}
+
+.OBMyOBLeftColumnLinkFocusedOver,
+.OBMyOBLeftColumnLinkOver,
+.OBMyOBLeftColumnLink:hover {
+  text-decoration: underline;
+}
+
+.OBMyOBLeftColumnLinkFocusedOver,
+.OBMyOBLeftColumnLinkFocused,
+.OBMyOBLeftColumnLink:focus {
+  color: $color1;
+}
+
+
+/* RecentViews */
+.OBMyOBRecentViews {
+  border-bottom: 3px solid $color1;
+  padding: 25px 0px 0px 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+  height: 30px; /* RecentViews Title */
+  color: $color1;
+  margin-bottom: 10px;
+}
+OBMyOBRecentViews:after {
+  margin-bottom: 10px;
+}
+
+/* Recent views entries */
+.OBMyOBRecentViewsEntryFocused,
+.OBMyOBRecentViewsEntryFocusedOver,
+.OBMyOBRecentViewsEntryOver,
+.OBMyOBRecentViewsEntry {
+  cursor: pointer;
+  font-family: $fontFamily;
+  font-size: 12px;
+  padding: 4px;
+  color: $color1;
+  height: 30px; /* RecentViews Item */
+  border-bottom: 1px solid #c9cbf0;
+}
+
+.OBMyOBRecentViewsEntryFocusedOver,
+.OBMyOBRecentViewsEntryOver,
+.OBMyOBRecentViewsEntry:hover {
+  text-decoration: underline;
+}
+
+.OBMyOBRecentViewsEntryFocusedOver,
+.OBMyOBRecentViewsEntryFocused,
+.OBMyOBRecentViewsEntry:focus {
+}
+
+/* Recent documents entries */
+.OBMyOBRecentDocumentsEntryFocused,
+.OBMyOBRecentDocumentsEntryFocusedOver,
+.OBMyOBRecentDocumentsEntryOver,
+.OBMyOBRecentDocumentsEntry {
+  cursor: pointer;
+  font-family: $fontFamily;
+  font-size: 12px;
+  padding: 4px;
+  color: $color1;
+  height: 20px; /* RecentViews Item */
+}
+
+.OBMyOBRecentDocumentsEntryFocusedOver,
+.OBMyOBRecentDocumentsEntryOver,
+.OBMyOBRecentDocumentsEntry:hover {
+  text-decoration: underline;
+}
+
+.OBMyOBRecentDocumentsEntryFocusedOver,
+.OBMyOBRecentDocumentsEntryFocused,
+.OBMyOBRecentDocumentsEntry:focus {
+  color: #fa962f;
+}
+
+/* Left menu Dialogs */
+.OBMyOBDialog {
+  background-color: white;
+  border: 1px solid $color1;
+  border-radius: 3px;
+}
+
+.OBMyOBDialogHeader {
+}
+
+.OBMyOBDialogHeaderText {
+  line-height: 0px;
+}
+
+.OBMyOBDialogBody {
+  margin-top: -10px;
+}
+
+
+/* Widget Parameters */
+.OBMyOBEditParametersLabel {
+  font-weight: bold;
+  padding-top: 10px;
+}
+
+/* Icons Topbar definition */
+.OBMyOBCreateNew, .OBMyOBCreateNewOver {
+      background-image: url($moduleUrlPath + '/images/management/iconCreateNew.png');
+
+}
+.OBMyOBQuickLaunch, OBMyOBQuickLaunchOver {
+      background-image: url($moduleUrlPath + '/images/management/icon.png');
+}

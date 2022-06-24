@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE FIN_PAYMENT_SCHEDULE">
+    <table name="FIN_PAYMENT_SCHEDULE" primaryKey="FIN_PAYMENT_SCHEDULE_KEY">
+      <column name="EM_APRM_MODIF_PAYM_SCHED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_MODIF_PAYM_OUT_SCHED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>

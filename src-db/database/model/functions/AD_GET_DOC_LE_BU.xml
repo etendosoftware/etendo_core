@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION AD_GET_DOC_LE_BU">
+    <function name="AD_GET_DOC_LE_BU" type="VARCHAR" volatility="STABLE">
+      <parameter name="p_header_table" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_document_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_header_column_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_type" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2009-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_org_header_id ad_org.ad_org_id%TYPE;
+  v_isbusinessunit ad_orgtype.isbusinessunit%TYPE;
+  v_islegalentity ad_orgtype.islegalentity%TYPE;
+
+BEGIN
+
+  -- Gets the organization and the organization type of the document's header
+  EXECUTE IMMEDIATE 
+    'SELECT ad_org.ad_org_id, ad_orgtype.isbusinessunit, ad_orgtype.islegalentity 
+     FROM '||p_header_table||', ad_org, ad_orgtype
+     WHERE '||p_header_table||'.'||p_header_column_id||' = '''||p_document_id||'''
+     AND ad_org.ad_orgtype_id = ad_orgtype.ad_orgtype_id
+     AND '||p_header_table||'.ad_org_id=ad_org.ad_org_id '
+    INTO v_org_header_id, v_isbusinessunit, v_islegalentity;
+
+  IF ((v_isbusinessunit = 'Y' AND COALESCE(p_type, 'BU') = 'BU')
+      OR (v_islegalentity = 'Y' AND COALESCE(p_type, 'LE') = 'LE')) THEN
+    RETURN v_org_header_id;
+  END IF;
+
+  RETURN AD_GET_ORG_LE_BU(v_org_header_id, p_type);
+END AD_GET_DOC_LE_BU
+]]></body>
+    </function>
+  </database>

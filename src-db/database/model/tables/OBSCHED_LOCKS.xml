@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_LOCKS">
+    <table name="OBSCHED_LOCKS" primaryKey="OBSCHED_LOC_PK">
+      <column name="OBSCHED_LOCKS_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="LOCK_NAME" primaryKey="false" required="true" type="VARCHAR" size="40" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <unique name="OBSCHED_LOC_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="LOCK_NAME"/>
+      </unique>
+    </table>
+  </database>

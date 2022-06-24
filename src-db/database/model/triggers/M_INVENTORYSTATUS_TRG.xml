@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_INVENTORYSTATUS_TRG">
+    <trigger name="M_INVENTORYSTATUS_TRG" table="M_INVENTORYSTATUS" fires="after" insert="true" update="true" delete="false" foreach="row">
+      <body><![CDATA[
+
+
+
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+/**
+* Manage Inventory Status translations
+*/
+v_existLocatorWithInvStatus VARCHAR2(32);
+BEGIN
+
+IF AD_isTriggerEnabled()='N' THEN RETURN;
+END IF;
+
+IF INSERTING THEN
+
+ INSERT INTO M_InventoryStatus_Trl
+  (M_InventoryStatus_Trl_ID, M_InventoryStatus_ID, AD_Language, AD_Client_ID, AD_Org_ID,
+  IsActive, Created, CreatedBy, Updated, UpdatedBy,
+  name, Description, IsTranslated)
+ SELECT get_uuid(), :new.M_InventoryStatus_ID, AD_Language, :new.AD_Client_ID, :new.AD_Org_ID,
+   :new.IsActive, :new.Created, :new.CreatedBy, :new.Updated, :new.UpdatedBy,
+   :new.name, :new.Description, 'N' 
+  FROM  AD_Language
+  WHERE IsActive = 'Y' AND IsSystemLanguage = 'Y'
+  AND EXISTS (SELECT * FROM AD_Client
+   WHERE AD_Client_ID=:new.AD_Client_ID AND IsMultiLingualDocument='Y');
+
+ELSIF UPDATING THEN
+
+ IF (:new.available <> :old.available or :new.nettable <> :old.nettable or :new.overissue <> :old.overissue) THEN
+  select 1 into v_existLocatorWithInvStatus from m_locator l where l.m_inventorystatus_id = :new.m_inventorystatus_id;
+  IF (v_existLocatorWithInvStatus IS NOT NULL) THEN
+        RAISE_APPLICATION_ERROR(-20000, '@InventoryStatusUsed@');
+  END IF;
+ END IF;
+
+ IF (COALESCE(:old.name, '.') <> COALESCE(:new.name, '.')) or (COALESCE(:old.description, '.') <> COALESCE(:new.description, '.')) THEN
+  UPDATE m_inventorystatus_trl
+  SET istranslated = 'N'
+  WHERE m_inventorystatus_id = :new.m_inventorystatus_id;
+ END IF;
+END IF;
+
+END M_INVENTORYSTATUS_TRG
+]]></body>
+    </trigger>
+  </database>

@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_SERVICEPRICERULE_RANGE">
+    <table name="M_SERVICEPRICERULE_RANGE" primaryKey="M_SERVICEPRICERULE_RANGE_KEY">
+      <column name="M_SERVICEPRICERULE_RANGE_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_SERVICEPRICERULE_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_PRICELIST_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AMOUNTUPTO" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="RULETYPE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[P]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="PERCENTAGE" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="AFTERDISCOUNTS" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="M_SERVPRRULRANGE_AD_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_SERVPRRULRANGE_AD_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_PRICELIST" name="M_SERVPRRULRANGE_PRICELIST">
+        <reference local="M_PRICELIST_ID" foreign="M_PRICELIST_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_SERVICEPRICERULE" name="M_SERVPRRULRANGE_RULE" onDelete="cascade">
+        <reference local="M_SERVICEPRICERULE_ID" foreign="M_SERVICEPRICERULE_ID"/>
+      </foreign-key>
+      <index name="M_SERVICEPRICERULERANGE_RULE" unique="false">
+        <index-column name="M_SERVICEPRICERULE_ID"/>
+      </index>
+      <unique name="M_SERVPRRUL_RANGE_AMOUNT">
+        <unique-column name="M_SERVICEPRICERULE_ID"/>
+        <unique-column name="AMOUNTUPTO"/>
+      </unique>
+      <check name="M_SERVPRRULRANGE_AFTERDISC_CHK"><![CDATA[AFTERDISCOUNTS IN ('Y', 'N')]]></check>
+      <check name="M_SERVPRRULRANGE_ISACTIV_CHECK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+    </table>
+  </database>

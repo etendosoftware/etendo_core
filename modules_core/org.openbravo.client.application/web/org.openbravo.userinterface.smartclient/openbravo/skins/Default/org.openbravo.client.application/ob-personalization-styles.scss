@@ -1,0 +1,173 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an 'AS IS'
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2011-2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+@import 'module.scss';
+
+.OBToolbarIconButton_icon_manageviews {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/personalization/iconButton-manageviews.png');
+}
+
+.OBToolbarIconButton_icon_personalization {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/personalization/iconButton-personalization2.png');
+}
+
+.OBToolbarIconButton_icon_personalization-modified {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/personalization/iconButton-personalization2-modified.png');
+}
+
+.OBToolbarIconButton_icon_edit_personalization {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/personalization/iconButton-personalization1.png');
+}
+
+.OBFieldsPane {
+  border-right: 0px;
+}
+
+.OBFormPersonalizationFieldsTreeGrid {
+}
+
+.OBFormPersonalizerPreviewPanel {
+  border-width: 0px 0px 0px 5px;
+  border-style: solid;
+  border-color: $color1;
+}
+
+.OBPersonalizationTreeGridCell,
+.OBPersonalizationTreeGridCellOver,
+.OBPersonalizationTreeGridCellSelected,
+.OBPersonalizationTreeGridCellSelectedOver,
+.OBPersonalizationTreeGridCellDisabled,
+
+.OBPersonalizationTreeGridCellHidden,
+.OBPersonalizationTreeGridCellHiddenOver,
+.OBPersonalizationTreeGridCellHiddenSelected,
+.OBPersonalizationTreeGridCellHiddenSelectedOver,
+.OBPersonalizationTreeGridCellHiddenDisabled {
+  font-family: arial, sans-serif;
+  vertical-align: middle;
+}
+
+.OBPersonalizationTreeGridCellHidden,
+.OBPersonalizationTreeGridCellHiddenOver,
+.OBPersonalizationTreeGridCellHiddenSelected,
+.OBPersonalizationTreeGridCellHiddenSelectedOver,
+.OBPersonalizationTreeGridCellHiddenDisabled {
+  color: #aaaaaa;
+}
+
+.OBPersonalizationTreeGridCellSelected,
+.OBPersonalizationTreeGridCellHiddenSelected {
+  background-color: $backgroundColor4; /* Orange for active grid, for non active grid: #b8d587 */
+}
+
+.OBPersonalizationTreeGridCellOver,
+.OBPersonalizationTreeGridCellHiddenOver,
+.OBPersonalizationTreeGridCellSelectedOver,
+.OBPersonalizationTreeGridCellHiddenSelectedOver {
+  cursor: pointer;
+  background-color: $color2;
+}
+
+.OBPersonalizationTreeGridCellSelectedOver,
+.OBPersonalizationTreeGridCellSelectedHiddenOver {
+  background-color: $backgroundColor4;
+}
+
+.OBPersonalizationPullDownMenu {
+    background-color: $backgroundColor1;
+    box-shadow: $menuShadow;
+    border-radius: 5px;
+}
+
+.OBPersonalizationPullDownMenuTable {
+}
+
+.OBPersonalizationPullDownMenuBody {
+    td {
+        color: $color1;
+    }
+}
+
+.OBPersonalizationPullDownMenuCell,
+.OBPersonalizationPullDownMenuCellSelected,
+.OBPersonalizationPullDownMenuCellOver,
+.OBPersonalizationPullDownMenuCellSelectedOver,
+.OBPersonalizationPullDownMenuCellDisabled,
+
+.OBPersonalizationPullDownMenuCellIcon,
+.OBPersonalizationPullDownMenuCellIconSelected,
+.OBPersonalizationPullDownMenuCellIconOver,
+.OBPersonalizationPullDownMenuCellIconSelectedOver,
+.OBPersonalizationPullDownMenuCellIconDisabled,
+
+.OBPersonalizationPullDownMenuCellSeparator,
+.OBPersonalizationPullDownMenuCellSeparatorSelected,
+.OBPersonalizationPullDownMenuCellSeparatorOver,
+.OBPersonalizationPullDownMenuCellSeparatorSelectedOver,
+.OBPersonalizationPullDownMenuCellSeparatorDisabled {
+  color: $color4;
+  font-size: 13px;
+  font-family: $fontFamily;
+  cursor: pointer;
+  padding-left: 5px;
+  padding-right: 5px;
+  line-height: 30px;
+}
+
+.OBPersonalizationPullDownMenuCellIcon,
+.OBPersonalizationPullDownMenuCellIconSelected,
+.OBPersonalizationPullDownMenuCellIconOver,
+.OBPersonalizationPullDownMenuCellIconSelectedOver,
+.OBPersonalizationPullDownMenuCellIconDisabled {
+  border: 1px solid $color1;
+  border-width: 0px 1px 0px 0px;
+  text-align: center;
+}
+
+.OBPersonalizationPullDownMenuCellSeparator,
+.OBPersonalizationPullDownMenuCellSeparatorSelected,
+.OBPersonalizationPullDownMenuCellSeparatorOver,
+.OBPersonalizationPullDownMenuCellSeparatorSelectedOver,
+.OBPersonalizationPullDownMenuCellSeparatorDisabled {
+  border: 1px solid $color1;
+  border-width: 1px 0px 0px 0px;
+}
+
+.OBPersonalizationPullDownMenuCell,
+.OBPersonalizationPullDownMenuCellSelected {
+}
+
+td.OBPersonalizationPullDownMenuCellDark,
+td.OBPersonalizationPullDownMenuCellOver,
+td.OBPersonalizationPullDownMenuCellIconOver,
+td.OBPersonalizationPullDownMenuCellIconSelectedOver,
+td.OBPersonalizationPullDownMenuCellSelectedOver,
+td.OBPersonalizationPullDownMenuCellSeparatorOver,
+td.OBPersonalizationPullDownMenuCellSeparatorSelectedOver {
+  background-color: $color1;
+  margin-bottom: -1px;
+  color: $color4;
+}

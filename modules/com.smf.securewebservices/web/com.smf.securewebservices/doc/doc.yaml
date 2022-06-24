@@ -1,0 +1,1210 @@
+# TODO: terminar la documentación.
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Secure webservices
+  description: |
+    ## Introducción
+
+    Este módulo permite llamar a cualquier [web service estandar](http://wiki.openbravo.com/wiki/How_to_create_a_new_REST_webservice) de openbravo de la misma manera en la que se haría con el endpoint "**/ws**", pero utilizando la autenticación con token.
+
+    Este metodo de autenticación permite, ademas, definir el contexto para las llamadas pudiendo elegir el rol y/o la organización al momento de solicitar un token. Tambien es posible renovar un token para refrescar la expiración o hacer cambio de rol/organización.
+
+    Ademas de la nueva implementación de autenticación, el modulo incluye utilidades para desarrolladores y web services útiles, como jsonDal (para acceder al Data Access Layer de OB con json).
+
+    ## Configuración inicial
+    
+    Es necesario configurar la clave de cifrado y el tiempo de expiración para los tokens de autenticación
+    en la ventana **Cliente** con el rol **System Administrator**.
+
+    Si el tiempo de expiración es igual a "0" los tokens no expiran.
+
+    Es altamente recomendable generar una calve aleatoria con el boton "**Generate key**".
+    
+    ![screenshot](img/screen01.png "SWS Config")
+servers:
+  - url: http://localhost:8080/openbravo  
+tags:
+  - name: Login
+    description: endpoints relacionados a la autenticación
+  - name: Dal
+    description: webservice de data access layer.
+paths:
+  /sws/login:
+    post:
+      summary: Obtener token de autenticación
+      tags:
+        - Login
+      description: |
+        Obtiene un token de autenticación (JWT) asociado a un contexto de Openbravo (User, Role, Org, Warehouse) y la lista de roles, organizaciones y almacenes utilizables.
+        Tanto las listas de roles, organizaciones y almacenes pueden ocultarse para simplificar el resultado de la petición.
+      parameters:
+        - name: showRoles
+          in: query
+          description: Mostrar lista de roles.  
+          required: false
+          schema:
+            type: boolean
+            default: true
+            example: true
+        - name: showOrgs
+          in: query
+          description: Mostrar listas de organizaciones.  
+          required: false
+          schema:
+            type: boolean
+            default: true
+            example: true
+        - name: showWarehouses
+          in: query
+          description: Mostrar listas de almacenes.  
+          required: false
+          schema:
+            type: boolean
+            default: true
+            example: true
+      requestBody:
+        description: Usuario, contraseña, id de rol, id de organziación, id de almacen. Solo los dos primero son obligatorios.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username: 
+                  type: string
+                  example: Openbravo
+                password:
+                  type: string
+                  example: openbravo
+                role:
+                  type: string
+                  example: "0"
+                organization:
+                  type: string
+                  example: "0"
+                warehouse:
+                  type: string
+                  example: "0"
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogResp"
+        401:
+          description: No auth
+  /sws/com.smf.securewebservices.jsonDal/{modelName}:
+    get:
+      summary: List records
+      security:
+        - bearerAuth: []
+      tags:
+        - Dal
+      parameters:
+        - name: modelName
+          in: path
+          required: true
+          description: Nombre del modelo a obtener (campo name en AD_Table)
+          schema:
+            type: string
+            example: Product
+        - name: _startRow
+          in: query
+          description: Primer resultado, usado para paginación.  
+          required: false
+          schema:
+            type: integer
+            format: int32
+            example: "0"
+        - name: _endRow
+          in: query
+          description: Ultimo resultado, usado para paginación. Si _startRow es 0 y _endRow es 4 devolvera los primeros 5 resultados de la query.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            example: 4
+        - name: includeChildren
+          in: query
+          description: Incluye registros hijos.
+          required: false 
+          schema:
+            type: boolean
+            example: false
+            default: true
+        - name: where
+          in: query
+          description: Clausula where en HQL.
+          required: false 
+          schema:
+            type: string
+            example: purchase = true
+        - name: orderBy
+          in: query
+          description: Clausula order by en HQL.
+          required: false 
+          schema:
+            type: string
+        - name: _selectedProperties
+          in: query
+          description: Campos a seleccionar separados por comas.
+          required: false 
+          schema:
+            type: string
+            example: id, name
+        - name: _noActiveFilter
+          in: query
+          description: Si es verdadero tambien buscará los registros no activos.
+          required: false 
+          schema:
+            type: boolean
+            default: false
+            example: true
+      responses:
+        '200':
+          description: Arreglo de objetos de openbravo.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"      
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Add/edit record
+      security:
+        - bearerAuth: []
+      tags:
+        - Dal
+      requestBody:
+        description: Usuario, contraseña, id de rol e id de organziación. Solo los dos primero son obligatorios.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/NewProduct"            
+      parameters:
+        - name: modelName
+          in: path
+          required: true
+          description: Nombre del modelo a insertar/modificar (campo name en AD_Table)
+          schema:
+            type: string
+            default: Product
+      responses:
+        '200':
+          description: Objeto creado o editado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /sws/com.smf.securewebservices.jsonDal/{modelName}/{recordID}:
+    get:
+      summary: Get a record by ID
+      security:
+        - bearerAuth: []
+      tags:
+        - Dal
+      parameters:
+        - name: modelName
+          in: path
+          required: true
+          description: Nombre del modelo a obtener (campo name en AD_Table)
+          schema:
+            type: string
+            default: Product
+        - name: recordID
+          in: path
+          required: true
+          description: ID del registro a obtener
+          schema:
+            type: string
+            default: DA7FC1BB3BA44EC48EC1AB9C74168CED
+        - name: includeChildren
+          in: query
+          description: Incluye registros hijos.
+          required: false 
+          schema:
+            type: boolean
+            default: false
+        - name: _selectedProperties
+          in: query
+          description: Campos a seleccionar separados por comas.
+          required: false 
+          schema:
+            type: string
+            default: id, name
+        - name: _noActiveFilter
+          in: query
+          description: Si es verdadero tambien buscará los registros no activos.
+          required: false 
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Objeto solicitado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    LogResp:
+      type: object
+      title: Respuesta de login
+      properties:
+        status:
+          type: string
+          example: success
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJzd3MiLCJyb2xlIjoiMCIsIm9yZ2FuaXphdGlvbiI6IjAiLCJpc3MiOiJzd3MiLCJleHAiOjE1ODE1MjMxNTcsInVzZXIiOiIxMDAiLCJpYXQiOjE1ODE1MTU3Nzd9.ZyAwUz7B1xOuMJzrtt6LJo0O7UNi133W15Uv_RfW3IM
+        roleList:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: '0'
+              name:
+                type: string
+                default: ''
+                example: System Administrator
+              orgList:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: '0'
+                    name:
+                      type: string
+                      example: '*'
+                    warehouseList:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: '0'
+                          name:
+                            type: string
+                            example: '*'
+    Product:
+      type: object
+      properties:
+        _identifier:
+          type: string
+          default: ''
+          example: Office supplies
+        _entityName:
+          type: string
+          default: ''
+          example: Product
+        $ref:
+          type: string
+          default: ''
+          example: Product/FF73714380904306A55B87438C1AEE32
+        id:
+          type: string
+          default: ''
+          example: FF73714380904306A55B87438C1AEE32
+        client:
+          type: string
+          default: ''
+          example: 23C59575B9CF467C9620760EB255B389
+        client$_identifier:
+          type: string
+          default: ''
+          example: F&B International Group
+        organization:
+          type: string
+          default: ''
+          example: 2E60544D37534C0B89E765FE29BC0B43
+        organization$_identifier:
+          type: string
+          default: ''
+          example: 'F&B US, Inc.'
+        active:
+          type: boolean
+          default: false
+          example: true
+        creationDate:
+          type: string
+          default: ''
+          example: '2013-07-04T23:45:45-03:00'
+        createdBy:
+          type: string
+          default: ''
+          example: '0'
+        createdBy$_identifier:
+          type: string
+          default: ''
+          example: System
+        updated:
+          type: string
+          default: ''
+          example: '2013-07-04T23:45:45-03:00'
+        updatedBy:
+          type: string
+          default: ''
+          example: '0'
+        updatedBy$_identifier:
+          type: string
+          default: ''
+          example: System
+        searchKey:
+          type: string
+          default: ''
+          example: OSupplies
+        name:
+          type: string
+          default: ''
+          example: Office supplies
+        description:
+          
+          default: null
+          example: null
+        comments:
+          
+          default: null
+          example: null
+        helpComment:
+          
+          default: null
+          example: null
+        uPCEAN:
+          
+          default: null
+          example: null
+        sKU:
+          
+          default: null
+          example: null
+        uOM:
+          type: string
+          default: ''
+          example: '100'
+        uOM$_identifier:
+          type: string
+          default: ''
+          example: Unit
+        salesRepresentative:
+          type: string
+          default: ''
+          example: '100'
+        salesRepresentative$_identifier:
+          type: string
+          default: ''
+          example: Openbravo
+        summaryLevel:
+          type: boolean
+          default: false
+          example: false
+        stocked:
+          type: boolean
+          default: false
+          example: false
+        purchase:
+          type: boolean
+          default: false
+          example: true
+        sale:
+          type: boolean
+          default: false
+          example: false
+        billOfMaterials:
+          type: boolean
+          default: false
+          example: false
+        printDetailsOnInvoice:
+          type: boolean
+          default: false
+          example: false
+        printDetailsOnPickList:
+          type: boolean
+          default: false
+          example: false
+        bOMVerified:
+          type: boolean
+          default: false
+          example: false
+        productCategory:
+          type: string
+          default: ''
+          example: 7B795AA107694B5480B1C7D59FD5AE8A
+        productCategory$_identifier:
+          type: string
+          default: ''
+          example: Others
+        classification:
+          
+          default: null
+          example: null
+        volume:
+          type: integer
+          default: 0
+          example: 0
+        weight:
+          type: integer
+          default: 0
+          example: 0
+        shelfWidth:
+          
+          default: null
+          example: null
+        shelfHeight:
+          
+          default: null
+          example: null
+        shelfDepth:
+          
+          default: null
+          example: null
+        unitsPerPallet:
+          
+          default: null
+          example: null
+        taxCategory:
+          type: string
+          default: ''
+          example: 43A120C9377B4537B5D1976D9B1233D7
+        taxCategory$_identifier:
+          type: string
+          default: ''
+          example: US State Sales Tax
+        resource:
+          
+          default: null
+          example: null
+        discontinued:
+          type: boolean
+          default: false
+          example: false
+        discontinuedBy:
+          
+          default: null
+          example: null
+        processNow:
+          type: boolean
+          default: false
+          example: false
+        expenseType:
+          
+          default: null
+          example: null
+        productType:
+          type: string
+          default: ''
+          example: I
+        imageURL:
+          
+          default: null
+          example: null
+        descriptionURL:
+          
+          default: null
+          example: null
+        guaranteedDays:
+          
+          default: null
+          example: null
+        versionNo:
+          
+          default: null
+          example: null
+        attributeSet:
+          
+          default: null
+          example: null
+        attributeSetValue:
+          
+          default: null
+          example: null
+        downloadURL:
+          
+          default: null
+          example: null
+        freightCategory:
+          
+          default: null
+          example: null
+        storageBin:
+          
+          default: null
+          example: null
+        image:
+          
+          default: null
+          example: null
+        businessPartner:
+          
+          default: null
+          example: null
+        printPrice:
+          type: boolean
+          default: false
+          example: true
+        name2:
+          
+          default: null
+          example: null
+        costType:
+          
+          default: null
+          example: null
+        standardCost:
+          
+          default: null
+          example: null
+        minimumStock:
+          
+          default: null
+          example: null
+        enforceAttribute:
+          type: boolean
+          default: false
+          example: false
+        calculated:
+          type: boolean
+          default: false
+          example: false
+        processPlan:
+          
+          default: null
+          example: null
+        production:
+          type: boolean
+          default: false
+          example: false
+        capacity:
+          
+          default: null
+          example: null
+        minimumLeadTime:
+          
+          default: null
+          example: null
+        planner:
+          
+          default: null
+          example: null
+        planningMethod:
+          
+          default: null
+          example: null
+        maxQuantity:
+          
+          default: null
+          example: null
+        minQuantity:
+          
+          default: null
+          example: null
+        standardQuantity:
+          
+          default: null
+          example: null
+        quantityType:
+          type: boolean
+          default: false
+          example: false
+        safetyStock:
+          
+          default: null
+          example: null
+        useAttributeSetValueAs:
+          
+          default: null
+          example: null
+        isquantityvariable:
+          type: boolean
+          default: false
+          example: false
+        deferredRevenue:
+          type: boolean
+          default: false
+          example: false
+        revenuePlanType:
+          
+          default: null
+          example: null
+        periodNumber:
+          
+          default: null
+          example: null
+        isdeferredexpense:
+          type: boolean
+          default: false
+          example: false
+        expplantype:
+          
+          default: null
+          example: null
+        periodnumberExp:
+          
+          default: null
+          example: null
+        defaultPeriod:
+          
+          default: null
+          example: null
+        defaultPeriodExpense:
+          
+          default: null
+          example: null
+        bookUsingPurchaseOrderPrice:
+          type: boolean
+          default: false
+          example: false
+        uOMForWeight:
+          
+          default: null
+          example: null
+        brand:
+          
+          default: null
+          example: null
+        isGeneric:
+          type: boolean
+          default: false
+          example: false
+        genericProduct:
+          
+          default: null
+          example: null
+        createVariants:
+          
+          default: null
+          example: null
+        characteristicDescription:
+          
+          default: null
+          example: null
+        updateInvariants:
+          
+          default: null
+          example: null
+        manageVariants:
+          type: boolean
+          default: false
+          example: false
+        includedProductCategories:
+          
+          default: null
+          example: null
+        includedProducts:
+          
+          default: null
+          example: null
+        printDescription:
+          type: boolean
+          default: false
+          example: false
+        returnable:
+          type: boolean
+          default: false
+          example: true
+        overdueReturnDays:
+          
+          default: null
+          example: null
+        ispricerulebased:
+          type: boolean
+          default: false
+          example: false
+        uniquePerDocument:
+          type: boolean
+          default: false
+          example: false
+        relateprodcattoservice:
+          
+          default: null
+          example: null
+        relateprodtoservice:
+          
+          default: null
+          example: null
+        linkedToProduct:
+          type: boolean
+          default: false
+          example: false
+        quantityRule:
+          
+          default: null
+          example: null
+        allowDeferredSell:
+          type: boolean
+          default: false
+          example: false
+        deferredSellMaxDays:
+          
+          default: null
+          example: null
+        productStatus:
+          
+          default: null
+          example: null
+        modifyTax:
+          type: boolean
+          default: false
+          example: false
+        relateprodcattaxtoservice:
+          type: boolean
+          default: false
+          example: false
+        copyservicemodifytaxconfig:
+          type: boolean
+          default: false
+          example: false
+        recordTime:
+          type: integer
+          default: 0
+          example: 1582210044621
+    NewProduct:
+      type: object
+      properties:
+        _entityName:
+          type: string
+          default: ''
+          example: Product
+        searchKey:
+          type: string
+          default: ''
+          example: OSupplies
+        name:
+          type: string
+          default: ''
+          example: Office supplies
+        description:
+          
+          default: null
+          example: null
+        comments:
+          
+          default: null
+          example: null
+        helpComment:
+          
+          default: null
+          example: null
+        uPCEAN:
+          
+          default: null
+          example: null
+        sKU:
+          
+          default: null
+          example: null
+        uOM:
+          type: string
+          default: ''
+          example: '100'
+        salesRepresentative:
+          type: string
+          default: ''
+          example: '100'
+        summaryLevel:
+          type: boolean
+          default: false
+          example: false
+        stocked:
+          type: boolean
+          default: false
+          example: false
+        purchase:
+          type: boolean
+          default: false
+          example: true
+        sale:
+          type: boolean
+          default: false
+          example: false
+        billOfMaterials:
+          type: boolean
+          default: false
+          example: false
+        printDetailsOnInvoice:
+          type: boolean
+          default: false
+          example: false
+        printDetailsOnPickList:
+          type: boolean
+          default: false
+          example: false
+        bOMVerified:
+          type: boolean
+          default: false
+          example: false
+        productCategory:
+          type: string
+          default: ''
+          example: 7B795AA107694B5480B1C7D59FD5AE8A
+        classification:
+          
+          default: null
+          example: null
+        volume:
+          type: integer
+          default: 0
+          example: 0
+        weight:
+          type: integer
+          default: 0
+          example: 0
+        shelfWidth:
+          
+          default: null
+          example: null
+        shelfHeight:
+          
+          default: null
+          example: null
+        shelfDepth:
+          
+          default: null
+          example: null
+        unitsPerPallet:
+          
+          default: null
+          example: null
+        taxCategory:
+          type: string
+          default: ''
+          example: 43A120C9377B4537B5D1976D9B1233D7
+        resource:
+          
+          default: null
+          example: null
+        discontinued:
+          type: boolean
+          default: false
+          example: false
+        discontinuedBy:
+          
+          default: null
+          example: null
+        processNow:
+          type: boolean
+          default: false
+          example: false
+        expenseType:
+          
+          default: null
+          example: null
+        productType:
+          type: string
+          default: ''
+          example: I
+        imageURL:
+          
+          default: null
+          example: null
+        descriptionURL:
+          
+          default: null
+          example: null
+        guaranteedDays:
+          
+          default: null
+          example: null
+        versionNo:
+          
+          default: null
+          example: null
+        attributeSet:
+          
+          default: null
+          example: null
+        attributeSetValue:
+          
+          default: null
+          example: null
+        downloadURL:
+          
+          default: null
+          example: null
+        freightCategory:
+          
+          default: null
+          example: null
+        storageBin:
+          
+          default: null
+          example: null
+        image:
+          
+          default: null
+          example: null
+        businessPartner:
+          
+          default: null
+          example: null
+        printPrice:
+          type: boolean
+          default: false
+          example: true
+        name2:
+          
+          default: null
+          example: null
+        costType:
+          
+          default: null
+          example: null
+        standardCost:
+          
+          default: null
+          example: null
+        minimumStock:
+          
+          default: null
+          example: null
+        enforceAttribute:
+          type: boolean
+          default: false
+          example: false
+        calculated:
+          type: boolean
+          default: false
+          example: false
+        processPlan:
+          
+          default: null
+          example: null
+        production:
+          type: boolean
+          default: false
+          example: false
+        capacity:
+          
+          default: null
+          example: null
+        minimumLeadTime:
+          
+          default: null
+          example: null
+        planner:
+          
+          default: null
+          example: null
+        planningMethod:
+          
+          default: null
+          example: null
+        maxQuantity:
+          
+          default: null
+          example: null
+        minQuantity:
+          
+          default: null
+          example: null
+        standardQuantity:
+          
+          default: null
+          example: null
+        quantityType:
+          type: boolean
+          default: false
+          example: false
+        safetyStock:
+          
+          default: null
+          example: null
+        useAttributeSetValueAs:
+          
+          default: null
+          example: null
+        isquantityvariable:
+          type: boolean
+          default: false
+          example: false
+        deferredRevenue:
+          type: boolean
+          default: false
+          example: false
+        revenuePlanType:
+          
+          default: null
+          example: null
+        periodNumber:
+          
+          default: null
+          example: null
+        isdeferredexpense:
+          type: boolean
+          default: false
+          example: false
+        expplantype:
+          
+          default: null
+          example: null
+        periodnumberExp:
+          
+          default: null
+          example: null
+        defaultPeriod:
+          
+          default: null
+          example: null
+        defaultPeriodExpense:
+          
+          default: null
+          example: null
+        bookUsingPurchaseOrderPrice:
+          type: boolean
+          default: false
+          example: false
+        uOMForWeight:
+          
+          default: null
+          example: null
+        brand:
+          
+          default: null
+          example: null
+        isGeneric:
+          type: boolean
+          default: false
+          example: false
+        genericProduct:
+          
+          default: null
+          example: null
+        createVariants:
+          
+          default: null
+          example: null
+        characteristicDescription:
+          
+          default: null
+          example: null
+        updateInvariants:
+          
+          default: null
+          example: null
+        manageVariants:
+          type: boolean
+          default: false
+          example: false
+        includedProductCategories:
+          
+          default: null
+          example: null
+        includedProducts:
+          
+          default: null
+          example: null
+        printDescription:
+          type: boolean
+          default: false
+          example: false
+        returnable:
+          type: boolean
+          default: false
+          example: true
+        overdueReturnDays:
+          
+          default: null
+          example: null
+        ispricerulebased:
+          type: boolean
+          default: false
+          example: false
+        uniquePerDocument:
+          type: boolean
+          default: false
+          example: false
+        relateprodcattoservice:
+          
+          default: null
+          example: null
+        relateprodtoservice:
+          
+          default: null
+          example: null
+        linkedToProduct:
+          type: boolean
+          default: false
+          example: false
+        quantityRule:
+          
+          default: null
+          example: null
+        allowDeferredSell:
+          type: boolean
+          default: false
+          example: false
+        deferredSellMaxDays:
+          
+          default: null
+          example: null
+        productStatus:
+          
+          default: null
+          example: null
+        modifyTax:
+          type: boolean
+          default: false
+          example: false
+        relateprodcattaxtoservice:
+          type: boolean
+          default: false
+          example: false
+        copyservicemodifytaxconfig:
+          type: boolean
+          default: false
+          example: false
+    Error:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: "Error."
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      

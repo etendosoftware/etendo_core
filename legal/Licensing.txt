@@ -1,0 +1,287 @@
+﻿A) Openbravo Public License
+
+This license file applies to the Openbravo ERP software (the "Openbravo
+Software"), except as described below.
+
+This product is Copyright 2001-2021 Openbravo S.L.U.  For other detailed notice,
+see the "NOTICE" file with this distribution.
+
+This product is free software; you can redistribute it and/or modify
+it under  the terms of Openbravo Public License v.1.1 being the
+Mozilla Public with a permitted attribution clause (available at
+www.openbravo.com/legal/license.html)
+
+This product is distributed in the hope that it will be useful, but WITHOUT
+ANY  WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A  PARTICULAR PURPOSE. See the Openbravo Public License
+(www.openbravo.com/legal/license.html) for more details.
+
+You should have received a copy of the Openbravo Public License along with this
+product; if not, write to legal@openbravo.com.  You can also find the terms of
+the Openbravo Public License here: http://www.openbravo.com/legal/license.html
+
+
+B) Apache Software License 
+
+The programs contained in the following folders, which are part
+of the Openbravo Software, are provided by Openbravo SLU under the
+Apache Software License 2.0. This license is available online at
+http://www.apache.org/licenses/LICENSE-2.0. This notice also appears in
+individual source files.
+
+src-core/src/org/openbravo/base
+src-core/src/org/openbravo/data
+src-core/src/org/openbravo/database
+src-core/src/org/openbravo/exception
+src-core/src/org/openbravo/utils
+src-core/src/org/openbravo/XmlEngine
+All these files are copyright © 2001-2011 Openbravo SLU
+
+
+C) Third party code
+
+Some portions of the Openbravo Software are provided by third parties and
+thus are not available under the Openbravo Public License, but are available
+under other licensing terms. In this distribution, they are:
+
+
+# Elements of Compiere ERP & CRM 2.4.0 to 2.5.0e. 
+In accordance with provision "3.2. Availability of Source Code" of the Compiere
+Public License 1.1, the source and modified source for the Compiere ERP &
+CRM files included in Openbravo ERP in this distribution are available
+under the Compiere Public license 1.1 and are located in the /database/
+folder. For more information, see CompiereAddendum.txt in the /legal/ folder
+
+# src/org/openbravo/erpCommon/ad_callouts/ISO_4217.xml
+Currency XML from Swiss Association for Standardisation
+https://www.iso.org/iso-4217-currency-codes.html
+
+# calculator.js (at web/js)
+Under Tigra Calculator license (license available at http://www.softcomplex.com/)
+Copyright © 2003-2004 Softcomplex Inc. 
+
+# ecj-4.17.jar
+Eclipse Public License 1.0 (license available at
+http://www.eclipse.org/legal/epl-v10.html) or in the file EPL-1.0.txt in this folder
+
+# Eclipse icons
+Icons and files under the Eclipse Public License (license available at
+http://www.eclipse.org/legal/epl-v10.html)
+
+# javax.persistence-api-2.2.jar
+Under the terms of the Eclipse Public License v 1.0 (license available at
+http://www.eclipse.org/legal/epl-v10.html) 
+and Eclipse Distribution License v 1.0 (license available at 
+http://www.eclipse.org/org/documents/edl-v10.php)
+
+# jboss-annotations-api_1.3_spec-2.0.1.Final.jar
+# jboss-interceptors-api_1.2_spec-2.0.0.Final.jar
+Dual license EPL 2.0 and GPL2 w/ CPE. Using the Eclipse Public License v 2.0,
+available at https://www.eclipse.org/legal/epl-2.0/ and in the EPL-2.0.txt in this folder
+
+# nekohtml.jar (CyberNeko HTML Parser)
+Under the CyberNeko Software License, Version 1.0 (license available at
+http://people.apache.org/~andyc/neko/doc/html/
+
+# ant-1.9.2.jar
+# ant-launcher-1.9.2.jar
+# ant-nodeps.jar
+# catalina-ant.jar
+# commons-beanutils-1.8.3.jar
+# commons-betwixt-0.8.jar
+# commons-codec-1.11.jar
+# commons-collections-3.2.2.jar
+# commons-dbcp-1.4.jar
+# commons-digester-1.8.1.jar
+# commons-fileupload-1.4.jar
+# commons-io-2.4.jar
+# commons-lang-2.6.jar
+# commons-logging-1.2.jar
+# commons-pool-1.5.6.jar
+# jakarta-oro-2.0.8.jar
+# jettison-1.3-patched.jar
+# log4j-api-2.11.1.jar
+# log4j-core-2.11.1.jar
+# log4j-web-2.11.1.jar
+# log4j-slf4j-impl-2.11.1.jar
+# log4j-1.2-api-2.11.1.jar
+# quartz-2.3.2.jar
+# servlet-api.jar 
+# wstx-asl-3.0.2.jar
+# xercesImpl-2.9.0-patched.jar
+
+All files under Apache Software License 2.0, available at
+http://www.apache.org/licenses/LICENSE-2.0
+
+# postgresql-42.2.20.jar
+Under the BSD license, also available at https://jdbc.postgresql.org/about/license.html
+
+# Dojo Foundation javascripts in web/js/dojo/
+All files under the Academic Free License 2.1 (license available at
+http://opensource.org/licenses/afl-2.1.php)
+
+# Dynarch DHTML/Javascript calendar at web/js/jscalendar (Copyright Mihai
+  Bazon, 2002, 2003 - http://dynarch.com/mishoo/)
+
+# itextpdf-5.5.0.jar
+# itext-pdfa-5.5.0.jar
+Both files under AGPL V3 license with LGPL Exception (included as iTextpdf_license.txt in this folder)
+
+# jackson-core-2.12.3.jar
+# jackson-databind-2.12.3.jar
+# jackson-annotations-2.12.3.jar
+All files under the Apache 2.0 license (included as Apache_license-2.0.txt in this folder)
+
+# jasperreports-6.0.0.jar
+Under the terms of the LGPL 3.0, available at http://www.gnu.org/licenses/lgpl-3.0.html
+
+# jasperreports-fonts-6.0.0.jar
+License is contained in the jar file itself (path: net/sf/jasperreports/fonts/dejavu/LICENSE)
+
+# jcommon-1.0.15.jar 
+# jfreechart-1.0.12.jar
+# jxl-2.6.10.jar
+All files under the LGPL 2.1 (available at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
+
+# poi-3.10.1.jar
+Under the Apache 2.0 license (included as Apache_poi_license.txt in this folder)
+
+# hibernate-core-5.4.2.Final.jar
+# hibernate-commons-annotations-5.1.0.Final.jar
+All files under the LGPL 2.1 (available at www.gnu.org/licenses/lgpl.html)
+
+# antlr-2.7.7.jar
+Under the ANTLR license (available at http://www.antlr.org/license.html)
+
+# junit-4.12.jar
+Under the Eclipse Public License - v 1.0 (available at https://www.eclipse.org/legal/epl-v10.html)
+
+# dom4j-2.1.3.jar
+Provided by DOM4J Project - https://dom4j.github.io, under the BSD 3-Clause license (available at https://github.com/dom4j/dom4j/blob/master/LICENSE)
+
+# hamcrest-all-1.3.jar
+Under the BSD 3-Clause license (available at http://opensource.org/licenses/BSD-3-Clause)
+
+# rhino-1.7.13.jar
+# rhino-engine-1.7.13.jar
+Under MPL/GPL License (available at https://developer.mozilla.org/en/Rhino_License)
+
+# javassist-3.24.0-GA.jar
+Under MPL License (included as MPL-1.1.txt in this folder)
+
+# slf4j-api-1.7.25.jar
+Under MIT license. (available at http://www.slf4j.org/license.html)
+
+# freemarker-2.3.16.jar
+Under a BSD style license (available at http://freemarker.sourceforge.net/docs/app_license.html)
+
+In addition, the distribution includes 
+- ojdbc8-19.3.0.0.jar under the OTN Development and Distribution
+  License Agreement (in /legal folder and available at
+  https://www.oracle.com/downloads/licenses/distribution-license.html)
+
+# jboss-ejb3-api-3.1.0.jar
+Under the LGPL license (included as LGPL-2.1.txt in this folder)
+
+# jakarta.enterprise.cdi-api-2.0.2.jar
+# guava-21.0.jar
+# jakarta.inject-api-1.0.jar
+# jboss-logging-3.3.2.Final.jar
+# jboss-classfilewriter-1.2.4.Final.jar
+# weld-api-3.1.SP4.jar
+# weld-core-impl-3.1.7.SP1.jar
+# weld-environment-common-3.1.7.SP1.jar
+# weld-jsf-3.1.7.SP1.jar
+# weld-servlet-core-3.1.7.SP1.jar
+# weld-spi-3.1.SP4.jar
+# weld-web-3.1.7.SP1.jar
+# arquillian-config-api-1.4.1.Final.jar
+# arquillian-config-impl-base-1.4.1.Final.jar
+# arquillian-config-spi-1.4.1.Final.jar
+# arquillian-container-impl-base-1.4.1.Final.jar
+# arquillian-container-spi-1.4.1.Final.jar
+# arquillian-container-test-api-1.4.1.Final.jar
+# arquillian-container-test-impl-base-1.4.1.Final.jar
+# arquillian-container-test-spi-1.4.1.Final.jar
+# arquillian-core-api-1.4.1.Final.jar
+# arquillian-core-impl-base-1.4.1.Final.jar
+# arquillian-core-spi-1.4.1.Final.jar
+# arquillian-junit-container-1.4.1.Final.jar
+# arquillian-junit-core-1.4.1.Final.jar
+# arquillian-suite-extension-1.2.0.jar
+# arquillian-test-api-1.4.1.Final.jar
+# arquillian-testenricher-cdi-1.4.1.Final.jar
+# arquillian-test-impl-base-1.4.1.Final.jar
+# arquillian-test-spi-1.4.1.Final.jar
+# arquillian-weld-embedded-2.0.1.Final.jar
+# shrinkwrap-api-1.2.6.jar
+# shrinkwrap-descriptors-api-base-2.0.0.jar
+# shrinkwrap-descriptors-spi-2.0.0.jar
+# shrinkwrap-impl-base-1.2.6.jar
+# shrinkwrap-spi-1.2.6.jar
+# validation-api-1.0.0.GA.jar
+# httpcore-4.4.9.jar
+# httpclient-4.5.5.jar
+# httpmime-4.5.5.jar
+# tomcat-juli.jar (version 9.0.37)
+# tomcat-jdbc.jar (version 9.0.37)
+# classmate-1.3.4.jar
+# jandex-2.0.5.Final.jar
+# FastInfoset-1.2.15.jar
+# JSMin.java
+Under the Apache 2.0 license (included as Apache_license-2.0.txt in this folder)
+
+# reflections-0.9.11.jar
+Under the WTFPL license (included as WTFPL_license.txt in this folder)
+
+# byte-buddy-1.9.10.jar
+Under the Apache 2.0 license (included as Apache_license-2.0.txt in this folder),
+note that Byte Buddy depends on the ASM library which is distributed under a BSD license (included as ASM_BSD_license.txt in this folder)
+
+# jboss-transaction-api_1.2_spec-1.1.1.Final.jar
+Under the CDDL license version 1.0 (license available at https://spdx.org/licenses/CDDL-1.0.html 
+or in the file CDDL-1.0.txt in this folder)
+
+# istack-commons-runtime-3.0.7.jar
+# javax.activation-1.2.0.jar
+# jaxb-api-2.3.1.jar
+# jaxb-runtime-2.3.1.jar
+# javax.mail-1.6.1.jar
+# jboss-el-api_3.0_spec-1.0.13.Final.jar
+# stax-ex-1.8.jar
+# txw2-2.3.1.jar
+Under the CDDL license version 1.1 (license available at https://spdx.org/licenses/CDDL-1.1.html 
+or in the file CDDL-1.1.txt in this folder)
+
+# CSSMinimizer.java
+CSSMin Copyright License Agreement (BSD License), Copyright (c) 2011, Barry van Oudtshoorn
+The full license text is embedded within the CSSMinimizer.java file itself
+
+# org.openbravo.client.kernel
+LAB.min.js is available under the MIT license (available at
+http://www.opensource.org/licenses/mit-license.php)
+
+# org.openbravo.userinterface.smartclient
+The SmartClient source code, as well as JavaScript and CSS files under the isomorphic/skins
+directory are licensed under the terms of the LGPL 3.0, available at
+http://www.gnu.org/licenses/lgpl-3.0.html
+
+# BigDecimal-all-1.0.3.min.js
+BigDecimal implementation in JavaScript under the ICU4J license which is available in the file ICU4J-1.3.1.txt in this folder or with more explanation at:
+https://github.com/alostale/BigDecimal.js
+
+# scopeleaks.js
+# scopeleaks.min.js
+A modified version of scopeleaks by Rui Lopes available from https://github.com/ruidlopes/scopeleaks
+(The MIT License), Copyright © 2011 Rui Lopes
+The full license text is embedded within the scopeleaks.js file
+
+# jsbeautifier.py
+Under the MIT license (available at https://github.com/beautify-web/js-beautify/blob/master/LICENSE)
+
+The license files for this third party software are available in the legal
+folder of this distribution.
+
+If you have questions about the licensing terms for the Openbravo Software,
+please contact us at: legal@openbravo.com
+

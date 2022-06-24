@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE FIN_FINANCIAL_ACCOUNT">
+    <table name="FIN_FINANCIAL_ACCOUNT" primaryKey="FIN_FINANCIAL_ACCOUNT_KEY">
+      <column name="EM_APRM_IMPORTBANKFILE" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_MATCHTRANSACTIONS" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_RECONCILE" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_MATCHTRANS_FORCE" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_ADDTRANSACTIONPD" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_FINDTRANSACTIONSPD" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_ADDMULTIPLEPAYMENTS" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_FUNDS_TRANS" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_ISFUNDSTRANS_ENABLED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_APRM_GLITEM_DIFF" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="C_GLITEM" name="EM_APRM_GLITEM_FK">
+        <reference local="EM_APRM_GLITEM_DIFF" foreign="C_GLITEM_ID"/>
+      </foreign-key>
+      <index name="EM_APRM_GLITEM_FKI" unique="false">
+        <index-column name="EM_APRM_GLITEM_DIFF"/>
+      </index>
+      <check name="EM_APRM_FIN_FINACC_ISFUNDS_CHK"><![CDATA[EM_APRM_ISFUNDSTRANS_ENABLED IN ('Y', 'N')]]></check>
+    </table>
+  </database>

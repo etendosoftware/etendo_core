@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<data>
+<FIN_PAY_EXEC_PROCESS>
+  <FIN_PAY_EXEC_PROCESS_ID><![CDATA[301950D5D2F24F49916EDE06A473DF02]]></FIN_PAY_EXEC_PROCESS_ID>
+  <AD_CLIENT_ID><![CDATA[23C59575B9CF467C9620760EB255B389]]></AD_CLIENT_ID>
+  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+  <CREATED><![CDATA[2013-07-04 23:45:49.049]]></CREATED>
+  <CREATEDBY><![CDATA[0]]></CREATEDBY>
+  <UPDATED><![CDATA[2013-07-04 23:45:49.049]]></UPDATED>
+  <UPDATEDBY><![CDATA[0]]></UPDATEDBY>
+  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+  <NAME><![CDATA[Simple Execution Process]]></NAME>
+  <DESCRIPTION><![CDATA[Simple execution process that sets the status of the selected payments to Payment Made / Payment Received]]></DESCRIPTION>
+  <CLASSNAME><![CDATA[org.openbravo.advpaymentmngt.executionprocess.SimpleExecutionProcess]]></CLASSNAME>
+</FIN_PAY_EXEC_PROCESS>
+
+<FIN_PAY_EXEC_PROCESS>
+  <FIN_PAY_EXEC_PROCESS_ID><![CDATA[3228607360214D178E489E248218D2FC]]></FIN_PAY_EXEC_PROCESS_ID>
+  <AD_CLIENT_ID><![CDATA[23C59575B9CF467C9620760EB255B389]]></AD_CLIENT_ID>
+  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+  <CREATED><![CDATA[2013-07-04 23:45:49.049]]></CREATED>
+  <CREATEDBY><![CDATA[0]]></CREATEDBY>
+  <UPDATED><![CDATA[2013-07-04 23:45:49.049]]></UPDATED>
+  <UPDATEDBY><![CDATA[0]]></UPDATEDBY>
+  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+  <NAME><![CDATA[Print Check simple process]]></NAME>
+  <DESCRIPTION><![CDATA[Simple process that prompts for a check number and sets it as the reference number of the payment.]]></DESCRIPTION>
+  <CLASSNAME><![CDATA[org.openbravo.advpaymentmngt.executionprocess.PrintCheck]]></CLASSNAME>
+</FIN_PAY_EXEC_PROCESS>
+
+<FIN_PAY_EXEC_PROCESS>
+  <FIN_PAY_EXEC_PROCESS_ID><![CDATA[5A2293805B4D4FC2A4CE091BCCF03BB4]]></FIN_PAY_EXEC_PROCESS_ID>
+  <AD_CLIENT_ID><![CDATA[23C59575B9CF467C9620760EB255B389]]></AD_CLIENT_ID>
+  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+  <CREATED><![CDATA[2013-07-04 23:45:49.049]]></CREATED>
+  <CREATEDBY><![CDATA[0]]></CREATEDBY>
+  <UPDATED><![CDATA[2013-07-04 23:45:49.049]]></UPDATED>
+  <UPDATEDBY><![CDATA[0]]></UPDATEDBY>
+  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+  <NAME><![CDATA[Leave as Credit]]></NAME>
+  <DESCRIPTION><![CDATA[Execution process that on negative payments. Sets the leaves the payment amount as credit while modifying the payment's amount to zero.]]></DESCRIPTION>
+  <CLASSNAME><![CDATA[org.openbravo.advpaymentmngt.executionprocess.LeaveAsCredit]]></CLASSNAME>
+</FIN_PAY_EXEC_PROCESS>
+
+</data>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ADAlertRule id="09B5AF60D1FE4D3CB57C24CF79B09866" identifier="Avg Cost configuration issue. RFC Shipment with no original">
+    <id>09B5AF60D1FE4D3CB57C24CF79B09866</id>
+    <active>true</active>
+    <name>Avg Cost configuration issue. RFC Shipment with no original</name>
+    <tab id="180" entity-name="ADTab" identifier="Product - Product"/>
+    <filterClause xsi:nil="true"/>
+    <sql>SELECT DISTINCT iol.m_product_id as referencekey_id, '0' as ad_role_id, null as ad_user_id, 'The product ' || p.name || ' has Returned Shipments without a related original shipment and does not have a Purchase PriceList nor Standard Cost defined.' as description, 'Y' as isactive, iol.ad_org_id as ad_org_id, iol.ad_client_id as ad_client_id, now() as created, '0' as createdBy, now() as updated, '0' as updatedBy, p.name as RECORD_ID
+FROM m_inoutline iol
+  JOIN m_inout io ON iol.m_inout_id = io.m_inout_id AND io.issotrx = 'Y' AND io.docstatus = 'CO'
+  JOIN m_product p ON iol.m_product_id = p.m_product_id
+  JOIN m_transaction t ON iol.m_inoutline_id = t.m_inoutline_id
+  JOIN c_bpartner bp ON io.c_bpartner_id = bp.c_bpartner_id
+  JOIN c_doctype dt ON io.c_doctype_id = dt.c_doctype_id AND dt.isreturn = 'Y'
+  JOIN m_costing_rule cr ON ad_isorgincluded(io.ad_org_id, cr.ad_org_id, io.ad_client_id) &gt;= 0 AND cr.datefrom &lt;= t.trxprocessdate AND cr.dateto &gt; t.trxprocessdate
+  JOIN m_costing_algorithm ca ON cr.m_costing_algorithm_id = ca.m_costing_algorithm_id AND ca.classname = 'org.openbravo.costing.AverageAlgorithm'
+  LEFT JOIN c_orderline ol ON iol.c_orderline_id = ol.c_orderline_id
+WHERE (iol.c_orderline_id IS NULL OR ol.m_inoutline_id IS NULL)
+  AND NOT EXISTS (SELECT 1 FROM m_costing c
+    WHERE c.m_product_id = iol.m_product_id AND c.costtype IN ( 'STA', 'AVA') AND c.datefrom &lt;= t.trxprocessdate AND c.dateto &gt; t.trxprocessdate)
+  AND NOT EXISTS (SELECT 1 FROM m_productprice pp
+    JOIN m_pricelist_version ppv ON pp.m_pricelist_version_id = ppv.m_pricelist_version_id
+    JOIN m_pricelist pl ON pl.m_pricelist_id = ppv.m_pricelist_id
+    WHERE pp.m_product_id = iol.m_product_id
+      AND (bp.po_pricelist_id = ppv.m_pricelist_id OR (bp.po_pricelist_id IS NULL AND pl.issopricelist = 'N'))
+      AND ppv.validfrom &lt;= t.trxprocessdate)</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="36080A439B564021A2523283A760577A" identifier="Avg Cost configuration issue. Receipts without related Order">
+    <id>36080A439B564021A2523283A760577A</id>
+    <active>true</active>
+    <name>Avg Cost configuration issue. Receipts without related Order</name>
+    <tab id="180" entity-name="ADTab" identifier="Product - Product"/>
+    <filterClause xsi:nil="true"/>
+    <sql>SELECT DISTINCT iol.m_product_id as referencekey_id, '0' as ad_role_id, null as ad_user_id, 'The product ' || p.name || ' has Receipts without a related Purchase Order and does not have a Purchase PriceList nor Standard Cost defined.' as description, 'Y' as isactive, iol.ad_org_id as ad_org_id, iol.ad_client_id as ad_client_id, now() as created, '0' as createdBy, now() as updated, '0' as updatedBy, p.name as RECORD_ID
+FROM m_inoutline iol
+JOIN m_inout io ON iol.m_inout_id = io.m_inout_id AND io.issotrx = 'N' AND io.docstatus = 'CO'
+JOIN m_transaction t ON iol.m_inoutline_id = t.m_inoutline_id
+JOIN c_bpartner bp ON io.c_bpartner_id = bp.c_bpartner_id
+JOIN m_product p ON iol.m_product_id = p.m_product_id
+JOIN m_costing_rule cr ON ad_isorgincluded(io.ad_org_id, cr.ad_org_id, io.ad_client_id) &gt;= 0 AND cr.datefrom &lt;= t.trxprocessdate AND cr.dateto &gt; t.trxprocessdate
+JOIN m_costing_algorithm ca ON cr.m_costing_algorithm_id = ca.m_costing_algorithm_id AND ca.classname = 'org.openbravo.costing.AverageAlgorithm'
+WHERE NOT EXISTS (SELECT 1 FROM m_matchpo mp WHERE mp.m_inoutline_id = iol.m_inoutline_id AND mp.c_orderline_id IS NOT NULL)
+AND NOT EXISTS (SELECT 1 FROM m_costing c WHERE c.m_product_id = iol.m_product_id AND c.costtype IN ('STA', 'AVA') AND c.datefrom &lt;= t.trxprocessdate AND c.dateto &gt; t.trxprocessdate)
+AND NOT EXISTS (SELECT 1 FROM m_productprice pp
+JOIN m_pricelist_version ppv ON pp.m_pricelist_version_id = ppv.m_pricelist_version_id
+JOIN m_pricelist pl ON pl.m_pricelist_id = ppv.m_pricelist_id
+WHERE pp.m_product_id = iol.m_product_id AND (bp.po_pricelist_id = ppv.m_pricelist_id OR (bp.po_pricelist_id IS NULL AND pl.issopricelist = 'N')) AND ppv.validfrom &lt;= t.trxprocessdate)
+AND NOT EXISTS (SELECT 1 FROM c_orderline ol JOIN c_order o ON ol.c_order_id = o.c_order_id AND o.issotrx = 'N' AND o.processed = 'Y'
+WHERE ol.m_product_id = iol.m_product_id AND o.c_bpartner_id = bp.c_bpartner_id AND ad_isorgincluded(o.ad_org_id, cr.ad_org_id, io.ad_client_id) &gt;= 0)</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="A1FB0C9A1E57405091CE261FB3E96DAC" identifier="Avg Cost configuration issue.Negative Internal Consumption">
+    <id>A1FB0C9A1E57405091CE261FB3E96DAC</id>
+    <active>true</active>
+    <name>Avg Cost configuration issue.Negative Internal Consumption</name>
+    <tab id="180" entity-name="ADTab" identifier="Product - Product"/>
+    <filterClause xsi:nil="true"/>
+    <sql>SELECT DISTINCT il.m_product_id as referencekey_id, '0' as ad_role_id, null as ad_user_id,
+  'The product ' || p.name || ' has Negative Internal Consumptions and does not have a Purchase PriceList nor Standard Cost defined.' as description,
+  'Y' as isactive, il.ad_org_id as ad_org_id, il.ad_client_id as ad_client_id,
+  now() as created, '0' as createdBy, now() as updated, '0' as updatedBy,
+  ad_column_identifier('M_Product', p.m_product_id, 'en_US') as RECORD_ID
+FROM m_internal_consumptionline il
+  JOIN m_internal_consumption i ON i.m_internal_consumption_id = il.m_internal_consumption_id
+  JOIN m_transaction t ON il.m_internal_consumptionline_id = t.m_internal_consumptionline_id
+  JOIN m_product p ON il.m_product_id = p.m_product_id
+  JOIN m_costing_rule cr ON ad_isorgincluded(i.ad_org_id, cr.ad_org_id, i.ad_client_id) &gt;= 0 AND cr.datefrom &lt;= t.trxprocessdate AND cr.dateto &gt; t.trxprocessdate
+  JOIN m_costing_algorithm ca ON cr.m_costing_algorithm_id = ca.m_costing_algorithm_id AND ca.classname = 'org.openbravo.costing.AverageAlgorithm'
+WHERE t.movementqty &gt; 0
+  AND NOT EXISTS (SELECT 1 FROM m_costing c
+    WHERE c.m_product_id = il.m_product_id AND c.costtype IN ( 'STA', 'AVA') AND c.datefrom &lt;= t.trxprocessdate AND c.dateto &gt; t.trxprocessdate)
+  AND NOT EXISTS (SELECT 1 FROM m_productprice pp
+                              JOIN m_pricelist_version ppv ON pp.m_pricelist_version_id = ppv.m_pricelist_version_id
+                              JOIN m_pricelist pl ON pl.m_pricelist_id = ppv.m_pricelist_id
+                  WHERE pp.m_product_id = il.m_product_id
+                    AND pl.issopricelist = 'N'
+                    AND ppv.validfrom &lt;= t.trxprocessdate)</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="A72D356950CE4B41ACC281C31C335785" identifier="Avg Cost configuration issue. Incoming Physical Inventory">
+    <id>A72D356950CE4B41ACC281C31C335785</id>
+    <active>true</active>
+    <name>Avg Cost configuration issue. Incoming Physical Inventory</name>
+    <tab id="180" entity-name="ADTab" identifier="Product - Product"/>
+    <filterClause xsi:nil="true"/>
+    <sql>SELECT DISTINCT il.m_product_id as referencekey_id, '0' as ad_role_id, null as ad_user_id,
+  'The product ' || p.name || ' has Incoming Physical Inventory and does not have a Purchase PriceList nor Standard Cost defined.' as description,
+  'Y' as isactive, il.ad_org_id as ad_org_id, il.ad_client_id as ad_client_id,
+  now() as created, '0' as createdBy, now() as updated, '0' as updatedBy,
+  ad_column_identifier('M_Product', p.m_product_id, 'en_US') as RECORD_ID
+FROM m_inventoryline il
+    JOIN m_inventory i ON i.m_inventory_id = il.m_inventory_id
+    JOIN m_transaction t ON il.m_inventoryline_id = t.m_inventoryline_id
+    JOIN m_product p on p.m_product_id = il.m_product_id
+WHERE t.movementqty &gt; 0
+  AND NOT EXISTS (SELECT 1 FROM m_costing
+                  WHERE m_costing.m_product_id = il.m_product_id AND m_costing.costtype = 'STA' AND m_costing.datefrom &lt;= t.trxprocessdate AND m_costing.dateto &gt; t.trxprocessdate)
+  AND NOT EXISTS (SELECT 1 FROM m_productprice pp
+                    JOIN m_pricelist_version ppv ON pp.m_pricelist_version_id = ppv.m_pricelist_version_id
+                    JOIN m_pricelist pl ON pl.m_pricelist_id = ppv.m_pricelist_id
+                  WHERE pp.m_product_id = il.m_product_id AND pl.issopricelist = 'N' AND ppv.validfrom &lt;= t.trxprocessdate)
+  AND EXISTS (SELECT 1 FROM m_costing_rule cr
+                JOIN m_costing_algorithm ca ON cr.m_costing_algorithm_id = ca.m_costing_algorithm_id AND ca.classname LIKE 'org.openbravo.costing.AverageAlgorithm'
+              WHERE (ad_isorgincluded(il.ad_org_id, cr.ad_org_id, i.ad_client_id) &gt;= 0 OR ad_isorgincluded(cr.ad_org_id, il.ad_org_id, i.ad_client_id) &gt;= 0)
+                AND cr.datefrom &lt;= t.trxprocessdate AND cr.dateto &gt; t.trxprocessdate)
+  AND NOT EXISTS (SELECT 1 FROM m_costing
+                  WHERE m_costing.m_product_id = il.m_product_id AND m_costing.costtype = 'AVA' AND m_costing.datefrom &lt;= t.trxprocessdate AND m_costing.dateto &gt; t.trxprocessdate)</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="BD07156AA7EE4FB2B95B3F3A6D63296F" identifier="Avg Cost configuration issue.Cancel Ship. with no original">
+    <id>BD07156AA7EE4FB2B95B3F3A6D63296F</id>
+    <active>true</active>
+    <name>Avg Cost configuration issue.Cancel Ship. with no original</name>
+    <tab id="180" entity-name="ADTab" identifier="Product - Product"/>
+    <filterClause xsi:nil="true"/>
+    <sql>SELECT DISTINCT iol.m_product_id as referencekey_id, '0' as ad_role_id, null as ad_user_id, 'The product ' || p.name || ' has Cancelation Shipments without a related original shipment and does not have a Purchase PriceList nor Standard Cost defined.' as description, 'Y' as isactive, iol.ad_org_id as ad_org_id, iol.ad_client_id as ad_client_id, now() as created, '0' as createdBy, now() as updated, '0' as updatedBy, p.name as RECORD_ID
+FROM m_inoutline iol
+  JOIN m_inout io ON iol.m_inout_id = io.m_inout_id AND io.issotrx = 'Y' AND io.docstatus = 'VO'
+  JOIN m_product p ON iol.m_product_id = p.m_product_id
+  JOIN m_transaction t ON iol.m_inoutline_id = t.m_inoutline_id
+  JOIN c_bpartner bp ON io.c_bpartner_id = bp.c_bpartner_id
+  JOIN c_doctype dt ON io.c_doctype_id = dt.c_doctype_id AND dt.isreturn = 'N'
+  JOIN m_costing_rule cr ON ad_isorgincluded(io.ad_org_id, cr.ad_org_id, io.ad_client_id) &gt;= 0 AND cr.datefrom &lt;= t.trxprocessdate AND cr.dateto &gt; t.trxprocessdate
+  JOIN m_costing_algorithm ca ON cr.m_costing_algorithm_id = ca.m_costing_algorithm_id AND ca.classname = 'org.openbravo.costing.AverageAlgorithm'
+WHERE (iol.canceled_inoutline_id IS NULL AND iol.movementqty &lt; 0)
+  AND NOT EXISTS (SELECT 1 FROM m_costing c
+    WHERE c.m_product_id = iol.m_product_id AND c.costtype IN ( 'STA', 'AVA') AND c.datefrom &lt;= t.trxprocessdate AND c.dateto &gt; t.trxprocessdate)
+  AND NOT EXISTS (SELECT 1 FROM m_productprice pp
+                              JOIN m_pricelist_version ppv ON pp.m_pricelist_version_id = ppv.m_pricelist_version_id
+                              JOIN m_pricelist pl ON pl.m_pricelist_id = ppv.m_pricelist_id
+                  WHERE pp.m_product_id = iol.m_product_id
+                    AND (bp.po_pricelist_id = ppv.m_pricelist_id OR (bp.po_pricelist_id IS NULL AND pl.issopricelist = 'N'))
+                    AND ppv.validfrom &lt;= t.trxprocessdate)</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="C43620EE5D79410CAA6B1F0B103C7F22" identifier="Avg Cost configuration issue.Negative Shipment">
+    <id>C43620EE5D79410CAA6B1F0B103C7F22</id>
+    <active>true</active>
+    <name>Avg Cost configuration issue.Negative Shipment</name>
+    <tab id="180" entity-name="ADTab" identifier="Product - Product"/>
+    <filterClause xsi:nil="true"/>
+    <sql>SELECT DISTINCT iol.m_product_id as referencekey_id, '0' as ad_role_id, null as ad_user_id, 'The product ' || p.name || ' has Negative Shipments and does not have a Purchase PriceList nor Standard Cost defined.' as description, 'Y' as isactive, iol.ad_org_id as ad_org_id, iol.ad_client_id as ad_client_id, now() as created, '0' as createdBy, now() as updated, '0' as updatedBy, p.name as RECORD_ID
+FROM m_inoutline iol
+  JOIN m_inout io ON iol.m_inout_id = io.m_inout_id AND io.issotrx = 'Y' AND io.docstatus = 'CO'
+  JOIN m_product p ON iol.m_product_id = p.m_product_id
+  JOIN m_transaction t ON iol.m_inoutline_id = t.m_inoutline_id
+  JOIN c_bpartner bp ON io.c_bpartner_id = bp.c_bpartner_id
+  JOIN c_doctype dt ON io.c_doctype_id = dt.c_doctype_id AND dt.isreturn = 'N'
+  JOIN m_costing_rule cr ON ad_isorgincluded(io.ad_org_id, cr.ad_org_id, io.ad_client_id) &gt;= 0 AND cr.datefrom &lt;= t.trxprocessdate AND cr.dateto &gt; t.trxprocessdate
+  JOIN m_costing_algorithm ca ON cr.m_costing_algorithm_id = ca.m_costing_algorithm_id AND ca.classname = 'org.openbravo.costing.AverageAlgorithm'
+WHERE iol.movementqty &lt; 0
+  AND NOT EXISTS (SELECT 1 FROM m_costing c
+    WHERE c.m_product_id = iol.m_product_id AND c.costtype IN ( 'STA', 'AVA') AND c.datefrom &lt;= t.trxprocessdate AND c.dateto &gt; t.trxprocessdate)
+  AND NOT EXISTS (SELECT 1 FROM m_productprice pp
+                              JOIN m_pricelist_version ppv ON pp.m_pricelist_version_id = ppv.m_pricelist_version_id
+                              JOIN m_pricelist pl ON pl.m_pricelist_id = ppv.m_pricelist_id
+                  WHERE pp.m_product_id = iol.m_product_id
+                    AND (bp.po_pricelist_id = ppv.m_pricelist_id OR (bp.po_pricelist_id IS NULL AND pl.issopricelist = 'N'))
+                    AND ppv.validfrom &lt;= t.trxprocessdate)
+</sql>
+    <type>D</type>
+  </ADAlertRule>
+</ob:Openbravo>

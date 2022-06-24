@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="VIEW M_PRODUCT_WAREHOUSE_QTYS_V">
+    <view name="M_PRODUCT_WAREHOUSE_QTYS_V"><![CDATA[SELECT sd.m_product_id, sd.m_warehouse_id, sum(sd.qtyonhand) AS qtyonhand, sum(sd.qtyordered) AS qtyordered, sum(sd.qtyreserved) AS qtyreserved FROM (SELECT sdd.m_product_id, l.m_warehouse_id, sum(sdd.qtyonhand) AS qtyonhand, 0 AS qtyordered, 0 AS qtyreserved FROM m_storage_detail sdd JOIN m_locator l ON sdd.m_locator_id = l.m_locator_id GROUP BY sdd.m_product_id, l.m_warehouse_id UNION SELECT sp.m_product_id, sp.m_warehouse_id, 0 AS qtyonhand, sum(sp.qtyordered) AS qtyordered, sum(sp.qtyreserved) AS qtyreserved FROM m_storage_pending sp GROUP BY sp.m_product_id, sp.m_warehouse_id) sd GROUP BY sd.m_product_id, sd.m_warehouse_id]]></view>
+  </database>

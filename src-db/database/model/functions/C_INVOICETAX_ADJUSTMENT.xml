@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_INVOICETAX_ADJUSTMENT">
+    <function name="C_INVOICETAX_ADJUSTMENT" type="NULL">
+      <parameter name="p_invoice_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_precision" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_action" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2017-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+/*
+* It rounds C_InvoiceLineTax and C_InvoiceTax TaxBaseAmt and adjusts C_InvoiceTax TaxAmt and C_InvoiceLine LineNetAmt
+* when completing the p_invoice_id invoice.
+* It removes C_InvoiceLineTax and C_InvoiceTax taxes and C_InvoiceLine and C_Invoice amounts and recalculates them again
+* when reactivating the p_invoice_id invoice.
+*/
+
+-- Variables
+v_taxAmt C_INVOICETAX.TaxAmt%TYPE;
+v_amount C_INVOICELINE.Line_Gross_Amount%TYPE;
+TYPE RECORD IS REF CURSOR;
+CUR_Tax RECORD;
+CUR_Line RECORD;
+
+BEGIN --BODY
+
+  -- Round and Adjust taxes
+  IF (p_action = 'CO') THEN
+    AD_Disable_Triggers();
+
+    -- Round
+    UPDATE C_INVOICELINETAX
+    SET TaxBaseAmt = round(TaxBaseAmt, p_precision)
+    WHERE C_Invoice_ID = p_invoice_id;
+
+    UPDATE C_INVOICETAX
+    SET TaxBaseAmt = round(TaxBaseAmt, p_precision)
+    WHERE C_Invoice_ID = p_invoice_id
+    AND Recalculate = 'Y';
+
+    -- Adjust
+    FOR CUR_Tax IN (
+      SELECT it.C_Tax_ID, COALESCE((MIN(it.DocTaxBaseAmt) + MIN(it.DocTaxAmt)) - (SUM(ilt.LineTaxBaseAmt) + SUM(ilt.LineTaxAmt)), 0) as TaxAdjustment, COALESCE(MIN(it.DocTaxBaseAmt) - SUM(ilt.LineTaxBaseAmt), 0) as LineAdjustment
+      FROM (
+        SELECT c_tax_get_root(it.c_tax_id) as C_Tax_ID, CASE WHEN MIN(it.TaxBaseAmt) > 0 THEN MIN(it.TaxBaseAmt) ELSE MAX(it.TaxBaseAmt) END as DocTaxBaseAmt, SUM(it.TaxAmt) as DocTaxAmt, MIN(it.Line) as Line
+        FROM C_InvoiceTax it
+        JOIN C_Tax t
+        ON it.C_Tax_ID = t.C_Tax_ID
+        WHERE it.C_Invoice_ID = p_invoice_id
+        AND it.Recalculate = 'Y'
+        AND t.DocTaxAmount = 'D'
+        GROUP BY c_tax_get_root(it.c_tax_id)
+      ) it
+      JOIN (
+        SELECT c_tax_get_root(ilt.c_tax_id) as C_Tax_ID, CASE WHEN MIN(ilt.TaxBaseAmt) > 0 THEN MIN(ilt.TaxBaseAmt) ELSE MAX(ilt.TaxBaseAmt) END as LineTaxBaseAmt, SUM(ilt.TaxAmt) as LineTaxAmt
+        FROM C_InvoiceLineTax ilt
+        JOIN C_Tax t
+        ON ilt.C_Tax_ID = t.C_Tax_ID
+        WHERE ilt.C_Invoice_ID = p_invoice_id
+        AND t.DocTaxAmount = 'D'
+        GROUP BY ilt.C_InvoiceLine_ID, c_tax_get_root(ilt.c_tax_id)
+      ) ilt
+      ON ilt.C_Tax_ID = it.C_Tax_ID
+      GROUP BY it.C_Tax_ID, it.Line
+      HAVING COALESCE(MIN(it.DocTaxBaseAmt), 0) <> COALESCE(SUM(ilt.LineTaxBaseAmt), 0)
+      OR COALESCE(MIN(it.DocTaxBaseAmt) + MIN(it.DocTaxAmt), 0) <> COALESCE(SUM(ilt.LineTaxBaseAmt) + SUM(ilt.LineTaxAmt), 0)
+      ORDER BY it.Line
+    )
+    LOOP
+      -- Adjust the tax that stays closest to the original amount (the one with the lowest rounded tax amount - not rounded tax amount + adjustment amount)
+      IF (CUR_Tax.TaxAdjustment <> 0) THEN
+        FOR CUR_Line IN (
+          SELECT it.C_InvoiceTax_ID, it.C_Tax_ID, t.Line
+          FROM C_InvoiceTax it
+          JOIN C_Tax t
+          ON it.C_Tax_ID = t.C_Tax_ID
+          WHERE it.C_Invoice_ID = p_invoice_id
+          AND it.Recalculate = 'Y'
+          AND c_tax_get_root(it.C_Tax_ID) = CUR_Tax.C_Tax_ID
+          ORDER BY ABS(it.TaxAmt - (it.TaxBaseAmt * (t.Rate/100)) - CUR_Tax.TaxAdjustment) ASC, ABS(it.TaxAmt) DESC, t.Line DESC
+        )
+        LOOP
+          UPDATE C_INVOICETAX
+          SET TaxAmt = TaxAmt - CUR_Tax.TaxAdjustment
+          WHERE C_InvoiceTax_ID = CUR_Line.C_InvoiceTax_ID;
+
+          UPDATE C_INVOICETAX it
+          SET TaxBaseAmt = TaxBaseAmt - CUR_Tax.TaxAdjustment
+          WHERE it.C_Invoice_ID = p_invoice_id
+          AND it.Recalculate = 'Y'
+          AND c_tax_get_root(it.C_Tax_ID) = CUR_Tax.C_Tax_ID
+          AND EXISTS (
+            SELECT 1
+            FROM C_Tax t
+            WHERE t.C_Tax_ID = it.C_Tax_ID
+            AND ((t.Cascade = 'Y'
+            AND t.Line > CUR_Line.Line)
+            OR (t.BaseAmount IN ('TAX', 'LNATAX', 'TBATAX')
+            AND C_TAX_ISMEMBER(t.C_TaxBase_ID, CUR_Line.C_Tax_ID) = 1
+            AND t.IsSummary = 'N'))
+          );
+
+          EXIT;
+        END LOOP;
+      END IF;
+
+      -- Adjust LineNetAmt
+      IF (CUR_Tax.LineAdjustment <> 0) THEN
+        FOR CUR_Line IN (
+          SELECT il.C_InvoiceLine_ID
+          FROM C_InvoiceLine il
+          WHERE il.C_Invoice_ID = p_invoice_id
+          AND EXISTS (
+            SELECT 1
+            FROM C_InvoiceLineTax ilt
+            WHERE il.C_InvoiceLine_ID = ilt.C_InvoiceLine_ID
+            AND c_tax_get_root(ilt.C_Tax_ID) = CUR_Tax.c_Tax_ID
+          )
+          ORDER BY ABS(il.LineNetAmt) DESC, il.Line DESC
+        )
+        LOOP
+          UPDATE C_INVOICELINE
+          SET LineNetAmt = LineNetAmt + CUR_Tax.LineAdjustment
+          WHERE C_InvoiceLine_ID = CUR_Line.C_InvoiceLine_ID;
+
+          -- TODO: Adjust C_InvoiceLineTax accordingly
+
+          EXIT;
+        END LOOP;
+      END IF;
+    END LOOP;
+
+    AD_Enable_Triggers();
+
+  -- Recalculate amounts and taxes
+  ELSIF (p_action = 'RE') THEN
+
+    -- Remove header amounts and taxes
+    DELETE FROM C_INVOICETAX WHERE C_Invoice_ID = p_invoice_id AND Recalculate = 'Y';
+    SELECT COALESCE(SUM(TaxAmt), 0) INTO v_taxAmt FROM C_INVOICETAX WHERE C_Invoice_ID = p_invoice_id AND Recalculate = 'N';
+    UPDATE C_INVOICE SET TotalLines = 0, GrandTotal = v_taxAmt WHERE C_Invoice_ID = p_invoice_id;
+
+    FOR Cur_line IN (
+      SELECT C_InvoiceLine_ID
+      FROM C_INVOICELINE
+      WHERE C_Invoice_ID = p_invoice_id
+    ) LOOP
+      AD_Disable_Triggers();
+
+      -- Remove line amounts and taxes
+      DELETE FROM C_INVOICELINETAX WHERE C_InvoiceLine_ID = Cur_line.C_InvoiceLine_ID;
+      SELECT Line_Gross_Amount INTO v_amount FROM C_INVOICELINE WHERE C_InvoiceLine_ID = Cur_line.C_InvoiceLine_ID;
+      UPDATE C_INVOICELINE SET Line_Gross_Amount = 0 WHERE C_InvoiceLine_ID = Cur_line.C_InvoiceLine_ID;
+
+      AD_Enable_Triggers();
+
+      -- Recalculate amounts and taxes
+      UPDATE C_INVOICELINE SET Line_Gross_Amount = v_amount WHERE C_InvoiceLine_ID = Cur_line.C_InvoiceLine_ID;
+
+    END LOOP;
+
+  END IF;
+END C_INVOICETAX_ADJUSTMENT
+]]></body>
+    </function>
+  </database>

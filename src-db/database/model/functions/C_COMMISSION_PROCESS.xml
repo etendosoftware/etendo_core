@@ -1,0 +1,477 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_COMMISSION_PROCESS">
+    <function name="C_COMMISSION_PROCESS" type="NULL">
+      <parameter name="p_pinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/******************************************************************************
+  * The contents of this file are subject to the   Compiere License  Version 1.1
+  * ("License"); You may not use this file except in compliance with the License
+  * You may obtain a copy of the License at http://www.compiere.org/license.html
+  * Software distributed under the License is distributed on an  "AS IS"  basis,
+  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  * the specific language governing rights and limitations under the License.
+  * The Original Code is                  Compiere  ERP &  Business Solution
+  * The Initial Developer of the Original Code is Jorg Janke  and ComPiere, Inc.
+  * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke, parts
+  * created by ComPiere are Copyright (C) ComPiere, Inc.;   All Rights Reserved.
+  * Contributor(s): Openbravo SLU
+  * Contributions are Copyright (C) 2001-2018 Openbravo S.L.U.
+  ******************************************************************************/
+  -- Logistice
+  v_ResultStr VARCHAR2(2000):='';
+  v_Message VARCHAR2(2000):='';
+  v_Record_ID VARCHAR2(32);
+  -- Parameter
+  TYPE RECORD IS REF CURSOR;
+    Cur_Parameter RECORD;
+    -- Parameter Variables
+    p_StartDate DATE;
+    --
+    v_AD_Client_ID VARCHAR2(32);
+    v_AD_Org_ID VARCHAR2(32);
+    v_Name VARCHAR2(90) ;
+    v_Currency VARCHAR2(10) ;
+    v_FrequencyType VARCHAR(60);
+    v_DocBasisType VARCHAR(60);
+    v_ListDetails VARCHAR(60);
+    v_SalesRep_ID VARCHAR2(32) ;
+    v_BasisStatus VARCHAR(60) ;
+    v_BasisAmt VARCHAR(60) ;
+    v_day NUMBER;
+    v_isCascade VARCHAR(60);
+    --
+    v_StartDate DATE;
+    v_EndDate DATE;
+    v_C_CommissionRun_ID VARCHAR2(32) ;
+    v_NextNo VARCHAR2(32) ;
+    v_DocumentNo VARCHAR(40) ;
+    v_isgeneric CHAR(1);
+    v_productname M_Product.Name%TYPE;
+  BEGIN
+    --  Update AD_PInstance
+    DBMS_OUTPUT.PUT_LINE('Updating PInstance - Processing ' || p_PInstance_ID) ;
+    v_ResultStr:='PInstanceNotFound';
+    AD_UPDATE_PINSTANCE(p_PInstance_ID, NULL, 'Y', NULL, NULL) ;
+  BEGIN --BODY
+    -- Get Parameters
+    v_ResultStr:='ReadingParameters';
+    FOR Cur_Parameter IN
+      (SELECT i.Record_ID,
+        p.ParameterName,
+        p.P_String,
+        p.P_Number,
+        p.P_Date
+      FROM AD_PInstance i
+      LEFT JOIN AD_PInstance_Para p
+        ON i.AD_PInstance_ID=p.AD_PInstance_ID
+      WHERE i.AD_PInstance_ID=p_PInstance_ID
+      ORDER BY p.SeqNo
+      )
+    LOOP
+      v_Record_ID:=Cur_Parameter.Record_ID;
+      IF(Cur_Parameter.ParameterName='StartDate') THEN
+        p_StartDate:=Cur_Parameter.P_Date;
+        DBMS_OUTPUT.PUT_LINE('  StartDate=' || p_StartDate) ;
+      ELSE
+        DBMS_OUTPUT.PUT_LINE('*** Unknown Parameter=' || Cur_Parameter.ParameterName) ;
+      END IF;
+    END LOOP; -- Get Parameter
+    DBMS_OUTPUT.PUT_LINE('  Record_ID=' || v_Record_ID) ;
+    /**
+    * Create Header + Determine DATE Range
+    */
+    v_ResultStr:='ReadingRecord';
+    SELECT c.AD_Client_ID,
+      c.AD_Org_ID,
+      c.Name,
+      c.FrequencyType,
+      c.DocBasisType,
+      c.ListDetails,
+      c.C_BPartner_ID, 
+      c.BasisStatus, 
+      c.BasisAmt, 
+      c.iscascade,
+      COALESCE(p.isgeneric, 'N'),
+      p.name
+    INTO v_AD_Client_ID,
+      v_AD_Org_ID,
+      v_Name,
+      v_FrequencyType,
+      v_DocBasisType,
+      v_ListDetails,
+      v_SalesRep_ID, 
+      v_BasisStatus, 
+      v_BasisAmt, 
+      v_isCascade,
+      v_isgeneric,
+      v_productname
+    FROM C_Commission c
+        LEFT JOIN m_product p ON c.m_product_id = p.m_product_id
+    WHERE C_Commission_ID=v_Record_ID;
+    --
+    IF (v_isgeneric = 'Y') THEN
+      RAISE_APPLICATION_ERROR(-20000, '@CannotUseGenericProduct@ ' || v_productName);
+    END IF;
+    
+    SELECT ISO_Code
+    INTO v_Currency
+    FROM C_Currency cur,
+      C_Commission com
+    WHERE cur.C_Currency_ID=com.C_Currency_ID
+      AND com.C_Commission_ID=v_Record_ID;
+    --
+    v_ResultStr:='CalculatingHeader';
+    IF(p_StartDate IS NULL) THEN
+      p_StartDate:=now() ;
+    END IF;
+    --
+    IF(v_FrequencyType='Q') THEN -- Quarter
+      v_StartDate:=TRUNC(p_StartDate, 'Q') ;
+      v_EndDate:=TRUNC(v_StartDate+93, 'Q') -1;
+    ELSIF(v_FrequencyType='W') THEN -- Weekly
+      v_StartDate:=TRUNC(p_StartDate, 'DAY') ;
+      v_EndDate:=TRUNC(v_StartDate+7, 'DAY') -1;
+    ELSIF(v_FrequencyType='M') THEN-- Month
+      v_StartDate:=TRUNC(p_StartDate, 'MM') ;
+      v_EndDate:=TRUNC(v_StartDate+32, 'MM') -1;
+    ELSE --Semi-monthly (StartDate 1s or 16th of Month)
+      select to_number(to_char(p_StartDate, 'DD')) into v_day from dual;
+      IF (v_day<16) THEN 
+        v_StartDate:=TRUNC(p_StartDate, 'MM') ;
+        v_EndDate:=TRUNC(v_StartDate, 'MM') +14 ;
+      ELSE
+        v_StartDate:=TRUNC(p_StartDate, 'MM')+15 ;
+        v_EndDate:=TRUNC(v_StartDate+20, 'MM') -1;
+      END IF;
+    END IF;
+    -- Name 01-Jan-2000 - 31-Jan-2001 - USD
+    v_Name:=v_Name || ' ' || TO_CHAR(v_StartDate) || ' - ' || TO_CHAR(v_EndDate) || ' - ' || v_Currency;
+    AD_Sequence_Doc('DocumentNo_C_CommissionRun', v_AD_Client_ID, 'Y', v_DocumentNo) ;
+    DBMS_OUTPUT.PUT_LINE('Create: ' || v_DocumentNo || ' - ' || v_Name) ;
+    v_ResultStr:='InsertingHeader';
+    v_C_CommissionRun_ID:= get_uuid();
+    INSERT
+    INTO C_CommissionRun
+      (
+        C_CommissionRun_ID, C_Commission_ID, AD_Client_ID, AD_Org_ID,
+        IsActive, Created, CreatedBy, Updated,
+        UpdatedBy, DocumentNo, Description, StartDate,
+        GrandTotal, Processing, Processed
+      )
+      VALUES
+      (
+        v_C_CommissionRun_ID, v_Record_ID, v_AD_Client_ID, v_AD_Org_ID,
+         'Y', now(), '0', now(),
+        '0', v_DocumentNo, v_Name, v_StartDate,
+        0, 'N', 'N'
+      )  
+      ;
+    --
+    v_ResultStr:='Update Record';
+    UPDATE C_Commission
+      SET DateLastRun=now()
+    WHERE C_Commission_ID=v_Record_ID;
+    /**
+    * Calculate Lines
+    */
+    DECLARE
+      CUR_CLine RECORD;
+    TYPE TYPE_Ref IS REF CURSOR;
+      v_rc TYPE_REF;
+      --
+      v_Cmd VARCHAR2(3000):='';
+      v_C_CommissionAmt_ID VARCHAR2(32) ;
+      --
+      v_C_Currency_ID C_CommissionDetail.C_Currency_ID%TYPE;
+      v_Amt C_CommissionDetail.ActualAmt%TYPE;
+      v_Qty C_CommissionDetail.ActualQty%TYPE;
+      v_Amt_Deleted C_CommissionDetail.ActualAmt%TYPE;
+      v_C_OrderLine_ID VARCHAR2(32) ;
+      v_C_InvoiceLine_ID VARCHAR2(32) ;
+      v_Reference C_CommissionDetail.Reference%TYPE;
+      v_Info C_CommissionDetail.Info%TYPE;
+      v_isCostCalculated C_CommissionDetail.isCostCalculated%TYPE;
+      --
+    BEGIN
+      FOR CUR_CLine IN
+        (SELECT *  FROM C_CommissionLine  WHERE C_Commission_ID=v_Record_ID AND IsActive='Y' ORDER BY line)
+      LOOP
+        IF (v_isCascade ='N' OR CUR_CLine.Exclude='N') THEN
+          v_ResultStr:='InsertingAmt';
+          -- For every Commission Line that are not exclude=yes(and v_iscascade=yes) create empty Amt line (updated by Detail)
+          AD_Sequence_Next('C_CommissionAmt', v_AD_Client_ID, v_C_CommissionAmt_ID) ;
+          INSERT
+          INTO C_CommissionAmt
+            (
+              C_CommissionAmt_ID, C_CommissionRun_ID, C_CommissionLine_ID, AD_Client_ID,
+              AD_Org_ID, IsActive, Created, CreatedBy, Updated,
+              UpdatedBy, ConvertedAmt, ActualQty, CommissionAmt
+            )
+            VALUES
+            (
+              v_C_CommissionAmt_ID, v_C_CommissionRun_ID, CUR_CLine.C_CommissionLine_ID, v_AD_Client_ID,
+              v_AD_Org_ID, 'Y', now(), '0',
+              now(), '0', 0, 0,
+              0
+            )
+            ; -- Calculation done by Trigger
+          -- DBMS_OUTPUT.PUT_LINE('- ' || CUR_CLine.Line);
+        END IF;
+        v_iscostCalculated := 'Y';
+        v_ResultStr:='AssemblingDynSQL';
+        -- Receipt Basis
+        IF(v_DocBasisType='R') THEN
+          v_ResultStr:='To develope';
+          /*IF (v_ListDetails = 'Y') THEN
+          v_Cmd := 'SELECT h.C_Currency_ID, l.LineNetAmt, l.QtyInvoiced, '
+          || 'NULL, l.C_InvoiceLine_ID, p.DocumentNo || ''_'' || h.DocumentNo, COALESCE(prd.Name,l.Description) '
+          || 'FROM C_Payment p, C_Invoice h, C_InvoiceLine l LEFT JOIN M_Product prd ON l.M_Product_ID = prd.M_Product_ID '
+          || 'WHERE p.C_Invoice_ID = h.C_Invoice_ID'
+          || ' AND p.DocStatus IN (''CL'',''CO'')'
+          || ' AND h.C_Invoice_ID = l.C_Invoice_ID'
+          || ' AND h.AD_Client_ID = '':1'''
+          || ' AND h.DateInvoiced >= to_date('':2'')'
+          || ' AND h.DateInvoiced < to_date('':3'') +1';
+          || ' ';
+          ELSE
+          v_Cmd := 'SELECT h.C_Currency_ID, SUM(l.LineNetAmt) AS Amt, SUM(l.QtyInvoiced) AS Qty, '
+          || 'NULL, NULL, NULL, NULL '
+          || 'FROM C_Payment p, C_Invoice h, C_InvoiceLine l '
+          || 'WHERE p.C_Invoice_ID = h.C_Invoice_ID'
+          || ' AND p.DocStatus IN (''CL'',''CO'')'
+          || ' AND h.C_Invoice_ID = l.C_Invoice_ID'
+          || ' AND h.AD_Client_ID = '':1'''
+          || ' AND h.DateInvoiced >= to_date('':2'')'
+          || ' AND h.DateInvoiced < to_date('':3'') +1';
+          END IF;*/
+          -- Invoice Basis
+        ELSIF(v_DocBasisType='I') THEN
+          IF(v_ListDetails='Y' OR v_IsCascade='Y') THEN
+            IF(v_BasisAmt='N') THEN
+              IF(v_BasisStatus='F') THEN
+                v_Cmd:='SELECT h.C_Currency_ID, l.LineNetAmt * (psv.expected / h.grandtotal),'
+                || 'CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END * l.QtyInvoiced, '
+                || 'NULL, l.C_InvoiceLine_ID, h.DocumentNo, substr(COALESCE(prd.Name,l.Description),1,60), ''Y'' '
+                || 'FROM C_Invoice h JOIN C_InvoiceLine l ON h.C_Invoice_ID = l.C_Invoice_ID'
+                || '    JOIN c_doctype dt ON h.c_doctype_id = dt.c_doctype_id'
+                || '    LEFT JOIN M_Product prd ON l.M_Product_ID = prd.M_Product_ID ';
+              ELSE
+                v_Cmd:='SELECT DISTINCT h.C_Currency_ID, CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END * l.LineNetAmt,'
+                || 'CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END * l.QtyInvoiced, '
+                || 'NULL, l.C_InvoiceLine_ID, h.DocumentNo, substr(COALESCE(prd.Name,l.Description),1,60), ''Y'' '
+                || 'FROM C_Invoice h JOIN C_InvoiceLine l ON h.C_Invoice_ID = l.C_Invoice_ID'
+                || '    JOIN c_doctype dt ON h.c_doctype_id = dt.c_doctype_id'
+                || '    LEFT JOIN M_Product prd ON l.M_Product_ID = prd.M_Product_ID ';
+              END IF;
+            ELSE
+              v_Cmd:='SELECT DISTINCT CASE WHEN cost.c_currency_id is null THEN h.C_Currency_ID ELSE cost.c_currency_id END currency, '
+              || 'CASE WHEN (COST.cost is null AND prd.ISSTOCKED=''Y'' AND prd.PRODUCTTYPE=''I'') THEN 0 '
+              || 'WHEN (M_GET_NO_TRX_PRODUCT_COST(prd.M_PRODUCT_ID, h.DATEINVOICED, ''STA'', h.ad_org_id, null, h.C_CURRENCY_ID) is null AND (prd.ISSTOCKED=''N'' OR prd.PRODUCTTYPE<>''I'')) THEN 0 '
+              || 'ELSE CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END '
+              || '     * CASE WHEN ( prd.isstocked = ''Y'' AND prd.producttype = ''I'' ) THEN CASE WHEN dt.docbasetype=''ARI_RM'' THEN l.linenetamt + ( qtyinvoiced * (COST.cost / ( -1 * m_transaction.movementqty ) ) ) ELSE l.linenetamt - ( qtyinvoiced * (COST.cost / ( -1 * m_transaction.movementqty ) ) ) END ELSE l.linenetamt - (M_get_no_trx_product_cost(prd.m_product_id, h.dateinvoiced, ''STA'', h.ad_org_id, NULL, h.c_currency_id) * l.qtyinvoiced ) END '
+              || 'END AS margin, '
+              || 'CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END * l.QtyInvoiced, '
+              || 'NULL, l.C_InvoiceLine_ID, h.DocumentNo, substr(COALESCE(prd.Name,l.Description),1,60), '
+              || 'CASE WHEN (COST.cost is null AND prd.ISSTOCKED=''Y'' AND prd.PRODUCTTYPE=''I'') THEN ''N'' WHEN ((prd.ISSTOCKED=''N'' OR prd.PRODUCTTYPE<>''I'') AND (M_GET_NO_TRX_PRODUCT_COST(prd.M_PRODUCT_ID, h.DATEINVOICED, ''STA'', h.ad_org_id, null, h.C_CURRENCY_ID)) is null) THEN ''N''   ELSE  ''Y'' END as IsCostCalculated ' 
+              || 'FROM c_invoiceline l inner join C_Invoice h on l.C_Invoice_ID = h.C_Invoice_ID  '
+              || 'left join m_inoutline on l.m_inoutline_id = m_inoutline.m_inoutline_id  '
+              || 'left join m_inout on m_inoutline.m_inout_id = m_inout.m_inout_id  '
+              || 'left join m_transaction on m_inoutline.m_inoutline_id = m_transaction.m_inoutline_id '
+              || '    JOIN c_doctype dt ON h.c_doctype_id = dt.c_doctype_id '
+              || '    LEFT JOIN M_Product prd ON l.M_Product_ID = prd.M_Product_ID '
+              || '    left join(select SUM(m_transaction_cost.cost) as cost,m_transaction_id, c_currency_id '
+              || '              FROM m_transaction_cost '
+              || '              GROUP BY m_transaction_id, c_currency_id) COST on m_transaction.m_transaction_id = COST.m_transaction_id ';
+            END IF;
+          ELSE
+            --v_BasisAmt = 'N'
+            IF(v_BasisStatus='F') THEN
+              v_Cmd:='SELECT h.C_Currency_ID, SUM(l.LineNetAmt * (psv.expected / h.grandtotal)) AS Amt,'
+              || ' SUM(CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END * l.QtyInvoiced) AS Qty, '
+              || 'NULL, NULL, NULL, NULL, ''Y'' '
+              || 'FROM C_Invoice h JOIN C_InvoiceLine l ON h.C_Invoice_ID = l.C_Invoice_ID'
+              || '    JOIN c_doctype dt ON h.c_doctype_id = dt.c_doctype_id ';
+            ELSE
+              v_Cmd:='SELECT h.C_Currency_ID, SUM(CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END * l.LineNetAmt) AS Amt,'
+              || ' SUM(CASE WHEN dt.docbasetype IN (''ARC'',''APC'') THEN -1 ELSE 1 END * l.QtyInvoiced) AS Qty, '
+              || 'NULL, NULL, NULL, NULL, ''Y'' '
+              || 'FROM C_Invoice h JOIN C_InvoiceLine l ON h.C_Invoice_ID = l.C_Invoice_ID'
+              || '    JOIN c_doctype dt ON h.c_doctype_id = dt.c_doctype_id ';
+            END IF;
+          END IF;
+          IF (v_BasisStatus='F') THEN
+            v_Cmd:= v_Cmd || ' left join fin_payment_sched_inv_v psv ON psv.C_Invoice_ID = h.C_Invoice_ID ';
+          END IF;
+          v_Cmd := v_Cmd || ' WHERE h.DocStatus IN (''CL'',''CO'')'
+          || ' AND h.ISSOTRX = ''Y'''
+          || ' AND h.AD_Client_ID = '':1''';
+          IF (v_BasisStatus='F') THEN
+            v_Cmd:= v_Cmd || ' and exists ('
+                          || '              select 1 from fin_payment_sched_inv_v psv1 '
+                          || '              where psv1.c_invoice_id = psv.c_invoice_id '
+                          || '              and psv1.lastpayment >= to_date('':2'') '
+                          || '              and psv1.lastpayment < to_date('':3'') + 1 '
+                          || '             ) '
+                          || ' and to_date('':3'') + 1 > ALL ( '
+                          || '                                select psv2.lastpayment '
+                          || '                                from fin_payment_sched_inv_v psv2 '
+                          || '                                where psv2.c_invoice_id = h.c_invoice_id '
+                          || '                                ) ';
+          ELSE
+            v_Cmd:= v_Cmd || ' AND h.DateInvoiced >= to_date('':2'')'
+            || ' AND h.DateInvoiced < to_date('':3'') +1';
+          END IF;
+        -- Order Basis
+        ELSE
+          IF(v_ListDetails='Y') THEN
+            v_Cmd:='SELECT h.C_Currency_ID, l.LineNetAmt, l.QtyOrdered, '
+            || 'l.C_OrderLine_ID, NULL, h.DocumentNo, substr(COALESCE(prd.Name,l.Description),1,60), ''Y'' '
+            || 'FROM C_Order h, C_OrderLine l LEFT JOIN M_Product prd ON l.M_Product_ID = prd.M_Product_ID ';
+          ELSE
+            v_Cmd:='SELECT h.C_Currency_ID, SUM(l.LineNetAmt) AS Amt, SUM(l.QtyOrdered) AS Qty, '
+            || 'NULL, NULL, NULL, NULL, ''Y'' '
+            || 'FROM C_Order h, C_OrderLine l ';
+          END IF;
+          v_Cmd := v_Cmd || ' WHERE h.C_Order_ID = l.C_Order_ID'
+          || ' AND h.DocStatus IN (''CL'',''CO'')'
+          || ' AND h.ISSOTRX = ''Y'''
+          || ' AND h.AD_Client_ID = '':1'''
+          || ' AND h.DateOrdered >= to_date('':2'')'
+          || ' AND h.DateOrdered < to_date('':3'') +1';
+        END IF;
+        
+        IF(v_BasisStatus='F' AND v_DocBasisType='I') THEN
+          v_Cmd:= v_Cmd || ' AND h.IsPaid = ''Y''';
+        END IF;
+        -- CommissionOrders/Invoices
+        IF(CUR_CLine.CommissionOrders='Y') THEN
+          v_Cmd:=v_Cmd || ' AND h.SalesRep_ID IN (SELECT AD_User_ID FROM AD_User WHERE IsActive=''Y'' AND C_BPartner_ID=''' || v_SalesRep_ID || ''')';
+        END IF;
+        -- Organization
+        IF(CUR_CLine.Org_ID IS NOT NULL) THEN
+          v_Cmd:=v_Cmd || ' AND h.AD_Org_ID=''' || CUR_CLine.Org_ID || '''';
+        ELSE
+          v_Cmd:=v_Cmd || ' AND AD_ISORGINCLUDED(h.AD_Org_ID, ''' || v_AD_Org_ID || ''', h.AD_Client_ID) <> -1';
+        END IF;
+        -- BPartner
+        IF(CUR_CLine.C_BPartner_ID IS NOT NULL) THEN
+          v_Cmd:=v_Cmd || ' AND h.C_BPartner_ID=''' || CUR_CLine.C_BPartner_ID || '''';
+        END IF;
+        -- BPartner Group
+        IF(CUR_CLine.C_BP_Group_ID IS NOT NULL) THEN
+          v_Cmd:=v_Cmd || ' AND h.C_BPartner_ID IN'  || '(SELECT C_BPartner_ID FROM C_BPartner WHERE C_BP_Group_ID=''' || CUR_CLine.C_BP_Group_ID || ''')';
+        END IF;
+        -- Sales Region
+        IF(CUR_CLine.C_SalesRegion_ID IS NOT NULL) THEN
+          v_Cmd:=v_Cmd || ' AND h.C_BPartner_Location_ID IN '  || '(SELECT C_BPartner_Location_ID FROM C_BPartner_Location WHERE C_SalesRegion_ID=''' || CUR_CLine.C_SalesRegion_ID || ''')';
+        END IF;
+        -- Product
+        IF(CUR_CLine.M_Product_ID IS NOT NULL) THEN
+          v_Cmd:=v_Cmd || ' AND l.M_Product_ID=''' || CUR_CLine.M_Product_ID || '''';
+        END IF;
+        -- Product Category
+        IF(CUR_CLine.M_Product_Category_ID IS NOT NULL) THEN
+          v_Cmd:=v_Cmd || ' AND l.M_Product_ID IN '  || '(SELECT M_Product_ID FROM M_Product WHERE M_Product_Category_ID=''' || CUR_CLine.M_Product_Category_ID ||''')';
+        END IF;
+        -- Grouping
+        IF(v_ListDetails<>'Y') THEN
+          v_Cmd:=v_Cmd || ' GROUP BY h.C_Currency_ID';
+        END IF;
+        --
+        -- DBMS_OUTPUT.PUT_LINE('- ' || CUR_CLine.Line || ' SQL=' || SUBSTR(v_Cmd, 1, 200));
+        -- DBMS_OUTPUT.PUT_LINE(SUBSTR(v_Cmd, 200,200));
+        -- DBMS_OUTPUT.PUT_LINE(SUBSTR(v_Cmd, 400));
+        --
+        v_ResultStr:='OpenDynCursor';
+        SELECT REPLACE(REPLACE(REPLACE(v_Cmd, ':1', to_char(v_AD_Client_ID)), ':2', to_char(v_StartDate)), ':3', to_char(v_EndDate)) INTO v_Cmd FROM DUAL;
+        OPEN v_rc FOR v_Cmd;
+        LOOP
+          v_ResultStr:='FetchingData';
+          FETCH v_rc INTO v_C_Currency_ID,
+          v_Amt,
+          v_Qty,
+          v_C_OrderLine_ID,
+          v_C_InvoiceLine_ID,
+          v_Reference,
+          v_Info,
+          v_iscostCalculated;
+          EXIT WHEN v_rc%NOTFOUND;
+          -- 
+          IF (v_isCascade = 'Y') THEN  --DELETE DETAILS
+            v_ResultStr:='DeletingDetail';
+            IF (v_DocBasisType='I') THEN  --invoice
+              SELECT ActualAmt
+              INTO v_Amt_Deleted
+              FROM C_CommissionDetail
+              WHERE c_invoiceline_id = v_C_InvoiceLine_ID
+              AND EXISTS (SELECT 1 FROM c_commissionamt
+                                    WHERE c_commissionamt.c_commissionrun_id = v_C_CommissionRun_ID
+                                    AND C_CommissionDetail.c_commissionamt_id = c_commissionamt.c_commissionamt_id);
+              DELETE FROM C_CommissionDetail 
+              WHERE c_commissionamt_id IN (select c_commissionamt_id
+                                         from c_commissionamt 
+                                         where c_commissionamt.c_commissionrun_id = v_C_CommissionRun_ID)  
+                    AND c_invoiceline_id = v_C_InvoiceLine_ID;
+            ELSE --orders
+              SELECT ActualAmt
+              INTO v_Amt_Deleted
+              FROM C_CommissionDetail
+              WHERE c_orderline_id = v_C_OrderLine_ID
+              AND EXISTS (SELECT 1 FROM c_commissionamt
+                                    WHERE c_commissionamt.c_commissionrun_id = v_C_CommissionRun_ID
+                                    AND C_CommissionDetail.c_commissionamt_id = c_commissionamt.c_commissionamt_id);
+              DELETE FROM C_CommissionDetail 
+              WHERE c_commissionamt_id IN (select c_commissionamt_id 
+                                         from c_commissionamt 
+                                         where c_commissionamt.c_commissionrun_id = v_C_CommissionRun_ID)
+                    AND c_orderline_id = v_C_OrderLine_ID;
+            END IF;
+          END IF;
+          IF (v_isCascade = 'N' OR (v_isCascade = 'Y' AND CUR_CLine.Exclude='N')) THEN
+            v_ResultStr:='InsertingDetail';
+            AD_Sequence_Next('C_CommissionDetail', v_AD_Client_ID, v_NextNo) ;
+            INSERT
+            INTO C_CommissionDetail
+              (
+                C_CommissionDetail_ID, C_CommissionAmt_ID, AD_Client_ID, AD_Org_ID,
+                IsActive, Created, CreatedBy, Updated,
+                UpdatedBy, C_Currency_ID, ActualAmt, ConvertedAmt,
+                ActualQty,
+                C_OrderLine_ID, C_InvoiceLine_ID, Reference, Info, IsCostCalculated
+              )
+              VALUES
+              (
+                v_NextNo, v_C_CommissionAmt_ID, v_AD_Client_ID, v_AD_Org_ID,
+                 'Y', now(), '0', now(),
+                '0', v_C_Currency_ID, v_Amt + COALESCE(v_Amt_Deleted, 0), 0,
+                v_Qty, -- Conversion done by Trigger
+                v_C_OrderLine_ID, v_C_InvoiceLine_ID, v_Reference, v_Info, v_isCostCalculated 
+              )
+              ;
+          END IF;
+          --
+          -- DBMS_OUTPUT.PUT_LINE('  ' || v_Reference || ' - ' || v_Amt || ' - ' || v_Qty);
+        END LOOP;
+        CLOSE v_rc;
+        --
+      END LOOP; -- For every Commission Line
+    END;
+    v_Message:='@CommissionRun@ = ' || v_DocumentNo || ' - ' || v_Name;
+    --<<FINISH_PROCESS>>
+    --  Update AD_PInstance
+    DBMS_OUTPUT.PUT_LINE('Updating PInstance - Finished ' || v_Message) ;
+    AD_UPDATE_PINSTANCE(p_PInstance_ID, NULL, 'N', 1, v_Message) ;
+    RETURN;
+  END; --BODY
+EXCEPTION
+WHEN OTHERS THEN
+  v_ResultStr:= '@ERROR=' || SQLERRM;
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  ROLLBACK;
+  AD_UPDATE_PINSTANCE(p_PInstance_ID, NULL, 'N', 0, v_ResultStr) ;
+  RETURN;
+END C_COMMISSION_PROCESS
+]]></body>
+    </function>
+  </database>

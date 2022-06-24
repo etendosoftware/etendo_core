@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2016 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="PgJdbcDatesIssueData" package="org.openbravo.modulescript">
+  <SqlMethod name="existsAlertRule" type="preparedStatement" return="boolean">
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERTRULE
+       WHERE NAME = ?
+      ]]>
+    </Sql>
+    <Parameter name="alertRule"/>
+  </SqlMethod>
+  
+  <SqlMethod name="existsAlert" type="preparedStatement" return="boolean">
+    <Sql><![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM AD_ALERTRULE
+       WHERE NAME = ?
+      ]]>
+    </Sql>
+    <Parameter name="name"/>
+  </SqlMethod>
+  
+  <SqlMethod name="getAlertRuleId" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT MAX(ad_alertrule_id) AS id
+       FROM AD_ALERTRULE
+       WHERE NAME = ?
+      ]]></Sql>
+    <Parameter name="name"/>
+  </SqlMethod>
+  
+  <SqlMethod name="insertAlertRule" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      INSERT INTO AD_ALERTRULE (
+        AD_ALERTRULE_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+        CREATED, CREATEDBY,  UPDATED, UPDATEDBY,
+        NAME, TYPE
+      ) VALUES (
+        get_uuid(), '0', '0', 'Y',
+        now(), '0', now(), '0',
+        ?, 'E'
+      )
+    ]]></Sql>
+    <Parameter name="name"/>
+  </SqlMethod>
+  
+  <SqlMethod name="insertAlert" type="preparedStatement" return="rowcount">
+    <Sql><![CDATA[
+      INSERT INTO AD_Alert (
+        AD_Alert_ID, AD_Client_ID, AD_Org_ID, IsActive,
+        Created, CreatedBy, Updated, UpdatedBy,
+        Description, AD_AlertRule_ID, Referencekey_ID
+      ) VALUES (
+        get_uuid(), '0', '0', 'Y',
+        NOW(), '0', NOW(), '0',
+        ?, ?, '0')
+      ]]>
+    </Sql>
+    <Parameter name="description" />
+    <Parameter name="adAlertRuleId" />
+  </SqlMethod>
+  
+  <SqlMethod name="insertAlertRecipient" type="preparedStatement" return="rowcount">
+    <Sql><![CDATA[
+    INSERT INTO ad_alertrecipient(
+            ad_client_id, ad_org_id, isactive, created, createdby, 
+            updated, updatedby, ad_alertrecipient_id, ad_alertrule_id, ad_role_id, 
+            sendemail)
+    select ad_client_id, ad_org_id, 'Y', now(), '0',
+           now(), '0', get_uuid(), ?, ad_role_id, 'N'
+      from ad_role
+     where isactive = 'Y'
+      ]]>
+    </Sql>
+    <Parameter name="adAlertRuleId" />
+  </SqlMethod>
+
+</SqlClass>

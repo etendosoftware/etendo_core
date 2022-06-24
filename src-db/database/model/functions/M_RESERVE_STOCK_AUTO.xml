@@ -1,0 +1,115 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_RESERVE_STOCK_AUTO">
+    <function name="M_RESERVE_STOCK_AUTO" type="NULL">
+      <parameter name="p_reservation_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_reservedqty" type="NUMERIC" mode="out">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+/*************
+* Function to reserve stock using the get stock function.
+**************/
+  v_product_id                  VARCHAR2(32);
+  v_uom_id                      VARCHAR2(32);
+  v_asi_id                      VARCHAR2(32);
+  v_locator_id                  VARCHAR2(32);
+  v_warehouse_id                VARCHAR2(32);
+  v_client_id                   VARCHAR2(32);
+  v_org_id                      VARCHAR2(32);
+  v_soline_id                   VARCHAR2(32);
+  v_qty                         NUMBER;
+  v_pendingtoreserveqty         NUMBER;
+  v_pendingqty                  NUMBER;
+  v_reserveqty                  NUMBER;
+  v_dummy                       VARCHAR2(2000) := '';
+  v_pinstance_id                VARCHAR2(32) := get_uuid();
+  v_prioritywarehouse_id        VARCHAR2(32);
+  
+
+  TYPE RECORD IS REF CURSOR;
+  cur_stock                     RECORD;
+
+BEGIN
+  SELECT quantity - COALESCE(reservedqty,0),
+         m_product_id, c_uom_id, m_attributesetinstance_id, m_locator_id, m_warehouse_id,
+         ad_client_id, ad_org_id, c_orderline_id, quantity
+    INTO v_pendingtoreserveqty,
+         v_product_id, v_uom_id, v_asi_id, v_locator_id, v_warehouse_id,
+         v_client_id, v_org_id, v_soline_id, v_reserveqty
+  FROM m_reservation
+  WHERE m_reservation_id = p_reservation_id;
+
+  IF (v_pendingtoreserveqty <= 0) THEN
+    p_reservedqty := 0;
+    RETURN;
+  END IF;
+
+  -- Call M_GET_STOCK
+  DECLARE
+    v_pinstance_result AD_PInstance.result%TYPE;
+    v_pinstance_msg AD_PInstance.errormsg%TYPE;
+    v_warehouse_rule_id VARCHAR2(32);
+  BEGIN
+    IF (v_soline_id IS NOT NULL) THEN
+      SELECT m_warehouse_rule_id , m_warehouse_id
+      INTO v_warehouse_rule_id , v_prioritywarehouse_id
+      FROM c_orderline
+      WHERE c_orderline_id = v_soline_id;
+    END IF;
+
+    M_GET_STOCK_PARAM(v_pinstance_id, p_reservation_id, v_pendingtoreserveqty, v_product_id, v_locator_id, v_warehouse_id, v_prioritywarehouse_id, v_org_id, v_asi_id, p_User_ID, v_client_id, v_warehouse_rule_id, v_uom_id, null, null, null, null, '---', null, 'N', v_pinstance_result, v_pinstance_msg, 'Y', null, null);
+    -- Check result
+    IF (v_pinstance_result = 0) THEN
+      -- Error on m_get_stock
+      RAISE_APPLICATION_ERROR(-20000, v_pinstance_msg);
+    END IF;
+  END; -- End Call M_GET_STOCK
+  
+  v_pendingqty := v_pendingtoreserveqty;
+  
+  FOR cur_stock IN (
+    SELECT sp.quantity, sp.m_storage_detail_id, w.isallocated
+    FROM m_stock_proposed sp
+        JOIN m_storage_detail sd ON sd.m_storage_detail_id = sp.m_storage_detail_id
+        JOIN m_locator l ON sd.m_locator_id = l.m_locator_id
+        JOIN m_warehouse w ON l.m_warehouse_id = w.m_warehouse_id
+    WHERE sp.ad_pinstance_id = v_pinstance_id
+    AND sd.m_product_uom_id IS NULL
+    ORDER BY sp.priority
+  ) LOOP
+    v_qty := LEAST(cur_stock.quantity, v_pendingqty);
+    M_RESERVE_STOCK_MANUAL(p_reservation_id, 'SD', cur_stock.m_storage_detail_id, v_qty, p_user_id, cur_stock.isallocated, v_dummy);
+    DBMS_OUTPUT.PUT_LINE('M_Rerserve_Stock_Manual: ' || v_dummy);
+    v_pendingqty := v_pendingqty - v_qty;
+    IF (v_pendingqty <= 0) THEN
+      p_reservedqty := v_reserveqty;
+      RETURN;
+    END IF;
+  END LOOP;
+
+  p_reservedqty := v_reserveqty - v_pendingqty;
+  RETURN;
+END M_RESERVE_STOCK_AUTO
+]]></body>
+    </function>
+  </database>

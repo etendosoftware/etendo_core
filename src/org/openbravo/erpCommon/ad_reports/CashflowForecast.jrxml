@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CashflowForecast" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="3e8177ed-1f04-47c0-8c79-41687401c9d8">
+	<property name="ireport.zoom" value="1.1000000000000052"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="default" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="6">
+		<box leftPadding="5" rightPadding="5"/>
+	</style>
+	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="6" isBold="true">
+		<box leftPadding="5">
+			<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+		</box>
+	</style>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="18" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="GroupHeader_Gray" mode="Opaque" backcolor="#999999"/>
+	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
+	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11" isBold="false"/>
+	<style name="Report_Footer" isDefault="true" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="14" isBold="true"/>
+	<style name="Group_Data_Field" fontName="Bitstream Vera Sans" fontSize="14"/>
+	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Footer" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<parameter name="USER_CLIENT" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["(1000000)"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_ORG" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["(0)"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="REPORT_TITLE" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["REPORT TITLE"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="AMOUNTFORMAT" class="java.text.DecimalFormat" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new DecimalFormat()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["./modules/org.openbravo.financial.cashflowforecast/src/org/openbravo/financial/cashflowforecast/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BreakByDate" class="java.lang.Boolean">
+		<defaultValueExpression><![CDATA[false]]></defaultValueExpression>
+	</parameter>
+	<parameter name="DatePlanned" class="java.util.Date"/>
+	<parameter name="FinancialAccountId" class="java.lang.String"/>
+	<parameter name="fieldProviderSummary" class="org.openbravo.erpCommon.utility.JRFieldProviderDataSource" isForPrompting="false"/>
+	<parameter name="fieldProviderSubReport" class="org.openbravo.erpCommon.utility.JRFieldProviderDataSource" isForPrompting="false"/>
+	<parameter name="SUBREP_CashflowForecastLinesByDate" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREP_CashflowForecastLines" class="net.sf.jasperreports.engine.JasperReport">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREP_CashflowForecastSummary" class="net.sf.jasperreports.engine.JasperReport">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="OUTPUT_FORMAT" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select 1 from dual]]>
+	</queryString>
+	<variable name="SUBREPORT_COUNT" class="java.lang.Integer" calculation="System">
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<group name="Summary">
+		<groupHeader>
+			<band height="35">
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="15" uuid="38c386c7-3d44-44c3-8a3b-d35cebbcbb2e"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<staticText>
+					<reportElement key="staticText-21" style="Detail_Header" x="187" y="0" width="65" height="15" forecolor="#FEFEFE" backcolor="#969696" uuid="3212afd6-3a87-41c6-aef7-b6e21e3f8d89"/>
+					<box leftPadding="0" rightPadding="0">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[Current Balance]]></text>
+				</staticText>
+				<staticText>
+					<reportElement key="staticText-24" style="Detail_Header" x="380" y="0" width="70" height="15" forecolor="#FEFEFE" backcolor="#969696" uuid="005593e4-1127-4b44-9021-d43947d4307b"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[Payment]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+					<reportElement key="textField-10" style="Detail_Header" x="505" y="0" width="50" height="15" forecolor="#FEFEFE" backcolor="#969696" uuid="438cac5e-1f48-4d03-8cf1-63960e4296f8"/>
+					<box leftPadding="2" rightPadding="5">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{DatePlanned}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement key="staticText-25" style="Detail_Header" x="450" y="0" width="55" height="15" forecolor="#FEFEFE" backcolor="#969696" uuid="713887af-b1da-415b-8ade-b3abd65e96c3"/>
+					<box leftPadding="0" rightPadding="0">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[Final Balance]]></text>
+				</staticText>
+				<staticText>
+					<reportElement key="staticText-23" style="Detail_Header" x="310" y="0" width="70" height="15" forecolor="#FEFEFE" backcolor="#969696" uuid="d3ee29b5-af88-47fa-88a1-7f5e92a8ae9c"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[Income]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+					<reportElement key="textField-11" style="Detail_Header" x="252" y="0" width="59" height="15" forecolor="#FEFEFE" backcolor="#969696" uuid="565c2eb6-ab2c-413a-a1ef-6baf37e0fd97"/>
+					<box leftPadding="2" rightPadding="5">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement key="staticText-18" style="Detail_Header" x="0" y="0" width="187" height="15" forecolor="#FEFEFE" backcolor="#969696" uuid="1f9a8496-8633-4706-9a7c-ce220ecd414e"/>
+					<box leftPadding="5" rightPadding="5">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#959595"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="SansSerif" size="6" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<text><![CDATA[Financial Account]]></text>
+				</staticText>
+				<line>
+					<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="15" uuid="315f9fe3-fbaf-4d6e-bdcf-9ae914578555"/>
+					<graphicElement>
+						<pen lineColor="#959595"/>
+					</graphicElement>
+				</line>
+				<subreport>
+					<reportElement x="0" y="15" width="555" height="20" uuid="ea4147d9-c196-4b12-967b-30fd63b6334f"/>
+					<subreportParameter name="AMOUNTFORMAT">
+						<subreportParameterExpression><![CDATA[$P{AMOUNTFORMAT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<dataSourceExpression><![CDATA[$P{fieldProviderSummary}]]></dataSourceExpression>
+					<subreportExpression><![CDATA[$P{SUBREP_CashflowForecastSummary}]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="Lines">
+		<groupHeader>
+			<band height="13"/>
+			<band height="50">
+				<subreport>
+					<reportElement x="0" y="0" width="555" height="50" uuid="250b685d-7fae-4cd3-b70d-a02e90426e8e"/>
+					<subreportParameter name="OUTPUT_FORMAT">
+						<subreportParameterExpression><![CDATA[$P{OUTPUT_FORMAT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="AMOUNTFORMAT">
+						<subreportParameterExpression><![CDATA[$P{AMOUNTFORMAT}]]></subreportParameterExpression>
+					</subreportParameter>
+					<dataSourceExpression><![CDATA[$P{fieldProviderSubReport}]]></dataSourceExpression>
+					<subreportExpression><![CDATA[($P{BreakByDate}==true)?$P{SUBREP_CashflowForecastLinesByDate}:$P{SUBREP_CashflowForecastLines}]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="46" splitType="Stretch">
+			<staticText>
+				<reportElement style="Report_Subtitle" x="343" y="26" width="113" height="20" uuid="5731d121-54bb-4037-b9bb-6d93f35db8e7"/>
+				<box rightPadding="5"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Planned Date:]]></text>
+			</staticText>
+			<textField>
+				<reportElement style="Report_Subtitle" x="455" y="26" width="100" height="20" uuid="2537c53c-98b3-4543-a1de-8eae0395e562"/>
+				<textFieldExpression><![CDATA[$P{DatePlanned}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement style="Report_Title" x="1" y="0" width="342" height="25" uuid="f5c32ccf-f000-4aae-bb8b-11d0832c0466"/>
+				<text><![CDATA[Cashflow Forecast Report]]></text>
+			</staticText>
+		</band>
+	</title>
+</jasperReport>

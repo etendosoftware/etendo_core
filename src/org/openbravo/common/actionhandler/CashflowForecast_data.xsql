@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2011-2018 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="CashflowForecastData" package="org.openbravo.common.actionhandler">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="selectLines" type="preparedStatement" return="multiple">
+    <Sql>
+      <![CDATA[
+     SELECT fa.fin_financial_account_id, fa.name, null as currentbalance, fa.accountno,
+       COALESCE(coalesce(case when fat.fin_finacc_transaction_id is null then null 
+                         else case when fat.depositamt-fat.paymentamt < 0 then 'N' else 'Y' end end, p.isreceipt), i.issotrx) as isreceipt,
+       COALESCE(mt.msgtext, m.msgtext) as incomeorpaymentmessage,
+       COALESCE(coalesce(fat.statementdate, p.paymentdate), psinv.duedate) as duedate,
+       i.dateinvoiced as dateinvoiced, i.documentno as invoiceno, i.c_invoice_id,
+       p.fin_payment_id, p.documentno || '  ' || p.description as payment_desc, p.documentno as paymentno,
+       bp.name as bpname, fat.fin_finacc_transaction_id,
+       case trxcur.c_currency_id when facur.c_currency_id then null else
+         case COALESCE(coalesce(case when fat.fin_finacc_transaction_id is null then null else case when fat.depositamt-fat.paymentamt < 0 then 'N' else 'Y' end end, p.isreceipt), i.issotrx)
+                                when 'Y' then psd.amount else -1 * psd.amount end end as originalAmount,
+       C_convert_doc_currency(case COALESCE(coalesce(case when fat.fin_finacc_transaction_id is null then null else case when fat.depositamt-fat.paymentamt < 0 then 'N' else 'Y' end end, p.isreceipt), i.issotrx)
+                          when 'Y' then
+                            psd.amount
+                          else
+                            -1 * psd.amount
+                          end,
+           coalesce(coalesce(fat.foreign_currency_id, p.c_currency_id), i.c_currency_id), fa.c_currency_id,
+           COALESCE(coalesce(fat.statementdate, p.paymentdate), psinv.duedate),
+           i.c_invoice_id, p.fin_payment_id, fat.fin_finacc_transaction_id, psd.ad_client_id, psd.ad_org_id) as convertedAmount,
+       case trxcur.c_currency_id when facur.c_currency_id then null else
+       trxcur.iso_code end as trxcur, facur.iso_code as facur, null as initialbalance,
+       psinv.fin_payment_schedule_id as fin_payment_schedule_id,
+       null as finalsummary, null as income, null as payment,
+       ad_column_identifier('FIN_Financial_Account', fa.fin_financial_account_id, ?)  as financialaccount,
+       null as amount,
+       case when p.fin_payment_id is null then 'display:none' else '' end as stylePay,
+       case when i.c_invoice_id is null then 'display:none' else '' end as styleInv,
+       case when fat.fin_finacc_transaction_id is null then 'display:none' else '' end as styleTrx,
+       case when fat.fin_finacc_transaction_id is null then
+         case when p.fin_payment_id is null then 'InvoicePlan' else 'PaymentLine' end
+       else 'TransactionLine' end as tabToOpen,
+       coalesce(fat.fin_finacc_transaction_id,coalesce(psd.FIN_PAYMENT_SCHEDULE_INVOICE, psinv.fin_payment_schedule_id)) as recordId,
+       fat.description as trans_descrip
+      FROM fin_payment_scheduledetail psd
+       left join fin_payment_detail pd on psd.fin_payment_detail_id = pd.fin_payment_detail_id
+       left join fin_payment p on pd.fin_payment_id = p.fin_payment_id
+       left join fin_payment_schedule psinv on psd.fin_payment_schedule_invoice = psinv.fin_payment_schedule_id
+       left join c_invoice i on psinv.c_invoice_id = i.c_invoice_id
+       left join c_bpartner bp on coalesce(p.c_bpartner_id, i.c_bpartner_id) = bp.c_bpartner_id
+       left join fin_financial_account fa on fa.fin_financial_account_id = coalesce(p.fin_financial_account_id, case i.issotrx when 'Y' then bp.fin_financial_account_id when 'N' then bp.po_financial_account_id else null end)
+       left join fin_finacc_transaction fat on fat.fin_payment_id=p.fin_payment_id
+       left join c_currency trxcur on trxcur.c_currency_id = coalesce(coalesce(fat.foreign_currency_id, p.c_currency_id), i.c_currency_id)
+       left join C_CURRENCY FACUR on FACUR.C_CURRENCY_ID = FA.C_CURRENCY_ID,
+       AD_MESSAGE M left join AD_MESSAGE_TRL MT on (M.AD_MESSAGE_ID = MT.AD_MESSAGE_ID and MT.AD_LANGUAGE = ?)
+     where COALESCE(psd.fin_payment_detail_id, psd.fin_payment_schedule_invoice) is not null
+       and psd.iscanceled='N'
+       and (i.isactive is null or i.isactive = 'Y')
+       and (fat.isactive is null or fat.isactive = 'Y')
+       and (trxcur.isactive is null or trxcur.isactive = 'Y')
+       and (facur.isactive is null or facur.isactive = 'Y')
+       AND fa.fin_financial_account_id = ?
+       AND 1=1
+       and m.value = (case COALESCE(coalesce(case when fat.fin_finacc_transaction_id is null then null else case when fat.depositamt-fat.paymentamt < 0 then 'N' else 'Y' end end, p.isreceipt), i.issotrx)
+                      when 'Y' then 'Income' else 'Payment' end)
+       and (fat.fin_finacc_transaction_id is null
+            or fat.statementdate>now())
+       and (p.fin_payment_id is null or (p.amount <> 0 and (select seqno from ad_ref_list rl where rl.ad_reference_id = '575BCB88A4694C27BC013DE9C73E6FE7' and value = p.status) < 40))
+     group by psd.ad_client_id, psd.ad_org_id, fa.fin_financial_account_id, fa.name, fa.accountno, fa.c_currency_id,
+       COALESCE(coalesce(case when fat.fin_finacc_transaction_id is null then null 
+                         else case when fat.depositamt-fat.paymentamt < 0 then 'N' else 'Y' end end, p.isreceipt), i.issotrx),
+       COALESCE(mt.msgtext, m.msgtext), COALESCE(coalesce(fat.statementdate, p.paymentdate), psinv.duedate),
+       i.dateinvoiced, i.documentno, i.c_invoice_id, i.c_currency_id, p.fin_payment_id, p.description, p.documentno, p.c_currency_id, coalesce(coalesce(fat.foreign_currency_id, p.c_currency_id), i.c_currency_id),
+       bp.name, fat.fin_finacc_transaction_id, fat.depositamt,
+       case COALESCE(coalesce(case when fat.fin_finacc_transaction_id is null then null else case when fat.depositamt-fat.paymentamt < 0 then 'N' else 'Y' end end, p.isreceipt), i.issotrx) when 'Y' then psd.amount else -1 * psd.amount end,
+       psinv.fin_payment_schedule_id, psd.FIN_PAYMENT_SCHEDULE_INVOICE, trxcur.c_currency_id, facur.c_currency_id, pd.fin_payment_detail_id, trxcur.iso_code,
+       facur.iso_code, fat.description
+    union all
+      select fat.fin_financial_account_id, fa.name as name, null as currentbalance, null as accountno,
+        case when fat.depositamt-fat.paymentamt < 0 then 'N' else 'Y' end as isreceipt,
+        COALESCE(mt.msgtext, m.msgtext) as incomeorpaymentmessage,
+        fat.statementdate as duedate,
+        null as dateinvoiced, null as invoiceno, null as c_invoice_id,
+        null as fin_payment_id, null as payment_desc, null as paymentno,
+        bp.name as bpname, fat.fin_finacc_transaction_id,
+        null as originalAmount,
+        fat.depositamt-fat.paymentamt as convertedAmount,
+         null as trxcur, facur.iso_code as facur,
+        null as initialbalance,
+        null as fin_payment_schedule_id,
+        null as finalsummary, null as income, null as payment,
+        ad_column_identifier('FIN_Financial_Account', fa.fin_financial_account_id, ?)  as financialaccount,
+        null as amount,
+        'display:none' as stylePay, 'display:none' as styleInv, '' as styleTrx,
+        'TransactionLine' as tabToOpen, fat.fin_finacc_transaction_id as recordId,
+       fat.description as trans_descrip
+      from fin_finacc_transaction fat
+        left join fin_financial_account fa on fat.fin_financial_account_id = fa.fin_financial_account_id
+        left join c_bpartner bp on fat.c_bpartner_id = bp.c_bpartner_id
+        left join c_currency fatcur on fatcur.c_currency_id = fat.foreign_currency_id
+        left join C_CURRENCY facur on FACUR.C_CURRENCY_ID = FA.C_CURRENCY_ID,
+        AD_MESSAGE M left join AD_MESSAGE_TRL MT on (M.AD_MESSAGE_ID = MT.AD_MESSAGE_ID and MT.AD_LANGUAGE = ?)
+      where fat.fin_financial_account_id = ?
+        and (fat.isactive is null or fat.isactive='Y')
+        and (fa.isactive is null or fa.isactive='Y')
+        and (facur.isactive is null or facur.isactive='Y')
+        and (fatcur.isactive is null or fatcur.isactive='Y')
+        and m.value = (case when fat.depositamt-fat.paymentamt < 0 then 'Payment' else 'Income' end)
+        and fat.fin_payment_id is null
+        and 2=2
+      order by name, fin_financial_account_id, fin_financial_account_id
+      ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="language"/>
+    <Parameter name="language"/>
+    <Parameter name="financialAccountId"/>
+    <Parameter name="datePlanned" optional="true" after="AND 1=1"><![CDATA[ AND COALESCE(coalesce(fat.statementdate, p.paymentdate), psinv.duedate) <= to_date(?) ]]></Parameter>
+    <Parameter name="language"/>
+    <Parameter name="language"/>
+    <Parameter name="financialAccountId"/>
+    <Parameter name="datePlanned" optional="true" after="and 2=2"><![CDATA[ and (fat.statementdate > now() and fat.statementdate <= to_date(?)) ]]></Parameter>
+    <Parameter name="orderByClause" type="replace" optional="true" after="order by name, fin_financial_account_id" text=", fin_financial_account_id"/>
+  </SqlMethod>
+  <SqlMethod name="selectSummary" type="preparedStatement" return="multiple">
+    <Sql>
+      <![CDATA[
+        select fa.fin_financial_account_id, ad_column_identifier('FIN_Financial_Account', fa.fin_financial_account_id, ?)  as financialaccount,
+               fa.currentbalance-sum(fat.depositamt-fat.paymentamt) as initialbalance
+        from fin_finacc_transaction fat left join fin_financial_account fa on fa.fin_financial_account_id=fat.fin_financial_account_id
+        where fat.statementdate > now()
+          and fa.ad_client_id in ('1')
+          and fa.ad_org_id in ('1')
+          and fa.isactive='Y'
+          AND 2=2
+        group by fa.fin_financial_account_id, fa.name, fa.accountno, fa.currentbalance
+        union all
+        select fa.fin_financial_account_id, ad_column_identifier('FIN_Financial_Account', fa.fin_financial_account_id, ?)  as financialaccount,
+               fa.currentbalance as initialbalance
+        from fin_financial_account fa
+        where fa.ad_client_id in ('1')
+          and  fa.ad_org_id in ('1')
+          and fa.isactive='Y'
+          AND 3=3
+          and not exists
+        ( select 1
+          from fin_finacc_transaction fat
+          where fat.statementdate > now()
+            and 4=4
+            and fat.fin_financial_account_id = fa.fin_financial_account_id
+        )
+    ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="language"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="and fa.ad_client_id in (" text="'1'"></Parameter>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="and fa.ad_org_id in (" text="'1'"></Parameter>
+    <Parameter name="financialAccountId" optional="true" after="AND 2=2"><![CDATA[ AND fa.fin_financial_account_id = ? ]]></Parameter>
+    <Parameter name="datePlanned" optional="true" after="AND 2=2"><![CDATA[ AND fat.statementdate <= TO_DATE(?) ]]></Parameter>
+    <Parameter name="language"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="where fa.ad_client_id in (" text="'1'"></Parameter>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="and  fa.ad_org_id in (" text="'1'"></Parameter>
+    <Parameter name="financialAccountId" optional="true" after="AND 3=3"><![CDATA[ AND fa.fin_financial_account_id = ? ]]></Parameter>
+    <Parameter name="datePlanned" optional="true" after="and 4=4"><![CDATA[ AND fat.statementdate <= TO_DATE(?) ]]></Parameter>
+  </SqlMethod>
+</SqlClass>

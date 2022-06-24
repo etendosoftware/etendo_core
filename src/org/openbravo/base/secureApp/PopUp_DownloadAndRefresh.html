@@ -1,0 +1,58 @@
+<!--
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):
+ *************************************************************************
+ */
+ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title></title>
+<link rel="shortcut icon" href="../../../../../web/images/favicon.ico" type="image/x-icon" />
+<script language="JavaScript" src="../../../../../web/js/utils.js" type="text/javascript"></script>
+<script language="javascript">
+    function onLoadDo(url) {
+      if (getFrame('LayoutMDI')) {
+        getFrame('LayoutMDI').document.getElementById('background_target').src = url;
+      } else if (typeof top.opener.parent.appFrame !== 'undefined') {
+        top.opener.parent.appFrame.document.location.href = url;
+      }
+      else {
+        top.opener.parent.document.location.href = url;
+      }
+      var buttonRefresh;
+      if (opener && opener.parent && opener.parent.appFrame && opener.parent.appFrame.document.getElementById('buttonRefresh')) {
+        buttonRefresh = opener.parent.appFrame.document.getElementById('buttonRefresh');
+      } else if (getFrame('LayoutMDI') && getFrame('LayoutMDI').OB.MainView.TabSet.getSelectedTab().pane.getClassName() === 'OBClassicWindow') {
+        buttonRefresh = getFrame('LayoutMDI').OB.MainView.TabSet.getSelectedTab().pane.getAppFrameWindow().document.getElementById('buttonRefresh');
+      }
+      if (buttonRefresh) {
+        buttonRefresh.onclick();
+      } else if (getFrame('LayoutMDI') && getFrame('LayoutMDI').OB.MainView.TabSet.getSelectedTab().pane.view) {
+        var theView = getFrame('LayoutMDI').OB.MainView.TabSet.getSelectedTab().pane.view;
+        theView.refresh(function(){
+            theView.getTabMessage();
+            theView.toolBar.refreshCustomButtons();
+        });
+      }
+      closePage();
+    }
+  </script>
+</head>
+<body onload="onLoadDo('xx');" style="background-color: #505050;" id="paramHref">
+</body>
+</html>

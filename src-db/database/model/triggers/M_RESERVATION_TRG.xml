@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_RESERVATION_TRG">
+    <trigger name="M_RESERVATION_TRG" table="M_RESERVATION" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_sales_order_id      VARCHAR2(32);
+  v_linecount           NUMBER;
+  v_creservedcount      NUMBER;
+  v_preservedcount      NUMBER;
+  v_count               NUMBER;
+  v_dummy               VARCHAR2(2000);
+  v_productname         m_product.name%TYPE;
+  v_isgeneric           CHAR(1);
+  v_updateOrderAndLines           CHAR(1) := 'N';
+  -- Parameter
+  TYPE RECORD IS REF CURSOR;
+  cur_reservationstock 				RECORD;
+BEGIN
+  IF (AD_isTriggerEnabled()='N') THEN
+    RETURN;
+  END IF;
+  
+  IF (INSERTING) THEN
+    SELECT COUNT(1) INTO v_count
+    FROM ad_preference
+    WHERE property = 'StockReservations';
+    IF (v_count > 1) THEN
+      v_dummy := AD_GET_PREFERENCE_VALUE('StockReservations', 'Y', :NEW.ad_client_id, :NEW.ad_org_id, NULL, NULL, NULL);
+      DBMS_OUTPUT.PUT_LINE('StockReservations preference value: ' || v_dummy);
+    ELSIF (v_count = 0) THEN
+      RAISE_APPLICATION_ERROR(-20000, 'ReservationsNotEnabled');
+    END IF;
+
+  END IF;
+  IF (UPDATING) THEN
+    IF ( :NEW.quantity <> :old.quantity OR :NEW.reservedqty <> :OLD.reservedqty) THEN
+      v_updateOrderAndLines := 'Y';
+    END IF;
+  END IF;
+  IF (INSERTING) THEN 
+    v_updateOrderAndLines := 'Y';
+  END IF;
+  IF (v_updateOrderAndLines = 'Y') THEN
+    IF (:NEW.res_status NOT IN ('DR', 'CL') AND :NEW.c_orderline_id IS NOT NULL) THEN
+      UPDATE c_orderline
+      SET so_res_status = CASE WHEN :NEW.quantity <= :NEW.reservedqty THEN 'CR'
+                               WHEN :NEW.quantity > :NEW.reservedqty AND :NEW.reservedqty > 0 THEN 'PR'
+                               ELSE 'NR'
+                          END
+      WHERE c_orderline_id = :NEW.c_orderline_id;
+
+      SELECT c_order_id INTO v_sales_order_id
+      FROM c_orderline
+      WHERE c_orderline_id = :NEW.c_orderline_id;
+      SELECT COUNT(*), SUM(CASE so_res_status WHEN 'CR' THEN 1 ELSE 0 END), SUM(CASE so_res_status WHEN 'PR' THEN 1 ELSE 0 END)
+        INTO v_linecount, v_creservedcount, v_preservedcount
+      FROM c_orderline ol
+          JOIN m_product p ON ol.m_product_id = p.m_product_id
+      WHERE ol.c_order_id = v_sales_order_id
+        AND ol.qtyordered > 0
+        AND p.isstocked = 'Y'
+        AND p.producttype = 'I';
+  
+      UPDATE c_order
+      SET so_res_status = CASE WHEN v_linecount = v_creservedcount THEN 'CR'
+                               WHEN v_creservedcount + v_preservedcount > 0 THEN 'PR'
+                               ELSE 'NR'
+                          END
+      WHERE c_order_id = v_sales_order_id;
+    END IF;
+  END IF;
+
+  IF (UPDATING) THEN
+    IF (:OLD.res_status = 'DR' AND :NEW.res_status <> 'DR') THEN
+      FOR cur_reservationstock IN (
+	      select rs.m_locator_id, rs.m_attributesetinstance_id, SUM(rs.quantity - coalesce(rs.releasedqty,0)) as reservedqty, 
+				SUM(CASE WHEN rs.isallocated = 'Y' THEN (rs.quantity - coalesce(rs.releasedqty,0)) ELSE 0 END) as allocatedqty
+        from m_reservation_stock rs
+				where rs.m_reservation_id = :NEW.m_reservation_id
+				group by rs.m_locator_id, rs.m_attributesetinstance_id
+      )
+      LOOP
+			  UPDATE m_storage_detail
+			  SET reservedqty = reservedqty + cur_reservationstock.reservedqty,
+			      allocatedqty = allocatedqty + cur_reservationstock.allocatedqty
+			  WHERE m_product_id = :NEW.m_product_id
+				AND m_product_uom_id IS NULL
+				AND c_uom_id = :NEW.c_uom_id
+				AND m_locator_id = cur_reservationstock.m_locator_id
+				AND m_attributesetinstance_id = cur_reservationstock.m_attributesetinstance_id;
+      END LOOP;
+    END IF;
+    IF (:OLD.res_status <> 'DR' AND :NEW.res_status = 'DR') THEN
+      FOR cur_reservationstock IN (
+	      select rs.m_locator_id, rs.m_attributesetinstance_id, SUM(rs.quantity - coalesce(rs.releasedqty,0)) as reservedqty, 
+				SUM(CASE WHEN rs.isallocated = 'Y' THEN (rs.quantity - coalesce(rs.releasedqty,0)) ELSE 0 END) as allocatedqty
+				from m_reservation_stock rs
+				where rs.m_reservation_id = :NEW.m_reservation_id
+				group by rs.m_locator_id, rs.m_attributesetinstance_id
+      )
+      LOOP
+			  UPDATE m_storage_detail
+			  SET reservedqty = reservedqty - cur_reservationstock.reservedqty,
+			      allocatedqty = allocatedqty - cur_reservationstock.allocatedqty
+			  WHERE m_product_id = :NEW.m_product_id
+				AND m_product_uom_id IS NULL
+				AND c_uom_id = :NEW.c_uom_id
+				AND m_locator_id = cur_reservationstock.m_locator_id
+				AND m_attributesetinstance_id = cur_reservationstock.m_attributesetinstance_id;
+      END LOOP;
+    END IF;
+  END IF;
+
+  IF (DELETING) THEN
+    IF (:OLD.res_status <> 'DR') THEN
+      RAISE_APPLICATION_ERROR(-20000, '@DocumentProcessed@');
+    ELSIF (:OLD.releasedqty <> 0) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@CannotDeleteReleasedReservation@');
+    END IF;
+    IF (:OLD.c_orderline_id IS NOT NULL) THEN
+      UPDATE c_orderline
+      SET so_res_status = 'NR'
+      WHERE c_orderline_id = :OLD.c_orderline_id;
+
+      SELECT c_order_id INTO v_sales_order_id
+      FROM c_orderline
+      WHERE c_orderline_id = :OLD.c_orderline_id;
+      SELECT COUNT(*), SUM(CASE so_res_status WHEN 'CR' THEN 1 ELSE 0 END), SUM(CASE so_res_status WHEN 'PR' THEN 1 ELSE 0 END)
+        INTO v_linecount, v_creservedcount, v_preservedcount
+      FROM c_orderline ol
+          JOIN m_product p ON ol.m_product_id = p.m_product_id
+      WHERE ol.c_order_id = v_sales_order_id
+        AND ol.qtyordered > 0
+        AND p.isstocked = 'Y'
+        AND p.producttype = 'I';
+  
+      UPDATE c_order
+      SET so_res_status = CASE WHEN v_linecount = v_creservedcount THEN 'CR'
+                               WHEN v_creservedcount + v_preservedcount > 0 THEN 'PR'
+                               ELSE 'NR'
+                          END
+      WHERE c_order_id = v_sales_order_id;
+    END IF;
+  END IF;
+  IF (INSERTING OR UPDATING) THEN
+    IF (:NEW.m_product_id IS NOT NULL) THEN
+      SELECT isgeneric, name INTO v_isgeneric, v_productname
+      FROM m_product
+      WHERE m_product_id = :NEW.m_product_id;
+      IF (v_isgeneric = 'Y') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@CannotUseGenericProduct@ ' || v_productname);
+      END IF;
+    END IF;
+  END IF;
+END M_RESERVATION_TRG
+]]></body>
+    </trigger>
+  </database>

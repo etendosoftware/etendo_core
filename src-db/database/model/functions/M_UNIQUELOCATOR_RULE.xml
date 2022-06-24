@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_UNIQUELOCATOR_RULE">
+    <function name="M_UNIQUELOCATOR_RULE" type="NULL">
+      <parameter name="pinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_warehouse_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2016 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+/*************************************************************************
+* DEPRECATED: Use m_uniquelocator_rule_param instead
+************************************************************************/
+  v_ResultStr VARCHAR2(2000):='';
+  v_Message VARCHAR2(2000):='';
+
+  TYPE RECORD IS REF CURSOR;
+  Cur_Parameter RECORD;
+  Cur_MStock    RECORD;
+
+  v_quantity NUMBER;
+  v_ProductID   VARCHAR2(32);
+  v_SelectedLocatorID VARCHAR2(32) ;
+BEGIN
+
+  v_ResultStr:='ReadingParameters';
+  FOR Cur_Parameter IN (
+      SELECT i.record_id, p.parametername, p.p_string, p.p_number, p.p_date, i.createdby AS ad_user_id
+      FROM ad_pinstance i
+      LEFT JOIN ad_pinstance_para p ON i.ad_pinstance_id=p.ad_pinstance_id
+      WHERE i.ad_pinstance_id=pinstance_id
+        AND p.parametername IN ('Quantity', 'M_Product_ID')
+      ORDER BY p.seqno
+  ) LOOP
+
+    IF (Cur_Parameter.ParameterName = 'Quantity') THEN
+      v_Quantity:=Cur_Parameter.P_Number;
+      DBMS_OUTPUT.PUT_LINE(' Quantity=' || v_Quantity);
+    ELSIF (Cur_Parameter.ParameterName = 'M_Product_ID') THEN
+      v_ProductID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_Product_ID=' || v_ProductID);
+    END IF;
+  END LOOP; -- Get Parameter
+
+  FOR Cur_MStock IN (
+      SELECT sum(ms.quantity) AS qty, t.m_locator_id, MIN(priority) AS priority
+      FROM m_stock_proposed ms
+           JOIN m_storage_detail t ON ms.m_storage_detail_id = t.m_storage_detail_id
+           JOIN m_locator l ON t.m_locator_id = l.m_locator_id
+      WHERE ad_pinstance_id = pinstance_id
+        AND l.m_warehouse_id = p_warehouse_id
+      GROUP BY t.m_locator_id
+      HAVING sum(ms.quantity) >= v_quantity
+      ORDER BY MIN(ms.priority)
+  ) LOOP
+    v_selectedlocatorid := cur_mstock.m_locator_id;
+    EXIT;
+  END LOOP;
+
+  IF (v_selectedlocatorid IS NOT NULL) THEN
+    DELETE FROM m_stock_proposed
+    WHERE m_stock_proposed_id IN (SELECT m_stock_proposed_id
+                                  FROM m_stock_proposed ms
+                                      JOIN m_storage_detail sd ON ms.m_storage_detail_id = sd.m_storage_detail_id
+                                      JOIN m_locator l ON sd.m_locator_id = l.m_locator_id
+                                  WHERE ms.ad_pinstance_id = pinstance_id
+                                    AND sd.m_locator_id <> COALESCE(v_selectedlocatorid, '-1')
+                                    AND l.m_warehouse_id = p_warehouse_id);
+  ELSE
+    UPDATE m_stock_proposed
+    SET isfinal = 'N'
+    WHERE m_stock_proposed_id IN (SELECT m_stock_proposed_id
+                                  FROM m_stock_proposed ms
+                                      JOIN m_storage_detail sd ON ms.m_storage_detail_id = sd.m_storage_detail_id
+                                      JOIN m_locator l ON sd.m_locator_id = l.m_locator_id
+                                  WHERE ms.ad_pinstance_id = pinstance_id
+                                    AND l.m_warehouse_id = p_warehouse_id);
+    v_Message := '@NotEnoughLocatorUniqueStock@';
+    AD_UPDATE_PINSTANCE(PInstance_ID, NULL, 'N', 2, v_Message, 'N');
+    RETURN;
+  END IF;
+
+EXCEPTION
+WHEN OTHERS THEN
+  v_ResultStr:= '@ERROR=' || SQLERRM;
+  AD_UPDATE_PINSTANCE(PInstance_ID, NULL, 'N', 0, v_ResultStr, 'N');
+  RETURN;
+END M_UNIQUELOCATOR_RULE
+]]></body>
+    </function>
+  </database>

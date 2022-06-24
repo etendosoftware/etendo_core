@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_INVOICELINE_BEFORE_TRG">
+    <trigger name="C_INVOICELINE_BEFORE_TRG" table="C_INVOICELINE" fires="before" insert="true" update="true" delete="false" foreach="row">
+      <body><![CDATA[
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2015-2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+  v_std_prec NUMBER:=2;
+  v_price_prec NUMBER:=2;
+  v_invoice_id VARCHAR2(32);
+  v_istaxincluded CHAR(1);
+  v_PriceActual NUMBER;
+  
+  v_IsSOTrx CHAR(1);
+  v_Warehouse_ID VARCHAR2(32);
+  v_BPartner_Location_ID VARCHAR2(32);
+  v_Project_ID VARCHAR2(32);  
+  v_AsBOM CHAR(1);  
+  v_TotalRatio NUMBER;
+  v_TotalProducts NUMBER;
+  
+  v_BaseLine NUMBER;
+  v_Line NUMBER;
+  v_LineAcum NUMBER;   
+  v_NetActual NUMBER;
+  v_CalcLine NUMBER;
+  v_execute CHAR(1):='N';
+          
+  TYPE RECORD IS REF CURSOR;
+  Cur_BOM RECORD;  
+BEGIN
+  IF AD_isTriggerEnabled()='N' THEN RETURN;
+  END IF;
+
+  IF (:new.c_orderline_id IS NULL) THEN
+    v_Warehouse_ID := NULL;
+  ELSE
+    SELECT o.m_warehouse_id into v_Warehouse_ID 
+    FROM c_orderline ol, c_order o 
+    WHERE o.c_order_id = ol.c_order_id and ol.c_orderline_id = :new.c_orderline_id;
+  END IF;
+  
+  v_invoice_id := :new.c_invoice_id;
+  SELECT stdPrecision, m_pricelist.istaxincluded, priceprecision, i.C_BPARTNER_LOCATION_ID, i.C_PROJECT_ID, i.ISSOTRX
+    INTO v_std_prec, v_istaxincluded, v_price_prec, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX
+  FROM c_invoice i
+    JOIN c_currency ON i.c_currency_id = c_currency.c_currency_id
+    JOIN m_pricelist ON i.m_pricelist_id = m_pricelist.m_pricelist_id
+  WHERE i.c_invoice_id = v_invoice_id;
+
+  IF (v_istaxincluded = 'Y' AND :new.c_tax_id IS NOT NULL) THEN
+    IF (INSERTING) THEN
+          v_execute:='Y';
+    ELSIF(UPDATING) THEN
+        IF(:old.LineNetAmt <> :new.LineNetAmt
+          OR :old.Line_Gross_Amount <> :new.Line_Gross_Amount
+          OR :old.gross_unit_price <> :new.gross_unit_price
+          OR :old.c_tax_id <> :new.c_tax_id
+          OR :old.qtyinvoiced <> :new.qtyinvoiced) THEN
+          v_execute:='Y';
+        END IF;
+    END IF;
+    IF (v_execute='Y') THEN
+  
+      -- If tax included taxes recalculate net price / amounts
+      IF (:new.qtyinvoiced <> 0) THEN
+        :new.line_gross_amount := ROUND(:new.gross_unit_price * :new.Qtyinvoiced, v_std_prec);
+      END IF;
+      
+      SELECT tc.ASBOM INTO v_AsBOM FROM C_TAXCATEGORY tc, C_tax t WHERE tc.C_TAXCATEGORY_ID = t.C_TAXCATEGORY_ID AND t.C_TAX_ID = :new.C_Tax_ID;
+      IF (v_AsBOM = 'Y') THEN
+        -- BOM taxes
+        -- Calculate the base for ratios.
+        v_BaseLine := :new.line_gross_amount;
+        -- Calculate total ratio and number of products
+        v_TotalRatio := 0;
+        v_TotalProducts := 0;      
+        FOR Cur_BOM IN (
+          SELECT C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX) AS TAX,
+          SUM(ROUND(BOMQTY * BOMPRICE, v_std_Prec)) AS RATIO FROM m_product_bom WHERE m_product_id = :NEW.M_PRODUCT_ID
+          GROUP BY C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX)
+          ORDER BY RATIO ASC )
+        LOOP
+          v_TotalRatio := v_TotalRatio + Cur_BOM.RATIO;
+          v_TotalProducts := v_TotalProducts + 1;
+        END LOOP;
+        
+        -- Calculate taxes based on BOM of products  
+        v_LineAcum := 0;
+        v_NetActual := 0;
+        FOR Cur_BOM IN (
+          SELECT C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX) AS TAX,
+          SUM(ROUND(BOMQTY * BOMPRICE, v_std_Prec)) AS RATIO FROM m_product_bom WHERE m_product_id = :NEW.M_PRODUCT_ID
+          GROUP BY C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX)
+          ORDER BY RATIO ASC )
+        LOOP
+          v_TotalProducts := v_TotalProducts - 1;
+          IF (v_TotalProducts > 0) THEN
+            v_Line := ROUND(v_BaseLine * Cur_BOM.RATIO / v_TotalRatio , v_std_Prec);
+            v_LineAcum := v_LineAcum + v_Line;
+          ELSE -- The last willaccummulate rounding
+            v_Line := v_BaseLine - v_LineAcum;
+          END IF;
+          v_CalcLine := C_GET_NET_AMOUNT_FROM_GROSS(Cur_BOM.TAX, v_Line, v_Line, v_std_Prec);
+          v_NetActual := v_NetActual + v_CalcLine; -- Acum the net
+        END LOOP;    
+        v_PriceActual := v_NetActual / :new.qtyinvoiced;     
+      ELSE
+        -- Regular taxes
+        v_NetActual := C_GET_NET_AMOUNT_FROM_GROSS(:new.c_tax_id, :new.line_gross_amount, :new.taxbaseamt, v_std_Prec);
+        IF (:new.qtyinvoiced <> 0) THEN
+          v_PriceActual := ROUND(v_NetActual / :new.qtyinvoiced, v_price_prec);
+        ELSE
+          v_PriceActual := 0;
+        END IF;
+      END IF;      
+      
+      :NEW.pricestd := v_priceactual;
+      :NEW.pricelist := v_priceactual;
+      :NEW.pricelimit := v_priceactual;
+      :NEW.priceactual := v_priceactual;
+      :new.taxbaseamt := v_NetActual;
+      :new.LineNetAmt := v_NetActual;
+
+    END IF;
+  END IF;
+
+END C_INVOICELINE_BEFORE_TRG
+]]></body>
+    </trigger>
+  </database>

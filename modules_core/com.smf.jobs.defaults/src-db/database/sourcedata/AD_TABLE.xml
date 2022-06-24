@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<data>
+<!--903BE70A11F849F19BAD389E9A84BDF9--><AD_TABLE>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <AD_TABLE_ID><![CDATA[903BE70A11F849F19BAD389E9A84BDF9]]></AD_TABLE_ID>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <NAME><![CDATA[DJOBS_CreateFromOrders]]></NAME>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <TABLENAME><![CDATA[DJOBS_CreateFromOrders]]></TABLENAME>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISVIEW><![CDATA[N]]></ISVIEW>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <AD_WINDOW_ID><![CDATA[662326D726DE45508FA18D69AB3DA35D]]></AD_WINDOW_ID>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISHIGHVOLUME><![CDATA[N]]></ISHIGHVOLUME>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <IMPORTTABLE><![CDATA[N]]></IMPORTTABLE>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISCHANGELOG><![CDATA[N]]></ISCHANGELOG>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISDEFAULTACCT><![CDATA[N]]></ISDEFAULTACCT>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <DEVELOPMENTSTATUS><![CDATA[RE]]></DEVELOPMENTSTATUS>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <AD_PACKAGE_ID><![CDATA[B3D092B422794A428F3AD858883DE4B3]]></AD_PACKAGE_ID>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <DATAORIGINTYPE><![CDATA[HQL]]></DATAORIGINTYPE>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ISTREE><![CDATA[N]]></ISTREE>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <HQLQUERY><![CDATA[select 
+ic.salesOrder.id,
+o.name as adorgname,
+ic.documentType as cdoctypename,
+ic.documentNo,
+bp.name as cbpartnername,
+ic.orderDate,
+case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end as amountlines,
+case 
+    when ic.term = 'N' 
+        then 0 
+    when (ic.term = 'O' and ic.deliveredQuantity < ic.orderedQuantity) 
+        then case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end 
+    else 
+        case when @linesIncludeTaxes@ = 'Y' then ic.notinvoicedlinesgross else ic.notinvoicedlines end
+end as notinvoicedlines,
+ic.term AS TermName,
+case 
+    when ic.term = 'N' 
+        then 0 
+    when ic.term = 'I' 
+        then (
+                case 
+                    when ic.term = 'N' 
+                        then 0 
+                    when (ic.term = 'O' and ic.deliveredQuantity < ic.orderedQuantity) 
+                        then case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end 
+                    else 
+                        case when @linesIncludeTaxes@ = 'Y' then ic.notinvoicedlinesgross else ic.notinvoicedlines end
+                end
+            )
+    when (ic.term = 'O' and ic.deliveredQuantity < ic.orderedQuantity) 
+        then 0 
+    else ic.pendinglines 
+end as pendinglines,
+ic.orderedQuantity,
+ic.deliveredQuantity,
+((case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end)-(case when @linesIncludeTaxes@ = 'Y' then ic.notinvoicedlinesgross else ic.notinvoicedlines end)) AS linesinvoiced,
+ic.amountlinesgross as totalgross,
+ic.creationDate,
+ic.createdBy,
+ic.updated,
+ic.updatedBy
+from
+InvoiceCandidateV ic
+join ic.salesOrder ord
+join ic.organization o
+join ic.businessPartner bp
+where (
+    (
+        ic.term = 'D' 
+        and ic.deliveredQuantity != 0 
+        and (
+                (
+                @linesIncludeTaxes@ = 'N'
+                and exists (
+                    select 1 
+                    from OrderLine ol 
+                    where ol.salesOrder = ord 
+                    and ol.deliveredQuantity-ol.invoicedQuantity != 0
+                    ) 
+                )
+            or 
+            @linesIncludeTaxes@ = 'Y'
+        )
+    )
+    or
+    (
+        ic.term = 'I'
+        and exists (
+            select 1
+            from OrderLine ol
+            where ol.salesOrder = ord 
+            and ol.orderedQuantity-ol.invoicedQuantity != 0
+            )
+    )
+    or
+    (
+        ic.term = 'S'
+        and exists (
+            select 1
+            from OrderLine ol
+            where ol.salesOrder = ord 
+            and ol.deliveredQuantity != 0
+            and ol.orderedQuantity != ol.invoicedQuantity
+            )
+    )
+)
+and @additional_filters@]]></HQLQUERY>
+<!--903BE70A11F849F19BAD389E9A84BDF9-->  <ENTITY_ALIAS><![CDATA[ic]]></ENTITY_ALIAS>
+<!--903BE70A11F849F19BAD389E9A84BDF9--></AD_TABLE>
+
+</data>

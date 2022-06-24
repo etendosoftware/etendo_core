@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="UnreconciledBankStatement" pageWidth="495" pageHeight="802" columnWidth="495" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="9495e9b0-c162-42e2-8a73-7748c5fd766f">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="RECONCILIATION_ID" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT bsl.datetrx as BSLINE_DATE, coalesce(TO_CHAR(bp.name), TO_CHAR(bsl.bpartnername), '') as DESCRIPTION,
+       bsl.referenceno as REF, (bsl.cramount - bsl.dramount) as AMOUNT
+FROM fin_bankstatementline bsl join fin_bankstatement bs on (bsl.fin_bankstatement_id=bs.fin_bankstatement_id)
+     left join c_bpartner bp on (bp.c_bpartner_id = bsl.c_bpartner_id)
+WHERE bs.processed = 'Y'
+      and bs.fin_financial_account_id = (SELECT rec.fin_financial_account_id
+                                         FROM fin_reconciliation rec
+                                         WHERE fin_reconciliation_id=$P{RECONCILIATION_ID})
+      and bsl.datetrx <= (SELECT rec.dateto
+                          FROM fin_reconciliation rec
+                          WHERE fin_reconciliation_id=$P{RECONCILIATION_ID})
+      and (bsl.fin_finacc_transaction_id is null 
+          or bsl.fin_finacc_transaction_id in (select fin_finacc_transaction_id
+						from fin_finacc_transaction, fin_reconciliation
+						where fin_finacc_transaction.fin_reconciliation_id = fin_reconciliation.fin_reconciliation_id
+						and fin_reconciliation.created > (SELECT rec.created
+							     FROM fin_reconciliation rec
+							     WHERE fin_reconciliation_id=$P{RECONCILIATION_ID})))
+ORDER BY BSLINE_DATE, DESCRIPTION, AMOUNT]]>
+	</queryString>
+	<field name="BSLINE_DATE" class="java.util.Date"/>
+	<field name="DESCRIPTION" class="java.lang.String"/>
+	<field name="REF" class="java.lang.String"/>
+	<field name="AMOUNT" class="java.math.BigDecimal"/>
+	<variable name="SUM_LINEAMT" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{AMOUNT}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" x="0" y="0" width="70" height="15" forecolor="#000000" uuid="b88289cf-2a24-4069-8424-8ff153478d1e"/>
+				<box leftPadding="5">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{BSLINE_DATE}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" x="70" y="0" width="188" height="15" forecolor="#000000" uuid="a90cf7ad-08a1-44bc-9b14-02e75d629162"/>
+				<box leftPadding="5">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DESCRIPTION}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" x="258" y="0" width="122" height="15" forecolor="#000000" uuid="538dcd06-f536-4782-b58b-9ed782de676d"/>
+				<box leftPadding="5">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{REF}]]></textFieldExpression>
+			</textField>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" x="380" y="0" width="115" height="15" forecolor="#000000" uuid="00a8a427-98a4-4f4d-a4fa-cf83845c204a"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{AMOUNT}!=null) ? $P{NUMBERFORMAT}.format($F{AMOUNT}).toString() : new String(" ")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="25" splitType="Stretch">
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField-2" x="380" y="0" width="115" height="15" uuid="46be7abd-7bf1-425d-b759-f9c8eb850e43"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($V{SUM_LINEAMT}!=null) ? $P{NUMBERFORMAT}.format($V{SUM_LINEAMT}).toString() : new String(" ")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-1" x="211" y="0" width="169" height="15" uuid="d3692343-d2f3-478e-9991-7668a97e3157"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Total Un-reconciled Bank Statement Lines]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

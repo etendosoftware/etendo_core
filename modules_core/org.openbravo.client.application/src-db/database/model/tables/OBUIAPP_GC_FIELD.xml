@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBUIAPP_GC_FIELD">
+    <table name="OBUIAPP_GC_FIELD" primaryKey="OBUIAPP_GC_FIELD_KEY">
+      <column name="OBUIAPP_GC_FIELD_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="OBUIAPP_GC_TAB_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_FIELD_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="FILTERABLE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[D]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="SORTABLE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[D]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="TEXT_FILTER_BEHAVIOR" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[D]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="FILTERONCHANGE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[D]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="THRESHOLD_TO_FILTER" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ALLOWFILTERBYIDENTIFIER" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[D]]></default>
+        <onCreateDefault><![CDATA['D']]></onCreateDefault>
+      </column>
+      <column name="ISFKDROPDOWNUNFILTERED" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[D]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="DISABLEFKCOMBO" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[D]]></default>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="OBUIAPP_GC_FIELD_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_FIELD" name="OBUIAPP_GC_FIELD_FIELD">
+        <reference local="AD_FIELD_ID" foreign="AD_FIELD_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="OBUIAPP_GC_FIELD_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="OBUIAPP_GC_TAB" name="OBUIAPP_GC_FIELD_TAB">
+        <reference local="OBUIAPP_GC_TAB_ID" foreign="OBUIAPP_GC_TAB_ID"/>
+      </foreign-key>
+      <index name="OBUIAPP_GC_FIELD_TAB_IDX" unique="false">
+        <index-column name="OBUIAPP_GC_TAB_ID"/>
+      </index>
+      <unique name="OBUIAPP_GC_FIELD_UNIQUE_FIELD">
+        <unique-column name="AD_FIELD_ID"/>
+      </unique>
+    </table>
+  </database>

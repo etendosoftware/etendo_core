@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_GETJSONDESCRIPTION">
+    <function name="M_GETJSONDESCRIPTION" type="VARCHAR" volatility="STABLE">
+      <parameter name="p_attributesetinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_exclude_characters" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_language_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_dateformatsql" type="VARCHAR" mode="in">
+        <default><![CDATA[DD-MM-YYYY]]></default>
+      </parameter>
+      <body><![CDATA[/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2017-2019 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+ */
+ 
+ /*
+ * Generates a JSON with the attributesetinstance description.
+ * Example: '{"lot":{"value":"L0","name":"lot"},"serialno":{"value":"#0","name":"serialno"},"CEE55391F603473DBD164BF00A6FCDBC":{"value":"77","name":"Instanciable1"},"AC8962C737FA47D6872654D4C1769427":{"value":"","name":"Not Mandatory"}}'
+ */
+
+  v_json VARCHAR2(2000):='{';
+  v_serno VARCHAR2(2000):='';
+  v_lot VARCHAR2(2000):='';
+  v_guaranteedate VARCHAR2(2000):='';
+  v_escaped_serno VARCHAR2(2000):='';
+  v_escaped_lot VARCHAR2(2000):='';
+  v_escaped_guaranteedate VARCHAR2(2000):='';
+  v_escaped_attvalue VARCHAR2(2000):='';
+  v_serno_sk VARCHAR(60):='SerialNoLabel';
+  v_guaranteedate_sk VARCHAR(60):='ExpirationDateLabel';
+  v_lot_sk VARCHAR(60):='LotLabel';
+  v_serno_label AD_Message.MsgText%TYPE;
+  v_guaranteedate_label AD_Message.MsgText%TYPE;
+  v_lot_label AD_Message.MsgText%TYPE;
+  v_language_code VARCHAR(6);
+  v_att_set_instance_id_to_use VARCHAR(32);
+  v_ref_inv_id VARCHAR(32);
+  v_backslash VARCHAR(1):= CHR(92);
+  v_two_backslash VARCHAR(2);
+  v_backslash_and_quote VARCHAR(2);
+  TYPE RECORD IS REF CURSOR;
+  Cur_Attribute RECORD;
+  
+BEGIN
+  SELECT ad_language into v_language_code from ad_language where ad_language_id = p_language_id;
+  select ad_message_get2(v_serno_sk, v_language_code) INTO v_serno_label from dual;
+  select ad_message_get2(v_guaranteedate_sk, v_language_code) INTO v_guaranteedate_label from dual;
+  select ad_message_get2(v_lot_sk, v_language_code) INTO v_lot_label from dual;
+  SELECT coalesce(to_char(case when mas.M_SERNOCTL_ID is null AND p_exclude_characters = 'N' then concat('#', masi.serno) else masi.serno end), ''),
+         coalesce(to_char(case when mas.M_LOTCTL_ID is null AND p_exclude_characters = 'N' then concat('L', masi.lot) else masi.lot end),  ''), 
+         coalesce(to_char(TO_DATE(masi.guaranteedate), p_dateformatsql), '')
+  INTO v_serno, 
+       v_lot, 
+       v_guaranteedate
+  FROM m_attributesetinstance masi
+  INNER JOIN m_attributeset mas on (mas.m_attributeset_id = masi.m_attributeset_id)
+  where masi.m_attributesetinstance_id = p_attributesetinstance_id;
+
+  v_two_backslash := v_backslash || v_backslash;
+  v_backslash_and_quote := v_backslash || '"';
+  
+  v_escaped_lot := replace(v_lot, CHR(10), '');
+  v_escaped_lot := replace(v_escaped_lot, CHR(13), '');
+  v_escaped_lot := replace(v_escaped_lot, v_backslash, v_two_backslash);
+  v_escaped_lot := replace(v_escaped_lot, '"', v_backslash_and_quote);
+  
+  v_escaped_serno := replace(v_serno, CHR(10), '');
+  v_escaped_serno := replace(v_escaped_serno, CHR(13), '');
+  v_escaped_serno := replace(v_escaped_serno, v_backslash, v_two_backslash);
+  v_escaped_serno := replace(v_escaped_serno, '"', v_backslash_and_quote);
+  
+  v_escaped_guaranteedate := replace(v_guaranteedate, CHR(10), '');
+  v_escaped_guaranteedate := replace(v_escaped_guaranteedate, CHR(13), '');
+  v_escaped_guaranteedate := replace(v_escaped_guaranteedate, v_backslash, v_two_backslash);
+  v_escaped_guaranteedate := replace(v_escaped_guaranteedate, '"', v_backslash_and_quote);
+  
+  v_json:=v_json || '"lot":{"value":"' || v_escaped_lot || '","name":"lot","label":"' || v_lot_label || '"},';
+  v_json:=v_json || '"serialno":{"value":"' || v_escaped_serno || '","name":"serialno","label":"' || v_serno_label || '"},';
+  v_json:=v_json || '"guaranteedate":{"value":"' || v_escaped_guaranteedate || '","name":"guaranteedate","label":"' || v_guaranteedate_label || '"}';
+
+  SELECT m_refinventory_id, parent_attributesetinstance_id
+  INTO v_ref_inv_id, v_att_set_instance_id_to_use
+  FROM m_attributesetinstance
+  WHERE m_attributesetinstance_id = p_attributesetinstance_id;
+  
+  IF (v_ref_inv_id IS NULL) THEN
+    v_att_set_instance_id_to_use:=p_attributesetinstance_id;
+  END IF;
+  
+  FOR Cur_Attribute IN
+    (SELECT mai.m_attribute_id as attributeId, coalesce(to_char(mai.value), '') as attributeValue, ma.name as attributeName
+     FROM m_attributeinstance mai
+     INNER JOIN m_attribute ma on (ma.m_attribute_id=mai.m_attribute_id)
+     WHERE mai.m_attributesetinstance_id = v_att_set_instance_id_to_use
+     ORDER BY ma.name)
+  LOOP
+    v_escaped_attvalue := replace(Cur_Attribute.attributeValue, CHR(10), '');
+    v_escaped_attvalue := replace(v_escaped_attvalue, CHR(13), '');
+    v_escaped_attvalue := replace(v_escaped_attvalue, v_backslash, v_two_backslash);
+    v_escaped_attvalue := replace(v_escaped_attvalue, '"', v_backslash_and_quote);
+    v_json:=v_json || ',"' || Cur_Attribute.attributeId || '":{"value":"' || v_escaped_attvalue || '","name":"' || Cur_Attribute.attributeName || '"}';
+  END LOOP;
+
+  v_json:=v_json || '}';
+  
+  RETURN v_json;
+END M_GETJSONDESCRIPTION
+]]></body>
+    </function>
+  </database>

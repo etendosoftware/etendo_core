@@ -1,0 +1,43 @@
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2011-2013 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<html>
+<body>
+<script>
+function getUrlVars() {
+    var vars = [], hash, href= window.location.href,
+        hashes = href.slice(href.indexOf('?') + 1).split('&');
+
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+
+    return vars;
+}
+var user=getUrlVars()["u"];
+if(user && user==="Openbravo_spa"){
+  document.write("<a class='twitter-timeline' href='https://twitter.com/Openbravo_Spa' data-widget-id='346960442435964928' data-chrome='noscrollbar' data-link-color='#58A618'>Tweets by @Openbravo_Spa</a>");
+}
+else {
+  document.write("<a class='twitter-timeline'  href='https://twitter.com/Openbravo'  data-widget-id='346955484378566657' data-chrome='noscrollbar' data-link-color='#58A618'>Tweets by @Openbravo</a>");
+}
+!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+</body>
+</html>

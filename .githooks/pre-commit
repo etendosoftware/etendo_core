@@ -1,0 +1,36 @@
+#!/bin/bash
+# *************************************************************************
+# * The contents of this file are subject to the Openbravo  Public  License
+# * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+# * Version 1.1  with a permitted attribution clause; you may not  use this
+# * file except in compliance with the License. You  may  obtain  a copy of
+# * the License at http://www.openbravo.com/legal/license.html
+# * Software distributed under the License  is  distributed  on  an "AS IS"
+# * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# * License for the specific  language  governing  rights  and  limitations
+# * under the License.
+# * The Original Code is Openbravo ERP.
+# * The Initial Developer of the Original Code is Openbravo SLU
+# * All portions are Copyright (C) 2020 Openbravo SLU
+# * All Rights Reserved.
+# * Contributor(s):  ______________________________________.
+# ************************************************************************
+
+SCRIPT_NAME=$(basename "$0")
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+HOOKS_DIR="$SCRIPT_DIR/$SCRIPT_NAME.d"
+
+if [[ -d $HOOKS_DIR ]]; then
+  STDIN=$(cat /dev/stdin)
+
+  for HOOK in $HOOKS_DIR/*; do
+    echo "$STDIN" | $HOOK "$@"
+
+    EXIT_CODE=$?
+
+    if [ $EXIT_CODE != 0 ]; then
+      exit $EXIT_CODE
+    fi
+  done
+fi

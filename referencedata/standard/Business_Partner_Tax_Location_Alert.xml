@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ADAlertRule id="37AE323EAAB5481E9F356581696DBA51" identifier="Business Partner with no Tax Location Address">
+    <id>37AE323EAAB5481E9F356581696DBA51</id>
+    <active>true</active>
+    <name>Business Partner with no Tax Location Address</name>
+    <tab id="220" entity-name="ADTab" identifier="Business Partner - Business Partner"/>
+    <filterClause xsi:nil="true"/>
+    <sql>select bp.c_bpartner_id AS REFERENCEKEY_ID,
+ '0' AS AD_ROLE_ID,
+ NULL AS AD_USER_ID,
+ 'Business Partner: "' || AD_COLUMN_IDENTIFIER('C_BPartner', bp.C_BPARTNER_ID, 'en_US')
+ || '" has defined different country addresses. Please define one of them as Tax Location' AS DESCRIPTION,
+ 'Y' AS ISACTIVE,
+ bp.AD_ORG_ID AS AD_ORG_ID, 
+ bp.AD_CLIENT_ID AS AD_CLIENT_ID, 
+ now() AS CREATED,  
+ '0' AS CREATEDBY,  
+ now() AS UPDATED,
+ '0' AS UPDATEDBY,
+ AD_COLUMN_IDENTIFIER('C_BPartner', bp.C_BPARTNER_ID, 'en_US') AS RECORD_ID
+from c_bpartner bp
+where not exists (select 1 
+              from c_bpartner_location bpl0 
+              where bpl0.c_bpartner_id = bp.c_bpartner_id
+              and bpl0.istaxlocation = 'Y'
+              ) 
+and exists (select 1 
+              from c_bpartner_location bpl 
+              inner join c_location l on (bpl.c_location_id = l.c_location_id)
+              where bpl.c_bpartner_id = bp.c_bpartner_id
+              group by bpl.c_bpartner_id
+              having count(distinct(l.c_country_id)) &gt; 1
+            )</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="E59B5B5048C04EF5A0261C7B963A875D" identifier="Business Partner with several Tax Location Addresses">
+    <id>E59B5B5048C04EF5A0261C7B963A875D</id>
+    <active>true</active>
+    <name>Business Partner with several Tax Location Addresses</name>
+    <tab id="220" entity-name="ADTab" identifier="Business Partner - Business Partner"/>
+    <filterClause xsi:nil="true"/>
+    <sql>select bp.c_bpartner_id AS REFERENCEKEY_ID,
+ '0' AS AD_ROLE_ID,
+ NULL AS AD_USER_ID,
+ 'Business Partner: "' || AD_COLUMN_IDENTIFIER('C_BPartner', bp.C_BPARTNER_ID, 'en_US')
+ || '" has defined different countries as Tax Location. Only one country should be defined as Tax Location' AS DESCRIPTION,
+ 'Y' AS ISACTIVE,
+ bp.AD_ORG_ID AS AD_ORG_ID, 
+ bp.AD_CLIENT_ID AS AD_CLIENT_ID, 
+ now() AS CREATED,  
+ '0' AS CREATEDBY,  
+ now() AS UPDATED,
+ '0' AS UPDATEDBY,
+ AD_COLUMN_IDENTIFIER('C_BPartner', bp.C_BPARTNER_ID, 'en_US') AS RECORD_ID
+from c_bpartner bp
+where exists (select 1 
+              from c_bpartner_location bpl 
+              inner join c_location l on (bpl.c_location_id = l.c_location_id)
+              where bpl.c_bpartner_id = bp.c_bpartner_id
+              and bpl.istaxlocation = 'Y'
+              group by bpl.c_bpartner_id, bpl.istaxlocation
+              having count(distinct(l.c_country_id)) &gt; 1
+              )</sql>
+    <type>D</type>
+  </ADAlertRule>
+</ob:Openbravo>

@@ -1,0 +1,140 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id "org.sonarqube" version "2.6"
+    id 'war'
+    id 'idea'
+    id 'groovy'
+}
+compileJava.options.encoding = "UTF-8"
+apply from: 'https://repo.futit.cloud/repository/static-public-releases/com/etendo/etendo/latest/etendo-latest.gradle'
+apply from: 'tests.gradle'
+
+group = 'com.smf.classic.core'
+def versionTs = 0;
+if (file('version.properties').exists()) {
+    def props = new Properties()
+    props.load(new FileInputStream(file('version.properties')))
+    if (props != null && props.containsKey('version.ts') && props.containsKey('version.ts')) {
+        versionTs = props['version.ts']
+    }
+}
+version = '21.4.0'
+
+def artifactID = 'ob'
+def javaPackage = group + '.' + artifactID
+
+java.sourceCompatibility = JavaVersion.VERSION_11
+
+def whiteSyncCoreList = [
+        'legal/**',
+        'lib/**',
+        'modules_core/**',
+        'referencedata/**',
+        'src/**',
+        'src-db/**',
+        'src-test/**',
+        'src-core/**',
+        'src-jmh/**',
+        'src-trl/**',
+        'src-util/**',
+        'src-wad/**',
+        'web/**',
+        '*.template',
+        'config/*.template',
+        'gradlew',
+        'gradle.bat',
+        'build.xml'
+]
+dependencies {
+    compile 'org.redisson:redisson:3.15.4'
+}
+
+publishing {
+    publications {
+        core(MavenPublication) {
+            artifact file("$buildDir/libs/" + "$javaPackage" + "-" + "$version" + ".zip")
+            artifactId = artifactID
+            groupId = group
+            version = project.version
+        }
+    }
+
+    repositories {
+        maven {
+            url ''
+        }
+    }
+}
+
+task exportProjectVersion doLast {
+    ant.propertyfile(file: "version.properties") {
+        entry(key: "version.tag", value: project.version)
+    }
+}
+
+
+/**
+ * This task makes zip file, and configure publication parameters.
+ */
+task assembleArtifact(type: Zip) {
+    System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
+    archiveName javaPackage + "-" + project.version + '.zip'
+    destinationDir file("$buildDir/libs/")
+    include(whiteSyncCoreList)
+    from "."
+    into "."
+
+    if(project.version.endsWith('-SNAPSHOT')) {
+        publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-snapshots"
+    }
+    else {
+        publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-releases"
+    }
+
+    doLast {
+        if (!project.hasProperty('mavenUser') && !project.hasProperty('mavenPassword')) {
+            askNexusCredentials()
+        }
+        publishing.repositories.maven.credentials {
+            username project.hasProperty('mavenUser') ? "$mavenUser" : project.ext.get("nexusUser")
+            password project.hasProperty('mavenPassword') ? "$mavenPassword" : project.ext.get("nexusPassword")
+        }
+    }
+}
+
+task publishCore(dependsOn: [assembleArtifact, publishCorePublicationToMavenRepository]) { }
+
+idea {
+    module {
+        excludeDirs += [file('${env.CATALINA_HOME}'), file('.githooks'), file('.idea'), file('.settings'), file('.build.apply')]
+    }
+}
+
+task call_sass(type: Exec) {}
+
+task css_compile() doLast {
+
+    def gen_css = []
+    def lookupAt = ['modules_core', 'modules', 'web']
+    lookupAt.forEach({dirName ->
+        FileTree tree = fileTree(dirName).matching {
+            include '**/*.scss'
+        }.each {
+            def less_fl = it.toString()
+            def css_fl = less_fl.replaceAll(".scss", ".css")
+            if(file(less_fl).lastModified() > file(css_fl).lastModified()) {
+                println(it)
+                gen_css.add(css_fl)
+                exec {
+                    executable "sass"
+                    args "$less_fl", "$css_fl"
+                }
+            }
+        }
+    })
+}
+
+task deploySkin (dependsOn: [css_compile, "deploy.skin"]) doLast {
+
+}

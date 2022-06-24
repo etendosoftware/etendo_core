@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER APRM_FIN_FINACC_TRAN_CHECK_TRG">
+    <trigger name="APRM_FIN_FINACC_TRAN_CHECK_TRG" table="FIN_FINACC_TRANSACTION" fires="before" insert="false" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+/************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2010-2016 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+*************************************************************************/
+
+v_DateNull DATE := TO_DATE('01-01-1900','DD-MM-YYYY');
+v_Posted FIN_RECONCILIATION.POSTED%TYPE;
+v_Count NUMBER:= 0;
+  
+BEGIN
+   
+  IF AD_isTriggerEnabled()='N' THEN RETURN;
+  END IF;
+
+  IF (UPDATING) THEN
+    IF(:OLD.PROCESSED='Y' AND ((COALESCE(:OLD.C_CURRENCY_ID, '0') <> COALESCE(:NEW.C_CURRENCY_ID, '0'))
+      OR(COALESCE(:OLD.FIN_FINANCIAL_ACCOUNT_ID, '0') <> COALESCE(:NEW.FIN_FINANCIAL_ACCOUNT_ID, '0'))
+      OR(COALESCE(:OLD.LINE, 0) <> COALESCE(:NEW.LINE, 0))
+      OR(COALESCE(:OLD.FIN_PAYMENT_ID, '0') <> COALESCE(:NEW.FIN_PAYMENT_ID, '0'))
+      OR(COALESCE(:OLD.PAYMENTAMT, 0) <> COALESCE(:NEW.PAYMENTAMT, 0))
+      OR(COALESCE(:OLD.DEPOSITAMT, 0) <> COALESCE(:NEW.DEPOSITAMT, 0))
+      OR(COALESCE(:OLD.TRXTYPE, '0') <> COALESCE(:NEW.TRXTYPE, '0'))      
+      OR(COALESCE(:OLD.STATEMENTDATE, v_DateNull) <> COALESCE(:NEW.STATEMENTDATE, v_DateNull)))) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@20501@');
+    END IF;
+    IF((COALESCE(:OLD.DATEACCT, v_DateNull) <> COALESCE(:NEW.DATEACCT, v_DateNull))
+      OR(COALESCE(:OLD.AD_ORG_ID, '0') <> COALESCE(:NEW.AD_ORG_ID, '0'))
+      OR(COALESCE(:OLD.C_PROJECT_ID, '0') <> COALESCE(:NEW.C_PROJECT_ID, '0'))
+      OR(COALESCE(:OLD.C_GLITEM_ID, '0') <> COALESCE(:NEW.C_GLITEM_ID, '0'))        
+      OR(COALESCE(:OLD.C_CAMPAIGN_ID, '0') <> COALESCE(:NEW.C_CAMPAIGN_ID, '0'))
+      OR(COALESCE(:OLD.C_ACTIVITY_ID, '0') <> COALESCE(:NEW.C_ACTIVITY_ID, '0'))
+      OR(COALESCE(:OLD.USER1_ID, '0') <> COALESCE(:NEW.USER1_ID, '0'))
+      OR(COALESCE(:OLD.USER2_ID, '0') <> COALESCE(:NEW.USER2_ID, '0'))) THEN
+        IF(:OLD.C_GLITEM_ID IS NOT NULL AND :NEW.C_GLITEM_ID IS NULL) THEN
+      		RAISE_APPLICATION_ERROR(-20000, '@1400@');
+        END IF;
+        IF(:OLD.POSTED='Y') THEN
+      		RAISE_APPLICATION_ERROR(-20000, '@20501@');
+        END IF;
+        IF (:OLD.FIN_RECONCILIATION_ID IS NOT NULL) THEN
+          SELECT POSTED 
+          INTO v_Posted
+          FROM FIN_RECONCILIATION 
+          WHERE FIN_RECONCILIATION_ID = :OLD.FIN_RECONCILIATION_ID;
+          IF(v_Posted = 'Y') THEN
+          	IF(:OLD.C_GLITEM_ID IS NOT NULL) THEN
+          	  SELECT COUNT(1)
+							INTO v_Count 
+							FROM fin_financial_account_acct
+							WHERE fin_financial_account_id = :OLD.FIN_FINANCIAL_ACCOUNT_ID
+							AND ((:OLD.TRXTYPE IN ('BPW','BF') AND fin_withdrawal_acct IS NULL)
+							OR (:OLD.TRXTYPE = 'BPD' AND fin_deposit_acct IS NULL));
+			        IF(v_Count>0 OR (COALESCE(:OLD.DATEACCT, v_DateNull) <> COALESCE(:NEW.DATEACCT, v_DateNull))) THEN
+			      		RAISE_APPLICATION_ERROR(-20000, '@APRM_RelatedPostedDocument@');
+			        END IF;
+				    ELSIF((COALESCE(:OLD.DATEACCT, v_DateNull) <> COALESCE(:NEW.DATEACCT, v_DateNull))) THEN
+			        RAISE_APPLICATION_ERROR(-20000, '@APRM_RelatedPostedDocument@');
+				    ELSE
+				      SELECT COUNT(1)
+							INTO v_Count
+							FROM FIN_FINACC_PAYMENTMETHOD, FIN_FINANCIAL_ACCOUNT_ACCT, FIN_PAYMENT
+							WHERE FIN_FINACC_PAYMENTMETHOD.FIN_FINANCIAL_ACCOUNT_ID = FIN_FINANCIAL_ACCOUNT_ACCT.FIN_FINANCIAL_ACCOUNT_ID
+							AND FIN_FINACC_PAYMENTMETHOD.FIN_FINANCIAL_ACCOUNT_ID = :OLD.FIN_FINANCIAL_ACCOUNT_ID
+							AND FIN_PAYMENT.FIN_PAYMENT_ID = :OLD.FIN_PAYMENT_ID
+							AND FIN_FINACC_PAYMENTMETHOD.FIN_PAYMENTMETHOD_ID = FIN_PAYMENT.FIN_PAYMENTMETHOD_ID
+							AND (
+							   (FIN_FINACC_PAYMENTMETHOD.UPONDEPOSITUSE = 'INT' AND FIN_FINANCIAL_ACCOUNT_ACCT.FIN_IN_INTRANSIT_ACCT IS NULL AND FIN_PAYMENT.ISRECEIPT = 'Y')
+							   OR
+							   (FIN_FINACC_PAYMENTMETHOD.UPONDEPOSITUSE = 'DEP' AND FIN_FINANCIAL_ACCOUNT_ACCT.FIN_DEPOSIT_ACCT IS NULL AND FIN_PAYMENT.ISRECEIPT = 'Y')
+							   OR
+							   (FIN_FINACC_PAYMENTMETHOD.UPONDEPOSITUSE = 'CLE' AND FIN_FINANCIAL_ACCOUNT_ACCT.FIN_IN_CLEAR_ACCT IS NULL AND FIN_PAYMENT.ISRECEIPT = 'Y')
+							   OR
+							   (FIN_FINACC_PAYMENTMETHOD.UPONDEPOSITUSE = 'INT' AND FIN_FINANCIAL_ACCOUNT_ACCT.FIN_OUT_INTRANSIT_ACCT IS NULL AND FIN_PAYMENT.ISRECEIPT = 'N')
+							   OR
+							   (FIN_FINACC_PAYMENTMETHOD.UPONDEPOSITUSE = 'WIT' AND FIN_FINANCIAL_ACCOUNT_ACCT.FIN_WITHDRAWAL_ACCT IS NULL AND FIN_PAYMENT.ISRECEIPT = 'N')
+							   OR
+							   (FIN_FINACC_PAYMENTMETHOD.UPONDEPOSITUSE = 'CLE' AND FIN_FINANCIAL_ACCOUNT_ACCT.FIN_OUT_CLEAR_ACCT IS NULL AND FIN_PAYMENT.ISRECEIPT = 'N'));
+							IF(v_Count>0) THEN
+			      		RAISE_APPLICATION_ERROR(-20000, '@APRM_RelatedPostedDocument@');
+			        END IF;
+          	END IF;
+          END IF;
+        END IF;
+    END IF;
+  END IF;
+  IF(DELETING) THEN
+   IF(:OLD.PROCESSED='Y') THEN
+     RAISE_APPLICATION_ERROR(-20000, '@20501@');
+   END IF;
+  END IF;
+END APRM_FIN_FINACC_TRAN_CHECK_TRG
+]]></body>
+    </trigger>
+  </database>

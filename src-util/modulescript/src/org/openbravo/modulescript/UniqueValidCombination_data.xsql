@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012-2015 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="UniqueValidCombinationData" package="org.openbravo.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        select 1 as count from dual
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="selectDuplicates" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      select count(1) as count
+        from (select 1
+        from c_validcombination
+        where M_PRODUCT_ID is null
+        and C_BPARTNER_ID is null
+        and C_PROJECT_ID is null
+        and C_CAMPAIGN_ID is null
+        and C_SALESREGION_ID is null
+        and C_ACTIVITY_ID is null
+        and USER1_ID is null
+        and USER2_ID is null
+        and isactive = 'Y'
+        group by account_id, ad_client_id, c_acctschema_id
+        having count(account_id) > 1) a
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="selectMissingValidCombination" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        select count(1) as count
+        from dual 
+        where exists (select 1 
+                    from c_elementvalue 
+                    where not exists(select 1 
+                                    from c_validcombination 
+                                    where c_validcombination.account_id = c_elementvalue_id 
+                                    and isactive='Y' 
+                                    and M_PRODUCT_ID is null
+                                    and C_BPARTNER_ID is null
+                                    and C_PROJECT_ID is null
+                                    and C_CAMPAIGN_ID is null
+                                    and C_SALESREGION_ID is null
+                                    and C_ACTIVITY_ID is null
+                                    and USER1_ID is null
+                                    and USER2_ID is null)
+                     and elementlevel = 'S'
+                     and isactive = 'Y')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateJournalLineDimensions" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        update gl_journalline
+        set 
+        M_PRODUCT_ID =coalesce(M_PRODUCT_ID, (select M_PRODUCT_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+        C_BPARTNER_ID =coalesce(C_BPARTNER_ID, (select C_BPARTNER_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+        C_PROJECT_ID =coalesce(C_PROJECT_ID, (select C_PROJECT_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+        C_CAMPAIGN_ID =coalesce(C_CAMPAIGN_ID, (select C_CAMPAIGN_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+        C_SALESREGION_ID =coalesce(C_SALESREGION_ID, (select C_SALESREGION_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+        C_ACTIVITY_ID =coalesce(C_ACTIVITY_ID, (select C_ACTIVITY_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+        USER1_ID =coalesce(USER1_ID, (select USER1_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+        USER2_ID =coalesce(USER2_ID, (select USER2_ID from c_validcombination where c_validcombination_id = gl_journalline.c_validcombination_id)),
+	UPDATED = NOW()
+        where exists (select 1 from c_validcombination
+                                    where (M_PRODUCT_ID is not null
+                                    or C_BPARTNER_ID is not null
+                                    or C_PROJECT_ID is not null
+                                    or C_CAMPAIGN_ID is not null
+                                    or C_SALESREGION_ID is not null
+                                    or C_ACTIVITY_ID is not null
+                                    or USER2_ID is not null
+                                    or USER1_ID is not null)
+                                    and c_validcombination_id = gl_journalline.c_validcombination_id)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateValidCombinationDeactivate" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        update c_validcombination set isactive='N', UPDATED = NOW()
+        where (M_PRODUCT_ID is not null
+        or C_BPARTNER_ID is not null
+        or C_PROJECT_ID is not null
+        or C_CAMPAIGN_ID is not null
+        or C_SALESREGION_ID is not null
+        or C_ACTIVITY_ID is not null
+        or USER1_ID is not null
+        or USER2_ID is not null)
+	AND ISACTIVE = 'Y'
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateValidCombinationDeactivateDuplicated" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        update c_validcombination set isactive='N', UPDATED = NOW()
+        where account_id in (select account_id
+                            from c_validcombination
+                            where M_PRODUCT_ID is null
+                            and C_BPARTNER_ID is null
+                            and C_PROJECT_ID is null
+                            and C_CAMPAIGN_ID is null
+                            and C_SALESREGION_ID is null
+                            and C_ACTIVITY_ID is null
+                            and USER1_ID is null
+                            and USER2_ID is null
+			    AND ISACTIVE = 'Y'
+                            group by account_id, ad_client_id, c_acctschema_id
+                            having count(account_id) > 1)
+        and c_validcombination_id not in (select max(c_validcombination_id)
+                                        from c_validcombination
+                                        where M_PRODUCT_ID is null
+                                        and C_BPARTNER_ID is null
+                                        and C_PROJECT_ID is null
+                                        and C_CAMPAIGN_ID is null
+                                        and C_SALESREGION_ID is null
+                                        and C_ACTIVITY_ID is null
+                                        and USER1_ID is null
+                                        and USER2_ID is null
+					AND ISACTIVE = 'Y'
+                                        group by account_id, ad_client_id, c_acctschema_id
+                                        having count(account_id) > 1
+                                        )
+        AND ISACTIVE='Y'
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="insertValidCombinations" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        INSERT INTO C_VALIDCOMBINATION
+          (C_VALIDCOMBINATION_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY,
+           UPDATED, UPDATEDBY, ALIAS, COMBINATION, DESCRIPTION, ISFULLYQUALIFIED,
+           C_ACCTSCHEMA_ID, ACCOUNT_ID, M_PRODUCT_ID, C_BPARTNER_ID, AD_ORGTRX_ID, C_LOCFROM_ID,
+           C_LOCTO_ID, C_SALESREGION_ID, C_PROJECT_ID, C_CAMPAIGN_ID, C_ACTIVITY_ID, USER1_ID,
+           USER2_ID)
+        select get_uuid(), c_elementvalue.ad_client_id, c_elementvalue.ad_org_id, 'Y', now(), '100',
+        now(), '100', c_elementvalue.value, c_elementvalue.value, '', 'Y', 
+        c_acctschema_element.c_acctschema_id, c_elementvalue.c_elementvalue_id, null, null, c_elementvalue.ad_org_id, null,
+        null, null, null, null, null, null, 
+        null
+        from c_elementvalue, c_acctschema_element
+        where c_elementvalue.elementlevel = 'S'
+        and c_elementvalue.c_element_id = c_acctschema_element.c_element_id
+        and not exists (select 1 from c_validcombination
+                                        where c_validcombination.account_id = c_elementvalue.c_elementvalue_id
+                                        and isactive='Y'
+                                        and c_validcombination.c_acctschema_id = c_acctschema_element.c_acctschema_id)
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

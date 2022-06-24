@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_GET_NET_PRICE_FROM_GROSS">
+    <function name="C_GET_NET_PRICE_FROM_GROSS" type="NUMERIC" volatility="STABLE">
+      <parameter name="p_tax_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_grossamt" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_alternatetaxbaseamt" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_priceprecision" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_qty" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+-- Logistice
+  v_ResultStr VARCHAR(2000):=''; 
+  v_NetPrice NUMBER;
+  v_TaxAmount NUMBER;
+  v_calcPrecision NUMBER:=50;
+BEGIN --BODY
+  IF (p_qty = 0 OR p_grossamt = 0) THEN
+    RETURN 0;
+  END IF;
+  IF (p_priceprecision > 50) THEN
+    v_calcPrecision := p_priceprecision;
+  END IF;
+  v_TaxAmount := C_GET_TAX_AMT_FROM_NET(p_tax_id, p_grossamt, p_alternatetaxbaseamt, v_calcPrecision, 0);
+  DBMS_OUTPUT.PUT_LINE('Unit tax ' || v_TaxAmount);
+  -- Do multiplication before division to avoid wrong calculation in PostgreSQL. See Issue 35486.
+  v_NetPrice:= ROUND(((p_grossamt * p_grossamt) / (p_grossamt + v_TaxAmount)) / p_qty, p_priceprecision);
+
+  --TODO:Call function to recalculate alternate taxbase amount.
+
+  --TODO:If alternate taxbase amount is different recalculate line net amount c_tax_from_net_amt function.
+
+  RETURN v_NetPrice;
+
+EXCEPTION
+WHEN OTHERS THEN
+  v_ResultStr:= '@ERROR=' || SQLERRM;
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  RAISE;
+  RETURN NULL;
+END C_GET_NET_PRICE_FROM_GROSS
+]]></body>
+    </function>
+  </database>

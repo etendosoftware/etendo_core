@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2019 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="DuplicatedCharacteristicNameData" package="org.openbravo.buildvalidation">
+  <SqlMethod name="DuplicatedCharacteristicNameData" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        SELECT ch.m_characteristic_id, ch.name as characteristic, chv.name as value, count(*)
+        FROM m_ch_value chv
+            join m_characteristic ch on (ch.m_characteristic_id = chv.m_characteristic_id)
+        GROUP BY ch.m_characteristic_id, ch.name, chv.name
+        HAVING count(*) > 1        
+      ]]></Sql>
+  </SqlMethod>
+  <SqlMethod name="tableExists" type="preparedStatement" return="boolean">
+      <SqlMethodComment>Checks if table exists in AD.</SqlMethodComment>
+      <Sql><![CDATA[
+             select tablename
+             from ad_table
+             where lower(tablename) = ?
+      ]]></Sql>
+     <Parameter name="tableName"/>
+   </SqlMethod>  
+</SqlClass>

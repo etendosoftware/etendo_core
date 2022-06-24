@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_CH_VALUE_TRG">
+    <trigger name="M_CH_VALUE_TRG" table="M_CH_VALUE" fires="after" insert="true" update="false" delete="true" foreach="row">
+      <body><![CDATA[
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2013-2016 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+  v_Tree_ID           VARCHAR2(32);
+  v_Parent_ID         VARCHAR2(32);
+  v_count             NUMBER;
+  v_active            VARCHAR2(32):='N';
+  v_exist NUMBER:=0;
+
+BEGIN
+  IF (AD_isTriggerEnabled()='N') THEN
+    RETURN;
+  END IF;
+  -- Insert C_ElementValue Trigger
+  --  for Translation
+  --  and TreeNode
+  IF INSERTING THEN
+    --  Create TreeNode --
+    --  get AD_Tree_ID + ParentID
+    SELECT ch.ad_tree_id, n.node_id
+      INTO v_tree_id, v_parent_id
+    FROM m_characteristic ch JOIN ad_treenode n ON ch.ad_tree_id = n.ad_tree_id
+    WHERE n.parent_id IS NULL
+      AND ch.m_characteristic_id = :NEW.m_characteristic_id;
+
+    SELECT count(*) INTO v_count
+    FROM ad_treenode
+    WHERE node_id = :NEW.m_ch_value_id
+      AND ad_tree_id = v_tree_id;
+
+    IF (v_Count = 0) THEN 
+      --  Insert into TreeNode
+      INSERT INTO ad_treenode (
+          ad_treenode_id, ad_client_id, ad_org_id, isactive,
+          created, createdby, updated, updatedby,
+          ad_tree_id, node_id, parent_id,
+          seqno
+      ) VALUES (
+          get_uuid(), :NEW.ad_client_id, '0', :NEW.isactive,
+          :NEW.created, :NEW.createdby, :NEW.updated, :NEW.updatedby,
+          v_tree_id, :NEW.m_ch_value_id, v_parent_id,
+          -- Summary Nodes first
+          CASE :NEW.issummary
+            WHEN 'Y' THEN 100
+            ELSE 999
+          END
+      );
+    END IF;
+
+    select count(*) into v_exist
+    from ad_preference
+    where ad_client_id=:new.ad_client_id
+    and property='IsActiveNewChValueProd';
+
+    IF (v_exist > 0) THEN
+      select value into v_active
+      from ad_preference
+      where ad_client_id=:new.ad_client_id
+      and property='IsActiveNewChValueProd';
+    END IF;  
+
+    INSERT INTO m_product_ch_conf (
+      m_product_ch_conf_id, ad_client_id, ad_org_id, isactive,
+      created, createdby, updated, updatedby,
+      m_product_ch_id, m_ch_value_id, skcode
+    ) SELECT
+      get_uuid(), :new.ad_client_id, :new.ad_org_id, v_active,
+      now(), :new.createdby, now(), :new.updatedby,
+      pch.m_product_ch_id, :new.m_ch_value_id, :new.skcode
+      FROM m_product_ch pch
+      WHERE pch.m_characteristic_id = :new.m_characteristic_id
+        AND pch.m_ch_subset_id IS NULL
+        AND exists (select 1 from  m_product where m_product_id=pch.m_product_id AND isgeneric='Y')
+        AND pch.isvariant='Y'
+        AND pch.isexplodeconf = 'Y';
+  END IF;
+
+  IF DELETING THEN
+    --  Delete TreeNode --
+    SELECT ch.ad_tree_id INTO v_tree_id
+    FROM m_characteristic ch
+    WHERE ch.m_characteristic_id = :OLD.m_characteristic_id;
+
+    SELECT count(*) INTO v_count
+    FROM ad_treenode
+    WHERE ad_client_id = :OLD.ad_client_id
+      AND ad_tree_id = v_tree_id
+      AND parent_id = :OLD.m_ch_value_id;
+    IF (v_count>0) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@ElementHasChildren@');
+    END IF;
+
+    DELETE FROM ad_treenode
+    WHERE ad_client_id = :OLD.ad_client_id
+      AND ad_tree_id = v_tree_id
+      AND node_id = :OLD.m_ch_value_id;
+
+  END IF;
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+  -- No tree found in the characteristic
+  RAISE_APPLICATION_ERROR(-20000, '@20013@') ;
+END M_CH_VALUE_TRG
+]]></body>
+    </trigger>
+  </database>

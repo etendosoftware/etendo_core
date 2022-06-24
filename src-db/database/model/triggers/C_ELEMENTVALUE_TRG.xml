@@ -1,0 +1,247 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_ELEMENTVALUE_TRG">
+    <trigger name="C_ELEMENTVALUE_TRG" table="C_ELEMENTVALUE" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2001-2016 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+
+
+
+  v_xTree_ID VARCHAR2(32);
+  v_xParent_ID VARCHAR2(32);
+  v_count NUMBER;
+  TYPE RECORD IS REF CURSOR;
+  cur_AcctSchema RECORD;
+    
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+  -- Insert C_ElementValue Trigger
+  --  for Translation
+  --  and TreeNode
+  IF INSERTING THEN
+    --  Create Translation Row
+    INSERT
+    INTO C_ElementValue_Trl
+      (
+        C_ElementValue_Trl_ID, C_ElementValue_ID, AD_Language, AD_Client_ID,
+        AD_Org_ID, IsActive, Created,
+        CreatedBy, Updated, UpdatedBy,
+        Name, IsTranslated
+      )
+    SELECT get_uuid(), :new.C_ElementValue_ID,
+      AD_Language, :new.AD_Client_ID, :new.AD_Org_ID,
+      :new.IsActive, :new.Created, :new.CreatedBy,
+      :new.Updated, :new.UpdatedBy, :new.Name,
+       'N'
+    FROM AD_Language
+    WHERE IsActive='Y'
+      AND IsSystemLanguage='Y';
+    -- Create Valid Combination
+    IF(:new.elementlevel = 'S') THEN
+	    FOR cur_AcctSchema IN
+        (SELECT distinct (C_AcctSchema_ID)
+        FROM C_AcctSchema_Element
+        WHERE C_AcctSchema_Element.C_Element_ID = :new.C_Element_ID
+        )
+      LOOP
+			  INSERT INTO C_VALIDCOMBINATION
+				  (C_VALIDCOMBINATION_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY,
+				   UPDATED, UPDATEDBY, ALIAS, COMBINATION, DESCRIPTION, ISFULLYQUALIFIED,
+				   C_ACCTSCHEMA_ID, ACCOUNT_ID, M_PRODUCT_ID, C_BPARTNER_ID, AD_ORGTRX_ID, C_LOCFROM_ID,
+				   C_LOCTO_ID, C_SALESREGION_ID, C_PROJECT_ID, C_CAMPAIGN_ID, C_ACTIVITY_ID, USER1_ID,
+				   USER2_ID)
+				VALUES (
+				   GET_UUID(), :new.AD_Client_ID, :new.AD_Org_ID, :new.IsActive, :new.Created, :new.CreatedBy,
+				   :new.Updated, :new.UpdatedBy, :new.value, :new.value, '', 'Y',
+				   cur_AcctSchema.C_AcctSchema_ID, :new.C_ElementValue_ID, null, null, null, null,
+				   null, null, null, null, null, null,
+				   null);
+			END LOOP;
+    END IF;
+    --  Create TreeNode --
+    --  get AD_Tree_ID + ParentID
+    SELECT e.AD_Tree_ID,
+      n.Node_ID
+    INTO v_xTree_ID,
+      v_xParent_ID
+    FROM C_Element e,
+      AD_TreeNode n
+    WHERE e.AD_Tree_ID=n.AD_Tree_ID
+      AND n.Parent_ID IS NULL
+      AND e.C_Element_ID=:new.C_Element_ID;
+    --  DBMS_OUTPUT.PUT_LINE('Tree='||v_xTree_ID||'  Node='||:new.C_ElementValue_ID||'  Parent='||v_xParent_ID);
+    SELECT count(*)
+    INTo v_Count
+    FROM AD_TreeNode
+    WHERE node_ID = :new.C_ElementValue_ID
+    
+    AND AD_Tree_ID = v_xTree_ID;
+    IF(v_Count = 0) THEN 
+	    --  Insert into TreeNode
+	    INSERT
+	    INTO AD_TreeNode
+	      (
+	        AD_TreeNode_ID, AD_Client_ID, AD_Org_ID, IsActive,
+	        Created, CreatedBy, Updated,
+	        UpdatedBy, AD_Tree_ID, Node_ID,
+	        Parent_ID, SeqNo
+	      )
+	      VALUES
+	      (
+	        get_uuid(), :new.AD_Client_ID, :new.AD_Org_ID, :new.IsActive,
+	        :new.Created, :new.CreatedBy, :new.Updated,
+	        :new.UpdatedBy, v_xTree_ID, :new.C_ElementValue_ID,
+	        v_xParent_ID,(
+	        CASE :new.IsSummary
+	          WHEN 'Y'
+	          THEN 100
+	          ELSE 999
+	        END
+	        )
+	      )
+	      ;
+    	-- Summary Nodes first
+   END IF;
+  END IF;
+  -- Inserting
+  -- C_ElementValue update trigger
+  --  synchronize name,...
+  IF UPDATING THEN
+    IF COALESCE(:old.Name, '.') <> COALESCE(:NEW.Name, '.') THEN
+      UPDATE C_ElementValue_Trl
+        SET name=:NEW.Name,
+        Updated=now()
+      WHERE C_ElementValue_ID=:new.C_ElementValue_ID
+      AND IsTranslated='N';
+      UPDATE C_ElementValue_Trl
+        SET IsTranslated='N',
+        Updated=now()
+      WHERE C_ElementValue_ID=:new.C_ElementValue_ID
+      AND IsTranslated='Y';
+    END IF;
+    
+     -- Update combination and description fields only if needed to not to trigger a cross tables update     
+    UPDATE C_ValidCombination
+      SET Updated=now(), 
+          combination= TO_CHAR(REPLACE(combination, :old.VALUE, :new.VALUE)),
+          description= TO_CHAR(REPLACE(description, :old.NAME, :new.NAME))
+      WHERE (Account_ID=:new.C_ElementValue_ID
+         AND ((combination <> (TO_CHAR(REPLACE(combination, :old.VALUE, :new.VALUE))))
+         OR description <> (TO_CHAR(REPLACE(description, :old.NAME, :new.NAME)))));
+     IF(:new.elementlevel <> 'S' and :old.elementlevel = 'S') THEN
+		    UPDATE C_ValidCombination
+		      SET Updated=now(), isactive = 'N' 		          
+		      WHERE Account_ID=:new.C_ElementValue_ID;
+     END IF;         
+     IF(:new.elementlevel = 'S') THEN
+        SELECT COUNT(*)
+        INTO v_Count
+        FROM C_VALIDCOMBINATION
+        WHERE Account_ID=:new.C_ElementValue_ID;
+	if(v_Count>0) THEN
+	  IF :NEW.IsActive = 'Y' AND :OLD.IsActive = 'N' THEN
+	    UPDATE C_ValidCombination
+	    SET Updated=now(), isactive = 'Y'
+	    WHERE Account_ID=:new.C_ElementValue_ID
+	    AND C_AcctSchema_ID in (SELECT C_AcctSchema_ID
+	                          FROM C_AcctSchema
+			          WHERE isactive = 'Y')
+	    AND m_product_id IS NULL
+	    AND c_bpartner_id IS NULL
+	    AND ad_orgtrx_id IS NULL
+	    AND c_salesregion_id IS NULL
+	    AND c_project_id IS NULL
+	    AND c_campaign_id IS NULL
+	    AND c_activity_id IS NULL
+	    AND user1_id IS NULL
+	    AND user2_id IS NULL;
+	  ELSE
+	    IF :NEW.IsActive = 'N' AND :OLD.IsActive = 'Y' THEN
+	      UPDATE C_ValidCombination
+	      SET Updated=now(), isactive = 'N'
+	      WHERE Account_ID=:new.C_ElementValue_ID
+	      AND C_AcctSchema_ID in (SELECT C_AcctSchema_ID
+	                          FROM C_AcctSchema
+			          WHERE isactive = 'Y');
+	    END IF;
+	  END IF;
+	ELSE
+		  	    FOR cur_AcctSchema IN
+			        (SELECT distinct (C_AcctSchema_ID)
+			        FROM C_AcctSchema_Element
+			        WHERE C_AcctSchema_Element.C_Element_ID = :new.C_Element_ID
+			        )
+			      LOOP
+						  INSERT INTO C_VALIDCOMBINATION
+							  (C_VALIDCOMBINATION_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY,
+							   UPDATED, UPDATEDBY, ALIAS, COMBINATION, DESCRIPTION, ISFULLYQUALIFIED,
+							   C_ACCTSCHEMA_ID, ACCOUNT_ID, M_PRODUCT_ID, C_BPARTNER_ID, AD_ORGTRX_ID, C_LOCFROM_ID,
+							   C_LOCTO_ID, C_SALESREGION_ID, C_PROJECT_ID, C_CAMPAIGN_ID, C_ACTIVITY_ID, USER1_ID,
+							   USER2_ID)
+							VALUES (
+							   GET_UUID(), :new.AD_Client_ID, :new.AD_Org_ID, :new.IsActive, :new.Created, :new.CreatedBy,
+							   :new.Updated, :new.UpdatedBy, :new.value, :new.value, '', 'Y',
+							   cur_AcctSchema.C_AcctSchema_ID, :new.C_ElementValue_ID, null, null, null, null,
+							   null, null, null, null, null, null,
+							   null);
+						END LOOP;
+		    END IF;
+     END IF;         
+
+     IF (COALESCE(:old.value, '.') <> COALESCE(:new.value, '.')) OR (COALESCE(:old.name, '.') <> COALESCE(:new.name, '.')) THEN
+        UPDATE Fact_Acct SET AcctValue=:new.VALUE,AcctDescription=:new.NAME WHERE Account_ID=:new.C_ElementValue_ID;
+     END IF;
+  END IF;
+  -- Updating
+  IF DELETING THEN
+
+
+    --  Delete TreeNode --
+    --  get AD_Tree_ID
+    SELECT e.AD_Tree_ID
+    INTO v_xTree_ID
+    FROM C_Element e
+    WHERE e.C_Element_ID=:old.C_Element_ID;
+
+    SELECT COUNT(*)
+    INTO v_count
+    FROM AD_TREENODE
+    WHERE AD_CLIENT_ID=:old.AD_Client_ID
+      AND AD_Tree_ID=v_xTree_ID
+      AND parent_ID=:old.C_ElementValue_ID;
+
+    IF (v_count>0) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@ElementHasChildren@');
+    END IF;
+
+    DELETE
+    FROM AD_TREENODE
+    WHERE AD_CLIENT_ID=:old.AD_Client_ID
+      AND AD_Tree_ID=v_xTree_ID
+      AND Node_ID=:old.C_ElementValue_ID;
+  END IF;
+  -- Deleting
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+  RAISE_APPLICATION_ERROR(-20000, '@20013@') ;
+END C_ELEMENTVALUE_TRG
+]]></body>
+    </trigger>
+  </database>

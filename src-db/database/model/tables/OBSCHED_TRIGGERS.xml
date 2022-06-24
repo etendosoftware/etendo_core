@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_TRIGGERS">
+    <table name="OBSCHED_TRIGGERS" primaryKey="OBSCHED_TRI_PK">
+      <column name="OBSCHED_TRIGGERS_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_GROUP" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_GROUP" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DESCRIPTION" primaryKey="false" required="false" type="VARCHAR" size="250" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="NEXT_FIRE_TIME" primaryKey="false" required="false" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PREV_FIRE_TIME" primaryKey="false" required="false" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PRIORITY" primaryKey="false" required="false" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_STATE" primaryKey="false" required="true" type="VARCHAR" size="16" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_TYPE" primaryKey="false" required="true" type="VARCHAR" size="8" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="START_TIME" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="END_TIME" primaryKey="false" required="false" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CALENDAR_NAME" primaryKey="false" required="false" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="MISFIRE_INSTR" primaryKey="false" required="false" type="DECIMAL" size="2,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_DATA" primaryKey="false" required="false" type="BLOB" size="4000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="OBSCHED_JOB_DETAILS" name="OBSCHED_TRI_JOB_DET_FK">
+        <reference local="SCHED_NAME" foreign="SCHED_NAME"/>
+        <reference local="JOB_NAME" foreign="JOB_NAME"/>
+        <reference local="JOB_GROUP" foreign="JOB_GROUP"/>
+      </foreign-key>
+      <index name="OBSCHED_T_C_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="CALENDAR_NAME"/>
+      </index>
+      <index name="OBSCHED_T_G_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="TRIGGER_GROUP"/>
+      </index>
+      <index name="OBSCHED_T_J_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="JOB_NAME"/>
+        <index-column name="JOB_GROUP"/>
+      </index>
+      <index name="OBSCHED_T_JG_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="JOB_GROUP"/>
+      </index>
+      <index name="OBSCHED_T_N_G_STATE_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="TRIGGER_GROUP"/>
+        <index-column name="TRIGGER_STATE"/>
+      </index>
+      <index name="OBSCHED_T_N_STATE_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="TRIGGER_NAME"/>
+        <index-column name="TRIGGER_GROUP"/>
+        <index-column name="TRIGGER_STATE"/>
+      </index>
+      <index name="OBSCHED_T_NEXT_FIRE_TIME_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="NEXT_FIRE_TIME"/>
+      </index>
+      <index name="OBSCHED_T_NFT_MISF_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="MISFIRE_INSTR"/>
+        <index-column name="NEXT_FIRE_TIME"/>
+      </index>
+      <index name="OBSCHED_T_NFT_ST_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="TRIGGER_STATE"/>
+        <index-column name="NEXT_FIRE_TIME"/>
+      </index>
+      <index name="OBSCHED_T_NFT_ST_MISF_GRP_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="MISFIRE_INSTR"/>
+        <index-column name="NEXT_FIRE_TIME"/>
+        <index-column name="TRIGGER_GROUP"/>
+        <index-column name="TRIGGER_STATE"/>
+      </index>
+      <index name="OBSCHED_T_NFT_ST_MISF_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="MISFIRE_INSTR"/>
+        <index-column name="NEXT_FIRE_TIME"/>
+        <index-column name="TRIGGER_STATE"/>
+      </index>
+      <index name="OBSCHED_T_STATE_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="TRIGGER_STATE"/>
+      </index>
+      <unique name="OBSCHED_TRI_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="TRIGGER_NAME"/>
+        <unique-column name="TRIGGER_GROUP"/>
+      </unique>
+    </table>
+  </database>

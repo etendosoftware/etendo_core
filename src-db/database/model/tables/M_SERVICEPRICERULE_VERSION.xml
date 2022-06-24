@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_SERVICEPRICERULE_VERSION">
+    <table name="M_SERVICEPRICERULE_VERSION" primaryKey="M_SERVICEPRICERULE_VERSION_KEY">
+      <column name="M_SERVICEPRICERULE_VERSION_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_SERVICEPRICERULE_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_PRODUCT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="VALIDFROM" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_RELATEDPRODUCT_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_RELATEDPRODUCTCATEGORY_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="M_SERVPRRULVERSION_AD_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_SERVPRRULVERSION_AD_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_PRODUCT" name="M_SERVPRRULVERSION_PRODUCT">
+        <reference local="M_PRODUCT_ID" foreign="M_PRODUCT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_PRODUCT_SERVICE" name="M_SERVPRRULVERSION_RELPRODUCT">
+        <reference local="M_RELATEDPRODUCT_ID" foreign="M_PRODUCT_SERVICE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_SERVICEPRICERULE" name="M_SERVPRRULVERSION_RULE">
+        <reference local="M_SERVICEPRICERULE_ID" foreign="M_SERVICEPRICERULE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_PRODUCT_CATEGORY_SERVICE" name="M_SERVPRRULVERSION_SERVPRODCAT">
+        <reference local="M_RELATEDPRODUCTCATEGORY_ID" foreign="M_PRODUCT_CATEGORY_SERVICE_ID"/>
+      </foreign-key>
+      <index name="M_SERVICEP_PR_VERSION_RELCAT" unique="false">
+        <index-column name="M_RELATEDPRODUCTCATEGORY_ID"/>
+      </index>
+      <index name="M_SERVICEP_PR_VERSION_RELPROD" unique="false">
+        <index-column name="M_RELATEDPRODUCT_ID"/>
+      </index>
+      <index name="M_SERVICEPRICERULEVERSION_PROD" unique="false">
+        <index-column name="M_PRODUCT_ID"/>
+      </index>
+      <check name="M_SERVPRRULVER_ISACTIVE_CHECK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+    </table>
+  </database>

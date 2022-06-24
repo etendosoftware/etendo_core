@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo Public License 
+ * Version 1.1 (the "License"), being the Mozilla Public License 
+ * version 1.1  with a permitted attribution clause ; you may not use 
+ * this file except in compliance with the License. 
+ * You may obtain a copy of the License at  
+ * http://www.openbravo.com/legal/license.txt 
+ * Software distributed under the License is distributed on an 
+ * "AS IS" basis, WITHOUT WARRANTY OF  ANY KIND, either express or 
+ * implied. See the License for the specific language governing rights 
+ * and  limitations under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2014-2021 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s): Openbravo S.L.U.
+ ************************************************************************
+-->
+
+<project name="openbravo" default="compile.complete" basedir="..">
+  <import file="../src/build.xml" />
+
+  <property name="build.test" location="${base.src.test}/build/classes" />
+
+  <path id="test-src-dirs">
+    <pathelement path="${base.src.test}/src" />
+    <dirset dir="${base.modules}">
+      <include name="*/src-test" />
+    </dirset>
+    <dirset dir="${base.modules_core}">
+      <include name="*/src-test" />
+    </dirset>
+  </path>
+
+  <path id="test.class.path">
+    <path refid="test-src-dirs"/>
+    <pathelement path="${build.test}" />
+  	<pathelement path="${build}" />
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${build.core.lib}">
+      <include name="openbravo-core.jar" />
+    </fileset>
+    <fileset dir="${build.trl.lib}">
+      <include name="openbravo-trl.jar" />
+    </fileset>
+    <fileset dir="${build.wad.lib}">
+      <include name="openbravo-wad.jar" />
+    </fileset>
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.db}/lib/">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.modules}">
+      <include name="*/lib/**" />
+    </fileset>
+    <fileset dir="${base.modules_core}">
+      <include name="*/lib/**" />
+    </fileset>
+    <pathelement path="${base.src.test}/src"/>
+  </path>
+
+  <target name="compile.test" depends="sqlc,generate.entities.quick">
+
+  	 <mkdir dir="${build.test}"/>
+     <javac destdir="${build.test}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
+      <src refid="test-src-dirs"/>
+      <classpath refid="test.class.path" />
+    </javac>
+  </target>
+
+  <target name="run.tests" depends="compile.test">
+    <junit printsummary="no" haltonfailure="yes" showoutput="yes" outputtoformatters="false">
+      <classpath refid="test.class.path" />
+      <test name="org.openbravo.test.AntTaskTests" haltonfailure="no" outfile="../src/result_mid">
+        <formatter type="xml" />
+      </test>
+    </junit>
+  </target>
+
+  <target name="run.all.tests" depends="compile.test">
+    <junit printsummary="no" haltonfailure="yes" showoutput="yes" outputtoformatters="false">
+      <classpath refid="test.class.path" />
+      <test name="org.openbravo.test.StandaloneTestSuite" haltonfailure="no" outfile="../src/result">
+      <formatter type="xml" />
+    </test>
+    </junit>
+  </target>
+
+  <target name="run.quick.tests" depends="compile.test">
+    <junit printsummary="no" haltonfailure="yes" showoutput="yes" outputtoformatters="false">
+      <classpath refid="test.class.path" />
+      <test name="org.openbravo.test.AllQuickAntTaskTests" haltonfailure="no" outfile="../src/result-quick">
+        <formatter type="xml" />
+      </test>
+    </junit>
+  </target>
+
+  <target name="run.test" depends="compile.test">
+    <junit printsummary="no" haltonfailure="yes" showoutput="yes" outputtoformatters="false">
+      <classpath refid="test.class.path" />
+      <test name="${test}" haltonfailure="no" outfile="../src/result-${test}">
+        <formatter type="xml"/>
+      </test>
+    </junit>
+  </target>
+
+  <target name="run.webservice.tests" depends="compile.test">
+    <junit printsummary="no" haltonfailure="yes" showoutput="yes" outputtoformatters="false">
+      <classpath refid="test.class.path" />
+      <test name="org.openbravo.test.WebserviceTestSuite" haltonfailure="no" outfile="../src/resultws">
+        <formatter type="xml" />
+      </test>
+    </junit>
+  </target>
+</project>

@@ -1,0 +1,179 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_ORDERTAX_ADJUSTMENT">
+    <function name="C_ORDERTAX_ADJUSTMENT" type="NULL">
+      <parameter name="p_order_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_precision" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_action" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2017-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+/*
+* It rounds C_OrderLineTax and C_OrderTax TaxBaseAmt and adjusts C_OrderTax TaxAmt and C_OrderLine LineNetAmt
+* when completing the p_order_id order.
+* It removes C_OrderLineTax and C_OrderTax taxes and C_OrderLine and C_Order amounts and recalculates them again
+* when reactivating the p_order_id order.
+*/
+
+-- Variables
+v_amount C_ORDERLINE.Line_Gross_Amount%TYPE;
+TYPE RECORD IS REF CURSOR;
+CUR_Tax RECORD;
+CUR_Line RECORD;
+
+BEGIN --BODY
+
+  -- Round and Adjust taxes
+  IF (p_action = 'CO') THEN
+    AD_Disable_Triggers();
+
+    -- Round
+    UPDATE C_ORDERLINETAX
+    SET TaxBaseAmt = round(TaxBaseAmt, p_precision)
+    WHERE C_Order_ID = p_order_id;
+
+    UPDATE C_ORDERTAX
+    SET TaxBaseAmt = round(TaxBaseAmt, p_precision)
+    WHERE C_Order_ID = p_order_id;
+
+    -- Adjust
+    FOR CUR_Tax IN (
+      SELECT ot.C_Tax_ID, COALESCE((MIN(ot.DocTaxBaseAmt) + MIN(ot.DocTaxAmt)) - (SUM(olt.LineTaxBaseAmt) + SUM(olt.LineTaxAmt)), 0) as TaxAdjustment, COALESCE(MIN(ot.DocTaxBaseAmt) - SUM(olt.LineTaxBaseAmt), 0) as LineAdjustment
+      FROM (
+        SELECT c_tax_get_root(ot.c_tax_id) as C_Tax_ID, CASE WHEN MIN(ot.TaxBaseAmt) > 0 THEN MIN(ot.TaxBaseAmt) ELSE MAX(ot.TaxBaseAmt) END as DocTaxBaseAmt, SUM(ot.TaxAmt) as DocTaxAmt, MIN(ot.Line) as Line
+        FROM C_OrderTax ot
+        JOIN C_Tax t
+        ON ot.C_Tax_ID = t.C_Tax_ID
+        WHERE ot.C_Order_ID = p_order_id
+        AND t.DocTaxAmount = 'D'
+        GROUP BY c_tax_get_root(ot.c_tax_id)
+      ) ot
+      JOIN (
+        SELECT c_tax_get_root(olt.c_tax_id) as C_Tax_ID, CASE WHEN MIN(olt.TaxBaseAmt) > 0 THEN MIN(olt.TaxBaseAmt) ELSE MAX(olt.TaxBaseAmt) END as LineTaxBaseAmt, SUM(olt.TaxAmt) as LineTaxAmt
+        FROM C_OrderLineTax olt
+        JOIN C_Tax t
+        ON olt.C_Tax_ID = t.C_Tax_ID
+        WHERE olt.C_Order_ID = p_order_id
+        AND t.DocTaxAmount = 'D'
+        GROUP BY olt.C_OrderLine_ID, c_tax_get_root(olt.c_tax_id)
+      ) olt
+      ON olt.C_Tax_ID = ot.C_Tax_ID
+      GROUP BY ot.C_Tax_ID, ot.Line
+      HAVING COALESCE(MIN(ot.DocTaxBaseAmt), 0) <> COALESCE(SUM(olt.LineTaxBaseAmt), 0)
+      OR COALESCE(MIN(ot.DocTaxBaseAmt) + MIN(ot.DocTaxAmt), 0) <> COALESCE(SUM(olt.LineTaxBaseAmt) + SUM(olt.LineTaxAmt), 0)
+      ORDER BY ot.Line
+    )
+    LOOP
+      -- Adjust the tax that stays closest to the original amount (the one with the lowest rounded tax amount - not rounded tax amount + adjustment amount)
+      IF (CUR_Tax.TaxAdjustment <> 0) THEN
+        FOR CUR_Line IN (
+          SELECT ot.C_OrderTax_ID, ot.C_Tax_ID, t.Line
+          FROM C_OrderTax ot
+          JOIN C_Tax t
+          ON ot.C_Tax_ID = t.C_Tax_ID
+          WHERE ot.C_Order_ID = p_order_id
+          AND c_tax_get_root(ot.C_Tax_ID) = CUR_Tax.C_Tax_ID
+          ORDER BY ABS(ot.TaxAmt - (ot.TaxBaseAmt * (t.Rate/100)) - CUR_Tax.TaxAdjustment) ASC, ABS(ot.TaxAmt) DESC, t.Line DESC
+        )
+        LOOP
+          UPDATE C_ORDERTAX
+          SET TaxAmt = TaxAmt - CUR_Tax.TaxAdjustment
+          WHERE C_OrderTax_ID = CUR_Line.C_OrderTax_ID;
+
+          UPDATE C_ORDERTAX ot
+          SET TaxBaseAmt = TaxBaseAmt - CUR_Tax.TaxAdjustment
+          WHERE ot.C_Order_ID = p_order_id
+          AND c_tax_get_root(ot.C_Tax_ID) = CUR_Tax.C_Tax_ID
+          AND EXISTS (
+            SELECT 1
+            FROM C_Tax t
+            WHERE t.C_Tax_ID = ot.C_Tax_ID
+            AND ((t.Cascade = 'Y'
+            AND t.Line > CUR_Line.Line)
+            OR (t.BaseAmount IN ('TAX', 'LNATAX', 'TBATAX')
+            AND C_TAX_ISMEMBER(t.C_TaxBase_ID, CUR_Line.C_Tax_ID) = 1
+            AND t.IsSummary = 'N'))
+          );
+
+          EXIT;
+        END LOOP;
+      END IF;
+
+      -- Adjust LineNetAmt
+      IF (CUR_Tax.LineAdjustment <> 0) THEN
+        FOR CUR_Line IN (
+          SELECT ol.C_OrderLine_ID
+          FROM C_OrderLine ol
+          WHERE ol.C_Order_ID = p_order_id
+          AND EXISTS (
+            SELECT 1
+            FROM C_OrderLineTax olt
+            WHERE ol.C_OrderLine_ID = olt.C_OrderLine_ID
+            AND c_tax_get_root(olt.C_Tax_ID) = CUR_Tax.c_Tax_ID
+          )
+          ORDER BY ABS(ol.LineNetAmt) DESC, ol.Line DESC
+        )
+        LOOP
+          UPDATE C_ORDERLINE
+          SET LineNetAmt = LineNetAmt + CUR_Tax.LineAdjustment
+          WHERE C_OrderLine_ID = CUR_Line.C_OrderLine_ID;
+
+          -- TODO: Adjust C_OrderLineTax accordingly
+
+          EXIT;
+        END LOOP;
+      END IF;
+    END LOOP;
+
+    AD_Enable_Triggers();
+
+  -- Recalculate amounts and taxes
+  ELSIF (p_action = 'RE') THEN
+
+    -- Remove header amounts and taxes
+    DELETE FROM C_ORDERTAX WHERE C_Order_ID = p_order_id;
+    UPDATE C_ORDER SET TotalLines = 0, GrandTotal = 0 WHERE C_Order_ID = p_order_id;
+
+    FOR Cur_line IN (
+      SELECT C_OrderLine_ID
+      FROM C_ORDERLINE
+      WHERE C_Order_ID = p_order_id
+    ) LOOP
+      AD_Disable_Triggers();
+
+      -- Remove line amounts and taxes
+      DELETE FROM C_ORDERLINETAX WHERE C_OrderLine_ID = Cur_line.C_OrderLine_ID;
+      SELECT Line_Gross_Amount INTO v_amount FROM C_ORDERLINE WHERE C_OrderLine_ID = Cur_line.C_OrderLine_ID;
+      UPDATE C_ORDERLINE SET Line_Gross_Amount = 0 WHERE C_OrderLine_ID = Cur_line.C_OrderLine_ID;
+
+      AD_Enable_Triggers();
+
+      -- Recalculate amounts and taxes
+      UPDATE C_ORDERLINE SET Line_Gross_Amount = v_amount WHERE C_OrderLine_ID = Cur_line.C_OrderLine_ID;
+
+    END LOOP;
+
+  END IF;
+END C_ORDERTAX_ADJUSTMENT
+]]></body>
+    </function>
+  </database>

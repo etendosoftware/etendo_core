@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_LC_RECEIPT">
+    <table name="M_LC_RECEIPT" primaryKey="M_LC_RECEIPT_KEY">
+      <column name="M_LC_RECEIPT_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_LANDEDCOST_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_INOUTLINE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_INOUT_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="M_LC_RECEIPT_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_INOUT" name="M_LC_RECEIPT_INOUT">
+        <reference local="M_INOUT_ID" foreign="M_INOUT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_INOUTLINE" name="M_LC_RECEIPT_INOUTLINE">
+        <reference local="M_INOUTLINE_ID" foreign="M_INOUTLINE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_LANDEDCOST" name="M_LC_RECEIPT_LC">
+        <reference local="M_LANDEDCOST_ID" foreign="M_LANDEDCOST_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_LC_RECEIPT_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <index name="M_LC_RECEIPT_INOUT" unique="false">
+        <index-column name="M_INOUT_ID"/>
+        <whereClause><![CDATA[M_INOUT_ID IS NOT NULL]]></whereClause>
+      </index>
+      <index name="M_LC_RECEIPT_INOUTLINE" unique="false">
+        <index-column name="M_INOUTLINE_ID"/>
+      </index>
+      <index name="M_LC_RECEIPT_LANDEDCOST" unique="false">
+        <index-column name="M_LANDEDCOST_ID"/>
+      </index>
+      <check name="M_LC_RECEIPT_ACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="M_LC_RECEIPT_IO_CHECK"><![CDATA[M_INOUT_ID IS NOT NULL OR M_INOUTLINE_ID IS NOT NULL]]></check>
+    </table>
+  </database>

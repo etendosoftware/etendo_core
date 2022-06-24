@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2001-2015 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="AcctServerProcessData" package="org.openbravo.erpCommon.ad_process">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="selectUserOrg" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      SELECT CREATEDBY AS AD_USER_ID, AD_ORG_ID, '' AS AD_TABLE_ID FROM AD_PROCESS
+      WHERE AD_PROCESS_ID = ?
+    ]]></Sql>
+    <Parameter name="adProcessId"/>
+   </SqlMethod>
+   <SqlMethod name="selectTable" type="preparedStatement" return="String" default="">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      SELECT P_STRING FROM AD_PINSTANCE_PARA
+      WHERE AD_PINSTANCE_ID = ?
+      AND PARAMETERNAME = 'AD_Table_ID'
+    ]]></Sql>
+    <Parameter name="adPinstanceId"/>
+   </SqlMethod>
+   <SqlMethod name="selectAcctTable" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      SELECT DISTINCT ad_table_id
+      FROM C_ACCTSCHEMA_TABLE
+      WHERE isactive = 'Y'
+      AND isBackgroundDisabled = 'N'
+      ORDER BY ad_table_id
+    ]]></Sql>
+   </SqlMethod>
+   <SqlMethod name="selectAcctTable" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      SELECT DISTINCT ad_table_id
+      FROM C_ACCTSCHEMA_TABLE
+      WHERE isactive = 'Y'
+      AND isBackgroundDisabled = 'N'
+      AND AD_Client_ID = ?
+      ORDER BY ad_table_id
+    ]]></Sql>
+    <Parameter name="client"/>
+   </SqlMethod>
+   <SqlMethod name="selectAcctTable" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      SELECT at.ad_table_id
+      FROM c_acctschema_table at
+      WHERE at.isactive = 'Y'
+      AND at.ad_client_id = ?
+      AND EXISTS (
+        SELECT 1
+        FROM c_acctschema a
+        JOIN ad_org_acctschema oa
+        ON a.c_acctschema_id = oa.c_acctschema_id
+        WHERE at.c_acctschema_id = a.c_acctschema_id
+        AND (ad_org_isinnaturaltree(?, oa.ad_org_id, oa.ad_client_id) = 'Y')
+        AND a.isactive = 'Y'
+        AND oa.isactive = 'Y'
+      )
+      GROUP BY at.ad_table_id
+      HAVING sum(case when at.isBackgroundDisabled = 'N' then 1 else 0 end) > 0
+      AND sum(case when at.isBackgroundDisabled = 'Y' then 1 else 0 end) = 0
+      ORDER BY at.ad_table_id
+    ]]></Sql>
+    <Parameter name="client"/>
+    <Parameter name="org"/>
+   </SqlMethod>
+   <SqlMethod name="selectDescription" type="preparedStatement" return="string">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+                SELECT (case when ad_table.po_window_id is null then '' else ad_column_identifier('AD_Window',TO_CHAR(ad_table.po_window_id),?) end)||
+                  (case when ad_table.po_window_id is null then '' else ' - ' end)||
+                  ad_column_identifier('AD_Window',TO_CHAR(ad_table.ad_window_id),?)
+                FROM AD_TABLE
+                WHERE AD_TABLE_ID = ?
+    ]]></Sql>
+    <Parameter name="language"/>
+    <Parameter name="language"/>
+    <Parameter name="adTableId"/>
+   </SqlMethod>
+   <SqlMethod name="selectOrg" type="preparedStatement" return="String" default="">
+     <SqlMethodComment></SqlMethodComment>
+     <Sql><![CDATA[
+       SELECT P_STRING FROM AD_PINSTANCE_PARA
+       WHERE AD_PINSTANCE_ID = ?
+       AND PARAMETERNAME = 'AD_Org_ID'
+     ]]></Sql>
+     <Parameter name="adPinstanceId"/>
+   </SqlMethod>
+     <SqlMethod name="selectDateFrom" type="preparedStatement" return="String" default="">
+     <SqlMethodComment></SqlMethodComment>
+     <Sql><![CDATA[
+       SELECT P_STRING FROM AD_PINSTANCE_PARA
+       WHERE AD_PINSTANCE_ID = ?
+       AND PARAMETERNAME = 'DateFrom'
+     ]]></Sql>
+     <Parameter name="adPinstanceId"/>
+   </SqlMethod>
+     <SqlMethod name="selectDateTo" type="preparedStatement" return="String" default="">
+     <SqlMethodComment></SqlMethodComment>
+     <Sql><![CDATA[
+       SELECT P_STRING FROM AD_PINSTANCE_PARA
+       WHERE AD_PINSTANCE_ID = ?
+       AND PARAMETERNAME = 'DateTo'
+     ]]></Sql>
+     <Parameter name="adPinstanceId"/>
+   </SqlMethod>
+   <SqlMethod name="useRequestProcessOrg" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as exist
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_preference
+                      WHERE attribute = 'UseRequestOrganizationExecutingRequestProcess')
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

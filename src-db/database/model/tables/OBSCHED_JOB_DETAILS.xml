@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_JOB_DETAILS">
+    <table name="OBSCHED_JOB_DETAILS" primaryKey="OBSCHED_JOB_DET_PK">
+      <column name="OBSCHED_JOB_DETAILS_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_GROUP" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DESCRIPTION" primaryKey="false" required="false" type="VARCHAR" size="250" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_CLASS_NAME" primaryKey="false" required="true" type="VARCHAR" size="250" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="IS_DURABLE" primaryKey="false" required="true" type="VARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="IS_NONCONCURRENT" primaryKey="false" required="true" type="VARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="IS_UPDATE_DATA" primaryKey="false" required="true" type="VARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="REQUESTS_RECOVERY" primaryKey="false" required="true" type="VARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_DATA" primaryKey="false" required="false" type="BLOB" size="4000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <index name="OBSCHED_J_GRP" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="JOB_GROUP"/>
+      </index>
+      <index name="OBSCHED_J_REQ_RECOVERY" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="REQUESTS_RECOVERY"/>
+      </index>
+      <unique name="OBSCHED_JOB_DET_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="JOB_NAME"/>
+        <unique-column name="JOB_GROUP"/>
+      </unique>
+    </table>
+  </database>

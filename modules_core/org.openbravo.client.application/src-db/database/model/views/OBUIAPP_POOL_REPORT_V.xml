@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="VIEW OBUIAPP_POOL_REPORT_V">
+    <view name="OBUIAPP_POOL_REPORT_V"><![CDATA[SELECT p.ad_process_id AS obuiapp_pool_report_v_id, p.ad_org_id, p.ad_client_id, to_char(p.name) AS name, '165' AS ad_window_id, p.isactive, p.created, p.createdby, p.updated, p.updatedby FROM ad_process p WHERE (p.isreport = 'Y' OR p.isjasper = 'Y') AND NOT (p.ad_process_id IN (SELECT DISTINCT ad_tab.ad_process_id FROM ad_tab WHERE ad_tab.ad_process_id IS NOT NULL)) UNION SELECT p.obuiapp_process_id AS obuiapp_pool_report_v_id, p.ad_org_id, p.ad_client_id, to_char(p.name) AS name, 'FF80818132D7FB620132D8193C0C0043' AS ad_window_id, p.isactive, p.created, p.createdby, p.updated, p.updatedby FROM obuiapp_process p WHERE p.uipattern = 'OBUIAPP_Report']]></view>
+  </database>

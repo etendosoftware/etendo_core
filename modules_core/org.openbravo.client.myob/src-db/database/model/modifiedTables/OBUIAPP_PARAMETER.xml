@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE OBUIAPP_PARAMETER">
+    <table name="OBUIAPP_PARAMETER" primaryKey="OBUIAPP_PARAMETER_KEY">
+      <column name="EM_OBKMO_WIDGET_CLASS_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="OBKMO_WIDGET_CLASS" name="EM_OBKMO_PARAMETER_WIDGETCLASS" onDelete="cascade">
+        <reference local="EM_OBKMO_WIDGET_CLASS_ID" foreign="OBKMO_WIDGET_CLASS_ID"/>
+      </foreign-key>
+      <index name="EM_OBKMO_PARAM_WIDGET" unique="false">
+        <index-column name="EM_OBKMO_WIDGET_CLASS_ID"/>
+        <whereClause><![CDATA[EM_OBKMO_WIDGET_CLASS_ID IS NOT NULL]]></whereClause>
+      </index>
+    </table>
+  </database>

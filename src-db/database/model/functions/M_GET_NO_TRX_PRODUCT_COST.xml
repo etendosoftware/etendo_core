@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_GET_NO_TRX_PRODUCT_COST">
+    <function name="M_GET_NO_TRX_PRODUCT_COST" type="NUMERIC" volatility="STABLE">
+      <parameter name="p_product_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_movementdate" type="TIMESTAMP" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_costtype" type="CHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_org_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_warehouse_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_currency_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_islegalentity" type="CHAR" mode="in">
+        <default><![CDATA[N]]></default>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_Cost              NUMBER;
+  v_Count             NUMBER;
+  v_CostType          VARCHAR2(60) ;
+  v_islegalentity     CHAR(1);
+  v_legal_entity      AD_ORG.AD_ORG_ID%TYPE;
+  TYPE RECORD IS REF CURSOR;
+    Cur_Cost RECORD;
+BEGIN
+  v_CostType := p_CostType;
+  IF(p_Product_ID IS NULL) THEN
+    RETURN NULL;
+  END IF;
+  IF(p_MovementDate IS NULL) THEN
+    RETURN NULL;
+  END IF;
+  IF(p_isLegalEntity = 'Y') THEN
+    v_legal_entity := p_org_id;
+  ELSIF(p_org_id IS NULL) THEN
+    RETURN NULL;
+  ELSE
+    SELECT ot.islegalentity INTO v_islegalentity
+    FROM ad_org o JOIN ad_orgtype ot ON o.ad_orgtype_id = ot.ad_orgtype_id
+    WHERE o.ad_org_id = p_org_id;
+    IF (v_islegalentity = 'Y') THEN
+      v_legal_entity := p_org_id;
+    ELSE
+      v_legal_entity := AD_GET_ORG_LE_BU(p_org_id, 'LE');
+    END IF;
+  END IF;
+
+
+  SELECT count(*) INTO v_Count
+  FROM DUAL 
+  WHERE EXISTS (SELECT 1
+                FROM m_costing
+                WHERE datefrom <= p_movementdate
+                  AND dateto > p_movementdate
+                  AND m_product_id = p_product_id
+                  AND COALESCE(m_warehouse_id, p_warehouse_id, '-1') = COALESCE(p_warehouse_id, m_warehouse_id, '-1')
+                  AND ad_org_id IN (v_legal_entity,'0')
+                  AND cost IS NOT NULL
+                  AND costtype IN ('STA', 'AVA')
+                  AND costtype = COALESCE(v_CostType, costtype)
+                );
+  IF(v_Count = 0) THEN
+    RETURN NULL;
+  END IF;
+  
+  FOR Cur_Cost IN (
+      SELECT cost, c_currency_id, ad_client_id, ad_org_id
+      FROM m_costing
+      WHERE datefrom <= p_movementdate
+        AND dateto > p_movementdate
+        AND m_product_id = p_product_id
+        AND COALESCE(m_warehouse_id, p_warehouse_id, '-1') = COALESCE(p_warehouse_id, m_warehouse_id, '-1')
+        AND ad_org_id IN (v_legal_entity,'0')
+        AND cost IS NOT NULL
+        AND costtype IN ('STA', 'AVA')
+        AND costtype = COALESCE(v_CostType, costtype)
+      ORDER BY datefrom, dateto DESC, CASE WHEN m_warehouse_id IS NULL THEN 1 ELSE 0 END
+  ) LOOP
+    IF (Cur_Cost.c_currency_id <> p_currency_id ) THEN
+    v_Cost := C_CURRENCY_CONVERT_PRECISION(Cur_Cost.COST, Cur_Cost.c_currency_id, p_currency_id, TO_DATE(p_movementdate), NULL, Cur_Cost.ad_client_id, Cur_Cost.ad_org_id,'C');
+    ELSE
+    v_Cost := Cur_Cost.COST;
+    END IF;
+    EXIT;
+  END LOOP;
+  RETURN v_Cost;
+END M_GET_NO_TRX_PRODUCT_COST
+]]></body>
+    </function>
+  </database>

@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="VIEW M_PRODCHVIEW_V">
+    <view name="M_PRODCHVIEW_V"><![CDATA[SELECT mp.m_product_id, mp.ad_client_id, mp.ad_org_id, mp.isactive, mp.created, mp.createdby, mp.updated, mp.updatedby, mp.value, mp.name, mp.characteristic_desc, mp.generic_product_id, mp.m_product_id || mc.m_characteristic_id AS m_prodchview_v_id, mc.m_characteristic_id, mc.name AS char_name, mpcv.m_ch_value_id, mpcv.m_product_ch_value_id, mp.isgeneric FROM m_product mp CROSS JOIN m_characteristic mc LEFT JOIN m_product_ch_value mpcv ON mc.m_characteristic_id = mpcv.m_characteristic_id AND mp.m_product_id = mpcv.m_product_id LEFT JOIN m_product_ch pch ON mp.m_product_id = pch.m_product_id AND mc.m_characteristic_id = pch.m_characteristic_id WHERE pch.isvariant IS NULL OR pch.isvariant = 'N']]></view>
+  </database>

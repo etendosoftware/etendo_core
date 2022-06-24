@@ -1,0 +1,285 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http: //www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2010-2013 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+/* Blue */
+/* Light Blue */
+/* Darker Blue */
+/* Gray */
+/* Darker Gray  */
+/* Yellow */
+/* White */
+/* Light Blue (20%) */
+/* Light Green */
+/* Light Blue (20%) */
+/* light Blue (10%) */
+/* Gray 10 % */
+.tabStyleActive {
+  background-color: #202452;
+}
+
+.tabStyleActiveSelected {
+  background-color: #202452;
+  border-top: 4px solid #fad614;
+}
+
+.tabStyleInactive {
+  background-color: #e1e1e1;
+  color: #a5aab7;
+}
+
+/*============================================================
+  The main navbar
+============================================================*/
+.OBNavBarToolStrip {
+  margin-left: 30px;
+  margin-right: 0px;
+  margin-top: 10px;
+  height: 53px;
+  background-color: #FFFFFF;
+}
+
+/*============================================================
+  Navbar button itself
+============================================================*/
+.OBNavBarImgButton,
+.OBNavBarImgButtonOver,
+.OBNavBarImgButtonFocused,
+.OBNavBarImgButtonFocusedOver,
+.OBNavBarImgButtonDown,
+.OBNavBarImgButtonFocusedDown,
+.OBNavBarImgButtonSelected,
+.OBNavBarImgButtonSelectedFocused,
+.OBNavBarImgButtonSelectedDown,
+.OBNavBarImgButtonSelectedFocusedDown,
+.OBNavBarImgButtonSelectedOver,
+.OBNavBarImgButtonSelectedFocusedOver {
+  cursor: pointer;
+  font-size: 11px;
+  text-align: center;
+  line-height: 100%;
+  /* To avoid strange effect in some Firefox where the imgButtons are 1px moved down */
+}
+
+td.OBNavBarTextButton,
+td.OBNavBarTextButtonOver,
+td.OBNavBarTextButtonFocused,
+td.OBNavBarTextButtonFocusedOver,
+td.OBNavBarTextButtonDown,
+td.OBNavBarTextButtonFocusedDown,
+td.OBNavBarTextButtonSelected,
+td.OBNavBarTextButtonSelectedFocused,
+td.OBNavBarTextButtonSelectedDown,
+td.OBNavBarTextButtonSelectedFocusedDown,
+td.OBNavBarTextButtonSelectedOver,
+td.OBNavBarTextButtonSelectedFocusedOver {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  padding: 0px 10px;
+  color: #202452;
+}
+
+/*============================================================
+  Navbar component styling
+============================================================*/
+.OBNavBarComponent {
+  background-color: #ffffff;
+  color: #000000;
+  cursor: pointer;
+  margin-right: 3px;
+}
+.OBNavBarComponent:hover {
+  background-color: #dddff6;
+  border-radius: 7px;
+}
+
+.OBApplicationMenuButtonOver,
+.OBApplicationMenuButtonDown,
+.OBApplicationMenuButton {
+  font-weight: bold;
+  font-size: 13px;
+  padding-top: 3px !important;
+  color: #202452;
+}
+
+.OBApplicationMenuButton:hover, .OBNavBarComponent:hover {
+  background-color: #dddff6;
+  border-radius: 7px;
+}
+
+.OBNavBarComponentHideLine {
+  margin: 0px;
+  padding: 0px;
+}
+
+.OBNavBarComponentSelected {
+  background-color: #dddff6;
+  border-radius: 7px;
+}
+
+/*============================================================
+  User profile form with tabs
+============================================================*/
+.OBNavBarComponentFormTabSetContainer {
+  font-size: 12px;
+  font-family: "Poppins", "lucida sans", sans-serif;
+  background-color: transparent;
+  margin-top: 5px;
+}
+
+/* note only the top styles are present here because in Openbravo tabs in forms are shown in the top
+if the tab headers are on the right, left or bottom the same styles can be used */
+.OBNavBarComponentFormTabButtonTopSelected,
+.OBNavBarComponentFormTabButtonTopSelectedFocused,
+.OBNavBarComponentFormTabButtonTopSelectedFocusedOver,
+.OBNavBarComponentFormTabButtonTopSelectedFocusedDown,
+.OBNavBarComponentFormTabButtonTopSelectedDown,
+.OBNavBarComponentFormTabButtonTopSelectedDisabled,
+.OBNavBarComponentFormTabButtonTopSelectedOver {
+  background-color: #eff1f7;
+  border-radius: 5px;
+  padding: 0px;
+  font-size: 13px;
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #dde0f7;
+}
+
+.OBNavBarComponentFormTabButtonTop,
+.OBNavBarComponentFormTabButtonTopFocused,
+.OBNavBarComponentFormTabButtonTopFocusedOver,
+.OBNavBarComponentFormTabButtonTopFocusedDown,
+.OBNavBarComponentFormTabButtonTopOver,
+.OBNavBarComponentFormTabButtonTopDown,
+.OBNavBarComponentFormTabButtonTopDisabled {
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  font-size: 12px;
+  font-family: "Poppins", "lucida sans", sans-serif;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/*============================================================
+  Standard flyout styling
+============================================================*/
+.OBFlyoutLayout {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0px 0px 20px 0px #ededed;
+}
+
+/*=======================================================================
+ * OBQuickLaunch - Button in upper nav bar
+=======================================================================*/
+.OBQuickLaunch {
+  background-image: url("../../web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/org.openbravo.client.application/images/navbar/iconQuickLaunch.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 15px;
+}
+
+/*=======================================================================
+ * OBQuickLaunchRecentLinkButton Item
+=======================================================================*/
+.OBQuickLaunchRecentLinkButton,
+.OBQuickLaunchRecentLinkButtonOver,
+.OBQuickLaunchRecentLinkButtonDown,
+.OBQuickLaunchRecentLinkButtonFocused,
+.OBQuickLaunchRecentLinkButtonFocusedOver,
+.OBQuickLaunchRecentLinkButtonFocusedDown {
+  font-family: "Poppins", "lucida sans", sans-serif;
+  font-size: 11px;
+  vertical-align: middle;
+  background: transparent;
+  padding: 3px 5px 3px 5px;
+}
+
+.OBQuickLaunchRecentLinkButton,
+.OBQuickLaunchRecentLinkButtonOver,
+.OBQuickLaunchRecentLinkButton:hover {
+  cursor: pointer;
+  color: #333333;
+}
+
+.OBQuickLaunchRecentLinkButtonDown,
+.OBQuickLaunchRecentLinkButton:active {
+  color: #004E27;
+}
+
+.OBQuickLaunchRecentLinkButtonOver,
+.OBQuickLaunchRecentLinkButtonFocusedOver,
+.OBQuickLaunchRecentLinkButton:hover {
+  text-decoration: underline;
+}
+
+/*=======================================================================
+ * OBNavBarCreateNew
+=======================================================================*/
+.OBNavBarCreateNew {
+  background-image: url("../../web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/org.openbravo.client.application/images/navbar/iconCreateNew.png");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/*=======================================================================
+ * OBHelpAboutLinkButton Item
+=======================================================================*/
+.OBHelpAboutLinkButton,
+.OBHelpAboutLinkButtonOver,
+.OBHelpAboutLinkButtonDown,
+.OBHelpAboutLinkButtonFocused,
+.OBHelpAboutLinkButtonFocusedOver,
+.OBHelpAboutLinkButtonFocusedDown {
+  font-family: "Poppins", "lucida sans", sans-serif;
+  font-size: 11px;
+  vertical-align: middle;
+  background: transparent;
+  padding: 3px 5px 3px 5px;
+}
+
+.OBHelpAboutLinkButton,
+.OBHelpAboutLinkButtonOver,
+.OBHelpAboutLinkButton:hover {
+  cursor: pointer;
+  color: #202452;
+}
+
+.OBHelpAboutLinkButtonDown,
+.OBHelpAboutLinkButton:active {
+  color: #202452;
+}
+
+.OBHelpAboutLinkButtonFocused,
+.OBHelpAboutLinkButtonFocusedOver,
+.OBHelpAboutLinkButtonFocusedDown,
+.OBHelpAboutLinkButton:focus {
+  color: #202452;
+}
+
+.OBHelpAboutLinkButtonOver,
+.OBHelpAboutLinkButtonFocusedOver,
+.OBHelpAboutLinkButton:hover {
+  text-decoration: underline;
+}
+
+/*# sourceMappingURL=ob-navigation-bar-styles.css.map */

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="UpdateFactAcctDescriptionData" package="org.openbravo.modulescript">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="needsUpdate" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+         SELECT count(1) as total
+         FROM DUAL
+         WHERE EXISTS (SELECT 1 FROM fact_acct fa LEFT JOIN c_elementvalue ev ON fa.account_id = ev.c_elementvalue_id
+                       WHERE (fa.acctdescription is null
+                              OR (fa.acctdescription is not null and fa.acctdescription <> ev.name)))
+      ]]>
+    </Sql>
+  </SqlMethod>
+    <SqlMethod name="isDescrUpdated" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as exist
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_preference
+                      WHERE attribute = 'Descr_Updated')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateFactAcctDescription" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE fact_acct
+        SET acctdescription = (select name from c_elementvalue where c_elementvalue_id = account_id)
+        WHERE fact_acct_id IN
+              (SELECT fact_acct_id
+               FROM fact_acct fa LEFT JOIN c_elementvalue ev ON fa.account_id = ev.c_elementvalue_id
+               WHERE (fa.acctdescription is null
+               OR (fa.acctdescription is not null and fa.acctdescription <> ev.name)))
+      ]]>
+    </Sql>
+  </SqlMethod>
+    <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO ad_preference (
+          ad_preference_id, ad_client_id, ad_org_id, isactive,
+          createdby, created, updatedby, updated,
+          attribute
+        ) VALUES (
+          get_uuid(), '0', '0', 'Y',
+          '0', NOW(), '0', NOW(),
+          'Descr_Updated'
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

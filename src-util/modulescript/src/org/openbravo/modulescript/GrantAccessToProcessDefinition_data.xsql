@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2017 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="GrantAccessToProcessDefinitionData" package="org.openbravo.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="getRolesToBeUpdated" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[SELECT distinct ad_client.ad_client_id as client_id, ad_client.name as client_name, 
+          ad_role.ad_role_id as role_id, ad_role.name as role_name,
+          ad_process.name AS process_name, ad_module.name as module_name
+          FROM ad_ref_data_loaded 
+          JOIN ad_client ON (ad_ref_data_loaded.ad_client_id = ad_client.ad_client_id)
+          JOIN ad_process_access ON (ad_ref_data_loaded.specific_id = ad_process_access.ad_process_access_id)
+          JOIN ad_process ON (ad_process.ad_process_id = ad_process_access.ad_process_id)
+          JOIN ad_module ON (ad_module.ad_module_id = ad_ref_data_loaded.ad_module_id)
+          JOIN ad_role ON (ad_role.ad_role_id = ad_process_access.ad_role_id)
+          WHERE ad_ref_data_loaded.ad_table_id = ?
+          AND ad_process_access.ad_process_id = ?
+          ORDER BY ad_role.name, ad_process.name, ad_client.name
+      ]]>
+    </Sql>
+    <Parameter name="tableId"/>
+    <Parameter name="oldId"/>
+  </SqlMethod>
+  <SqlMethod name="grantAccess" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[INSERT INTO obuiapp_process_access(
+            obuiapp_process_access_id, obuiapp_process_id, ad_role_id, ad_client_id, 
+            ad_org_id, isactive, created, createdby, updated, updatedby, 
+            isreadwrite, inherited_from)
+         (SELECT
+            get_uuid(), ?, ad_role_id, ad_client_id,
+            ad_org_id, isactive, now(), '0', now(), '0',
+            isreadwrite, inherited_from
+          FROM
+            ad_process_access
+          WHERE
+            ad_process_id = ?
+          AND
+            NOT EXISTS (SELECT 1 
+                        FROM obuiapp_process_access 
+                        WHERE obuiapp_process_access.ad_role_id = ad_process_access.ad_role_id
+                        AND obuiapp_process_id = ?)
+          AND
+            NOT EXISTS (SELECT 1 
+                        FROM ad_ref_data_loaded 
+                        WHERE ad_table_id = ? 
+                        AND ad_ref_data_loaded.ad_client_id = ad_process_access.ad_client_id
+                        AND specific_id = ad_process_access_id))
+      ]]>
+    </Sql>
+    <Parameter name="newId"/>
+    <Parameter name="oldId"/>
+    <Parameter name="newId"/>
+    <Parameter name="tableId"/>
+  </SqlMethod>
+  <SqlMethod name="createAlertRule" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[INSERT INTO ad_alertrule(
+            ad_alertrule_id, ad_client_id, ad_org_id, isactive, 
+            created, createdby, updated, updatedby, 
+            name, ad_tab_id, 
+            filterclause, sql, type)
+         VALUES (
+            get_uuid(), ?, '0', 'Y',
+            now(), '0', now(), '0', 
+            ?, '119',
+            '', '', 'E')
+      ]]>
+    </Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="name"/>
+  </SqlMethod>
+  <SqlMethod name="getAlertRule" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[SELECT ad_alertrule_id 
+            FROM ad_alertrule
+            WHERE ad_client_id = ?
+              AND name = ?
+      ]]>
+    </Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="name"/>
+  </SqlMethod>
+  <SqlMethod name="getAdminRole" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[SELECT ad_role_id
+            FROM ad_role
+            WHERE ad_client_id = ?
+              AND is_client_admin = 'Y'
+      ]]>
+    </Sql>
+    <Parameter name="clientId"/>
+  </SqlMethod>
+  <SqlMethod name="createAlert" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[INSERT INTO ad_alert(
+            ad_alert_id, ad_client_id, ad_org_id, isactive, 
+            created, createdby, updated, updatedby, 
+            description, ad_alertrule_id, ad_role_id,
+            ad_user_id, isfixed, m_warehouse_id, note,
+            record_id, referencekey_id, status)
+         VALUES (
+            get_uuid(), ?, '0', 'Y',
+            now(), '0', now(), '0', 
+            ?, ?, ?,
+            null, 'N', null, '',
+            ?, ?, 'NEW')
+      ]]>
+    </Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="description"/>
+    <Parameter name="alertRuleId"/>
+    <Parameter name="roleId"/>
+    <Parameter name="recordId" />
+    <Parameter name="roleId" />
+  </SqlMethod>
+  <SqlMethod name="existRecipient" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+       SELECT COUNT(*) AS EXISTING
+       FROM ad_alertrecipient
+       WHERE ad_client_id = ?
+       AND ad_alertrule_id = ?
+       AND ad_role_id = ?
+      ]]>
+    </Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="alertRuleId"/>
+    <Parameter name="roleId"/>
+  </SqlMethod>
+  <SqlMethod name="createRecipients" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[INSERT INTO ad_alertrecipient(
+            ad_alertrecipient_id, ad_user_id, ad_client_id, ad_org_id, isactive, 
+            created, createdby, updated, updatedby, 
+            ad_alertrule_id, ad_role_id, inherited_from)
+         VALUES (
+            get_uuid(), null, ?, '0', 'Y',
+            now(), '0', now(), '0', 
+            ?, ?, null)
+      ]]>
+    </Sql>
+    <Parameter name="clientId"/>
+    <Parameter name="alertRuleId"/>
+    <Parameter name="roleId"/>
+  </SqlMethod>
+</SqlClass>

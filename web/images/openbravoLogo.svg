@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="793.70081"
+   height="300"
+   viewBox="0 0 210 79.375005"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="etendo-logo-1.svg">
+  <defs
+     id="defs2">
+    <clipPath
+       id="clipPath22"
+       clipPathUnits="userSpaceOnUse">
+      <path
+         inkscape:connector-curvature="0"
+         id="path20"
+         d="M 0,327.9 H 557.702 V 0 H 0 Z" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="-104.28571"
+     inkscape:cy="548.57143"
+     inkscape:document-units="mm"
+     inkscape:current-layer="g18"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1294"
+     inkscape:window-height="704"
+     inkscape:window-x="72"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-217.62499)">
+    <g
+       transform="matrix(0.35277777,0,0,-0.35277777,3.681133,185.88195)"
+       inkscape:label="Etendo RGB"
+       id="g10">
+      <g
+         id="g16">
+        <g
+           clip-path="url(#clipPath22)"
+           id="g18"
+           transform="translate(10.714286,-263.57144)">
+          <g
+             transform="translate(87.9487,124.3241)"
+             id="g36">
+            <path
+               inkscape:connector-curvature="0"
+               id="path38"
+               style="fill:#202452;fill-opacity:1;fill-rule:nonzero;stroke:none"
+               d="m 0,0 v -28.178 h -53.794 v -18.274 h 50.037 v -27.496 h -50.037 v -19.467 h 54.82 v -28.178 H -87.949 V 0 Z" />
+          </g>
+          <g
+             transform="translate(99.58,89.4848)"
+             id="g40">
+            <path
+               inkscape:connector-curvature="0"
+               id="path42"
+               style="fill:#202452;fill-opacity:1;fill-rule:nonzero;stroke:none"
+               d="M 0,0 V 24.25 H 32.789 V 0 H 48.842 V -23.395 H 32.789 v -26.47 c 0,-4.671 0.825,-7.972 2.477,-9.906 1.648,-1.938 4.41,-2.903 8.281,-2.903 2.391,0 4.441,0.282 6.149,0.853 v -24.25 c -4.67,-1.477 -9.965,-2.22 -15.883,-2.22 -11.842,0 -20.437,2.332 -25.786,7.003 C 2.674,-76.623 0,-69.108 0,-58.746 v 35.351 z" />
+          </g>
+          <g
+             transform="translate(201.311,71.7255)"
+             id="g44">
+            <path
+               inkscape:connector-curvature="0"
+               id="path46"
+               style="fill:#202452;fill-opacity:1;fill-rule:nonzero;stroke:none"
+               d="M 0,0 C -7.744,0 -12.354,-5.012 -13.833,-15.029 H 13.663 C 12.864,-5.012 8.31,0 0,0 m 0.17,-50.55 c 3.302,0 6.004,0.768 8.113,2.306 2.105,1.536 3.329,3.556 3.672,6.061 h 33.471 c -1.938,-8.537 -7.002,-15.599 -15.199,-21.176 -8.198,-5.579 -18.102,-8.366 -29.716,-8.366 -14.685,0 -26.157,4.352 -34.41,13.062 -8.256,8.711 -12.381,19.896 -12.381,33.557 0,13.206 4.125,24.108 12.381,32.704 8.253,8.596 19.554,12.895 33.899,12.895 10.473,0 19.383,-2.337 26.726,-7.002 7.343,-4.671 12.723,-11.272 16.139,-19.812 2.502,-6.262 3.757,-14.916 3.757,-25.955 H -14.004 C -13.435,-44.461 -8.709,-50.55 0.17,-50.55" />
+          </g>
+          <g
+             transform="translate(314.687,91.8773)"
+             id="g48">
+            <path
+               inkscape:connector-curvature="0"
+               id="path50"
+               style="fill:#202452;fill-opacity:1;fill-rule:nonzero;stroke:none"
+               d="m 0,0 c 9.906,0 17.675,-3.075 23.311,-9.222 5.636,-6.15 8.454,-14.972 8.454,-26.47 V -89.146 H -1.024 v 49.353 c 0,9.676 -3.415,14.517 -10.247,14.517 -7.855,0 -11.783,-6.776 -11.783,-20.323 v -43.547 h -32.789 v 86.753 h 30.398 v -9.904 h 0.342 C -18.956,-4.101 -10.588,0 0,0" />
+          </g>
+          <g
+             transform="translate(405.2153,67.2836)"
+             id="g52">
+            <path
+               inkscape:connector-curvature="0"
+               id="path54"
+               style="fill:#202452;fill-opacity:1;fill-rule:nonzero;stroke:none"
+               d="m 0,0 c -4.214,0 -7.573,-1.907 -10.076,-5.72 -2.506,-3.815 -3.757,-8.965 -3.757,-15.456 0,-6.488 1.251,-11.642 3.757,-15.456 2.503,-3.815 5.862,-5.719 10.076,-5.719 4.098,0 7.372,1.904 9.82,5.719 2.447,3.814 3.671,8.968 3.671,15.456 0,6.491 -1.224,11.641 -3.671,15.456 C 7.372,-1.907 4.098,0 0,0 M 44.573,57.041 V -64.553 H 13.15 v 9.905 H 12.809 C 7.57,-62.959 -0.17,-67.113 -10.417,-67.113 c -11.502,0 -20.664,4.154 -27.496,12.465 -6.831,8.311 -10.245,19.47 -10.245,33.472 0,14.005 3.329,25.162 9.989,33.473 6.66,8.308 15.627,12.467 26.898,12.467 10.019,0 17.591,-3.586 22.713,-10.759 h 0.343 v 43.036 z" />
+          </g>
+          <g
+             transform="translate(519.5336,62.0756)"
+             id="g56">
+            <path
+               inkscape:connector-curvature="0"
+               id="path58"
+               style="fill:#202452;fill-opacity:1;fill-rule:nonzero;stroke:none"
+               d="m 0,0 c -2.449,3.813 -5.893,5.722 -10.332,5.722 -4.439,0 -7.886,-1.909 -10.332,-5.722 -2.449,-3.815 -3.673,-9.136 -3.673,-15.968 0,-6.829 1.224,-12.154 3.673,-15.968 2.446,-3.815 5.893,-5.718 10.332,-5.718 4.439,0 7.883,1.903 10.332,5.718 2.446,3.814 3.67,9.139 3.67,15.968 C 3.67,-9.136 2.446,-3.815 0,0 m -45.684,17.675 c 8.767,8.309 20.55,12.468 35.352,12.468 14.799,0 26.582,-4.159 35.351,-12.468 8.763,-8.31 13.15,-19.526 13.15,-33.643 0,-14.117 -4.387,-25.332 -13.15,-33.642 -8.769,-8.312 -20.552,-12.465 -35.351,-12.465 -14.802,0 -26.585,4.153 -35.352,12.465 -8.768,8.31 -13.149,19.525 -13.149,33.642 0,14.117 4.381,25.333 13.149,33.643" />
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

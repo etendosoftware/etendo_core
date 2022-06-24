@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER GL_JOURNAL_CHK_RESTRICT_TRG">
+    <trigger name="GL_JOURNAL_CHK_RESTRICT_TRG" table="GL_JOURNAL" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+
+
+
+
+    /*************************************************************************
+    * The contents of this file are subject to the Openbravo  Public  License
+    * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+    * Version 1.1  with a permitted attribution clause; you may not  use this
+    * file except in compliance with the License. You  may  obtain  a copy of
+    * the License at http://www.openbravo.com/legal/license.html
+    * Software distributed under the License  is  distributed  on  an "AS IS"
+    * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+    * License for the specific  language  governing  rights  and  limitations
+    * under the License.
+    * The Original Code is Openbravo ERP.
+    * The Initial Developer of the Original Code is Openbravo SLU
+    * All portions are Copyright (C) 2001-2016 Openbravo SLU
+    * All Rights Reserved.
+    * Contributor(s):  ______________________________________.
+    ************************************************************************/
+    v_DateNull DATE := TO_DATE('01-01-1900', 'DD-MM-YYYY');  
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+
+    IF UPDATING THEN  
+      IF(:old.Processed='Y'
+        AND ((COALESCE(:old.DATEDOC, v_DateNull) <> COALESCE(:new.DATEDOC, v_DateNull))
+        OR(COALESCE(:old.C_PERIOD_ID, '0') <> COALESCE(:new.C_PERIOD_ID, '0'))
+        OR(COALESCE(:old.CURRENCYRATE, 0) <> COALESCE(:new.CURRENCYRATE, 0))
+        OR(COALESCE(:old.CURRENCYRATETYPE, '.') <> COALESCE(:new.CURRENCYRATETYPE, '.'))
+        OR(COALESCE(:old.CONTROLAMT, 0) <> COALESCE(:new.CONTROLAMT, 0))
+        OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
+        OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0'))))
+        THEN  RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    
+      IF(:old.Posted='Y' 
+        AND ((COALESCE(:old.DATEACCT, v_DateNull) <> COALESCE(:new.DATEACCT, v_DateNull)) 
+        OR(COALESCE(:old.C_ACCTSCHEMA_ID, '0') <> COALESCE(:new.C_ACCTSCHEMA_ID, '0')) 
+        OR(COALESCE(:old.GL_CATEGORY_ID, '0') <> COALESCE(:new.GL_CATEGORY_ID, '0')) 
+        OR(COALESCE(:old.POSTINGTYPE, '.') <> COALESCE(:new.POSTINGTYPE, '.'))
+        OR(COALESCE(:OLD.User1_ID, '0') <> COALESCE(:NEW.User1_ID, '0'))
+        OR(COALESCE(:OLD.User2_ID, '0') <> COALESCE(:NEW.User2_ID, '0'))
+        OR(COALESCE(:OLD.C_Campaign_ID, '0') <> COALESCE(:NEW.C_Campaign_ID, '0'))
+        OR(COALESCE(:OLD.C_Project_ID, '0') <> COALESCE(:NEW.C_Project_ID, '0'))
+        OR(COALESCE(:OLD.A_Asset_ID, '0') <> COALESCE(:NEW.A_Asset_ID, '0'))
+        OR(COALESCE(:OLD.C_Costcenter_ID, '0') <> COALESCE(:NEW.C_Costcenter_ID, '0'))
+        OR(COALESCE(:OLD.C_BPartner_ID, '0') <> COALESCE(:NEW.C_BPartner_ID, '0'))
+        OR(COALESCE(:OLD.M_Product_ID, '0') <> COALESCE(:NEW.M_Product_ID, '0'))
+        )) 
+        THEN RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;    
+
+      
+      IF (:old.DateAcct <> :new.DateAcct and 
+        c_chk_open_period(:new.AD_ORG_ID, :new.DATEACCT, null, :new.C_DOCTYPE_ID) < 1) THEN
+        RAISE_APPLICATION_ERROR(-20000, '@PeriodNotValid@');
+      END IF;
+
+    END IF;
+    IF(DELETING) THEN
+      IF(:old.Processed='Y') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    END IF;
+    IF(INSERTING) THEN
+      IF(:NEW.Processed='Y') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+      IF (c_chk_open_period(:new.AD_ORG_ID, :new.DATEACCT, null, :new.C_DOCTYPE_ID) < 1) THEN
+        RAISE_APPLICATION_ERROR(-20000, '@PeriodNotValid@');
+      END IF;
+    END IF;
+    END GL_JOURNAL_CHK_RESTRICT_TRG
+]]></body>
+    </trigger>
+  </database>

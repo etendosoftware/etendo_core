@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ob:Openbravo xmlns:ob="http://www.openbravo.com">
+  <WarehouseRule id="33DAC92D21624E0A9D8C537382F2D28C" identifier="Unique Storage Bin">
+    <id>33DAC92D21624E0A9D8C537382F2D28C</id>
+    <active>true</active>
+    <name>Unique Storage Bin</name>
+    <procedure>M_UNIQUELOCATOR_RULE</procedure>
+    <description>Returns stock of the first storage bin in the warehouse with enough stock.</description>
+  </WarehouseRule>
+  <WarehouseRule id="5F23F9B25A834B78A0549AF028E29051" identifier="Unique Attribute">
+    <id>5F23F9B25A834B78A0549AF028E29051</id>
+    <active>true</active>
+    <name>Unique Attribute</name>
+    <procedure>M_UNIQUEATTRIBUTE_RULE</procedure>
+    <description>Returns stock of the first attribute set instance in the warehouse with enough stock.</description>
+  </WarehouseRule>
+  <WarehouseRule id="F2DEA5B4C39F4423BF0AAC73DABD4146" identifier="Default Warehouse Rule">
+    <id>F2DEA5B4C39F4423BF0AAC73DABD4146</id>
+    <active>true</active>
+    <name>Default Warehouse Rule</name>
+    <procedure>M_WAREHOUSE_DEFAULT_RULE</procedure>
+    <description>Useful to overwrite a warehouse rule defined at warehouse on specific documents.</description>
+  </WarehouseRule>
+</ob:Openbravo>

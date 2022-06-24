@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2018 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="GenerateShipmentsmanualData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      SELECT o.C_Order_ID, org.Name as adorgname, COALESCE(dttrl.Name, dt.Name) as cdoctypename, o.DocumentNo, bp.Name as cbpartnername, o.DateOrdered, o.totallines as amountlines,
+      (
+        SELECT sum((ol.qtyordered - ol.qtydelivered) * ol.priceactual)
+        FROM c_orderline ol
+        WHERE ol.c_order_id = o.c_order_id
+        AND ol.qtyordered <> ol.qtydelivered
+        AND ol.directship = 'N'
+        AND ol.m_product_id IS NOT NULL
+      ) as TotalLines
+      FROM C_Order o
+      JOIN AD_Org org
+      ON o.AD_Org_ID = org.AD_Org_ID
+      JOIN C_BPartner bp
+      ON o.C_BPartner_ID = bp.C_BPartner_ID
+      JOIN C_DocType dt
+      ON o.C_DocType_ID = dt.C_DocType_ID
+      LEFT JOIN C_DocType_trl dttrl
+      ON dt.C_DocType_ID = dttrl.C_DocType_ID
+      AND dttrl.ad_language = ?
+      WHERE o.docstatus = 'CO'
+      AND o.isdelivered = 'N'
+      AND dt.isreturn = 'N'
+      AND dt.docbasetype = 'SOO'
+      AND dt.docsubtypeso NOT IN ('ON', 'OB', 'WR')
+      AND EXISTS (
+        SELECT 1
+        FROM C_ORDERLINE ol
+        WHERE ol.c_order_id = o.c_order_id
+        AND ol.qtyordered <> ol.qtydelivered
+        AND ol.directship = 'N'
+        AND ol.m_product_id IS NOT NULL
+      )
+      AND o.ad_client_id IN ('1')
+      AND o.ad_org_id IN ('1')
+      AND 1=1
+      AND 2=2 AND o.ad_org_id IN ('1')
+      ORDER BY org.Name, bp.Name, DateOrdered
+      ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="language"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="AND o.ad_client_id IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND o.ad_org_id IN (" text="'1'"/>
+    <Parameter name="parBPartner" optional="true" after="AND 1=1">AND o.C_BPartner_ID = ?</Parameter>
+    <Parameter name="parDateFrom" optional="true" after="AND 1=1"><![CDATA[ AND o.DateOrdered >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 1=1"><![CDATA[ AND o.DateOrdered < TO_DATE(?)]]></Parameter>
+    <Parameter name="adOrgId" optional="true" type="replace" after="AND 2=2 AND o.ad_org_id IN (" text="'1'"/>
+  </SqlMethod>
+    <SqlMethod name="set" type="constant" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql></Sql>
+  </SqlMethod>
+    <SqlMethod name="update" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      UPDATE C_Order SET IsSelected = 'N'
+      WHERE IsSelected='Y'
+      ]]></Sql>
+  </SqlMethod>
+      <SqlMethod name="updateSelection" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      UPDATE C_Order SET IsSelected='Y' 
+      WHERE 1=1
+      ]]></Sql>
+    <Parameter name="parSalesOrders" optional="true" type="argument" after="WHERE 1=1" text="AND C_Order_ID IN"/>
+  </SqlMethod>
+      <SqlMethod name="updateReset" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      UPDATE C_Order SET IsSelected='N' 
+      WHERE 1=1
+      ]]></Sql>
+    <Parameter name="parSalesOrders" optional="true" type="argument" after="WHERE 1=1" text="AND C_Order_ID IN"/>
+  </SqlMethod>
+  <SqlMethod name="treeOrg" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+        SELECT AD_TREE_ORG_ID FROM AD_CLIENTINFO
+        WHERE AD_CLIENT_ID = ?
+    </Sql>
+    <Parameter name="client"/>
+  </SqlMethod>
+</SqlClass>

@@ -1,0 +1,10 @@
+context.name=etendo
+
+bbdd.sid=etendo
+bbdd.port=5432
+bbdd.systemUser=postgres
+bbdd.systemPassword=syspass
+bbdd.user=tad
+bbdd.password=tad
+
+org.gradle.jvmargs=-Xmx2g -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8

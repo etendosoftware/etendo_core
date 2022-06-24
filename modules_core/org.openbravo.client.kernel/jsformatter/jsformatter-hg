@@ -1,0 +1,62 @@
+#!/bin/bash
+# *************************************************************************
+# * The contents of this file are subject to the Openbravo  Public  License
+# * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+# * Version 1.1  with a permitted attribution clause; you may not  use this
+# * file except in compliance with the License. You  may  obtain  a copy of
+# * the License at http://www.openbravo.com/legal/license.html
+# * Software distributed under the License  is  distributed  on  an "AS IS"
+# * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# * License for the specific  language  governing  rights  and  limitations
+# * under the License.
+# * The Original Code is Openbravo ERP.
+# * The Initial Developer of the Original Code is Openbravo SLU
+# * All portions are Copyright (C) 2019 Openbravo SLU
+# * All Rights Reserved.
+# * Contributor(s):  ______________________________________.
+# ************************************************************************
+
+#
+# Mercurial pre-commit hook to check formatting in js code
+#
+set -e
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source ${SCRIPT_DIR}/../jsutils/dir-functions
+
+OPENBRAVO_ROOT_PATH=$(getOpenbravoRootPath 2>/dev/null)
+
+if [[ -z "${OPENBRAVO_ROOT_PATH}" ]]; then
+    exit 0
+fi
+
+IS_A_MODULE=$(isCurrentFolderModuleRoot)
+
+echo "pre-commit: Performing formatting check on modified js resources"
+
+FLAGS=""
+while getopts ":w" arg; do
+    case ${arg} in
+        w )
+            FLAGS="-w"
+        ;;
+    esac
+done
+shift "$((OPTIND-1))"
+
+FILES=()
+for changedfile in $(hg st -ma)
+do
+  if [[ -f "${changedfile}" ]]; then
+    if [[ "${IS_A_MODULE}" == true && -n "$(echo ${changedfile} | awk '/.js$/')" || \
+          "${IS_A_MODULE}" == false && -n "$(echo ${changedfile} | awk '/.js$/ && ! /^web/')" ]]; then
+        FILES+=("$(pwd)/${changedfile}")
+    fi
+  fi
+done
+
+if [[ -n "${FILES[*]}" ]]; then
+    ${OPENBRAVO_ROOT_PATH}/modules/org.openbravo.client.kernel/jsformatter/jsformatter ${FLAGS} ${FILES[*]} || exit 1
+fi
+
+exit 0

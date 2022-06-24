@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE AD_USER">
+    <table name="AD_USER" primaryKey="AD_USER_KEY">
+      <column name="EM_SMFSWS_DEFAULT_WS_ROLE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_ROLE" name="EM_SMFSWS_DEFAULT_WS_ROLE">
+        <reference local="EM_SMFSWS_DEFAULT_WS_ROLE_ID" foreign="AD_ROLE_ID"/>
+      </foreign-key>
+    </table>
+  </database>

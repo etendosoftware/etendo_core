@@ -1,0 +1,32 @@
+## Quartz properties
+org.quartz.scheduler.instanceName = DefaultQuartzScheduler
+org.quartz.scheduler.instanceId = AUTO
+org.quartz.scheduler.instanceIdGenerator.class = org.openbravo.scheduling.quartz.OpenbravoInstanceIdGenerator
+org.quartz.scheduler.rmi.export = false
+org.quartz.scheduler.rmi.proxy = false
+org.quartz.scheduler.wrapJobExecutionInUserTransaction = false
+
+org.quartz.threadPool.class = org.quartz.simpl.SimpleThreadPool
+org.quartz.threadPool.threadCount = 10
+org.quartz.threadPool.threadPriority = 5
+org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread = true
+
+org.quartz.jobStore.misfireThreshold = 60000
+
+org.quartz.jobStore.class = org.quartz.simpl.RAMJobStore
+
+# To configure quartz in cluster mode, comment previous org.quartz.jobStore.class
+# And uncomment the following lines
+#org.quartz.jobStore.class = org.openbravo.scheduling.quartz.OpenbravoPersistentJobStore
+#org.quartz.jobStore.driverDelegateClass = org.openbravo.scheduling.quartz.OpenbravoDriverDelegate
+#org.quartz.jobStore.useProperties = false
+#org.quartz.jobStore.dataSource = quartzDS
+#org.quartz.jobStore.tablePrefix = OBSCHED_
+#org.quartz.jobStore.isClustered = true
+#org.quartz.jobStore.acquireTriggersWithinLock=true
+#org.quartz.jobStore.clusterCheckinInterval = 10000
+
+#org.quartz.dataSource.quartzDS.connectionProvider.class = org.openbravo.scheduling.quartz.QuartzConnectionProvider
+
+#org.quartz.plugin.shutdownhook.class = org.quartz.plugins.management.ShutdownHookPlugin
+#org.quartz.plugin.shutdownhook.cleanShutdown = false

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="FinaccDetailMain" pageWidth="555" pageHeight="802" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.2100000000000044"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="default" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="6">
+		<box leftPadding="5" rightPadding="5"/>
+	</style>
+	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="6" isBold="true">
+		<box leftPadding="5">
+			<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+		</box>
+	</style>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="18" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="GroupHeader_Gray" mode="Opaque" backcolor="#999999"/>
+	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
+	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11" isBold="false"/>
+	<style name="Report_Footer" isDefault="true" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="14" isBold="true"/>
+	<style name="Group_Data_Field" fontName="Bitstream Vera Sans" fontSize="14"/>
+	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Group_Footer" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
+	<parameter name="AMOUNTFORMAT" class="java.text.DecimalFormat" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new DecimalFormat()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_ORG" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["(0)"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_CLIENT" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["(1000000)"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="CURRENT_BALANCE" class="java.math.BigDecimal"/>
+	<parameter name="DatePlanned" class="java.util.Date"/>
+	<parameter name="fieldProviderSubReport" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<queryString>
+		<![CDATA[select fa.fin_financial_account_id, fa.name as FINANCIALACCOUNT, fa.currentbalance as initialbalance, fa.accountno, null as income, null as payment, null as finalsummary
+    (select 1 from dual
+    where exists (
+        select 1
+        from fin_payment_scheduledetail psd
+           left join fin_payment_detail pd on psd.fin_payment_detail_id = pd.fin_payment_detail_id
+           left join fin_payment p on pd.fin_payment_id = p.fin_payment_id
+           left join fin_payment_schedule psinv on psd.fin_payment_schedule_invoice = psinv.fin_payment_schedule_id
+           left join c_invoice i on psinv.c_invoice_id = i.c_invoice_id
+           left join c_bpartner bp on coalesce(p.c_bpartner_id, i.c_bpartner_id) = bp.c_bpartner_id
+        where aprm_ispaymentconfirmed(p.status, psd.fin_payment_scheduledetail_id) = 'N'
+          and COALESCE(psd.fin_payment_detail_id, psd.fin_payment_schedule_invoice) is not null
+          and fa.fin_financial_account_id = coalesce(p.fin_financial_account_id, case i.issotrx when 'Y' then bp.fin_financial_account_id when 'N' then bp.po_financial_account_id else null end)
+          and COALESCE(psinv.duedate, p.paymentdate)-1 < $P{DatePlanned})) as has_lines
+from fin_financial_account fa
+where fa.isactive = 'Y'
+order by fa.name, fa.fin_financial_account_id]]>
+	</queryString>
+	<field name="FINANCIALACCOUNT" class="java.lang.String"/>
+	<field name="INITIALBALANCE" class="java.math.BigDecimal"/>
+	<field name="PAYMENT" class="java.math.BigDecimal"/>
+	<field name="INCOME" class="java.math.BigDecimal"/>
+	<field name="FINALSUMMARY" class="java.math.BigDecimal"/>
+	<detail>
+		<band height="15">
+			<textField>
+				<reportElement style="Total_Gray" x="310" y="0" width="70" height="15" backcolor="#FEFEFE"/>
+				<box leftPadding="5" rightPadding="5">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="6"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{AMOUNTFORMAT}.format($F{INCOME}==null?BigDecimal.ZERO:$F{INCOME})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="Total_Gray" x="187" y="0" width="123" height="15" backcolor="#FEFEFE"/>
+				<box leftPadding="5" rightPadding="5">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="6"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{AMOUNTFORMAT}.format($F{INITIALBALANCE})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="Total_Gray" x="450" y="0" width="104" height="15" backcolor="#FEFEFE"/>
+				<box leftPadding="5" rightPadding="5">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="6"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{AMOUNTFORMAT}.format($F{FINALSUMMARY})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="Total_Gray" x="380" y="0" width="70" height="15" backcolor="#FEFEFE"/>
+				<box leftPadding="5" rightPadding="5">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="6"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{AMOUNTFORMAT}.format($F{PAYMENT}==null?BigDecimal.ZERO:$F{PAYMENT})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="Total_Gray" x="0" y="0" width="187" height="15" backcolor="#FEFEFE"/>
+				<box leftPadding="5" rightPadding="5">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#959595"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#959595"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="6"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{FINANCIALACCOUNT}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="1" height="15"/>
+				<graphicElement>
+					<pen lineColor="#959595"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement stretchType="RelativeToBandHeight" x="554" y="0" width="1" height="15"/>
+				<graphicElement>
+					<pen lineColor="#959595"/>
+				</graphicElement>
+			</line>
+		</band>
+	</detail>
+</jasperReport>

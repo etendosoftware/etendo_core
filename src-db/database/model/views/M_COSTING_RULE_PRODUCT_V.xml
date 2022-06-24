@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="VIEW M_COSTING_RULE_PRODUCT_V">
+    <view name="M_COSTING_RULE_PRODUCT_V"><![CDATA[SELECT cr.m_costing_rule_id || pr.m_product_id AS m_costing_rule_product_v_id, cr.ad_client_id, cr.ad_org_id, cr.isactive, cr.created, cr.createdby, cr.updated, cr.updatedby, cr.m_costing_rule_id, cr.m_product_id AS apply_product_id, cr.m_costing_algorithm_id, pr.m_product_id, cr.m_product_category_id, cr.datefrom, cr.dateto, cr.org_dimension, cr.warehouse_dimension, cr.isvalidated FROM m_costing_rule cr LEFT JOIN m_product pr ON pr.ad_client_id = cr.ad_client_id AND ad_org_isinnaturaltree(pr.ad_org_id, cr.ad_org_id, cr.ad_client_id) = 'Y' AND pr.producttype = 'I' AND pr.isstocked = 'Y']]></view>
+  </database>

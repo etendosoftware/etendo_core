@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo Public License 
+ * Version 1.1 (the "License"), being the Mozilla Public License 
+ * version 1.1  with a permitted attribution clause ; you may not use 
+ * this file except in compliance with the License. 
+ * You may obtain a copy of the License at  
+ * http://www.openbravo.com/legal/license.txt 
+ * Software distributed under the License is distributed on an 
+ * "AS IS" basis, WITHOUT WARRANTY OF  ANY KIND, either express or 
+ * implied. See the License for the specific language governing rights 
+ * and  limitations under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2005-2020 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s): Openbravo S.L.U.
+ ************************************************************************
+-->
+
+<!--
+List of methods infside:
+
+init: creates all the folders.
+trl.clean: clean the AD_TEXTINTERFACES table
+clean: delete all folders.
+sqlc: generates the java from the xsql files.
+compileSqlc: compiles all the java generated from the xsqls.
+wad: generates all the files from the mda.
+postwad: copies the generated files to the base design folder.
+postsrc: copies the src files to the base design folder and the 
+         xml and jasper files to the translated designs folders
+postsrc.modules: it does the same as postsrc but for module files
+build.local.context: copies all files to the eclipse base context 
+                     (WebContent...).
+compile.src: comiles only the src files.
+compile: compiles specified WAD window and src and also translates.
+compile.complete: compiles all WAD windows and src and also translates.
+translate: Translate the modified files.
+copy.files: copy the local files to the context.
+compile.development: like compile, but also copies the files to the context.
+compile.complete.development: like compile.complete, but also copies the files 
+                              to the context.
+compile.web: re-builds the web folder.
+compile.web.development: like compile.web, but also copies the files to the context.
+build.war: build a war file in the lib directory.
+-->
+
+<project name="openbravo sources" default="compile" basedir=".">
+  <condition property="minimizeJSbool">
+    <istrue value="${minimizeJSandCSS}" />
+  </condition>
+
+  <property name="webTab" value="all" />
+  <property name="tab" value="%" />
+
+  <property name="base.translate.structure" value="org/openbravo/erpWindows" />
+  <property name="src" value="." />
+  <property name="tr" value="yes" />
+
+  <condition property="exclude.cdi">
+    <equals arg1="wildfly" arg2="${application.server}" />
+  </condition>
+
+  <condition property="translation">
+    <not>
+      <equals arg1="no" arg2="${tr}" />
+    </not>
+  </condition>
+  <target name="init">
+    <mkdir dir="${build}" />
+    <mkdir dir="${base.design}/design" />
+    <mkdir dir="${build.sqlc}/src" />
+    <mkdir dir="${build.sqlc}/srcAD" />
+    <mkdir dir="${build.AD}/org/openbravo/erpWindows" />
+    <mkdir dir="${build.AD}/org/openbravo/erpCommon/ad_actionButton" />
+    <mkdir dir="${build.AD}/org/openbravo/erpCommon/ad_callouts" />
+    <mkdir dir="${build.AD}/org/openbravo/erpCommon/reference" />
+  </target>
+  <macrodef name="updatesystemstatus">
+     <attribute name="v" default="NOT SET"/>
+     <sequential>
+       <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
+         <classpath> <fileset dir="${base.lib}"> <include name="**/*.jar"> </include> </fileset> </classpath>
+         <transaction> UPDATE ad_system_info SET system_status='@{v}' ;
+         </transaction>
+       </sql>
+     </sequential>
+  </macrodef>
+
+  <target name="trl.clean" if="translation">
+    <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <arg line="'${base.config}/Openbravo.properties' clean" />
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+  </target>
+  
+  <target name="trl.remove.unused" if="translation">
+    <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <arg line="'${base.config}/Openbravo.properties' remove" />
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+  </target>
+
+  <target name="clean" depends="trl.clean">
+    <property name="complete" value="true" />
+    <delete includeEmptyDirs="true" failonerror="false">
+      <fileset dir="${base.design}" />
+      <fileset dir="${build}" />
+      <fileset dir="${build.docs}" />
+      <fileset dir="${build.AD}" />
+      <fileset dir="${build.sqlc}" />
+      <fileset dir="${base.context}">
+        <exclude name=".svn" />
+        <exclude name="META-INF/MANIFEST.MF" />
+        <exclude name="**/.keep" />
+      </fileset>
+      <!-- Remove leftovers from (removed) dbmanager.jar -->
+      <fileset dir="${base.src.db}/build" />
+      <fileset file="${base.db}/lib/dbmanager.jar" />
+    </delete>
+  </target>
+
+  <target name="compile.apply.module" depends="init">
+    <mkdir dir="${build.apply.module}" />
+    <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
+      <arg line="'${base.config}'/Openbravo.properties .xsql . '${build.sqlc}'/src" />
+      <jvmarg value="-Dsqlc.listOfFiles=ApplyModule_data.xsql,PInstanceProcess_data.xsql,Translation_data.xsql,MessageBD_data.xsql"/>
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+    <javac includes="org/openbravo/erpCommon/modules/ApplyModuleTask.java" destdir="${build.apply.module}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" verbose="false" nowarn="${friendlyWarnings}" includeantruntime="false" >
+      <src path="${base.src}"/>
+      <src path="../build/javasqlc/src"/>
+      <src path="../src-gen"/>
+      <src path="../modules_core/org.openbravo.base.weld/src/"/>
+      <classpath refid="apply.module.compile.classpath" />
+      <compilerarg value="-implicit:class" />
+    </javac>
+  </target>
+  
+  <target name="sqlc">
+    <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
+      <arg line="'${base.config}'/Openbravo.properties .xsql . '${build.sqlc}'/src" />
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+    <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
+      <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules_core}' '${build.sqlc}'/src */src" />
+      <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+    <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
+      <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules}' '${build.sqlc}'/src */src" />
+      <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+    <copy file="${base.src}/buildAD.xml" tofile="${build.AD}/build.xml" />
+    <ant dir="${build.AD}" target="buildAD" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="clean.src.gen">
+    <delete includeEmptyDirs="true" failonerror="false">
+      <fileset dir="${base.src.gen}" >
+        <exclude name="**/.keep" />
+      </fileset>
+    </delete>
+  </target>
+
+  <!-- full generate.entities -> clean + .quick -->
+  <target name="generate.entities" depends="clean.src.gen,generate.entities.quick" />
+
+  <!-- 
+		Generates entities only when the application dictionary has changed.
+		Difference with the generate.entities is that it does not clean the src-gen directory. The standard
+		GenerateEntitiesTask always checks if the AD was changed before regenerating. The check is to compare
+		the modified time of the generated sources with the updated time of the Application Dictionary. If there
+		is a source older than the last updated time of the Application Dictionary then the sources need to be regenerated.		
+	-->
+  <target name="generate.entities.quick" depends="compile.src.gen">
+    <java classname="org.openbravo.base.gen.GenerateEntitiesTask" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
+      <arg line="'${base.src}' ${base.src.gen} ${base.config}/Openbravo.properties" />
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+      <!--
+        see issue: https://issues.openbravo.com/view.php?id=9331
+        Custom columns in standard tables should support a reference to a table in the module
+        if this occurs then possible the following javac has to be enabled instead of the two javacs below
+      <javac srcdir="${base.src}:${base.src.gen}" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on">
+        <classpath refid="project.class.path" />      
+      </javac>
+      -->
+      <javac srcdir="${base.src}:${base.src.gen}:${base.modules}:${base.modules_core}" includes="org/openbravo/model/**,org/openbravo/base/structure/**,org/openbravo/dal/**,org/openbravo/service/dataset/**,*/src/**/base/weld/**" excludes="**/*SequenceContributor.java" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
+        <classpath refid="project.class.path" />
+        <compilerarg value="-implicit:class" />
+      </javac>
+      <javac srcdir="${base.src.gen}" excludes="org/openbravo/model/**,org/openbravo/base/structure/**,org/openbravo/dal/**,org/openbravo/service/dataset/**,**/*SequenceContributor.java" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
+        <classpath refid="project.class.path" />
+      </javac>
+      <copy todir="${build}">
+      <fileset dir="${base.src.gen}">
+        <include name="META-INF/services/org.hibernate.boot.spi.MetadataContributor" />
+      </fileset>
+      </copy>
+      <copy todir="${build}">
+      <fileset dir="${base.src.gen}">
+        <include name="META-INF/services/org.hibernate.service.spi.ServiceContributor" />
+      </fileset>
+      </copy>
+  </target>
+
+  <!-- build-internal forking helper -->
+  <target name="generate.entities.quick.forked" depends="compile.src.gen">
+    <taskdef name="workflow" classpathref="project.class.path" classname="org.openbravo.base.gen.GenerateEntitiesTask" />
+    <workflow friendlyWarnings="${friendlyWarnings}" srcGenPath="${base.src.gen}" propertiesFile="${base.config}/Openbravo.properties" />
+  </target>
+
+  <path id="my-src-dirs">
+    <pathelement path="${basedir}" />
+    <pathelement path="${build.sqlc}/src" />
+    <pathelement path="${build.sqlc}/srcAD" />
+    <dirset dir="${base.modules}">
+      <include name="*/src" />
+    </dirset>
+    <dirset dir="${base.modules_core}">
+      <include name="*/src" />
+    </dirset>
+    <dirset dir="${base.src.gen}" includes="**/*">
+      <containsregexp expression="SequenceContributor"/>
+    </dirset>
+  </path>
+ 
+  <target name="compileSqlc" depends="sqlc">
+    <javac excludes="*/src-wad/**,*/src-util/**,**/org/openbravo/erpWindows/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
+      <src refid="my-src-dirs"/>
+      <classpath refid="project.class.path" />
+    </javac>
+
+    <javac srcdir="${build.sqlc}/srcAD" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
+      <classpath refid="project.class.path" />
+    </javac>
+
+    <javac srcdir="${build.AD}" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
+      <classpath refid="project.class.path" />
+    </javac>
+  </target>
+
+  <target name="compile.src.gen" depends="init">
+    <javac srcdir="${basedir}" includes="org/openbravo/base/exception/**,org/openbravo/base/gen/**,org/openbravo/base/expression/**,org/openbravo/base/provider/**,org/openbravo/base/model/**,org/openbravo/base/session/**,org/openbravo/base/validation/**,org/openbravo/base/util/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
+      <classpath refid="project.class.path" />
+      <compilerarg value="-implicit:class" />
+    </javac>
+    <copy todir="${build}">
+      <fileset dir="${basedir}">
+        <include name="**/*.hbm.xml" />
+        <include name="**/*.properties" />
+      </fileset>
+    </copy>
+
+    <!-- also compile the domaintypes in modules -->
+    <javac srcdir="${basedir}/../" includes="modules_core/*/src/**/model/domaintype/**/*.java,modules/*/src/**/model/domaintype/**/*.java" destdir="${build}"  fork="true" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+      <classpath refid="project.class.path" />
+    </javac>
+
+    <!-- copy all configuration files in modules to the output path also -->
+    <copy todir="${build}" encoding="UTF-8">
+      <fileset dir="${base.modules}">
+          <include name="*/src/**/*" />
+          <exclude name="*/src/**/*.java" />
+          <exclude name="*/src/**/*.xsql" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/src/**/*" />
+        <exclude name="*/src/**/*.java" />
+        <exclude name="*/src/**/*.xsql" />
+      </fileset>
+      <mapper type="regexp" from="(.*\${file.separator}src)(.*)" to="\2" />
+    </copy>
+  </target>
+
+  <target name="wadvalidation">
+    <taskdef name="WADValidation" classname="org.openbravo.wad.validation.WADValidatorTask">
+            <classpath refid="project.class.path" />
+          </taskdef>
+        
+        <WADValidation propertiesFile="${base.config}/Openbravo.properties"
+                       modules="${module}"
+                       stoponerror="${stopOnWadError}"
+                       friendlyWarnings="${friendlyWarnings}"/>
+  </target>
+  
+  <target name="wad" depends="init, wadvalidation">
+    <java classname="org.openbravo.wad.Wad" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}" failonerror="true">
+      <arg line="'${base.config}' '${tab}' '${build.AD}/org/openbravo/erpWindows' '${build.AD}/org/openbravo/erpCommon' '${build.sqlc}/src' '${webTab}' '${build.AD}/org/openbravo/erpCommon/ad_actionButton' '${base.design}' '${base.translate.structure}' 'dummyValueUnused' '..' '${attach.path}' '${web.url}' '${base.src}' '${complete}' '${module}' 'noquick' '${wad.generateAllClassic250Windows}' '${exclude.cdi}'" />
+      <classpath refid="wad.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+    <antcall target="postwad" inheritall="true" inheritrefs="true" />
+  </target>
+
+  <target name="wad.quick" depends="init, wadvalidation">
+    <java classname="org.openbravo.wad.Wad" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <arg line="'${base.config}' '${tab}' '${build.AD}/org/openbravo/erpWindows' '${build.AD}/org/openbravo/erpCommon' '${build.sqlc}/src' '${webTab}' '${build.AD}/org/openbravo/erpCommon/ad_actionButton' '${base.design}' '${base.translate.structure}' 'dummyValueUnused' '..' '${attach.path}' '${web.url}' '${base.src}' '${complete}' '${module}' 'quick' '${wad.generateAllClassic250Windows}' '${exclude.cdi}'" />
+      <classpath refid="wad.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+    <antcall target="postwad" inheritall="true" inheritrefs="true" />
+  </target>
+
+  <target name="postsrc" depends="postsrc.modules">
+
+    <copy todir="${build}">
+      <fileset dir="${basedir}">
+        <include name="**/*.properties" />
+        <include name="**/*.xslt" />
+        <include name="**/*.hbm.xml" />
+        <include name="**/*.ftl" />
+      </fileset>
+    </copy>
+    <copy todir="${base.design}/design">
+      <fileset dir="${basedir}">
+        <include name="**/*.xml" />
+        <include name="**/*.fo" />
+        <include name="**/*.html" />
+        <include name="**/*.srpt" />
+        <include name="**/*.jrxml" />
+        <include name="**/*.jasper" />
+      </fileset>
+    </copy>
+    <copy todir="${build}">
+      <fileset file="${base.config}/quartz.properties" />
+      <fileset file="${basedir}/org/openbravo/erpReports/jasperreports.properties" />
+    </copy>
+    <antcall target="build.local.context" inheritAll="true" inheritrefs="true" />
+  </target>
+
+  <target name="postsrc.modules">
+    <copy todir="${base.design}/design">
+      <fileset dir="${base.modules}">
+        <include name="*/src/**/*.xml" />
+        <include name="*/src/**/*.fo" />
+        <include name="*/src/**/*.html" />
+        <include name="*/src/**/*.srpt" />
+        <include name="*/src/**/*.jrxml" />
+        <include name="*/src/**/*.jasper" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/src/**/*.xml" />
+        <include name="*/src/**/*.fo" />
+        <include name="*/src/**/*.html" />
+        <include name="*/src/**/*.srpt" />
+        <include name="*/src/**/*.jrxml" />
+        <include name="*/src/**/*.jasper" />
+      </fileset>
+      <mapper type="regexp" from="(.*\${file.separator}src)(.*)" to="\2" />
+    </copy>
+    <copy todir="${build}">
+      <fileset dir="${base.modules}">
+        <include name="*/src/**" />
+        <exclude name="*/src/**/*.java" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/src/**" />
+        <exclude name="*/src/**/*.java" />
+      </fileset>
+      <mapper type="regexp" from="(.*\${file.separator}src)(.*)" to="\2" />
+    </copy>
+  </target>
+
+  <!-- end of auxiliar tasks-->
+
+  <target name="build.local.context">
+    <copy todir="${base.context}" encoding="UTF-8">
+      <fileset file="${basedir}/index.jsp" />
+    </copy>
+    <copy todir="${base.context}/WEB-INF" encoding="UTF-8">
+      <fileset file="${build.sqlc}/src/web.xml" />
+      <fileset dir="${base.config}">
+        <exclude name="**/eclipse/**" />
+        <exclude name="**/setup-properties**" />
+        <exclude name="*.template" />
+        <exclude name="checksums"/>
+        <exclude name="log4j2.xml"/>
+      </fileset>
+    </copy>
+    <copy todir="${base.context}/WEB-INF" encoding="UTF-8">
+      <fileset dir="${base.modules}">
+        <include name="*/config/**" />
+        <exclude name="*.template" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/config/**" />
+        <exclude name="*.template" />
+      </fileset>
+      <mapper type="regexp" from="(.*\${file.separator}config)(.*)" to="\2" />
+    </copy>
+    <copy todir="${base.context}/WEB-INF/lib" encoding="UTF-8" flatten="true">
+      <filelist refid="gradle.libs"/>
+    </copy>
+    <copy todir="${base.context}/WEB-INF/lib" encoding="UTF-8">
+      <fileset dir="${base.lib}/runtime">
+        <exclude name="openbravo-wad.jar" />
+        <exclude name="openbravo-trl.jar" />
+        <exclude name="*.war" />
+      </fileset>
+      <fileset dir="${base.db}/lib">
+        <include name="*" />
+      	<exclude name="wstx-asl-3.0.2.jar" />
+      </fileset>
+    </copy>
+
+    <copy todir="${base.context}/WEB-INF/lib" encoding="UTF-8">
+      <fileset dir="${base.modules}">
+        <include name="*/lib/runtime/**" />
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/cdi*"/>
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/javax*"/>
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/jboss*"/>
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/weld*"/>
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/lib/runtime/**" />
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/cdi*"/>
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/javax*"/>
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/jboss*"/>
+        <exclude if="exclude.cdi" name="org.openbravo.base.weld/lib/runtime/weld*"/>
+      </fileset>
+      <mapper type="regexp" from="(.*\${file.separator}lib\${file.separator}runtime)(.*)" to="\2" />
+    </copy>
+
+    <copy todir="${base.context}/WEB-INF/referencedata/standard/org.openbravo">
+      <fileset dir="${basedir}/../referencedata/standard">
+        <include name="*.xml" />
+      </fileset>
+    </copy>
+
+    <copy todir="${base.context}/WEB-INF/referencedata">
+      <fileset dir="${base.modules}">
+        <include name="*/referencedata/standard/*.xml" />
+        <include name="*/referencedata/accounts/COA.csv" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/referencedata/standard/*.xml" />
+        <include name="*/referencedata/accounts/COA.csv" />
+      </fileset>
+      <mapper type="regexp" from="(.*\${file.separator})referencedata\${file.separator}(standard|accounts)\${file.separator}(.*)" to="\2/\1\3" />
+    </copy>
+
+    <antcall target="build.web.folder" inheritAll="true" inheritrefs="true" />
+  </target>
+
+  <target name="build.web.folder">
+    <copy todir="${base.context}/web" encoding="UTF-8">
+      <fileset dir="${base.web}">
+        <include name="*/**" />
+        <exclude name="skins/**" />
+      </fileset>
+    </copy>
+    
+    <taskdef name="CheckSumCondition" classname="org.openbravo.utils.CheckSumCondition">
+        <classpath refid="project.class.path" />
+      </taskdef>
+    
+    <CheckSumCondition obDir="${basedir}/.."
+                       type="md5.skins"
+                       property="changes.in.md5.skins"/>
+    <condition property="do.skins">
+      <or>
+        <istrue value="${changes.in.md5.skins}" />
+        <not>
+          <istrue value="${smart.mode}"/>
+        </not>
+        <not>
+          <available file="${base.context}/web/skins/rtl" type="dir"/>
+        </not>
+        <not>
+          <available file="${base.context}/web/skins/ltr" type="dir"/>
+        </not>
+      </or>
+    </condition>
+    
+    <antcall target="build.web.folder.skins"  inheritAll="true" inheritrefs="true" />
+    
+    <antcall target="minimizeJS" inheritAll="true" inheritrefs="true" />
+  </target>
+    
+  
+  <target name="build.web.folder.base">
+    <mkdir dir="${base.context}/web" />
+    <copy todir="${base.context}/web" encoding="UTF-8">
+      <fileset dir="${base.modules}">
+        <include name="*/web/*/**" />
+        <exclude name="*/web/*/skins/**" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/web/*/**" />
+        <exclude name="*/web/*/skins/**" />
+      </fileset>
+      <mapper type="regexp" from="(.*)(\${file.separator}web)(\${file.separator}.*)" to="\3" />
+    </copy>
+  </target>
+
+  <target name="build.web.folder.skins" if="do.skins">
+
+    <delete includeEmptyDirs="true" dir="${base.context}/web/skins" quiet="yes" />
+    <mkdir dir="${base.context}/web/skins/ltr" />
+    <copy todir="${base.context}/web/skins/ltr" encoding="UTF-8">
+      <fileset dir="${base.web}/skins" />
+    </copy>
+    <mkdir dir="${base.context}/web/skins/rtl" />
+    <copy todir="${base.context}/web/skins/rtl" encoding="UTF-8">
+      <fileset dir="${base.web}/skins" />
+    </copy>
+
+    <antcall target="build.web.folder.base" />
+
+    <copy todir="${base.context}/web/skins/ltr" encoding="UTF-8">
+      <fileset dir="${base.modules}">
+        <include name="*/web/*/skins/**" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/web/*/skins/**" />
+      </fileset>
+      <mapper type="regexp" from="(.*)(\${file.separator}web)(.*\${file.separator})(skins\${file.separator})(.*)" to="\3\5" />
+    </copy>
+
+    <copy todir="${base.context}/web/skins/rtl" encoding="UTF-8">
+      <fileset dir="${base.modules}">
+        <include name="*/web/*/skins/**" />
+      </fileset>
+      <fileset dir="${base.modules_core}">
+        <include name="*/web/*/skins/**" />
+      </fileset>
+      <mapper type="regexp" from="(.*)(\${file.separator}web)(.*\${file.separator})(skins\${file.separator})(.*)" to="\3\5" />
+    </copy>
+
+    <java classname="org.openbravo.translate.RTLSkin" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <arg line="${base.context}/web/skins/rtl ${base.context}/web/skins/ltr" />
+      <classpath refid="project.class.path" />
+    </java>
+    
+  </target>
+
+  <target name="minimizeJS" description="minimize JS files" if="minimizeJSbool">
+    <taskdef name="minify" classname="org.openbravo.erpCommon.utility.JSMinifyTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <minify outputdir="${base.context}/web">
+      <fileset dir="${base.web}">
+        <include name="**/*.js" />
+
+        <exclude name="**/js/jscalendar/lang/calendar-al.js"/>
+        <exclude name="**/js/jscalendar/lang/calendar-he-utf8.js"/>
+        <exclude name="**/js/jscalendar/lang/calendar-hr.js"/>
+        <exclude name="**/dojotoolkit/**"/>
+        <exclude name="**/dojo/**"/>
+      </fileset>
+      <!-- dojo/dojo.js has to be in a separate fileset because its directory is excluded in the previous one -->
+      <fileset dir="${base.web}">
+        <include name="js/dojo/dojo.js"/>
+      </fileset>
+    </minify>
+  </target>
+
+  <target name="postwad">
+    <copy todir="${base.design}/design">
+      <fileset dir="${build.AD}">
+        <include name="**/*.xml" />
+        <include name="**/*.fo" />
+        <include name="**/*.html" />
+        <include name="**/*.srpt" />
+        <include name="**/*.jrxml" />
+        <include name="**/*.jasper" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile.src" depends="compileSqlc, postsrc, copy.files">
+  </target>
+
+  <target name="compile.complete" depends="clean,generate.entities,wad,compileSqlc,postsrc,translate, trl.remove.unused">
+    <antcall target="update.build.timestamp" />
+  </target>
+
+
+  <target name="smartbuild.new.wad" if="new.wad">
+    <antcall inheritall="true" inheritrefs="true" target="wad" />
+    <taskdef name="updateWADmd5" classname="org.openbravo.utils.WADCheckSumTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <updateWADmd5 obDir="${basedir}/.." />
+  </target>
+
+  <target name="smartbuild.no.new.wad" unless="new.wad">
+    <antcall inheritall="true" inheritrefs="true" target="wad.quick" />
+  </target>
+
+  <target name="smartbuild">
+    <antcall inheritall="true" inheritrefs="true" target="smartbuild.new.wad" />
+    <antcall inheritall="true" inheritrefs="true" target="smartbuild.no.new.wad" />
+    <antcall inheritall="true" inheritrefs="true" target="compileSqlc" />
+    <antcall inheritall="true" inheritrefs="true" target="postsrc" />
+    <antcall inheritall="true" inheritrefs="true" target="build.web.folder.base" />
+    <antcall inheritall="true" inheritrefs="true" target="translate" />
+    <antcall inheritall="true" inheritrefs="true" target="update.build.timestamp" />
+  </target>
+
+  <target name="translate" if="translation">
+    <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
+      <arg line="'${base.config}/Openbravo.properties' '${basedir}/..'" />
+      <classpath refid="project.class.path" />
+      <syspropertyset>
+         <propertyref name="java.security.egd" />
+      </syspropertyset>
+    </java>
+  </target>
+
+  <target name="compile" depends="wad,compileSqlc, postsrc, translate">
+  </target>
+
+  <target name="copy.files" if="mode.class">
+    <mkdir dir="${jakarta.base}/webapps/${context.name}" />
+    <sync todir="${jakarta.base}/webapps/${context.name}">
+      <!-- sync occurs in 2 steps because origin files are in different directories
+           keep in 1st step classes, that will be copied in 2nd step in order to to
+           delete them all to be re-copied afterward.
+      -->
+      <preserveintarget>
+        <include name="**/WEB-INF/classes/**"/>
+      </preserveintarget>
+      <fileset dir="${base.context}" />
+    </sync>
+
+    <mkdir dir="${jakarta.base}/webapps/${context.name}/WEB-INF/classes" />
+
+    <sync todir="${jakarta.base}/webapps/${context.name}/WEB-INF/classes">
+      <fileset dir="${build}" />
+    </sync>
+    
+  	<copy todir="${jakarta.base}/webapps/${context.name}/WEB-INF/lib" file="${build.core.lib}/openbravo-core.jar" encoding="UTF-8"/>
+  </target>
+
+  <target name="compile.development" depends="generate.entities, compile, copy.files">
+  </target>
+
+  <target name="compile.complete.development" depends="compile.complete, copy.files">
+    <updatesystemstatus v="RB51"/>
+  </target>
+
+  <target name="compile.web" depends="build.web.folder">
+  </target>
+
+  <target name="compile.web.development" depends="build.web.folder, copy.files">
+  </target>
+
+  <target name="build.war">
+    <delete failonerror="false" file="${base.lib}/${context.name}.war" />
+    <war compress="true" destfile="${base.lib}/${context.name}.war" encoding="UTF-8" webxml="${base.context}/WEB-INF/web.xml">
+      <zipfileset dir="${base.context}">
+        <exclude name="**/WEB-INF/web.xml" />
+      </zipfileset>
+      <classes dir="${build}" />
+    </war>
+    <updatesystemstatus v="RB51"/>
+  </target>
+
+  <target name="update.build.timestamp" unless="timestamp">
+    <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" delimiter="/">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+	        UPDATE AD_SYSTEM_INFO SET LAST_BUILD=NOW()
+	      </transaction>
+    </sql>
+  </target>
+
+</project>

@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_BLOB_TRIGGERS">
+    <table name="OBSCHED_BLOB_TRIGGERS" primaryKey="OBSCHED_BLO_TRI_PK">
+      <column name="OBSCHED_BLOB_TRIGGERS_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_GROUP" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="BLOB_DATA" primaryKey="false" required="false" type="BLOB" size="4000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="OBSCHED_TRIGGERS" name="OBSCHED_BLO_TRI_TRI_FK">
+        <reference local="SCHED_NAME" foreign="SCHED_NAME"/>
+        <reference local="TRIGGER_NAME" foreign="TRIGGER_NAME"/>
+        <reference local="TRIGGER_GROUP" foreign="TRIGGER_GROUP"/>
+      </foreign-key>
+      <unique name="OBSCHED_BLO_TRI_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="TRIGGER_NAME"/>
+        <unique-column name="TRIGGER_GROUP"/>
+      </unique>
+    </table>
+  </database>

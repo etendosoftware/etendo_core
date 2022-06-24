@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_LC_COST">
+    <table name="M_LC_COST" primaryKey="M_LC_COST_KEY">
+      <column name="M_LC_COST_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_LANDEDCOST_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_INOUT_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_LC_TYPE_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_INVOICELINE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AMOUNT" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_LC_DISTRIBUTION_ALG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DESCRIPTION" primaryKey="false" required="false" type="NVARCHAR" size="2000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_CURRENCY_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISMATCHED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="ISMATCHINGADJUSTED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="POSTED" primaryKey="false" required="false" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="PROCESSING" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="DATEACCT" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="LINE" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_DOCTYPE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PROCESS_MATCHING" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="MATCHING_AMT" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PROCESSED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CANCEL_MATCHING" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="MATCHING_COSTADJUSTMENT_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="M_LC_COST_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_CURRENCY" name="M_LC_COST_CURRENCY">
+        <reference local="C_CURRENCY_ID" foreign="C_CURRENCY_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_LC_DISTRIBUTION_ALG" name="M_LC_COST_DISTALG">
+        <reference local="M_LC_DISTRIBUTION_ALG_ID" foreign="M_LC_DISTRIBUTION_ALG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_DOCTYPE" name="M_LC_COST_DOCTYPE">
+        <reference local="C_DOCTYPE_ID" foreign="C_DOCTYPE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_INOUT" name="M_LC_COST_INOUT">
+        <reference local="M_INOUT_ID" foreign="M_INOUT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_INVOICELINE" name="M_LC_COST_INVOICELINE">
+        <reference local="C_INVOICELINE_ID" foreign="C_INVOICELINE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_LANDEDCOST" name="M_LC_COST_LC">
+        <reference local="M_LANDEDCOST_ID" foreign="M_LANDEDCOST_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_COSTADJUSTMENT" name="M_LC_COST_MATCHCOSTADJ">
+        <reference local="MATCHING_COSTADJUSTMENT_ID" foreign="M_COSTADJUSTMENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_LC_COST_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_LC_TYPE" name="M_LC_COST_TYPE">
+        <reference local="M_LC_TYPE_ID" foreign="M_LC_TYPE_ID"/>
+      </foreign-key>
+      <index name="M_LC_COST_INOUT" unique="false">
+        <index-column name="M_INOUT_ID"/>
+        <whereClause><![CDATA[M_INOUT_ID IS NOT NULL]]></whereClause>
+      </index>
+      <index name="M_LC_COST_INVOICELINE" unique="false">
+        <index-column name="C_INVOICELINE_ID"/>
+        <whereClause><![CDATA[C_INVOICELINE_ID IS NOT NULL]]></whereClause>
+      </index>
+      <index name="M_LC_COST_LANDEDCOST" unique="false">
+        <index-column name="M_LANDEDCOST_ID"/>
+        <whereClause><![CDATA[M_LANDEDCOST_ID IS NOT NULL]]></whereClause>
+      </index>
+      <index name="M_LC_COST_POSTED" unique="false">
+        <index-column name="POSTED"/>
+        <whereClause><![CDATA[POSTED IS NOT NULL]]></whereClause>
+      </index>
+      <check name="M_LC_COST_ACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="M_LC_COST_MATCHADJ"><![CDATA[ISMATCHINGADJUSTED IN ('Y', 'N')]]></check>
+      <check name="M_LC_COST_MATCHED"><![CDATA[ISMATCHED IN ('Y', 'N')]]></check>
+    </table>
+  </database>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ADAlertRule id="7D7B5AECABB34298BF5B6E47A86FD0DC" identifier="Wrong Purchase Order Payment Plan">
+    <id>7D7B5AECABB34298BF5B6E47A86FD0DC</id>
+    <active>false</active>
+    <name>Wrong Purchase Order Payment Plan</name>
+    <tab id="294" entity-name="ADTab" identifier="Header - Purchase Order"/>
+    <filterClause xsi:nil="true"/>
+    <sql>select distinct ad_column_identifier('C_Order', fin_payment_schedule.c_order_id, 'en_US') as record_id, 
+fin_payment_schedule.c_order_id  as referencekey_id, 0 as ad_role_id, null as ad_user_id, 
+'This order needs to be checked due to wrong payment info.' as description, 'Y' as isActive, 
+fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, now() as created, 0 as createdBy, now() as updated, 0 as updatedBy 
+from c_order, fin_payment_schedule, fin_payment_scheduledetail 
+where c_order.c_order_id = fin_payment_schedule.c_order_id 
+and fin_payment_schedule.fin_payment_schedule_id = fin_payment_scheduledetail.fin_payment_schedule_order 
+and fin_payment_scheduledetail.iscanceled = 'N' 
+and fin_payment_scheduledetail.fin_payment_detail_id IS NOT NULL 
+and c_order.issotrx = 'N' 
+group by fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, c_order.issotrx,
+fin_payment_schedule.fin_payment_schedule_id, fin_payment_schedule.c_order_id, fin_payment_schedule.paidamt 
+having fin_payment_schedule.paidamt &lt;&gt; sum(fin_payment_scheduledetail.amount + coalesce(fin_payment_scheduledetail.writeoffamt,0)) 
+order by 1</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="7F3831D3C7C547DA9ED871756AC3BBEF" identifier="Wrong Sales Order Payment Plan">
+    <id>7F3831D3C7C547DA9ED871756AC3BBEF</id>
+    <active>false</active>
+    <name>Wrong Sales Order Payment Plan</name>
+    <tab id="186" entity-name="ADTab" identifier="Header - Sales Order"/>
+    <filterClause xsi:nil="true"/>
+    <sql>select distinct ad_column_identifier('C_Order', fin_payment_schedule.c_order_id, 'en_US') as record_id, 
+fin_payment_schedule.c_order_id  as referencekey_id, 0 as ad_role_id, null as ad_user_id, 
+'This order needs to be checked due to wrong payment info.' as description, 'Y' as isActive, 
+fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, now() as created, 0 as createdBy, now() as updated, 0 as updatedBy 
+from c_order, fin_payment_schedule, fin_payment_scheduledetail 
+where c_order.c_order_id = fin_payment_schedule.c_order_id 
+and fin_payment_schedule.fin_payment_schedule_id = fin_payment_scheduledetail.fin_payment_schedule_order 
+and fin_payment_scheduledetail.iscanceled = 'N' 
+and fin_payment_scheduledetail.fin_payment_detail_id IS NOT NULL 
+and c_order.issotrx = 'Y' 
+group by fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, c_order.issotrx,
+fin_payment_schedule.fin_payment_schedule_id, fin_payment_schedule.c_order_id, fin_payment_schedule.paidamt 
+having fin_payment_schedule.paidamt &lt;&gt; sum(fin_payment_scheduledetail.amount + coalesce(fin_payment_scheduledetail.writeoffamt,0)) 
+order by 1</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="F4EB0B136EC84E73AE6B1B7C2F8F01EC" identifier="Wrong Sales Invoice Payment Plan">
+    <id>F4EB0B136EC84E73AE6B1B7C2F8F01EC</id>
+    <active>false</active>
+    <name>Wrong Sales Invoice Payment Plan</name>
+    <tab id="263" entity-name="ADTab" identifier="Header - Sales Invoice"/>
+    <filterClause xsi:nil="true"/>
+    <sql>select distinct ad_column_identifier('c_invoice', fin_payment_schedule.c_invoice_id, 'en_US') as record_id, 
+fin_payment_schedule.c_invoice_id  as referencekey_id, 0 as ad_role_id, null as ad_user_id, 
+'This invoice needs to be reactivated and processed again due to wrong payment info.' as description, 'Y' as isActive, 
+fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, now() as created, 0 as createdBy, now() as updated, 0 as updatedBy 
+from c_invoice, fin_payment_schedule, fin_payment_scheduledetail 
+where c_invoice.c_invoice_id = fin_payment_schedule.c_invoice_id 
+and fin_payment_schedule.fin_payment_schedule_id = fin_payment_scheduledetail.fin_payment_schedule_invoice 
+and fin_payment_scheduledetail.iscanceled = 'N' 
+and c_invoice.issotrx = 'Y' 
+group by fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, c_invoice.issotrx, 
+fin_payment_schedule.fin_payment_schedule_id, fin_payment_schedule.c_invoice_id, fin_payment_schedule.amount 
+having fin_payment_schedule.amount &lt;&gt; sum(fin_payment_scheduledetail.amount + coalesce(fin_payment_scheduledetail.writeoffamt,0)) 
+order by 1</sql>
+    <type>D</type>
+  </ADAlertRule>
+  <ADAlertRule id="FB29D12BB3D344E482DA6C3FC3262C48" identifier="Wrong Purchase Invoice Payment Plan">
+    <id>FB29D12BB3D344E482DA6C3FC3262C48</id>
+    <active>false</active>
+    <name>Wrong Purchase Invoice Payment Plan</name>
+    <tab id="290" entity-name="ADTab" identifier="Header - Purchase Invoice"/>
+    <filterClause xsi:nil="true"/>
+    <sql>select distinct ad_column_identifier('c_invoice', fin_payment_schedule.c_invoice_id, 'en_US') as record_id, 
+fin_payment_schedule.c_invoice_id  as referencekey_id, 0 as ad_role_id, null as ad_user_id, 
+'This invoice needs to be reactivated and processed again due to wrong payment info.' as description, 'Y' as isActive, 
+fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, now() as created, 0 as createdBy, now() as updated, 0 as updatedBy 
+from c_invoice, fin_payment_schedule, fin_payment_scheduledetail 
+where c_invoice.c_invoice_id = fin_payment_schedule.c_invoice_id 
+and fin_payment_schedule.fin_payment_schedule_id = fin_payment_scheduledetail.fin_payment_schedule_invoice 
+and fin_payment_scheduledetail.iscanceled = 'N' 
+and c_invoice.issotrx = 'N' 
+group by fin_payment_schedule.ad_org_id, fin_payment_schedule.ad_client_id, c_invoice.issotrx, 
+fin_payment_schedule.fin_payment_schedule_id, fin_payment_schedule.c_invoice_id, fin_payment_schedule.amount 
+having fin_payment_schedule.amount &lt;&gt; sum(fin_payment_scheduledetail.amount + coalesce(fin_payment_scheduledetail.writeoffamt,0)) 
+order by 1</sql>
+    <type>D</type>
+  </ADAlertRule>
+</ob:Openbravo>

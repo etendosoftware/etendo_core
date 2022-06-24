@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
+<!-- 2016-12-07T15:45:56 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportValuationStockExcel" printOrder="Horizontal" pageWidth="1325" pageHeight="595" orientation="Landscape" columnWidth="1325" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="de20ebe7-a956-454f-9dbb-a60c3e076d85">
+	<property name="ireport.zoom" value="1.8150000000000042"/>
+	<property name="ireport.x" value="932"/>
+	<property name="ireport.y" value="0"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<property name="net.sf.jasperreports.export.xls.detect.cell.type" value="true"/>
+	<style name="Title" forecolor="#FFFFFF" fontName="Times New Roman" fontSize="50" isBold="false"/>
+	<style name="SubTitle" forecolor="#CCCCCC" fontName="Times New Roman" fontSize="18" isBold="false"/>
+	<style name="Column header" forecolor="#FFFFFF" backcolor="#808080" fontName="Times New Roman" fontSize="14" isBold="true"/>
+	<style name="Detail" mode="Transparent" fontName="Times New Roman"/>
+	<style name="Row" mode="Transparent" fontName="Times New Roman">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$V{REPORT_COUNT}%2 == 0]]></conditionExpression>
+			<style mode="Opaque" backcolor="#F0EFEF"/>
+		</conditionalStyle>
+	</style>
+	<parameter name="ALG_COST" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Average Algorithm"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUM_ALG_COST" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["Average Algorithm"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="COSTFORMAT" class="java.text.DecimalFormat" isForPrompting="false">
+		<defaultValueExpression><![CDATA[new DecimalFormat("#,##0.00####", new DecimalFormatSymbols())]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+     m_warehouse."name" AS WAREHOUSE,
+     m_product_category."name" AS CATEGORY_NAME,
+     m_product."name" AS PRODUCT_NAME,
+     m_product."value" AS PRODUCT_SEARCHKEY,
+     m_transaction."transactioncost" AS QTY,
+     m_product."name" AS UOM_NAME,
+     m_transaction."transactioncost" AS AVERAGE_COST,
+     m_transaction."transactioncost" AS TOTAL_COST,
+     m_transaction."transactioncost" AS COST_TYPE,
+     m_transaction."transactioncost" AS VALUATION_TYPE,
+     m_product."m_product_id" AS M_PRODUCT_ID
+FROM
+     "public"."m_product" m_product RIGHT OUTER JOIN "public"."m_transaction" m_transaction ON m_product."m_product_id" = m_transaction."m_product_id"
+     LEFT OUTER JOIN "public"."m_locator" m_locator ON m_product."m_locator_id" = m_locator."m_locator_id"
+     AND m_locator."m_locator_id" = m_transaction."m_locator_id"
+     LEFT OUTER JOIN "public"."m_warehouse" m_warehouse ON m_locator."m_warehouse_id" = m_warehouse."m_warehouse_id"
+     AND m_locator."m_locator_id" = m_warehouse."m_returnlocator_id"
+     LEFT OUTER JOIN "public"."m_product_category" m_product_category ON m_product."m_product_category_id" = m_product_category."m_product_category_id"
+ORDER BY
+     WAREHOUSE ASC,
+     CATEGORY_NAME ASC,
+     PRODUCT_NAME ASC]]>
+	</queryString>
+	<field name="warehouse" class="java.lang.String"/>
+	<field name="category_name" class="java.lang.String"/>
+	<field name="product_name" class="java.lang.String"/>
+	<field name="product_searchkey" class="java.lang.String"/>
+	<field name="qty" class="java.math.BigDecimal"/>
+	<field name="uom_name" class="java.lang.String"/>
+	<field name="average_cost" class="java.math.BigDecimal"/>
+	<field name="total_cost" class="java.math.BigDecimal"/>
+	<field name="cost_type" class="java.math.BigDecimal"/>
+	<field name="valuation_type" class="java.math.BigDecimal"/>
+	<field name="m_product_id" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="45" splitType="Stretch">
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="540" y="25" width="320" height="20" forecolor="#FFFFFF" uuid="4750fb1c-a95c-45fe-bfbf-0865ccb3f72c">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[PRODUCT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="860" y="25" width="75" height="20" forecolor="#FFFFFF" uuid="2ddfea0f-3d24-49a5-80f2-a69ca74efe90">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[QUANTITY]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="935" y="25" width="50" height="20" forecolor="#FFFFFF" uuid="21369127-b714-42ab-818e-f70cfa1f4bfe">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[UNIT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="985" y="25" width="75" height="20" forecolor="#FFFFFF" uuid="e4b2915f-05a0-45e2-bcf7-6899c82b1485">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[UNIT
+COST]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="1060" y="25" width="100" height="20" forecolor="#FFFFFF" uuid="127ae546-460b-4f66-ad35-9649bc61076e">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[VALUATION]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="0" y="25" width="250" height="20" forecolor="#FFFFFF" uuid="f31b44bb-ce82-4afc-846e-14022308db37">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[WAREHOUSE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="250" y="25" width="150" height="20" forecolor="#FFFFFF" uuid="35ed12aa-f4b4-4a9b-8ea4-917ec2330621">
+					<property name="local_mesure_unitx" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[PRODUCT CATEGORY]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="0" width="1325" height="25" uuid="8e8bafd3-ed5c-4ee2-96ac-3b65e63f4ef5">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Bitstream Vera Sans" size="18"/>
+				</textElement>
+				<text><![CDATA[Stock Valuation Report]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="1160" y="25" width="65" height="20" forecolor="#FFFFFF" backcolor="#808080" uuid="e165edab-ee89-41b3-8f5b-5204407b0463">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ALG_COST}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="1225" y="25" width="100" height="20" forecolor="#FFFFFF" backcolor="#808080" uuid="2496c5ac-f148-4464-8a66-4ff410438f27">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{SUM_ALG_COST}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement style="Column header" mode="Opaque" x="400" y="25" width="140" height="20" forecolor="#FFFFFF" uuid="1a026877-7f54-4184-8cfd-39693cbd9b87">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Bitstream Vera Sans" size="8" isBold="false"/>
+				</textElement>
+				<text><![CDATA[SEARCHKEY]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="13" splitType="Stretch">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="250" height="13" uuid="ea268241-cb91-47e4-9c2e-d12029a0180e">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{warehouse}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="Detail" positionType="Float" x="540" y="0" width="320" height="13" uuid="beb93005-49d2-41b4-86c9-f0ba99734fb1">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="local_mesure_unitx" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{product_name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true" pattern="#,##0.00;-#,##0.00">
+				<reportElement style="Detail" positionType="Float" x="860" y="0" width="75" height="13" uuid="5102a987-6f28-4caa-9403-a3151706c081">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{qty}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="Detail" positionType="Float" x="935" y="0" width="50" height="13" uuid="7766275f-7858-4f29-90af-60e23b43ffe5">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{uom_name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="Detail" positionType="Float" x="985" y="0" width="75" height="13" uuid="2b2a76d9-4eb4-42e9-816c-a3cc9c947224">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{average_cost}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{COSTFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement style="Detail" positionType="Float" x="1060" y="0" width="100" height="13" uuid="c3427f37-c24c-47ce-8e29-80dac24dd1c6">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{total_cost}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="Detail" positionType="Float" x="1160" y="0" width="65" height="13" uuid="e3b5669e-8500-4933-934b-c172558c3312">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="local_mesure_unitx" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cost_type}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{COSTFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement style="Detail" positionType="Float" x="1225" y="0" width="100" height="13" uuid="4a91a321-76eb-4406-93dd-cae7930ce468">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="local_mesure_unitx" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{valuation_type}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="250" y="0" width="150" height="13" uuid="fed07278-3583-4188-ba35-4ef34b252725">
+					<property name="local_mesure_unitx" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{category_name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="Detail" positionType="Float" x="400" y="0" width="140" height="13" uuid="f5867629-ff2c-4378-a143-c154bfec8169">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Bitstream Vera Sans" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{product_searchkey}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

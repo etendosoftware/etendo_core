@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="DocLineLandedCostData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT LCR.M_LC_RECEIPTLINE_AMT_ID, LCR.AD_CLIENT_ID, LCR.AD_ORG_ID, 
+        LCR.M_LC_COST_ID, LCR.AMOUNT  * COALESCE(A.QUANTITY, IOL.MOVEMENTQTY)/IOL.MOVEMENTQTY AS AMOUNT, 
+        GREATEST(IO.DATEACCT, TO_DATE(?)) AS DATEACCT, LCC.M_LC_TYPE_ID, L.M_WAREHOUSE_ID, IOL.M_PRODUCT_ID,
+        LCC.C_CURRENCY_ID, '' AS ACCOUNT_ID, '' AS NAME, '' AS GLITEM_DEBIT_ACCT, '' AS GLITEM_CREDIT_ACCT, 
+        A.C_Campaign_ID, COALESCE(A.C_Project_Id, IOL.C_Project_Id) AS C_Project_Id, 
+        COALESCE(A.User1_ID, IOL.User1_ID) AS user1Id, COALESCE(A.User2_ID, IOL.User2_ID) AS user2Id, 
+        COALESCE(A.C_Costcenter_ID, IOL.C_Costcenter_ID) AS C_Costcenter_ID,COALESCE(A.A_Asset_ID,IOL.A_Asset_ID) AS A_Asset_ID, 
+        COALESCE(A.C_BPartner_ID, IOL.C_BPartner_ID) AS C_BPartner_ID, A.C_Activity_ID
+        FROM M_LC_RECEIPTLINE_AMT  LCR, M_INOUT IO, M_LC_COST LCC, M_LOCATOR L, M_INOUTLINE IOL
+           left join M_InOutLine_AcctDimension A ON IOl.M_InOutLine_ID = A.M_InOutLine_ID
+        WHERE LCR.ISACTIVE='Y'
+        AND LCR.M_INOUTLINE_ID = IOL.M_INOUTLINE_ID
+        AND IOL.M_INOUT_ID = IO.M_INOUT_ID
+        AND LCR.M_LC_COST_ID = LCC.M_LC_COST_ID
+        AND IOL.M_LOCATOR_ID = L.M_LOCATOR_ID
+        AND LCR.ISMATCHADJUSTMENT = 'N'
+        AND LCC.M_LANDEDCOST_ID = ?
+        ORDER BY LCC.LINE, IO.DOCUMENTNO, IO.M_INOUT_ID, IOL.LINE
+     ]]>
+     </Sql>
+     <Parameter name="LC_Reference_Date"/>
+     <Parameter name="LC_Receiptline_Amt"/>
+   </SqlMethod>
+   <SqlMethod name="selectLCAccount" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT COALESCE(LCT.ACCOUNT_ID, '') AS ACCOUNT_ID, COALESCE(LCT.M_PRODUCT_ID, '') AS M_PRODUCT_ID, NAME
+        FROM M_LC_TYPE LCT 
+        WHERE LCT.M_LC_TYPE_ID = ?
+     ]]>
+     </Sql>
+     <Parameter name="Lc_Type_Id"/>
+   </SqlMethod>
+   <SqlMethod name="selectGlitem" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT GLITEM_DEBIT_ACCT, GLITEM_CREDIT_ACCT
+        FROM C_GLITEM_ACCT 
+        WHERE C_GLITEM_id = ?
+        AND C_ACCTSCHEMA_id = ?
+     ]]>
+     </Sql>
+     <Parameter name="C_Glitem_ID"/>
+     <Parameter name="C_AcctSchema_ID"/>
+   </SqlMethod>
+   <SqlMethod name="selectLCProduct" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT P_EXPENSE_ACCT AS ACCOUNT_ID
+        FROM M_PRODUCT_ACCT 
+        WHERE M_PRODUCT_ID = ?
+        AND C_ACCTSCHEMA_id = ?
+     ]]>
+     </Sql>
+     <Parameter name="M_Product_ID"/>
+     <Parameter name="C_AcctSchema_ID"/>
+   </SqlMethod>
+ </SqlClass>

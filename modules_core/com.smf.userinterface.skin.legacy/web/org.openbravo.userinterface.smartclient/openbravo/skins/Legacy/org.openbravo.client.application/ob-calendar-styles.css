@@ -1,0 +1,111 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2013 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+
+.OBEventWindow {
+  border: 1px solid #333333;
+}
+
+.OBEventWindowHeader {
+  font-family: Verdana,Bitstream Vera Sans,sans-serif;
+  font-weight: bold;
+  font-size: 9px;
+  background-color: #FFE1C0;
+}
+
+.OBEventWindowBody {
+  font-family: Verdana,Bitstream Vera Sans,sans-serif;
+  font-size: 9px;
+  background-color: #FFE1C0;
+  padding: 0px 3px 0px 3px;
+}
+
+.OBCalendarLegendElementColor {
+  margin: 3px 0px 0px 0px;
+}
+.OBCalendarLegendElementTitle {
+  padding: 4px 0px 0px 5px;
+}
+
+.OBCalendarGridCell,
+.OBCalendarGridCellWorkday,
+.OBCalendarGridCellWorkdaySelected,
+.OBCalendarGridCellWorkdayDisabled,
+.OBCalendarGridCellSelected,
+.OBCalendarGridCellDark,
+.OBCalendarGridCellDisabled {
+  border: 1px solid #cdd7bb;
+  border-width: 0px 1px 1px 0px;
+  font-family: arial, sans-serif;
+  font-size: 11px;
+}
+
+.OBCalendarGridCell,
+.OBCalendarGridCellDisabled,
+.OBCalendarGridCellWorkdayDisabled {
+  background-color: #D8D8D8;
+}
+
+.OBCalendarGridCellSelected,
+.OBCalendarGridCellWorkdaySelected {
+  background-color: #FFE1C0;
+}
+
+.OBCalendarGridHeaderCell {
+  font-size: 11px;
+  font-family: 'lucida sans', sans-serif;
+  font-weight: bold;
+  border: 1px solid #BBBFB6;
+  border-width: 0px 1px 0px 0px;
+  text-align: center;
+  background-image: url(./images/grid/gridHeader_bg.png);
+}
+
+.OBCalendarGridHeaderCellOver {
+  font-size: 11px;
+  font-family: 'lucida sans', sans-serif;
+  font-weight: bold;
+  border: 1px solid #BBBFB6;
+  border-width: 0px 1px 0px 0px;
+  text-align: center;
+  background-image: url(./images/grid/gridHeader_bg_Over.png);
+}
+
+.OBMultiCalendarLegendElementColor {
+  margin: 3px 0px 0px 0px;
+}
+
+.OBMultiCalendarLegendGroupElementTreeOpened {
+  margin: 3px 0px 0px 0px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/calendar/treeOpened.png);
+}
+
+.OBMultiCalendarLegendGroupElementTreeClosed {
+  margin: 3px 0px 0px 0px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url(./images/calendar/treeClosed.png);
+}
+
+.OBMultiCalendarLegendElementName {
+  padding: 4px 0px 0px 0px;
+}

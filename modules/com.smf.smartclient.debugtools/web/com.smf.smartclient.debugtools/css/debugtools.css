@@ -1,0 +1,17 @@
+.OBToolbarIconButton_icon_rmFilters {
+    background-image: url('../../web/com.smf.smartclient.debugtools/img/icon.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.OBToolbarIconButton_icon_showFields {
+    background-image: url('../../web/com.smf.smartclient.debugtools/img/eye.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.OBToolbarIconButton_icon_showGridId {
+    background-image: url('../../web/com.smf.smartclient.debugtools/img/showid.png');
+    background-position: center center;
+    background-repeat: no-repeat;
+}

@@ -1,0 +1,1252 @@
+<?xml version="1.0" encoding="UTF-8"?><ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <UOMConversion id="010C2C92E4394D87BF811BD011F2A015" identifier="Mile">
+    <id>010C2C92E4394D87BF811BD011F2A015</id>
+    <active>true</active>
+    <uOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <toUOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <multipleRateBy>0.0000060</multipleRateBy>
+    <divideRateBy>160934.4</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="0704A83693954422841AD514528A238A" identifier="Mile">
+    <id>0704A83693954422841AD514528A238A</id>
+    <active>true</active>
+    <uOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <toUOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <multipleRateBy>0.000016</multipleRateBy>
+    <divideRateBy>63360</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="09B5480A5C3C4D64B39E4EA4482BAF5C" identifier="Inch">
+    <id>09B5480A5C3C4D64B39E4EA4482BAF5C</id>
+    <active>true</active>
+    <uOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <toUOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <multipleRateBy>63360</multipleRateBy>
+    <divideRateBy>0.000016</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="0B2184C2381341FEA71849676B4E0DD9" identifier="Millimeter">
+    <id>0B2184C2381341FEA71849676B4E0DD9</id>
+    <active>true</active>
+    <uOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <toUOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <multipleRateBy>25.4</multipleRateBy>
+    <divideRateBy>0.03937</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="0C6BEB4583DB47A4B94B060797F717EB" identifier="Meter">
+    <id>0C6BEB4583DB47A4B94B060797F717EB</id>
+    <active>true</active>
+    <uOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <toUOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <multipleRateBy>1609.344</multipleRateBy>
+    <divideRateBy>0.000621</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="0F3BADDC745B4315816375C943A863D8" identifier="Kilometer">
+    <id>0F3BADDC745B4315816375C943A863D8</id>
+    <active>true</active>
+    <uOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <toUOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <multipleRateBy>0.000025</multipleRateBy>
+    <divideRateBy>39370.0787</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="0F4184B04C67493E9DDC2F8D3A66A43F" identifier="Yard">
+    <id>0F4184B04C67493E9DDC2F8D3A66A43F</id>
+    <active>true</active>
+    <uOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <toUOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <multipleRateBy>1093.6133</multipleRateBy>
+    <divideRateBy>0.000914</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="1173082D93424A81B03356255E80DCB6" identifier="Centimeter">
+    <id>1173082D93424A81B03356255E80DCB6</id>
+    <active>true</active>
+    <uOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <toUOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <multipleRateBy>91.44</multipleRateBy>
+    <divideRateBy>0.010936</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="148F73BDAB864104A0D80BE1E54C9D63" identifier="Cubic Meter">
+    <id>148F73BDAB864104A0D80BE1E54C9D63</id>
+    <active>true</active>
+    <uOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <toUOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <multipleRateBy>0.004546</multipleRateBy>
+    <divideRateBy>219.9692</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="1572435CF6124EFD9D1FD9544E53A411" identifier="Yard">
+    <id>1572435CF6124EFD9D1FD9544E53A411</id>
+    <active>true</active>
+    <uOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <toUOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <multipleRateBy>0.333333</multipleRateBy>
+    <divideRateBy>3</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="15B9086673464FC79115C5904EEDCCBE" identifier="Foot">
+    <id>15B9086673464FC79115C5904EEDCCBE</id>
+    <active>true</active>
+    <uOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <toUOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <multipleRateBy>3</multipleRateBy>
+    <divideRateBy>0.333333</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="17A1E272E90A48429C3F6955864E95DB" identifier="Square Centimeter">
+    <id>17A1E272E90A48429C3F6955864E95DB</id>
+    <active>true</active>
+    <uOM id="FDFFCA35AB8041F6957989FA93F8C3ED" entity-name="UOM" identifier="Square Meter"/>
+    <toUOM id="03A1ED8702974DE68E44C5771229D750" entity-name="UOM" identifier="Square Centimeter"/>
+    <multipleRateBy>10000</multipleRateBy>
+    <divideRateBy>0.00010</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="1922E4021A9449C3B18E9590AF4AB2E9" identifier="Square Centimeter">
+    <id>1922E4021A9449C3B18E9590AF4AB2E9</id>
+    <active>true</active>
+    <uOM id="BB118F8584D64FCBB5F897A2EBE56AE8" entity-name="UOM" identifier="Square Foot"/>
+    <toUOM id="03A1ED8702974DE68E44C5771229D750" entity-name="UOM" identifier="Square Centimeter"/>
+    <multipleRateBy>929.0304</multipleRateBy>
+    <divideRateBy>0.001076</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="1C91CA02272D40139164E9D90007B3DC" identifier="Kilometer">
+    <id>1C91CA02272D40139164E9D90007B3DC</id>
+    <active>true</active>
+    <uOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <toUOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <multipleRateBy>0.000010</multipleRateBy>
+    <divideRateBy>100000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="1FAEF7EE99D543B7AD15A192B23EE84E" identifier="Kilometer">
+    <id>1FAEF7EE99D543B7AD15A192B23EE84E</id>
+    <active>true</active>
+    <uOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <toUOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <multipleRateBy>0.000914</multipleRateBy>
+    <divideRateBy>1093.6133</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="20AD6971415D40849CADBAEACBC8BABE" identifier="Meter">
+    <id>20AD6971415D40849CADBAEACBC8BABE</id>
+    <active>true</active>
+    <uOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <toUOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <multipleRateBy>0.01</multipleRateBy>
+    <divideRateBy>100</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="2278C20E54674E71A78CC055E7A31D7D" identifier="Foot">
+    <id>2278C20E54674E71A78CC055E7A31D7D</id>
+    <active>true</active>
+    <uOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <toUOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <multipleRateBy>0.083333</multipleRateBy>
+    <divideRateBy>12</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="274066DB048B4B47A7208C01A2DCCC6A" identifier="Kilogram">
+    <id>274066DB048B4B47A7208C01A2DCCC6A</id>
+    <active>true</active>
+    <uOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <toUOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <multipleRateBy>0.001</multipleRateBy>
+    <divideRateBy>1000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="2846FA4B938E41A9BBB4DBAA31091D07" identifier="Cubic Meter">
+    <id>2846FA4B938E41A9BBB4DBAA31091D07</id>
+    <active>true</active>
+    <uOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <toUOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <multipleRateBy>0.001</multipleRateBy>
+    <divideRateBy>1000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="35D7A67AD7844FB4A05A57F1DF80454A" identifier="Millimeter">
+    <id>35D7A67AD7844FB4A05A57F1DF80454A</id>
+    <active>true</active>
+    <uOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <toUOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <multipleRateBy>304.8</multipleRateBy>
+    <divideRateBy>0.003281</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="36A83692A2DF4C20A66B0985C140476E" identifier="Millimeter">
+    <id>36A83692A2DF4C20A66B0985C140476E</id>
+    <active>true</active>
+    <uOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <toUOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <multipleRateBy>1609344</multipleRateBy>
+    <divideRateBy>0.0000010</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="37C5D05FBF39438CA2382FE0D284D622" identifier="Square Foot">
+    <id>37C5D05FBF39438CA2382FE0D284D622</id>
+    <active>true</active>
+    <uOM id="FDFFCA35AB8041F6957989FA93F8C3ED" entity-name="UOM" identifier="Square Meter"/>
+    <toUOM id="BB118F8584D64FCBB5F897A2EBE56AE8" entity-name="UOM" identifier="Square Foot"/>
+    <multipleRateBy>10.7639</multipleRateBy>
+    <divideRateBy>0.092903</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="39A364209B0D415C9ECD920ABEEDFE97" identifier="Centimeter">
+    <id>39A364209B0D415C9ECD920ABEEDFE97</id>
+    <active>true</active>
+    <uOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <toUOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <multipleRateBy>160934.4</multipleRateBy>
+    <divideRateBy>0.0000060</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="40BEF9D1FD3B4872BF3BDA47A8491A97" identifier="Foot">
+    <id>40BEF9D1FD3B4872BF3BDA47A8491A97</id>
+    <active>true</active>
+    <uOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <toUOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <multipleRateBy>3.2808</multipleRateBy>
+    <divideRateBy>0.304804</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="466CD3F8414340DDBB8AE47D5860EC17" identifier="Square Foot">
+    <id>466CD3F8414340DDBB8AE47D5860EC17</id>
+    <active>true</active>
+    <uOM id="03A1ED8702974DE68E44C5771229D750" entity-name="UOM" identifier="Square Centimeter"/>
+    <toUOM id="BB118F8584D64FCBB5F897A2EBE56AE8" entity-name="UOM" identifier="Square Foot"/>
+    <multipleRateBy>0.001076</multipleRateBy>
+    <divideRateBy>929.0304</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="469BA1C3F574429F87A045D93AA0E290" identifier="Mile">
+    <id>469BA1C3F574429F87A045D93AA0E290</id>
+    <active>true</active>
+    <uOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <toUOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <multipleRateBy>0.000621</multipleRateBy>
+    <divideRateBy>1609.344</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="49E8E18038AE4D48A06E6A637541D551" identifier="Inch">
+    <id>49E8E18038AE4D48A06E6A637541D551</id>
+    <active>true</active>
+    <uOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <toUOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <multipleRateBy>0.03937</multipleRateBy>
+    <divideRateBy>25.4</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="4A628E1037D6441E9650031AF74538FE" identifier="Litre">
+    <id>4A628E1037D6441E9650031AF74538FE</id>
+    <active>true</active>
+    <uOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <toUOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <multipleRateBy>1000</multipleRateBy>
+    <divideRateBy>0.001</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="4E29C0865FA540299764883884589497" identifier="Gram">
+    <id>4E29C0865FA540299764883884589497</id>
+    <active>true</active>
+    <uOM id="2EBC93C05D75431E9EEFB29CEC76F244" entity-name="UOM" identifier="Ounce"/>
+    <toUOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <multipleRateBy>28.3495</multipleRateBy>
+    <divideRateBy>0.035274</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="51D177F90373443487D241CEAC0F34AC" identifier="Pound">
+    <id>51D177F90373443487D241CEAC0F34AC</id>
+    <active>true</active>
+    <uOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <toUOM id="6FA87C4EE1FD4C86940A5F2E47C429DA" entity-name="UOM" identifier="Pound"/>
+    <multipleRateBy>2.2046</multipleRateBy>
+    <divideRateBy>0.453597</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="54EF5AB293AF47438F4C9DF54DEF9171" identifier="Foot">
+    <id>54EF5AB293AF47438F4C9DF54DEF9171</id>
+    <active>true</active>
+    <uOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <toUOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <multipleRateBy>5280</multipleRateBy>
+    <divideRateBy>0.000189</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="5506E265C79B43939A5B8B51FD51689A" identifier="Ounce">
+    <id>5506E265C79B43939A5B8B51FD51689A</id>
+    <active>true</active>
+    <uOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <toUOM id="2EBC93C05D75431E9EEFB29CEC76F244" entity-name="UOM" identifier="Ounce"/>
+    <multipleRateBy>0.035274</multipleRateBy>
+    <divideRateBy>28.3495</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="5527B7AE5EFF4AACA50B4E58B60962E8" identifier="Meter">
+    <id>5527B7AE5EFF4AACA50B4E58B60962E8</id>
+    <active>true</active>
+    <uOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <toUOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <multipleRateBy>0.0254</multipleRateBy>
+    <divideRateBy>39.3701</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="55D5F440B4154AE082540F5421077600" identifier="Kilogram">
+    <id>55D5F440B4154AE082540F5421077600</id>
+    <active>true</active>
+    <uOM id="6FA87C4EE1FD4C86940A5F2E47C429DA" entity-name="UOM" identifier="Pound"/>
+    <toUOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <multipleRateBy>0.453597</multipleRateBy>
+    <divideRateBy>2.2046</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="58AF3B0391154AB391710FAB6E73DE51" identifier="Meter">
+    <id>58AF3B0391154AB391710FAB6E73DE51</id>
+    <active>true</active>
+    <uOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <toUOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <multipleRateBy>0.914411</multipleRateBy>
+    <divideRateBy>1.0936</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="5928CBFBD1A34F10B4D27AF32FF0A794" identifier="Gallon (US)">
+    <id>5928CBFBD1A34F10B4D27AF32FF0A794</id>
+    <active>true</active>
+    <uOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <toUOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <multipleRateBy>0.000258</multipleRateBy>
+    <divideRateBy>3875.412</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="697D86016FEA4CE19CADBEE046B8B51A" identifier="Square Inch">
+    <id>697D86016FEA4CE19CADBEE046B8B51A</id>
+    <active>true</active>
+    <uOM id="BB118F8584D64FCBB5F897A2EBE56AE8" entity-name="UOM" identifier="Square Foot"/>
+    <toUOM id="40B0E154EF704F839D5A7DEFD721D41A" entity-name="UOM" identifier="Square Inch"/>
+    <multipleRateBy>144</multipleRateBy>
+    <divideRateBy>0.006944</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="69BF0B108809484EBE8E1325C4EDC7E2" identifier="Metric Ton">
+    <id>69BF0B108809484EBE8E1325C4EDC7E2</id>
+    <active>true</active>
+    <uOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <toUOM id="72C8EB9E3001414D901DE48C985163CF" entity-name="UOM" identifier="Metric Ton"/>
+    <multipleRateBy>0.001</multipleRateBy>
+    <divideRateBy>1000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="6A29FBA36C7147CDA3174D5A48BD83B9" identifier="Square Inch">
+    <id>6A29FBA36C7147CDA3174D5A48BD83B9</id>
+    <active>true</active>
+    <uOM id="FDFFCA35AB8041F6957989FA93F8C3ED" entity-name="UOM" identifier="Square Meter"/>
+    <toUOM id="40B0E154EF704F839D5A7DEFD721D41A" entity-name="UOM" identifier="Square Inch"/>
+    <multipleRateBy>1550.0031</multipleRateBy>
+    <divideRateBy>0.000645</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="6C29AAFA311C4A6381B366E80764B456" identifier="Foot">
+    <id>6C29AAFA311C4A6381B366E80764B456</id>
+    <active>true</active>
+    <uOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <toUOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <multipleRateBy>0.032808</multipleRateBy>
+    <divideRateBy>30.48</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="6CD184165EB84C21910F5A4BCE7B4410" identifier="Inch">
+    <id>6CD184165EB84C21910F5A4BCE7B4410</id>
+    <active>true</active>
+    <uOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <toUOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <multipleRateBy>39.3701</multipleRateBy>
+    <divideRateBy>0.0254</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="6DA0EBCD6FAF46B4AEF784F373C6DE8C" identifier="Gram">
+    <id>6DA0EBCD6FAF46B4AEF784F373C6DE8C</id>
+    <active>true</active>
+    <uOM id="6FA87C4EE1FD4C86940A5F2E47C429DA" entity-name="UOM" identifier="Pound"/>
+    <toUOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <multipleRateBy>453.5924</multipleRateBy>
+    <divideRateBy>0.002205</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="6DCDF3062E2D44A89E40B7D5A71D5F69" identifier="Cubic Foot">
+    <id>6DCDF3062E2D44A89E40B7D5A71D5F69</id>
+    <active>true</active>
+    <uOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <toUOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <multipleRateBy>35.3147</multipleRateBy>
+    <divideRateBy>0.028317</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="6DDFBF49D2174BD19D48F0D79F5B78A3" identifier="Gallon (US)">
+    <id>6DDFBF49D2174BD19D48F0D79F5B78A3</id>
+    <active>true</active>
+    <uOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <toUOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <multipleRateBy>0.264173</multipleRateBy>
+    <divideRateBy>3.7854</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="6FC587799877481C8DB7A132375246F5" identifier="Inch">
+    <id>6FC587799877481C8DB7A132375246F5</id>
+    <active>true</active>
+    <uOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <toUOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <multipleRateBy>12</multipleRateBy>
+    <divideRateBy>0.083333</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="722F12A679DD4FE38B9391F461AEE459" identifier="Square Centimeter">
+    <id>722F12A679DD4FE38B9391F461AEE459</id>
+    <active>true</active>
+    <uOM id="40B0E154EF704F839D5A7DEFD721D41A" entity-name="UOM" identifier="Square Inch"/>
+    <toUOM id="03A1ED8702974DE68E44C5771229D750" entity-name="UOM" identifier="Square Centimeter"/>
+    <multipleRateBy>6.4516</multipleRateBy>
+    <divideRateBy>0.155</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="73E4C2C6347D4CF0A360BD47B2D4C501" identifier="Yard">
+    <id>73E4C2C6347D4CF0A360BD47B2D4C501</id>
+    <active>true</active>
+    <uOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <toUOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <multipleRateBy>0.001094</multipleRateBy>
+    <divideRateBy>914.4</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="74AD182A4CA246D181262B99E51CFC40" identifier="Kilogram">
+    <id>74AD182A4CA246D181262B99E51CFC40</id>
+    <active>true</active>
+    <uOM id="2EBC93C05D75431E9EEFB29CEC76F244" entity-name="UOM" identifier="Ounce"/>
+    <toUOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <multipleRateBy>0.0283</multipleRateBy>
+    <divideRateBy>35.335689</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="757C5E4E4EE44F41B2BFF5AFF2E649A1" identifier="Yard">
+    <id>757C5E4E4EE44F41B2BFF5AFF2E649A1</id>
+    <active>true</active>
+    <uOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <toUOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <multipleRateBy>0.027778</multipleRateBy>
+    <divideRateBy>36</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="777EA0B58DD44EB7AF7A5252ED1D6F76" identifier="Mile">
+    <id>777EA0B58DD44EB7AF7A5252ED1D6F76</id>
+    <active>true</active>
+    <uOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <toUOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <multipleRateBy>0.621388</multipleRateBy>
+    <divideRateBy>1.6093</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="7929E71A02124E399877A0405E9286C3" identifier="Cubic Centimeter">
+    <id>7929E71A02124E399877A0405E9286C3</id>
+    <active>true</active>
+    <uOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <toUOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <multipleRateBy>1000</multipleRateBy>
+    <divideRateBy>0.001</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="851A269DBB1D4242AC0A89D9FB34D624" identifier="Millimeter">
+    <id>851A269DBB1D4242AC0A89D9FB34D624</id>
+    <active>true</active>
+    <uOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <toUOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <multipleRateBy>10</multipleRateBy>
+    <divideRateBy>0.1</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="8885664D30EE4B42B7B48369622B8DA8" identifier="Centimeter">
+    <id>8885664D30EE4B42B7B48369622B8DA8</id>
+    <active>true</active>
+    <uOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <toUOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <multipleRateBy>30.48</multipleRateBy>
+    <divideRateBy>0.032808</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="8A6A8C311A044AA5A7FCD5AD962DF8DD" identifier="Inch">
+    <id>8A6A8C311A044AA5A7FCD5AD962DF8DD</id>
+    <active>true</active>
+    <uOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <toUOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <multipleRateBy>36</multipleRateBy>
+    <divideRateBy>0.027778</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="8AE0DEC0CDF74599A7E3F4F13472EB97" identifier="Centimeter">
+    <id>8AE0DEC0CDF74599A7E3F4F13472EB97</id>
+    <active>true</active>
+    <uOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <toUOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <multipleRateBy>100</multipleRateBy>
+    <divideRateBy>0.01</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="8FE935A86E7E4F74B5E91381664F8C69" identifier="Ounce">
+    <id>8FE935A86E7E4F74B5E91381664F8C69</id>
+    <active>true</active>
+    <uOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <toUOM id="2EBC93C05D75431E9EEFB29CEC76F244" entity-name="UOM" identifier="Ounce"/>
+    <multipleRateBy>35.335689</multipleRateBy>
+    <divideRateBy>0.0283</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="90B8C4605D5D4C49987DA26C5C452918" identifier="Millimeter">
+    <id>90B8C4605D5D4C49987DA26C5C452918</id>
+    <active>true</active>
+    <uOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <toUOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <multipleRateBy>1000</multipleRateBy>
+    <divideRateBy>0.001</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="90FEC30C92E84F66A201E0430C4F4037" identifier="Kilogram">
+    <id>90FEC30C92E84F66A201E0430C4F4037</id>
+    <active>true</active>
+    <uOM id="72C8EB9E3001414D901DE48C985163CF" entity-name="UOM" identifier="Metric Ton"/>
+    <toUOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <multipleRateBy>1000</multipleRateBy>
+    <divideRateBy>0.001</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="91025BAC0988428E9D0905D4D19CCE83" identifier="Square Meter">
+    <id>91025BAC0988428E9D0905D4D19CCE83</id>
+    <active>true</active>
+    <uOM id="03A1ED8702974DE68E44C5771229D750" entity-name="UOM" identifier="Square Centimeter"/>
+    <toUOM id="FDFFCA35AB8041F6957989FA93F8C3ED" entity-name="UOM" identifier="Square Meter"/>
+    <multipleRateBy>0.00010</multipleRateBy>
+    <divideRateBy>10000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="91D8771C983144F2A45114A3F28AC262" identifier="Mile">
+    <id>91D8771C983144F2A45114A3F28AC262</id>
+    <active>true</active>
+    <uOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <toUOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <multipleRateBy>0.000189</multipleRateBy>
+    <divideRateBy>5280</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="925EE0393237497BA9DBF3EA28F4207D" identifier="Square Inch">
+    <id>925EE0393237497BA9DBF3EA28F4207D</id>
+    <active>true</active>
+    <uOM id="03A1ED8702974DE68E44C5771229D750" entity-name="UOM" identifier="Square Centimeter"/>
+    <toUOM id="40B0E154EF704F839D5A7DEFD721D41A" entity-name="UOM" identifier="Square Inch"/>
+    <multipleRateBy>0.155</multipleRateBy>
+    <divideRateBy>6.4516</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="927812EC3B4E47A2B1E05249EBC98CF9" identifier="Litre">
+    <id>927812EC3B4E47A2B1E05249EBC98CF9</id>
+    <active>true</active>
+    <uOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <toUOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <multipleRateBy>28.3168</multipleRateBy>
+    <divideRateBy>0.035315</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="95333B93C2C041C9998D00CDF6AF2008" identifier="Square Meter">
+    <id>95333B93C2C041C9998D00CDF6AF2008</id>
+    <active>true</active>
+    <uOM id="40B0E154EF704F839D5A7DEFD721D41A" entity-name="UOM" identifier="Square Inch"/>
+    <toUOM id="FDFFCA35AB8041F6957989FA93F8C3ED" entity-name="UOM" identifier="Square Meter"/>
+    <multipleRateBy>0.000645</multipleRateBy>
+    <divideRateBy>1550.0031</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="9A68B66679D94339954BC1DCC950EB57" identifier="Gallon (US)">
+    <id>9A68B66679D94339954BC1DCC950EB57</id>
+    <active>true</active>
+    <uOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <toUOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <multipleRateBy>7.4805</multipleRateBy>
+    <divideRateBy>0.133681</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="9B8C9B5A457B485FA01D8D679751B2CC" identifier="Litre">
+    <id>9B8C9B5A457B485FA01D8D679751B2CC</id>
+    <active>true</active>
+    <uOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <toUOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <multipleRateBy>0.001</multipleRateBy>
+    <divideRateBy>1000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="A6F0932FE94D4A80BC50A9E6F77DFEFF" identifier="Centimeter">
+    <id>A6F0932FE94D4A80BC50A9E6F77DFEFF</id>
+    <active>true</active>
+    <uOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <toUOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <multipleRateBy>2.54</multipleRateBy>
+    <divideRateBy>0.393701</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="A9685FF137324D32BC3674872442B6E2" identifier="Pound">
+    <id>A9685FF137324D32BC3674872442B6E2</id>
+    <active>true</active>
+    <uOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <toUOM id="6FA87C4EE1FD4C86940A5F2E47C429DA" entity-name="UOM" identifier="Pound"/>
+    <multipleRateBy>0.002205</multipleRateBy>
+    <divideRateBy>453.5924</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="AC389EB971544A4D8E061DFB7E30EB88" identifier="Litre">
+    <id>AC389EB971544A4D8E061DFB7E30EB88</id>
+    <active>true</active>
+    <uOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <toUOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <multipleRateBy>3.7854</multipleRateBy>
+    <divideRateBy>0.264173</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="AC92C6F863CB4C4A9CDC193D36A653B5" identifier="Gallon (US)">
+    <id>AC92C6F863CB4C4A9CDC193D36A653B5</id>
+    <active>true</active>
+    <uOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <toUOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <multipleRateBy>219.9692</multipleRateBy>
+    <divideRateBy>0.004546</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="AD290022417C421AA59C40EEA689FDCD" identifier="Square Meter">
+    <id>AD290022417C421AA59C40EEA689FDCD</id>
+    <active>true</active>
+    <uOM id="BB118F8584D64FCBB5F897A2EBE56AE8" entity-name="UOM" identifier="Square Foot"/>
+    <toUOM id="FDFFCA35AB8041F6957989FA93F8C3ED" entity-name="UOM" identifier="Square Meter"/>
+    <multipleRateBy>0.092903</multipleRateBy>
+    <divideRateBy>10.7639</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="AE21EE9E7E60478AA2560C3C2D500726" identifier="Cubic Foot">
+    <id>AE21EE9E7E60478AA2560C3C2D500726</id>
+    <active>true</active>
+    <uOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <toUOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <multipleRateBy>0.133681</multipleRateBy>
+    <divideRateBy>7.4805</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="AED4D15A283543719979C67048B1A42C" identifier="Ounce">
+    <id>AED4D15A283543719979C67048B1A42C</id>
+    <active>true</active>
+    <uOM id="6FA87C4EE1FD4C86940A5F2E47C429DA" entity-name="UOM" identifier="Pound"/>
+    <toUOM id="2EBC93C05D75431E9EEFB29CEC76F244" entity-name="UOM" identifier="Ounce"/>
+    <multipleRateBy>16</multipleRateBy>
+    <divideRateBy>0.0625</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="B0E732F9A33541B3AA8ECFABD37D5F2A" identifier="Mile">
+    <id>B0E732F9A33541B3AA8ECFABD37D5F2A</id>
+    <active>true</active>
+    <uOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <toUOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <multipleRateBy>0.0000010</multipleRateBy>
+    <divideRateBy>1609344</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="B9224CCE6A404AF483E29C34200621AD" identifier="Cubic Centimeter">
+    <id>B9224CCE6A404AF483E29C34200621AD</id>
+    <active>true</active>
+    <uOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <toUOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <multipleRateBy>1000000</multipleRateBy>
+    <divideRateBy>0.0000010</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="B945DCF339944838AFDB799BD6B710E3" identifier="Kilometer">
+    <id>B945DCF339944838AFDB799BD6B710E3</id>
+    <active>true</active>
+    <uOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <toUOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <multipleRateBy>0.000305</multipleRateBy>
+    <divideRateBy>3280.8399</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="BD21F85222B04AC28D6879B169A2D745" identifier="Meter">
+    <id>BD21F85222B04AC28D6879B169A2D745</id>
+    <active>true</active>
+    <uOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <toUOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <multipleRateBy>1000</multipleRateBy>
+    <divideRateBy>0.001</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="BD29F5A0192F437D98C15EBC95161FCD" identifier="Foot">
+    <id>BD29F5A0192F437D98C15EBC95161FCD</id>
+    <active>true</active>
+    <uOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <toUOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <multipleRateBy>3280.8399</multipleRateBy>
+    <divideRateBy>0.000305</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="C34BE2087D3048CE95BFA85900DE6FE7" identifier="Cubic Foot">
+    <id>C34BE2087D3048CE95BFA85900DE6FE7</id>
+    <active>true</active>
+    <uOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <toUOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <multipleRateBy>0.000035</multipleRateBy>
+    <divideRateBy>28316.8466</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="C5A3F1D43B844EF083B5696E4C803730" identifier="Inch">
+    <id>C5A3F1D43B844EF083B5696E4C803730</id>
+    <active>true</active>
+    <uOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <toUOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <multipleRateBy>39370.0787</multipleRateBy>
+    <divideRateBy>0.000025</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="C7003453D7074E559CC4360FBFFA2ACB" identifier="Cubic Meter">
+    <id>C7003453D7074E559CC4360FBFFA2ACB</id>
+    <active>true</active>
+    <uOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <toUOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <multipleRateBy>0.028317</multipleRateBy>
+    <divideRateBy>35.3147</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="C775F1803C924808AB1971AAFE20E74F" identifier="Gram">
+    <id>C775F1803C924808AB1971AAFE20E74F</id>
+    <active>true</active>
+    <uOM id="72C8EB9E3001414D901DE48C985163CF" entity-name="UOM" identifier="Metric Ton"/>
+    <toUOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <multipleRateBy>1000000</multipleRateBy>
+    <divideRateBy>0.0000010</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="CB652CE11624417EA581A6F83BF4290C" identifier="Meter">
+    <id>CB652CE11624417EA581A6F83BF4290C</id>
+    <active>true</active>
+    <uOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <toUOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <multipleRateBy>0.001</multipleRateBy>
+    <divideRateBy>1000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="D0C2EA6A185C47D4AEBB9A652EA1CF66" identifier="Metric Ton">
+    <id>D0C2EA6A185C47D4AEBB9A652EA1CF66</id>
+    <active>true</active>
+    <uOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <toUOM id="72C8EB9E3001414D901DE48C985163CF" entity-name="UOM" identifier="Metric Ton"/>
+    <multipleRateBy>0.0000010</multipleRateBy>
+    <divideRateBy>1000000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="D53BF10272A44D999C9B5EA4249F49C9" identifier="Inch">
+    <id>D53BF10272A44D999C9B5EA4249F49C9</id>
+    <active>true</active>
+    <uOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <toUOM id="F9AD53BEDA3D4A32BECF44030C281EF2" entity-name="UOM" identifier="Inch"/>
+    <multipleRateBy>0.393701</multipleRateBy>
+    <divideRateBy>2.54</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="D5C1F24ACE7C405E93F44206A3FBD515" identifier="Pound">
+    <id>D5C1F24ACE7C405E93F44206A3FBD515</id>
+    <active>true</active>
+    <uOM id="2EBC93C05D75431E9EEFB29CEC76F244" entity-name="UOM" identifier="Ounce"/>
+    <toUOM id="6FA87C4EE1FD4C86940A5F2E47C429DA" entity-name="UOM" identifier="Pound"/>
+    <multipleRateBy>0.0625</multipleRateBy>
+    <divideRateBy>16</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="D68411A857F545F9A3E202450AC7E657" identifier="Centimeter">
+    <id>D68411A857F545F9A3E202450AC7E657</id>
+    <active>true</active>
+    <uOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <toUOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <multipleRateBy>0.1</multipleRateBy>
+    <divideRateBy>10</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="D94E3569F2504C0AAACF68C11A64BCC2" identifier="Cubic Centimeter">
+    <id>D94E3569F2504C0AAACF68C11A64BCC2</id>
+    <active>true</active>
+    <uOM id="6CB1469F8167467BABD40DABE043D829" entity-name="UOM" identifier="Gallon (US)"/>
+    <toUOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <multipleRateBy>3875.412</multipleRateBy>
+    <divideRateBy>0.000258</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="D962A71310F646E0834237C0E0D6DE9B" identifier="Cubic Meter">
+    <id>D962A71310F646E0834237C0E0D6DE9B</id>
+    <active>true</active>
+    <uOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <toUOM id="6B3B437CB42D452FA04E098D52138888" entity-name="UOM" identifier="Cubic Meter"/>
+    <multipleRateBy>0.0000010</multipleRateBy>
+    <divideRateBy>1000000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="DB7A3D8C526040CF915233BCAF4DFB85" identifier="Meter">
+    <id>DB7A3D8C526040CF915233BCAF4DFB85</id>
+    <active>true</active>
+    <uOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <toUOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <multipleRateBy>0.304804</multipleRateBy>
+    <divideRateBy>3.2808</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="DD92B93933EB4877A37470E1F1198622" identifier="Kilometer">
+    <id>DD92B93933EB4877A37470E1F1198622</id>
+    <active>true</active>
+    <uOM id="E2DFB5559E414F85BC7C800BF0DD4E14" entity-name="UOM" identifier="Mile"/>
+    <toUOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <multipleRateBy>1.6093</multipleRateBy>
+    <divideRateBy>0.621388</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="DE641DFA2057446EA184D1616B590F6C" identifier="Yard">
+    <id>DE641DFA2057446EA184D1616B590F6C</id>
+    <active>true</active>
+    <uOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <toUOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <multipleRateBy>0.010936</multipleRateBy>
+    <divideRateBy>91.44</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="DF2FDC61C9084AF29D711A250D370EE6" identifier="Gram">
+    <id>DF2FDC61C9084AF29D711A250D370EE6</id>
+    <active>true</active>
+    <uOM id="72BA247D31F745F3AF11F74A5E2CCBEF" entity-name="UOM" identifier="Kilogram"/>
+    <toUOM id="BD53EA48AAD04ADB8361B374367E42EB" entity-name="UOM" identifier="Gram"/>
+    <multipleRateBy>1000</multipleRateBy>
+    <divideRateBy>0.001</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="E0D67AAE5999459F957911971B6A8C0E" identifier="Cubic Centimeter">
+    <id>E0D67AAE5999459F957911971B6A8C0E</id>
+    <active>true</active>
+    <uOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <toUOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" entity-name="UOM" identifier="Cubic Centimeter"/>
+    <multipleRateBy>28316.8466</multipleRateBy>
+    <divideRateBy>0.000035</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="E10CDC8127E440F891D5BB811D885DED" identifier="Kilometer">
+    <id>E10CDC8127E440F891D5BB811D885DED</id>
+    <active>true</active>
+    <uOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <toUOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <multipleRateBy>0.0000010</multipleRateBy>
+    <divideRateBy>1000000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="E24B4A31C0CC46A6BF3A1EA2EFBA093A" identifier="Millimeter">
+    <id>E24B4A31C0CC46A6BF3A1EA2EFBA093A</id>
+    <active>true</active>
+    <uOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <toUOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <multipleRateBy>914.4</multipleRateBy>
+    <divideRateBy>0.001094</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="E2A090FCF498429E9B33F1550E655342" identifier="Cubic Foot">
+    <id>E2A090FCF498429E9B33F1550E655342</id>
+    <active>true</active>
+    <uOM id="023A83E2F6FB41F3A76A822078AE9F72" entity-name="UOM" identifier="Litre"/>
+    <toUOM id="D492A98D34814D1C85568C4D1CE12B55" entity-name="UOM" identifier="Cubic Foot"/>
+    <multipleRateBy>0.035315</multipleRateBy>
+    <divideRateBy>28.3168</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="E42427EE22CF4ED28B3F0761C1F70332" identifier="Foot">
+    <id>E42427EE22CF4ED28B3F0761C1F70332</id>
+    <active>true</active>
+    <uOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <toUOM id="F59613ADEC7F404E8142FC7477B7C04D" entity-name="UOM" identifier="Foot"/>
+    <multipleRateBy>0.003281</multipleRateBy>
+    <divideRateBy>304.8</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="F2E0E203D1D744788448FED685B423ED" identifier="Yard">
+    <id>F2E0E203D1D744788448FED685B423ED</id>
+    <active>true</active>
+    <uOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <toUOM id="53E0B852279845AE8DA2879F18E9B3D9" entity-name="UOM" identifier="Yard"/>
+    <multipleRateBy>1.0936</multipleRateBy>
+    <divideRateBy>0.914411</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="FA3306BB89B24B359CF9DC79656523BE" identifier="Millimeter">
+    <id>FA3306BB89B24B359CF9DC79656523BE</id>
+    <active>true</active>
+    <uOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <toUOM id="B648C32ED9304B4A87C5997CB69D7B72" entity-name="UOM" identifier="Millimeter"/>
+    <multipleRateBy>1000000</multipleRateBy>
+    <divideRateBy>0.0000010</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="FA3F8E8234BF4A7595D36462FAFD4534" identifier="Centimeter">
+    <id>FA3F8E8234BF4A7595D36462FAFD4534</id>
+    <active>true</active>
+    <uOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <toUOM id="ADF850C3E6E9413B9F9EEA5C87456073" entity-name="UOM" identifier="Centimeter"/>
+    <multipleRateBy>100000</multipleRateBy>
+    <divideRateBy>0.000010</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="FC68AC86D19E457EBA0DF37E428F2C2B" identifier="Kilometer">
+    <id>FC68AC86D19E457EBA0DF37E428F2C2B</id>
+    <active>true</active>
+    <uOM id="54E1CF8449474628BEA191E0532EEC3E" entity-name="UOM" identifier="Meter"/>
+    <toUOM id="A8AE303C482B454081EC39ED47377398" entity-name="UOM" identifier="Kilometer"/>
+    <multipleRateBy>0.001</multipleRateBy>
+    <divideRateBy>1000</divideRateBy>
+  </UOMConversion>
+  <UOMConversion id="FFAB38C464E74CA0A65895EFC86CBC0D" identifier="Square Foot">
+    <id>FFAB38C464E74CA0A65895EFC86CBC0D</id>
+    <active>true</active>
+    <uOM id="40B0E154EF704F839D5A7DEFD721D41A" entity-name="UOM" identifier="Square Inch"/>
+    <toUOM id="BB118F8584D64FCBB5F897A2EBE56AE8" entity-name="UOM" identifier="Square Foot"/>
+    <multipleRateBy>0.006944</multipleRateBy>
+    <divideRateBy>144</divideRateBy>
+  </UOMConversion>
+  <UOM id="100" identifier="Unit">
+    <id>100</id>
+    <active>true</active>
+    <eDICode>EA</eDICode>
+    <symbol>Ud </symbol>
+    <name>Unit</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>0</standardPrecision>
+    <costingPrecision>4</costingPrecision>
+    <default>true</default>
+    <breakdown>false</breakdown>
+    <uOMType xsi:nil="true"/>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="101" identifier="Hour">
+    <id>101</id>
+    <active>true</active>
+    <eDICode>HR</eDICode>
+    <symbol>h  </symbol>
+    <name>Hour</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>T</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="102" identifier="Day">
+    <id>102</id>
+    <active>true</active>
+    <eDICode>DA</eDICode>
+    <symbol>d  </symbol>
+    <name>Day</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>T</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="103" identifier="Minutes">
+    <id>103</id>
+    <active>true</active>
+    <eDICode>MJ</eDICode>
+    <symbol>min</symbol>
+    <name>Minutes</name>
+    <description>(lowest unit for resorce assigments)</description>
+    <standardPrecision>0</standardPrecision>
+    <costingPrecision>0</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>T</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="104" identifier="Labour day">
+    <id>104</id>
+    <active>true</active>
+    <eDICode>WD</eDICode>
+    <symbol>D  </symbol>
+    <name>Labour day</name>
+    <description>8 hours</description>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType xsi:nil="true"/>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="105" identifier="Week">
+    <id>105</id>
+    <active>true</active>
+    <eDICode>WK</eDICode>
+    <symbol>w  </symbol>
+    <name>Week</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>T</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="106" identifier="Month">
+    <id>106</id>
+    <active>true</active>
+    <eDICode>MO</eDICode>
+    <symbol>m  </symbol>
+    <name>Month</name>
+    <description>30 days</description>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>T</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="107" identifier="Labour month">
+    <id>107</id>
+    <active>true</active>
+    <eDICode>WM</eDICode>
+    <symbol>M  </symbol>
+    <name>Labour month</name>
+    <description>20 days</description>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType xsi:nil="true"/>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="108" identifier="Year">
+    <id>108</id>
+    <active>true</active>
+    <eDICode>YR</eDICode>
+    <symbol>Y  </symbol>
+    <name>Year</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>T</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="023A83E2F6FB41F3A76A822078AE9F72" identifier="Litre">
+    <id>023A83E2F6FB41F3A76A822078AE9F72</id>
+    <active>true</active>
+    <eDICode>L </eDICode>
+    <symbol>l  </symbol>
+    <name>Litre</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>V</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="03A1ED8702974DE68E44C5771229D750" identifier="Square Centimeter">
+    <id>03A1ED8702974DE68E44C5771229D750</id>
+    <active>true</active>
+    <eDICode>C2</eDICode>
+    <symbol>cm²</symbol>
+    <name>Square Centimeter</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>A</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="2EBC93C05D75431E9EEFB29CEC76F244" identifier="Ounce">
+    <id>2EBC93C05D75431E9EEFB29CEC76F244</id>
+    <active>true</active>
+    <eDICode>OZ</eDICode>
+    <symbol>oz </symbol>
+    <name>Ounce</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>W</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="40B0E154EF704F839D5A7DEFD721D41A" identifier="Square Inch">
+    <id>40B0E154EF704F839D5A7DEFD721D41A</id>
+    <active>true</active>
+    <eDICode>N2</eDICode>
+    <symbol>in²</symbol>
+    <name>Square Inch</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>A</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="53E0B852279845AE8DA2879F18E9B3D9" identifier="Yard">
+    <id>53E0B852279845AE8DA2879F18E9B3D9</id>
+    <active>true</active>
+    <eDICode>YD</eDICode>
+    <symbol>yd </symbol>
+    <name>Yard</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="54E1CF8449474628BEA191E0532EEC3E" identifier="Meter">
+    <id>54E1CF8449474628BEA191E0532EEC3E</id>
+    <active>true</active>
+    <eDICode>M </eDICode>
+    <symbol>M  </symbol>
+    <name>Meter</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="6B3B437CB42D452FA04E098D52138888" identifier="Cubic Meter">
+    <id>6B3B437CB42D452FA04E098D52138888</id>
+    <active>true</active>
+    <eDICode>M3</eDICode>
+    <symbol>m³ </symbol>
+    <name>Cubic Meter</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>0</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>V</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="6CB1469F8167467BABD40DABE043D829" identifier="Gallon (US)">
+    <id>6CB1469F8167467BABD40DABE043D829</id>
+    <active>true</active>
+    <eDICode>GL</eDICode>
+    <symbol>gl </symbol>
+    <name>Gallon (US)</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>V</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="6FA87C4EE1FD4C86940A5F2E47C429DA" identifier="Pound">
+    <id>6FA87C4EE1FD4C86940A5F2E47C429DA</id>
+    <active>true</active>
+    <eDICode>LB</eDICode>
+    <symbol>Lb </symbol>
+    <name>Pound</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>W</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="72BA247D31F745F3AF11F74A5E2CCBEF" identifier="Kilogram">
+    <id>72BA247D31F745F3AF11F74A5E2CCBEF</id>
+    <active>true</active>
+    <eDICode>KG</eDICode>
+    <symbol>kg </symbol>
+    <name>Kilogram</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>W</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="72C8EB9E3001414D901DE48C985163CF" identifier="Metric Ton">
+    <id>72C8EB9E3001414D901DE48C985163CF</id>
+    <active>true</active>
+    <eDICode>T </eDICode>
+    <symbol>T  </symbol>
+    <name>Metric Ton</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>W</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="A8AE303C482B454081EC39ED47377398" identifier="Kilometer">
+    <id>A8AE303C482B454081EC39ED47377398</id>
+    <active>true</active>
+    <eDICode>KM</eDICode>
+    <symbol>km </symbol>
+    <name>Kilometer</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="ADF850C3E6E9413B9F9EEA5C87456073" identifier="Centimeter">
+    <id>ADF850C3E6E9413B9F9EEA5C87456073</id>
+    <active>true</active>
+    <eDICode>CM</eDICode>
+    <symbol>cm </symbol>
+    <name>Centimeter</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="B648C32ED9304B4A87C5997CB69D7B72" identifier="Millimeter">
+    <id>B648C32ED9304B4A87C5997CB69D7B72</id>
+    <active>true</active>
+    <eDICode>MM</eDICode>
+    <symbol>mm </symbol>
+    <name>Millimeter</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="BB118F8584D64FCBB5F897A2EBE56AE8" identifier="Square Foot">
+    <id>BB118F8584D64FCBB5F897A2EBE56AE8</id>
+    <active>true</active>
+    <eDICode>F2</eDICode>
+    <symbol>f² </symbol>
+    <name>Square Foot</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>A</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="BCC599A13E0640A6823A0CF9ED3CDB9E" identifier="Cubic Centimeter">
+    <id>BCC599A13E0640A6823A0CF9ED3CDB9E</id>
+    <active>true</active>
+    <eDICode>C3</eDICode>
+    <symbol>cm³</symbol>
+    <name>Cubic Centimeter</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>V</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="BD53EA48AAD04ADB8361B374367E42EB" identifier="Gram">
+    <id>BD53EA48AAD04ADB8361B374367E42EB</id>
+    <active>true</active>
+    <eDICode>G </eDICode>
+    <symbol>g  </symbol>
+    <name>Gram</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>W</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="D492A98D34814D1C85568C4D1CE12B55" identifier="Cubic Foot">
+    <id>D492A98D34814D1C85568C4D1CE12B55</id>
+    <active>true</active>
+    <eDICode>CF</eDICode>
+    <symbol>f³ </symbol>
+    <name>Cubic Foot</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>V</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="E2DFB5559E414F85BC7C800BF0DD4E14" identifier="Mile">
+    <id>E2DFB5559E414F85BC7C800BF0DD4E14</id>
+    <active>true</active>
+    <eDICode>MI</eDICode>
+    <symbol>mi </symbol>
+    <name>Mile</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="F59613ADEC7F404E8142FC7477B7C04D" identifier="Foot">
+    <id>F59613ADEC7F404E8142FC7477B7C04D</id>
+    <active>true</active>
+    <eDICode>FT</eDICode>
+    <symbol>ft </symbol>
+    <name>Foot</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="F9AD53BEDA3D4A32BECF44030C281EF2" identifier="Inch">
+    <id>F9AD53BEDA3D4A32BECF44030C281EF2</id>
+    <active>true</active>
+    <eDICode>IN</eDICode>
+    <symbol>in </symbol>
+    <name>Inch</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>L</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+  <UOM id="FDFFCA35AB8041F6957989FA93F8C3ED" identifier="Square Meter">
+    <id>FDFFCA35AB8041F6957989FA93F8C3ED</id>
+    <active>true</active>
+    <eDICode>M2</eDICode>
+    <symbol>m² </symbol>
+    <name>Square Meter</name>
+    <description xsi:nil="true"/>
+    <standardPrecision>2</standardPrecision>
+    <costingPrecision>2</costingPrecision>
+    <default>false</default>
+    <breakdown>false</breakdown>
+    <uOMType>A</uOMType>
+    <useinproduction>false</useinproduction>
+  </UOM>
+</ob:Openbravo>

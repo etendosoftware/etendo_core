@@ -1,0 +1,115 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being  the  Mozilla  Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2011-2016 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+ */ 
+
+.OBMyOpenbravo {
+  background-color: #FFFFFF;
+}
+
+
+/* Portal part*/
+.OBMyOBPortal {
+  padding-top: 15px;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-bottom: 10px;
+}
+
+
+/* Left Column*/
+.OBMyOBLeftColumn {
+  padding-top: 16px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.OBMyOBLeftColumnLinkOver,
+.OBMyOBLeftColumnLinkFocusedOver,
+.OBMyOBLeftColumnLinkFocused,
+.OBMyOBLeftColumnLink {
+  color: #000;
+  padding-top: 10px;
+  padding-left: 4px;
+  cursor: pointer;
+}
+
+.OBMyOBLeftColumnLinkFocusedOver,
+.OBMyOBLeftColumnLinkOver,
+.OBMyOBLeftColumnLink:hover {
+  text-decoration: underline;
+}
+
+.OBMyOBLeftColumnLinkFocusedOver,
+.OBMyOBLeftColumnLinkFocused,
+.OBMyOBLeftColumnLink:focus {
+  color: #fa962f;
+}
+
+
+/* RecentViews */
+.OBMyOBRecentViews {
+  border-bottom: 2px solid #72AB10;
+  padding: 10px 0px 0px 4px;
+  font-weight: bold;
+}
+
+.OBMyOBRecentViewsEntryFocused,
+.OBMyOBRecentViewsEntryFocusedOver,
+.OBMyOBRecentViewsEntryOver,
+.OBMyOBRecentViewsEntry {
+  cursor: pointer;
+  font-family: 'lucida sans', sans-serif;
+  font-size: 12px;
+  padding: 4px;
+}
+
+.OBMyOBRecentViewsEntryFocusedOver,
+.OBMyOBRecentViewsEntryOver,
+.OBMyOBRecentViewsEntry:hover {
+  text-decoration: underline;
+}
+
+.OBMyOBRecentViewsEntryFocusedOver,
+.OBMyOBRecentViewsEntryFocused,
+.OBMyOBRecentViewsEntry:focus {
+  color: #fa962f;
+}
+
+
+/* Left menu Dialogs */
+.OBMyOBDialog {
+  background-color: #E6F0DB;
+}
+
+.OBMyOBDialogHeader {
+}
+
+.OBMyOBDialogHeaderText {
+  line-height: 0px;
+}
+
+.OBMyOBDialogBody {
+  margin-top: -10px;
+}
+
+
+/* Widget Parameters */
+.OBMyOBEditParametersLabel {
+  font-weight: bold;
+  padding-top: 10px;
+}

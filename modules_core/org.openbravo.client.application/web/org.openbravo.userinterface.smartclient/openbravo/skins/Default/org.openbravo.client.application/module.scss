@@ -1,0 +1,15 @@
+@import '../../../../../../../org.openbravo.client.myob/web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/org.openbravo.client.myob/theme.scss';
+
+$moduleUrlPath: $skinUrlPath + '/org.openbravo.client.application';
+
+.tabStyleActive {
+  background-color: $color1;
+}
+.tabStyleActiveSelected {
+  background-color: $color1;
+  border-top: 4px solid $backgroundColor2;
+}
+.tabStyleInactive {
+  background-color: $color2;
+  color: #a5aab7;
+}

@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION OBUIAPP_UPDATE_ACCESS">
+    <function name="OBUIAPP_UPDATE_ACCESS" type="NULL">
+      <parameter name="p_ep_instance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2013 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+BEGIN
+
+  INSERT INTO OBUIAPP_Process_Access
+    (
+      OBUIAPP_Process_Access_ID, OBUIAPP_Process_ID, AD_Role_ID, AD_Client_ID,
+      AD_Org_ID, IsActive, Created,
+      CreatedBy, Updated, UpdatedBy
+    )
+  SELECT get_uuid(), P.OBUIAPP_Process_ID, R.AD_ROLE_ID, R.AD_CLIENT_ID,
+    R.AD_ORG_ID, 'Y', now(),
+    '0', now(), '0'
+  FROM OBUIAPP_Process P, AD_ROLE R
+  WHERE R.ISMANUAL = 'N'
+  AND P.IsActive='Y'
+    AND (
+      (R.USERLEVEL = 'S' AND P.ACCESSLEVEL IN ('4','7','6'))
+      OR
+      (R.USERLEVEL IN (' CO', ' C') AND P.ACCESSLEVEL IN ('7','6','3','1'))
+      OR
+      (R.USERLEVEL = '  O' AND P.ACCESSLEVEL IN ('3','1','7'))
+    )
+    AND NOT EXISTS (SELECT 1
+                     FROM OBUIAPP_Process_Access
+                    WHERE OBUIAPP_Process_ID = P.OBUIAPP_Process_ID
+                      AND AD_ROLE_ID = R.AD_ROLE_ID);
+
+    --update view access
+  INSERT INTO OBUIAPP_View_Role_Access
+    (
+      OBUIAPP_View_Role_Access_ID, OBUIAPP_View_Impl_ID, AD_Role_ID, AD_Client_ID,
+      AD_Org_ID, IsActive, Created,
+      CreatedBy, Updated, UpdatedBy
+    )
+  SELECT get_uuid(), V.OBUIAPP_View_Impl_ID, R.AD_ROLE_ID, R.AD_CLIENT_ID,
+    R.AD_ORG_ID, 'Y', now(),
+    '0', now(), '0'
+  FROM OBUIAPP_View_Impl V, AD_Role R
+  WHERE R.isManual = 'N'
+  AND V.isActive = 'Y'
+    AND NOT EXISTS (SELECT 1
+                     FROM OBUIAPP_View_Role_Access
+                    WHERE OBUIAPP_View_Impl_ID = V.OBUIAPP_View_Impl_ID
+                      AND AD_ROLE_ID = R.AD_ROLE_ID
+                      AND (R.ISADVANCED = 'Y' OR V.ISADVANCEDFEATURE = 'N'));
+END OBUIAPP_UPDATE_ACCESS
+]]></body>
+    </function>
+  </database>

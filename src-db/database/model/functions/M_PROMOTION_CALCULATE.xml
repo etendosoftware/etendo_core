@@ -1,0 +1,393 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_PROMOTION_CALCULATE">
+    <function name="M_PROMOTION_CALCULATE" type="NULL">
+      <parameter name="p_type" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_doc_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_date DATE;
+  v_partner VARCHAR2(32);
+  v_priceList VARCHAR2(32);
+  v_method VARCHAR(200);
+  v_precision NUMBER;
+  v_apply_next  VARCHAR(1);
+  v_taxIncluded VARCHAR(1);
+
+  v_count NUMBER;
+  v_apply_discount NUMBER:= 1;
+
+  TYPE RECORD IS REF CURSOR;
+  Cur_Order RECORD;
+  Cur_Offer RECORD;
+  v_totalamt NUMBER;
+  v_displayedtotalamt NUMBER;
+  v_qtyordered NUMBER;
+  v_qtyinvoiced NUMBER;
+  v_stdPrecision NUMBER;
+BEGIN
+  if (p_type = 'O') then
+		select o.c_bpartner_id, o.m_priceList_id, o.dateordered, 
+           c.priceprecision, c.stdPrecision, pl.isTaxIncluded
+			into v_partner, v_priceList, v_date, 
+           v_precision, v_stdPrecision, v_taxIncluded
+			from C_Order o, c_currency c, m_priceList pl
+		 where C_Order_ID = p_doc_id
+			 and c.C_Currency_ID = o.C_Currency_ID
+			 and pl.m_priceList_ID = o.m_priceList_ID;
+  else
+    --Skip reversal invoices
+    select count(*)
+      into v_count
+      from c_invoice_reverse
+     where c_invoice_id = p_doc_id;
+     
+    if (v_count != 0) then
+      return;
+    end if;
+
+		select o.c_bpartner_id, o.m_priceList_id, o.dateinvoiced, 
+           c.priceprecision, c.stdPrecision, pl.isTaxIncluded
+			into v_partner, v_priceList, v_date, 
+           v_precision, v_stdPrecision, v_taxIncluded
+			from C_Invoice o, c_currency c, m_priceList pl
+		 where C_Invoice_ID = p_doc_id
+			 and c.C_Currency_ID = o.C_Currency_ID
+			 and pl.m_priceList_ID = o.m_priceList_ID;
+	end if;
+
+  for Cur_Order in (select c_orderline_id as id, gross_unit_price, c_tax_id, cancelpricead, 
+                           M_Product_ID, ad_client_id, ad_org_id, null as from_order, line
+                      from c_orderline 
+                     where c_order_id = p_doc_id
+                       and p_type = 'O'
+                       and qtyinvoiced = 0 -- Can't change prices on invoiced lines
+                     union
+                    select c_invoiceline_id, gross_unit_price, c_tax_id, 'N', 
+                           M_Product_ID, ad_client_id, ad_org_id, c_orderline_id, line
+                      from c_invoiceline 
+                     where c_invoice_id = p_doc_id
+                       and p_type = 'I'
+                     order by line, 1) loop
+    -- Remove existent promotions as they are going to be recalculated
+    if (p_type = 'O') then
+      select count(*) 
+        into v_count
+        from c_orderline_offer
+       where c_orderline_id = Cur_Order.id;
+
+      if (v_count = 0) then
+        -- In case there are any price adjustment, prices need also to be recalculated
+        -- as they are proposed in UI as the adjustments were applied
+        select count(*)
+          into v_count
+          from m_offer
+         where isactive = 'Y'
+          and v_date between DateFrom and coalesce(DateTo, TO_DATE('31-12-9999', 'DD-MM-YYYY'))
+          and AD_Client_ID = Cur_Order.AD_Client_ID
+          and M_Offer_Type_ID = '5D4BAF6BB86D4D2C9ED3D5A6FC051579';
+      end if; 
+
+      if (v_count > 0) then
+				if (v_taxIncluded = 'Y') then
+					update c_orderline set
+						gross_unit_price = grosspricestd,
+						line_gross_amount = round(grosspricestd * qtyordered, v_stdPrecision)
+					where c_orderline_id = Cur_Order.id;
+				else
+					update c_orderline
+						 set priceactual = pricestd,
+								 linenetamt = round(pricestd * qtyordered, v_stdPrecision)
+					 where c_orderline_id = Cur_Order.id;
+				end if;
+				
+				delete from c_orderline_offer
+				 where c_orderline_id = Cur_Order.id;
+		  end if;
+		else
+     select count(*) 
+       into v_count
+       from c_invoiceline_offer
+      where c_invoiceline_id = Cur_Order.id;
+
+      if (v_count = 0) then
+        -- In case there are any price adjustment, prices need also to be recalculated
+        -- as they are proposed in UI as the adjustments were applied
+        select count(*)
+          into v_count
+          from m_offer
+         where isactive = 'Y'
+          and v_date between DateFrom and coalesce(DateTo, TO_DATE('31-12-9999', 'DD-MM-YYYY'))
+          and AD_Client_ID = Cur_Order.AD_Client_ID
+          and M_Offer_Type_ID = '5D4BAF6BB86D4D2C9ED3D5A6FC051579';
+      end if; 
+
+      if (v_count > 0) then
+        if (Cur_Order.from_order is null) then
+          -- Invoice: reset to original prices in case invoice is not coming fom an order
+					if (v_taxIncluded = 'Y') then
+						update c_invoiceline set
+							gross_unit_price = grosspricestd,
+							line_gross_amount = round(grosspricestd * qtyinvoiced, v_stdPrecision)
+						where c_invoiceline_id = Cur_Order.id
+						  and c_invoiceline.c_invoice_discount_id is null
+						  and not exists(
+                                                    select 1
+                                                    from c_discount
+                                                    where c_discount.m_product_id = c_invoiceline.m_product_id
+                                                  );
+					else
+						update c_invoiceline
+							 set priceactual = pricestd,
+									 linenetamt = round(pricestd * qtyinvoiced, v_stdPrecision)
+						where c_invoiceline_id = Cur_Order.id
+						  and c_invoiceline.c_invoice_discount_id is null
+						  and not exists(
+                                                    select 1
+                                                    from c_discount
+                                                    where c_discount.m_product_id = c_invoiceline.m_product_id
+                                                  );
+					end if;
+				end if;
+
+				delete from c_invoiceline_offer
+				 where c_invoiceline_id = Cur_Order.id;
+		  end if;
+		end if;
+		
+		if (p_type = 'I' and cur_order.from_order is not null) then
+      -- Invoice line generated from order line, don't recalculate promotions,
+      -- just apply existent ones. Price is not recalculated, it should have been
+      -- properly set previous to this point.
+      select o.qtyordered, i.qtyinvoiced
+        into v_qtyordered, v_qtyinvoiced
+        from c_orderline o, c_invoiceline i
+       where i.c_invoiceline_id = cur_order.id
+         and o.c_orderline_id = i.c_orderline_id;
+      
+      for Cur_Offer in (select *
+                          from c_orderline_offer
+                         where c_orderline_id = cur_order.from_order) loop
+        if (v_qtyordered = v_qtyinvoiced) then
+          v_totalamt := Cur_Offer.totalamt;
+          v_displayedtotalamt := Cur_Offer.displayedtotalamt;
+        else
+          IF(v_qtyordered <> 0) THEN
+            v_totalamt := round(Cur_Offer.totalamt * v_qtyinvoiced / v_qtyordered, v_precision);
+            v_displayedtotalamt := round(Cur_Offer.displayedtotalamt * v_qtyinvoiced / v_qtyordered, v_precision);
+          ELSE
+            v_totalamt := 0;
+            v_displayedtotalamt := 0;
+          END IF;
+        end if;
+        
+        insert into c_invoiceline_offer
+          (c_invoiceline_offer_id, ad_client_id, ad_org_id,              
+					 isactive, createdby, updatedby,              
+					 c_invoiceline_id, line, m_offer_id,             
+					 priceoffer, amtoffer, priceoffergross,        
+					 totalamt, displayedtotalamt) 
+				values
+				  (get_uuid(), cur_order.ad_client_id, cur_order.ad_org_id,              
+					 Cur_Offer.isactive, p_user_id, p_user_id,              
+					 cur_order.id, Cur_Offer.line, Cur_Offer.m_offer_id,             
+					 Cur_Offer.priceoffer, Cur_Offer.amtoffer, Cur_Offer.priceoffergross,        
+					 v_totalamt, v_displayedtotalamt);
+      end loop;
+    elsif (Cur_Order.cancelpricead = 'N') then
+      -- Look for candidate promotions to be applied to current line
+      v_apply_next := 'Y';
+      FOR Cur_Offer IN
+        (SELECT M_OFFER_ID, t.PL_Order_Implementor
+        FROM M_OFFER, M_Offer_Type t
+        WHERE v_date BETWEEN DATEFROM AND COALESCE(DATETO, TO_DATE('31-12-9999', 'DD-MM-YYYY'))
+          AND M_OFFER.AD_Client_ID = Cur_Order.AD_Client_ID
+          AND AD_ISORGINCLUDED(Cur_Order.AD_Org_ID, M_OFFER.AD_ORG_ID, M_OFFER.AD_CLIENT_ID) <> -1
+          AND M_OFFER.IsActive = 'Y'
+          AND t.M_Offer_Type_ID = M_Offer.M_Offer_Type_ID
+          AND ((PRICELIST_SELECTION='Y' AND NOT EXISTS (SELECT 1 FROM M_OFFER_PRICELIST
+             WHERE M_OFFER_ID=M_OFFER.M_OFFER_ID
+             AND M_PRICELIST_ID = v_priceList
+             AND ISACTIVE = 'Y'))
+           OR (PRICELIST_SELECTION='N' AND EXISTS(SELECT 1 FROM M_OFFER_PRICELIST
+              WHERE M_OFFER_ID = M_OFFER.M_OFFER_ID
+              AND M_PRICELIST_ID = v_priceList
+              AND ISACTIVE = 'Y')))
+          AND((BPARTNER_SELECTION = 'Y'
+          AND NOT EXISTS
+          (SELECT 1
+          FROM M_OFFER_BPARTNER
+          WHERE M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND C_BPARTNER_ID = v_partner
+            AND ISACTIVE = 'Y'
+          ))
+          OR(BPARTNER_SELECTION = 'N'
+          AND EXISTS
+          (SELECT 1
+          FROM M_OFFER_BPARTNER
+          WHERE M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND C_BPARTNER_ID = v_partner
+            AND ISACTIVE = 'Y'
+          )))
+          AND((BP_GROUP_SELECTION = 'Y'
+          AND NOT EXISTS
+          (SELECT 1
+          FROM C_BPARTNER B,
+            M_OFFER_BP_GROUP OB
+          WHERE OB.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND B.C_BPARTNER_ID = v_partner
+            AND OB.C_BP_GROUP_ID = B.C_BP_GROUP_ID
+            AND OB.ISACTIVE = 'Y'
+          ))
+          OR(BP_GROUP_SELECTION = 'N'
+          AND EXISTS
+          (SELECT 1
+          FROM C_BPARTNER B,
+            M_OFFER_BP_GROUP OB
+          WHERE OB.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND B.C_BPARTNER_ID = v_partner
+            AND OB.C_BP_GROUP_ID = B.C_BP_GROUP_ID
+            AND OB.ISACTIVE = 'Y'
+          )))
+          AND((PRODUCT_SELECTION = 'Y'
+          AND NOT EXISTS
+          (SELECT 1
+          FROM M_OFFER_PRODUCT
+          WHERE M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND M_PRODUCT_ID = Cur_Order.M_Product_ID
+            AND ISACTIVE = 'Y'
+          ))
+          OR(PRODUCT_SELECTION = 'N'
+          AND EXISTS
+          (SELECT 1
+          FROM M_OFFER_PRODUCT
+          WHERE M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND M_PRODUCT_ID = Cur_Order.M_Product_ID
+            AND ISACTIVE = 'Y'
+          )))
+          AND((PROD_CAT_SELECTION = 'Y'
+          AND NOT EXISTS
+          (SELECT 1
+          FROM M_PRODUCT P,
+            M_OFFER_PROD_CAT OP
+          WHERE OP.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND P.M_PRODUCT_ID = Cur_Order.M_Product_ID
+            AND OP.M_PRODUCT_CATEGORY_ID = P.M_PRODUCT_CATEGORY_ID
+            AND OP.ISACTIVE = 'Y'
+          ))
+          OR(PROD_CAT_SELECTION = 'N'
+          AND EXISTS
+          (SELECT 1
+          FROM M_PRODUCT P,
+            M_OFFER_PROD_CAT OP
+          WHERE OP.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND P.M_PRODUCT_ID = Cur_Order.M_Product_ID
+            AND OP.M_PRODUCT_CATEGORY_ID = P.M_PRODUCT_CATEGORY_ID
+            AND OP.ISACTIVE = 'Y'
+          )))
+          AND ((ORG_SELECTION = 'Y'
+          AND NOT EXISTS
+          (SELECT 1
+          FROM M_OFFER_ORGANIZATION O
+          WHERE O.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND O.AD_ORG_ID = Cur_Order.AD_Org_ID
+            AND O.ISACTIVE = 'Y'
+          ))
+          OR(ORG_SELECTION = 'N'
+          AND EXISTS
+          (SELECT 1
+          FROM M_OFFER_ORGANIZATION O
+          WHERE O.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND O.AD_ORG_ID = Cur_Order.AD_Org_ID
+            AND O.ISACTIVE = 'Y'
+          )))
+          AND ((CHARACTERISTICS_SELECTION = 'Y'
+          AND NOT EXISTS
+          (SELECT 1
+          FROM M_OFFER_CHARACTERISTIC C, M_PRODUCT_CH_VALUE V
+          WHERE C.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND V.M_PRODUCT_ID = Cur_Order.M_Product_ID
+            AND m_isparent_ch_value(V.M_CH_VALUE_ID, C.M_CH_VALUE_ID, C.M_CHARACTERISTIC_ID) <> -1
+            AND C.ISACTIVE = 'Y'
+          ))
+          OR(CHARACTERISTICS_SELECTION = 'N'
+          AND EXISTS
+          (SELECT 1
+          FROM M_OFFER_CHARACTERISTIC C, M_PRODUCT_CH_VALUE V
+          WHERE C.M_OFFER_ID = M_OFFER.M_OFFER_ID
+            AND V.M_PRODUCT_ID = Cur_Order.M_Product_ID
+            AND m_isparent_ch_value(V.M_CH_VALUE_ID, C.M_CH_VALUE_ID, C.M_CHARACTERISTIC_ID) <> -1
+            AND C.ISACTIVE = 'Y'
+          ))
+          )
+        ORDER BY PRIORITY,
+          M_OFFER_ID
+        )
+      loop
+
+        --M_Promotions_Calculate - Extension Point to apply additional filters to discounts
+        SELECT count(*) INTO v_count
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_ep_procedures WHERE ad_extension_points_id = 'F20050CAA4E1420B8766E1867F7D07CC');
+        IF (v_count=1) THEN
+        DECLARE
+        v_ep_instance VARCHAR2(32);
+        v_extension_point_id VARCHAR2(32) := 'F20050CAA4E1420B8766E1867F7D07CC';
+        v_Record_ID varchar(32) := Cur_Offer.M_Offer_ID; --OBTG:VARCHAR2--
+        v_Product_ID varchar(32) := Cur_Order.M_Product_ID; --OBTG:VARCHAR2--
+
+        BEGIN
+          v_ep_instance := get_uuid();
+
+          AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Record_ID',
+          v_Record_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+          AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Product',
+          v_Product_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+          AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Result',
+          NULL, NULL, v_apply_discount, NULL, NULL, NULL, NULL);
+          AD_EXTENSION_POINT_HANDLER(v_ep_instance, v_extension_point_id);
+
+          SELECT p_number INTO v_apply_discount
+          FROM ad_ep_instance_para
+          WHERE ad_ep_instance_id = v_ep_instance
+          AND parametername LIKE 'Result';
+
+          DELETE FROM ad_ep_instance_para
+          WHERE ad_ep_instance_id = v_ep_instance;
+        END;
+        END IF;
+
+        IF v_apply_discount = 1 THEN
+          if (v_apply_next = 'Y' AND Cur_Offer.PL_Order_Implementor is not null) then
+            v_method := Cur_Offer.PL_Order_Implementor || '('''||p_type||''', '''||Cur_Offer.M_Offer_ID||''','''||Cur_Order.id||''', '||v_precision||', '|| v_stdprecision||', '''||p_user_id||''', '''||v_taxIncluded||''')';
+            v_apply_next := AD_Execute_Function(v_method);
+          end if;
+        END IF;
+        v_apply_discount :=1;
+      end loop;
+    end if;
+  end loop;
+END M_PROMOTION_CALCULATE
+]]></body>
+    </function>
+  </database>

@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_TRANSACTION_TRG2">
+    <trigger name="M_TRANSACTION_TRG2" table="M_TRANSACTION" fires="before" insert="true" update="false" delete="false" foreach="row">
+      <body><![CDATA[
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_onhand      NUMBER;
+  v_reserved    NUMBER;
+  v_count       NUMBER;
+  v_productname m_product.name%TYPE;
+  v_isgeneric   CHAR(1);
+
+  v_attr_description    VARCHAR2(255);
+  v_product_value       VARCHAR2(40);
+  v_locator_value       VARCHAR2(40);
+  v_uom_value           VARCHAR2(3);
+
+BEGIN
+  IF (AD_isTriggerEnabled() = 'N') THEN RETURN;
+  END IF;
+
+  IF (INSERTING) THEN
+    IF (:NEW.movementqty < 0 AND :NEW.m_product_uom_id IS NULL) THEN
+      -- Check reservations. Reserved stock must be released before inserting the transacion.
+      SELECT count(1) INTO v_count
+      FROM dual
+      WHERE EXISTS (SELECT 1
+                    FROM m_reservation r
+                        JOIN m_reservation_stock rs ON r.m_reservation_id = rs.m_reservation_id
+                    WHERE r.res_status NOT IN ('CL', 'DR')
+                      AND r.m_product_id = :NEW.m_product_id
+                      AND r.c_uom_id = :NEW.c_uom_id
+                      AND COALESCE(rs.m_attributesetinstance_id, '0') = :NEW.m_attributesetinstance_id
+                      AND rs.m_locator_id = :NEW.m_locator_id);
+      IF (v_count > 0) THEN
+        SELECT COALESCE(sum(rs.quantity - COALESCE(rs.releasedqty,0)), 0)
+          INTO v_reserved
+        FROM m_reservation_stock rs
+            JOIN m_reservation r ON rs.m_reservation_id = r.m_reservation_id
+        WHERE r.res_status NOT IN ('CL', 'DR')
+          AND r.m_product_id = :NEW.m_product_id
+          AND r.c_uom_id = :NEW.c_uom_id
+          AND COALESCE(rs.m_attributesetinstance_id, '0') = :NEW.m_attributesetinstance_id
+          AND rs.m_locator_id = :NEW.m_locator_id;
+
+        SELECT sd.qtyonhand
+          INTO v_onhand
+        FROM m_storage_detail sd
+        WHERE sd.m_product_id = :NEW.m_product_id
+          AND sd.c_uom_id = :NEW.c_uom_id
+          AND COALESCE(sd.m_attributesetinstance_id, '0') = :NEW.m_attributesetinstance_id
+          AND sd.m_locator_id = :NEW.m_locator_id
+          AND sd.m_product_uom_id IS NULL;
+
+        IF (v_onhand - v_reserved < ABS(:NEW.movementqty) AND v_reserved > 0) THEN
+	  SELECT value
+            INTO v_product_value
+          FROM M_Product
+          WHERE M_Product_ID = :NEW.m_product_id;
+
+          IF(:NEW.m_attributesetinstance_id IS NOT NULL) THEN
+            SELECT description
+              INTO v_attr_description
+            FROM M_AttributeSetInstance
+            WHERE M_AttributeSetInstance_ID = :NEW.m_attributesetinstance_id;
+          END IF;
+
+          SELECT uomsymbol
+            INTO v_uom_value
+          FROM C_Uom
+          WHERE C_Uom_ID = :NEW.c_uom_id;
+
+          IF (:NEW.m_locator_id IS NOT NULL) THEN
+            SELECT value
+              INTO v_locator_value
+            FROM M_Locator
+            WHERE M_Locator_ID = :NEW.m_locator_id;
+          END IF;
+          IF (:NEW.Checkreservedqty='Y') THEN
+          RAISE_APPLICATION_ERROR(-20000, '@CannotTakeOutReservedStock@' || ' @of@' || ' @Product@: ' || v_product_value || ', @AttributeSetInstance@: ' || COALESCE(v_attr_description, '-') || ', @UOM@: ' || COALESCE(v_uom_value, '-') || ' @And@'||' @StorageBin@: ' || COALESCE(v_locator_value, '-'));
+          END IF;
+        END IF;
+      END IF;
+    END IF;
+    IF (:NEW.m_product_id IS NOT NULL) THEN
+      SELECT isgeneric, name INTO v_isgeneric, v_productname
+      FROM m_product
+      WHERE m_product_id = :NEW.m_product_id;
+      IF (v_isgeneric = 'Y') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@CannotUseGenericProduct@ ' || v_productname);
+      END IF;
+    END IF;
+  END IF;
+END M_TRANSACTION_TRG2
+]]></body>
+    </trigger>
+  </database>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="TransactionsWithMissingDataData" package="org.openbravo.advpaymentmngt.buildvalidation">
+  <SqlMethod name="dummy" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' AS documentno, '' AS fin_finacc_transaction_id, '' AS ad_client_id,
+             '' AS ad_org_id, '' AS ad_role_id
+      FROM DUAL
+    ]]></Sql>
+  </SqlMethod>
+  <SqlMethod name="selectTransactionsWithMissingData" type="preparedStatement" return="multiple">
+    <SqlMethodComment>This query returns transactions with deposit and payment amount equal to Zero and/or Transaction Date null and/or Accounting Date null</SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT ad_column_identifier('fin_finacc_transaction_id', fin_finacc_transaction_id, 'en_US') as documentno, fin_finacc_transaction_id, ad_client_id, ad_org_id 
+      FROM fin_finacc_transaction
+      WHERE  statementdate IS NULL 
+      OR dateacct IS NULL
+    ]]></Sql>
+  </SqlMethod>
+  <SqlMethod name="existAPRMbasetables" type="preparedStatement" return="boolean">
+    <SqlMethodComment>Check if the FIN_Finacc_Transaction table exist</SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT count(*) AS EXISTING
+       FROM ad_table
+       WHERE ad_table_id = '4D8C3B3C31D1410DA046140C9F024D17'
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_SIMPLE_TRIGGERS">
+    <table name="OBSCHED_SIMPLE_TRIGGERS" primaryKey="OBSCHED_SIM_TRI_PK">
+      <column name="OBSCHED_SIMPLE_TRIGGERS_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_GROUP" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="REPEAT_COUNT" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="REPEAT_INTERVAL" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TIMES_TRIGGERED" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="OBSCHED_TRIGGERS" name="OBSCHED_SIM_TRI_TRI_FK">
+        <reference local="SCHED_NAME" foreign="SCHED_NAME"/>
+        <reference local="TRIGGER_NAME" foreign="TRIGGER_NAME"/>
+        <reference local="TRIGGER_GROUP" foreign="TRIGGER_GROUP"/>
+      </foreign-key>
+      <unique name="OBSCHED_SIM_TRI_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="TRIGGER_NAME"/>
+        <unique-column name="TRIGGER_GROUP"/>
+      </unique>
+    </table>
+  </database>

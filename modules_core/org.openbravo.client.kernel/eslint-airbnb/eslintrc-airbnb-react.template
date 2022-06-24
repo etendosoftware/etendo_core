@@ -1,0 +1,35 @@
+{
+  "extends": [
+    "airbnb",
+    "airbnb/hooks",
+    "plugin:prettier/recommended"
+  ],
+
+  "overrides": [
+    {
+      "files": ["*.jsx", "*.js"]
+    }
+  ],
+
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module",
+    "allowImportExportEverywhere": true
+  },
+
+  "rules": {
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "packageDir": [ packageDirPlaceholder ],
+        "devDependencies": [
+          "**/*.stories.*",
+          "**/?(*.)+(test).[jt]s?(x)",
+          "**/src-test/**"
+        ]
+      }
+    ],
+    "class-methods-use-this": "off",
+    "no-use-before-define": ["error", "nofunc"]
+  }
+}

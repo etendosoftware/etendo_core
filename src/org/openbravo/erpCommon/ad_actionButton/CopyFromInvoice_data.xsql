@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2020 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="CopyFromInvoiceData" package="org.openbravo.erpCommon.ad_actionButton">
+  <SqlMethod name="select" type="preparedStatement" connection="true" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT
+        C_INVOICELINE.C_UOM_ID, C_INVOICELINE.QTYINVOICED, C_INVOICELINE.C_InvoiceLine_ID,C_INVOICELINE.PRICELIST, 
+        C_INVOICELINE.PRICELIMIT, C_INVOICELINE.PRICEACTUAL, C_INVOICELINE.LINENETAMT,
+        '' AS AD_ORG_ID, '' AS AD_CLIENT_ID, 
+        '' AS C_BPartner_Location_ID, 
+        '' AS DateInvoiced, '' AS C_Project_ID,
+        C_INVOICELINE.M_PRODUCT_ID AS PRODUCT_ID, 
+        '' AS C_BPARTNER_ID, '' AS C_CURRENCY_ID,
+        '' AS M_PRICELIST_ID, '' AS LINE,
+        '' AS ISSOTRX, '' AS TAXDATE,
+        '' AS PRICESTD, '' AS VALIDFROM,
+        '' AS StdPrecision, '' AS PricePrecision, '' AS EnforcePriceLimit,
+        C_INVOICELINE.ACCOUNT_ID AS ACCOUNT_ID,
+        C_AUM, AUMQTY,
+        M_PRODUCT_UOM_ID
+        FROM C_INVOICELINE 
+        LEFT JOIN C_INVOICE ON C_INVOICE.C_INVOICE_ID = C_INVOICELINE.C_INVOICE_ID
+        LEFT OUTER JOIN C_INVOICE_DISCOUNT ON C_INVOICELINE.C_INVOICE_DISCOUNT_ID = C_INVOICE_DISCOUNT.C_INVOICE_DISCOUNT_ID
+        LEFT OUTER JOIN C_BPARTNER_DISCOUNT ON C_INVOICE_DISCOUNT.C_DISCOUNT_ID = C_BPARTNER_DISCOUNT.C_DISCOUNT_ID AND C_BPARTNER_DISCOUNT.C_BPARTNER_ID = C_INVOICE.C_BPARTNER_ID
+        WHERE C_INVOICELINE.C_Invoice_ID = ?
+        AND C_INVOICELINE.AD_CLIENT_ID IN ('1')
+        AND C_INVOICELINE.AD_ORG_ID IN ('1')
+        AND C_INVOICELINE.ISACTIVE = 'Y'
+        AND (APPLYINORDER IS NULL OR APPLYINORDER <> 'N')
+        AND C_INVOICELINE.C_INVOICE_DISCOUNT_ID IS NULL
+        ORDER BY C_INVOICELINE.LINE
+      ]]>
+    </Sql>
+    <Parameter name="cInvoiceId"/>
+    <Parameter name="userclient" optional="true" type="replace" after="AND C_INVOICELINE.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="userorg" optional="true" type="replace" after="AND C_INVOICELINE.AD_ORG_ID IN (" text="'1'"/>
+  </SqlMethod>
+  <SqlMethod name="insert" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO C_INVOICELINE (C_InvoiceLine_ID, C_Invoice_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, 
+            CREATED, CREATEDBY, UPDATED, UPDATEDBY, LINE, DESCRIPTION, M_PRODUCT_ID, 
+            QTYINVOICED, PRICELIST, PRICEACTUAL, PRICELIMIT, LINENETAMT, C_CHARGE_ID, CHARGEAMT, C_UOM_ID, C_TAX_ID, 
+            S_RESOURCEASSIGNMENT_ID, M_ATTRIBUTESETINSTANCE_ID, ISDESCRIPTION, QUANTITYORDER, M_PRODUCT_UOM_ID, 
+            PRICESTD, ACCOUNT_ID,FINANCIAL_INVOICE_LINE,
+            gross_unit_price, line_gross_amount, grosspricelist, grosspricestd,
+            isdeferred, defplantype, periodnumber, c_period_id,
+            C_PROJECT_ID, A_ASSET_ID, C_COSTCENTER_ID, USER1_ID, USER2_ID,
+            C_AUM, AUMQTY
+        )
+        SELECT ?, ?, ?, ?, 'Y', now(), ?, now(), ?,
+        (SELECT COALESCE(MAX(LINE),0)+10 FROM C_InvoiceLine WHERE C_Invoice_ID = ?), l.DESCRIPTION, l.M_PRODUCT_ID,
+        TO_NUMBER(?), TO_NUMBER(?), TO_NUMBER(?), TO_NUMBER(?), TO_NUMBER(?), l.C_CHARGE_ID, l.CHARGEAMT, l.C_UOM_ID, ?,
+        l.S_RESOURCEASSIGNMENT_ID, l.M_ATTRIBUTESETINSTANCE_ID, l.ISDESCRIPTION, l.QUANTITYORDER, l.M_PRODUCT_UOM_ID,
+        l.PRICESTD, l.ACCOUNT_ID,l.FINANCIAL_INVOICE_LINE,
+        TO_NUMBER(?), TO_NUMBER(?), TO_NUMBER(?), TO_NUMBER(?),
+        l.isdeferred, l.defplantype, l.periodnumber, l.c_period_id,
+        COALESCE(l.C_Project_ID, inv.C_Project_ID) AS C_Project_ID,
+        COALESCE(l.A_Asset_ID, inv.A_Asset_ID) AS A_Asset_ID,
+        COALESCE(l.C_Costcenter_ID, inv.C_Costcenter_ID) AS C_Costcenter_ID,
+        COALESCE(l.User1_ID, inv.User1_ID) AS User1_ID,
+        COALESCE(l.User2_ID, inv.User2_ID) AS User2_ID,
+        ?, TO_NUMBER(?)
+        FROM C_INVOICELINE l, C_Invoice inv
+        WHERE C_INVOICELINE_ID = ? 
+        AND l.C_Invoice_ID = inv.C_Invoice_ID
+      ]]>
+    </Sql>
+    <Parameter name="cNewInvoiceId"/>
+    <Parameter name="cInvoiceId"/>
+    <Parameter name="adClientId"/>
+    <Parameter name="adOrgId"/>
+    <Parameter name="adUserId"/>
+    <Parameter name="adUserId"/>
+    <Parameter name="cInvoiceId"/>
+    <Parameter name="qtyInvoiced"/>
+    <Parameter name="priceList"/>
+    <Parameter name="priceActual"/>
+    <Parameter name="priceLimit"/>
+    <Parameter name="lineNetAmount"/>
+    <Parameter name="cTaxId"/>
+    <Parameter name="priceGross"/>
+    <Parameter name="amtGross"/>
+    <Parameter name="priceListGros"/>
+    <Parameter name="priceStdGross"/>
+    <Parameter name="cAum"/>
+    <Parameter name="aumQty"/>
+    <Parameter name="cInvoicelineId"/>
+  </SqlMethod>
+  <SqlMethod name="insertAcctDimension" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO C_INVOICELINE_ACCTDIMENSION(C_INVOICELINE_ACCTDIMENSION_ID, AD_CLIENT_ID, AD_ORG_ID,
+        ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, C_INVOICELINE_ID, AMT, C_PROJECT_ID, C_CAMPAIGN_ID,
+        USER1_ID, USER2_ID, C_ACTIVITY_ID, C_COSTCENTER_ID, C_BPARTNER_ID, M_PRODUCT_ID)
+        SELECT GET_UUID(), ?, AD_ORG_ID, 'Y', NOW(), ?, NOW(), ?, ?, AMT, C_PROJECT_ID, C_CAMPAIGN_ID, USER1_ID, USER2_ID, 
+        C_ACTIVITY_ID, C_COSTCENTER_ID, C_BPARTNER_ID, M_PRODUCT_ID
+        FROM C_INVOICELINE_ACCTDIMENSION WHERE C_INVOICELINE_ID = ? AND ISACTIVE='Y'
+      ]]>
+    </Sql>
+    <Parameter name="adClientId"/>
+    <Parameter name="adUserId"/>
+    <Parameter name="adUserId"/>
+    <Parameter name="cNewInvoicelineId"/>
+    <Parameter name="cOldInvoicelineId"/>
+  </SqlMethod>
+  <SqlMethod name="selectInvoice" type="preparedStatement" connection="true" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT I.AD_ORG_ID,I.AD_CLIENT_ID,I.C_BPartner_Location_ID,I.DateInvoiced,I.C_Project_ID,
+         I.C_Bpartner_ID,I.C_Currency_ID,I.M_Pricelist_ID,COALESCE(MAX(IL.Line),0) AS LINE,I.IsSOTrx AS ISSOTRX, I.TaxDate,
+         IL.PRICELIST, IL.PRICEACTUAL, IL.PRICELIMIT, IL.LINENETAMT,
+         C_AUM, AUMQTY
+         FROM C_Invoice I LEFT JOIN C_INVOICELINE IL ON I.C_INVOICE_ID = IL.C_INVOICE_ID 
+        WHERE I.C_Invoice_ID = ? 
+        AND I.ISACTIVE = 'Y'
+        GROUP BY I.AD_ORG_ID,I.AD_CLIENT_ID,I.C_BPartner_Location_ID,I.DateInvoiced,I.C_Project_ID,
+         I.C_Bpartner_ID,I.C_Currency_ID,I.M_Pricelist_ID,I.IsSOTrx, I.TaxDate,IL.PRICELIST, IL.PRICEACTUAL, IL.PRICELIMIT, IL.LINENETAMT,
+         C_AUM, AUMQTY
+      ]]>
+    </Sql>
+    <Parameter name="cInvoiceId"/>
+  </SqlMethod>
+  <SqlMethod name="selectPriceForProduct" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT M_BOM_PriceStd(p.M_Product_ID,pv.M_PriceList_Version_ID) AS PriceStd,
+        M_BOM_PriceList(p.M_Product_ID,pv.M_PriceList_Version_ID) AS PriceList,
+        M_BOM_PriceLimit(p.M_Product_ID,pv.M_PriceList_Version_ID) AS PriceLimit,
+        p.C_UOM_ID,pv.ValidFrom,pl.C_Currency_ID 
+        FROM M_Product p, M_ProductPrice pp, M_Pricelist pl, M_PriceList_Version pv 
+        WHERE p.M_Product_ID=pp.M_Product_ID
+        AND pp.M_PriceList_Version_ID=pv.M_PriceList_Version_ID
+        AND pv.M_PriceList_ID=pl.M_PriceList_ID
+        AND pv.IsActive='Y'
+        AND p.M_Product_ID = ?
+       AND pl.M_PriceList_ID = ?
+        ORDER BY pv.ValidFrom DESC
+      ]]>
+    </Sql>
+    <Parameter name="MProductID"/>
+    <Parameter name="MPriceListID"/>
+  </SqlMethod>
+  <SqlMethod name="getOffersStdPrice" type="preparedStatement" return="String" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      SELECT ROUND(TO_NUMBER(?),
+                    (SELECT PRICEPRECISION 
+                       FROM C_CURRENCY C,
+                            C_INVOICE    I 
+                      WHERE C.C_CURRENCY_ID = I.C_CURRENCY_ID
+                        AND I.C_INVOICE_ID = ?)) as TOTAL FROM DUAL
+     </Sql>
+    <Parameter name="pricestd"/>
+    <Parameter name="invoiceid"/>
+  </SqlMethod>
+</SqlClass>

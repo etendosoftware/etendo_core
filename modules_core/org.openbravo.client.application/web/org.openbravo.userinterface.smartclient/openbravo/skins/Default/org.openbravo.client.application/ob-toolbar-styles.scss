@@ -1,0 +1,352 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an 'AS IS'
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2010-2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+
+@import 'module.scss';
+
+/* OBToolbar */
+
+.OBToolbar {
+  background-color: $color1;
+}
+
+/* OBToolbarIconButton */
+
+.OBToolbarIconButton,
+.OBToolbarIconButtonOver,
+.OBToolbarIconButtonDown,
+.OBToolbarIconButtonFocused,
+.OBToolbarIconButtonFocusedOver,
+.OBToolbarIconButtonFocusedDown,
+.OBToolbarIconButtonSelected,
+.OBToolbarIconButtonSelectedOver,
+.OBToolbarIconButtonSelectedDown,
+.OBToolbarIconButtonSelectedFocused,
+.OBToolbarIconButtonSelectedFocusedOver,
+.OBToolbarIconButtonSelectedFocusedDown,
+.OBToolbarIconButtonSelectedDisabled,
+.OBToolbarIconButtonDisabled {
+  color: transparent;
+  font-size: 0pt;
+}
+
+.OBToolbarIconButton {
+}
+
+.OBToolbarIconButtonDisabledProgress {
+  border: 1px solid $color1;
+}
+
+.OBToolbarIconButtonFocused,
+.OBToolbarIconButtonFocusedOver,
+.OBToolbarIconButtonFocusedDown,
+.OBToolbarIconButtonSelectedFocused,
+.OBToolbarIconButtonSelectedFocusedOver,
+.OBToolbarIconButtonSelectedFocusedDown {
+  border: 1px solid $color6 !important;
+}
+
+.OBToolbarIconButtonOver,
+.OBToolbarIconButtonFocusedOver,
+.OBToolbarIconButtonSelectedOver,
+.OBToolbarIconButtonSelectedFocusedOver {
+  background-color: $color1;
+ }
+
+.OBToolbarIconButtonOver,
+.OBToolbarIconButtonSelectedOver {
+  border: 2px solid $color6 !important;
+  border-radius: 6px;
+  background-color: $color7;
+}
+
+.OBToolbarIconButtonSelected,
+.OBToolbarIconButtonSelectedFocused,
+.OBToolbarIconButtonDown,
+.OBToolbarIconButtonFocusedDown,
+.OBToolbarIconButtonSelectedDown,
+.OBToolbarIconButtonSelectedFocusedDown {
+  background-color: $color6;
+}
+
+.OBToolbarIconButtonSelected,
+.OBToolbarIconButtonDown,
+.OBToolbarIconButtonSelectedDown {
+  border: 1px solid $color6 !important;
+}
+
+.OBToolbarIconButtonMenu {
+  padding: 10px 1px 0px 0px !important;
+  width: 23px;  /* Hack to avoid an IE7/8 off-center */
+}
+
+.OBToolbarIconButtonDisabled {
+    opacity: 40%;
+}
+
+.OBToolbarIconButton_icon_newDoc {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-newdoc.png');
+}
+
+.OBToolbarIconButton_icon_newRow {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-newrow.png');
+}
+
+.OBToolbarIconButton_icon_save {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-save.png');
+}
+
+.OBToolbarIconButton_icon_saveclose {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-saveclose.png');
+}
+
+.OBToolbarIconButton_icon_savecloseX {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-savecloseX.png');
+}
+
+.OBToolbarIconButton_icon_link {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-link.png');
+}
+
+.OBToolbarIconButton_icon_createCopy {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-createcopy.png');
+}
+
+.OBToolbarIconButton_icon_eliminate {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-eliminate.png');
+}
+
+.OBToolbarIconButton_icon_export {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-export.png');
+}
+
+.OBToolbarIconButton_icon_email {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-email.png');
+}
+
+.OBToolbarIconButton_icon_print {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-print.png');
+}
+
+.OBToolbarIconButton_icon_undo {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-undo.png');
+}
+
+.OBToolbarIconButton_icon_redo {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-redo.png');
+}
+
+.OBToolbarIconButton_icon_saveView {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-saveview.png');
+}
+
+.OBToolbarIconButton_icon_saveProgress {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-progress.gif');  /* Generated @ http://www.ajaxload.info/ */ /* Indicator type: 'Snake' - Background color: $color1 - Transparent background - Foreground color: #FFFFFF */
+}
+
+.OBToolbarIconButton_icon_sum {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-sum.png');
+}
+
+.OBToolbarIconButton_icon_splitView {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-splitview.png');
+}
+
+.OBToolbarIconButton_icon_audit {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-audit.png');
+}
+
+.OBToolbarIconButton_icon_attach {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-attach.png');
+}
+
+.OBToolbarIconButton_icon_attachExists {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-attach-box.png');
+}
+
+.OBToolbarIconButton_icon_attachProgress {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-progress.gif');  /* Generated @ http://www.ajaxload.info/ */ /* Indicator type: 'Snake' - Background color: $color1 - Transparent background - Foreground color: #FFFFFF */
+}
+
+.OBToolbarIconButton_icon_attachExistsProgress {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-progress.gif');  /* Generated @ http://www.ajaxload.info/ */ /* Indicator type: 'Snake' - Background color: $color1 - Transparent background - Foreground color: #FFFFFF */
+}
+
+.OBToolbarIconButton_icon_innerJoin {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-innerjoin.png');
+}
+
+.OBToolbarIconButton_icon_outerJoin {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-outerjoin.png');
+}
+
+.OBToolbarIconButton_icon_favourites {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-fav.png');
+}
+
+.OBToolbarIconButton_icon_refresh {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-refresh.png');
+}
+
+.OBToolbarIconButton_icon_tree {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-tree.png');
+}
+
+.OBToolbarIconButton_icon_treeGrid {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-tree.png');
+}
+
+.OBToolbarIconButton_icon_clone {
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url($moduleUrlPath + '/images/toolbar/iconButton-clone.png');
+}
+
+/* OBToolbarTextButton */
+
+.OBToolbarTextButton,
+.OBToolbarTextButtonOver,
+.OBToolbarTextButtonDown,
+.OBToolbarTextButtonFocused,
+.OBToolbarTextButtonFocusedOver,
+.OBToolbarTextButtonFocusedDown,
+.OBToolbarTextButtonSelected,
+.OBToolbarTextButtonSelectedOver,
+.OBToolbarTextButtonSelectedDown,
+.OBToolbarTextButtonSelectedFocused,
+.OBToolbarTextButtonSelectedFocusedOver,
+.OBToolbarTextButtonSelectedFocusedDown,
+.OBToolbarTextButtonDisabled,
+.OBToolbarTextButtonSelectedDisabled,
+
+.OBToolbarTextButtonParent,
+.OBToolbarTextButtonParentOver,
+.OBToolbarTextButtonParentDown,
+.OBToolbarTextButtonParentFocused,
+.OBToolbarTextButtonParentFocusedOver,
+.OBToolbarTextButtonParentFocusedDown,
+.OBToolbarTextButtonParentSelected,
+.OBToolbarTextButtonParentSelectedOver,
+.OBToolbarTextButtonParentSelectedDown,
+.OBToolbarTextButtonParentSelectedFocused,
+.OBToolbarTextButtonParentSelectedFocusedOver,
+.OBToolbarTextButtonParentSelectedFocusedDown,
+.OBToolbarTextButtonParentDisabled,
+.OBToolbarTextButtonParentSelectedDisabled {
+    background-color: #fad614;
+    border-radius: 7px;
+    color: #202452;
+    font-family: "Poppins","lucida sans",sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding-bottom: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 5px;
+    text-transform: d;
+    display: block;
+    margin: 10px auto;
+    vertical-align: middle;
+    text-transform: uppercase;
+
+    &:hover {
+        opacity: 80%;
+    }
+}
+
+
+
+.OBToolbarTextButtonSelected,
+.OBToolbarTextButtonSelectedFocused,
+.OBToolbarTextButtonDown,
+.OBToolbarTextButtonFocusedDown,
+.OBToolbarTextButtonSelectedDown,
+.OBToolbarTextButtonSelectedFocusedDown,
+
+.OBToolbarTextButtonParentSelected,
+.OBToolbarTextButtonParentSelectedFocused,
+.OBToolbarTextButtonParentDown,
+.OBToolbarTextButtonParentFocusedDown,
+.OBToolbarTextButtonParentSelectedDown,
+.OBToolbarTextButtonParentSelectedFocusedDown {
+}
+
+.OBToolbarTextButtonDisabled,
+.OBToolbarTextButtonSelectedDisabled,
+
+.OBToolbarTextButtonParentDisabled,
+.OBToolbarTextButtonParentSelectedDisabled {
+  color: #777;
+  background-color: #eff1f7;
+}

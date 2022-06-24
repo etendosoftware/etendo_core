@@ -1,0 +1,267 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_INTERNAL_CONSUMPTION_POST1">
+    <function name="M_INTERNAL_CONSUMPTION_POST1" type="NULL">
+      <parameter name="pinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_internal_cosumption_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_action" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  -- Logistice
+  v_ResultStr VARCHAR2(2000):='';
+  v_Message VARCHAR2(2000):='';
+  Record_ID VARCHAR2(32);
+  v_Result NUMBER:=1;
+  -- Parameter
+  TYPE RECORD IS REF CURSOR;
+  Cur_Parameter RECORD;
+
+  -- Parameter Variables
+  v_IsProcessing CHAR(1) ;
+  v_IsProcessed VARCHAR2(60) ;
+  v_MoveDate DATE;
+  v_Client_ID VARCHAR2(32) ;
+  v_Org_ID VARCHAR2(32);
+  v_User VARCHAR2(32);
+  v_line NUMBER;
+  v_Count NUMBER:=0;
+  v_action VARCHAR2(60):='CO';
+  v_status M_Internal_Consumption.status%TYPE;
+  v_name M_Internal_Consumption.name%TYPE;
+  v_productname m_product.name%TYPE;
+BEGIN
+  --  Update AD_PInstance
+  IF (pinstance_id IS NOT NULL) THEN
+    DBMS_OUTPUT.PUT_LINE('Updating PInstance - Processing ' || PInstance_ID) ;
+    v_ResultStr:='PInstanceNotFound';
+    AD_UPDATE_PINSTANCE(PInstance_ID, NULL, 'Y', NULL, NULL) ;
+  END IF;
+BEGIN --BODY
+  -- Get Parameters
+  IF (pinstance_id IS NOT NULL) THEN
+    v_ResultStr:='ReadingParameters';
+    FOR Cur_Parameter IN (
+      SELECT i.Record_ID, i.AD_User_ID, p.ParameterName,
+          p.P_String, p.P_Number, p.P_Date
+      FROM AD_PInstance i
+             LEFT JOIN AD_PInstance_Para p ON i.AD_PInstance_ID=p.AD_PInstance_ID
+      WHERE i.AD_PInstance_ID=PInstance_ID
+      ORDER BY p.SeqNo
+    ) LOOP
+      IF (upper(cur_parameter.parametername) LIKE 'ACTION') THEN
+        v_action := cur_parameter.p_string;
+      END IF;
+      Record_ID := Cur_Parameter.Record_ID;
+      v_User := Cur_Parameter.AD_User_ID;
+    END LOOP; -- Get Parameter
+  ELSE
+    record_id := p_internal_cosumption_id;
+    v_action := p_action;
+  END IF;
+  DBMS_OUTPUT.PUT_LINE('  Record_ID=' || Record_ID) ;
+  -- Reading Internal_Consumption
+  SELECT MovementDate, Processing, Processed, AD_Client_ID,
+         AD_Org_ID, COALESCE(v_user, updatedby), status, name
+    INTO v_MoveDate, v_IsProcessing, v_IsProcessed, v_Client_ID,
+         v_Org_ID, v_user, v_status, v_name
+  FROM M_Internal_Consumption
+  WHERE M_Internal_Consumption_ID=Record_ID  FOR UPDATE;
+  IF (v_IsProcessing = 'Y') THEN
+    RAISE_APPLICATION_ERROR(-20000, '@OtherProcessActive@') ;
+  END IF;
+  IF (v_IsProcessed = 'Y' AND v_action <> 'VO') THEN
+    RAISE_APPLICATION_ERROR(-20000, '@AlreadyPosted@') ;
+  END IF;
+
+  v_ResultStr:='CheckingRestrictions';
+  SELECT COUNT(*), MAX(line)
+    INTO v_Count, v_line
+  FROM M_Internal_ConsumptionLine M, M_Product P
+  WHERE M.M_PRODUCT_ID=P.M_PRODUCT_ID
+    AND P.M_ATTRIBUTESET_ID IS NOT NULL
+    AND (P.ATTRSETVALUETYPE IS NULL OR P.ATTRSETVALUETYPE <> 'F')
+    AND (SELECT ISONEATTRSETVALREQUIRED FROM M_ATTRIBUTESET WHERE M_ATTRIBUTESET_ID = P.M_ATTRIBUTESET_ID) = 'Y'
+    AND COALESCE(M.M_ATTRIBUTESETINSTANCE_ID, '0') = '0'
+    AND M.M_Internal_Consumption_ID=Record_ID;
+  IF (v_Count <> 0) THEN
+    RAISE_APPLICATION_ERROR(-20000, '@Inline@'||' '||v_line||' '||'@productWithoutAttributeSet@') ;
+  END IF;
+
+  --Checking if the Internal consumption has lines
+  SELECT count(*)
+  INTO v_Count
+  FROM M_Internal_ConsumptionLine
+  WHERE M_Internal_Consumption_ID=Record_ID;
+  IF (v_Count = 0) THEN
+    RAISE_APPLICATION_ERROR(-20000, '@InternalConsuptionNoLines@') ;
+  END IF;
+
+  SELECT count(*) INTO v_count
+  FROM dual
+  WHERE EXISTS (
+      SELECT 1
+      FROM m_internal_consumptionline icl JOIN m_product p ON icl.m_product_id = p.m_product_id
+      WHERE icl.m_internal_consumption_id = record_id
+        AND p.isgeneric = 'Y');
+  IF (v_count > 0) THEN
+    SELECT max(p.name) INTO v_productname
+    FROM m_internal_consumptionline icl JOIN m_product p ON icl.m_product_id = p.m_product_id
+    WHERE icl.m_internal_consumption_id = record_id
+      AND p.isgeneric = 'Y';
+    RAISE_APPLICATION_ERROR(-20000, '@CannotUseGenericProduct@ ' || v_productName);
+  END IF;
+  
+  IF (v_action IN ('CO')) THEN
+    /**
+    * Complete action: Create records on m_transaction and update status
+    */
+    DECLARE
+      Cur_MoveLine RECORD;
+    BEGIN
+      FOR Cur_MoveLine IN (
+          SELECT icl.*
+          FROM M_Internal_ConsumptionLine icl
+          JOIN M_Product p
+          ON icl.M_Product_ID = p.M_Product_ID
+          WHERE icl.M_Internal_Consumption_ID = Record_ID
+          AND p.IsStocked = 'Y'
+          ORDER BY icl.Line
+      ) LOOP
+        v_ResultStr:='Transaction for line' || Cur_MoveLine.Line;
+
+        INSERT INTO M_Transaction (
+            M_Transaction_ID, AD_Client_ID, AD_Org_ID, IsActive,
+            Created, CreatedBy, Updated, UpdatedBy,
+            MovementType, M_Locator_ID, M_Product_ID, M_AttributeSetInstance_ID,
+            MovementDate, MovementQty, M_Internal_ConsumptionLine_ID, M_Product_UOM_ID,
+            QuantityOrder, C_UOM_ID
+        ) VALUES (
+            get_uuid(), Cur_MoveLine.AD_Client_ID, Cur_MoveLine.AD_Org_ID, 'Y',
+            now(), v_User, now(), v_User,
+            'D-', Cur_MoveLine.M_Locator_ID, Cur_MoveLine.M_Product_ID, COALESCE(Cur_MoveLine.M_AttributeSetInstance_ID, '0'),
+            v_MoveDate, (Cur_MoveLine.MovementQty * -1), Cur_MoveLine.M_Internal_ConsumptionLine_ID, Cur_MoveLine.M_Product_UOM_ID,
+            (Cur_MoveLine.QuantityOrder * -1), Cur_MoveLine.C_UOM_ID
+        );
+        M_Check_Stock(Cur_MoveLine.M_Product_ID, v_Client_ID, v_Org_ID, v_Result, v_Message, Cur_MoveLine.M_Locator_ID) ;
+        IF (v_Result = 0) THEN
+          RAISE_APPLICATION_ERROR(-20000, v_Message||' '||'@line@'||' '||Cur_MoveLine.line) ;
+        END IF;
+      END LOOP;
+      v_ResultStr:='ProcessingMovement';
+      UPDATE M_Internal_Consumption
+      SET Processed = 'Y',
+          Status = 'CO',
+          Updated = now(),
+          UpdatedBy = v_User
+      WHERE M_Internal_Consumption_ID = Record_ID;
+
+    END;
+  ELSIF (v_action IN ('VO')) THEN
+    /*
+    * Void Internal consumption.
+    *
+    * Create a new internal consumption negating the quantities and post it.
+    */
+    DECLARE
+      v_voidintconsumption_id VARCHAR2(32);
+    BEGIN
+      -- Checks
+      IF (v_status <> 'CO') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@ActionNotSupported@');
+      END IF;
+      v_voidintconsumption_id := get_uuid();
+      -- Create void internal consumption.
+      INSERT INTO m_internal_consumption (
+          m_internal_consumption_id, ad_client_id, ad_org_id, isactive,
+          created, createdby, updated, updatedby,
+          name, movementdate
+      ) VALUES (
+          v_voidintconsumption_id, v_client_id, v_org_id, 'Y',
+          now(), v_user, now(), v_user,
+          'VO: '|| v_name, v_MoveDate
+      );
+      
+      INSERT INTO m_internal_consumptionline (
+        m_internal_consumptionline_id, ad_client_id, ad_org_id, isactive,
+        created, createdby, updated, updatedby,
+        m_internal_consumption_id, line, m_locator_id,
+        m_product_id, m_attributesetinstance_id,
+        movementqty, c_uom_id, m_product_uom_id, quantityorder,
+        description, void_intconsumption_line_id
+      ) 
+      SELECT get_uuid(), ad_client_id, ad_org_id, isactive,
+          now(), v_user, now(), v_user,
+          v_voidintconsumption_id, line, m_locator_id,
+          m_product_id, m_attributesetinstance_id,
+          movementqty * -1, c_uom_id, m_product_uom_id, quantityorder * -1,
+          description, m_internal_consumptionline_id
+      FROM m_internal_consumptionline
+      WHERE m_internal_consumption_id = record_id;
+      
+      --Update void
+      UPDATE m_internal_consumption
+      SET status = 'VO',
+          updated = now(),
+          updatedby = v_user
+      WHERE m_internal_consumption_id = record_id;
+      -- post reveral internal consumption
+      M_INTERNAL_CONSUMPTION_POST1(NULL, v_voidintconsumption_id, 'CO');
+      -- update reversal internal consumption
+      UPDATE m_internal_consumption
+      SET status = 'VO',
+          updated = now(),
+          updatedby = v_user
+      WHERE m_internal_consumption_id = v_voidintconsumption_id;
+
+      -- transactions related with original inout and with voided inout will be mark as is cost permanent
+      UPDATE M_TRANSACTION TRX
+      SET ISCOSTPERMANENT='Y'
+      WHERE TRX.M_INTERNAL_CONSUMPTIONLINE_ID IN (SELECT M_INTERNAL_CONSUMPTIONLINE_ID 
+                                   FROM M_INTERNAL_CONSUMPTIONLINE
+                                   WHERE (M_INTERNAL_CONSUMPTION_ID = record_id
+                                          OR M_INTERNAL_CONSUMPTION_ID =  v_voidintconsumption_id));
+    END;
+  END IF;
+   v_ResultStr := 'UnLockingMovement';
+  --<<END_PROCESSING>>
+  --  Update AD_PInstance
+  DBMS_OUTPUT.PUT_LINE('Updating PInstance - Finished ' || v_Message) ;
+  IF (pinstance_id IS NOT NULL) THEN
+    AD_UPDATE_PINSTANCE(PInstance_ID, v_User, 'N', v_Result, v_Message) ;
+  END IF;
+  RETURN;
+END; --BODY
+EXCEPTION
+WHEN OTHERS THEN
+  v_ResultStr:= '@ERROR=' || SQLERRM;
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  IF (pinstance_id IS NOT NULL) THEN
+    ROLLBACK;
+    AD_UPDATE_PINSTANCE(PInstance_ID, NULL, 'N', 0, v_ResultStr) ;
+  ELSE
+    RAISE;
+  END IF;
+  RETURN;
+END M_INTERNAL_CONSUMPTION_POST1
+]]></body>
+    </function>
+  </database>

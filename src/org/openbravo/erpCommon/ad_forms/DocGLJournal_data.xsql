@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ ******************************************************************************
+ * The contents of this file are subject to the   Compiere License  Version 1.1
+ * ("License"); You may not use this file except in compliance with the License
+ * You may obtain a copy of the License at http://www.compiere.org/license.html
+ * Software distributed under the License is distributed on an  "AS IS"  basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * The Original Code is                  Compiere  ERP & CRM  Business Solution
+ * The Initial Developer of the Original Code is Jorg Janke  and ComPiere, Inc.
+ * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke, parts
+ * created by ComPiere are Copyright (C) ComPiere, Inc.;   All Rights Reserved.
+ * Contributor(s): Openbravo SLU
+ * Contributions are Copyright (C) 2001-2017 Openbravo S.L.U.
+ ******************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="DocGLJournalData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT G.AD_CLIENT_ID, G.AD_ORG_ID, G.DOCUMENTNO, G.DATEACCT, G.DATEDOC,
+        G.C_CURRENCY_ID, G.C_DOCTYPE_ID, G.POSTED, G.POSTINGTYPE, G.ISOPENING,
+        G.C_CAMPAIGN_ID, G.C_PROJECT_ID, G.USER1_ID, G.USER2_ID, G.C_COSTCENTER_ID,
+        G.A_ASSET_ID, G.C_BPARTNER_ID, G.M_PRODUCT_ID, G.C_PERIOD_ID AS PERIOD,
+        '' AS FININVCOUNT,'' AS FINACCTCOUNT, G.MULTI_GL
+        FROM GL_JOURNAL G
+        WHERE AD_CLIENT_ID=?
+        AND GL_JOURNAL_ID=?
+     ]]>
+     </Sql>
+     <Parameter name="client"/>
+     <Parameter name="id"/>
+   </SqlMethod>
+  <SqlMethod name="selectAcctSchema" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT C_ACCTSCHEMA_ID
+        FROM GL_JOURNAL G
+        WHERE AD_CLIENT_ID=?
+        AND GL_JOURNAL_ID=?
+     ]]>
+     </Sql>
+     <Parameter name="client"/>
+     <Parameter name="id"/>
+   </SqlMethod>
+   <SqlMethod name="periodOpen" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql>
+      <![CDATA[
+      select max(c_period.c_period_id) as period
+      from c_period, c_periodcontrol
+      where c_period.c_period_id = c_periodcontrol.c_period_id
+      and c_periodcontrol.docbasetype = 'GLJ'
+      and c_periodcontrol.periodstatus = 'O'
+      and c_periodcontrol.c_period_id = ?
+      ]]>
+      </Sql>
+      <Parameter name="period"/>
+   </SqlMethod>   
+ 
+ <SqlMethod name="selectFinInvCount" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT (SELECT COUNT(DISTINCT GL_JOURNALLINE.ACCOUNT_ID)
+               FROM GL_JOURNALLINE
+                 INNER JOIN GL_JOURNAL ON GL_JOURNALLINE.GL_JOURNAL_ID = GL_JOURNAL.GL_JOURNAL_ID
+               WHERE GL_JOURNAL.MULTI_GL = 'Y'
+               AND   GL_JOURNAL.GL_JOURNAL_ID = ?) AS FININVCOUNT,
+               (SELECT COUNT(DISTINCT GLACT.C_GLITEM_ID)
+                FROM GL_JOURNALLINE
+                  INNER JOIN GL_JOURNAL ON GL_JOURNALLINE.GL_JOURNAL_ID = GL_JOURNAL.GL_JOURNAL_ID
+                  JOIN C_GLITEM_ACCT GLACT ON (GL_JOURNALLINE.ACCOUNT_ID = GLACT.C_GLITEM_ID)
+                WHERE GL_JOURNAL.MULTI_GL = 'Y'
+                AND   GL_JOURNAL.GL_JOURNAL_ID = ?
+                AND   GLACT.C_ACCTSCHEMA_ID = ?) AS FINACCTCOUNT
+        FROM DUAL
+     ]]>
+     </Sql>
+     <Parameter name="gl_journal"/>
+     <Parameter name="gl_journal"/>
+     <Parameter name="acctschema_id"/>
+   </SqlMethod>
+     
+   
+ </SqlClass>

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2017 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+<SqlClass name="FieldsData" package="org.openbravo.wad" accessModifier="public">
+  <SqlMethod name="dummy" type="preparedStatement" return="multiple">
+    <Sql>
+      <![CDATA[
+      SELECT '' as adColumnId, '' as realName, '' As Name, '' as NameRef, 
+        'x' as xmltext, '' as reference, '' as referencevalue,
+        '' as required, '' as isdisplayed, '' as isupdateable,
+        '' As defaultValue, 
+        '' As fieldLength, 
+        '' as Text_Align, '' AS Xml_Format, 
+        '' as displaylength, '' as columnname, 
+        '' as WHERECLAUSE, '' as tablename, '' as Type, '' as ISSESSIONATTR, '' as iskey, 
+        '' as isParent, '' as ACCESSLEVEL, '' as isreadonly, '' as issecondarykey, '' as showInRelation, '' as isEncrypted,
+        '' as SORTNO, '' as istranslated, '' as id, '' as htmltext, '' as htmltexttrl, '' as xmltexttrl, '' as tablenametrl, 
+        0 AS NOWRAP, '' as isColumnEncrypted, '' as isDesencryptable, '' as ad_reference_value_id, '' as ad_val_rule_id, '' AS isjasper, '' as isactive, '' as AD_Tab_ID, '' as parent_tab_name, '' as orgcode,
+        '' as tableModule, '' as columnModule, '' as clientcode, '' as isautosave, '' as ad_field_id
+      FROM dual
+      ]]>
+    </Sql>
+    <Field name="trytext" value="void" />
+    <Field name="catchtext" value="void" />
+  </SqlMethod>
+  
+  <SqlMethod name="keyColumnName" type="preparedStatement" return="multiple">
+      <SqlMethodComment>Name of the column key of the tab</SqlMethodComment>
+      <Sql><![CDATA[
+        SELECT ColumnName As Name, issecondarykey FROM ad_table, ad_column, ad_tab 
+        WHERE ad_table.ad_table_id = ad_column.ad_table_id
+          AND ad_tab.ad_table_id = ad_table.ad_table_id
+          AND ad_tab_id = ? 
+          and iskey='Y'
+      ]]></Sql>
+      <Parameter name="tab"/>
+  </SqlMethod>
+
+  <SqlMethod name="tableName" type="preparedStatement" return="string">
+      <SqlMethodComment>Name of the table of the tab</SqlMethodComment>
+      <Sql>
+        SELECT ad_table.TABLEName FROM ad_tab, ad_table
+        WHERE ad_table.ad_table_id = ad_tab.ad_table_id and ad_tab_id = ?
+      </Sql>
+      <Parameter name="tab"/>
+  </SqlMethod>
+
+  <SqlMethod name="columnIdentifier" type="preparedStatement" return="string">
+      <SqlMethodComment>Name of the table of the tab</SqlMethodComment>
+      <Sql>
+        SELECT MAX(columnname) AS NAME FROM AD_COLUMN, AD_TABLE 
+        WHERE AD_TABLE.TABLENAME = ?
+          AND AD_COLUMN.ad_table_id = AD_TABLE.ad_table_id
+          AND isidentifier = 'Y' 
+          AND SeqNo = (CASE TO_CHAR(AD_TABLE.TABLENAME) 
+                          WHEN 'C_PaySelectionCheck' THEN 2 
+                          ELSE (SELECT MIN(SeqNo) 
+                                  FROM AD_Column 
+                                 WHERE AD_Table_ID=AD_TABLE.AD_Table_ID 
+                                   AND IsIdentifier='Y')
+                           END)
+      </Sql>
+      <Parameter name="tableName"/>
+  </SqlMethod>
+  <SqlMethod name="isSOTrx" type="preparedStatement" return="String" default="N">
+    <SqlMethodComment>isSOTrx of the window</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT isSOTrx FROM AD_WINDOW, AD_TAB 
+      WHERE AD_TAB.AD_WINDOW_ID = AD_WINDOW.AD_WINDOW_ID 
+      AND AD_TAB.AD_TAB_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="tab"/>
+  </SqlMethod>
+ 
+  <SqlMethod name="selectActionButton" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT distinct ad_column.columnname, 
+      ad_column.ad_process_id as reference, ad_process.procedurename as name, 
+      ad_column.ad_reference_id as type, ad_column.ad_reference_value_id as referencevalue,
+      ad_val_rule_id as defaultvalue, ad_column.fieldlength, ad_field.name as realname, 
+      ad_process.description as tablename, ad_process.help as xmltext, ad_column.ad_reference_value_id, ad_process.isjasper, ad_column.isautosave
+      FROM ad_column, ad_process, ad_field
+      where ad_column.ad_process_id = ad_process.ad_process_id 
+      and ad_column.ad_column_id = ad_field.ad_column_id  
+      AND ad_field.ignoreinwad='N'
+      AND (ad_process.procedurename is not null 
+           or ad_process.isjasper = 'Y'
+           or (UIPattern='S' AND EXISTS (SELECT 1 FROM AD_MODEL_OBJECT WHERE AD_PROCESS_ID = AD_PROCESS.AD_PROCESS_ID))) 
+      and ad_column.columnname not in('DocAction', 'PaymentRule') 
+      and (ad_column.columnname <> 'CreateFrom'
+      or ad_column.ad_process_id is not null)
+      and (ad_column.columnname <> 'Posted'
+      or ad_column.ad_process_id is not null)
+      and ad_column.ad_column_id in (select ad_column_id from ad_field where isdisplayed='Y' and isactive='Y')
+      and ad_column.isactive='Y'
+      order by ad_column.ad_process_id
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="buildActionButton" type="preparedStatement" return="boolean">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT count(*) as total
+      FROM ad_column, ad_process, ad_field, ad_system_info si
+      where ad_column.ad_process_id = ad_process.ad_process_id 
+      and ad_column.ad_column_id = ad_field.ad_column_id 
+      AND (ad_process.procedurename is not null 
+           or ad_process.isjasper = 'Y'
+           or (UIPattern='S' AND EXISTS (SELECT 1 FROM AD_MODEL_OBJECT WHERE AD_PROCESS_ID = AD_PROCESS.AD_PROCESS_ID)))
+      and ad_column.columnname not in('DocAction', 'PaymentRule') 
+      and (ad_column.columnname <> 'CreateFrom'
+      or ad_column.ad_process_id is not null)
+      and ad_field.ignoreinwad='N'
+      and (ad_column.columnname <> 'Posted'
+      or ad_column.ad_process_id is not null)
+      and ad_column.ad_column_id in (select ad_column_id from ad_field where isdisplayed='Y' and isactive='Y')
+      and ad_column.isactive='Y'
+      and (ad_process.updated > si.last_build
+           or exists (select 1 
+                        from ad_process_para pp 
+                       where pp.ad_process_id = ad_process.ad_process_id
+                         and pp.updated > si.last_build))
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="selectActionButtonGenerics" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT DISTINCT 'ActionButton'  AS columnname, 
+        ad_process_id AS reference, procedurename AS NAME, 
+        '' AS TYPE, '' AS referencevalue,
+        '' AS defaultvalue, '' AS fieldlength, '' AS realname, 
+        description AS tablename, help AS xmltext, isjasper, '' AS isautosave
+        FROM AD_PROCESS
+        WHERE isactive='Y'
+        AND UIPattern='S'
+        and ad_process_id in (select ad_process_id from ad_menu)
+        ORDER BY ad_process_id
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="hasCreateFromButton" type="preparedStatement" return="String" default="0">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT coalesce(ad_column.ad_process_id, '-1') AS total 
+        FROM AD_FIELD, AD_COLUMN, AD_TABLE
+        WHERE AD_FIELD.ad_column_id = AD_COLUMN.ad_column_id
+        AND AD_COLUMN.AD_TABLE_ID = AD_TABLE.AD_TABLE_ID 
+        AND ad_tab_id = ? 
+        AND ad_field.ignoreinwad='N'
+        AND AD_COLUMN.ad_reference_id = '28'
+        AND AD_COLUMN.COLUMNNAME = 'CreateFrom'
+        AND AD_COLUMN.AD_PROCESS_ID IS NULL
+        AND AD_FIELD.ISDISPLAYED = 'Y'
+      ]]>
+    </Sql>
+    <Parameter name="tab"/>
+  </SqlMethod>
+  <SqlMethod name="hasPostedButton" type="preparedStatement" return="String" default="0">
+    <SqlMethodComment>Names of the columns of the fields of a tab</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT coalesce(ad_column.ad_process_id, '-1') AS total 
+        FROM AD_FIELD, AD_COLUMN, AD_TABLE
+        WHERE AD_FIELD.ad_column_id = AD_COLUMN.ad_column_id
+        AND AD_COLUMN.AD_TABLE_ID = AD_TABLE.AD_TABLE_ID 
+        AND ad_tab_id = ? 
+        AND ad_field.ignoreinwad='N'
+        AND AD_COLUMN.ad_reference_id = '28'
+        AND AD_COLUMN.COLUMNNAME = 'Posted'
+        AND AD_COLUMN.AD_PROCESS_ID IS NULL
+        AND AD_FIELD.ISDISPLAYED = 'Y'
+      ]]>
+    </Sql>
+    <Parameter name="tab"/>
+  </SqlMethod>
+  
+  <SqlMethod name="selectProcessesWithReloads" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Obtains all processes that might require combo reload</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+         SELECT distinct c.AD_PROCESS_id as id
+        FROM AD_PROCESS_PARA c left join  AD_VAL_RULE v on c.AD_VAL_RULE_ID = v.AD_VAL_RULE_ID
+                         left join AD_REF_TABLE t on (CASE c.ad_reference_id WHEN '18' THEN c.AD_REFERENCE_VALUE_ID ELSE '0' END) = t.AD_REFERENCE_ID     
+        WHERE (t.whereclause IS NOT NULL
+            OR v.code IS NOT NULL
+            OR c.ad_reference_id in ('19','18','17'))
+      ]]>
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="selectValidationProcess" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Obtains all param for processes that might require combo reload</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+         SELECT c.AD_PROCESS_PARA_id as id, c.columnname, t.WHERECLAUSE as whereClause, v.code as referencevalue, c.ad_reference_id as reference,
+        c.ad_reference_value_id as NameRef, c.ad_val_rule_id as defaultvalue,  c.columnname as name,
+        (case when t.whereclause is not null or v.code is not null then 'C' else 'R' end) as type /*Combo reaload or Reference*/ 
+        FROM AD_PROCESS_PARA c left join  AD_VAL_RULE v on c.AD_VAL_RULE_ID = v.AD_VAL_RULE_ID
+                         left join AD_REF_TABLE t on (CASE c.ad_reference_id WHEN '18' THEN c.AD_REFERENCE_VALUE_ID ELSE '0' END) = t.AD_REFERENCE_ID     
+        WHERE (t.whereclause IS NOT NULL
+            OR v.code IS NOT NULL
+            OR c.ad_reference_id in ('19','18','17'))
+         AND c.AD_Process_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="processId"/>
+  </SqlMethod>
+  
+    <SqlMethod name="processHasOrgParam" type="preparedStatement" return="boolean">
+    <Sql>
+      <![CDATA[
+         select count(*)
+           from ad_process_para 
+          where lower(columnname) = 'ad_org_id'
+            and ad_process_id = ?
+      ]]>
+    </Sql>
+    <Parameter name="processId"/>
+  </SqlMethod>
+  
+  <SqlMethod name="selectColumnTableProcess" type="preparedStatement" return="multiple">
+    <Sql>
+      SELECT ColumnName As Name, 'x' as xmltext, ad_reference_value_id as referencevalue, 
+      ad_val_rule.CODE as defaultValue, ad_val_rule.AD_VAL_RULE_ID as columnname,
+      ad_ref_table.WHERECLAUSE, ad_table.tablename, 'TableList' as tablenametrl, ad_table.name as nameref, 
+      '18' as reference, 'Y' as required, 'N'as istranslated 
+      FROM ad_process_para p left join ad_val_rule on p.AD_VAL_RULE_ID = ad_val_rule.AD_VAL_RULE_ID, 
+           ad_ref_table, 
+           ad_table 
+      WHERE ad_ref_table.ad_table_id = ad_table.ad_table_id 
+      AND p.AD_REFERENCE_VALUE_ID = ad_ref_table.AD_REFERENCE_ID  
+      AND p.ad_process_para_id = ?
+      AND p.ad_reference_id = '18'
+    </Sql>
+    <Parameter name="processParaId"/>
+  </SqlMethod>
+  
+  <SqlMethod name="selectColumnTableDirProcess" type="preparedStatement" return="multiple">
+    <Sql>
+      SELECT ColumnName As Name, 'x' as xmltext, ColumnName as referencevalue, 
+      ad_val_rule.CODE as defaultValue, ad_val_rule.AD_VAL_RULE_ID as columnname,  
+      'TableDir' as tablenametrl, '' as WHERECLAUSE, '19' as reference, 'N' as istranslated 
+      FROM ad_process_para p left join ad_val_rule on p.AD_VAL_RULE_ID = ad_val_rule.AD_VAL_RULE_ID
+      WHERE p.ad_process_para_id = ?
+      AND ad_reference_id = '19'
+    </Sql>
+    <Parameter name="processParaId"/>
+  </SqlMethod>
+  
+  <SqlMethod name="hasActionButton" type="preparedStatement" return="String" default="0">
+    <SqlMethodComment>Checks if the tab has action buttons</SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      select count(*) as actionButtons
+      from ad_field f, ad_column c
+      where f.ad_column_id = c.ad_column_id 
+      and f.ad_tab_id = ?
+      and f.isactive = 'Y'
+      and f.isdisplayed = 'Y'
+      and f.ignoreinwad='N'
+      and c.isactive = 'Y'
+      and ad_reference_value_id is not null
+      and c.ad_reference_id = '28' 
+      ]]>
+    </Sql>
+    <Parameter name="tab"/>
+  </SqlMethod>
+
+   <SqlMethod name="explicitAccessProcess" type="preparedStatement" return="multiple">
+    <Sql>
+      <![CDATA[
+      select p.ad_process_id as id
+        from ad_process p, ad_column c, ad_field f
+       where f.ad_tab_id = ?
+         and f.ad_column_id = c.ad_column_id
+         and c.ad_process_id = p.ad_process_id
+         and p.is_explicit_access = 'Y'
+      ]]>
+    </Sql>
+    <Parameter name="tab"/>
+  </SqlMethod>
+  </SqlClass>

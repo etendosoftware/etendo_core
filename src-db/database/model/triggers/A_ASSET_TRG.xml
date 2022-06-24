@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER A_ASSET_TRG">
+    <trigger name="A_ASSET_TRG" table="A_ASSET" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2001-2012 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+  TYPE RECORD IS REF CURSOR;
+  Cur_Defaults RECORD;
+  v_AttrSetValueType M_Product.AttrSetValueType%TYPE;
+  v_xTree_ID AD_ClientInfo.AD_Tree_Asset_ID%TYPE;
+  v_count NUMBER;
+
+BEGIN
+
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+
+  --  Default Accounts for all AcctSchema
+  IF(INSERTING) THEN
+     FOR Cur_Defaults IN (SELECT *
+                        FROM A_Asset_Group_Acct d1
+                        WHERE d1.A_Asset_Group_ID=:new.A_Asset_Group_ID
+                        AND EXISTS
+			      (
+			      SELECT 1
+			      FROM AD_Org_AcctSchema
+			      WHERE (AD_IsOrgIncluded(AD_Org_ID, :new.AD_ORG_ID, :new.AD_Client_ID)<>-1 OR AD_IsOrgIncluded(:new.AD_ORG_ID, AD_Org_ID, :new.AD_Client_ID)<>-1)
+			      AND IsActive = 'Y'
+			      AND AD_Org_AcctSchema.C_AcctSchema_ID = d1.C_AcctSchema_ID
+			      )
+            AND d1.AD_CLIENT_ID = :new.AD_Client_ID
+			) LOOP
+
+      INSERT
+      INTO A_ASSET_ACCT
+        (
+          A_ASSET_ACCT_ID,
+          A_ASSET_ID, C_ACCTSCHEMA_ID, AD_CLIENT_ID,
+          AD_ORG_ID, ISACTIVE, CREATED,
+          CREATEDBY, UPDATED, UPDATEDBY,
+          A_DEPRECIATION_ACCT, A_ACCUMDEPRECIATION_ACCT, A_DISPOSAL_LOSS,
+          A_DISPOSAL_GAIN
+        )
+        VALUES
+        (
+          get_uuid(),
+          :new.A_Asset_ID, Cur_Defaults.C_AcctSchema_ID, :new.AD_Client_ID,
+          :new.AD_Org_ID,  'Y', now(),
+          :new.CreatedBy, now(), :new.UpdatedBy,
+          Cur_Defaults.A_DEPRECIATION_ACCT, Cur_Defaults.A_ACCUMDEPRECIATION_ACCT, Cur_Defaults.A_DISPOSAL_LOSS,
+          Cur_Defaults.A_DISPOSAL_LOSS
+        )
+        ;
+      END LOOP;
+      
+    --  Create TreeNode --
+    SELECT c.AD_Tree_Asset_ID
+    INTO v_xTree_ID
+    FROM AD_ClientInfo c
+    WHERE c.AD_Client_ID=:new.AD_Client_ID;
+
+    --  Insert into TreeNode
+    INSERT
+    INTO AD_TreeNode
+      (
+        ad_treeNode_Id, AD_Client_ID, AD_Org_ID, IsActive,
+        Created, CreatedBy, Updated,
+        UpdatedBy, AD_Tree_ID, Node_ID,
+        Parent_ID, SeqNo
+      )
+      VALUES
+      (
+        get_uuid(), :new.AD_Client_ID, :new.AD_Org_ID, :new.IsActive,
+        :new.Created, :new.CreatedBy, :new.Updated,
+        :new.UpdatedBy, v_xTree_ID, :new.A_Asset_ID,
+        '0',(
+        CASE :new.IsSummary
+          WHEN 'Y'
+          THEN 100
+          ELSE 999
+        END
+        )
+      )
+      ;
+  ELSIF (UPDATING) THEN
+    UPDATE A_ASSET_ACCT SET AD_ORG_ID = :new.AD_ORG_ID
+    WHERE A_ASSET_ID = :new.A_ASSET_ID;
+  END IF;
+  IF (INSERTING OR UPDATING) THEN
+   --Does not allow to change the attribute set value
+   -- for products which attribute set value type is Fixed
+   IF (:NEW.M_PRODUCT_ID IS NOT NULL AND COALESCE(:new.M_AttributeSetInstance_ID,'0')!='0') THEN
+    SELECT ATTRSETVALUETYPE 
+    INTO v_AttrSetValueType
+    FROM M_PRODUCT 
+    WHERE M_PRODUCT_ID=:NEW.M_PRODUCT_ID;
+    IF (v_AttrSetValueType='F') THEN
+     RAISE_APPLICATION_ERROR(-20000, '@AttrSetValueFixed@');
+    END IF;
+   END IF;
+  END IF;
+  
+  IF(DELETING) THEN
+    --  Delete TreeNode --
+    --  get AD_Tree_ID
+    SELECT c.AD_Tree_Asset_ID
+    INTO v_xTree_ID
+    FROM AD_ClientInfo c
+    WHERE c.AD_Client_ID=:old.AD_Client_ID;
+    select COUNT(*) INTO v_count from AD_TREENODE where parent_id=:old.A_Asset_ID
+    and AD_TREE_ID=v_xTree_ID;
+    IF(v_count>0) THEN
+        RAISE_APPLICATION_ERROR(-20000, '@ChildAssetCheck@') ;
+    END IF;
+    DELETE
+    FROM AD_TREENODE
+    WHERE AD_CLIENT_ID=:old.AD_Client_ID
+      AND AD_Tree_ID=v_xTree_ID
+      AND Node_ID=:old.A_Asset_ID;     
+  END IF;
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+  RAISE_APPLICATION_ERROR(-20000, '@20008@') ;
+END A_ASSET_TRG
+]]></body>
+    </trigger>
+  </database>

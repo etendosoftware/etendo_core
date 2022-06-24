@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_RESERVATION_STOCK">
+    <table name="M_RESERVATION_STOCK" primaryKey="M_RESERVATION_STOCK_KEY">
+      <column name="M_RESERVATION_STOCK_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_RESERVATION_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_ORDERLINE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="QUANTITY" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISALLOCATED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="M_LOCATOR_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_ATTRIBUTESETINSTANCE_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default><![CDATA[0]]></default>
+        <onCreateDefault><![CDATA['0']]></onCreateDefault>
+      </column>
+      <column name="RELEASEDQTY" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="M_ATTRIBUTESETINSTANCE" name="M_RESERVATION_STOCK_ATTRSETINS">
+        <reference local="M_ATTRIBUTESETINSTANCE_ID" foreign="M_ATTRIBUTESETINSTANCE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_CLIENT" name="M_RESERVATION_STOCK_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_LOCATOR" name="M_RESERVATION_STOCK_LOCATOR">
+        <reference local="M_LOCATOR_ID" foreign="M_LOCATOR_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_ORDERLINE" name="M_RESERVATION_STOCK_ORDERLINE">
+        <reference local="C_ORDERLINE_ID" foreign="C_ORDERLINE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_RESERVATION_STOCK_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_RESERVATION" name="M_RESERVATION_STOCK_RESERV">
+        <reference local="M_RESERVATION_ID" foreign="M_RESERVATION_ID"/>
+      </foreign-key>
+      <index name="M_RESERVATION_STOCK_RES" unique="false">
+        <index-column name="M_RESERVATION_ID"/>
+      </index>
+      <index name="M_RESERVSTOCK_ATTRSETINS_IDX" unique="false">
+        <index-column name="M_ATTRIBUTESETINSTANCE_ID"/>
+        <whereClause><![CDATA[M_ATTRIBUTESETINSTANCE_ID IS NOT NULL]]></whereClause>
+      </index>
+      <index name="M_RESERVSTOCK_LOCATOR_IDX" unique="false">
+        <index-column name="M_LOCATOR_ID"/>
+      </index>
+      <index name="M_RESERVSTOCK_ORDERLINE_IDX" unique="false">
+        <index-column name="C_ORDERLINE_ID"/>
+        <whereClause><![CDATA[C_ORDERLINE_ID IS NOT NULL]]></whereClause>
+      </index>
+      <check name="M_RESERVATION_STOCK_ACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="M_RESERVATION_STOCK_ALLOC_CHK"><![CDATA[ISALLOCATED IN ('Y', 'N')]]></check>
+    </table>
+  </database>

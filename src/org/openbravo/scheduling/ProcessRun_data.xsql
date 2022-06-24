@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2017 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="ProcessRunData" package="org.openbravo.scheduling">
+   <SqlMethod name="dummy" type="preparedStatement" return="single">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      	SELECT '' as dummy from dual	 
+    ]]></Sql>
+   </SqlMethod>
+   <SqlMethod name="insert" type="preparedStatement" return="rowcount" saveContextInfo="false">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      	INSERT INTO AD_Process_Run 
+        (AD_Org_ID, AD_Client_ID, Isactive, Created, Createdby, Updated, UpdatedBy, 
+        AD_Process_Run_ID, Status, Start_Time, Runtime, Log, AD_Process_Request_ID,
+        Scheduler_Instance)
+        VALUES (?, ?, 'Y', NOW(), ?, NOW(), ?, ?, ?, NOW(), ?, ?, ?, ?)
+    ]]></Sql>
+    <Parameter name="adOrgId"/>
+    <Parameter name="adClientId"/>
+    <Parameter name="createdby"/>
+    <Parameter name="updatedby"/>
+    <Parameter name="id"/>
+    <Parameter name="status"/>
+    <Parameter name="runtime"/>
+    <Parameter name="log"/>
+    <Parameter name="processRequestId"/>
+    <Parameter name="schedulerInstance"/>
+   </SqlMethod>
+   <SqlMethod name="update" type="preparedStatement" return="rowcount" saveContextInfo="false">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+      	UPDATE AD_Process_Run 
+        SET Updated = NOW(), UpdatedBy = ?, Status = ?, End_Time = NOW(),
+        Runtime = ?, Log = ?
+        WHERE AD_Process_Run_ID = ?
+    ]]></Sql>
+    <Parameter name="updatedby"/>
+    <Parameter name="status"/>
+    <Parameter name="runtime"/>
+    <Parameter name="log"/>
+    <Parameter name="id"/>
+   </SqlMethod>
+   <SqlMethod name="updateGroup" type="preparedStatement" return="rowcount" saveContextInfo="false">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        UPDATE AD_Process_Run
+        SET AD_Process_Run_Group_ID = ?
+        WHERE AD_Process_Run_ID = ?
+    ]]></Sql>
+    <Parameter name="group"/>
+    <Parameter name="id"/>
+   </SqlMethod>
+   <SqlMethod name="selectConcurrent" type="preparedStatement" return="String" default="0">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql>
+        SELECT 1 AS TOTAL
+        FROM DUAL
+        WHERE EXISTS(
+        SELECT 1
+        FROM AD_PROCESS_RUN RU
+        JOIN AD_PROCESS_REQUEST PR ON RU.AD_PROCESS_REQUEST_ID = PR.AD_PROCESS_REQUEST_ID
+        JOIN AD_PROCESS_REQUEST MYREQUEST ON PR.AD_PROCESS_GROUP_ID = MYREQUEST.AD_PROCESS_GROUP_ID
+        WHERE MYREQUEST.AD_PROCESS_REQUEST_ID = ?
+        AND RU.STATUS = 'PRC'
+        AND RU.AD_ORG_ID = MYREQUEST.AD_ORG_ID
+        AND RU.AD_CLIENT_ID = MYREQUEST.AD_CLIENT_ID)
+      </Sql>
+      <Parameter name="adProcessRequestId"/>
+  </SqlMethod>
+</SqlClass>

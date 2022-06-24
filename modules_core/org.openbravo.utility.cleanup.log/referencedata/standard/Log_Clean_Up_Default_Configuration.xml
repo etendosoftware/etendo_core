@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" defaultValues="true">
+  <OBULOG_Config id="60D34CD578FA4F6FA2123B5A7215D7B9" identifier="AD_PInstance">
+    <id>60D34CD578FA4F6FA2123B5A7215D7B9</id>
+    <active>true</active>
+    <table id="282" entity-name="ADTable" identifier="AD_PInstance"/>
+    <olderThan>15</olderThan>
+    <column xsi:nil="true"/>
+    <hQLWhereClause xsi:nil="true"/>
+    <truncateTable>false</truncateTable>
+  </OBULOG_Config>
+  <OBULOG_Config id="6E8DE0FE6C3241679F30F71D0EB9A783" identifier="AD_Process_Run">
+    <id>6E8DE0FE6C3241679F30F71D0EB9A783</id>
+    <active>true</active>
+    <table id="6567DD0C6715472CAE04255A4BEC4654" entity-name="ADTable" identifier="AD_Process_Run"/>
+    <olderThan>30</olderThan>
+    <column xsi:nil="true"/>
+    <hQLWhereClause>status != 'SUC'</hQLWhereClause>
+    <truncateTable>false</truncateTable>
+  </OBULOG_Config>
+  <OBULOG_Config id="CB60EDA17F3F46DE9C5EFE5F1EC46D2E" identifier="AD_Process_Request">
+    <id>CB60EDA17F3F46DE9C5EFE5F1EC46D2E</id>
+    <active>true</active>
+    <table id="82D4EDCF39AE44FB9B24E95A1B18B21C" entity-name="ADTable" identifier="AD_Process_Request"/>
+    <olderThan>15</olderThan>
+    <column xsi:nil="true"/>
+    <hQLWhereClause>status = 'COM'</hQLWhereClause>
+    <truncateTable>false</truncateTable>
+  </OBULOG_Config>
+  <OBULOG_Config id="D4ABF737F2DC4B4193EE72F53218C8EC" identifier="AD_Session">
+    <id>D4ABF737F2DC4B4193EE72F53218C8EC</id>
+    <active>true</active>
+    <table id="566" entity-name="ADTable" identifier="AD_Session"/>
+    <olderThan>40</olderThan>
+    <column xsi:nil="true"/>
+    <hQLWhereClause xsi:nil="true"/>
+    <truncateTable>false</truncateTable>
+  </OBULOG_Config>
+  <OBULOG_Config id="DDC89EDD91964A738467EB188EEF7CAB" identifier="C_Import_Entry_Archive">
+    <id>DDC89EDD91964A738467EB188EEF7CAB</id>
+    <active>true</active>
+    <table id="1B19E761F8E24E00B5FBF2C22082A006" entity-name="ADTable" identifier="C_Import_Entry_Archive"/>
+    <olderThan>30</olderThan>
+    <column xsi:nil="true"/>
+    <hQLWhereClause xsi:nil="true"/>
+    <truncateTable>false</truncateTable>
+  </OBULOG_Config>
+  <OBULOG_Config id="E0BDF5E5F6E2475D8F8CE77B65EFAFC6" identifier="AD_Process_Run">
+    <id>E0BDF5E5F6E2475D8F8CE77B65EFAFC6</id>
+    <active>true</active>
+    <table id="6567DD0C6715472CAE04255A4BEC4654" entity-name="ADTable" identifier="AD_Process_Run"/>
+    <olderThan>15</olderThan>
+    <column xsi:nil="true"/>
+    <hQLWhereClause>status = 'SUC'</hQLWhereClause>
+    <truncateTable>false</truncateTable>
+  </OBULOG_Config>
+  <OBULOG_Config id="EA8CE6BE20C54E01BCC30EF34366CF1B" identifier="M_Stock_Proposed">
+    <id>EA8CE6BE20C54E01BCC30EF34366CF1B</id>
+    <active>true</active>
+    <table id="FF80818132C964E30132C968F45B0008" entity-name="ADTable" identifier="M_Stock_Proposed"/>
+    <olderThan>15</olderThan>
+    <column xsi:nil="true"/>
+    <hQLWhereClause xsi:nil="true"/>
+    <truncateTable>false</truncateTable>
+  </OBULOG_Config>
+  <ProcessRequest id="8E020D1888EA44B9941D7A8639E822D5" identifier="Log Clean Up Process - ">
+    <id>8E020D1888EA44B9941D7A8639E822D5</id>
+    <active>true</active>
+    <process id="7A3E2A2BF61C47F8AD9FD4F898F2870B" entity-name="ADProcess" identifier="Log Clean Up Process"/>
+    <description xsi:nil="true"/>
+    <userContact id="100" entity-name="ADUser" identifier="Openbravo"/>
+    <securityBasedOnRole>false</securityBasedOnRole>
+    <openbravoContext>{"org.openbravo.scheduling.ProcessContext":{"user":100,"role":0,"language":"en_US","theme":"ltr\/org.openbravo.userinterface.skin.250to300Comp\/250to300Comp","client":0,"organization":0,"warehouse":"","command":"DEFAULT","userClient":"","userOrganization":"","dbSessionID":"","javaDateFormat":"","jsDateFormat":"","sqlDateFormat":"","accessLevel":"","roleSecurity":false}}</openbravoContext>
+    <status>SCH</status>
+    <nextExecution xsi:nil="true"/>
+    <previousExecution xsi:nil="true"/>
+    <finish xsi:nil="true"/>
+    <channel>Process Scheduler</channel>
+    <timing>S</timing>
+    <startTime>2015-02-06T00:00:00.0Z</startTime>
+    <startDate>2015-02-05T00:00:00.0Z</startDate>
+    <frequency>5</frequency>
+    <intervalInSeconds xsi:nil="true"/>
+    <intervalInMinutes xsi:nil="true"/>
+    <hourlyInterval xsi:nil="true"/>
+    <dailyInterval>1</dailyInterval>
+    <repetitions xsi:nil="true"/>
+    <numRepetitions xsi:nil="true"/>
+    <numberOfRepetitions xsi:nil="true"/>
+    <monday>false</monday>
+    <tuesday>false</tuesday>
+    <wednesday>false</wednesday>
+    <thursday>false</thursday>
+    <friday>false</friday>
+    <saturday>false</saturday>
+    <sunday>true</sunday>
+    <monthlyOption>S</monthlyOption>
+    <dayInMonth xsi:nil="true"/>
+    <dayOfTheWeek xsi:nil="true"/>
+    <finishes>false</finishes>
+    <finishTime xsi:nil="true"/>
+    <finishDate xsi:nil="true"/>
+    <dailyOption>N</dailyOption>
+    <cronExpression xsi:nil="true"/>
+    <processSet xsi:nil="true"/>
+    <scheduleProcess>false</scheduleProcess>
+    <rescheduleProcess>false</rescheduleProcess>
+    <unscheduleProcess>false</unscheduleProcess>
+    <params xsi:nil="true"/>
+    <processGroup xsi:nil="true"/>
+    <isgroup>false</isgroup>
+    <triggeredByGroup xsi:nil="true"/>
+  </ProcessRequest>
+</ob:Openbravo>

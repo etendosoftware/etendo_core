@@ -1,0 +1,175 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2011 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+*/
+/* Blue */
+/* Light Blue */
+/* Darker Blue */
+/* Gray */
+/* Darker Gray  */
+/* Yellow */
+/* White */
+/* Light Blue (20%) */
+/* Light Green */
+/* Light Blue (20%) */
+/* light Blue (10%) */
+/* Gray 10 % */
+.tabStyleActive {
+  background-color: #202452;
+}
+
+.tabStyleActiveSelected {
+  background-color: #202452;
+  border-top: 4px solid #fad614;
+}
+
+.tabStyleInactive {
+  background-color: #e1e1e1;
+  color: #a5aab7;
+}
+
+.OBApplicationMenuTreeBody .menuTable {
+  background: #fff;
+}
+
+.OBApplicationMenuTree {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0px 0px 20px 0px #ededed;
+}
+
+.OBApplicationMenuTreeBody {
+  font-size: 11px;
+  font-family: "Poppins", "lucida sans", sans-serif;
+}
+
+.OBApplicationMenuTreeItemCell,
+.OBApplicationMenuTreeItemCellSelected,
+.OBApplicationMenuTreeItemCellOver,
+.OBApplicationMenuTreeItemCellSelectedOver,
+.OBApplicationMenuTreeItemCellDisabled,
+.OBApplicationMenuTreeItemCellTitleField,
+.OBApplicationMenuTreeItemCellTitleFieldSelected,
+.OBApplicationMenuTreeItemCellTitleFieldOver,
+.OBApplicationMenuTreeItemCellTitleFieldSelectedOver,
+.OBApplicationMenuTreeItemCellTitleFieldDisabled {
+  cursor: pointer;
+  font-family: "Poppins", "lucida sans", sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  color: #202452;
+}
+
+.OBApplicationMenuTreeItemCellOver,
+.OBApplicationMenuTreeItemCellSelectedOver,
+.OBApplicationMenuTreeItemCellSubmenuFieldOver,
+.OBApplicationMenuTreeItemCellSubmenuFieldSelectedOver,
+.OBApplicationMenuTreeItemCellKeysFieldOver,
+.OBApplicationMenuTreeItemCellKeysFieldSelectedOver,
+.OBApplicationMenuTreeItemCellTitleFieldOver,
+.OBApplicationMenuTreeItemCellTitleFieldSelectedOver {
+  color: #202452;
+}
+
+.OBApplicationMenuTreeItemCellTitleField,
+.OBApplicationMenuTreeItemCellTitleFieldSelected,
+.OBApplicationMenuTreeItemCellTitleFieldOver,
+.OBApplicationMenuTreeItemCellTitleFieldSelectedOver,
+.OBApplicationMenuTreeItemCellTitleFieldDisabled {
+  padding: 0px 20px 0px 6px;
+}
+
+.OBApplicationMenuTreeItemCellIcon,
+.OBApplicationMenuTreeItemCellIconField,
+.OBApplicationMenuTreeItemCellIconFieldSelected,
+.OBApplicationMenuTreeItemCellIconFieldOver,
+.OBApplicationMenuTreeItemCellIconFieldSelectedOver,
+.OBApplicationMenuTreeItemCellIconFieldDisabled {
+  padding: 0px 14px 0px 15px;
+}
+
+.OBApplicationMenuTreeItemCellIconFieldOver,
+.OBApplicationMenuTreeItemCellIconFieldSelectedOver,
+.OBApplicationMenuTreeItemCellIconFieldSubmenuFieldOver,
+.OBApplicationMenuTreeItemCellIconFieldSubmenuFieldSelectedOver,
+.OBApplicationMenuTreeItemCellIconFieldKeysFieldOver,
+.OBApplicationMenuTreeItemCellIconFieldKeysFieldSelectedOver,
+.OBApplicationMenuTreeItemCellIconFieldTitleFieldOver,
+.OBApplicationMenuTreeItemCellIconFieldTitleFieldSelectedOver {
+  background-color: #fff;
+}
+
+.OBApplicationMenuTreeItemCellDisabled,
+.OBApplicationMenuTreeItemCellTitleFieldDisabled,
+.OBApplicationMenuTreeItemCellIconFieldDisabled {
+  color: #aaaaaa;
+}
+
+.OBApplicationMenuTreeItemCellIconFieldDisabled {
+  padding: 0px 0px 0px 25px;
+  border-right: none;
+  background-position: left center;
+  background-repeat: no-repeat;
+}
+
+.OBApplicationMenuTreeItemCellIconFieldDisabled nobr hr {
+  color: transparent;
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.OBApplicationMenuTreeTable {
+  background-color: #fff;
+  border-color: #fff;
+}
+.OBApplicationMenuTreeTable tr {
+  height: 30px;
+}
+.OBApplicationMenuTreeTable tr:hover td {
+  background-color: #DDE0F7;
+}
+
+.OBApplicationMenuTreeBody .menuTable img,
+.OBApplicationMenuTreeBodyOver .menuTable img,
+.OBApplicationMenuTreeItemCellTitleField img,
+.OBApplicationMenuTreeItemCellTitleFieldOver img,
+.OBApplicationMenuTreeItemCellSubmenuField img,
+.OBApplicationMenuTreeItemCellSubmenuFieldOver img {
+  display: block;
+}
+
+.OBApplicationMenuTreeItemCellKeysField,
+.OBApplicationMenuTreeItemCellKeysFieldSelected,
+.OBApplicationMenuTreeItemCellKeysFieldOver,
+.OBApplicationMenuTreeItemCellKeysFieldSelectedOver,
+.OBApplicationMenuTreeItemCellKeysFieldDisabled,
+.OBApplicationMenuTreeItemCellSubmenuField,
+.OBApplicationMenuTreeItemCellSubmenuFieldSelected,
+.OBApplicationMenuTreeItemCellSubmenuFieldOver,
+.OBApplicationMenuTreeItemCellSubmenuFieldSelectedOver,
+.OBApplicationMenuTreeItemCellSubmenuFieldDisabled {
+  padding-left: 0px;
+  padding-right: 15px;
+  text-align: right;
+}
+
+.OBApplicationMenuTreeItemCell,
+.OBApplicationMenuTreeItemCellSelected {
+  /*padding-left: 10px;*/
+}
+
+/*# sourceMappingURL=ob-application-menu-styles.css.map */

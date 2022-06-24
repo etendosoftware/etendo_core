@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <OBUIAPP_GC_Tab id="4701BC23719C41FAA422305FCDBBAF85" identifier="Average Cost Transactions - Product">
+    <id>4701BC23719C41FAA422305FCDBBAF85</id>
+    <active>true</active>
+    <tab id="9175CE3AFD764112BDB6E0647EB67FDF" entity-name="ADTab" identifier="Average Cost Transactions - Product"/>
+    <filterable>N</filterable>
+    <sortable>N</sortable>
+    <textFilterBehavior>D</textFilterBehavior>
+    <thresholdToFilter xsi:nil="true"/>
+    <isLazyFiltering>D</isLazyFiltering>
+    <filterOnChange>D</filterOnChange>
+    <allowFilterByIdentifier>D</allowFilterByIdentifier>
+    <isFkDropDownUnfiltered>D</isFkDropDownUnfiltered>
+    <disableFkCombo>D</disableFkCombo>
+  </OBUIAPP_GC_Tab>
+</ob:Openbravo>

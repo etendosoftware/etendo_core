@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE GL_JOURNALLINE">
+    <table name="GL_JOURNALLINE" primaryKey="GL_JOURNALENTRY_KEY">
+      <column name="EM_APRM_ADDPAYMENT" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>

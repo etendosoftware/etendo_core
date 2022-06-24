@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+  <database name="TABLE C_EXTBP_CONFIG_PROP_OPT">
+    <table name="C_EXTBP_CONFIG_PROP_OPT" primaryKey="C_EXTBPCONFPROPOPT_KEY">
+      <column name="C_EXTBP_CONFIG_PROP_OPT_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_EXTBP_CONFIG_PROPERTY_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TEXT" primaryKey="false" required="false" type="NVARCHAR" size="2000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="VALUE" primaryKey="false" required="true" type="VARCHAR" size="100" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISTRANSLATABLE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_MESSAGE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PROP_OPT_SEQNO" primaryKey="false" required="false" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISDEFAULT" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="C_EXTBPCONFPROPOPT_CLI_FK">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_MESSAGE" name="C_EXTBPCONFPROPOPT_MSG_FK">
+        <reference local="AD_MESSAGE_ID" foreign="AD_MESSAGE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="C_EXTBPCONFPROPOPT_ORG_FK">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_EXTBP_CONFIG_PROPERTY" name="C_EXTBPCONFPROPOPT_PROP_FK">
+        <reference local="C_EXTBP_CONFIG_PROPERTY_ID" foreign="C_EXTBP_CONFIG_PROPERTY_ID"/>
+      </foreign-key>
+      <index name="C_EXTBP_CONFIG_PROP_OPT_IX" unique="false">
+        <index-column name="C_EXTBP_CONFIG_PROPERTY_ID"/>
+      </index>
+      <unique name="C_EXTBPCONFPROPOPT_VAL_UN">
+        <unique-column name="VALUE"/>
+        <unique-column name="C_EXTBP_CONFIG_PROPERTY_ID"/>
+      </unique>
+      <check name="C_EXTBPCONFPROPOPT_ACT_CH"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="C_EXTBPCONFPROPOPT_ISDF_CH"><![CDATA[ISDEFAULT IN ('Y', 'N')]]></check>
+      <check name="C_EXTBPCONFPROPOPT_ISTR_CH"><![CDATA[ISTRANSLATABLE IN ('Y', 'N')]]></check>
+      <check name="C_EXTBPCONFPROPOPT_TRMSG_CH"><![CDATA[ISTRANSLATABLE = 'N' OR AD_MESSAGE_ID IS NOT NULL AND ISTRANSLATABLE = 'Y']]></check>
+      <check name="C_EXTBPCONFPROPOPT_TXTMSG_CH"><![CDATA[TEXT IS NOT NULL OR ISTRANSLATABLE = 'Y']]></check>
+    </table>
+  </database>

@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER OBUIAPP_PROCESS_TRG">
+    <trigger name="OBUIAPP_PROCESS_TRG" table="OBUIAPP_PROCESS" fires="after" insert="true" update="false" delete="false" foreach="row">
+      <body><![CDATA[
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2015 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+BEGIN
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+  IF INSERTING THEN 
+      INSERT INTO OBUIAPP_Process_Access
+      (
+        OBUIAPP_Process_Access_ID, OBUIAPP_Process_ID, AD_Role_ID, AD_Client_ID,
+        AD_Org_ID, IsActive, Created,
+        CreatedBy, Updated, UpdatedBy
+      )
+      SELECT get_uuid(), :new.OBUIAPP_Process_ID, R.AD_ROLE_ID, R.AD_CLIENT_ID,
+        R.AD_ORG_ID, 'Y', now(),
+        '0', now(), '0'
+      FROM AD_ROLE R
+      WHERE R.ISMANUAL = 'N'
+        AND (
+          (R.USERLEVEL = 'S' AND :new.ACCESSLEVEL IN ('4','7','6'))
+          OR
+          (R.USERLEVEL IN (' CO', ' C') AND :new.ACCESSLEVEL IN ('7','6','3','1'))
+          OR
+          (R.USERLEVEL = '  O' AND :new.ACCESSLEVEL IN ('3','1','7'))
+        );
+
+	INSERT INTO OBUIAPP_process_trl  
+             (OBUIAPP_PROCESS_TRL_ID, AD_CLIENT_ID, AD_ORG_ID               ,
+              ISACTIVE                , CREATED     , CREATEDBY               ,
+              UPDATED                 , UPDATEDBY   , OBUIAPP_PROCESS_ID    ,
+              NAME                    , DESCRIPTION , HELP                    ,
+              ISTRANSLATED            , AD_LANGUAGE)
+       SELECT get_uuid()              , :new.AD_CLIENT_ID, :new.AD_ORG_ID     ,
+              :new.ISACTIVE           , now()     , :new.CreatedBy           ,
+              now()                   , :new.UpdatedBy, :new.OBUIAPP_PROCESS_ID,
+              :new.NAME               , :new.DESCRIPTION , :new.HELP             ,
+              'N'                     , l.AD_LANGUAGE
+         FROM AD_Language l, AD_Module m
+        WHERE l.isActive = 'Y'
+          AND l.IsSystemLanguage='Y'
+          AND m.AD_Module_ID = :new.AD_Module_ID
+          AND M.AD_Language != l.AD_Language;
+  END IF;
+
+    IF UPDATING THEN
+      IF coalesce(:new.NAME,'.') != coalesce(:old.NAME,'.')
+         or coalesce(:new.description, '.') != coalesce(:old.description, '.')
+         or coalesce(:new.help, '.') != coalesce(:old.help, '.') THEN
+         UPDATE OBUIAPP_process_trl
+            SET IsTranslated='N',
+                Updated=now()
+          WHERE OBUIAPP_PROCESS_ID=:new.OBUIAPP_PROCESS_ID;
+      END IF;
+    END IF;
+
+END OBUIAPP_PROCESS_TRG
+]]></body>
+    </trigger>
+  </database>

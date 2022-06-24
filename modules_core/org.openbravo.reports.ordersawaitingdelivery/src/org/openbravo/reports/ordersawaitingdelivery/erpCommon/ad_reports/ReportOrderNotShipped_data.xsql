@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2009-2018 Openbravo SLU
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="ReportOrderNotShippedData" package="org.openbravo.reports.ordersawaitingdelivery.erpCommon.ad_reports">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[SELECT ORGNAME, BPNAME, DOCUMENTNO, POREFERENCE,
+       DATEORDERED, DATEPROMISED, DELIVERYRULE, DELIVERYLOCATION,
+       PRODNAME, M_ATTRIBUTESETINSTANCE_ID, ORDEREDQTY, PENDINGQTY,
+       STOCKVALUE || ' ' || UOMSYMBOL AS QTYINSTOCK, AUMQTY,
+       (SELECT UOMSYMBOL FROM C_UOM WHERE C_UOM_ID = AUM) AS AUMSYMBOL, AUM,
+       M_PRODUCT_ID, ORDEREDVALUE, PENDINGVALUE, STOCKVALUE
+    FROM
+    (
+    SELECT ORG.NAME AS ORGNAME, BP.NAME AS BPNAME,
+    O.DOCUMENTNO, O.POREFERENCE, TO_DATE(O.DATEORDERED) AS DATEORDERED, TO_DATE(O.DATEPROMISED) AS DATEPROMISED, 
+    REFLISTV.NAME AS DELIVERYRULE, COALESCE(DLOC.NAME, BPADD.NAME) AS DELIVERYLOCATION,
+    PR.NAME || ' ' || COALESCE(TO_CHAR(ASI.DESCRIPTION), '') AS PRODNAME, OL.M_ATTRIBUTESETINSTANCE_ID,
+    OL.QTYORDERED || ' ' || COALESCE(TO_CHAR(UO.UOMSYMBOL), '') AS ORDEREDQTY, 
+    (OL.QTYORDERED-OL.QTYDELIVERED) || ' ' || COALESCE(TO_CHAR(UO.UOMSYMBOL), '') AS PENDINGQTY, 
+    COALESCE(TO_CHAR(UO.UOMSYMBOL), '') AS UOMSYMBOL,
+    OL.AUMQTY, (COALESCE (OL.C_AUM, M_GET_DEFAULT_AUM_FOR_DOCUMENT(OL.M_PRODUCT_ID, O.C_DOCTYPE_ID))) AS AUM,
+    OL.M_PRODUCT_ID, OL.QTYORDERED AS ORDEREDVALUE, (OL.QTYORDERED-OL.QTYDELIVERED) AS PENDINGVALUE,
+    (
+      SELECT SUM(SD.QTYONHAND)
+      FROM M_STORAGE_DETAIL SD
+      WHERE SD.M_PRODUCT_ID = OL.M_PRODUCT_ID
+      AND SD.C_UOM_ID = OL.C_UOM_ID
+      AND COALESCE(SD.M_ATTRIBUTESETINSTANCE_ID, '0') = COALESCE(OL.M_ATTRIBUTESETINSTANCE_ID, SD.M_ATTRIBUTESETINSTANCE_ID, '0')
+      AND COALESCE(SD.M_PRODUCT_UOM_ID,'-1') = COALESCE(OL.M_PRODUCT_UOM_ID, '-1')
+      AND EXISTS (
+        SELECT 1
+        FROM M_LOCATOR LOC
+        WHERE LOC.M_LOCATOR_ID = SD.M_LOCATOR_ID
+        AND LOC.M_WAREHOUSE_ID = OL.M_WAREHOUSE_ID
+      )
+    ) AS STOCKVALUE     
+    FROM C_ORDER O
+    JOIN AD_ORG ORG ON O.AD_ORG_ID = ORG.AD_ORG_ID
+    JOIN C_BPARTNER BP ON O.C_BPARTNER_ID = BP.C_BPARTNER_ID
+    JOIN C_BPARTNER_LOCATION BPADD ON O.C_BPARTNER_LOCATION_ID = BPADD.C_BPARTNER_LOCATION_ID
+    JOIN AD_REF_LIST_V REFLISTV ON O.DELIVERYRULE = REFLISTV.VALUE
+    LEFT JOIN C_BPARTNER_LOCATION DLOC ON O.DELIVERY_LOCATION_ID = DLOC.C_BPARTNER_LOCATION_ID
+    JOIN C_ORDERLINE OL ON O.C_ORDER_ID = OL.C_ORDER_ID
+    JOIN M_PRODUCT PR ON OL.M_PRODUCT_ID = PR.M_PRODUCT_ID
+    JOIN C_UOM UO ON OL.C_UOM_ID = UO.C_UOM_ID
+    LEFT JOIN M_ATTRIBUTESETINSTANCE ASI ON OL.M_ATTRIBUTESETINSTANCE_ID = ASI.M_ATTRIBUTESETINSTANCE_ID
+    WHERE O.DOCSTATUS = 'CO'
+    AND O.ISSOTRX = 'Y'
+    AND REFLISTV.AD_REFERENCE_ID = '151'
+    AND REFLISTV.AD_LANGUAGE = ?
+    AND O.AD_CLIENT_ID IN ('1')
+    AND O.AD_ORG_ID IN ('1')
+    AND O.ISDELIVERED = 'N'
+    AND 1=1
+    ) A ORDER BY ORGNAME, BPNAME, DOCUMENTNO]]></Sql>
+    <Parameter name="adLanguage"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="O.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="O.AD_ORG_ID IN (" text="'1'"/>    
+    <Parameter name="dateFrom" optional="true" after="1=1"><![CDATA[ AND O.DATEORDERED >= TO_DATE(?) ]]></Parameter>
+    <Parameter name="dateTo" optional="true" after="1=1"><![CDATA[ AND O.DATEORDERED < TO_DATE(?) ]]></Parameter>
+    <Parameter name="cBpartnerId" optional="true" after="1=1">AND O.C_BPARTNER_ID = ?</Parameter>
+    <Parameter name="deliveryTerms" optional="true" after="1=1">AND O.DELIVERYRULE = ?</Parameter>
+    <Parameter name="orderDocNo" optional="true" after="1=1">AND UPPER(O.DOCUMENTNO) LIKE '%'||UPPER(?)||'%'</Parameter>    
+    <Parameter name="orderRef" optional="true" after="1=1">AND UPPER(O.POREFERENCE) LIKE '%'||UPPER(?)||'%'</Parameter>    
+    <Parameter name="cOrgId" optional="true" after="1=1">AND O.AD_ORG_ID = ?</Parameter>    
+  </SqlMethod>
+  <SqlMethod name="bPartnerDescription" type="preparedStatement" return="String" default="">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    SELECT MAX(NAME) AS NAME FROM C_BPARTNER 
+    WHERE C_BPARTNER_ID = ?
+    </Sql>
+    <Parameter name="cBpartnerId"/>
+  </SqlMethod>
+</SqlClass>

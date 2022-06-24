@@ -1,0 +1,176 @@
+#!/bin/bash
+# *************************************************************************
+# * The contents of this file are subject to the Openbravo  Public  License
+# * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+# * Version 1.1  with a permitted attribution clause; you may not  use this
+# * file except in compliance with the License. You  may  obtain  a copy of
+# * the License at http://www.openbravo.com/legal/license.html
+# * Software distributed under the License  is  distributed  on  an "AS IS"
+# * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# * License for the specific  language  governing  rights  and  limitations
+# * under the License.
+# * The Original Code is Openbravo ERP.
+# * The Initial Developer of the Original Code is Openbravo SLU
+# * All portions are Copyright (C) 2019-2021 Openbravo SLU
+# * All Rights Reserved.
+# * Contributor(s):  ______________________________________.
+# ************************************************************************
+
+SCRIPT_NAME=$(basename "$0")
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+FIX=false
+
+source ${SCRIPT_DIR}/../jsutils/dir-functions
+
+OPENBRAVO_ROOT_PATH=$(getOpenbravoRootPath)
+SCAN_BASE_PATH=$(getJsFilesScanPath)
+
+function usage() {
+  echo -n "Usage: ${SCRIPT_NAME} [-f][-h] [FILE ...]
+
+Utility to pass the Javascript Linter to the given files, or all files from the current directory if none given.
+With no arguments, if executed from Openbravo root directory, linting will be checked for all Core modules first and then
+it will be executed for each module that has a .eslintignore file in its root.
+
+ Options:
+  -f                Fixes errors/warnings that can automatically be fixed (Adds --fix argument to ESLint)
+  -h                Display this help and exit
+  -g                Git support, use git show and stdin as input
+
+"
+}
+
+#
+# Execute the Linter splitting the list of files in chunks of max 250 arguments. This is done because "npm run" argument
+# size limit is much lower than the one in bash commands.
+#
+function lintFiles {
+    if [[ -f "./.jsignore" ]]; then
+        exit 0
+    fi
+
+    IGNORE_PATH=""
+    if [[ "$(isCurrentFolderModuleRoot)" == true && -f "./.eslintignore" ]]; then
+        IGNORE_PATH="--ignore-path $(pwd)/.eslintignore"
+    fi
+
+    # If git is specified git show will be used to only show staged changes,
+    # realpath is needed for this to work, hash command is used to check for existence
+    if [[ $1 == "GIT" ]] && hash realpath 2>/dev/null; then
+      FILTERED_FILES=$(node ${SCRIPT_DIR}/filter-eslint-ignored-files.js "${@:2}")
+      if [[ -n "${FILTERED_FILES}" ]]; then
+          for FILE in ${FILTERED_FILES} ; do
+            FILE_NO_ABS=$(realpath --relative-to="$(pwd)" "$FILE")
+            git show :${FILE_NO_ABS} | npm run --prefix ${OPENBRAVO_ROOT_PATH} jslint -s -- ${FLAGS} ${IGNORE_PATH} --stdin --stdin-filename ${FILE}
+          done
+      fi
+    else
+      # Since eslint complains when ignoring a file explicitly passed and there's no way to workaround that via CLI,
+      # ignored files are removed using a script
+      FILTERED_FILES=$(node ${SCRIPT_DIR}/filter-eslint-ignored-files.js "${@:2}")
+      if [[ -n "${FILTERED_FILES}" ]]; then
+          echo "${FILTERED_FILES}" | xargs -n 250 npm run --prefix ${OPENBRAVO_ROOT_PATH} jslint -s -- ${FLAGS} ${IGNORE_PATH} || exit 1
+      fi
+    fi
+}
+
+function getWebJspackIgnorePatterns {
+    PATTERNS=""
+    CORE_2_PATH=modules/org.openbravo.core2
+    if  [ ! -d "$CORE_2_PATH" ]; then
+        PATTERNS="${PATTERNS} --ignore-pattern **/web-jspack/*"
+    fi
+    echo "${PATTERNS}"
+}
+
+
+function getEslintIgnorePatterns {
+    PATTERNS=""
+    for mod in ${@} ; do
+        PATTERNS="${PATTERNS} --ignore-pattern $(basename ${mod})"
+    done
+    PATTERNS="${PATTERNS} $(getWebJspackIgnorePatterns)"
+    echo "${PATTERNS}"
+}
+
+function lintAllFiles {
+    if [[ -d ${SCAN_BASE_PATH}/../modules ]]; then
+        echo "Lint check for Core files"
+        MODS_WITH_IGNORE=$(getModulesPathWithIgnoreFile ".eslintignore")
+        MODS_COMPLETELY_IGNORED=$(getModulesPathWithIgnoreFile ".jsignore")
+        IGNORE_PATTERNS=$(getEslintIgnorePatterns "${MODS_WITH_IGNORE}" "${MODS_COMPLETELY_IGNORED}")
+        runLinterInCore  ${SCAN_BASE_PATH} "${IGNORE_PATTERNS}" "${FLAGS}"
+        for mod in ${MODS_WITH_IGNORE} ; do
+            if [[ ! "$mod" =~ .*"node_modules".* ]]; then
+                runLinterInModule  ${mod} "${FLAGS}"
+            fi
+        done
+    elif [[ -d ${SCAN_BASE_PATH}/../../modules ]]; then
+        runLinterInModule ${SCAN_BASE_PATH}
+    fi
+}
+
+function runLinterInCore {
+    BASE=$1
+    IG_PATTERNS=$2
+    LINTER_FLAGS=$3
+    npm run jslint -s -- ${LINTER_FLAGS} ${IG_PATTERNS} ${BASE}
+}
+
+function runLinterInModule {
+    BASE=$1
+    LINTER_FLAGS=$2
+    IGNORE_PATH=""
+    if [[ -f "${BASE}/.eslintignore" ]]; then
+        IGNORE_PATH="--ignore-path ${BASE}/.eslintignore"
+    fi
+
+    IGNORE_PATTERNS=$(getWebJspackIgnorePatterns)
+
+    if [[ -f "${BASE}/.jsignore" ]]; then
+        exit 0
+    fi
+
+    echo "Lint check for module $(basename ${BASE})"
+    npm run jslint --prefix ${OPENBRAVO_ROOT_PATH} -s -- ${LINTER_FLAGS} ${IGNORE_PATH} ${IGNORE_PATTERNS} --no-error-on-unmatched-pattern "${BASE}"
+}
+
+#Parse input arguments
+while getopts ":fgh" arg; do
+    case ${arg} in
+        f )
+            FIX=true
+        ;;
+        g )
+            GIT=true
+        ;;
+        h )
+            usage
+            exit 0
+        ;;
+        \? )
+            echo "Invalid option: -$OPTARG" >&2
+            usage
+            exit 1
+        ;;
+    esac
+done
+shift "$((OPTIND-1))"
+
+source ${SCRIPT_DIR}/../jsutils/check-npm-deps
+
+FLAGS=""
+if [[ ${FIX} == true ]]; then
+    FLAGS="--fix"
+fi
+
+if [[ $# > 0 ]]; then
+    files=$(convertPathsToAbsolute $@)
+    if [[ ${GIT} == true ]]; then
+      lintFiles "GIT" ${files}
+    else
+      lintFiles ${files}
+    fi
+else
+    lintAllFiles
+fi

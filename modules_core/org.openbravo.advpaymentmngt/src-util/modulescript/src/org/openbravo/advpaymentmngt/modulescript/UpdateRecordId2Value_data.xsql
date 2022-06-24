@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+<SqlClass name="UpdateRecordId2ValueData" package="org.openbravo.advpaymentmngt.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT 1 as name from dual
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="selectCheck" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(1) as name from dual
+        WHERE EXISTS(SELECT 1 FROM FACT_ACCT 
+        WHERE NOT EXISTS (SELECT 1 FROM C_DEBT_PAYMENT WHERE C_DEBT_PAYMENT_ID = RECORD_ID2)
+        AND RECORD_ID2 IS NOT NULL)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="update" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE FACT_ACCT SET RECORD_ID2 = NULL 
+        WHERE NOT EXISTS (SELECT 1 FROM C_DEBT_PAYMENT WHERE C_DEBT_PAYMENT_ID = RECORD_ID2)
+        AND RECORD_ID2 IS NOT NULL
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

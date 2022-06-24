@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE AD_FIELD">
+    <table name="AD_FIELD" primaryKey="AD_FIELD_KEY">
+      <column name="EM_OBUIAPP_COLSPAN" primaryKey="false" required="false" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_OBUIAPP_ROWSPAN" primaryKey="false" required="false" type="DECIMAL" size="10,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_OBUIAPP_VALIDATOR" primaryKey="false" required="false" type="VARCHAR" size="255" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_OBUIAPP_SHOWSUMMARY" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault><![CDATA['N']]></onCreateDefault>
+      </column>
+      <column name="EM_OBUIAPP_SUMMARYFN" primaryKey="false" required="false" type="VARCHAR" size="255" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EM_OBUIAPP_DEFAULT_EXPRESSION" primaryKey="false" required="false" type="NVARCHAR" size="2000" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <check name="EM_OBUIAPP_AD_FIELD_SUMMARY"><![CDATA[EM_OBUIAPP_SHOWSUMMARY IN ('Y', 'N')]]></check>
+    </table>
+  </database>

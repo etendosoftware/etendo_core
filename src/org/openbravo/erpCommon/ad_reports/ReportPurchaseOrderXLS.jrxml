@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
+<!-- 2017-05-25T09:44:46 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportPurchaseOrder" pageWidth="1450" pageHeight="130" orientation="Landscape" columnWidth="1450" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" whenResourceMissingType="Empty" uuid="d5112654-5616-45aa-ab46-4a7530b995d6">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<property name="net.sf.jasperreports.export.xls.detect.cell.type" value="true"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="org.openbravo.erpCommon.utility.Utility"/>
+	<import value="java.util.*"/>
+	<import value="org.openbravo.dal.core.OBContext"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<style name="default" vAlign="Middle" fontName="DejaVu Sans" fontSize="8"/>
+	<style name="Report_Title" fontName="DejaVu Sans" fontSize="18">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="DejaVu Sans" fontSize="14">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Report_Data_Label" fontName="DejaVu Sans" fontSize="10" isBold="true"/>
+	<style name="Report_Data_Field" fontName="DejaVu Sans" fontSize="10" isBold="false"/>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="DejaVu Sans" fontSize="11" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="DejaVu Sans" fontSize="12" isBold="true">
+		<box leftPadding="5"/>
+	</style>
+	<style name="Group_Data_Label" fontName="DejaVu Sans" fontSize="11" isBold="true"/>
+	<style name="Group_Data_Field" fontName="DejaVu Sans" fontSize="11"/>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="DejaVu Sans" fontSize="10" isBold="true">
+		<box leftPadding="5">
+			<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+		</box>
+	</style>
+	<style name="Detail_Line" fontName="DejaVu Sans" fontSize="10">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean($V{DOCUMENTNO_COUNT}.intValue()%2==0)]]></conditionExpression>
+			<style mode="Opaque" backcolor="#CCCCCC"/>
+		</conditionalStyle>
+	</style>
+	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
+	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="DejaVu Sans" fontSize="10" isBold="true"/>
+	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="DejaVu Sans" fontSize="10"/>
+	<style name="Group_Footer" fontName="DejaVu Sans" fontSize="11" isBold="true"/>
+	<style name="Report_Footer" isDefault="true" vAlign="Middle" fontName="DejaVu Sans" fontSize="11"/>
+	<parameter name="DateFrom" class="java.util.Date" isForPrompting="false"/>
+	<parameter name="AD_Org_ID" class="org.codehaus.jettison.json.JSONObject" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="ChildOrgs" class="java.lang.String">
+		<defaultValueExpression><![CDATA[Utility.getInStrSet(OBContext.getOBContext().getOrganizationStructureProvider().getChildTree($P{AD_Org_ID}.getString("value"), true))]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_organization" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{AD_Org_ID} == null || "".equals($P{AD_Org_ID}.getString("value"))) ? "" : " AND C_ORDER.AD_ORG_ID IN (" + $P{ChildOrgs} + ")"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="C_BPartner_ID" class="org.codehaus.jettison.json.JSONObject" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_partner" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{C_BPartner_ID} == null || "".equals($P{C_BPartner_ID}.getString("value"))) ? "" : " AND C_ORDER.C_BPARTNER_ID = '" + $P{C_BPartner_ID}.getString("value") + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="DateTo" class="java.util.Date" isForPrompting="false"/>
+	<parameter name="M_Warehouse_ID" class="org.codehaus.jettison.json.JSONObject" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_warehouse" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{M_Warehouse_ID} == null || "".equals($P{M_Warehouse_ID}.getString("value"))) ? "" : " AND C_ORDER.M_WAREHOUSE_ID = '" + $P{M_Warehouse_ID}.getString("value") + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="C_Project_ID" class="org.codehaus.jettison.json.JSONObject" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_project" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{C_Project_ID} == null || "".equals($P{C_Project_ID}.getString("value"))) ? "" : " AND C_ORDER.C_PROJECT_ID = '" + $P{C_Project_ID}.getString("value") + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="LANGUAGE" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["en_US"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="AMOUNTFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<parameter name="QUANTITYFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<parameter name="LOCALE" class="java.util.Locale" isForPrompting="false"/>
+	<parameter name="C_Currency_ID" class="org.codehaus.jettison.json.JSONObject" isForPrompting="false"/>
+	<parameter name="aux_Currency" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[$P{C_Currency_ID}.getString("value")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_DateFrom" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{DateFrom} == null || $P{DateFrom}.equals("")) ? "" : "AND C_ORDER.DATEORDERED >= TO_DATE('" + new java.sql.Date($P{DateFrom}.getTime()).toString() + "', 'YYYY-MM-DD')"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_DateTo" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{DateTo} == null || $P{DateTo}.equals("")) ? "" : "AND C_ORDER.DATEORDERED <= TO_DATE('" + new java.sql.Date($P{DateTo}.getTime()) + "', 'YYYY-MM-DD')"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="Status" class="org.codehaus.jettison.json.JSONObject" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="aux_Status" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[($P{Status} == null || $P{Status}.equals("")) ? "" : "AND C_ORDER.DOCSTATUS = '" + $P{Status}.getString("value") + "'"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="Current_Client_ID" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="Readable_Organizations" class="java.lang.String">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="isUOMManagementEnabled" class="java.lang.Boolean" isForPrompting="false">
+		<defaultValueExpression><![CDATA[org.openbravo.materialmgmt.UOMUtil.isUomManagementEnabled()]]></defaultValueExpression>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[SELECT
+	ZZ.DOCUMENTNO,
+	ZZ.DATEORDERED,
+	BP.NAME AS CLIENT_NAME,
+	P.VALUE AS PRODUCT_CODE,
+    P.NAME AS PRODUCT_NAME,
+    P.UPC AS BARCODE,
+    COALESCE(RLT.NAME, RL.NAME) AS STATUS,
+    U.NAME AS UOMNAME,
+    AU.NAME AS AUM,
+    ZZ.QUANTITYORDER,
+    ZZ.OUTSTANDINGQTY,
+    ZZ.PRICEACTUAL,
+	C_CURRENCY_CONVERT(ZZ.PRICEACTUAL, ZZ.TRANSCURRENCYID, $P{aux_Currency}, ZZ.DATEORDERED, NULL, ZZ.TRANSCLIENTID, ZZ.TRANSORGID) AS CONVPRICEACTUAL,
+    ZZ.PRICELIST,
+    C_CURRENCY_CONVERT(ZZ.PRICELIST, ZZ.TRANSCURRENCYID, $P{aux_Currency}, ZZ.DATEORDERED, NULL, ZZ.TRANSCLIENTID, ZZ.TRANSORGID) AS CONVPRICELIST, 
+    C_CURRENCY_SYMBOL(ZZ.TRANSCURRENCYID, '0', 'Y') AS TRANSSYM,
+    C_CURRENCY_SYMBOL($P{aux_Currency}, '0', 'Y') AS CONVSYM,
+    C_CURRENCY_ISOSYM($P{aux_Currency}) AS CONVISOSYM,
+    ZZ.ALTERNATIVEQTY AS AUMQTY,
+    ZZ.NEEDBYDATE
+    FROM(
+    	SELECT
+    		Z.DOCUMENTNO,
+			Z.DOCSTATUS,
+			Z.DATEORDERED,
+			Z.NEEDBYDATE,
+			Z.C_BPARTNER_ID,
+		    SUM(Z.QUANTITYORDER) AS QUANTITYORDER,
+		    SUM(Z.QUANTITYORDER)-Z.MATCHPOQTY AS OUTSTANDINGQTY,
+		    Z.PRICEACTUAL,    
+		    SUM(Z.PRICELIST) AS PRICELIST,
+		    Z.M_PRODUCT_ID,
+		    Z.C_UOM_ID,
+		    Z.C_AUM_ID,
+		    Z.TRANSCURRENCYID,
+		    Z.TRANSCLIENTID, 
+		    Z.TRANSORGID,
+		    Z.ALTERNATIVEQTY
+	    FROM(
+		    SELECT
+			    C_ORDER.DOCUMENTNO AS DOCUMENTNO,
+			    C_ORDER.DOCSTATUS AS DOCSTATUS,
+			    C_ORDER.DATEORDERED AS DATEORDERED,
+			    C_ORDER.DATEPROMISED AS NEEDBYDATE,
+			    C_ORDER.C_BPARTNER_ID AS C_BPARTNER_ID,
+			    C_ORDERLINE.C_ORDERLINE_ID AS ORDERLINE,
+			    C_ORDERLINE.QTYORDERED AS QUANTITYORDER,
+			    SUM(COALESCE(M_MATCHPO.QTY,0)) AS MATCHPOQTY,
+			    C_ORDERLINE.PRICEACTUAL AS PRICEACTUAL,    
+			    C_ORDERLINE.LINENETAMT AS PRICELIST,
+			    C_ORDERLINE.M_PRODUCT_ID AS M_PRODUCT_ID,
+			    C_ORDERLINE.C_UOM_ID AS C_UOM_ID,
+			    C_ORDERLINE.C_AUM AS C_AUM_ID,
+			    C_ORDERLINE.C_CURRENCY_ID AS TRANSCURRENCYID,
+			    C_ORDERLINE.AD_CLIENT_ID AS TRANSCLIENTID, 
+			    C_ORDERLINE.AD_ORG_ID AS TRANSORGID,
+			    C_ORDERLINE.AUMQTY AS ALTERNATIVEQTY
+		    FROM C_ORDER
+		    JOIN C_ORDERLINE ON (C_ORDER.C_ORDER_ID = C_ORDERLINE.C_ORDER_ID)
+		    LEFT JOIN M_MATCHPO ON (C_ORDERLINE.C_ORDERLINE_ID = M_MATCHPO.C_ORDERLINE_ID AND M_MATCHPO.M_INOUTLINE_ID IS NOT NULL)
+		    WHERE 1=1
+			    $P!{aux_organization}
+			    $P!{aux_partner}  
+			    $P!{aux_warehouse}
+			    $P!{aux_project} 
+			    $P!{aux_DateFrom} 
+			    $P!{aux_DateTo}
+			    $P!{aux_Status}
+			    AND C_ORDER.ISSOTRX = 'N'
+			    AND C_ORDER.AD_CLIENT_ID = ($P{Current_Client_ID})
+			    AND C_ORDER.AD_ORG_ID IN ($P!{Readable_Organizations})
+		    GROUP BY C_ORDER.DOCUMENTNO, C_ORDER.DOCSTATUS, C_ORDER.DATEORDERED, C_ORDER.DATEPROMISED, C_ORDER.C_BPARTNER_ID, C_ORDERLINE.C_ORDERLINE_ID, C_ORDERLINE.QTYORDERED, C_ORDERLINE.PRICEACTUAL, C_ORDERLINE.LINENETAMT, C_ORDERLINE.M_PRODUCT_ID, C_ORDERLINE.C_UOM_ID, C_ORDERLINE.C_AUM, C_ORDERLINE.C_CURRENCY_ID, C_ORDERLINE.AD_CLIENT_ID, C_ORDERLINE.AD_ORG_ID, C_ORDERLINE.AUMQTY
+		    ) Z
+		GROUP BY DOCUMENTNO, DOCSTATUS, DATEORDERED, NEEDBYDATE, C_BPARTNER_ID, Z.MATCHPOQTY, PRICEACTUAL, M_PRODUCT_ID, C_UOM_ID, C_AUM_ID, TRANSCURRENCYID, TRANSCLIENTID, TRANSORGID, ALTERNATIVEQTY
+		) ZZ
+    JOIN C_BPARTNER BP ON (ZZ.C_BPARTNER_ID = BP.C_BPARTNER_ID)
+    JOIN M_PRODUCT P ON (ZZ.M_PRODUCT_ID = P.M_PRODUCT_ID)
+    JOIN AD_REF_LIST RL ON (ZZ.DOCSTATUS = RL.VALUE)
+    LEFT JOIN AD_REF_LIST_TRL RLT ON (RL.AD_REF_LIST_ID = RLT.AD_REF_LIST_ID AND RLT.AD_LANGUAGE = $P{LANGUAGE})
+    JOIN C_UOM U ON (ZZ.C_UOM_ID = U.C_UOM_ID)
+    LEFT JOIN C_UOM AU ON (ZZ.C_AUM_ID = AU.C_UOM_ID)
+    WHERE
+    	RL.AD_REFERENCE_ID = '9184D71985B045E1BCF98D70D33472DE'
+    ORDER BY
+    	CLIENT_NAME, DATEORDERED, DOCUMENTNO, PRODUCT_NAME]]>
+	</queryString>
+	<field name="DOCUMENTNO" class="java.lang.String"/>
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="DATEORDERED" class="java.util.Date"/>
+	<field name="NEEDBYDATE" class="java.sql.Timestamp"/>
+	<field name="CLIENT_NAME" class="java.lang.String"/>
+	<field name="QUANTITYORDER" class="java.math.BigDecimal"/>
+	<field name="OUTSTANDINGQTY" class="java.math.BigDecimal"/>
+	<field name="PRICEACTUAL" class="java.math.BigDecimal"/>
+	<field name="CONVPRICEACTUAL" class="java.math.BigDecimal"/>
+	<field name="PRICELIST" class="java.math.BigDecimal"/>
+	<field name="CONVPRICELIST" class="java.math.BigDecimal"/>
+	<field name="PRODUCT_CODE" class="java.lang.String"/>
+	<field name="PRODUCT_NAME" class="java.lang.String"/>
+	<field name="BARCODE" class="java.lang.String"/>
+	<field name="UOMNAME" class="java.lang.String"/>
+	<field name="TRANSSYM" class="java.lang.String"/>
+	<field name="CONVSYM" class="java.lang.String"/>
+	<field name="CONVISOSYM" class="java.lang.String"/>
+	<field name="AUMQTY" class="java.math.BigDecimal"/>
+	<field name="AUM" class="java.lang.String"/>
+	<variable name="LOCALE" class="java.util.Locale">
+		<variableExpression><![CDATA[new Locale($P{LANGUAGE}.substring(0,2),$P{LANGUAGE}.substring(3,5))]]></variableExpression>
+	</variable>
+	<variable name="TOTAL_CLIENT" class="java.math.BigDecimal" resetType="Group" resetGroup="CLIENT_NAME" calculation="Sum">
+		<variableExpression><![CDATA[$F{CONVPRICELIST}]]></variableExpression>
+	</variable>
+	<group name="CLIENT_NAME">
+		<groupHeader>
+			<band height="14">
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="-10" width="90" height="14" backcolor="#C0C0C0" uuid="963a2c27-e526-4f17-8e1c-02f5f2c4195b"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Document No.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="90" y="-10" width="58" height="14" backcolor="#C0C0C0" uuid="e36fce9c-f85d-4349-8f6e-7d9c724d6eb5"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Status]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="148" y="-10" width="168" height="14" backcolor="#C0C0C0" uuid="7f8dbe60-af50-4555-bfcb-c2895aa69608"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Business Partner]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="316" y="-10" width="69" height="14" backcolor="#C0C0C0" uuid="3f1c7120-1224-43e0-9a58-77b10d13ec59"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="385" y="-10" width="69" height="14" backcolor="#C0C0C0" uuid="10274c8e-582c-46d5-a0cb-c2797bd94e83"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Need By Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="454" y="-10" width="113" height="14" backcolor="#C0C0C0" uuid="fadca79e-c532-4b84-9227-64949f99b82b"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Search Key]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="567" y="-10" width="178" height="14" backcolor="#C0C0C0" uuid="4bff7558-e45e-4926-a22f-7158a82532a1"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Product]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="745" y="-10" width="165" height="14" backcolor="#C0C0C0" uuid="56b9099f-92b8-4b05-9c12-51a7624cfba6"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[UPC/EAN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="910" y="-10" width="50" height="14" backcolor="#C0C0C0" uuid="646f6623-4180-4689-8a58-e4d2235ecfef"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Quantity]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="960" y="-10" width="117" height="14" backcolor="#C0C0C0" uuid="3169e4a7-c48a-4189-96c2-b80171724237"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Outstanding Quantity]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1077" y="-10" width="71" height="14" backcolor="#C0C0C0" uuid="5b19df83-18c7-422f-9601-8f57729df31f"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[UOM]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1148" y="-10" width="76" height="14" backcolor="#C0C0C0" uuid="35e504d4-b07a-4a4e-b631-f5c74391c602"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Price]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1300" y="-10" width="60" height="14" backcolor="#C0C0C0" uuid="76673677-41ed-4801-854d-f2cf0a09819f"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[Amount]]></text>
+				</staticText>
+				<textField>
+					<reportElement mode="Opaque" x="1360" y="-10" width="90" height="14" backcolor="#C0C0C0" uuid="2ede07c7-41fb-4c82-9966-572f58ae08c5"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Amount " + $F{CONVISOSYM}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement mode="Opaque" x="1224" y="-10" width="76" height="14" backcolor="#C0C0C0" uuid="8f0d33af-b6ee-47ee-b952-c18b546ca268"/>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Price " + $F{CONVISOSYM}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="1450" height="20" uuid="71002e90-edc6-4dc7-9944-81849b405e47"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Purchase Order Report]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="80" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="50" width="90" height="20" uuid="18d7889f-c1f9-462b-ba45-2536b7dd88c8"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Report Date:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="90" y="50" width="1360" height="20" uuid="65547b77-95bc-4097-8ab3-296260500557"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="30" width="90" height="20" uuid="bad268c2-db20-45e9-a444-c748ce2f8835"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Document Status: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="10" width="90" height="20" uuid="284a25a8-5673-42a4-866a-c57ee1a27aa3"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Secondary Filters:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="-10" width="90" height="20" uuid="fedf1a86-534f-469e-97f8-01fa7294e72c"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Primary Filters:]]></text>
+			</staticText>
+			<textField pattern="dd-MM-yyyy" isBlankWhenNull="true">
+				<reportElement x="90" y="-10" width="1360" height="20" uuid="e1e19353-c1ac-4ed7-84b2-5f0142de3695"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[(($P{DateFrom} == null || $P{DateFrom}.equals("")) ? "" :"From "+new SimpleDateFormat("dd-MM-yyyy").format($P{DateFrom}))
++(($P{DateTo} == null || $P{DateTo}.equals("")) ? "" : " to "+new SimpleDateFormat("dd-MM-yyyy").format($P{DateTo}))]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="90" y="30" width="1360" height="20" uuid="417d1e3b-0f76-42a2-83c9-5874a3bfdec5"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{Status}.getString("identifier")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="90" y="10" width="1360" height="20" uuid="9fbfd6ce-b233-4248-8592-8f6343f7e4d7"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{AD_Org_ID} == null ? "" : "Organization: " + $P{AD_Org_ID}.getString("identifier")) + ($P{AD_Org_ID} != null && !$P{C_BPartner_ID}.equals("") ? ", " : "" ) + ($P{C_BPartner_ID}.equals("") ? "" : "Business Partner: " + $F{CLIENT_NAME})]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="14" splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="-10" width="90" height="14" uuid="6b47b056-076f-4eef-b8fd-3b9d82a88cb2"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DOCUMENTNO}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="90" y="-10" width="58" height="14" uuid="639a9f65-fd1a-4126-abca-a70c7c45947b"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{STATUS}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="148" y="-10" width="168" height="14" uuid="331d82cf-0eb5-4c0f-beff-8327bfe2761f"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CLIENT_NAME}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="316" y="-10" width="69" height="14" uuid="a51756f8-118e-4261-8940-06c853a6a046"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DATEORDERED}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="385" y="-10" width="69" height="14" uuid="25276851-ceb8-4779-a9a4-575ed7c12d26"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{NEEDBYDATE}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="454" y="-10" width="113" height="14" uuid="69d0e3f3-f4bb-4a3a-9340-1e5acb8d7809"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRODUCT_CODE}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="567" y="-10" width="178" height="14" uuid="722a8a05-0ddb-40bc-a26c-3e4b4662fb39"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRODUCT_NAME}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement x="745" y="-10" width="165" height="14" uuid="4aaa69a4-2338-4464-86e4-c33ad3698487"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{BARCODE}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="910" y="-10" width="50" height="14" uuid="05f96c58-42b5-4a50-a2db-d2b983345d18"/>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{QUANTITYORDER}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{QUANTITYFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="960" y="-10" width="117" height="14" uuid="99fa8175-4481-4fe6-a898-73867f82fe72"/>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{OUTSTANDINGQTY}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{QUANTITYFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="1077" y="-10" width="71" height="14" uuid="ee48d6a4-a965-432a-a856-33f356a1b43a"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{UOMNAME}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="1148" y="-10" width="76" height="14" uuid="ef1f531c-f757-4b73-a9dd-ae05e8600541"/>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRICEACTUAL}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMOUNTFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="1224" y="-10" width="76" height="14" uuid="1204c703-ae80-45fd-b0d1-7b75e21ee313"/>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CONVPRICEACTUAL}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMOUNTFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="1360" y="-10" width="90" height="14" uuid="a42930f3-a166-4348-ba2b-f0107ee802e6"/>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{CONVPRICEACTUAL}.multiply($F{QUANTITYORDER})]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMOUNTFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="1300" y="-10" width="60" height="14" uuid="532f2787-51c1-4aef-b39a-4d731c9df441"/>
+				<textElement textAlignment="Right">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRICEACTUAL}.multiply($F{QUANTITYORDER})]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMOUNTFORMAT}.toPattern()]]></patternExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

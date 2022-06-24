@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2016 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="GenerateValuedStockAggregatedData" package="org.openbravo.materialmgmt">
+  <SqlClassComment></SqlClassComment>
+
+  <SqlMethod name="select" type="preparedStatement" return="String">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      select c_invoice_id, documentno from c_invoice
+      ]]>
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="insertData" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      INSERT INTO m_valued_stock_agg
+      (
+        m_valued_stock_agg_id,
+        ad_client_id,
+        ad_org_id,
+        isactive,
+        created,
+        createdby,
+        updated,
+        updatedby,
+        m_product_id,
+        m_locator_id,
+        c_uom_id,
+        c_period_id,
+        datefrom,
+        dateto,
+        stock,
+        valuation,
+        c_currency_id,
+        m_costing_rule_id
+      )
+      SELECT GET_UUID(), ad_client_id, ?, 'Y' as active, NOW(), MAX(createdby), NOW(), MAX(updatedby),
+        m_product_id, m_locator_id, c_uom_id, ?, TO_DATE(?), TO_DATE(?), 
+        sum(stock) as stock, sum(valuation) AS valuation, ?, ?
+        FROM (
+            SELECT ad_client_id, MAX(createdby) AS createdby, MAX(updatedby) AS updatedby, m_product_id, m_locator_id, c_uom_id, SUM(movementqty) as stock,
+            sum(a.trxcost) AS valuation
+            FROM(
+                SELECT trx.ad_client_id, trx.ad_org_id, trx.createdby, trx.updatedby, trx.m_product_id, trx.m_locator_id, trx.c_uom_id, trx.movementqty,
+                  0 AS trxcost
+                FROM m_transaction trx
+                WHERE TRUNC(trx.movementdate) <= TO_DATE(?)
+                AND 2=2
+                AND 4=4
+                AND 5=5
+                AND trx.ad_client_id IN (?)
+                AND trx.ad_org_id IN ('1')
+                UNION ALL
+                SELECT t.ad_client_id, t.ad_org_id, t.createdby, t.updatedby, t.m_product_id, t.m_locator_id, t.c_uom_id, 0 AS movementqty,
+                  CASE t.iscostcalculated
+                    WHEN 'Y' THEN C_CURRENCY_CONVERT_PRECISION (tc.trxcost, tc.c_currency_id, ?, tc.movementdate, NULL, t.ad_client_id, ?,'C')
+                    ELSE NULL
+                  END AS trxcost
+                FROM(SELECT SUM(CASE WHEN t2.movementqty < 0 THEN -cost ELSE cost END) AS trxcost, t2.m_transaction_id, tc2.c_currency_id, COALESCE(dateacct, costdate) AS movementdate
+                     FROM m_transaction_cost tc2
+                     JOIN m_transaction t2 ON (tc2.m_transaction_id = t2.m_transaction_id)
+                     WHERE TRUNC(dateacct) <= TO_DATE(?)
+                     AND 3=3
+                     AND 6=6
+                     AND 7=7
+                     AND t2.ad_client_id IN (?)
+                     AND t2.ad_org_id IN ('1')
+                     GROUP BY t2.m_transaction_id, tc2.c_currency_id, COALESCE(dateacct, costdate)
+                ) tc LEFT JOIN m_transaction t ON (t.m_transaction_id = tc.m_transaction_id)
+            ) a
+            GROUP BY a.ad_client_id, a.m_product_id, a.c_uom_id, a.m_locator_id
+            UNION ALL
+            SELECT ad_client_id, MAX(createdby) AS createdby, MAX(updatedby) AS updatedby, m_product_id, m_locator_id, c_uom_id, 
+              SUM(stock) as stock, SUM(valuation) as valuation
+            FROM m_valued_stock_agg agg
+            WHERE ad_org_id IN ('1')
+              AND dateto = (SELECT MAX(agg2.dateto)
+                            FROM m_valued_stock_agg agg2
+                            WHERE agg2.dateto <= TO_DATE(?)
+                            AND agg2.ad_org_id IN ('1')
+                            AND m_costing_rule_id = ?)
+            GROUP BY ad_client_id, ad_org_id, m_product_id, m_locator_id, c_uom_id) B
+        GROUP BY ad_client_id, m_product_id, m_locator_id, c_uom_id
+      ]]>
+    </Sql>
+    <Parameter name="legalEntity"/>
+    <Parameter name="cPeriodID"/>
+    <Parameter name="dateFrom"/>
+    <Parameter name="dateTo"/>
+    <Parameter name="cCurrencyID"/>
+    <Parameter name="mCostingRuleID"/>
+    <Parameter name="dateTo"/>
+    <Parameter name="startingDate" optional="true" after="AND 2=2"><![CDATA[ AND TRUNC(trx.movementdate) > TO_DATE(?) ]]></Parameter>
+    <Parameter name="crStartDate" optional="true" after="AND 4=4"><![CDATA[ AND trx.trxprocessdate >= to_timestamp(?, 'DD-MM-YYYY HH24:MI:SS') ]]></Parameter>
+    <Parameter name="crEndDate" optional="true" after="AND 5=5"><![CDATA[ AND trx.trxprocessdate <= to_timestamp(?, 'DD-MM-YYYY HH24:MI:SS') ]]></Parameter>
+    <Parameter name="adClientId"/>
+    <Parameter name="organization" type="replace" optional="true" after="AND trx.ad_org_id IN (" text="'1'"/>
+    <Parameter name="cCurrencyID"/>
+    <Parameter name="legalOrg"/>
+    <Parameter name="dateTo"/>
+    <Parameter name="startingDate" optional="true" after="AND 3=3"><![CDATA[ AND TRUNC(dateacct) > TO_DATE(?) ]]></Parameter>
+    <Parameter name="crStartDate" optional="true" after="AND 6=6"><![CDATA[ AND t2.trxprocessdate >= to_timestamp(?, 'DD-MM-YYYY HH24:MI:SS') ]]></Parameter>
+    <Parameter name="crEndDate" optional="true" after="AND 7=7"><![CDATA[ AND t2.trxprocessdate <= to_timestamp(?, 'DD-MM-YYYY HH24:MI:SS') ]]></Parameter>
+    <Parameter name="adClientId"/>
+    <Parameter name="organization" type="replace" optional="true" after="AND t2.ad_org_id IN (" text="'1'"/>
+    <Parameter name="organization" type="replace" optional="true" after="WHERE ad_org_id IN (" text="'1'"/>
+    <Parameter name="startingDate"/>
+    <Parameter name="organization" type="replace" optional="true" after="AND agg2.ad_org_id IN (" text="'1'"/>
+    <Parameter name="mCostingRuleID"/>
+  </SqlMethod>
+  
+</SqlClass>

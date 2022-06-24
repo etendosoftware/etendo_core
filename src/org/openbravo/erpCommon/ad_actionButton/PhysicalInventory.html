@@ -1,0 +1,314 @@
+<!--
+*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html 
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License. 
+* The Original Code is Openbravo ERP. 
+* The Initial Developer of the Original Code is Openbravo SLU 
+* All portions are Copyright (C) 2015 Openbravo SLU 
+* All Rights Reserved. 
+* Contributor(s):  ______________________________________.
+************************************************************************
+-->
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Create Physical Inventory</title>
+    <link rel="shortcut icon" href="../../../../../web/images/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="../../../../../web/skins/Default/Openbravo_ERP_250.css" id="paramCSS"></link>
+    <script language="JavaScript" src="../../../../../web/js/shortcuts.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/utils.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/ajax.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/dojoConfig.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/dojo/dojo.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/messages.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../utility/DynamicJS.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/jscalendar/calendar.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/jscalendar/lang/calendar-es.js" type="text/javascript" id="fieldCalendar"></script>
+    <script language="JavaScript" src="../../../../../web/js/default/DateTextBox.js" type="text/javascript"></script>
+    <script language="JavaScript" type="text/javascript" id="paramLanguage">defaultLang = "en_US";</script>
+    <script language="JavaScript" src="../../../../../web/js/windowKeyboard.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/appStatus.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/js/default/MessageBox.js" type="text/javascript"></script>   
+    <script language="JavaScript" src="../../../../../web/js/searchs.js" type="text/javascript"></script>
+    <script language="JavaScript" src="../../../../../web/org.openbravo.advpaymentmngt/FIN_Utilities.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    //  window.onunload = reloadOpener; // reloads opener on closing
+      dojo.hostenv.writeIncludes(); //makes debugging in Venkman possible
+    </script>
+    <script language="JavaScript" type="text/javascript" id="paramDirectory">
+      var baseDirectory="../../../../../web/";
+    </script>
+    <script language="JavaScript" type="text/javascript" id="paramArray">
+      var arrDocAction = null;
+    </script>
+    <script language="JavaScript" type="text/javascript">
+      function submitThisPage(strCommand) {
+        if (strCommand==="CANCEL_PHYSICALINVENTORY" || strCommand==="SAVE_PHYSICALINVENTORY"){
+          setProcessingMode('popup', true);
+          submitCommandForm(strCommand, false, null, null, '_self');
+        }
+        return true;
+      }
+    </script>
+
+    <script language="JavaScript" type="text/javascript">
+    function onLoadDo(){
+        setProcessingMode('popup', false);
+        this.windowTables = new Array(
+          new windowTableId('client', 'buttonOK')
+        );
+        setWindowTableParentElement();
+        enableShortcuts('popup');
+        setBrowserAutoComplete(false);
+
+        loadGridList();
+        reloadOpener();
+        initFIN_Utilities(document.frmMain);
+        setWindowElementFocus('firstElement');
+        
+        // Refresh the invoice header after completing it
+        var contextView = getFrame('LayoutMDI').OB.ActionButton.executingProcess.contextView;
+        var currentView = getFrame('LayoutMDI').OB.ActionButton.executingProcess.view;
+        // Refresh context view
+        contextView.getTabMessage();
+        currentView.toolBar.refreshCustomButtons();
+        // Refresh in order to show possible new records
+        currentView.refresh(null, false, true);
+    }
+
+    function onResizeDo(){
+    }
+   
+    </script>
+<script language="JavaScript" type="text/javascript">
+function loadGridList() {
+  try {
+    var paramXMLReq = null;
+    return submitXmlHttpRequest(callBackGrid, document.frmMain, "LOAD_PHYSICALINVENTORY", "ProcessGoods.html", false, null, paramXMLReq);
+  } catch (e) {
+    alert(e);
+  }
+}
+
+function callBackGrid(paramXMLParticular, XMLHttpRequestObj) {
+  var strText = "";
+  if (getReadyStateHandler(XMLHttpRequestObj)) {
+    try {
+      if (XMLHttpRequestObj.responseText) {
+        strText = XMLHttpRequestObj.responseText;
+        var aux = strText.substring(29, strText.length-8);
+        var tableBody = document.getElementById('sectionGrid');
+        var browserName = getBrowserInfo('name');
+        if (browserName.toUpperCase().indexOf('INTERNET EXPLORER') != -1) {
+          var temp = document.createElement("span");
+          temp.id = 'temp';
+          temp.style.display = 'none';
+          var newRows = '<table><tbody id=\"sectionGrid\">'+ aux;
+          temp.innerHTML = newRows;
+          tableBody.parentNode.replaceChild(temp.firstChild.firstChild, tableBody);
+          if (temp.parentNode) {
+            temp.parentNode.removeChild(temp);
+          }
+        } else {
+          tableBody.innerHTML = aux;
+        }
+        
+        reloadOpener();
+      } else {
+        document.getElementById('sectionGrid').innerHTML = '';
+      }
+    } catch (e) {
+    }
+  }
+  return true;
+}
+</script>
+
+</head>
+
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="onLoadDo();" onresize="onResizeDo();">
+  <form id="form" method="post" action="ProcessGoods.html" name="frmMain">
+    <input type="hidden" name="Command">
+    <input type="hidden" name="IsPopUpCall" value="1"></input>
+    <input type="hidden" name="inpKey" value="" id="key"></input>
+    <input type="hidden" name="inpwindowId" value="" id="window"></input>
+    <input type="hidden" name="inpTabId" value="" id="tab"></input>
+    <input type="hidden" name="inpadOrgId" value="" id="adOrgId"></input>
+    <!-- Dummy value for FIN_Utilities.initFIN_Utilities() -->
+    <input type="hidden" name="isReceipt" value="Y" id="fieldReceipt"/>
+    <input type="hidden" name="inpdocaction" value="" id="paramDocAction"></input>
+    <input type="hidden" name="inpVoidedDocumentDate" value="" id="paramMinDate"></input>
+    <input type="hidden" name="inpVoidedDocumentAcctDate" value="" id="paramMinAcctDate"></input>
+    
+    <div class="Popup_ContentPane_CircleLogo">
+      <div class="Popup_WindowLogo">
+    <img class="Popup_WindowLogo_Icon Popup_WindowLogo_Icon_process" src="../../../../../web/images/blank.gif" border=0/></img>
+      </div>
+    </div>
+    <table cellspacing="0" cellpadding="0" width="100%" id="table_header">
+      <tr>
+    <td>
+          <table cellspacing="0" cellpadding="0" class="Popup_ContentPane_NavBar">
+            <tr class="Popup_NavBar_bg"><td></td>
+              <td class="Popup_NavBar_separator_cell"></td>
+              <td class="Popup_NavBar_bg_logo_left"></td>
+              <td class="Popup_NavBar_bg_logo" width="1" onclick="openNewBrowser('http://www.openbravo.com', 'Openbravo');return false;"><img src="../../../../../web/images/blank.gif" alt="Openbravo" title="Openbravo" border="0" id="openbravoLogo" class="Popup_NavBar_logo" /></td>
+              <td class="Popup_NavBar_bg_logo_right"></td>
+              <td class="Popup_NavBar_Popup_title_cell"><span name="lbl" id="lblPopupTitle">Create Physical Inventory</span></td>
+              <td class="Popup_NavBar_separator_cell"></td>
+            </tr>
+          </table>
+    </td>
+      </tr>
+      <tr>
+    <td>
+          <table cellspacing="0" cellpadding="0" class="Popup_ContentPane_SeparatorBar">
+            <tr>
+              <td class="Popup_SeparatorBar_bg"></td>
+            </tr>
+          </table>
+    </td>
+      </tr>
+    </table>
+
+    <table cellspacing="0" cellpadding="0" class="Popup_ContentPane_InfoBar">
+      <tbody>
+        <tr>
+          <td class="Popup_InfoBar_Icon_cell"><img src="../web/images/blank.gif" border="0" class="Popup_InfoBar_Icon_info"></td>
+          <td class="Popup_InfoBar_text_table">
+            <table>
+              <tbody>
+                <tr>
+                  <td class="Popup_InfoBar_text" id="helpDiscard"> 
+                    <div id="processHelpCustom">
+                      <p>There is no registered stock for those products and attribute set values.</p> 
+                      <p>As your client does not allow negative stock, it is needed to automatically create 
+                      a physical inventory for those products, in order to be able to void the receipt.</p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Grid and Buttons -->
+    <table cellspacing="0" cellpadding="0" width="100%">
+      <!-- Grid -->
+      <tr>
+        <td>
+          <div class="Popup_ContentPane_Client" style="overflow: auto;" id="client_middle">
+            <table width="100%" cellspacing="0" cellpadding="0" class="Popup_Client_TablePopup">
+              <!-- Grid -->
+              <tr>  
+        <td>
+          <table cellspacing="0" cellpadding="0" width="100%" class="DataGrid_Header_Table DataGrid_Body_Table" style="table-layout: auto;">
+                    <thead>
+                      <tr class="DataGrid_Body_Row">
+            <th class="DataGrid_Header_Cell" width="50">Line No</th>
+            <th class="DataGrid_Header_Cell" width="400">Product</th>
+            <th class="DataGrid_Header_Cell" width="200">Attribute Set Value</th>
+            <th class="DataGrid_Header_Cell" width="70">Quantity</th>
+            <th class="DataGrid_Header_Cell" width="70">UOM</th>
+            <th class="DataGrid_Header_Cell" width="70">Order Quantity</th>
+            <th class="DataGrid_Header_Cell" width="70">Order UOM</th>
+            <th class="DataGrid_Header_Cell" width="200">Storage Bin</th>
+                      </tr>
+                    </thead>
+                    <tbody id="sectionGrid">
+                    </tbody>
+          </table>
+        </td>
+              </tr>
+            </table>
+      </div>
+    </td>
+      </tr>
+      
+      <!-- Buttons -->
+      <tr>
+    <td>
+          <div class="Popup_ContentPane_Client" style="overflow: auto; padding-bottom: 5px;" id="client_bottom">
+            <table cellspacing="0" cellpadding="0" class="Popup_Client_TableSelector">
+
+              <tr>
+        <td class="TableEdition_OneCell_width"></td>
+        <td class="TableEdition_OneCell_width"></td>
+        <td class="TableEdition_OneCell_width"></td>
+        <td class="TableEdition_OneCell_width"></td>
+        <td class="TableEdition_OneCell_width"></td>
+        <td class="TableEdition_OneCell_width"></td>
+              </tr>
+              <tr>
+        <td></td>
+        <td></td>
+        <td class="Button_RightAlign_ContentCell">
+                  <div>
+                    <button type="button" 
+                id="buttonProcess"
+                class="ButtonLink" 
+                onclick="submitThisPage('SAVE_PHYSICALINVENTORY');return false;"
+                onfocus="buttonEvent('onfocus', this); window.status='Create'; return true;"
+                onblur="buttonEvent('onblur', this);"
+                onkeyup="buttonEvent('onkeyup', this);"
+                onkeydown="buttonEvent('onkeydown', this);"
+                onkeypress="buttonEvent('onkeypress', this);"
+                onmouseup="buttonEvent('onmouseup', this);"
+                onmousedown="buttonEvent('onmousedown', this);"
+                onmouseover="buttonEvent('onmouseover', this); window.status='Create'; return true;"
+                onmouseout="buttonEvent('onmouseout', this);">
+                      <table class="Button">
+            <tr>
+                          <td class="Button_left"><img class="Button_Icon Button_Icon_ok" alt="Process" title="Process" src="../../../../../web/images/blank.gif" border="0" /></td>
+                          <td class="Button_text" width="150px">Ok</td>
+                          <td class="Button_right"></td>
+            </tr>
+                      </table>
+                    </button>
+                  </div>
+        </td>
+        <td class="Button_LeftAlign_ContentCell">
+                  <div>
+                    <button type="button" 
+                id="buttonCancel" 
+                class="ButtonLink" 
+                onclick="submitThisPage('CANCEL_PHYSICALINVENTORY');return false;"
+                onfocus="buttonEvent('onfocus', this); window.status='Cancel'; return true;"
+                onblur="buttonEvent('onblur', this);"
+                onkeyup="buttonEvent('onkeyup', this);"
+                onkeydown="buttonEvent('onkeydown', this);"
+                onkeypress="buttonEvent('onkeypress', this);"
+                onmouseup="buttonEvent('onmouseup', this);"
+                onmousedown="buttonEvent('onmousedown', this);"
+                onmouseover="buttonEvent('onmouseover', this); window.status='Cancel'; return true;"
+                onmouseout="buttonEvent('onmouseout', this);">
+                      <table class="Button">
+            <tr>
+                          <td class="Button_left"><img class="Button_Icon Button_Icon_cancel" alt="Cancel" title="Cancel" src="../../../../../web/images/blank.gif" border="0" /></td>
+                          <td class="Button_text" width="150px">Cancel</td>
+                          <td class="Button_right"></td>
+            </tr>
+                      </table>
+                    </button>
+                  </div>
+        </td>
+        <td></td>
+        <td></td>
+              </tr>
+            </table>
+          </div>
+    </td>
+      </tr>
+    </table>
+
+</body>
+</html>

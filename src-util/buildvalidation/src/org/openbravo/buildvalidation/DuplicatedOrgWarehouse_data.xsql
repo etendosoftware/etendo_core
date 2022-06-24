@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+<SqlClass name="DuplicatedOrgWarehouseData" package="org.openbravo.buildvalidation">
+  <SqlMethod name="DuplicatedOrganizationWarehouse" type="preparedStatement" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        SELECT c.name as client, o.name as organization, w.name as warehouse
+        FROM ad_org_warehouse ow
+            left join ad_org o on ow.ad_org_id=o.ad_org_id
+            left join m_warehouse w on ow.m_warehouse_id = w.m_warehouse_id
+            left join ad_client c on ow.ad_client_id = c.ad_client_id
+        GROUP BY ow.m_warehouse_id, ow.ad_org_id, c.name, o.name, w.name
+        HAVING count(*)>1
+      ]]></Sql>
+  </SqlMethod>
+  <SqlMethod name="existsDuplicatedOrgWarehouse" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        SELECT count(*) AS EXISTING
+        FROM ad_org_warehouse
+        GROUP BY ad_org_id, m_warehouse_id
+        HAVING count(*)>1
+      ]]></Sql>
+  </SqlMethod>
+  <SqlMethod name="existOrgWarehouseTable" type="preparedStatement" return="boolean">
+    <SqlMethodComment>Check if the AD_Org_Warehouse table exist</SqlMethodComment>
+    <Sql><![CDATA[
+       SELECT count(*) AS EXISTING
+       FROM ad_table
+       WHERE ad_table_id = '26673F55911848E894D837F57207A92B'
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

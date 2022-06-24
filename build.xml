@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2001-2021 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************
+-->
+<!--
+List of targets:
+
+init: checks if exists the JAVA_HOME var.
+compile.complete: refer to compile.complete target of src.
+compile: refer to compile target of src.
+compile.complete.development: refer to compile.complete.development target of src.
+compile.development: refer to compile.development target of src.
+compile.web: refer to compile.web: target of src.
+compile.web.development: refer to compile.web.development: target of src.
+compile.src: refer to compile.src target of src.
+war: refer to build.war target of src.
+core.lib: refer to build target of src-core.
+wad.lib: refer to build target of src-wad.
+trl.lib: refer to build target of src-trl.
+clean: refer to clean target of src.
+trl.clean: refer to trl.clean target of src.
+translate: refer to translate target of src.
+deploy.context: deploy the context into Tomcat using the manager
+install.source: install the ERP from sources (from subversion).
+create.database: refer to create.database target of database.
+update.database: refer to update.database target of database.
+create.database.script: refer to create.database.script target of database.
+update.database.script: refer to update.database.script target of database.
+export.database: exports database structure and data to xml files.
+-->
+<project name="openbravo" default="compile.complete" basedir=".">
+  <property environment="env" />
+  <property name="base.config" location="config" />
+  <property file="${base.config}/Openbravo.properties" />
+  <property file="${base.config}/checksums" />
+
+  <property name="base.config" location="config" />
+  <property name="base.src" location="src" />
+  <property name="base.src.test" location="src-test" />
+  <property name="base.src.core" location="src-core" />
+  <property name="base.src.db" location="src-db" />
+  <property name="base.src.trl" location="src-trl" />
+  <property name="base.src.wad" location="src-wad" />
+  <property name="base.src.gen" location="src-gen" />
+  <property name="base.db" location="src-db/database" />
+  <property name="base.web" location="web" />
+  <property name="base.context" location="WebContent" />
+  <property name="base.design" location="${base.context}/src-loc" />
+  <property name="base.lib" location="lib" />
+  <property name="base.modules" location="modules" />
+  <property name="base.modules_core" location="modules_core" />
+  <property name="build" location="build/classes" />
+  <property name="build.apply.module" location="build.apply/classes" />
+  <property name="build.AD" location="srcAD" />
+  <property name="build.sqlc" location="build/javasqlc" />
+  <property name="build.core.lib" location="src-core/lib" />
+  <property name="build.trl.lib" location="src-trl/lib" />
+  <property name="build.wad.lib" location="src-wad/lib" />
+  <property name="build.docs" location="docs/api" />
+  <property name="jakarta.home" location="${env.CATALINA_HOME}" />
+  <property name="module" value="%" />
+  <property name="apply.on.create" value="false" />
+  <property name="obx.export.RD" value="false" />
+  <property name="obx.export.DB" value="false" />
+  <property name="obx.export.CS" value="false" />
+  <property name="obx.export.validate" value="true" />
+  <property name="obx.export.allDeps" value="false" />
+  <property name="chekPerms" value="false" />
+  <property name="force" value="false" />
+  <property name="strict.template.application" value="false" />
+  <property name="rd" value="false" />
+  <property name="local" value="true" />
+  <property name="stopOnWadError" value="false"/>
+  <property name="friendlyWarnings" value="false"/>
+  <property name="checkTranslationConsistency" value="true"/>
+  <property name="buildValidation" value="true"/>
+  <property name="modules" value=""/> 
+  <property name="minimizeJSandCSS" value="false"/>
+  <condition property="xdoclint.missing" value="" else="-Xdoclint:-missing">
+    <equals arg1="${ant.java.version}" arg2="1.7"/>
+  </condition>
+
+  <condition property="html.version" value="-html5" else="">
+    <not>
+      <equals arg1="${ant.java.version}" arg2="1.8"/>
+    </not>
+  </condition>
+
+  <condition property="deploy.mode" value="class">
+    <not>
+      <isset property="${deploy.mode}" />
+    </not>
+  </condition>
+
+  <condition property="mode.war">
+    <equals arg1="war" arg2="${deploy.mode}" />
+  </condition>
+
+  <condition property="mode.class">
+    <equals arg1="class" arg2="${deploy.mode}" />
+  </condition>
+
+  <condition property="apply.modules.on.create">
+    <or>
+      <equals arg1="yes" arg2="${apply.on.create}" />
+      <equals arg1="true" arg2="${apply.on.create}" />
+    </or>
+  </condition>
+
+  <condition property="obx.exp.DB">
+    <or>
+      <equals arg1="yes" arg2="${obx.export.DB}" />
+      <equals arg1="true" arg2="${obx.export.DB}" />
+    </or>
+  </condition>
+
+  <condition property="obx.exp.CS">
+    <or>
+      <equals arg1="yes" arg2="${obx.export.CS}" />
+      <equals arg1="true" arg2="${obx.export.CS}" />
+    </or>
+  </condition>
+  
+  <condition property="obx.exp.validate">
+    <or>
+      <equals arg1="yes" arg2="${obx.export.validate}" />
+      <equals arg1="true" arg2="${obx.export.validate}" />
+    </or>
+  </condition>
+
+  <condition property="timestamp">
+    <or>
+      <equals arg1="no" arg2="${execute.update.build.timestamp}" />
+      <equals arg1="false" arg2="${execute.update.build.timestamp}" />
+    </or>
+  </condition>
+
+  <condition property="jakarta.base" value="${env.CATALINA_BASE}" else="${jakarta.home}">
+    <and>
+      <isset property="env.CATALINA_BASE" />
+    </and>
+  </condition>
+
+  <condition property="build.maxmemory" value="1024M" else="512M">
+    <or>
+      <equals arg1="${os.arch}" arg2="amd64" />
+      <equals arg1="${os.arch}" arg2="x86_64" />
+      <equals arg1="${os.arch}" arg2="ia64" />
+    </or>
+  </condition>
+
+  <condition property="allow.root.user" value="true" else="false">
+    <or>
+      <equals arg1="yes" arg2="${allow.root}" />
+      <equals arg1="true" arg2="${allow.root}" />
+    </or>
+  </condition>
+
+  <condition property="no.java.home" value="true">
+    <not>
+      <isset property="env.JAVA_HOME" />
+    </not>
+  </condition>
+
+  <condition property="bbdd.owner.url" value="${bbdd.url}/${bbdd.sid}" else="${bbdd.url}">
+    <and>
+      <equals arg1="${bbdd.rdbms}" arg2="POSTGRE" />
+    </and>
+  </condition>
+
+  <condition property="root.user">
+    <and>
+      <equals arg1="${user.name}" arg2="root" />
+      <not>
+        <contains string="${os.name}" substring="Windows" />
+      </not>
+      <equals arg1="false" arg2="${allow.root.user}" />
+    </and>
+  </condition>
+
+  <!-- Minimal classpath used for executing Wad at compile time -->
+  <path id="wad.class.path">
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${build.core.lib}">
+      <include name="openbravo-core.jar" />
+    </fileset>
+    <fileset dir="${build.wad.lib}">
+      <include name="openbravo-wad.jar" />
+    </fileset>
+    <pathelement path="${base.config}" />
+  </path>
+
+  <path id="project.class.path">
+    <dirset dir="${base.modules}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <dirset dir="${base.modules_core}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <pathelement path="${basedir}/src-util/modulescript/build/classes/" />
+    <pathelement path="${base.config}" />
+    <pathelement path="${build}" />
+    <pathelement path="${base.src}" />
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${build.core.lib}">
+      <include name="openbravo-core.jar" />
+    </fileset>
+    <fileset dir="${build.trl.lib}">
+      <include name="openbravo-trl.jar" />
+    </fileset>
+    <fileset dir="${build.wad.lib}">
+      <include name="openbravo-wad.jar" />
+    </fileset>
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+      <exclude name="**/test/*.jar" />
+    </fileset>
+    <fileset dir="${base.db}/lib/">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.modules}">
+      <include name="*/lib/**" />
+       <exclude name="**/test/*.jar" />
+    </fileset>
+    <fileset dir="${base.modules_core}">
+      <include name="*/lib/**" />
+      <exclude name="**/test/*.jar" />
+    </fileset>
+  </path>
+
+  <!-- This classpath is needed only for the compile.apply.module task-->
+  <path id="apply.module.compile.classpath">
+    <dirset dir="${base.modules}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <dirset dir="${base.modules_core}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <pathelement path="${basedir}/../../src-util/modulescript/build/classes/" />
+    <pathelement path="${build.apply.module}" />
+    <pathelement path="${base.config}" />
+    <pathelement path="${base.src}" />
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${build.core.lib}">
+      <include name="openbravo-core.jar" />
+    </fileset>
+    <fileset dir="${build.trl.lib}">
+      <include name="openbravo-trl.jar" />
+    </fileset>
+    <fileset dir="${build.wad.lib}">
+      <include name="openbravo-wad.jar" />
+    </fileset>
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.db}/lib/">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.modules}">
+      <include name="*/lib/**" />
+    </fileset>
+    <fileset dir="${base.modules_core}">
+      <include name="*/lib/**" />
+    </fileset>
+  </path>
+  
+  <!-- This classpath is needed only for the apply.module task-->
+  <path id="apply.module.runtime.classpath">
+    <dirset dir="${base.modules}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <dirset dir="${base.modules_core}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <pathelement path="${basedir}/../../src-util/modulescript/build/classes/" />
+    <pathelement path="${base.config}" />
+    <pathelement path="${build.apply.module}" />
+    <pathelement path="${build}" />
+    <pathelement path="${base.src}" />
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${build.core.lib}">
+      <include name="openbravo-core.jar" />
+    </fileset>
+    <fileset dir="${build.trl.lib}">
+      <include name="openbravo-trl.jar" />
+    </fileset>
+    <fileset dir="${build.wad.lib}">
+      <include name="openbravo-wad.jar" />
+    </fileset>
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.db}/lib/">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.modules}">
+      <include name="*/lib/**" />
+    </fileset>
+    <fileset dir="${base.modules_core}">
+      <include name="*/lib/**" />
+    </fileset>
+  </path>
+
+  <path id="gradle.class.path">
+    <dirset dir="${base.modules}">
+      <include name="*/build/classes/" />
+    </dirset>
+  </path>
+  
+  <macrodef name="updatesystemstatus">
+     <attribute name="v" default="NOT SET"/>
+     <sequential>
+       <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
+         <classpath> <fileset dir="${base.lib}"> <include name="**/*.jar"> </include> </fileset> </classpath>
+         <transaction> UPDATE ad_system_info SET system_status='@{v}' ;
+         </transaction>
+       </sql>
+     </sequential>
+  </macrodef>
+  
+  <macrodef name="updatesystemstatuswhennot">
+    <attribute name="v" default="NOT SET"/>
+    <attribute name="previous" default="NOT SET"/>
+     <sequential>
+       <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
+         <classpath> <fileset dir="${base.lib}"> <include name="**/*.jar"> </include> </fileset> </classpath>
+         <transaction> UPDATE ad_system_info SET system_status='@{v}' where system_status!='@{previous}' ;
+         </transaction>
+       </sql>
+     </sequential>
+  </macrodef>
+  
+  <target name="init">
+    <fail if="root.user" message="Don't run ant tasks with the root user" />
+    <fail if="no.java.home" message="The environment variable JAVA_HOME is not set." />
+    <fail message="Unsupported Java version ${ant.java.version}. Minimum required is 11.">
+      <condition>
+        <or>
+          <equals arg1="${ant.java.version}" arg2="1.6"/>
+          <equals arg1="${ant.java.version}" arg2="1.7"/>
+          <equals arg1="${ant.java.version}" arg2="1.8"/>
+          <equals arg1="${ant.java.version}" arg2="9"/>
+          <equals arg1="${ant.java.version}" arg2="10"/>
+        </or>
+      </condition>
+    </fail>
+    <antversion property="min.ant.version" atleast="1.9.2" />
+    <antversion property="actual.ant.version" />
+    <fail message="Unsupported ant version ${actual.ant.version}. Minimum required is 1.9.2.">
+      <condition>
+        <not>
+          <isset property="min.ant.version"/>
+        </not>
+      </condition>
+    </fail>
+    <condition property="gradle.libs.defined">
+      <isreference refid="gradle.libs"/>
+    </condition>
+    <fail unless="gradle.libs.defined" message="Build tasks must be run using Gradle."/>
+  </target>
+
+  <target name="compile.complete" depends="init, core.lib, wad.lib, trl.lib">
+    <ant dir="${base.src}" target="compile.complete" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="migrate.attachments" depends="init">
+    <taskdef name="MigrateAttachments" classname="org.openbravo.erpCommon.utility.MigrateAttachments" >
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <MigrateAttachments/>
+  </target>
+
+  <target name="smartbuild" depends="init, core.lib">
+    <property name="smart.mode" value="true" />
+    <property name="onlyIfModified" value="true" />
+    <echo>Smartbuild step core.lib</echo>
+    <antcall target="core.lib" />
+
+    <condition property="no.local">
+      <not>
+        <istrue value="${local}" />
+      </not>
+    </condition>
+    <echo>Smartbuild step update.database.if.no.local</echo>
+    <antcall target="update.database.if.no.local" />
+
+    <echo>Smartbuild step wad.lib</echo>
+    <antcall target="wad.lib" />
+
+    <echo>Smartbuild step CheckSumCondition</echo>
+    <taskdef name="CheckSumCondition" classname="org.openbravo.utils.CheckSumCondition">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    
+    <CheckSumCondition obDir="${basedir}"
+                       type="md5.wad"
+                       property="test.md5.wad"/>
+
+    <condition property="new.wad">
+        <istrue value="${test.md5.wad}"/>
+    </condition>
+
+    <echo>Smartbuild step trl.lib</echo>
+    <antcall target="trl.lib" />
+
+    <echo>Smartbuild step generate.entities.quick</echo>
+    <antcall inheritall="true" inheritrefs="true" target="generate.entities.quick" />
+
+    <ant dir="${base.src}" target="smartbuild" inheritAll="true" inheritRefs="true" />
+
+    <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
+    <echo>Smartbuild step build.deploy</echo>
+    <antcall target="build.deploy" />
+    <updatesystemstatuswhennot v="RB51" previous="RB12"/>
+
+  </target>
+
+  <target name="deploy.skin" depends="init">
+    <property name="smart.mode" value="true" />
+    <property name="onlyIfModified" value="true" />
+    <!--
+    <antcall target="core.lib" />
+
+    <condition property="no.local">
+      <not>
+        <istrue value="${local}" />
+      </not>
+    </condition>
+    <antcall target="update.database.if.no.local" />
+
+    <antcall target="wad.lib" />
+
+    <taskdef name="CheckSumCondition" classname="org.openbravo.utils.CheckSumCondition">
+      <classpath refid="project.class.path" />
+    </taskdef>
+
+    <CheckSumCondition obDir="${basedir}"
+                       type="md5.wad"
+                       property="test.md5.wad"/>
+
+    <condition property="new.wad">
+      <istrue value="${test.md5.wad}"/>
+    </condition>
+
+    <antcall target="trl.lib" />
+
+    <antcall inheritall="true" inheritrefs="true" target="generate.entities.quick" />
+
+-->
+    <ant dir="${base.src}" target="smartbuild" inheritAll="true" inheritRefs="true" />
+
+    <antcall target="build.deploy" />
+    <updatesystemstatuswhennot v="RB51" previous="RB12"/>
+  </target>
+
+  <target name="update.database.if.no.local" if="no.local">
+    <antcall target="update.database" />
+  </target>
+
+  <target name="build.deploy">
+    <antcall target="build.deploy.war" />
+    <antcall target="build.deploy.class" />
+  </target>
+
+  <target name="build.deploy.class" if="mode.class">
+    <ant dir="${base.src}" target="copy.files" inheritAll="true" inheritRefs="true" />
+    <mkdir dir="${jakarta.base}/webapps/${context.name}/WEB-INF/lib" />
+    <copy todir="${jakarta.base}/webapps/${context.name}/WEB-INF/lib" file="${build.core.lib}/openbravo-core.jar" encoding="UTF-8" />
+  </target>
+
+  <target name="build.deploy.war" if="mode.war">
+    <antcall target="war" />
+  </target>
+
+  <target name="compile" depends="init,core.lib, wad.lib, trl.lib">
+    <ant dir="${base.src}" target="compile" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="buildvalidation" depends="init, core.lib">
+    <updatesystemstatus v="RB11"/> 
+    <condition property="buildValidation.var">
+      <istrue value="${buildValidation}"  />
+    </condition>
+    <ant dir="src-util/buildvalidation" target="buildvalidation" inheritAll="true" inheritRefs="true" />
+  </target>
+  
+  <target name="compile.buildvalidation" depends="init, core.lib">
+    <ant dir="src-util/buildvalidation" target="compile" inheritAll="true" inheritRefs="true" />
+  </target>
+  
+  <target name="compile.modulescript" depends="init, core.lib">
+    <ant dir="src-util/modulescript" target="compile" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="compile.complete.deploy" depends="compile.complete.development, compile.complete.war">
+
+    <!-- Calculate wad checksum to enable smartbuild-->
+    <taskdef name="CheckSumCondition" classname="org.openbravo.utils.CheckSumCondition">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    
+    <CheckSumCondition obDir="${basedir}"
+                           type="md5.wad"
+                           property="test.md5.wad"/>
+  </target>
+
+  <target name="compile.complete.development" depends="init, core.lib, wad.lib, trl.lib" unless="mode.war">
+    <updatesystemstatus v="RB43"/>
+    <ant dir="${base.src}" target="compile.complete.development" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="compile.complete.war" depends="init" if="mode.war">
+    <updatesystemstatus v="RB43"/>
+    <antcall target="compile.complete" />
+    <antcall target="war" />
+  </target>
+
+  <target name="compile.deploy" depends="compile.war, compile.development">
+    <updatesystemstatus v="RB51"/>
+  </target>
+
+  <target name="compile.development" depends="init" unless="mode.war">
+    <ant dir="${base.src}" target="compile.development" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="compile.war" if="mode.war">
+    <antcall target="generate.entities" />
+    <antcall target="compile" />
+    <antcall target="war" />
+  </target>
+
+  <target name="compile.web" depends="init">
+    <ant dir="${base.src}" target="compile.web" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="compile.web.development" depends="init">
+    <ant dir="${base.src}" target="compile.web.development" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="compile.src.gen" depends="init">
+    <ant dir="${base.src}" target="compile.src.gen" inheritAll="true" inheritRefs="true" />
+  </target>
+
+
+  <target name="generate.java.doc" depends="init">
+    <javadoc Windowtitle="${title}" access="protected" Header="${header}" destdir="${build.docs}" maxmemory="1024M" failonerror="yes" additionalparam="-Xdoclint:-missing -html5" source="11">
+      <sourcepath>
+        <pathelement path="${base.src}" />
+        <pathelement path="${base.src.test}/src" />
+        <pathelement path="${build.AD}" />
+        <pathelement path="${base.src.core}/src" />
+        <pathelement path="${base.src.gen}" />
+        <pathelement path="build/javasqlc/src" />
+        <pathelement path="build/javasqlc/srcAD" />
+        <dirset dir="${base.modules}">
+          <include name="*/src" />
+          <include name="*/src-test" />
+        </dirset>
+      </sourcepath>
+      <excludepackage name="org.openbravo.erpWindows.*"/>
+      <classpath>
+        <path refid="project.class.path"/>
+        <fileset dir="${base.modules}">
+          <include name="*/lib/test/*.jar" />
+        </fileset>
+      </classpath>
+      <link href="https://docs.oracle.com/en/java/javase/11/docs/api/"/>
+    </javadoc>
+  </target>
+
+  <target name="generate.entities">
+    <ant dir="${base.src}" target="generate.entities" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="generate.entities.quick">
+    <ant dir="${base.src}" target="generate.entities.quick" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <!-- build-internal forking helper -->
+  <target name="generate.entities.quick.forked">
+    <ant dir="${base.src}" target="generate.entities.quick.forked" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="compile.test" depends="init">
+    <ant dir="${base.src.test}" target="compile.test" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="run.all.tests" depends="init">
+    <ant dir="${base.src.test}" target="run.all.tests" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="run.webservice.tests" depends="init">
+      <ant dir="${base.src.test}" target="run.webservice.tests" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="run.test" depends="init">
+    <ant dir="${base.src.test}" target="run.test" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="run.api.test.model" 
+          description="Checks current xml db model and dictionary API for not-allowed changes. Requires stableDBdir parameter">
+    <taskdef name="checkAPI" classname="org.openbravo.ddlutils.task.CheckAPIDistribution">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <checkAPI driver="${bbdd.driver}" 
+                  url="${bbdd.owner.url}" 
+                  user="${bbdd.user}" 
+                  password="${bbdd.password}" 
+                  stableDBdir="${stableDBdir}"
+                  testDBdir="${basedir}"
+                  modules="${modules}"
+    />    
+  </target>
+  
+  <target name="compile.src" depends="init">
+    <ant dir="${base.src}" target="compile.src" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="war" depends="init">
+    <ant dir="${base.src}" target="build.war" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="core.lib" depends="init">
+    <ant dir="${base.src.core}" target="build" inheritAll="true" inheritRefs="true" />
+    <copy file="${base.src.core}/lib/openbravo-core.jar" todir="${base.lib}/runtime" failonerror="false" />
+  </target>
+
+  <target name="wad.lib" depends="init">
+    <ant dir="${base.src.wad}" target="build" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="trl.lib" depends="init">
+    <ant dir="${base.src.trl}" target="build" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="clean" depends="init">
+    <ant dir="${base.src}" target="clean" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="trl.clean" depends="init">
+    <ant dir="${base.src}" target="trl.clean" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="trl.remove.unused" depends="init">
+    <ant dir="${base.src}" target="trl.remove.unused" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="translate" depends="init">
+    <ant dir="${base.src}" target="translate" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="install.source" depends="init, cleanSubfolders, create.database, wad.lib, trl.lib, compile.complete.deploy">
+    <echo message="applying modules" />
+    <antcall inheritall="true" inheritrefs="true" target="apply.module" />
+
+    <antcall inheritall="true" target="import.sample.data" />
+    <updatesystemstatus v="RB51"/> 
+    <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="create.database" depends="init, core.lib">
+    <ant dir="${base.db}" antfile="build-create.xml" target="create.database" inheritAll="true" inheritRefs="true" />
+    <antcall target="db.apply.modules.sampledata" />
+  </target>
+
+  <target name="update.database" depends="init, core.lib, buildvalidation">
+    <updatesystemstatus v="RB12"/>
+    <ant dir="${base.db}" target="update.database.java" inheritAll="true" inheritRefs="true" />
+    <antcall target="generate.entities.quick" />
+    <antcall target="apply.module" />
+    <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="create.database.script" depends="init, core.lib">
+    <ant dir="${base.db}" target="create.database.script" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="update.database.script" depends="init, core.lib">
+    <ant dir="${base.db}" target="update.database.script" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="export.database" depends="init, core.lib, generate.entities.quick">
+    <ant dir="${base.db}" target="export.database.structure" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="export.config.script" depends="init, core.lib">
+    <ant dir="${base.db}" target="export.config.script" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="export.sample.data" depends="init, core.lib">
+    <ant dir="${base.db}" target="export.sample.data" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="import.sample.data" depends="init, core.lib">
+    <ant dir="${base.db}" target="import.sample.data" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="db.apply.modules.sampledata" if="apply.modules.on.create">
+    <antcall target="generate.entities" />
+    <antcall inheritall="true" inheritrefs="true" target="apply.module" />
+    <antcall target="import.sample.data" />
+  </target>
+  
+  <target name="apply.module.forked">
+    <!-- 
+    Note: set reinitializeModel to false because otherwise the dal is re-initialized with classes and a model
+    which are not in sync (see issue: https://issues.openbravo.com/view.php?id=9376)
+    Note: applyModule can also be moved to a java task to fork it (to prevent this from occuring)
+    but then no output is visible for the user.
+    -->
+    <taskdef name="applyModule" classname="org.openbravo.erpCommon.modules.ApplyModuleTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <applyModule userId="0" adminMode="true" forceRefData="${forceRefData}" propertiesFile="${base.config}/Openbravo.properties"/>
+  </target>
+  
+  <target name="compile.apply.module" depends="init">
+    <updatesystemstatus v="RB31"/>
+    <ant dir="${base.src}" target="compile.apply.module" inheritAll="true" inheritRefs="true" />
+  </target>
+  
+  <!--
+  This task uses a special classpath.
+  This classpath is equivalent to the normal project.class.path, except for the fact that that the normal build folder
+  is replaced by the apply.module.build folder, in which the ApplyModule task related classes will be compiled.
+  This is done to workaround the fact that the javac task needs to compile all the related classes when upgrading openbravo
+  and if the normal build folder is included, none of them are recompiled by default unless the whole build directory is specified.
+  -->
+  <target name="apply.module" depends="compile.apply.module">
+    <java classname="org.openbravo.erpCommon.modules.ApplyModuleTask" fork="true" maxmemory="${build.maxmemory}" failonerror="true">
+      <arg line="'${base.src}' '${friendlyWarnings}' '${forceRefData}'" />
+      <classpath refid="apply.module.runtime.classpath" />
+    </java>
+   <delete includeEmptyDirs="true"  dir="${build.apply.module}" />
+  </target>
+
+  <target name="tomcat.list">
+    <taskdef name="list" classname="org.apache.catalina.ant.ListTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <list url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}" />
+  </target>
+
+  <target name="deploy.context">
+    <taskdef name="undeploy" classname="org.apache.catalina.ant.UndeployTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <taskdef name="deploy.tomcat" classname="org.apache.catalina.ant.DeployTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <taskdef name="start" classname="org.apache.catalina.ant.StartTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+
+    <undeploy url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}" path="/${context.name}" failonerror="false" />
+    <deploy.tomcat url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}" path="/${context.name}" war="file:${base.lib}/${context.name}.war" />
+    <start url="${tomcat.manager.url}" username="${tomcat.manager.username}" password="${tomcat.manager.password}" path="/${context.name}" />
+  </target>
+
+  <target name="obx.export.database" if="obx.exp.DB">
+    <antcall target="export.database" />
+  </target>
+
+  <target name="obx.export.config.script" if="obx.exp.CS">
+    <antcall target="export.config.script" />
+  </target>
+
+  <target name="obx.export.validateModules" if="obx.exp.validate">
+    <taskdef name="validateModules" classname="org.openbravo.service.system.SystemValidationTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+
+    <taskdef name="WADValidation" classname="org.openbravo.wad.validation.WADValidatorTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+
+    <echo message="Validating Module..." />
+
+    <WADValidation propertiesFile="${base.config}/Openbravo.properties"
+                   modules="${module}"
+                   stoponerror="true"/>
+
+    <validateModules moduleJavaPackage="${module}" failOnError="true" userId="0" adminMode="true" propertiesFile="${base.config}/Openbravo.properties" type="module" />
+  </target>
+  
+  <target name="package.module">
+    <taskdef name="extractModule" classname="org.openbravo.erpCommon.modules.ExtractModuleTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    
+    <antcall target="obx.export.validateModules" />
+    <antcall target="obx.export.database" />
+    <antcall target="obx.export.config.script" />
+
+    <extractModule moduleName="${module}" 
+                   userId="0" 
+                   adminMode="true" 
+                   propertiesFile="${base.config}/Openbravo.properties" 
+                   exportRD="${obx.export.RD}" 
+                   addAllDependencies="${obx.export.allDeps}"/>
+  </target>
+  
+  <target name="setup.compile">
+	<mkdir dir="build/classes" />
+    <javac srcdir="src/org/openbravo/configuration" destdir="build/classes" fork="true" deprecation="off" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+      <classpath refid="project.class.path"/>  
+    </javac>
+  </target>
+
+  <target name="setup" depends="init, setup.compile">
+    <echo message="Launching configuration application..."/>
+    <taskdef name="configurationApp" classname="org.openbravo.configuration.ConfigurationApp">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <configurationApp nonInteractive="${nonInteractive}" acceptLicense="${acceptLicense}"/>
+    </target>
+
+  <target name="validate.wad">
+    <ant dir="${base.src}" target="wadvalidation" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <target name="UIrebuild">
+    <!-- UIrebuild task was used from MMC rebuild which is no longer supported since 21Q1.
+         This task is kept to show an error message when updating from previous releases. -->
+    <updatesystemstatus v="RB70"/>
+       <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}"  autocommit="true">
+         <classpath> <fileset dir="${base.lib}"> <include name="**/*.jar"> </include> </fileset> </classpath>
+          insert into ad_error_log
+             (ad_error_log_id,    ad_client_id,  ad_org_id,
+             createdby,           updatedby,     system_status,
+             error_level,         message,       line_number)
+          values
+             (get_uuid(),         '0',           '0',
+             '0',                 '0',           'RB11',
+             'ERROR',             'UI rebuild is no longer supported',
+              (select coalesce(max(line_number), 0) + 1 from ad_error_log))
+       </sql>
+       <fail message="UI rebuild is no longer supported"/>
+  </target>
+
+  <target name="check.module.consistency">
+    <fail message="Use ./gradlew dependencies" />
+  </target>
+  
+  <target name="cleanSubfolders" depends="init">
+      <ant dir="${base.src.core}" target="clean" inheritAll="true" inheritRefs="true" />
+      <ant dir="${base.src.trl}" target="clean" inheritAll="true" inheritRefs="true" />
+      <ant dir="${base.src.wad}" target="clean" inheritAll="true" inheritRefs="true" />
+  </target>
+  
+  <target name="activate.instance" depends="init"
+          description="Activates the instance with the provided public key">
+   <taskdef name="activateInstace" classname="org.openbravo.erpCommon.obps.ActivationTask">
+     <classpath refid="project.class.path" />
+   </taskdef>
+   <property name="purpose" value="" />
+   <property name="publicKey" value="" />
+   <property name="publicKeyFile" value="" />
+    
+   <activateInstace purpose="${purpose}"
+                    publicKey="${publicKey}"
+                    publicKeyFile="${publicKeyFile}"
+                    userId="0" 
+                    adminMode="true" 
+                    propertiesFile="${base.config}/Openbravo.properties"/>
+  </target>
+  
+  <target name="host.name"
+          description="Prints this machine's name. This name can be used to overwrite common Openbravo.properties by machine.name.Openbravo properties file">
+    <mkdir dir="build/classes"/>
+    <javac srcdir="src/org/openbravo/base/session" includes="HostNameTask.java" destdir="build/classes" fork="true" deprecation="off" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+      <classpath refid="project.class.path"/>
+    </javac>
+    <taskdef name="hostName" classname="org.openbravo.base.session.HostNameTask">
+      <classpath refid="project.class.path"/>
+    </taskdef>
+    <hostName/>
+  </target>
+  <target name="compileSqlc" depends="init">
+    <ant dir="${base.src}" target="compileSqlc" inheritAll="true" inheritRefs="true" />
+  </target>
+  <target name="wad" depends="init">
+    <ant dir="${base.src}" target="wad" inheritAll="true" inheritRefs="true" />
+  </target>
+
+</project>

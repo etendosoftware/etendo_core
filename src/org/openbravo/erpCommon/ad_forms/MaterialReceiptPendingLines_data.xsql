@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2016 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="MaterialReceiptPendingLinesData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      SELECT OL.C_ORDERLINE_ID, OL.AD_CLIENT_ID, OL.AD_ORG_ID, OL.ISACTIVE, OL.CREATED,
+             OL.CREATEDBY, OL.UPDATED, OL.UPDATEDBY, OL.C_ORDER_ID,
+             OL.LINE, OL.C_BPARTNER_ID, OL.C_BPARTNER_LOCATION_ID, OL.DATEORDERED,
+             OL.DATEPROMISED, OL.DATEDELIVERED, OL.DATEINVOICED, OL.DESCRIPTION,
+             OL.M_PRODUCT_ID, OL.M_WAREHOUSE_ID, OL.DIRECTSHIP, OL.C_UOM_ID, OL.QTYORDERED,
+             OL.QTYRESERVED, OL.QTYDELIVERED, OL.QTYINVOICED, OL.M_SHIPPER_ID,
+             OL.C_CURRENCY_ID, OL.PRICELIST, OL.PRICEACTUAL, OL.PRICELIMIT, OL.LINENETAMT,
+             OL.DISCOUNT, OL.FREIGHTAMT, OL.C_CHARGE_ID, OL.CHARGEAMT,
+             OL.C_TAX_ID, OL.S_RESOURCEASSIGNMENT_ID, OL.REF_ORDERLINE_ID, OL.M_ATTRIBUTESETINSTANCE_ID,
+             OL.ISDESCRIPTION, OL.QUANTITYORDER, OL.M_PRODUCT_UOM_ID,
+             COALESCE(OL.C_PROJECT_ID, O.C_PROJECT_ID) AS C_PROJECT_ID,
+             COALESCE(OL.USER1_ID, O.USER1_ID) AS USER1_ID,
+             COALESCE(OL.USER2_ID, O.USER2_ID) AS USER2_ID,
+             COALESCE(OL.C_COSTCENTER_ID, O.C_COSTCENTER_ID) AS C_COSTCENTER_ID,
+             COALESCE(OL.A_ASSET_ID, O.A_ASSET_ID) AS A_ASSET_ID,
+             OL.C_AUM, OL.AUMQTY, O.C_DOCTYPE_ID
+      FROM C_ORDERLINE OL, C_ORDER O
+      WHERE OL.C_ORDER_ID = O.C_ORDER_ID 
+            AND OL.C_ORDERLINE_ID = ?
+      ]]></Sql>
+	<Field name="rownum" value="count"/>
+    <Parameter name="cOrderlineId"/>
+  </SqlMethod>
+  <SqlMethod name="insert" connection="true" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      INSERT INTO M_INOUTLINE
+        (M_INOUTLINE_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+         CREATED, CREATEDBY, UPDATED, UPDATEDBY, 
+         LINE, DESCRIPTION, M_INOUT_ID, C_ORDERLINE_ID, M_LOCATOR_ID, M_PRODUCT_ID, C_UOM_ID, 
+         MOVEMENTQTY, ISINVOICED, M_ATTRIBUTESETINSTANCE_ID, ISDESCRIPTION, QUANTITYORDER, M_PRODUCT_UOM_ID,
+         C_PROJECT_ID, USER1_ID, USER2_ID, C_COSTCENTER_ID, A_ASSET_ID, C_AUM, AUMQTY)
+      VALUES
+        (?,?,?,?,
+         now(),?,now(),?,
+         TO_NUMBER(?),?,?,?,?,?,?,
+         TO_NUMBER(?),?,?,?,TO_NUMBER(?),?,
+         ?,?,?,?,?,?,TO_NUMBER(?))
+      ]]></Sql>
+      <Parameter name="mInoutlineId"/>
+      <Parameter name="adClientId"/>
+      <Parameter name="adOrgId"/>
+      <Parameter name="isactive"/>
+      <Parameter name="createdby"/>
+      <Parameter name="updatedby"/>
+      <Parameter name="line"/>
+      <Parameter name="description"/>
+      <Parameter name="mInoutId"/>
+      <Parameter name="cOrderlineId"/>
+      <Parameter name="mLocatorId"/>
+      <Parameter name="mProductId"/>
+      <Parameter name="cUomId"/>
+      <Parameter name="movementqty"/>
+      <Parameter name="isinvoiced"/>
+      <Parameter name="mAttributesetinstanceId"/>
+      <Parameter name="isdescription"/>
+      <Parameter name="quantityorder"/>
+      <Parameter name="mProductUomId"/>
+      <Parameter name="cProjectId"/>
+      <Parameter name="user1Id"/>
+      <Parameter name="user2Id"/>
+      <Parameter name="cCostcenterId"/>
+      <Parameter name="aAssetId"/>
+      <Parameter name="cAum"/>
+      <Parameter name="aumQty"/>
+  </SqlMethod>
+  <SqlMethod name="updateInvoiceOrder" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      UPDATE C_InvoiceLine SET M_InoutLine_id = ?
+      WHERE C_OrderLine_ID= ?
+      AND M_InOutLine_ID IS NULL
+    </Sql>
+    <Parameter name="mInoutlineId"/>
+    <Parameter name="cOrderlineId"/>
+  </SqlMethod>
+</SqlClass>

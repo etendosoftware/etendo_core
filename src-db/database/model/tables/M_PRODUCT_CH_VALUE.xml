@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_PRODUCT_CH_VALUE">
+    <table name="M_PRODUCT_CH_VALUE" primaryKey="M_PRODUCT_CH_VALUE_KEY">
+      <column name="M_PRODUCT_CH_VALUE_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_PRODUCT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_CHARACTERISTIC_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_CH_VALUE_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="M_PRODUCT_CH_VALUE_AD_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_PRODUCT_CH_VALUE_AD_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_CHARACTERISTIC" name="M_PRODUCT_CH_VALUE_CHARACT">
+        <reference local="M_CHARACTERISTIC_ID" foreign="M_CHARACTERISTIC_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_CH_VALUE" name="M_PRODUCT_CH_VALUE_M_CHVALUE">
+        <reference local="M_CH_VALUE_ID" foreign="M_CH_VALUE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_PRODUCT" name="M_PRODUCT_CH_VALUE_M_PRODUCT">
+        <reference local="M_PRODUCT_ID" foreign="M_PRODUCT_ID"/>
+      </foreign-key>
+      <index name="M_PRODUCT_CH_VALUE_CHAR_ID" unique="false">
+        <index-column name="M_CHARACTERISTIC_ID"/>
+      </index>
+      <index name="M_PRODUCT_CH_VALUE_VALUE" unique="true">
+        <index-column name="M_PRODUCT_ID"/>
+        <index-column name="M_CH_VALUE_ID"/>
+      </index>
+      <index name="M_PRODUCT_CH_VALUE_VALUE_IDX" unique="false">
+        <index-column name="M_CH_VALUE_ID"/>
+      </index>
+      <check name="M_PRODUCT_CH_VALUE_ISACTIVE"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+    </table>
+  </database>

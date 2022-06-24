@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_GET_STOCK">
+    <function name="M_GET_STOCK" type="NULL">
+      <parameter name="pinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_calledfromapp" type="VARCHAR" mode="in">
+        <default><![CDATA[Y]]></default>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2011-2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  -- Logistice
+  v_ResultStr VARCHAR2(2000):='';
+  v_Message VARCHAR2(2000):='';
+  v_Record_ID VARCHAR2(32);
+  v_result NUMBER:=1;
+  
+  -- Parameter
+  TYPE RECORD IS REF CURSOR;
+  Cur_Parameter RECORD;
+
+  -- Parameter Variables
+  v_Quantity NUMBER(10);
+  v_ProductID   VARCHAR2(32);
+  v_LocatorID   VARCHAR2(32);
+  v_WarehouseID VARCHAR2(32) ;
+  v_PriorityWarehouseID VARCHAR2(32);
+  v_OrgID VARCHAR2(32) ;
+  v_AttributesetinstanceID  VARCHAR2(32) ;
+  v_AD_User_ID VARCHAR2(32) ;
+  v_ClientID VARCHAR2(32) ;
+  v_warehouse_rule_id VARCHAR2(32);
+  v_UomID VARCHAR2(32) ;
+  v_ProductUomID VARCHAR2(32) ;
+  v_TableID  VARCHAR2(32):='-1';
+  v_AuxID VARCHAR2(32):='-1';
+  v_LineNo NUMBER;
+  v_ProcessID VARCHAR2(32) ;
+  v_Reservation_ID VARCHAR2(32);
+  v_avail CHAR;
+  v_nett CHAR;
+  v_overissue CHAR;
+  
+BEGIN
+  --  Update AD_PInstance
+  DBMS_OUTPUT.PUT_LINE('Updating PInstance - Processing ' || PInstance_ID) ;
+  v_ResultStr:='PInstanceNotFound';
+  AD_UPDATE_PINSTANCE(PInstance_ID, NULL, 'Y', NULL, NULL, p_calledfromapp);
+BEGIN --BODY
+
+  -- Get Parameters
+  v_ResultStr:='ReadingParameters';
+  FOR Cur_Parameter IN (
+      SELECT i.record_id, p.parametername, p.p_string, p.p_number, p.p_date, i.createdby AS ad_user_id
+      FROM ad_pinstance i
+      LEFT JOIN ad_pinstance_para p ON i.ad_pinstance_id=p.ad_pinstance_id
+      WHERE i.ad_pinstance_id=pinstance_id
+      ORDER BY p.seqno
+  ) LOOP
+    v_Record_ID:=Cur_Parameter.Record_ID;
+    v_AD_User_ID:=Cur_Parameter.AD_User_ID;
+
+    IF (Cur_Parameter.ParameterName = 'Quantity') THEN
+      v_Quantity:=Cur_Parameter.P_Number;
+      DBMS_OUTPUT.PUT_LINE(' Quantity=' || v_Quantity);
+    ELSIF (Cur_Parameter.ParameterName = 'M_Product_ID') THEN
+      v_ProductID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_Product_ID=' || v_ProductID);
+    ELSIF (Cur_Parameter.ParameterName = 'C_Uom_ID') THEN
+      v_UomID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' C_Uom_ID=' || v_UomID);
+    ELSIF (Cur_Parameter.ParameterName = 'M_Product_Uom_ID') THEN
+      v_ProductUomID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_Product_Uom_ID=' || v_ProductUomID);
+    ELSIF (Cur_Parameter.ParameterName = 'M_Locator_ID') THEN
+      v_LocatorID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_Locator_ID=' || v_LocatorID);    
+    ELSIF (Cur_Parameter.ParameterName = 'M_Warehouse_ID') THEN
+      v_WarehouseID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_Warehouse_ID=' || v_WarehouseID);
+    ELSIF (Cur_Parameter.ParameterName = 'Priority_Warehouse_ID') THEN
+      v_PriorityWarehouseID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' Priority_Warehouse_ID=' || v_WarehouseID);
+    ELSIF (Cur_Parameter.ParameterName = 'AD_Client_ID') THEN
+      v_ClientID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' AD_Client_ID=' || v_ClientID);
+    ELSIF (Cur_Parameter.ParameterName = 'AD_Org_ID') THEN
+      v_OrgID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' AD_Org_ID=' || v_OrgID);
+    ELSIF (Cur_Parameter.ParameterName = 'M_AttributesetInstance_ID') THEN
+      v_AttributesetinstanceID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_AttributesetInstance_ID=' || v_AttributesetinstanceID);
+    ELSIF (Cur_Parameter.ParameterName = 'M_Warehouse_Rule_ID') THEN
+      v_warehouse_rule_id:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_Warehouse_Rule_ID=' || v_warehouse_rule_id);
+    ELSIF (Cur_Parameter.ParameterName = 'TableId') THEN
+      v_TableID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' TableId=' || v_TableID);
+    ELSIF (Cur_Parameter.ParameterName = 'AuxID') THEN
+      v_AuxID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' AuxID=' || v_AuxID);    
+    ELSIF (Cur_Parameter.ParameterName = 'LineNo') THEN
+      v_LineNo:=Cur_Parameter.P_Number;
+      DBMS_OUTPUT.PUT_LINE(' LineNo=' || v_LineNo);
+    ELSIF (Cur_Parameter.ParameterName = 'ProcessID') THEN
+      v_ProcessID:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' ProcessID=' || v_ProcessID);
+    ELSIF (Cur_Parameter.ParameterName = 'M_Reservation_ID') THEN
+      v_reservation_id:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' M_Reservation_ID=' || v_reservation_id);
+    ELSIF (Cur_Parameter.ParameterName = 'Available') THEN
+      v_avail:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' v_avail=' || v_avail);
+    ELSIF (Cur_Parameter.ParameterName = 'Nettable') THEN
+      v_nett:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' v_nett=' || v_nett);
+    ELSIF (Cur_Parameter.ParameterName = 'OverIssue') THEN
+      v_overissue:=Cur_Parameter.P_String;
+      DBMS_OUTPUT.PUT_LINE(' v_overissue=' || v_overissue);
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('*** Unknown Parameter=' || Cur_Parameter.ParameterName) ;
+    END IF;
+  END LOOP; -- Get Parameter
+  DBMS_OUTPUT.PUT_LINE('  Record_ID=' || v_Record_ID) ;
+
+  M_GET_STOCK_PARAM(PInstance_ID, v_Record_ID, v_Quantity, v_ProductID, v_LocatorID, v_WarehouseID, v_PriorityWarehouseID, v_OrgID, v_AttributesetinstanceID, v_AD_User_ID, v_ClientID, v_warehouse_rule_id, v_UomID, v_ProductUomID, v_TableID, v_AuxID, v_LineNo, v_ProcessID, v_reservation_id, p_calledfromapp, v_result, v_Message, v_avail, v_nett, v_overissue);
+ 
+
+  --  Update AD_PInstance
+  DBMS_OUTPUT.PUT_LINE('Updating PInstance - Finished ' || v_Message) ;
+  AD_UPDATE_PINSTANCE(PInstance_ID, NULL, 'N', v_result, v_Message, p_calledfromapp) ;
+  RETURN;
+END; --BODY
+EXCEPTION
+WHEN OTHERS THEN
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  IF (SQLERRM LIKE '@ERROR=%') THEN
+    v_resultstr := SQLERRM;
+  ELSE
+    v_ResultStr:= '@ERROR=' || SQLERRM;
+  END IF;
+  DBMS_OUTPUT.PUT_LINE(v_ResultStr) ;
+  AD_UPDATE_PINSTANCE(PInstance_ID, NULL, 'N', 0, v_ResultStr, p_calledfromapp);
+  IF (p_calledfromapp = 'Y') THEN
+    RETURN;
+  ELSE
+    RAISE;
+  END IF;
+END M_GET_STOCK
+]]></body>
+    </function>
+  </database>

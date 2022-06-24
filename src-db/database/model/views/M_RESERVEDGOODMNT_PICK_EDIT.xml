@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="VIEW M_RESERVEDGOODMNT_PICK_EDIT">
+    <view name="M_RESERVEDGOODMNT_PICK_EDIT"><![CDATA[SELECT rs.m_reservation_stock_id AS m_reservedgoodmnt_pick_edit_id, rs.m_reservation_id, r.ad_client_id, r.ad_org_id, rs.isactive, r.updated, r.updatedby, r.created, r.createdby, to_char('N') AS ob_selected, rs.m_locator_id, r.c_orderline_id, rs.quantity, COALESCE(rs.releasedqty, 0) AS releasedqty, NULL AS m_locatorto_id, to_number('0') AS movementqty, rs.m_attributesetinstance_id FROM m_reservation r JOIN m_reservation_stock rs ON r.m_reservation_id = rs.m_reservation_id WHERE rs.m_locator_id IS NOT NULL AND (rs.quantity - COALESCE(rs.releasedqty, 0)) > 0]]></view>
+  </database>

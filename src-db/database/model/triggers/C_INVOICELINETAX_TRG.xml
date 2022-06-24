@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_INVOICELINETAX_TRG">
+    <trigger name="C_INVOICELINETAX_TRG" table="C_INVOICELINETAX" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+/*************************************************************************
+  * The contents of this file are subject to the Compiere Public
+  * License 1.1 ("License"); You may not use this file except in
+  * compliance with the License. You may obtain a copy of the License in
+  * the legal folder of your Openbravo installation.
+  * Software distributed under the License is distributed on an
+  * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing rights
+  * and limitations under the License.
+  * The Original Code is  Compiere  ERP  Solution
+  * The Initial Developer of the Original Code is Jorg Janke and ComPiere, Inc.
+  * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke,
+  * parts created by ComPiere are Copyright (C) ComPiere, Inc.;
+  * All Rights Reserved.
+  * Contributor(s): Openbravo SLU
+  * Contributions are Copyright (C) 2010-2018 Openbravo, S.L.U.
+  *
+  * Specifically, this derivative work is based upon the following Compiere
+  * file and version.
+  *************************************************************************/
+
+v_Count NUMBER;
+v_LineNo  NUMBER;
+v_C_Invoice_ID C_INVOICELINETAX.C_INVOICE_ID%TYPE;
+v_C_Tax_ID C_INVOICELINETAX.C_TAX_ID%TYPE;
+v_C_InvoiceTax_ID C_INVOICETAX.C_INVOICETAX_ID%TYPE;
+v_Prec C_CURRENCY.STDPRECISION%TYPE;
+v_DocTaxAmount C_TAX.DOCTAXAMOUNT%TYPE;
+v_Rate  C_TAX.RATE%TYPE;
+v_Cascade C_TAX.CASCADE%TYPE;
+v_BaseAmount C_TAX.BASEAMOUNT%TYPE;
+v_TaxBase_ID C_TAX.C_TAXBASE_ID%TYPE;
+v_Line C_TAX.LINE%TYPE;
+v_Processed   VARCHAR(60);
+v_Increment_Amount C_INVOICETAX.TAXAMT%TYPE;
+v_Increment_Base C_INVOICETAX.TAXBASEAMT%TYPE;
+    
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+    
+    IF(INSERTING OR UPDATING) THEN
+      v_C_Tax_ID:=:NEW.C_Tax_ID;
+      v_C_Invoice_ID:=:NEW.C_INVOICE_ID;
+    ELSE
+      v_C_Tax_ID:=:OLD.C_Tax_ID;
+      v_C_Invoice_ID:=:OLD.C_INVOICE_ID;
+    END IF;
+
+    SELECT C_CURRENCY.STDPRECISION, PROCESSED
+    INTO v_Prec, v_Processed
+    FROM C_INVOICE, C_CURRENCY
+    WHERE C_INVOICE.C_CURRENCY_ID = C_CURRENCY.C_CURRENCY_ID
+
+    AND C_INVOICE_ID = v_C_Invoice_ID;
+    
+    SELECT DocTaxAmount, Rate, Cascade, BaseAmount, C_TaxBase_ID, Line
+    INTO v_DocTaxAmount, v_Rate, v_Cascade, v_BaseAmount, v_TaxBase_ID, v_Line
+    FROM C_TAX
+    WHERE C_TAX_ID = v_C_Tax_ID;
+
+  IF ( INSERTING ) THEN
+    v_Increment_Amount := :NEW.TAXAMT ;
+    v_Increment_Base := :NEW.TAXBASEAMT ;
+  ELSIF ( UPDATING ) THEN
+    v_Increment_Amount := :NEW.TAXAMT - :OLD.TAXAMT ;
+    v_Increment_Base := :NEW.TAXBASEAMT - :OLD.TAXBASEAMT ;
+  ELSE
+    v_Increment_Amount := - :OLD.TAXAMT ;
+    v_Increment_Base := - :OLD.TAXBASEAMT ;
+  END IF;
+
+  IF (INSERTING OR UPDATING) THEN
+    SELECT COUNT(C_TAX_ID), MAX(c_invoicetax_id) INTO v_Count, v_C_InvoiceTax_ID
+    FROM C_INVOICETAX
+    WHERE C_Invoice_ID = :new.C_Invoice_ID
+    AND C_Tax_ID = :new.C_Tax_ID
+    AND Recalculate = 'Y';
+    IF(v_Count>0) THEN
+      IF (v_DocTaxAmount = 'D' AND (v_Cascade = 'Y' OR v_BaseAmount IN ('TAX', 'LNATAX', 'TBATAX'))) THEN
+        SELECT COALESCE(CASE WHEN MAX(it.TaxBaseAmt) > 0 THEN 
+                          MAX(it.TaxAmt) + CASE WHEN v_BaseAmount = 'TAX' THEN 0 ELSE MAX(ROUND(it.TaxBaseAmt, v_Prec)) END
+                        ELSE 
+                          MIN(it.TaxAmt) + CASE WHEN v_BaseAmount = 'TAX' THEN 0 ELSE MIN(ROUND(it.TaxBaseAmt, v_Prec)) END
+                        END, 0)
+        INTO v_Increment_Base
+        FROM C_InvoiceTax it
+        JOIN C_Tax t
+        ON it.C_Tax_ID = t.C_Tax_ID
+        WHERE it.C_Invoice_ID = :new.C_Invoice_ID
+        AND c_tax_get_root(it.C_Tax_ID) = c_tax_get_root(:new.C_Tax_ID)
+        AND it.Recalculate = 'Y'
+        AND ((v_Cascade = 'Y'
+        AND t.Line < v_Line)
+        OR (v_BaseAmount IN ('TAX', 'LNATAX', 'TBATAX')
+        AND C_TAX_ISMEMBER(v_TaxBase_ID, t.C_Tax_ID) = 1
+        AND t.IsSummary = 'N'));
+
+        UPDATE C_INVOICETAX
+        SET TAXAMT = ROUND((v_Increment_Base) * v_Rate/100, v_Prec),
+        TAXBASEAMT = v_Increment_Base
+        WHERE C_InvoiceTax_ID = v_C_InvoiceTax_ID;
+      ELSE
+        UPDATE C_INVOICETAX
+        SET TAXAMT = CASE WHEN v_DocTaxAmount='D' THEN ROUND(ROUND(TAXBASEAMT + v_Increment_Base, v_Prec) * v_Rate/100, v_Prec) ELSE (TAXAMT + v_Increment_Amount) END,
+        TAXBASEAMT = TAXBASEAMT + v_Increment_Base
+        WHERE C_InvoiceTax_ID = v_C_InvoiceTax_ID;
+      END IF;
+    ELSE
+      SELECT COALESCE(MAX(LINE),0) + 10
+      INTO v_LineNo
+      FROM C_INVOICETAX
+      WHERE C_INVOICE_ID = :NEW.C_Invoice_ID;
+      INSERT
+      INTO C_INVOICETAX (
+      C_InvoiceTax_ID, C_Invoice_ID, C_Tax_ID, AD_Client_ID, AD_Org_ID,
+      IsActive, Created, CreatedBy, Updated,
+      UpdatedBy, TaxBaseAmt, TaxAmt, Line, Recalculate)
+      VALUES (
+      GET_UUID(), :NEW.C_Invoice_ID, :NEW.C_TAX_ID, :NEW.AD_CLIENT_ID, :NEW.AD_ORG_ID,
+      'Y', now(), :NEW.UPDATEDBY, now(),
+      :NEW.UPDATEDBY, :NEW.TAXBASEAMT, :NEW.TAXAMT, v_LineNo, 'Y');
+    END IF;
+  ELSE
+  IF (v_Processed='Y') THEN 
+    RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+  ELSE
+    IF (v_DocTaxAmount = 'D' AND (v_Cascade = 'Y' OR v_BaseAmount IN ('TAX', 'LNATAX', 'TBATAX'))) THEN
+              SELECT COALESCE(CASE WHEN MAX(it.TaxBaseAmt) > 0 THEN 
+                          MAX(it.TaxAmt) + CASE WHEN v_BaseAmount = 'TAX' THEN 0 ELSE MAX(ROUND(it.TaxBaseAmt, v_Prec)) END
+                        ELSE 
+                          MIN(it.TaxAmt) + CASE WHEN v_BaseAmount = 'TAX' THEN 0 ELSE MIN(ROUND(it.TaxBaseAmt, v_Prec)) END
+                        END, 0)
+      INTO v_Increment_Base
+      FROM C_InvoiceTax it
+      JOIN C_Tax t
+      ON it.C_Tax_ID = t.C_Tax_ID
+      WHERE it.C_Invoice_ID = :old.C_Invoice_ID
+      AND c_tax_get_root(it.C_Tax_ID) = c_tax_get_root(:old.C_Tax_ID)
+      AND it.Recalculate = 'Y'
+      AND ((v_Cascade = 'Y'
+      AND t.Line < v_Line)
+      OR (v_BaseAmount IN ('TAX', 'LNATAX', 'TBATAX')
+      AND C_TAX_ISMEMBER(v_TaxBase_ID, t.C_Tax_ID) = 1
+      AND t.IsSummary = 'N'));
+
+      UPDATE C_INVOICETAX
+      SET TAXAMT = ROUND(v_Increment_Base * v_Rate/100, v_Prec),
+      TAXBASEAMT = v_Increment_Base
+      WHERE C_Invoice_ID = :old.C_Invoice_ID
+      AND C_Tax_ID = :old.C_Tax_ID
+      AND Recalculate = 'Y';
+    ELSE
+      UPDATE C_INVOICETAX
+      SET TAXAMT = CASE WHEN v_DocTaxAmount = 'D' THEN ROUND(ROUND(TAXBASEAMT - :OLD.TAXBASEAMT, v_Prec) * v_Rate/100, v_Prec) ELSE (TAXAMT - :OLD.TAXAMT) END,
+      TAXBASEAMT = TAXBASEAMT - :OLD.TAXBASEAMT
+      WHERE C_Invoice_ID = :old.C_Invoice_ID
+      AND C_Tax_ID = :old.C_Tax_ID
+      AND Recalculate = 'Y';
+    END IF;
+
+    DELETE FROM C_INVOICETAX 
+    WHERE C_INVOICE_ID = :OLD.C_Invoice_ID
+    AND C_TAX_ID = :OLD.C_TAX_ID
+    AND ROUND(TAXBASEAMT, v_Prec) = 0
+    AND TAXAMT = 0;
+    
+  END IF;
+END IF;
+END C_INVOICELINETAX_TRG
+]]></body>
+    </trigger>
+  </database>

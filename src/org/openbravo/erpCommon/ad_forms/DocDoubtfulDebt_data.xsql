@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2013 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="DocDoubtfulDebtData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT C_INVOICELINE.M_PRODUCT_ID,
+        C_INVOICELINE.ACCOUNT_ID AS M_C_GLITEM_ID, 
+        SUM(COALESCE(C_INVOICELINE_ACCTDIMENSION.AMT, C_INVOICELINE.LINENETAMT)/C_INVOICE.TOTALLINES)
+        AS percentage,
+        C_INVOICELINE_ACCTDIMENSION.C_CAMPAIGN_ID, COALESCE(C_INVOICELINE_ACCTDIMENSION.C_PROJECT_ID, C_INVOICELINE.C_PROJECT_ID, C_INVOICE.C_PROJECT_ID) AS C_PROJECT_ID,
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.USER1_ID,C_INVOICELINE.USER1_ID, C_INVOICELINE.USER1_ID) AS user1Id,
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.USER2_ID,C_INVOICELINE.USER2_ID, C_INVOICE.USER2_ID) AS user2Id,
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.C_COSTCENTER_ID,C_INVOICELINE.C_COSTCENTER_ID, C_INVOICE.C_COSTCENTER_ID) AS C_COSTCENTER_ID,
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.A_ASSET_ID,C_INVOICELINE.A_ASSET_ID, C_INVOICE.A_ASSET_ID) AS A_ASSET_ID,
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.C_BPARTNER_ID,C_INVOICELINE.C_BPARTNER_ID, C_INVOICE.C_BPARTNER_ID) AS C_BPARTNER_ID, 
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.AD_ORG_ID,C_INVOICELINE.AD_ORG_ID, C_INVOICE.AD_ORG_ID) AS AD_ORG_ID, C_INVOICELINE_ACCTDIMENSION.C_ACTIVITY_ID
+        FROM C_INVOICE
+        left join C_INVOICELINE on C_INVOICE.C_INVOICE_ID = C_INVOICELINE.C_INVOICE_ID
+        left join C_INVOICELINE_ACCTDIMENSION on C_INVOICELINE.C_INVOICELINE_ID = C_INVOICELINE_ACCTDIMENSION.C_INVOICELINE_ID
+        WHERE  C_INVOICELINE.C_INVOICE_ID = ?
+        GROUP BY C_INVOICELINE.M_PRODUCT_ID, C_INVOICELINE.ACCOUNT_ID, 
+        C_INVOICELINE_ACCTDIMENSION.C_CAMPAIGN_ID, COALESCE(C_INVOICELINE_ACCTDIMENSION.C_PROJECT_ID, C_INVOICELINE.C_PROJECT_ID, C_INVOICE.C_PROJECT_ID),
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.USER1_ID,C_INVOICELINE.USER1_ID, C_INVOICELINE.USER1_ID),
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.USER2_ID, C_INVOICELINE.USER2_ID, C_INVOICE.USER2_ID),
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.C_COSTCENTER_ID, C_INVOICELINE.C_COSTCENTER_ID, C_INVOICE.C_COSTCENTER_ID),
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.A_ASSET_ID,C_INVOICELINE.A_ASSET_ID, C_INVOICE.A_ASSET_ID),
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.C_BPARTNER_ID,C_INVOICELINE.C_BPARTNER_ID, C_INVOICE.C_BPARTNER_ID), 
+        COALESCE(C_INVOICELINE_ACCTDIMENSION.AD_ORG_ID,C_INVOICELINE.AD_ORG_ID, C_INVOICE.AD_ORG_ID), C_INVOICELINE_ACCTDIMENSION.C_ACTIVITY_ID
+        order by 3 desc
+     ]]>
+     </Sql>
+     <Parameter name="invoice"/>
+  </SqlMethod>
+</SqlClass>

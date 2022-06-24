@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_GET_DEFAULT_AUM_FOR_DOCUMENT">
+    <function name="M_GET_DEFAULT_AUM_FOR_DOCUMENT" type="VARCHAR" volatility="STABLE">
+      <parameter name="mproductid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="documenttypeid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2016-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+*
+* This function returns the default AUM defined for a product and specific
+* document type.
+*
+*  Parameters:
+*    p_mproductid character varying: The product id
+*    documenttypeid character varying: The document type id.
+*  Returns:
+*    The default AUM defined for the product and document type.
+************************************************************************/
+
+  TYPE RECORD IS REF CURSOR;
+  v_isSOTRX char(1);
+  v_Default_Aum varchar(32); --OBTG:VARCHAR2--
+BEGIN
+
+  SELECT issotrx INTO v_isSOTRX FROM c_doctype WHERE c_doctype_id = documentTypeId;
+
+  IF(v_isSOTRX = 'Y') THEN
+    BEGIN
+      SELECT c_uom_id
+        INTO v_Default_Aum
+      FROM m_product_aum
+      WHERE m_product_id = mProductId
+      AND sales = 'P';
+    EXCEPTION 
+      WHEN NO_DATA_FOUND THEN
+        v_Default_Aum := NULL;
+    END;
+  ELSE
+    BEGIN
+      SELECT c_uom_id
+        INTO v_Default_Aum
+      FROM m_product_aum
+      WHERE m_product_id = mProductId
+      AND purchase = 'P';
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        v_Default_Aum := NULL;
+    END;
+  END IF;
+  
+  IF v_Default_Aum IS NULL THEN
+    SELECT c_uom_id
+    INTO v_Default_Aum
+    FROM m_product
+    WHERE m_product_id = mProductId;
+  END IF;
+  
+  RETURN v_Default_Aum;
+END M_GET_DEFAULT_AUM_FOR_DOCUMENT
+]]></body>
+    </function>
+  </database>

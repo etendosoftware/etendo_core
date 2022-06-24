@@ -1,0 +1,157 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2010-2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+ */
+/* Blue */
+/* Light Blue */
+/* Darker Blue */
+/* Gray */
+/* Darker Gray  */
+/* Yellow */
+/* White */
+/* Light Blue (20%) */
+/* Light Green */
+/* Light Blue (20%) */
+/* light Blue (10%) */
+/* Gray 10 % */
+.tabStyleActive {
+  background-color: #202452;
+}
+
+.tabStyleActiveSelected {
+  background-color: #202452;
+  border-top: 4px solid #fad614;
+}
+
+.tabStyleInactive {
+  background-color: #e1e1e1;
+  color: #a5aab7;
+}
+
+.OBPopupInTabModalMask {
+  background-color: #000000;
+  opacity: 0.5;
+}
+
+/* OBPopup */
+.OBPopup {
+  background-color: #eff1f7;
+  padding: 30px;
+  border-radius: 6px;
+}
+.OBPopup .OBFormButton,
+.OBPopup .OBFormButtonOver,
+.OBPopup .OBFormButtonFocused,
+.OBPopup .OBFormButtonFocusedOver,
+.OBPopup .OBFormButtonDown,
+.OBPopup .OBFormButtonFocusedDown,
+.OBPopup .OBFormButtonSelected,
+.OBPopup .OBFormButtonSelectedFocused,
+.OBPopup .OBFormButtonSelectedDown,
+.OBPopup .OBFormButtonSelectedFocusedDown,
+.OBPopup .OBFormButtonSelectedOver,
+.OBPopup .OBFormButtonSelectedFocusedOver,
+.OBPopup .OBFormButton {
+  background-color: #202452;
+  color: #ffffff;
+}
+.OBPopup .OBFormButton:hover,
+.OBPopup .OBFormButtonOver:hover,
+.OBPopup .OBFormButtonFocused:hover,
+.OBPopup .OBFormButtonFocusedOver:hover,
+.OBPopup .OBFormButtonDown:hover,
+.OBPopup .OBFormButtonFocusedDown:hover,
+.OBPopup .OBFormButtonSelected:hover,
+.OBPopup .OBFormButtonSelectedFocused:hover,
+.OBPopup .OBFormButtonSelectedDown:hover,
+.OBPopup .OBFormButtonSelectedFocusedDown:hover,
+.OBPopup .OBFormButtonSelectedOver:hover,
+.OBPopup .OBFormButtonSelectedFocusedOver:hover,
+.OBPopup .OBFormButton:hover {
+  opacity: 80%;
+}
+.OBPopup .OBFormButtonDisabled,
+.OBPopup .OBFormButtonSelectedDisabled {
+  background-color: #ccc;
+  color: #ffffff;
+}
+.OBPopup .OBFormButtonDisabled:hover,
+.OBPopup .OBFormButtonSelectedDisabled:hover {
+  opacity: 80%;
+}
+.OBPopup .OBFormFieldInput {
+  border-color: #202452;
+}
+
+.OBPopupHeaderIcon {
+  margin: 0px 0px 0px 4px;
+  line-height: 100%;
+  /* To avoid strange effect in some Firefox where the imgButtons are 1px moved down */
+}
+
+.OBPopupHeaderText {
+  font-family: "Poppins", "lucida sans", sans-serif;
+  font-size: 16px;
+  color: #202452;
+  font-weight: bold;
+}
+
+.OBPopupIconMinimize,
+.OBPopupIconMinimizeOver,
+.OBPopupIconMinimizeDown,
+.OBPopupIconMinimizeDisabled {
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #A2B48B;
+  line-height: 100%;
+  /* To avoid strange effect in some Firefox where the imgButtons are 1px moved down */
+}
+
+.OBPopupIconMaximize,
+.OBPopupIconMaximizeOver,
+.OBPopupIconMaximizeDown,
+.OBPopupIconMaximizeDisabled {
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #A2B48B;
+  line-height: 100%;
+  /* To avoid strange effect in some Firefox where the imgButtons are 1px moved down */
+}
+
+.OBPopupIconRestore,
+.OBPopupIconRestoreOver,
+.OBPopupIconRestoreDown,
+.OBPopupIconRestoreDisabled {
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #A2B48B;
+  line-height: 100%;
+  /* To avoid strange effect in some Firefox where the imgButtons are 1px moved down */
+}
+
+.OBPopupIconClose,
+.OBPopupIconCloseOver,
+.OBPopupIconCloseDown,
+.OBPopupIconCloseDisabled {
+  /*
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #FA962F;
+  */
+  line-height: 100%;
+  /* To avoid strange effect in some Firefox where the imgButtons are 1px moved down */
+}
+
+/* OBPopupHTMLFlow */
+
+/*# sourceMappingURL=ob-popup-styles.css.map */

@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION AD_GET_NODE_TREE_BYLEVEL">
+    <function name="AD_GET_NODE_TREE_BYLEVEL" type="VARCHAR" volatility="STABLE">
+      <parameter name="p_tree_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_node_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_level" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  vp VARCHAR2(32);
+  vExists NUMBER;
+BEGIN
+
+  SELECT COUNT(1)  INTO vExists
+  FROM ad_treenode
+  WHERE node_id = p_node_id
+  AND ad_tree_id = p_tree_id;
+
+  IF (vExists = 0) THEN RETURN NULL;
+  ELSE 
+    SELECT parent_id
+    INTO vp
+    FROM ad_treenode
+    WHERE node_id = p_node_id
+    AND ad_tree_id = p_tree_id;
+
+
+    IF(AD_GET_LEVEL_NODE_TREE(p_tree_id, p_node_id)<=p_level) then return p_node_id; end if;
+    RETURN AD_GET_NODE_TREE_BYLEVEL(p_tree_id, vp, p_level);
+  END IF;
+  EXCEPTION WHEN OTHERS THEN RETURN p_node_id;
+END AD_GET_NODE_TREE_BYLEVEL
+]]></body>
+    </function>
+  </database>

@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_FIRED_TRIGGERS">
+    <table name="OBSCHED_FIRED_TRIGGERS" primaryKey="OBSCHED_FIR_TRI_PK">
+      <column name="OBSCHED_FIRED_TRIGGERS_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ENTRY_ID" primaryKey="false" required="true" type="VARCHAR" size="95" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_GROUP" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="INSTANCE_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="FIRED_TIME" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_TIME" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="PRIORITY" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="STATE" primaryKey="false" required="true" type="VARCHAR" size="16" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_NAME" primaryKey="false" required="false" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="JOB_GROUP" primaryKey="false" required="false" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="IS_NONCONCURRENT" primaryKey="false" required="false" type="VARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="REQUESTS_RECOVERY" primaryKey="false" required="false" type="VARCHAR" size="1" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <index name="OBSCHED_FT_INS_JOB_REQ_RCV_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="INSTANCE_NAME"/>
+        <index-column name="REQUESTS_RECOVERY"/>
+      </index>
+      <index name="OBSCHED_FT_J_G_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="JOB_NAME"/>
+        <index-column name="JOB_GROUP"/>
+      </index>
+      <index name="OBSCHED_FT_JG_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="JOB_GROUP"/>
+      </index>
+      <index name="OBSCHED_FT_T_G_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="TRIGGER_NAME"/>
+        <index-column name="TRIGGER_GROUP"/>
+      </index>
+      <index name="OBSCHED_FT_TG_I" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="TRIGGER_GROUP"/>
+      </index>
+      <index name="OBSCHED_FT_TRIG_INST_NAME" unique="false">
+        <index-column name="SCHED_NAME"/>
+        <index-column name="INSTANCE_NAME"/>
+      </index>
+      <unique name="OBSCHED_FIR_TRI_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="ENTRY_ID"/>
+      </unique>
+    </table>
+  </database>

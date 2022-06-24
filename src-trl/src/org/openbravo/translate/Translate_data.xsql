@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2017 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+<SqlClass name="TranslateData" package="org.openbravo.translate">
+  <SqlMethod name="getTextInterfaces" type="preparedStatement" return="multiple">
+      <Sql>
+      select ad_textinterfaces_id as id, isUsed as tr, text, t.ad_module_id as module, filename, m.ad_language as lang, '' as name,'' as javapackage
+        from ad_textinterfaces t, ad_module m
+       where t.ad_module_id = m.ad_module_id
+       order by text, case when filename is not null then 0 else 1 end
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="getModulesInDevelopment" type="preparedStatement" return="multiple">
+    <Sql>
+      select AD_Module_id as id, name, javapackage, AD_LANGUAGE as lang
+        from AD_Module
+       where isInDevelopment = 'Y'
+       order by 1
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="insert" type="preparedStatement" connection="true" return="rowCount">
+    <Sql>
+      insert into ad_textinterfaces
+        (AD_TEXTINTERFACES_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, TEXT, FILENAME, ISUSED, AD_MODULE_ID)
+      values
+        (get_uuid(),'0' ,'0', 'Y', now(), '0', now(), '0', ?, ?, 'Y', ?)
+    </Sql>
+    <Parameter name="text"/>
+    <Parameter name="filename"/>
+    <Parameter name="module"/>
+  </SqlMethod>
+
+  <SqlMethod name="update" type="preparedStatement" connection="true" return="rowCount">
+    <Sql>
+      update ad_textinterfaces t
+         set isUsed='Y'
+       where ad_textinterfaces_id = ?
+    </Sql>
+    <Parameter name="adTextinterfacesId"/>
+  </SqlMethod>
+
+  <SqlMethod name="clean" type="preparedStatement" return="rowCount">
+    <Sql>
+      update ad_textinterfaces t
+         set isUsed='N'
+       where exists (select 1 
+                       from ad_module m
+                      where m.ad_module_id = t.ad_module_id
+                        and m.isInDevelopment = 'Y')  
+    </Sql>
+  </SqlMethod>
+  
+  <SqlMethod name="remove" type="preparedStatement" return="rowCount">
+    <Sql>
+      delete from ad_textinterfaces t
+       where isUsed='N'
+         and exists (select 1 
+                       from ad_module m
+                      where m.ad_module_id = t.ad_module_id
+                        and m.isInDevelopment = 'Y')  
+    </Sql>
+  </SqlMethod>
+</SqlClass>

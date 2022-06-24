@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_PAUSED_TRIGGER_GRPS">
+    <table name="OBSCHED_PAUSED_TRIGGER_GRPS" primaryKey="OBSCHED_PAU_TRI_GRP_PK">
+      <column name="OBSCHED_PAUSED_TRIGGER_GRPS_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="TRIGGER_GROUP" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <unique name="OBSCHED_PAU_TRI_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="TRIGGER_GROUP"/>
+      </unique>
+    </table>
+  </database>

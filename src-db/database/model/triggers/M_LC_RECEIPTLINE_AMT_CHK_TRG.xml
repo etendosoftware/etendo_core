@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_LC_RECEIPTLINE_AMT_CHK_TRG">
+    <trigger name="M_LC_RECEIPTLINE_AMT_CHK_TRG" table="M_LC_RECEIPTLINE_AMT" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+    /*************************************************************************
+    * The contents of this file are subject to the Openbravo  Public  License
+    * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+    * Version 1.1  with a permitted attribution clause; you may not  use this
+    * file except in compliance with the License. You  may  obtain  a copy of
+    * the License at http://www.openbravo.com/legal/license.html
+    * Software distributed under the License  is  distributed  on  an "AS IS"
+    * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+    * License for the specific  language  governing  rights  and  limitations
+    * under the License.
+    * The Original Code is Openbravo ERP.
+    * The Initial Developer of the Original Code is Openbravo SLU
+    * All portions are Copyright (C) 2014 Openbravo SLU
+    * All Rights Reserved.
+    * Contributor(s):  ______________________________________.
+    ************************************************************************/
+  v_Processed VARCHAR(60) ;
+  v_M_LC_Receipt_ID VARCHAR2(32) ;
+  v_M_LC_Cost_ID VARCHAR2(32) ;
+  v_Posted VARCHAR(60) ;
+  v_ismatchadjustment char(1);
+        
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+  IF INSERTING THEN
+    v_M_LC_Receipt_ID:=:new.M_LC_Receipt_ID;
+    v_ismatchadjustment:=:new.ismatchadjustment;
+    v_M_LC_Cost_ID:=:new.M_LC_Cost_ID;
+  ELSE
+    v_M_LC_Receipt_ID:=:old.M_LC_Receipt_ID;
+    v_ismatchadjustment:=:old.ismatchadjustment;
+    v_M_LC_Cost_ID:=:old.M_LC_Cost_ID;
+  END IF;
+  IF v_ismatchadjustment = 'N' THEN
+    SELECT PROCESSED, POSTED INTO v_Processed, v_Posted FROM M_LandedCost, M_LC_Receipt WHERE M_LandedCost.M_LandedCost_id = M_LC_Receipt.M_LandedCost_id  and M_LC_Receipt.M_LC_Receipt_ID=v_M_LC_Receipt_ID;
+  ELSE
+    SELECT PROCESSED, POSTED INTO v_Processed, v_Posted FROM M_LC_Cost WHERE M_LC_Cost.M_LC_Cost_ID=v_M_LC_Cost_ID;
+  END IF;
+    IF UPDATING THEN  
+      IF(v_Processed='Y'
+        AND ((COALESCE(:old.m_lc_cost_id, '0') <> COALESCE(:new.m_lc_cost_id, '0'))
+        OR(COALESCE(:old.m_inoutline_id, '0') <> COALESCE(:new.m_inoutline_id, '0'))
+        OR(COALESCE(:old.m_lc_receipt_id, '0') <> COALESCE(:new.m_lc_receipt_id, '0'))
+        OR(COALESCE(:old.amount, 0) <> COALESCE(:new.amount, 0))
+        OR(COALESCE(:old.ismatchadjustment, '.') <> COALESCE(:new.ismatchadjustment, '.'))
+        OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
+        OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0'))))
+        THEN  RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    
+      IF(v_Posted='Y' 
+        AND ((COALESCE(:old.m_lc_cost_id, '0') <> COALESCE(:new.m_lc_cost_id, '0'))
+        OR(COALESCE(:old.m_inoutline_id, '0') <> COALESCE(:new.m_inoutline_id, '0'))
+        OR(COALESCE(:old.m_lc_receipt_id, '0') <> COALESCE(:new.m_lc_receipt_id, '0'))
+        OR(COALESCE(:old.amount, 0) <> COALESCE(:new.amount, 0))
+        OR(COALESCE(:old.ismatchadjustment, '.') <> COALESCE(:new.ismatchadjustment, '.'))
+        OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
+        OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0'))))
+        THEN RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;    
+    END IF;
+    IF(DELETING) THEN
+      IF(v_Processed='Y' and :old.ismatchadjustment = 'N') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    END IF;
+    IF(INSERTING) THEN
+      IF(v_Processed='Y' and :new.ismatchadjustment = 'N') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    END IF;
+    END M_LC_RECEIPTLINE_AMT_CHK_TRG
+]]></body>
+    </trigger>
+  </database>

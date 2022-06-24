@@ -1,0 +1,45 @@
+#!/bin/bash
+# *************************************************************************
+# * The contents of this file are subject to the Openbravo  Public  License
+# * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+# * Version 1.1  with a permitted attribution clause; you may not  use this
+# * file except in compliance with the License. You  may  obtain  a copy of
+# * the License at http://www.openbravo.com/legal/license.html
+# * Software distributed under the License  is  distributed  on  an "AS IS"
+# * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# * License for the specific  language  governing  rights  and  limitations
+# * under the License.
+# * The Original Code is Openbravo ERP.
+# * The Initial Developer of the Original Code is Openbravo SLU
+# * All portions are Copyright (C) 2019-2020 Openbravo SLU
+# * All Rights Reserved.
+# * Contributor(s):  ______________________________________.
+# ************************************************************************
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+echo "Copying .eslintrc.json with Airbnb rules to modules with web/app or web-jspack folder"
+
+
+BASE_PATH=$(pwd)
+PACKAGE_DIR_PATHS="";
+# generates list of web-jspack paths that contain a package.json file
+for mod in modules/*; do
+  if [[ -f "${mod}/web-jspack/$(basename ${mod})/package.json" ]]; then
+    [ ! "$PACKAGE_DIR_PATHS" = "" ] && PACKAGE_DIR_PATHS="${PACKAGE_DIR_PATHS},"
+    PACKAGE_DIR_PATHS="${PACKAGE_DIR_PATHS}\"${BASE_PATH}/${mod}/web-jspack/$(basename ${mod})\""
+  fi
+done
+
+for mod in modules/*; do
+  if [[ -d "${mod}/web/$(basename ${mod})/app" ]]; then
+    cp ${SCRIPT_DIR}/eslintrc-airbnb.template ${mod}/web/$(basename ${mod})/app/.eslintrc.json
+    echo "> Copied to ${mod}/app"
+  fi
+
+  if [[ -d "${mod}/web-jspack/$(basename ${mod})" ]]; then
+    ## copy eslintrc-airbnb-react.template, replacing the placeholder with the actual content
+    cat ${SCRIPT_DIR}/eslintrc-airbnb-react.template | sed -e "s#packageDirPlaceholder#${PACKAGE_DIR_PATHS}#" > ${mod}/web-jspack/$(basename ${mod})/.eslintrc.json
+    echo "> Copied to ${mod}/web-jspack"
+  fi
+done

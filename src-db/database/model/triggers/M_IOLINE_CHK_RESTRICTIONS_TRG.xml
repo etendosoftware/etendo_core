@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_IOLINE_CHK_RESTRICTIONS_TRG">
+    <trigger name="M_IOLINE_CHK_RESTRICTIONS_TRG" table="M_INOUTLINE" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+
+
+
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2001-2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_Processed VARCHAR(60) ;
+  v_DocStatus VARCHAR(60) ;
+  v_M_INOUT_ID VARCHAR2(32) ;
+  v_Posted VARCHAR(60) ;
+  v_productname m_product.name%TYPE;
+  v_isgeneric   CHAR(1);
+    
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+
+  IF INSERTING THEN
+    v_M_INOUT_ID:=:new.M_INOUT_ID;
+  ELSE
+    v_M_INOUT_ID:=:old.M_INOUT_ID;
+  END IF;
+  SELECT PROCESSED, DOCSTATUS, POSTED INTO v_Processed, v_DocStatus, v_Posted FROM M_INOUT WHERE M_INOUT_ID=v_M_INOUT_ID;
+  IF UPDATING THEN
+    IF(v_Processed='Y' AND ((COALESCE(:old.LINE, 0) <> COALESCE(:new.LINE, 0))
+   OR (COALESCE(:old.M_PRODUCT_ID, '0') <> COALESCE(:new.M_PRODUCT_ID, '0'))
+   OR(COALESCE(:old.QUANTITYORDER, 0) <> COALESCE(:new.QUANTITYORDER, 0))
+   OR(COALESCE(:old.M_ATTRIBUTESETINSTANCE_ID, '0') <> COALESCE(:new.M_ATTRIBUTESETINSTANCE_ID, '0'))
+   OR(COALESCE(:old.MOVEMENTQTY, 0) <> COALESCE(:new.MOVEMENTQTY, 0))
+   OR(COALESCE(:old.M_PRODUCT_UOM_ID, '0') <> COALESCE(:new.M_PRODUCT_UOM_ID, '0'))
+   OR(COALESCE(:old.C_ORDERLINE_ID, '0') <> COALESCE(:new.C_ORDERLINE_ID, '0') AND v_DocStatus != 'VO')
+   OR(COALESCE(:old.M_LOCATOR_ID, '0') <> COALESCE(:new.M_LOCATOR_ID, '0'))
+   OR(COALESCE(:OLD.C_AUM, '0') <> COALESCE(:NEW.C_AUM, '0'))
+   OR(COALESCE(:OLD.AUMQTY, 0) <> COALESCE(:NEW.AUMQTY, 0))
+   OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
+   OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0'))))
+  THEN
+      RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+  END IF;
+
+  IF(v_Posted='Y' AND ((COALESCE(:old.C_BPARTNER_ID, '0') <> COALESCE(:new.C_BPARTNER_ID, '0'))
+      OR(COALESCE(:old.C_PROJECT_ID, '0') <> COALESCE(:new.C_PROJECT_ID, '0'))
+      OR(COALESCE(:old.C_COSTCENTER_ID, '0') <> COALESCE(:new.C_COSTCENTER_ID, '0'))
+      OR(COALESCE(:old.A_ASSET_ID, '0') <> COALESCE(:new.A_ASSET_ID, '0'))
+      OR(COALESCE(:old.USER1_ID, '0') <> COALESCE(:new.USER1_ID, '0'))
+      OR(COALESCE(:old.USER2_ID, '0') <> COALESCE(:new.USER2_ID, '0')))) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+    END IF;
+
+  END IF;
+  IF((DELETING OR INSERTING) AND v_Processed='Y') THEN
+    RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+  END IF;
+  IF (INSERTING OR UPDATING) THEN
+    IF (:NEW.m_product_id IS NOT NULL) THEN
+      SELECT isgeneric, name INTO v_isgeneric, v_productname
+      FROM m_product
+      WHERE m_product_id = :NEW.m_product_id;
+      IF (v_isgeneric = 'Y') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@CannotUseGenericProduct@ ' || v_productname);
+      END IF;
+    END IF;
+  END IF;
+
+  IF (INSERTING OR UPDATING) THEN
+    IF (:NEW.C_AUM IS NOT NULL AND :NEW.AUMQTY IS NOT NULL AND :NEW.M_PRODUCT_UOM_ID IS NOT NULL AND :NEW.QUANTITYORDER IS NOT NULL) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@CannotUseAUMandSecondUOM@');
+    END IF;
+  END IF;
+  
+END M_IOLINE_CHK_RESTRICTIONS_TRG
+]]></body>
+    </trigger>
+  </database>

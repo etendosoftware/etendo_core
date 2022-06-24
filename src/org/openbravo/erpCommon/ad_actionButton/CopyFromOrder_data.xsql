@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2020 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="CopyFromOrderData" package="org.openbravo.erpCommon.ad_actionButton">
+<SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT DISTINCT M_PRODUCT_ID, PRODUCTNAME, M_ATTRIBUTESETINSTANCE_ID, DESCRIPTION, CLASS_OFFER,
+        OFFER_NAME, PRICESTD, LASTPRICESO, C_TAX_ID, NAMETAX, C_UOM_ID, UOMSYMBOL, C_AUM, '' AS ID, '' AS NAME, C_AUMSYMBOL, C_DOCTYPE_ID, '0' AS AUMQTY, '0' AS QTY, '' AS PRICELIMIT, '' AS PRICELIST, '' AS STDPRECISION, '' AS PRICEPRECISION FROM (
+        SELECT CL.M_PRODUCT_ID AS M_PRODUCT_ID, M.NAME AS PRODUCTNAME,
+        MA.M_ATTRIBUTESETINSTANCE_ID AS M_ATTRIBUTESETINSTANCE_ID, MA.DESCRIPTION AS DESCRIPTION,
+        (CASE coalesce(M_GET_OFFER(TO_DATE(NOW()), ?, CL.M_PRODUCT_ID),'-1') WHEN '-1' THEN '' ELSE '' END) AS CLASS_OFFER,
+        (CASE coalesce(M_GET_OFFER(TO_DATE(NOW()), ?, CL.M_PRODUCT_ID),'-1') WHEN '-1' THEN '' ELSE TO_CHAR(
+        M_GET_OFFERS_NAME(TO_DATE(NOW()), ?, CL.M_PRODUCT_ID)
+        ) END) AS OFFER_NAME,
+        (CASE coalesce(M_GET_OFFER(TO_DATE(NOW()), ?, CL.M_PRODUCT_ID),'-1') WHEN '-1' THEN '' ELSE M_GET_OFFER(TO_DATE(NOW()), ?, CL.M_PRODUCT_ID) END) AS M_OFFER_ID,
+        M_BOM_PRICESTD(CL.M_PRODUCT_ID, M_GET_PRICELIST_VERSION(?, TO_DATE(?))) AS PRICESTD,
+        (CASE coalesce(M_GET_OFFER(TO_DATE(NOW()), ?, CL.M_PRODUCT_ID),'-1') WHEN '-1' 
+                                                            THEN (SELECT MAX(CASE ? WHEN 'Y' THEN gross_unit_price ELSE PRICEACTUAL END) 
+                                                                    FROM C_ORDER
+                                                                        JOIN C_ORDERLINE ON C_ORDER.C_ORDER_ID = C_ORDERLINE.C_ORDER_ID
+                                                                        JOIN m_pricelist ON m_pricelist.m_pricelist_id = c_order.m_pricelist_id
+                                                                    WHERE C_ORDER.DATEORDERED = (SELECT MAX(C_ORDER.DATEORDERED)
+                                                                        FROM C_ORDER
+                                                                            JOIN C_ORDERLINE ON C_ORDER.C_ORDER_ID = C_ORDERLINE.C_ORDER_ID
+                                                                            JOIN m_pricelist ON m_pricelist.m_pricelist_id = c_order.m_pricelist_id
+                                                                        WHERE C_ORDER.C_ORDER_ID = C_ORDERLINE.C_ORDER_ID
+                                                                        AND m_pricelist.istaxincluded = ?
+                                                                        AND C_ORDER.C_BPARTNER_ID = ?
+                                                                        AND C_ORDERLINE.M_PRODUCT_ID = M.M_PRODUCT_ID
+                                                                        AND C_ORDER.DOCSTATUS = 'CO')
+                                                                    AND m_pricelist.istaxincluded = ?
+                                                                    AND C_ORDER.C_BPARTNER_ID = ?
+                                                                    AND C_ORDERLINE.M_PRODUCT_ID = M.M_PRODUCT_ID
+                                                                    AND C_ORDER.DOCSTATUS = 'CO') 
+                                                               ELSE M_BOM_PRICESTD(CL.M_PRODUCT_ID, M_GET_PRICELIST_VERSION(?, TO_DATE(?))) 
+                                                                END) AS LASTPRICESO,
+        C_TAX.C_TAX_ID, C_TAX.NAME AS NAMETAX, C_UOM.C_UOM_ID, C_UOM.UOMSYMBOL,
+        (CASE WHEN CL.C_AUM IS NULL THEN M_GET_DEFAULT_AUM_FOR_DOCUMENT(CL.M_PRODUCT_ID, C.C_DOCTYPE_ID) ELSE CL.C_AUM END) AS C_AUM,
+        (CASE WHEN CL.C_AUM IS NULL THEN (SELECT UOMSYMBOL FROM C_UOM WHERE C_UOM_ID = M_GET_DEFAULT_AUM_FOR_DOCUMENT(CL.M_PRODUCT_ID, C.C_DOCTYPE_ID)) ELSE (SELECT UOMSYMBOL FROM C_UOM WHERE C_UOM_ID = CL.C_AUM) END) AS C_AUMSYMBOL,
+        C.C_DOCTYPE_ID
+        FROM C_ORDER C JOIN m_pricelist pl ON c.m_pricelist_id = pl.m_pricelist_id,
+            C_ORDERLINE CL LEFT JOIN (SELECT M_ATTRIBUTESETINSTANCE_ID , DESCRIPTION FROM M_ATTRIBUTESETINSTANCE) MA ON (CL.M_ATTRIBUTESETINSTANCE_ID = MA.M_ATTRIBUTESETINSTANCE_ID), M_PRODUCT M, C_UOM, C_TAX
+        WHERE C.C_ORDER_ID = CL.C_ORDER_ID
+        AND CL.M_PRODUCT_ID = M.M_PRODUCT_ID
+        AND CL.C_TAX_ID = C_TAX.C_TAX_ID
+        AND M.C_UOM_ID = C_UOM.C_UOM_ID
+        AND pl.istaxincluded = ?
+        AND C.C_BPARTNER_ID = ?
+        AND C.DOCSTATUS = 'CO'
+        AND M.ISACTIVE = 'Y'
+        AND C.ISSOTRX = ?
+        AND C.DATEORDERED >= NOW()-TO_NUMBER(?)
+        AND C.DATEORDERED <NOW()+1
+        GROUP BY CL.M_PRODUCT_ID, M.NAME, MA.M_ATTRIBUTESETINSTANCE_ID, 
+        MA.DESCRIPTION,M.M_PRODUCT_ID, C_TAX.C_TAX_ID, C_TAX.NAME, C_UOM.C_UOM_ID, C_UOM.UOMSYMBOL, C_AUM, C.M_PRICELIST_ID, C.C_DOCTYPE_ID
+        )A
+       ORDER BY PRODUCTNAME
+      ]]>
+    </Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="mPricelistId"/>
+    <Parameter name="dateOrdered"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="mPricelistId"/>
+    <Parameter name="dateOrdered"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="issotrx"/>
+    <Parameter name="lastDays"/>
+  </SqlMethod>
+  <SqlMethod name="getOffersStdPrice" type="preparedStatement" return="String" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+	  SELECT ROUND(TO_NUMBER(?),
+                    (SELECT PRICEPRECISION 
+                       FROM C_CURRENCY C,
+                            C_ORDER    O 
+                      WHERE C.C_CURRENCY_ID = O.C_CURRENCY_ID
+                        AND O.C_ORDER_ID = ?)) as TOTAL FROM DUAL
+	 </Sql>
+	<Parameter name="pricestd"/>
+    <Parameter name="orderid"/>
+  </SqlMethod>
+  <SqlMethod name="insertCOrderline" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO C_ORDERLINE (C_ORDERLINE_ID, AD_CLIENT_ID, AD_ORG_ID, CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+            C_ORDER_ID, LINE, C_BPARTNER_ID, C_BPARTNER_LOCATION_ID, DATEORDERED, DATEPROMISED, M_PRODUCT_ID, M_WAREHOUSE_ID, C_UOM_ID,
+            QTYORDERED, C_CURRENCY_ID, PRICELIST, PRICEACTUAL, PRICELIMIT, PRICESTD, DISCOUNT, C_TAX_ID, M_ATTRIBUTESETINSTANCE_ID,
+            grosspricelist, gross_unit_price, line_gross_amount, grosspricestd, C_AUM, AUMQTY
+        ) VALUES (?,?,?,NOW(),?,NOW(),?,
+                ?,(SELECT (coalesce(Max(Line),0))+10 FROM C_OrderLine WHERE C_Order_id = ?),?,?,TO_DATE(?),TO_DATE(?),?,?,?,
+                TO_NUMBER(?),?,TO_NUMBER(?),TO_NUMBER(?),TO_NUMBER(?),TO_NUMBER(?),TO_NUMBER(?), ?, ?,
+            TO_NUMBER(?), TO_NUMBER(?), TO_NUMBER(?), TO_NUMBER(?), ?, TO_NUMBER(?)
+        )
+      ]]>
+    </Sql>
+    <Parameter name="cOrderlineId"/>
+    <Parameter name="adClientId"/>
+    <Parameter name="adOrgId"/>
+    <Parameter name="user"/>
+    <Parameter name="user"/>
+    <Parameter name="cOrderId"/>
+    <Parameter name="cOrderId"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="cBpartnerLocationId"/>
+    <Parameter name="dateordered"/>
+    <Parameter name="datepromised"/>
+    <Parameter name="mProductId"/>
+    <Parameter name="mWarehouseId"/>
+    <Parameter name="cUomId"/>
+    <Parameter name="qtyordered"/>
+    <Parameter name="cCurrencyId"/>
+    <Parameter name="pricelist"/>
+    <Parameter name="priceactual"/>
+    <Parameter name="pricelimit"/>
+    <Parameter name="pricestd"/>
+    <Parameter name="discount"/>
+    <Parameter name="cTaxId"/>
+    <Parameter name="mAttributesetinstanceId"/>
+    <Parameter name="priceListGross"/>
+    <Parameter name="priceGross"/>
+    <Parameter name="amtGross"/>
+    <Parameter name="pricestdgross"/>
+    <Parameter name="cAum"/>
+    <Parameter name="aumQty"/>
+  </SqlMethod>
+</SqlClass>

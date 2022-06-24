@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportSalesPartnerProduct" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="a020faf2-2e0e-4b3d-a9b3-a8d764cc9873">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="LANGUAGE" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["es_ES"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/home/gorkaion/openbravo/jasperreports/"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="BASE_DESIGN" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["/home/iperdomo/workspace/src/openbravo/pi-libupdate/src"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="USER_CLIENT" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="NUMBERFORMAT" class="java.text.DecimalFormat" isForPrompting="false"/>
+	<parameter name="LOCALE" class="java.util.Locale" isForPrompting="false"/>
+	<parameter name="C_Currency_ID" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["102"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT	AD_COLUMN_IDENTIFIER(TO_CHAR('C_BPartner'),TO_CHAR(C_BPARTNER_ID),TO_CHAR($P{LANGUAGE})) AS PARTNER,
+			        C_BPARTNER_ID,
+					SUM(CONVAMOUNT) AS CONVAMOUNT,
+			        SUM(GRANDTOTAL) AS GRANDTOTAL,
+			        SUM(ORDERNO) AS ORDERNO,
+			        C_CURRENCY_ISOSYM($P{C_Currency_ID}) AS CONVISOSYM,
+			        C_CURRENCY_SYMBOL($P{C_Currency_ID},0,'Y') AS CONVSYM
+			FROM    (SELECT C_CURRENCY_CONVERT(SUM(GRANDTOTAL),TRCURRENCYID,$P{C_Currency_ID},TO_DATE(TRDATE),NULL,TRCLIENTID,TRORGID) AS CONVAMOUNT,
+			                SUM(GRANDTOTAL) AS GRANDTOTAL,
+			                COUNT(C_BPARTNER_ID) AS ORDERNO,
+			                C_BPARTNER_ID
+			        FROM   	(SELECT C_ORDER.C_CURRENCY_ID AS TRCURRENCYID,
+			                        TO_DATE(COALESCE(C_ORDER.DATEORDERED,NOW())) AS TRDATE,
+			                        C_ORDER.AD_CLIENT_ID AS TRCLIENTID,
+			                        C_ORDER.AD_ORG_ID AS TRORGID,
+			                        C_ORDER.GRANDTOTAL,
+			                        C_ORDER.C_BPARTNER_ID
+							FROM	C_ORDER
+			                        LEFT JOIN AD_USER ON C_ORDER.SALESREP_ID = AD_USER.AD_USER_ID,
+			                        C_BPARTNER
+			                        LEFT JOIN C_BPARTNER CB ON C_BPARTNER.SALESREP_ID = CB.C_BPARTNER_ID,
+			                        C_BP_GROUP,
+			                        M_PRODUCT,
+			                        M_PRODUCT_CATEGORY,
+			                        M_WAREHOUSE,
+			                        AD_ORG
+			                WHERE	C_ORDER.C_BPARTNER_ID = C_BPARTNER.C_BPARTNER_ID
+			                        AND C_BPARTNER.C_BP_GROUP_ID = C_BP_GROUP.C_BP_GROUP_ID
+			                        AND M_PRODUCT.M_PRODUCT_CATEGORY_ID = M_PRODUCT_CATEGORY.M_PRODUCT_CATEGORY_ID
+			                        AND C_ORDER.M_WAREHOUSE_ID = M_WAREHOUSE.M_WAREHOUSE_ID
+			                        AND C_ORDER.AD_ORG_ID = AD_ORG.AD_ORG_ID
+			                        AND C_ORDER.ISSOTRX = 'Y'
+			                        AND C_ORDER.PROCESSED = 'Y'
+			                        AND C_ORDER.DOCSTATUS IN ('CO','CL')
+						AND C_ORDER.AD_CLIENT_ID IN ($P!{USER_CLIENT})
+			                GROUP BY 	C_ORDER.C_BPARTNER_ID,C_ORDER.C_CURRENCY_ID,C_ORDER.C_CURRENCY_ID,C_ORDER.DATEORDERED,
+			                			C_ORDER.DATEORDERED,C_ORDER.AD_CLIENT_ID,C_ORDER.AD_ORG_ID,C_ORDER.GRANDTOTAL) AA
+			        GROUP BY AA.C_BPARTNER_ID,TRCURRENCYID,TRDATE,TRCLIENTID,TRORGID) ZZ
+			GROUP BY ZZ.C_BPARTNER_ID
+			ORDER BY ORDERNO DESC]]>
+	</queryString>
+	<field name="partner" class="java.lang.String"/>
+	<field name="c_bpartner_id" class="java.lang.String"/>
+	<field name="convamount" class="java.math.BigDecimal"/>
+	<field name="grandtotal" class="java.math.BigDecimal"/>
+	<field name="orderno" class="java.math.BigDecimal"/>
+	<field name="convisosym" class="java.lang.String"/>
+	<field name="convsym" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="50" splitType="Stretch">
+			<staticText>
+				<reportElement key="staticText" x="25" y="5" width="480" height="40" uuid="2a83ee59-247e-4260-8c57-b0cecaba8d07"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font size="28" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Sales by Partner and Product]]></text>
+			</staticText>
+			<line>
+				<reportElement key="line" positionType="FixRelativeToBottom" x="0" y="48" width="534" height="1" forecolor="#000000" uuid="5ba898d3-749a-4a0a-a134-d56e1b293120"/>
+			</line>
+			<line>
+				<reportElement key="line" x="0" y="3" width="534" height="1" forecolor="#000000" uuid="236b6f0d-2d3b-4242-a603-a0629ab9ff9e"/>
+			</line>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="9" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="20" splitType="Stretch">
+			<rectangle radius="0">
+				<reportElement key="element-22" mode="Opaque" x="1" y="1" width="534" height="17" forecolor="#000000" backcolor="#999999" uuid="3801f544-d97b-4651-9c2e-d2bc15edabb5"/>
+			</rectangle>
+			<staticText>
+				<reportElement key="element-90" x="0" y="1" width="178" height="16" forecolor="#FFFFFF" uuid="26292f40-4325-48ef-a4f8-2d8260125442"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="" size="12"/>
+				</textElement>
+				<text><![CDATA[PARTNER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-90" x="178" y="1" width="103" height="16" forecolor="#FFFFFF" uuid="001265c3-ec42-4823-ad26-16234745cca8"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="" size="12"/>
+				</textElement>
+				<text><![CDATA[GRAND TOTAL]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-90" x="356" y="1" width="178" height="16" forecolor="#FFFFFF" uuid="71af620d-1b37-4354-ba43-e154310aa47b"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="" size="12"/>
+				</textElement>
+				<text><![CDATA[Number of Orders]]></text>
+			</staticText>
+			<staticText>
+				<reportElement key="element-91" x="281" y="1" width="75" height="16" forecolor="#FFFFFF" uuid="57f6f59f-07f9-4041-bdf5-4c789ca8b544"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="" size="12"/>
+				</textElement>
+				<text><![CDATA[CURRENCY]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="197" splitType="Stretch">
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" x="0" y="1" width="178" height="15" uuid="7599651f-5987-4e5a-a4e0-84170b0669b1"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Times-Roman" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{partner}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" x="178" y="1" width="103" height="15" uuid="3aa25335-79cd-49d7-92e4-6aa0c6e6347d"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Times-Roman" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{convamount}!=null)?$P{NUMBERFORMAT}.format($F{convamount}):new String(" ")]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField" x="356" y="1" width="178" height="15" uuid="46ab03f4-3cd2-49a6-9ee1-3b5923492a2a"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Times-Roman" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{orderno}!=null)?$P{NUMBERFORMAT}.format($F{orderno}.intValue()):new String(" ")]]></textFieldExpression>
+			</textField>
+			<subreport isUsingCache="true">
+				<reportElement key="subreport-1" x="31" y="17" width="452" height="173" uuid="c5c14ba7-53c8-408b-bad1-6cb8f2efa7a6"/>
+				<subreportParameter name="PARTNER">
+					<subreportParameterExpression><![CDATA[$F{c_bpartner_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="NUMBERFORMAT">
+					<subreportParameterExpression><![CDATA[$P{NUMBERFORMAT}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="LOCALE">
+					<subreportParameterExpression><![CDATA[$P{LOCALE}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="LANGUAGE">
+					<subreportParameterExpression><![CDATA[$P{LANGUAGE}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{BASE_DESIGN} + "/org/openbravo/erpCommon/ad_reports/ReportSalesPartnerProduct_srpt.jasper"]]></subreportExpression>
+			</subreport>
+			<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true">
+				<reportElement key="textField-1" x="281" y="1" width="75" height="15" uuid="3424e71d-b75d-4900-a072-17c96f2291d4"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="Times-Roman" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{convisosym}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="27" splitType="Stretch">
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" x="325" y="4" width="170" height="19" uuid="fb9fe719-9025-4b53-bf69-f5b7d00a31f3"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font fontName="Helvetica" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" x="499" y="4" width="36" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="426652c3-c360-4b2d-a6e9-7e363fade132"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Top" rotation="None">
+					<font fontName="Helvetica" size="10" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfFontName="Helvetica" pdfEncoding="CP1252" isPdfEmbedded="false"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement key="line" x="0" y="1" width="535" height="1" forecolor="#000000" uuid="0cb9ced0-d4c5-49e2-b228-dc4ec143f76f"/>
+			</line>
+			<textField pattern="" isBlankWhenNull="false">
+				<reportElement key="textField" x="1" y="6" width="209" height="19" uuid="2c37a9eb-2ab8-4b0a-b34c-790ed2088432"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="Times-Roman" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>

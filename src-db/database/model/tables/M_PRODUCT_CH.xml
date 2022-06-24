@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_PRODUCT_CH">
+    <table name="M_PRODUCT_CH" primaryKey="M_PRODUCT_CH_KEY">
+      <column name="M_PRODUCT_CH_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_PRODUCT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_CHARACTERISTIC_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SEQNO" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISVARIANT" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault><![CDATA['N']]></onCreateDefault>
+      </column>
+      <column name="M_CH_SUBSET_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DEFINE_PRICE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault><![CDATA['N']]></onCreateDefault>
+      </column>
+      <column name="DEFINE_IMAGE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault><![CDATA['N']]></onCreateDefault>
+      </column>
+      <column name="PRICELIST_TYPE" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
+        <default><![CDATA[SALES]]></default>
+        <onCreateDefault><![CDATA['ALL']]></onCreateDefault>
+      </column>
+      <column name="ISEXPLODECONF" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault><![CDATA['Y']]></onCreateDefault>
+      </column>
+      <foreign-key foreignTable="AD_CLIENT" name="M_PRODUCT_CH_AD_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_PRODUCT_CH_AD_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_CHARACTERISTIC" name="M_PRODUCT_CH_M_CHARACTERISTIC">
+        <reference local="M_CHARACTERISTIC_ID" foreign="M_CHARACTERISTIC_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_PRODUCT" name="M_PRODUCT_CH_M_PRODUCT">
+        <reference local="M_PRODUCT_ID" foreign="M_PRODUCT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_CH_SUBSET" name="M_PRODUCT_CH_SUBSET">
+        <reference local="M_CH_SUBSET_ID" foreign="M_CH_SUBSET_ID"/>
+      </foreign-key>
+      <index name="M_PRODUCT_CH_CHARACTERISTIC" unique="true">
+        <index-column name="M_PRODUCT_ID"/>
+        <index-column name="M_CHARACTERISTIC_ID"/>
+      </index>
+      <check name="M_PRODUCT_CH_DEFINE_IMAGE_CHK"><![CDATA[DEFINE_IMAGE IN ('Y', 'N')]]></check>
+      <check name="M_PRODUCT_CH_DEFINE_PRICE_CHK"><![CDATA[DEFINE_PRICE IN ('Y', 'N')]]></check>
+      <check name="M_PRODUCT_CH_ISACTIVE"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="M_PRODUCT_CH_ISEXPLODECONF"><![CDATA[ISEXPLODECONF IN ('Y', 'N')]]></check>
+      <check name="M_PRODUCT_CH_VARIANT"><![CDATA[ISVARIANT IN ('Y', 'N')]]></check>
+    </table>
+  </database>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html 
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License. 
+* The Original Code is Openbravo ERP. 
+* The Initial Developer of the Original Code is Openbravo SLU 
+* All portions are Copyright (C) 2001-2014 Openbravo SLU 
+* All Rights Reserved. 
+* Contributor(s):  ______________________________________.
+************************************************************************
+-->
+<REPORT>
+    <template file="EmailOptions.html"/>
+    <PARAMETER id="strDocumentId" name="strDocumentId" attribute="value" default=""/>
+    <PARAMETER id="draftDocumentIds" name="draftDocumentIds" attribute="value" default=""/>
+  <PARAMETER id="paramDirectory" name="directory" default=""/>
+  <PARAMETER id="paramLanguage" name="paramLanguage" default=""/>
+  <PARAMETER id="paramCSS" name="theme" attribute="href" replace="Default"/>
+    <PARAMETER id="fromEmailId" name="fromEmailId" attribute="value" default=""/>
+    <PARAMETER id="fromEmail" name="fromEmail" attribute="value" default=""/>
+    <PARAMETER id="fromName" name="fromName" default=""/>
+    <PARAMETER id="toEmail" name="toEmail" attribute="value" default=""/>
+    <PARAMETER id="toEmailOrig" name="toEmailOrig" attribute="value" default=""/>
+    <PARAMETER id="toName" name="toName" default=""/>
+    <PARAMETER id="ccEmail" name="ccEmail" attribute="value" default=""/>
+    <PARAMETER id="ccEmailOrig" name="ccEmailOrig" attribute="value" default=""/>
+    <PARAMETER id="ccName" name="ccName" default=""/>
+    <PARAMETER id="bccEmail" name="bccEmail" attribute="value" default=""/>
+    <PARAMETER id="bccEmailOrig" name="bccEmailOrig" attribute="value" default=""/>
+    <PARAMETER id="bccName" name="bccName" default=""/>
+    <PARAMETER id="replyToEmail" name="replyToEmail" attribute="value" default=""/>
+    <PARAMETER id="replyToEmailOrig" name="replyToEmailOrig" attribute="value" default=""/>
+    <PARAMETER id="replyToName" name="replyToName" default=""/>
+    <PARAMETER id="emailSubject" name="emailSubject" attribute="value" default=""/>
+    <PARAMETER id="emailBody" name="emailBody" default=""/>
+    <PARAMETER id="discardTable" name="discardTable" default=""/>
+    <PARAMETER id="discardSelect" name="discardSelect" default=""/>
+    <PARAMETER id="to" name="to" default=""/>
+    <PARAMETER id="replyTo" name="replyTo" default=""/>
+    <PARAMETER id="closed" name="closed" attribute="value" default=""/>
+    <PARAMETER id="paramArchive" name="inpArchive" attribute="value" default=""/>
+    <PARAMETER id="idToDelete" name="idToDelete" attribute="value" default=""/>
+    <PARAMETER id="multCusCount" name="multCusCount" default=""/>
+    <PARAMETER id="tab" name="tab" default="" attribute="value"/>
+    <PARAMETER id="multSalesRepCount" name="multSalesRepCount" default=""/> 
+    <PARAMETER id="c_poc_doctype_template_id" name="templateId"/>
+    <PARAMETER id="reportEmailConfig" name="reportEmailConfig" default=""/>
+    <PARAMETER id="multiDocType" name="multiDocType" attribute="value" default=""/>
+    <PARAMETER id="useDefault" name="useDefault" attribute="value" default=""/>
+    <SUBREPORT id="reportEmail" name="reportEmail" report="org/openbravo/erpCommon/reference/List">
+        <ARGUMENT name="template_filename" withId="c_poc_doctype_template_id"/>
+    </SUBREPORT>
+    <structure name="structure2">
+        <FIELD id="fileDocName" attribute="value" replace="tt">docName</FIELD>
+        <FIELD id="fileDocName">docName</FIELD>
+        <SECTION id="sectionDetail2"/>
+    </structure>
+    
+    <structure name="structure1">
+        <FIELD id="paramId" attribute="name" replace="xx">id</FIELD>
+        <FIELD id="paramId" attribute="checked" replace="pp">selected</FIELD>
+        <FIELD id="paramId" attribute="type" replace="zz">visible</FIELD>
+        <FIELD id="linkLocator" attribute="onclick" replace="yy">id</FIELD>
+        <FIELD id="paramName">fileName</FIELD>
+        
+        <SECTION id="sectionDetail"/>
+    </structure>
+</REPORT>

@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_GET_DEFAULT_PERIOD">
+    <function name="C_GET_DEFAULT_PERIOD" type="VARCHAR" volatility="STABLE">
+      <parameter name="p_invoice" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_defaultperiod" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+/*
+* It returns the period from the inherited calendar of the invoice organization
+* based on p_defaultperiod input parameter.
+* If no period is found, it returns NULL.
+*/
+
+  v_calendar_id AD_Org.C_Calendar_ID%TYPE; 
+  v_period_id C_Period.C_Period_ID%TYPE; 
+  v_dateAcct C_Invoice.DateAcct%TYPE; 
+  v_enddate C_Period.EndDate%TYPE;
+  
+begin
+
+		SELECT ad_inheritedcalendar_id
+		INTO v_calendar_id
+		FROM AD_ORG
+		WHERE AD_ORG_ID = (SELECT AD_ORG_ID FROM C_INVOICE WHERE C_INVOICE_ID = p_invoice);
+
+		SELECT DATEACCT 
+		INTO v_dateAcct
+		FROM C_INVOICE WHERE C_INVOICE_ID = p_invoice; 
+
+		SELECT C_PERIOD_ID, ENDDATE
+		INTO v_period_id, v_enddate
+		FROM C_PERIOD, C_YEAR
+		WHERE C_PERIOD.C_YEAR_ID = C_YEAR.C_YEAR_ID
+		AND C_CALENDAR_ID = v_calendar_id
+		AND PERIODTYPE <> 'A'
+		AND STARTDATE<=trunc(v_dateAcct)
+		AND ENDDATE>=trunc(v_dateAcct);
+
+		IF(p_defaultPeriod='C') THEN
+		    RETURN v_period_id;
+		ELSIF(p_defaultPeriod='N') THEN
+
+				SELECT C_PERIOD_ID, ENDDATE
+				INTO v_period_id, v_enddate
+				FROM C_PERIOD, C_YEAR
+				WHERE C_PERIOD.C_YEAR_ID = C_YEAR.C_YEAR_ID
+				AND C_CALENDAR_ID = v_calendar_id
+		    AND PERIODTYPE <> 'A'				
+		    AND STARTDATE<=(trunc(v_endDate) +1)
+				AND ENDDATE>=(trunc(v_endDate) +1);
+		
+		    RETURN v_period_id;
+		ELSE 
+				RETURN NULL;
+		END IF;
+END C_GET_DEFAULT_PERIOD
+]]></body>
+    </function>
+  </database>

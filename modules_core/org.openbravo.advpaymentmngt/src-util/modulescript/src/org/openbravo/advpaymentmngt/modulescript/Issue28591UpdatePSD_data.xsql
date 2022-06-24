@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2015 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+<SqlClass name="Issue28591UpdatePSDData" package="org.openbravo.advpaymentmngt.modulescript">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT '' as fin_payment_scheduledetail_id, '' as outstandingamt, '' as wrongamt, 
+        '' as fin_payment_schedule_id, '' as c_invoice_id, '' as c_currency_id, '' as bp_currency_id,
+        '' as fin_payment_id, '' as fin_payment_detail_id, '' as isreceipt, '' as c_bpartner_id, '' as paidamt,
+        '' as fin_payment_proposal_id, '' as amount 
+        FROM DUAL
+      ]]>
+    </Sql>
+   </SqlMethod>
+   <SqlMethod name="selectPS" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      select  sum(ps.paidamt) as paidamt, sum (ps.outstandingamt) as outstandingamt, i.c_invoice_id
+      from FIN_Payment_Schedule ps , c_invoice i
+      where ps.c_invoice_id=i.c_invoice_id
+      and i.ispaid='N'
+      group by i.c_invoice_id , i.totalpaid
+      having i.totalpaid <> sum(ps.paidamt)  and sum (ps.outstandingamt) =0
+      ]]>
+    </Sql>
+   </SqlMethod>
+   <SqlMethod name="updateFinPaymentschedule" type="preparedStatement" return="rowcount">
+   <SqlMethodComment></SqlMethodComment>
+   <Sql>
+     <![CDATA[
+      update fin_payment_schedule set paidamt=to_number(?) , outstandingamt= to_number(?) where c_invoice_id=?        
+       ]]>
+     </Sql>
+   <Parameter name="outstandingamt"/>
+   <Parameter name="paidamt"/>
+   <Parameter name="invoiceId"/>   
+   </SqlMethod>
+   <SqlMethod name="selectPSD" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      select ps.outstandingamt as outstandingamt, max(psd.fin_payment_scheduledetail_id) as fin_payment_scheduledetail_id
+      from fin_payment_scheduledetail psd
+      LEFT JOIN fin_payment_schedule ps ON ps.fin_payment_schedule_id = COALESCE(psd.fin_payment_schedule_invoice,psd.fin_payment_schedule_order)
+      where psd.fin_payment_detail_id is null and ps.outstandingamt > 0
+      group by ps.outstandingamt, ps.fin_payment_schedule_id
+      having sum(psd.amount) <> ps.outstandingamt
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updatePSDAmount" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE FIN_PAYMENT_SCHEDULEDETAIL SET AMOUNT=TO_NUMBER(?),
+        updatedby='0', updated=now()
+        WHERE FIN_PAYMENT_SCHEDULEDETAIL_ID = ?
+      ]]>
+    </Sql>
+    <Parameter name="outStandingAmount"/>
+    <Parameter name="finPaymentScheduledetailId"/>
+  </SqlMethod>
+  <SqlMethod name="updateWrongPSD" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as exist
+        FROM DUAL
+        WHERE EXISTS (SELECT 1 FROM ad_preference
+                      WHERE attribute = 'Issue28591updateWrongPSD2')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="selectPaymentProposal" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+       select pp.fin_payment_proposal_id, sum(psd.amount) as amount
+       from fin_payment_proposal pp, fin_payment_prop_detail ppd, fin_payment_scheduledetail psd
+       where pp.fin_payment_proposal_id = ppd.fin_payment_proposal_id
+       and ppd.fin_payment_scheduledetail_id = psd.fin_payment_scheduledetail_id
+       and ppd.amount > psd.amount
+       and psd.fin_payment_detail_id IS NULL
+       group by pp.fin_payment_proposal_id, pp.amount
+      ]]>
+    </Sql>
+  </SqlMethod>
+   <SqlMethod name="updatePaymentProposal" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      update fin_payment_proposal
+      set amount = to_number(?)
+      where fin_payment_proposal_id =?
+      ]]>
+    </Sql>
+    <Parameter name="sumAmt"/>
+    <Parameter name="finPaymentProposalId"/>
+  </SqlMethod>
+   <SqlMethod name="updatePaymentProp" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+       update fin_payment_prop_detail ppd
+       set amount = ( select psd.amount  from fin_payment_scheduledetail  psd  where ppd.fin_payment_scheduledetail_id = psd.fin_payment_scheduledetail_id     and ppd.amount > psd.amount
+       and psd.fin_payment_detail_id IS NULL)
+       WHERE EXISTS ( select psd.amount  from fin_payment_scheduledetail psd  where ppd.fin_payment_scheduledetail_id = psd.fin_payment_scheduledetail_id     and ppd.amount > psd.amount
+       and psd.fin_payment_detail_id IS NULL)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO ad_preference (
+          ad_preference_id, ad_client_id, ad_org_id, isactive,
+          createdby, created, updatedby, updated,
+          attribute
+        ) VALUES (
+          get_uuid(), '0', '0', 'Y',
+          '0', NOW(), '0', NOW(),
+          'Issue28591updateWrongPSD2'
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+ </SqlClass>

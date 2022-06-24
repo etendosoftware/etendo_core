@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2018 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  Cheli Pineda__________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="CreateFromInvoiceData" package="org.openbravo.erpCommon.ad_actionButton">
+  <SqlMethod name="selectFromPOCombo" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT o.C_ORDER_ID as ID, Ad_Column_Identifier(to_char('C_Order'), to_char(o.c_order_id), to_char(?)) AS NAME 
+        FROM C_ORDER o JOIN m_pricelist pl ON o.m_pricelist_id = pl.m_pricelist_id
+        WHERE o.IsSOTrx='N' 
+        AND o.DocStatus IN ('CL','CO') 
+        AND o.AD_Client_ID IN ('1') 
+        AND o.AD_Org_ID IN ('1')
+        AND o.C_BPartner_ID = ?
+        AND pl.istaxincluded = ?
+        AND o.c_currency_id = ?
+        AND o.InvoiceRule <> 'N'
+        AND EXISTS (SELECT 1 
+                     FROM C_ORDERLINE l left join M_MATCHPO m on  l.C_OrderLine_ID=m.C_OrderLine_ID
+                                                              and m.C_InvoiceLine_ID IS NOT NULL  
+                    WHERE l.C_ORDER_ID = o.C_ORDER_ID  
+                    GROUP BY l.QtyOrdered,l.C_OrderLine_ID 
+                    HAVING (l.QtyOrdered-SUM(COALESCE(m.Qty,0))) <> 0)
+        ORDER BY NAME
+      ]]>
+    </Sql>
+    <Parameter name="language"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="o.AD_Client_ID IN (" text="'1'"/>
+    <Parameter name="adOrgClient" type="replace" optional="true" after="o.AD_Org_ID IN (" text="'1'"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="currencyId"/>
+  </SqlMethod>
+  <SqlMethod name="selectFromPOSOTrxCombo" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT o.C_ORDER_ID as ID, Ad_Column_Identifier(to_char('C_Order'), to_char(o.c_order_id), to_char(?)) AS NAME 
+        FROM C_INVOICE_CANDIDATE_V ic,
+             C_ORDER o JOIN m_pricelist pl ON o.m_pricelist_id = pl.m_pricelist_id
+        WHERE o.C_ORDER_ID = ic.C_ORDER_ID 
+        AND ic.AD_Client_ID IN ('1') 
+        AND ic.AD_Org_ID IN ('1') 
+        AND ic.C_BPartner_ID = ?
+        AND pl.istaxincluded = ? 
+        AND o.c_currency_id = ?
+        AND o.C_Order_Id = ic.C_Order_Id
+        AND ((ic.term IN ('D', 'S') AND ic.qtydelivered <> 0) OR (ic.term = 'I' AND exists (SELECT 1 FROM C_ORDERLINE ol WHERE ol.C_ORDER_ID = o.C_ORDER_ID group by ol.c_orderline_id having SUM(ol.QTYORDERED) - SUM(ol.QTYINVOICED) <> 0)) OR (ic.term = 'O' AND (ic.qtyordered = ic.qtydelivered)))
+        GROUP BY o.C_ORDER_ID, o.DocumentNo, o.DateOrdered, o.GrandTotal 
+        ORDER BY NAME
+      ]]>
+    </Sql>
+    <Parameter name="language"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="ic.AD_Client_ID IN (" text="'1'"/>
+    <Parameter name="adOrgClient" type="replace" optional="true" after="ic.AD_Org_ID IN (" text="'1'"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="currencyId"/>
+  </SqlMethod>
+  <SqlMethod name="selectFromShipmentCombo" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT s.M_InOut_ID AS ID, Ad_Column_Identifier(to_char('M_InOut'), to_char(s.M_InOut_ID), to_char(?)) AS NAME 
+        FROM M_INOUT s 
+        WHERE s.IsSOTrx='N' 
+        AND s.DocStatus IN ('CL','CO') 
+        AND s.ISLOGISTIC <> 'Y'
+        AND s.AD_Client_ID IN ('1') 
+        AND s.AD_Org_ID IN ('1') 
+        AND s.C_BPartner_ID = ? 
+        AND EXISTS (SELECT 1 
+                     FROM M_INOUTLINE l
+                           left join M_MATCHINV mi on l.M_InOutLine_ID=mi.M_InOutLine_ID
+                           left join c_orderline ol on l.c_orderline_id = ol.c_orderline_id
+                           left join c_order o on ol.c_order_id = o.c_order_id AND o.InvoiceRule <> 'N'
+                           left join m_pricelist pl on pl.m_pricelist_id = o.m_pricelist_id
+                      WHERE l.M_INOUT_ID = s.M_INOUT_ID 
+                        AND (l.c_orderline_id is null OR pl.istaxincluded = ?)
+                        AND (l.c_orderline_id is null OR o.c_currency_id = ?)
+                      GROUP BY l.MovementQty, l.M_InOutLine_ID 
+                      HAVING  (l.MovementQty-SUM(COALESCE(mi.Qty,0))) <> 0)
+        ORDER BY NAME
+      ]]>
+    </Sql>
+    <Parameter name="adLanguage"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="s.AD_Client_ID IN (" text="'1'"/>
+    <Parameter name="adOrgClient" type="replace" optional="true" after="s.AD_Org_ID IN (" text="'1'"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="currencyId"/>
+  </SqlMethod>
+  <SqlMethod name="selectFromShipmentSOTrxCombo" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT s.M_InOut_ID AS ID, Ad_Column_Identifier(to_char('M_InOut'), to_char(s.M_InOut_ID), to_char(?)) AS NAME 
+        FROM M_INOUT s 
+        WHERE s.IsSOTrx='Y' 
+        AND s.ISLOGISTIC <> 'Y'
+        AND s.DocStatus IN ('CL','CO') 
+        AND s.AD_Client_ID IN ('1') 
+        AND s.AD_Org_ID IN ('1')
+        AND s.C_BPartner_ID = ?  
+        AND s.IsCompletelyInvoiced = 'N'
+        AND EXISTS (SELECT 1 FROM M_INOUTLINE l 
+                           left join c_orderline ol on l.c_orderline_id = ol.c_orderline_id
+                           left join c_order o on ol.c_order_id = o.c_order_id
+                           left join m_pricelist pl on pl.m_pricelist_id = o.m_pricelist_id
+                           left join c_invoiceline il on l.m_inoutline_id = il.m_inoutline_id
+                           left join c_invoice i on il.c_invoice_id = i.c_invoice_id
+                    WHERE l.M_INOUT_ID = s.M_INOUT_ID
+                    AND (l.c_orderline_id is null OR pl.istaxincluded = ?)
+                    AND (l.c_orderline_id is null OR o.c_currency_id = ?)
+                    GROUP BY l.m_inoutline_id, l.movementqty
+                    HAVING ( l.movementqty >= 0 AND l.movementqty > Sum(COALESCE(CASE WHEN i.docstatus = 'CO' THEN il.qtyinvoiced ELSE 0 END, 0)) )
+                      OR ( l.movementqty < 0 AND l.movementqty < Sum(COALESCE(CASE WHEN i.docstatus = 'CO' THEN il.qtyinvoiced ELSE 0 END, 0)) )
+                    )
+        AND NOT EXISTS (SELECT 1
+        FROM C_ORDER o
+        WHERE o.C_ORDER_ID = s.C_ORDER_ID
+        AND ((o.INVOICERULE = 'O' AND o.isdelivered = 'N') OR o.invoicerule = 'N'))
+        ORDER BY NAME
+      ]]>
+    </Sql>
+    <Parameter name="adLanguage"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="s.AD_Client_ID IN (" text="'1'"/>
+    <Parameter name="adOrgClient" type="replace" optional="true" after="s.AD_Org_ID IN (" text="'1'"/>
+    <Parameter name="cBpartnerId"/>
+    <Parameter name="isTaxIncluded"/>
+    <Parameter name="currencyId"/>
+  </SqlMethod>
+</SqlClass>

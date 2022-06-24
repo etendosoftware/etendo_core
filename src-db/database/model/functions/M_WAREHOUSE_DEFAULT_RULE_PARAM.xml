@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_WAREHOUSE_DEFAULT_RULE_PARAM">
+    <function name="M_WAREHOUSE_DEFAULT_RULE_PARAM" type="NULL" volatility="IMMUTABLE">
+      <parameter name="pinstance_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_clientid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_orgid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_productid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_uomid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_productuomid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_warehouse_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_locatorid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_attributesetinstanceid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_quantity" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_priority_warehouse_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_m_warehouse_rule_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_tableid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_auxid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_lineno" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_m_reservation_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_result" type="NUMERIC" mode="out">
+        <default/>
+      </parameter>
+      <parameter name="p_message" type="VARCHAR" mode="out">
+        <default/>
+      </parameter>
+      <parameter name="p_avail" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <parameter name="p_nett" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <parameter name="p_overissue" type="CHAR" mode="in">
+        <default><![CDATA[NULL]]></default>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2017-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+BEGIN
+  /*
+  
+  This rule keeps stock proposed as defaulted by the m_get_stock procedure. It shall be used when it is desired to
+  overwrite a warehouse rule defined at warehouse level.
+  
+  */
+  p_result:=1;
+  p_message:='';
+  RETURN;
+END M_WAREHOUSE_DEFAULT_RULE_PARAM
+]]></body>
+    </function>
+  </database>

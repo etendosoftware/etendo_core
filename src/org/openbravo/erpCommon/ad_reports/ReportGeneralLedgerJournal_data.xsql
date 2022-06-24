@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2001-2019 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="ReportGeneralLedgerJournalData" package="org.openbravo.erpCommon.ad_reports">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="scrollable">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      SELECT *
+      FROM ( SELECT '0' AS RN1, B.* FROM (
+      SELECT SCHEMA_ID, SCHEMA_NAME, IDENTIFIER, DATEACCT, AA.VALUE, AA.NAME, ID, AD_TABLE_ID, DOCBASETYPE,AR.NAME as DOCNAME, SEQNO, '' AS TOTAL, DESCRIPTION,
+      (CASE FACTACCTTYPE WHEN 'O' THEN 1 WHEN 'N' THEN 2 WHEN 'R' THEN 3 WHEN 'D' THEN 4 ELSE 5 END) AS FACTACCTTYPE2,
+      (CASE AMTACCTDR WHEN 0 THEN NULL ELSE AMTACCTDR END) AS AMTACCTDR, (CASE AMTACCTCR WHEN 0 THEN NULL ELSE AMTACCTCR END) AS AMTACCTCR, 
+      '' AS GROUPEDLINES, '' AS TAXID, AD_GETTAB_FROM_TABLE(AA.AD_TABLE_ID, AA.DOCBASETYPE, AA.AD_CLIENT_ID) AS TAB_ID  , '' as newStyle, AA.journalbatch_id AS journalbatch_id
+      FROM 
+      (SELECT F.C_ACCTSCHEMA_ID AS SCHEMA_ID, SC.NAME AS SCHEMA_NAME, F.FACT_ACCT_GROUP_ID AS IDENTIFIER, F.DATEACCT,
+      F.ACCTVALUE AS VALUE, F.ACCTDESCRIPTION AS NAME, CASE WHEN 'Y' = 'Y' THEN TO_CHAR(F.DESCRIPTION) ELSE TO_CHAR('') END AS DESCRIPTION, F.RECORD_ID AS ID, F.AD_TABLE_ID, F.DOCBASETYPE,
+      sum(F.AMTACCTDR) AS AMTACCTDR, sum(F.AMTACCTCR) AS AMTACCTCR, MIN(SEQNO) AS SEQNO, F.FACTACCTTYPE AS FACTACCTTYPE, F.AD_CLIENT_ID, MAX(glj.gl_journalbatch_id) as journalbatch_id
+      FROM FACT_ACCT F
+      JOIN C_ACCTSCHEMA SC ON (F.C_ACCTSCHEMA_ID = SC.C_ACCTSCHEMA_ID)
+      LEFT JOIN GL_JOURNAL GLJ ON (GLJ.GL_JOURNAL_ID = F.RECORD_ID AND F.AD_TABLE_ID = '224') 
+      WHERE F.AD_CLIENT_ID IN ('1')
+      AND F.AD_ORG_ID IN('1')
+      AND 1=1
+      AND f.AD_ORG_ID IN('2')
+      AND F.FactAcctType IN ('C','N','O','R','D')
+      AND f.C_ACCTSCHEMA_ID = SC.C_ACCTSCHEMA_ID
+      AND (?='Y' OR F.FACT_ACCT_GROUP_ID IN (
+                SELECT FACT_ACCT_GROUP_ID FROM FACT_ACCT WHERE ACCOUNT_ID IN (
+                  SELECT c_elementvalue_id as name
+                  FROM C_ELEMENTVALUE
+                  WHERE value >= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and value <= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and c_elementvalue.ELEMENTLEVEL = 'S')
+                  AND AD_CLIENT_ID IN ('3')
+                  AND AD_ORG_ID IN ('3')
+                  AND 3=3
+                  AND AD_ORG_ID IN('4')
+                  AND FactAcctType IN ('C','N','O','R','D')
+                ))
+      GROUP BY f.C_ACCTSCHEMA_ID, SC.NAME, F.AD_TABLE_ID, F.DATEACCT, F.ACCTDESCRIPTION, CASE WHEN 'Y' = 'Y' THEN TO_CHAR(F.DESCRIPTION) ELSE TO_CHAR('') END, F.ACCTVALUE, F.DOCBASETYPE, F.RECORD_ID, 
+      F.FACT_ACCT_GROUP_ID, F.ACCOUNT_ID,F.FACTACCTTYPE,
+      (CASE F.AMTACCTDR WHEN 0 THEN (CASE SIGN(F.AMTACCTCR) WHEN -1 THEN 1 ELSE 2 END) ELSE (CASE SIGN(F.AMTACCTDR) WHEN -1 THEN 3 ELSE 4 END) END), F.AD_CLIENT_ID
+      HAVING (sum(F.AMTACCTDR) <> 0 OR sum(F.AMTACCTCR) <> 0)) AA
+      LEFT JOIN (select * from AD_REF_LIST_V WHERE AD_REFERENCE_ID = '183'  AND AD_LANGUAGE=?) AR  ON AR.VALUE=AA.DOCBASETYPE 
+      ORDER BY SCHEMA_NAME, DATEACCT, FACTACCTTYPE2, IDENTIFIER, AA.AMTACCTDR DESC, AA.AMTACCTCR DESC, SEQNO
+      ) B
+      ) C WHERE 1=1
+      ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="rownum" type="replace" optional="true" after="FROM ( SELECT " text="'0'" />
+    <Parameter name="descriptionGrouping" type="replace" optional="true" after="AS NAME, CASE WHEN " text="'Y'"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 1=1"><![CDATA[ AND f.DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="documentNo" optional="true" after="AND 1=1" type="argument"><![CDATA[ AND F.RECORD_ID IN ]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 1=1"><![CDATA[ AND f.C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND f.AD_ORG_ID IN(" text="'2'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND F.FactAcctType IN (" text="'C','N','O','R','D'"/>    
+    <Parameter name="allaccounts"/>
+    <Parameter name="accountFrom"/>
+    <Parameter name="accountTo"/>  
+    <Parameter name="adUserClient" type="replace" optional="true" after="AND AD_CLIENT_ID IN (" text="'3'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND AD_ORG_ID IN (" text="'3'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 3=3"><![CDATA[ AND dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 3=3"><![CDATA[ AND dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 3=3"><![CDATA[ AND DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 3=3"><![CDATA[ AND C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND AD_ORG_ID IN(" text="'4'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND FactAcctType IN (" text="'C','N','O','R','D'"/>
+    <Parameter name="descriptionGrouping" type="replace" optional="true" after="F.ACCTDESCRIPTION, CASE WHEN " text="'Y'"/>
+    <Parameter name="paramLanguage"></Parameter>
+    <!--Parameter name="closing" optional="true" type="none" after="2=2" text=" AND F.FactAcctType = 'C'"/>
+    <Parameter name="regularization" optional="true" type="none" after="2=2" text=" AND F.FactAcctType = 'R'"/>
+    <Parameter name="opening" optional="true" type="none" after="2=2" text=" AND F.FactAcctType = 'O'"/-->
+    <Parameter name="pgLimit" type="argument" optional="true" after=") B"><![CDATA[LIMIT ]]></Parameter>
+    <Parameter name="oraLimit1" type="argument" optional="true" after=") B"><![CDATA[WHERE ROWNUM <= ]]></Parameter>
+    <Parameter name="oraLimit2" type="argument" optional="true" after="WHERE 1=1"><![CDATA[ AND RN1 BETWEEN ]]></Parameter>
+  </SqlMethod>
+  <SqlMethod name="selectCountNoOfRecords" type="preparedStatement" return="string" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      SELECT COUNT(1) AS TOTAL
+      FROM (SELECT 1
+      FROM FACT_ACCT F
+      WHERE F.AD_CLIENT_ID IN ('1')
+      AND F.AD_ORG_ID IN('1')
+      AND 1=1
+      AND f.AD_ORG_ID IN('2')
+      AND F.FactAcctType IN ('C','N','O','R','D')
+      AND (?='Y' OR F.FACT_ACCT_GROUP_ID IN (
+                SELECT FACT_ACCT_GROUP_ID FROM FACT_ACCT WHERE ACCOUNT_ID IN (
+                  SELECT c_elementvalue_id as name
+                  FROM C_ELEMENTVALUE
+                  WHERE value >= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and value <= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and c_elementvalue.ELEMENTLEVEL = 'S')
+                  AND AD_CLIENT_ID IN ('3')
+                  AND AD_ORG_ID IN ('3')
+                  AND 3=3
+                  AND AD_ORG_ID IN('4')
+                  AND FactAcctType IN ('C','N','O','R','D')
+                ))
+      GROUP BY f.C_ACCTSCHEMA_ID, F.AD_TABLE_ID, F.DATEACCT, CASE WHEN 'Y' = 'Y' THEN TO_CHAR(F.DESCRIPTION) ELSE TO_CHAR('') END,
+      F.DOCBASETYPE, F.RECORD_ID,
+      F.FACT_ACCT_GROUP_ID, F.ACCOUNT_ID,F.FACTACCTTYPE,
+      (CASE F.AMTACCTDR WHEN 0 THEN (CASE SIGN(F.AMTACCTCR) WHEN -1 THEN 1 ELSE 2 END) ELSE (CASE SIGN(F.AMTACCTDR) WHEN -1 THEN 3 ELSE 4 END) END), F.AD_CLIENT_ID
+      HAVING sum(F.AMTACCTDR) <> 0 OR sum(F.AMTACCTCR) <> 0) AA
+      ]]></Sql>
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 1=1"><![CDATA[ AND f.DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="documentNo" optional="true" after="AND 1=1" type="argument"><![CDATA[ AND F.RECORD_ID IN ]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 1=1"><![CDATA[ AND f.C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND f.AD_ORG_ID IN(" text="'2'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND F.FactAcctType IN (" text="'C','N','O','R','D'"/>
+    <Parameter name="allaccounts"/>
+    <Parameter name="accountFrom"/>
+    <Parameter name="accountTo"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="AND AD_CLIENT_ID IN (" text="'3'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND AD_ORG_ID IN (" text="'3'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 3=3"><![CDATA[ AND dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 3=3"><![CDATA[ AND dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 3=3"><![CDATA[ AND DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 3=3"><![CDATA[ AND C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND AD_ORG_ID IN(" text="'4'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND FactAcctType IN (" text="'C','N','O','R','D'"/>
+    <Parameter name="descriptionGrouping" type="replace" optional="true" after="F.DATEACCT, CASE WHEN " text="'Y'"/>
+  </SqlMethod>
+  <SqlMethod name="selectCountGroupedLines" type="preparedStatement" return="scrollable">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      SELECT *
+      FROM ( SELECT '0' AS RN1, G.* FROM (
+      SELECT COUNT(*) AS GROUPEDLINES, IDENTIFIER, SCHEMA_NAME, DATEACCT
+      FROM
+      (
+        SELECT SCHEMA_ID, SCHEMA_NAME, IDENTIFIER, DATEACCT, VALUE, NAME, ID, AD_TABLE_ID, DOCBASETYPE, SEQNO, '' AS TOTAL, '' AS DESCRIPTION,
+        (CASE AMTACCTDR WHEN 0 THEN NULL ELSE AMTACCTDR END) AS AMTACCTDR, (CASE AMTACCTCR WHEN 0 THEN NULL ELSE AMTACCTCR END) AS AMTACCTCR
+        FROM 
+        (SELECT F.C_ACCTSCHEMA_ID AS SCHEMA_ID, SC.NAME AS SCHEMA_NAME, F.FACT_ACCT_GROUP_ID AS IDENTIFIER, F.DATEACCT,
+        F.ACCTVALUE AS VALUE, F.ACCTDESCRIPTION AS NAME,F.RECORD_ID AS ID, F.AD_TABLE_ID, F.DOCBASETYPE,
+        sum(F.AMTACCTDR) AS AMTACCTDR, sum(F.AMTACCTCR) AS AMTACCTCR, MIN(SEQNO) AS SEQNO
+        FROM FACT_ACCT F, C_ACCTSCHEMA SC  
+        WHERE F.AD_CLIENT_ID IN ('1')
+        AND F.AD_ORG_ID IN('1')
+        AND 1=1
+        AND f.AD_ORG_ID IN('2')
+        AND F.FactAcctType IN ('C','N','O','R','D')
+        AND f.C_ACCTSCHEMA_ID = SC.C_ACCTSCHEMA_ID
+        AND (?='Y' OR F.FACT_ACCT_GROUP_ID IN (
+                SELECT FACT_ACCT_GROUP_ID FROM FACT_ACCT WHERE ACCOUNT_ID IN (
+                  SELECT c_elementvalue_id as name
+                  FROM C_ELEMENTVALUE
+                  WHERE value >= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and value <= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and c_elementvalue.ELEMENTLEVEL = 'S')
+                  AND AD_CLIENT_ID IN ('3')
+                  AND AD_ORG_ID IN ('3')
+                  AND 3=3
+                  AND AD_ORG_ID IN('4')
+                  AND FactAcctType IN ('C','N','O','R','D')
+                ))
+        GROUP BY f.C_ACCTSCHEMA_ID, SC.NAME, F.AD_TABLE_ID, F.DATEACCT, F.ACCTDESCRIPTION, F.ACCTVALUE, F.DOCBASETYPE, F.RECORD_ID, 
+        F.FACT_ACCT_GROUP_ID, F.ACCOUNT_ID,
+        (CASE F.AMTACCTDR WHEN 0 THEN (CASE SIGN(F.AMTACCTCR) WHEN -1 THEN 1 ELSE 2 END) ELSE (CASE SIGN(F.AMTACCTDR) WHEN -1 THEN 3 ELSE 4 END) END)) AA
+        ORDER BY SCHEMA_NAME, DATEACCT, IDENTIFIER, SEQNO
+      ) BB
+      GROUP BY IDENTIFIER, SCHEMA_NAME, DATEACCT
+      ORDER BY SCHEMA_NAME, DATEACCT, IDENTIFIER
+      ) G
+      ) H WHERE 1=1
+      ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="rownum" type="replace" optional="true" after="FROM ( SELECT " text="'0'" />
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 1=1"><![CDATA[ AND f.DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="documentNo" optional="true" after="AND 1=1" type="argument"><![CDATA[ AND F.RECORD_ID IN ]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 1=1"><![CDATA[ AND f.C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND f.AD_ORG_ID IN(" text="'2'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND F.FactAcctType IN (" text="'C','N','O','R','D'"/>
+    <Parameter name="allaccounts"/>
+    <Parameter name="accountFrom"/>
+    <Parameter name="accountTo"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="AND AD_CLIENT_ID IN (" text="'3'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND AD_ORG_ID IN (" text="'3'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 3=3"><![CDATA[ AND dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 3=3"><![CDATA[ AND dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 3=3"><![CDATA[ AND DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 3=3"><![CDATA[ AND C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND AD_ORG_ID IN(" text="'4'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND FactAcctType IN (" text="'C','N','O','R','D'"/>
+    <Parameter name="pgLimit" type="argument" optional="true" after=") G"><![CDATA[LIMIT ]]></Parameter>
+    <Parameter name="oraLimit1" type="argument" optional="true" after=") G"><![CDATA[WHERE ROWNUM <= ]]></Parameter>
+    <Parameter name="oraLimit2" type="argument" optional="true" after="WHERE 1=1"><![CDATA[ AND RN1 BETWEEN ]]></Parameter>
+  </SqlMethod>
+  <SqlMethod name="selectCount" type="preparedStatement" return="string" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT COUNT(FACT_ACCT_GROUP_ID) AS TOTAL
+        FROM (
+        SELECT F.DATEACCT, F.FACT_ACCT_GROUP_ID  
+        FROM FACT_ACCT F left join AD_TABLE T on F.AD_TABLE_ID = T.AD_TABLE_ID
+                         left join AD_TAB TB  on T.AD_TABLE_ID = TB.AD_TABLE_ID
+                         left join AD_COLUMN C on T.AD_TABLE_ID = C.AD_TABLE_ID 
+                                              AND C.ISKEY = 'Y'  
+                         left join AD_WINDOW W on TB.AD_WINDOW_ID = W.AD_WINDOW_ID
+        WHERE F.AD_CLIENT_ID IN ('1')
+        AND F.AD_ORG_ID IN('1')
+        AND 1=1
+        AND f.AD_ORG_ID IN('2')     
+	      AND F.FactAcctType IN ('C','N','O','R','D')
+        AND (CASE (SELECT MAX(ISSOTRX) FROM C_DOCTYPE D 
+                    WHERE D.DOCBASETYPE = F.DOCBASETYPE) WHEN 'N' THEN COALESCE(T.PO_WINDOW_ID, T.AD_WINDOW_ID) ELSE T.AD_WINDOW_ID END) = (CASE TO_CHAR(F.DOCBASETYPE) 
+                    WHEN 'FAT' THEN '94EAA455D2644E04AB25D93BE5157B6D' ELSE W.AD_WINDOW_ID END)
+        AND (?='Y' OR F.FACT_ACCT_GROUP_ID IN (
+                SELECT FACT_ACCT_GROUP_ID FROM FACT_ACCT WHERE ACCOUNT_ID IN (
+                  SELECT c_elementvalue_id as name
+                  FROM C_ELEMENTVALUE
+                  WHERE value >= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and value <= (  select value from c_elementvalue where c_elementvalue_id = ?)
+                    and c_elementvalue.ELEMENTLEVEL = 'S')
+                  AND AD_CLIENT_ID IN ('3')
+                  AND AD_ORG_ID IN ('3')
+                  AND 3=3
+                  AND AD_ORG_ID IN('4')
+                  AND FactAcctType IN ('C','N','O','R','D')
+                ))
+        GROUP BY F.DATEACCT, F.FACT_ACCT_GROUP_ID) AA
+        WHERE (DATEACCT< TO_DATE(?) OR (DATEACCT=TO_DATE(?) AND FACT_ACCT_GROUP_ID < ?))
+      ]]></Sql>
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 1=1"><![CDATA[ AND f.dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 1=1"><![CDATA[ AND f.DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="documentNo" optional="true" after="AND 1=1" type="argument"><![CDATA[ AND F.RECORD_ID IN ]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 1=1"><![CDATA[ AND f.C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND f.AD_ORG_ID IN(" text="'2'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND F.FactAcctType IN (" text="'C','N','O','R','D'"/>
+    <Parameter name="allaccounts"/>
+    <Parameter name="accountFrom"/>
+    <Parameter name="accountTo"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="AND AD_CLIENT_ID IN (" text="'3'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND AD_ORG_ID IN (" text="'3'"/>
+    <Parameter name="parDateFrom" optional="true" after="AND 3=3"><![CDATA[ AND dateacct >= TO_DATE(?)]]></Parameter>
+    <Parameter name="parDateTo" optional="true" after="AND 3=3"><![CDATA[ AND dateacct < TO_DATE(?)]]></Parameter>
+    <Parameter name="docbasetype" optional="true" after="AND 3=3"><![CDATA[ AND DOCBASETYPE = ?]]></Parameter>
+    <Parameter name="acctschema" optional="true" after="AND 3=3"><![CDATA[ AND C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="orgFamily" type="replace" optional="true" after="AND AD_ORG_ID IN(" text="'4'"/>
+    <Parameter name="checks" type="replace" optional="true" after="AND FactAcctType IN (" text="'C','N','O','R','D'"/>   
+    <Parameter name="dateAcct"/>
+    <Parameter name="dateAcct"/>
+    <Parameter name="factAcctGroupId"/>
+    <!--Parameter name="closing" optional="true" type="none" after="2=2" text=" AND F.FactAcctType = 'C'"/>
+    <Parameter name="regularization" optional="true" type="none" after="2=2" text=" AND F.FactAcctType = 'R'"/>
+    <Parameter name="opening" optional="true" type="none" after="2=2" text=" AND F.FactAcctType = 'O'"/-->
+  </SqlMethod>
+  <SqlMethod name="set" type="constant" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql></Sql>
+    <Parameter name="rownum"/>      
+  </SqlMethod>
+  <SqlMethod name="selectDirect" type="preparedStatement" return="scrollable">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      SELECT *
+      FROM ( SELECT '0' AS RN1, B.* FROM (
+      SELECT SCHEMA_ID, SCHEMA_NAME, IDENTIFIER, DATEACCT, AA.VALUE, AA.NAME, ID, AD_TABLE_ID, DOCBASETYPE,AR.NAME as DOCNAME, SEQNO, '' AS TOTAL, DESCRIPTION,
+      (CASE FACTACCTTYPE WHEN 'O' THEN 1 WHEN 'N' THEN 2 WHEN 'R' THEN 3 WHEN 'D' THEN 4 ELSE 5 END) AS FACTACCTTYPE2,
+      (CASE AMTACCTDR WHEN 0 THEN NULL ELSE AMTACCTDR END) AS AMTACCTDR, (CASE AMTACCTCR WHEN 0 THEN NULL ELSE AMTACCTCR END) AS AMTACCTCR,
+      AD_GETTAB_FROM_TABLE(AA.AD_TABLE_ID, AA.DOCBASETYPE, AA.AD_CLIENT_ID) AS TAB_ID  , '' as newStyle, AA.journalbatch_id AS journalbatch_id
+      FROM 
+      (SELECT F.C_ACCTSCHEMA_ID AS SCHEMA_ID, SC.NAME AS SCHEMA_NAME, F.FACT_ACCT_GROUP_ID AS IDENTIFIER, F.DATEACCT,
+      F.ACCTVALUE AS VALUE, F.ACCTDESCRIPTION AS NAME, CASE WHEN 'Y' = 'Y' THEN TO_CHAR(F.DESCRIPTION) ELSE TO_CHAR('') END AS DESCRIPTION, F.RECORD_ID AS ID, F.AD_TABLE_ID, F.DOCBASETYPE,
+      sum(F.AMTACCTDR) AS AMTACCTDR, sum(F.AMTACCTCR) AS AMTACCTCR, MIN(SEQNO) AS SEQNO, F.FACTACCTTYPE AS FACTACCTTYPE, F.AD_CLIENT_ID, MAX(glj.gl_journalbatch_id) as journalbatch_id
+      FROM FACT_ACCT F
+      JOIN C_ACCTSCHEMA SC ON (f.C_ACCTSCHEMA_ID = SC.C_ACCTSCHEMA_ID)
+      LEFT JOIN GL_JOURNAL GLJ ON (GLJ.GL_JOURNAL_ID = f.RECORD_ID AND f.AD_TABLE_ID = '224')
+      WHERE F.AD_CLIENT_ID IN ('1')
+      AND F.AD_ORG_ID IN('1')
+      AND 1=1
+      AND f.C_ACCTSCHEMA_ID = ?
+      GROUP BY f.C_ACCTSCHEMA_ID, SC.NAME, F.AD_TABLE_ID, F.DATEACCT, F.ACCTDESCRIPTION, CASE WHEN 'Y' = 'Y' THEN TO_CHAR(F.DESCRIPTION) ELSE TO_CHAR('') END,  F.ACCTVALUE, F.DOCBASETYPE, F.RECORD_ID, 
+      F.FACT_ACCT_GROUP_ID, F.ACCOUNT_ID,F.FACTACCTTYPE,
+      (CASE F.AMTACCTDR WHEN 0 THEN (CASE SIGN(F.AMTACCTCR) WHEN -1 THEN 1 ELSE 2 END) ELSE (CASE SIGN(F.AMTACCTDR) WHEN -1 THEN 3 ELSE 4 END) END), F.AD_CLIENT_ID
+      HAVING (sum(F.AMTACCTDR) <> 0 OR sum(F.AMTACCTCR) <> 0)) AA
+      LEFT JOIN (select * from AD_REF_LIST_V WHERE AD_REFERENCE_ID = '183'  AND AD_LANGUAGE=?) AR  ON AR.VALUE=AA.DOCBASETYPE 
+      ORDER BY SCHEMA_NAME, DATEACCT, FACTACCTTYPE2, IDENTIFIER, AA.AMTACCTDR DESC, AA.AMTACCTCR DESC, SEQNO
+      ) B
+      ) C WHERE 1=1
+      ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="rownum" type="replace" optional="true" after="FROM ( SELECT " text="'0'" />
+    <Parameter name="descriptionGrouping" type="replace" optional="true" after="AS NAME, CASE WHEN " text="'Y'"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="table" optional="true" after="AND 1=1"><![CDATA[ AND f.ad_table_Id = ?]]></Parameter>
+    <Parameter name="record" optional="true" after="AND 1=1"><![CDATA[ AND f.record_Id = ?]]></Parameter>   
+    <Parameter name="table" optional="true" after="AND 1=1"><![CDATA[ AND f.ad_table_ID = ?]]></Parameter>
+    <Parameter name="record" optional="true" after="AND 1=1"><![CDATA[ AND f.record_ID = ?]]></Parameter>
+    <Parameter name="cAcctshemaId"></Parameter>
+    <Parameter name="descriptionGrouping" type="replace" optional="true" after="F.ACCTDESCRIPTION, CASE WHEN " text="'Y'"/>
+    <Parameter name="paramLanguage"></Parameter>
+    <Parameter name="pgLimit" type="argument" optional="true" after=") B"><![CDATA[LIMIT ]]></Parameter>
+    <Parameter name="oraLimit1" type="argument" optional="true" after=") B"><![CDATA[WHERE ROWNUM <= ]]></Parameter>
+    <Parameter name="oraLimit2" type="argument" optional="true" after="WHERE 1=1"><![CDATA[ AND RN1 BETWEEN ]]></Parameter>
+  </SqlMethod>
+  <SqlMethod name="selectCountDirect" type="preparedStatement" return="string" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT COUNT(FACT_ACCT_GROUP_ID) AS TOTAL
+        FROM (
+        SELECT F.DATEACCT, F.FACT_ACCT_GROUP_ID  
+        FROM  AD_TABLE T left join AD_TAB TB on T.AD_TABLE_ID = TB.AD_TABLE_ID
+                         left join AD_COLUMN C  on T.AD_TABLE_ID = C.AD_TABLE_ID 
+                                               AND C.ISKEY = 'Y'
+                         left join FACT_ACCT F on F.AD_TABLE_ID = T.AD_TABLE_ID
+                         left join AD_WINDOW W on TB.AD_WINDOW_ID = W.AD_WINDOW_ID 
+        WHERE F.AD_CLIENT_ID IN ('1')
+        AND F.AD_ORG_ID IN('1')
+        AND 1=1
+        AND F.fact_acct_group_id = ?
+        AND (CASE (SELECT MAX(ISSOTRX) FROM C_DOCTYPE D 
+        WHERE D.DOCBASETYPE = F.DOCBASETYPE) WHEN 'N' THEN COALESCE(T.PO_WINDOW_ID, T.AD_WINDOW_ID) ELSE T.AD_WINDOW_ID END) = W.AD_WINDOW_ID 
+        GROUP BY F.DATEACCT, F.FACT_ACCT_GROUP_ID) AA
+        WHERE (DATEACCT< TO_DATE(?) OR (DATEACCT=to_date(?) AND FACT_ACCT_GROUP_ID < ?))
+      ]]></Sql>
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="table" optional="true" after="AND 1=1"><![CDATA[ AND f.ad_table_Id = ?]]></Parameter>
+    <Parameter name="record" optional="true" after="AND 1=1"><![CDATA[ AND f.record_Id = ?]]></Parameter>
+    <Parameter name="factAcctGroup"/>
+    <Parameter name="dateAcct"/>
+    <Parameter name="dateAcct"/>
+    <Parameter name="factAcctGroupId"/>
+  </SqlMethod>
+  <SqlMethod name="selectDirect2" type="preparedStatement" return="scrollable">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+      SELECT SCHEMA_ID, SCHEMA_NAME, IDENTIFIER, DATEACCT, AA.VALUE, AA.NAME, ID, AD_TABLE_ID, DOCBASETYPE,AR.NAME as DOCNAME, SEQNO, '' AS TOTAL,  (CASE FACTACCTTYPE WHEN 'O' THEN 1 WHEN 'N' THEN 2 WHEN 'R' THEN 3 WHEN 'D' THEN 4 ELSE 5 END) AS FACTACCTTYPE2,
+      (CASE AMTACCTDR WHEN 0 THEN NULL ELSE AMTACCTDR END) AS AMTACCTDR, (CASE AMTACCTCR WHEN 0 THEN NULL ELSE AMTACCTCR END) AS AMTACCTCR,
+      AD_GETTAB_FROM_TABLE(AA.AD_TABLE_ID, AA.DOCBASETYPE, AA.AD_CLIENT_ID) AS TAB_ID  , '' as newStyle, AA.journalbatch_id AS journalbatch_id
+      FROM 
+      (SELECT F.C_ACCTSCHEMA_ID AS SCHEMA_ID, SC.NAME AS SCHEMA_NAME, F.FACT_ACCT_GROUP_ID AS IDENTIFIER, F.DATEACCT,
+      F.ACCTVALUE AS VALUE, F.ACCTDESCRIPTION AS NAME, F.RECORD_ID AS ID, F.AD_TABLE_ID, F.DOCBASETYPE,
+      sum(F.AMTACCTDR) AS AMTACCTDR, sum(F.AMTACCTCR) AS AMTACCTCR, MIN(SEQNO) AS SEQNO, F.FACTACCTTYPE AS FACTACCTTYPE, F.AD_CLIENT_ID, MAX(glj.gl_journalbatch_id) as journalbatch_id
+      FROM FACT_ACCT F
+      JOIN C_ACCTSCHEMA SC ON (f.C_ACCTSCHEMA_ID = SC.C_ACCTSCHEMA_ID)
+      LEFT JOIN GL_JOURNAL GLJ ON (GLJ.GL_JOURNAL_ID = f.RECORD_ID AND f.AD_TABLE_ID = '224') 
+      WHERE F.AD_CLIENT_ID IN ('1')
+      AND F.AD_ORG_ID IN('1')
+      AND f.C_ACCTSCHEMA_ID = SC.C_ACCTSCHEMA_ID
+      AND F.Fact_Acct_Group_ID = ?
+      GROUP BY f.C_ACCTSCHEMA_ID, SC.NAME, F.AD_TABLE_ID, F.DATEACCT, F.ACCTDESCRIPTION, F.ACCTVALUE, F.DOCBASETYPE, F.RECORD_ID, 
+      F.FACT_ACCT_GROUP_ID, F.ACCOUNT_ID,F.FACTACCTTYPE,
+      (CASE F.AMTACCTDR WHEN 0 THEN (CASE SIGN(F.AMTACCTCR) WHEN -1 THEN 1 ELSE 2 END) ELSE (CASE SIGN(F.AMTACCTDR) WHEN -1 THEN 3 ELSE 4 END) END), F.AD_CLIENT_ID
+      HAVING (sum(F.AMTACCTDR) <> 0 OR sum(F.AMTACCTCR) <> 0)) AA
+      LEFT JOIN (select * from AD_REF_LIST_V WHERE AD_REFERENCE_ID = '183'  AND AD_LANGUAGE=?) AR  ON AR.VALUE=AA.DOCBASETYPE 
+      ORDER BY SCHEMA_NAME, DATEACCT, FACTACCTTYPE2, IDENTIFIER, AA.AMTACCTDR DESC, AA.AMTACCTCR DESC, SEQNO
+      ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="factAcctGroupId"/>
+    <Parameter name="paramLanguage"></Parameter>
+  </SqlMethod>
+  <SqlMethod name="selectCountDirect2" type="preparedStatement" return="string" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT COUNT(FACT_ACCT_GROUP_ID) AS TOTAL
+        FROM (
+        SELECT F.DATEACCT, F.FACT_ACCT_GROUP_ID  
+        FROM AD_TABLE T left join AD_TAB TB    on T.AD_TABLE_ID = TB.AD_TABLE_ID
+                        left join AD_COLUMN C  on T.AD_TABLE_ID = C.AD_TABLE_ID
+                                              AND C.ISKEY = 'Y'
+                        left join FACT_ACCT F  on F.AD_TABLE_ID = T.AD_TABLE_ID 
+                        left join AD_WINDOW W  on TB.AD_WINDOW_ID = W.AD_WINDOW_ID
+        WHERE F.AD_CLIENT_ID IN ('1')
+        AND F.AD_ORG_ID IN('1')
+        AND 1=1
+        and f.fact_acct_group_id = ?
+        AND (CASE (SELECT MAX(ISSOTRX) FROM C_DOCTYPE D 
+        WHERE D.DOCBASETYPE = F.DOCBASETYPE) WHEN 'N' THEN COALESCE(T.PO_WINDOW_ID, T.AD_WINDOW_ID) ELSE T.AD_WINDOW_ID END) = W.AD_WINDOW_ID 
+        GROUP BY F.DATEACCT, F.FACT_ACCT_GROUP_ID) AA
+        WHERE (DATEACCT< to_date(?) OR (DATEACCT=to_date(?) AND FACT_ACCT_GROUP_ID < ?))
+      ]]></Sql>
+    <Parameter name="adUserClient" type="replace" optional="true" after="WHERE F.AD_CLIENT_ID IN (" text="'1'"/>
+    <Parameter name="adUserOrg" type="replace" optional="true" after="AND F.AD_ORG_ID IN(" text="'1'"/>
+    <Parameter name="factAcctGroupId"/>
+    <Parameter name="dateAcct"/>
+    <Parameter name="dateAcct"/>
+    <Parameter name="identifier"/>
+  </SqlMethod>
+  <SqlMethod name="selectCompany" type="preparedStatement" return="string" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT NAME
+        FROM AD_CLIENT
+        WHERE AD_CLIENT_ID = ?
+      ]]></Sql>
+    <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="selectOrg" type="preparedStatement" return="string" default="0">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT NAME
+        FROM AD_ORG
+        WHERE AD_ORG_ID = ?
+      ]]></Sql>
+    <Parameter name="orgId"/>
+  </SqlMethod>
+  <SqlMethod name="selectOrgTaxID" type="preparedStatement" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+    <![CDATA[
+        SELECT MIN(I.TAXID)
+        FROM AD_ORGINFO I
+        WHERE I.AD_ORG_ID = ?
+      ]]></Sql>
+    <Parameter name="org"/>
+  </SqlMethod>
+</SqlClass>

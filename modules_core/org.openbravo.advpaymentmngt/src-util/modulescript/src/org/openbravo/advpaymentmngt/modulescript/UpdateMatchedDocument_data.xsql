@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="UpdateMatchedDocumentData" package="org.openbravo.advpaymentmngt.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="isMatchedDocumentUpdated" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as existpreference
+        FROM ad_preference
+        WHERE attribute = 'IsMatchedDocumentUpdated'        
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateTransaction" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE fin_bankstatementline
+           SET matched_document = 'T'
+        WHERE fin_finacc_transaction_id IS NOT NULL
+        AND   EXISTS (SELECT 1
+                      FROM fin_finacc_transaction ft
+                      WHERE ft.fin_finacc_transaction_id = fin_bankstatementline.fin_finacc_transaction_id
+                      AND   ft.createdbyalgorithm = 'N')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updatePayment" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE fin_bankstatementline
+           SET matched_document = 'P'
+        WHERE fin_finacc_transaction_id IS NOT NULL
+        AND   EXISTS (SELECT 1
+                      FROM fin_finacc_transaction ft,
+                           fin_payment
+                      WHERE ft.fin_finacc_transaction_id = fin_bankstatementline.fin_finacc_transaction_id
+                      AND   ft.createdbyalgorithm = 'Y'
+                      AND   fin_payment.fin_payment_id = ft.fin_payment_id
+                      AND   fin_payment.createdbyalgorithm = 'N')
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateCredit" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE fin_bankstatementline
+           SET matched_document = 'C'
+        WHERE fin_finacc_transaction_id IS NOT NULL
+        AND   EXISTS (SELECT 1
+                      FROM fin_finacc_transaction ft,
+                           fin_payment,
+                           fin_payment_scheduledetail,
+                           fin_payment_detail
+                      WHERE ft.fin_finacc_transaction_id = fin_bankstatementline.fin_finacc_transaction_id
+                      AND   ft.createdbyalgorithm = 'Y'
+                      AND   fin_payment.createdbyalgorithm = 'Y'
+                      AND   fin_payment.fin_payment_id = ft.fin_payment_id
+                      AND   fin_payment_scheduledetail.fin_payment_detail_id = fin_payment_detail.fin_payment_detail_id
+                      AND   fin_payment_detail.fin_payment_id = fin_payment.fin_payment_id
+                      AND   fin_payment_scheduledetail.fin_payment_schedule_order IS NULL
+                      AND   fin_payment_scheduledetail.fin_payment_schedule_invoice IS NULL)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateInvoice" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE fin_bankstatementline
+           SET matched_document = 'I'
+        WHERE fin_finacc_transaction_id IS NOT NULL
+        AND   EXISTS (SELECT 1
+                      FROM fin_finacc_transaction ft,
+                           fin_payment,
+                           fin_payment_scheduledetail,
+                           fin_payment_detail
+                      WHERE ft.fin_finacc_transaction_id = fin_bankstatementline.fin_finacc_transaction_id
+                      AND   ft.createdbyalgorithm = 'Y'
+                      AND   fin_payment.createdbyalgorithm = 'Y'
+                      AND   fin_payment.fin_payment_id = ft.fin_payment_id
+                      AND   fin_payment_scheduledetail.fin_payment_detail_id = fin_payment_detail.fin_payment_detail_id
+                      AND   fin_payment_detail.fin_payment_id = fin_payment.fin_payment_id
+                      AND   fin_payment_scheduledetail.fin_payment_schedule_invoice IS NOT NULL)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateOrder" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE fin_bankstatementline
+           SET matched_document = 'O'
+        WHERE fin_finacc_transaction_id IS NOT NULL
+        AND   EXISTS (SELECT 1
+                      FROM fin_finacc_transaction ft,
+                           fin_payment,
+                           fin_payment_scheduledetail,
+                           fin_payment_detail
+                      WHERE ft.fin_finacc_transaction_id = fin_bankstatementline.fin_finacc_transaction_id
+                      AND   ft.createdbyalgorithm = 'Y'
+                      AND   fin_payment.createdbyalgorithm = 'Y'
+                      AND   fin_payment.fin_payment_id = ft.fin_payment_id
+                      AND   fin_payment_scheduledetail.fin_payment_detail_id = fin_payment_detail.fin_payment_detail_id
+                      AND   fin_payment_detail.fin_payment_id = fin_payment.fin_payment_id
+                      AND   fin_payment_scheduledetail.fin_payment_schedule_order IS NOT NULL
+                      AND   fin_payment_scheduledetail.fin_payment_schedule_invoice IS NULL)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO ad_preference (
+          ad_preference_id, ad_client_id, ad_org_id, isactive,
+          createdby, created, updatedby, updated,
+          attribute
+        ) VALUES (
+          get_uuid(), '0', '0', 'Y',
+          '0', NOW(), '0', NOW(),
+          'IsMatchedDocumentUpdated'
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

@@ -1,0 +1,40 @@
+<?xml version='1.0' ?>
+
+<!--
+*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2010-2020 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************
+-->
+
+<!-- Keep a minimum build structure not to fail when displaying rebuild popup while updating
+from an old release. See UIrebuild task in main build.xml.-->
+
+  <Build>
+    <mainSteps>
+      <mainStep code="RB11" errorCode="RB70">
+        <name>Initial Build Validation</name>
+        <errorMessage><![CDATA[
+          <b>System rebuild from Module Manager Console is no longer supported</b><br/><br/>
+          In order to complete the update, the system requires to be rebuilt from the command line. <br/> 
+          <a target="_blank" href="http://wiki.openbravo.com/wiki/Modules_Management#Rebuild">Learn how to do it</a>.
+        ]]></errorMessage>
+        <stepList/>
+      </mainStep>
+      <mainStep code="RB20" successCode="RB60" warningCode="RB60" errorCode="RB59">
+        <!-- Keeping a 2nd step as ApplyModules code assumed at least 2 steps -->
+      </mainStep>
+    </mainSteps>
+  </Build>

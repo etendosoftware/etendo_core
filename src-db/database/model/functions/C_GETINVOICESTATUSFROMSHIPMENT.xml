@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION C_GETINVOICESTATUSFROMSHIPMENT">
+    <function name="C_GETINVOICESTATUSFROMSHIPMENT" type="NUMERIC" volatility="STABLE">
+      <parameter name="p_minoutid" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+v_percent NUMBER:=0;
+BEGIN
+
+  SELECT CASE WHEN MIN(a.suma) = 0 THEN 0 
+              ELSE ROUND(COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)/MIN(a.suma) * 100, 0) END 
+  INTO v_percent
+  FROM m_inoutline minline 
+  JOIN c_invoiceline inv on minline.m_inoutline_id=inv.m_inoutline_id,
+  (SELECT COALESCE(SUM(ABS(g.movementqty)), 0) AS suma
+   FROM m_inoutline g 
+   WHERE g.m_inout_id =p_minoutid
+  ) a
+  WHERE minline.m_inout_id=p_minoutid
+  AND EXISTS (SELECT 1 
+              FROM c_invoice i 
+              WHERE i.c_invoice_id = inv.c_invoice_id
+              AND i.processed = 'Y'
+              AND i.docstatus <> 'VO'
+              AND i.docstatus <> 'CL'
+              AND i.docstatus <> 'DR');
+
+  IF (v_percent IS NULL) THEN
+    v_percent:=0;
+  ELSIF (v_percent > 100) THEN
+    v_percent:=100;
+  END IF;
+  
+RETURN v_percent;
+END C_GETINVOICESTATUSFROMSHIPMENT
+]]></body>
+    </function>
+  </database>

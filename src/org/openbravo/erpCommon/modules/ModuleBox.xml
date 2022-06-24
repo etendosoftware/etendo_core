@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2008-2019 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<REPORT>
+  <template file="ModuleBox.srpt"/>
+   <structure name="structureBox">
+    <FIELD id="name" replaceCharacters="html">name</FIELD>
+    <FIELD id="description" replaceCharacters="html">description</FIELD>
+    <FIELD id="icon" replace="xx" attribute="class">type</FIELD>
+    <FIELD id="help" replaceCharacters="html">help</FIELD>
+    <FIELD id="url" attribute="onclick" replace="xx">url</FIELD>
+    <FIELD id="url" attribute="style" replace="xx">urlStyle</FIELD>
+    <FIELD id="mergeInfo" attribute="style" replace="xx">mergeDisplay</FIELD>
+    <FIELD id="mergedModule" replaceCharacters="html">mergedModule</FIELD>
+    <FIELD id="mergedInto" replaceCharacters="html">mergedInto</FIELD>
+    <FIELD id="mergedIntoVersion" replaceCharacters="html">mergedIntoVersion</FIELD>
+    <FIELD id="details" attribute="onclick" replace="xx">moduleVersionID</FIELD>
+    <FIELD id="buttonInstall" attribute="onclick" replace="xx">moduleVersionID</FIELD>
+    <FIELD id="commercial" attribute="style" replace="xx" default="none">commercialStyle</FIELD>
+    <FIELD id="maturitySection" attribute="style" replace="xx" default="none">maturityStyle</FIELD>
+    <FIELD id="maturityLevel" default="none">maturityLevel</FIELD>
+    <FIELD id="supportSection" attribute="style" replace="xx" default="none">supportStyle</FIELD>
+    <FIELD id="support">support</FIELD>
+    <SECTION id="box"/>
+  </structure>
+
+  <DISCARD id="discard"/>
+</REPORT>

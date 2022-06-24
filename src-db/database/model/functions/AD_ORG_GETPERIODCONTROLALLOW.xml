@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION AD_ORG_GETPERIODCONTROLALLOW">
+    <function name="AD_ORG_GETPERIODCONTROLALLOW" type="VARCHAR" volatility="STABLE">
+      <parameter name="p_organization" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2009-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+/*
+* It returns the period allowed organization of the p_organization Organization.
+* If period allowed organization is not set, it returns NULL.
+*
+* This function works only for organizations set as ready. For the flows where 
+* the organization is not set as ready yet, please use AD_ORG_GETPERIODCONTROLALLOWTN instead.
+*
+* Only when working with ready organizations, and in processes where performance is important, 
+* it is highly recommended to directly query AD_Org.AD_PERIODCONTROLALLOWED_ORG_ID column. 
+*/
+
+  v_periodcontrolallowed_org_id AD_Org.AD_periodcontrolallowed_org_id%TYPE;
+
+BEGIN
+
+  IF (p_organization IS NULL) THEN
+    RETURN NULL;
+  END IF;
+
+  BEGIN
+    SELECT AD_periodcontrolallowed_org_id
+    INTO v_periodcontrolallowed_org_id
+    FROM AD_Org
+    WHERE AD_Org_ID = p_organization;
+  EXCEPTION WHEN NO_DATA_FOUND THEN
+    v_periodcontrolallowed_org_id := NULL;
+  END;
+  
+RETURN v_periodcontrolallowed_org_id;
+END AD_ORG_GETPERIODCONTROLALLOW
+]]></body>
+    </function>
+  </database>

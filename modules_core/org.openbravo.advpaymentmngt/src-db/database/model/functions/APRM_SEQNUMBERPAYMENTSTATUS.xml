@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION APRM_SEQNUMBERPAYMENTSTATUS">
+    <function name="APRM_SEQNUMBERPAYMENTSTATUS" type="VARCHAR" volatility="STABLE">
+      <parameter name="status" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2014-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_seqno VARCHAR2(32);
+  v_count NUMBER;
+  v_referencelist VARCHAR2(32):='575BCB88A4694C27BC013DE9C73E6FE7';
+
+BEGIN
+
+  -- Check if the status exists
+  SELECT count(*) INTO v_count FROM DUAL
+  WHERE EXISTS (SELECT 1 FROM ad_ref_list
+                WHERE ad_reference_id = v_referencelist
+                      AND value = status);
+
+  IF (v_count = 0) THEN
+    -- If status is null, return minimum value for invoice paid status (RPR or PPM)
+    RETURN '40';
+  END IF;
+  
+  SELECT seqno 
+  INTO v_seqno
+  FROM ad_ref_list
+  WHERE ad_reference_id = v_referencelist
+  and value = status;
+
+  RETURN v_seqno;
+
+EXCEPTION
+WHEN OTHERS THEN
+  DBMS_OUTPUT.PUT_LINE('aprm_seqnumberpaymentstatus exception');
+  RAISE;
+  RETURN NULL;
+END APRM_SEQNUMBERPAYMENTSTATUS
+]]></body>
+    </function>
+  </database>

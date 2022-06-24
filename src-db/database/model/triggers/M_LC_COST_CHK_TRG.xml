@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_LC_COST_CHK_TRG">
+    <trigger name="M_LC_COST_CHK_TRG" table="M_LC_COST" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+    /*************************************************************************
+    * The contents of this file are subject to the Openbravo  Public  License
+    * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+    * Version 1.1  with a permitted attribution clause; you may not  use this
+    * file except in compliance with the License. You  may  obtain  a copy of
+    * the License at http://www.openbravo.com/legal/license.html
+    * Software distributed under the License  is  distributed  on  an "AS IS"
+    * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+    * License for the specific  language  governing  rights  and  limitations
+    * under the License.
+    * The Original Code is Openbravo ERP.
+    * The Initial Developer of the Original Code is Openbravo SLU
+    * All portions are Copyright (C) 2014-2015 Openbravo SLU
+    * All Rights Reserved.
+    * Contributor(s):  ______________________________________.
+    ************************************************************************/
+    v_DateNull DATE := TO_DATE('01-01-1900', 'DD-MM-YYYY');
+	  v_Processed CHAR(1) ; --OBTG:VARCHAR2--
+	  v_m_LandedCost_ID VARCHAR2(32) ;
+	  v_m_Inout_ID VARCHAR2(32) ;
+        
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+	  IF INSERTING THEN
+	    v_m_LandedCost_ID:=:new.M_landedcost_ID;
+	    v_m_Inout_ID:=:new.M_inout_ID;
+	  ELSE
+	    v_m_LandedCost_ID:=:old.M_landedcost_ID;
+	    v_m_Inout_ID:=:old.M_inout_ID;
+	  END IF;
+	  
+    IF (v_m_LandedCost_ID is not null) THEN
+      SELECT PROCESSED INTO v_Processed FROM M_LandedCost WHERE M_landedcost_ID=v_M_LandedCost_ID;
+    ELSIF (v_m_Inout_ID is not null) THEN
+      SELECT PROCESSED INTO v_Processed FROM M_Inout WHERE M_inout_ID=v_m_Inout_ID;
+    END IF;
+    
+    IF UPDATING THEN  
+      IF(:old.Processed='Y'
+        AND ((COALESCE(:old.dateacct, v_DateNull) <> COALESCE(:new.dateacct, v_DateNull))
+        OR(COALESCE(:old.amount, 0) <> COALESCE(:new.amount, 0))
+        OR(COALESCE(:old.c_currency_id, '0') <> COALESCE(:new.c_currency_id, '0'))
+        OR(COALESCE(:old.c_doctype_id, '0') <> COALESCE(:new.c_doctype_id, '0'))
+        OR(COALESCE(:old.c_invoiceline_id, '0') <> COALESCE(:new.c_invoiceline_id, '0'))
+        OR(COALESCE(:old.cancel_matching, '.') <> COALESCE(:new.cancel_matching, '.'))
+        OR(COALESCE(:old.ismatched, '.') <> COALESCE(:new.ismatched, '.'))
+        OR(COALESCE(:old.line, 0) <> COALESCE(:new.line, 0))
+        OR(COALESCE(:old.m_inout_id, '0') <> COALESCE(:new.m_inout_id, '0'))
+        OR(COALESCE(:old.m_lc_distribution_alg_id, '0') <> COALESCE(:new.m_lc_distribution_alg_id, '0'))
+        OR(COALESCE(:old.m_lc_type_id, '0') <> COALESCE(:new.m_lc_type_id, '0'))
+        OR(COALESCE(:old.matching_amt, 0) <> COALESCE(:new.matching_amt, 0))
+        OR(COALESCE(:old.matching_costadjustment_id, '0') <> COALESCE(:new.matching_costadjustment_id, '0'))
+        OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
+        OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0'))))
+        THEN  RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    
+      IF(v_Processed='Y' 
+        AND ((COALESCE(:old.dateacct, v_DateNull) <> COALESCE(:new.dateacct, v_DateNull))
+        OR(COALESCE(:old.amount, 0) <> COALESCE(:new.amount, 0))
+        OR(COALESCE(:old.c_currency_id, '0') <> COALESCE(:new.c_currency_id, '0'))
+        OR(COALESCE(:old.c_doctype_id, '0') <> COALESCE(:new.c_doctype_id, '0'))
+        OR(COALESCE(:old.c_invoiceline_id, '0') <> COALESCE(:new.c_invoiceline_id, '0'))
+        OR(COALESCE(:old.cancel_matching, '.') <> COALESCE(:new.cancel_matching, '.'))
+        OR(COALESCE(:old.line, 0) <> COALESCE(:new.line, 0))
+        OR(COALESCE(:old.m_inout_id, '0') <> COALESCE(:new.m_inout_id, '0'))
+        OR(COALESCE(:old.m_lc_distribution_alg_id, '0') <> COALESCE(:new.m_lc_distribution_alg_id, '0'))
+        OR(COALESCE(:old.m_lc_type_id, '0') <> COALESCE(:new.m_lc_type_id, '0'))
+        OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
+        OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0'))))
+        THEN RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;    
+    END IF;
+    IF(DELETING) THEN
+      IF(:old.Processed='Y' or v_Processed='Y') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    END IF;
+    IF(INSERTING) THEN
+      IF(:NEW.Processed='Y' or v_Processed='Y') THEN
+        RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
+      END IF;
+    END IF;
+    END M_LC_COST_CHK_TRG
+]]></body>
+    </trigger>
+  </database>

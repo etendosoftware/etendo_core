@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2021 Openbravo SLU
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<!--
+List of targets:
+
+create.database: creates the database from scratch.
+-->
+<project name="openbravo" default="create.database" basedir=".">
+  <property environment="env" />
+  <condition property="bbdd.owner.url" value="${bbdd.url}/${bbdd.sid}" else="${bbdd.url}">
+    <and>
+      <equals arg1="${bbdd.rdbms}" arg2="POSTGRE" />
+    </and>
+  </condition>
+
+  <path id="runtime-classpath-create">
+    <fileset dir="./lib">
+      <include name="**/*.jar" />
+    </fileset>
+    <pathelement path="${build}" />
+    <fileset dir="${base.lib}">
+      <include name="**/*.jar" />
+    </fileset>
+    <pathelement path="${base.config}" />
+  </path>
+
+  <taskdef name="createdatabase" classname="org.openbravo.ddlutils.task.CreateDatabase">
+    <classpath refid="runtime-classpath-create" />
+  </taskdef>
+
+  <target name="create.database">
+    <antcall target="clean.database.${bbdd.rdbms}" />
+    <antcall target="${bbdd.rdbms}.structure" />
+    <antcall target="create.database.all" />
+    <antcall target="database.postcreate.${bbdd.rdbms}" />
+    <antcall target="update.dbupdate.timestamp" />
+  </target>
+
+
+  <target name="clean.database.ORACLE">
+    <antcall target="clean.database.ORACLE.param">
+      <param name="driver" value="${bbdd.driver}"/>
+      <param name="url" value="${bbdd.url}"/>
+      <param name="systemUser" value="${bbdd.systemUser}"/>
+      <param name="user" value="${bbdd.user}"/>
+      <param name="systemPassword" value="${bbdd.systemPassword}"/>
+      <param name="sid" value="${bbdd.sid}"/>
+    </antcall>
+  </target>	
+
+  <target name="clean.database.ORACLE.param">
+    <sql driver="${driver}" url="${url}" userid="${systemUser}" password="${systemPassword}" onerror="continue" delimiter="/">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        -- DROP USER IF EXISTS
+        DECLARE
+          v_count NUMBER;
+        BEGIN
+          SELECT COUNT(*) INTO v_count FROM dba_users WHERE UPPER(username) = UPPER('${user}');
+          IF (v_count > 0) THEN
+            EXECUTE IMMEDIATE 'DROP USER ${user} CASCADE';
+          END IF;
+        END;
+        /
+      </transaction>
+    </sql>
+  </target>
+
+	
+  <target name="clean.database.POSTGRE">
+    <antcall target="clean.database.POSTGRE.param">
+      <param name="driver" value="${bbdd.driver}"/>
+      <param name="url" value="${bbdd.url}/postgres"/>
+      <param name="systemUser" value="${bbdd.systemUser}"/>
+      <param name="user" value="${bbdd.user}"/>
+      <param name="systemPassword" value="${bbdd.systemPassword}"/>
+      <param name="sid" value="${bbdd.sid}"/>
+    </antcall>
+  </target>		
+	
+  <target name="clean.database.POSTGRE.param">
+    <sql driver="${driver}" url="${url}" userid="${systemUser}" password="${systemPassword}" autocommit="true" delimitertype="row">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        DROP DATABASE IF EXISTS ${sid};
+      </transaction>
+    </sql>
+    <sql driver="${driver}" url="${url}" userid="${systemUser}" password="${systemPassword}" onerror="continue" autocommit="true">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        DROP ROLE IF EXISTS "${user}";
+      </transaction>
+    </sql>
+  </target>
+
+  <target name="ORACLE.structure">
+    <antcall target="ORACLE.structure.param">
+      <param name="driver" value="${bbdd.driver}"/>
+      <param name="url" value="${bbdd.url}"/>
+      <param name="systemUser" value="${bbdd.systemUser}"/>
+      <param name="systemPassword" value="${bbdd.systemPassword}"/>
+      <param name="user" value="${bbdd.user}"/>
+      <param name="password" value="${bbdd.password}"/>
+      <param name="sid" value="${bbdd.sid}"/>
+    </antcall>
+  </target>	
+	
+  <target name="ORACLE.structure.param">
+    <sql driver="${driver}" url="${url}" userid="${systemUser}" password="${systemPassword}" delimiter="/">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        --CHEKING IF USER EXISTS
+        DECLARE
+          v_count NUMBER;
+        BEGIN
+          SELECT COUNT(*) INTO v_count FROM DBA_USERS WHERE UPPER(USERNAME) = UPPER('${user}');
+          IF (v_count > 0) THEN
+            RAISE_APPLICATION_ERROR(-20100, '${bbdd.user} ALREADY EXISTS. SELECT ANOTHER USER OR DROP IT FIRST');
+          END IF;
+        END;
+        /
+      </transaction>
+
+    </sql>
+    <sql driver="${driver}" url="${url}" userid="${systemUser}" password="${systemPassword}" onerror="continue">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        --UPDATING OPEN CURSORS NUMBER
+        ALTER SYSTEM SET OPEN_CURSORS = 10000 SCOPE=BOTH;
+      </transaction>
+    </sql>
+    <sql driver="${driver}" url="${url}" userid="${systemUser}" password="${systemPassword}">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        --CREATING USER
+        CREATE USER ${user} IDENTIFIED BY ${password}
+        DEFAULT TABLESPACE USERS
+        TEMPORARY TABLESPACE TEMP;
+
+        --GRANTING USER
+      	grant create session     	to ${user};
+      	grant alter  session     	to ${user};
+      	grant create table       	to ${user};
+      	grant create procedure   	to ${user};
+      	grant create trigger     	to ${user};
+      	grant create view        	to ${user};
+        grant create sequence    	to ${user};
+        grant create materialized view 	to ${user};
+      	alter user ${user} quota unlimited on users;
+      </transaction>
+    </sql>
+  </target>
+	
+  <target name="POSTGRE.structure">
+    <antcall target="POSTGRE.structure.param">
+      <param name="driver" value="${bbdd.driver}"/>
+      <param name="url" value="${bbdd.url}/postgres"/>
+      <param name="systemUser" value="${bbdd.systemUser}"/>
+      <param name="systemPassword" value="${bbdd.systemPassword}"/>
+      <param name="user" value="${bbdd.user}"/>
+      <param name="password" value="${bbdd.password}"/>
+      <param name="sid" value="${bbdd.sid}"/>
+    </antcall>
+  </target>		
+
+  <target name="POSTGRE.structure.param">
+    <sql driver="${driver}" url="${url}" userid="${systemUser}" password="${systemPassword}" onerror="continue" autocommit="true">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        --CREATING USER
+        CREATE ROLE "${user}" LOGIN PASSWORD '${password}'
+               CREATEDB CREATEROLE
+               VALID UNTIL 'infinity';
+      </transaction>
+    </sql>
+    <sql driver="${driver}" url="${url}" userid="${user}" password="${password}" autocommit="true">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+        CREATE DATABASE "${sid}"
+                  WITH ENCODING='UTF8'
+                  TEMPLATE=template0;
+      </transaction>
+    </sql>
+  </target>
+
+  <target name="create.database.all">
+    <createdatabase driver="${bbdd.driver}" url="${bbdd.owner.url}" user="${bbdd.user}" password="${bbdd.password}" model="model" object="${bbdd.object}" dropfirst="false" failonerror="false" basedir="${base.db}/../.." modulesDir="${base.modules}/" dirFilter="*/src-db/database/model" filter="com.openbravo.db.OpenbravoMetadataFilter" input="src-db/database/sourcedata,modules/*/src-db/database/sourcedata,modules_core/*/src-db/database/sourcedata" systemUser="${bbdd.systemUser}" systemPassword="${bbdd.systemPassword}">
+    </createdatabase>
+    <antcall target="database.poststructure.${bbdd.rdbms}" />
+  </target>
+
+
+  <target name="database.postcreate.ORACLE">
+    <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="abort" autocommit="true">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+          DELETE FROM AD_SYSTEM;
+          INSERT INTO AD_SYSTEM (AD_SYSTEM_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, NAME, TAD_RECORDRANGE, TAD_RECORDRANGE_INFO,  TAD_TRANSACTIONALRANGE, TAD_THEME)
+          VALUES ('0', '0', '0', 'Y', NOW(), '0', NOW(), '0', '?', 20, 100,  1, 
+                  (SELECT Value 
+				     FROM (SELECT Value 
+					         FROM AD_Ref_List 
+                            WHERE AD_Ref_List_ID IN ('800247', '27F0D1235450423C814D3A0DCABA7D10')
+                            ORDER BY (CASE WHEN Name ='Default' THEN 2 ELSE 1 END))
+                    WHERE RowNum = 1));
+          DELETE FROM AD_SYSTEM_INFO;
+          INSERT INTO AD_SYSTEM_INFO(AD_SYSTEM_INFO_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, ANT_VERSION, OB_INSTALLMODE, MATURITY_UPDATE, MATURITY_SEARCH,
+                your_company_login_image, your_it_service_login_image, your_company_menu_image, your_company_big_image, your_company_document_image, support_contact)
+          VALUES('0', '0', '0', 'Y', NOW(), '0', NOW(), '0', '${ant.version}', 'From Sources', '200', '200',
+                '37B37B6A8876462780DB969E5C4D81FD', '6C216D1786B34105ACCBA4DD8612A0CE', '5F3C04DF603F409A875C294910BD3491', '0A41E7C5497B46559BD03AD4100F8FEB', 'AA90B7900AD04E87A890BA2E2604A6D9', 'https://www.openbravo.com/services/support-maintenance');
+          CALL AD_UPDATE_ACCESS();
+      	  ${bbdd.sessionConfig};
+          SELECT AD_DB_MODIFIED('Y') FROM DUAL;
+          UPDATE AD_MODULE SET ISINDEVELOPMENT='N', ISDEFAULT='N', SEQNO=NULL, STATUS='P', UPDATE_AVAILABLE=NULL, ISREGISTERED='N' WHERE STATUS IS NULL OR STATUS='I';
+          CALL AD_LANGUAGE_CREATE(NULL);
+        </transaction>
+    </sql>
+    <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true" delimitertype="row">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+          BEGIN
+            DBMS_STATS.gather_schema_stats (ownname => UPPER('${bbdd.user}'), estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE, cascade =>TRUE);
+          END;
+        </transaction>
+    </sql>
+  </target>
+
+  <target name="database.postcreate.POSTGRE">
+    <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="abort" autocommit="true">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+          DELETE FROM AD_SYSTEM;
+          INSERT INTO AD_SYSTEM (AD_SYSTEM_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, NAME, TAD_RECORDRANGE, TAD_RECORDRANGE_INFO, TAD_TRANSACTIONALRANGE, TAD_THEME)
+          VALUES ('0', '0', '0', 'Y', NOW(), '0', NOW(), '0', '?', 20, 100, 1, 
+		          (SELECT Value FROM AD_Ref_List 
+                    WHERE AD_Ref_List_ID in ('800247', '27F0D1235450423C814D3A0DCABA7D10')
+                    ORDER BY (CASE WHEN Name ='Default' THEN 2 ELSE 1 END)
+                    LIMIT 1));
+          DELETE FROM AD_SYSTEM_INFO;
+          INSERT INTO AD_SYSTEM_INFO(AD_SYSTEM_INFO_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY, ANT_VERSION, OB_INSTALLMODE, MATURITY_UPDATE, MATURITY_SEARCH,
+                your_company_login_image, your_it_service_login_image, your_company_menu_image, your_company_big_image, your_company_document_image, support_contact)
+          VALUES('0', '0', '0', 'Y', NOW(), '0', NOW(), '0', '${ant.version}', 'From Sources', '200', '200',
+                '37B37B6A8876462780DB969E5C4D81FD', '6C216D1786B34105ACCBA4DD8612A0CE', '5F3C04DF603F409A875C294910BD3491', '0A41E7C5497B46559BD03AD4100F8FEB', 'AA90B7900AD04E87A890BA2E2604A6D9', 'https://www.openbravo.com/services/support-maintenance');
+          SELECT AD_UPDATE_ACCESS();
+          ${bbdd.sessionConfig};
+          SELECT AD_DB_MODIFIED('Y');
+          UPDATE AD_MODULE SET ISINDEVELOPMENT='N', ISDEFAULT='N', SEQNO=NULL, STATUS='P', UPDATE_AVAILABLE=NULL, ISREGISTERED='N' WHERE STATUS IS NULL OR STATUS='I';
+          SELECT AD_LANGUAGE_CREATE(NULL);
+          ANALYZE;
+        </transaction>
+    </sql>
+  </target>
+
+  <target name="database.poststructure.ORACLE">
+    <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+            PURGE RECYCLEBIN;
+        </transaction>
+    </sql>
+  </target>
+  <target name="database.poststructure.POSTGRE">
+  </target>
+
+  <target name="update.dbupdate.timestamp">
+    <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
+      <classpath>
+        <fileset dir="${base.lib}">
+          <include name="**/*.jar">
+          </include>
+        </fileset>
+      </classpath>
+      <transaction>
+          UPDATE AD_SYSTEM_INFO SET LAST_DBUPDATE=NOW()
+        </transaction>
+    </sql>
+  </target>
+</project>

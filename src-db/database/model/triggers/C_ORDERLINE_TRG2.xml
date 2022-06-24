@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_ORDERLINE_TRG2">
+    <trigger name="C_ORDERLINE_TRG2" table="C_ORDERLINE" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+
+
+
+
+    /*************************************************************************
+    * The contents of this file are subject to the Openbravo  Public  License
+    * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+    * Version 1.1  with a permitted attribution clause; you may not  use this
+    * file except in compliance with the License. You  may  obtain  a copy of
+    * the License at http://www.openbravo.com/legal/license.html
+    * Software distributed under the License  is  distributed  on  an "AS IS"
+    * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+    * License for the specific  language  governing  rights  and  limitations
+    * under the License.
+    * The Original Code is Openbravo ERP.
+    * The Initial Developer of the Original Code is Openbravo SLU
+    * All portions are Copyright (C) 2001-2018 Openbravo SLU
+    * All Rights Reserved.
+    * Contributor(s):  ______________________________________.
+    ************************************************************************/
+
+  v_istaxincluded CHAR(1) ;
+  v_ID C_ORDERLINE.C_ORDER_ID%TYPE;
+  v_oldLine NUMBER;
+  v_newLineNetAmt NUMBER;
+  v_newLineAlternate NUMBER;
+  v_oldGrossAmt NUMBER:=0;
+  v_newGrossAmt NUMBER:=0;
+  v_taxBaseAmt C_ORDERTAX.TAXBASEAMT%TYPE;
+  v_taxAmt C_ORDERTAX.TAXAMT%TYPE;
+  v_Prec C_CURRENCY.STDPRECISION%TYPE;
+  v_AttrSetValueType M_Product.AttrSetValueType%TYPE;
+  v_DocTaxAmount C_TAX.DocTaxAmount%TYPE;
+
+  v_oldLineAlternate NUMBER;
+  v_create CHAR(1):='Y';
+ 
+  v_Warehouse_ID VARCHAR2(32);
+  v_BPartner_Location_ID VARCHAR2(32);
+  v_Project_ID VARCHAR2(32);
+  v_IsSOTRX CHAR(1);
+  v_AsBOM CHAR(1);  
+  v_TotalRatio NUMBER;
+  v_TotalProducts NUMBER;
+  
+  v_BaseLine NUMBER;
+  v_Line NUMBER;
+  v_LineAcum NUMBER;  
+  v_BaseLineAlternate NUMBER;
+  v_LineAlternate NUMBER;
+  v_LineAlternateAcum NUMBER;
+  
+  v_CalcLine NUMBER;
+          
+  TYPE RECORD IS REF CURSOR;
+  Cur_BOM RECORD; 
+  Cur_TAXLINES RECORD;      
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+IF (DELETING) THEN
+  v_ID := :OLD.C_ORDER_ID;
+ELSE
+  v_ID := :NEW.C_ORDER_ID;
+END IF;
+
+IF (UPDATING) THEN
+  IF NOT(COALESCE(:old.M_Product_ID,'0') <> COALESCE(:NEW.M_Product_ID,'0')
+  OR COALESCE(:old.LineNetAmt,0) <> COALESCE(:NEW.LineNetAmt,0)
+  OR COALESCE(:old.FreightAmt,0) <> COALESCE(:NEW.FreightAmt,0)
+  OR COALESCE(:old.ChargeAmt,0) <> COALESCE(:NEW.ChargeAmt,0)
+  OR COALESCE(:old.C_Tax_ID,'0') <> COALESCE(:NEW.C_Tax_ID,'0')
+  OR COALESCE(:old.AD_Org_ID,'0') <> COALESCE(:NEW.AD_Org_ID,'0')
+  OR COALESCE(:old.TaxBaseAmt,0) <> COALESCE(:NEW.TaxBaseAmt,0)
+  OR COALESCE(:old.M_AttributeSetInstance_ID,'0') <> COALESCE(:NEW.M_AttributeSetInstance_ID,'0')
+  OR COALESCE(:old.line_gross_amount,0) <> COALESCE(:NEW.line_gross_amount,0)
+  OR COALESCE(:old.returnline,'0') <> COALESCE(:NEW.returnline,'0'))
+  THEN
+  RETURN;
+  END IF;
+ END IF;
+
+  /**************************************************************************
+   * Calculate Tax, etc.
+   */
+ SELECT stdPrecision, m_pricelist.istaxincluded, M_WAREHOUSE_ID, C_BPARTNER_LOCATION_ID, C_PROJECT_ID, ISSOTRX
+   INTO v_prec, v_istaxincluded, v_Warehouse_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX
+ FROM c_order
+        JOIN c_currency ON c_order.c_currency_id = c_currency.c_currency_id
+        JOIN m_pricelist ON c_order.m_pricelist_id = m_pricelist.m_pricelist_id
+ WHERE C_Order_ID=v_ID;
+
+
+   v_oldLine:=0;
+   v_newLineNetAmt:=0;
+   IF (v_istaxincluded = 'Y') THEN
+    IF (DELETING) THEN
+      v_oldgrossamt := :old.line_gross_amount;
+    ELSIF (UPDATING) THEN
+      v_oldgrossamt := :old.line_gross_amount;
+      v_newgrossamt := :new.line_gross_amount;
+    ELSE
+      v_newgrossamt := :new.line_gross_amount;
+    END IF;
+   END IF;
+ 
+  -- Calculate taxes
+  IF(UPDATING OR DELETING) THEN
+    v_oldLine:= COALESCE(:old.LineNetAmt,0) + COALESCE(:old.FreightAmt,0) + COALESCE(:old.ChargeAmt,0);
+  END IF;  
+  IF (INSERTING OR UPDATING) THEN
+    
+    v_newLineNetAmt := COALESCE(:new.LineNetAmt,0) + COALESCE(:new.FreightAmt,0) + COALESCE(:new.ChargeAmt,0);
+    v_newLineAlternate := COALESCE(:new.TaxBaseAmt,0) + COALESCE(:new.FreightAmt,0) + COALESCE(:new.ChargeAmt,0);
+    IF (UPDATING) THEN
+      v_oldLineAlternate := COALESCE(:old.TaxBaseAmt,0) + COALESCE(:old.FreightAmt,0) + COALESCE(:old.ChargeAmt,0);
+      IF (:new.AD_Org_ID <> :old.AD_Org_ID OR :new.C_Tax_ID <> :old.C_Tax_ID OR
+          v_newLineNetAmt <> v_oldLine OR v_newLineAlternate <> v_oldLineAlternate OR
+          :new.line_gross_amount <> :old.line_gross_amount) THEN        
+         -- Delete the TaxLines using a Cursor to be able to delete them in the proper order.
+         -- If not, the calculations done in the triggers can be incorrect
+         FOR Cur_TAXLINES IN (SELECT C_ORDERLINETAX_ID
+                              FROM C_ORDERLINETAX
+                              WHERE C_ORDERLINE_ID = :new.C_OrderLine_ID
+                              ORDER BY line ASC)
+         LOOP
+           DELETE FROM C_ORDERLINETAX WHERE C_ORDERLINETAX_ID = Cur_TAXLINES.C_OrderLineTax_ID;
+         END LOOP;
+        v_create := 'Y';
+      ELSE        
+        v_create := 'N';        
+      END IF;
+    END IF;      
+  
+    IF (v_create = 'Y') THEN        
+    SELECT tc.ASBOM INTO v_AsBOM FROM C_TAXCATEGORY tc, C_tax t WHERE tc.C_TAXCATEGORY_ID = t.C_TAXCATEGORY_ID AND t.C_TAX_ID = :new.C_Tax_ID;
+    IF (v_AsBOM = 'Y') THEN
+      -- BOM taxes
+      -- Calculate the base for ratios.
+      IF (v_istaxincluded = 'Y') THEN
+        v_BaseLine := :new.line_gross_amount;
+        v_BaseLineAlternate := :new.line_gross_amount;
+      ELSE
+        v_BaseLine := v_newLineNetAmt;
+        v_BaseLineAlternate := v_newLineAlternate;
+      END IF;
+
+          -- Calculate total ratio and number of products
+      v_TotalRatio := 0;
+      v_TotalProducts := 0;      
+      FOR Cur_BOM IN (
+        SELECT C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX) AS TAX,
+        SUM(ROUND(BOMQTY * BOMPRICE, v_Prec)) AS RATIO FROM m_product_bom WHERE m_product_id = :NEW.M_PRODUCT_ID
+        GROUP BY C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX)
+        ORDER BY RATIO ASC )
+      LOOP
+        v_TotalRatio := v_TotalRatio + Cur_BOM.RATIO;
+        v_TotalProducts := v_TotalProducts + 1;
+      END LOOP;
+      
+      -- Calculate taxes based on BOM of products  
+      v_LineAlternateAcum := 0;
+      v_LineAcum := 0;
+      FOR Cur_BOM IN (
+        SELECT C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX) AS TAX,
+        SUM(ROUND(BOMQTY * BOMPRICE, v_Prec)) AS RATIO FROM m_product_bom WHERE m_product_id = :NEW.M_PRODUCT_ID
+        GROUP BY C_GETTAX(m_productbom_id, :new.UPDATED, :new.AD_Org_ID, v_Warehouse_ID, v_Bpartner_Location_ID, v_Bpartner_Location_ID, v_Project_ID, v_IsSOTRX)
+        ORDER BY RATIO ASC )
+      LOOP
+        v_TotalProducts := v_TotalProducts - 1;
+        IF (v_TotalProducts > 0) THEN
+          v_Line := ROUND(v_BaseLine * Cur_BOM.RATIO / v_TotalRatio , v_Prec);
+          v_LineAcum := v_LineAcum + v_Line;
+          v_LineAlternate := ROUND(v_BaseLineAlternate * Cur_BOM.RATIO / v_TotalRatio , v_Prec);
+          v_LineAlternateAcum := v_LineAlternateAcum + v_LineAlternate;
+        ELSE -- The last willaccummulate rounding
+          v_Line := v_BaseLine - v_LineAcum;
+          v_LineAlternate := v_BaseLineAlternate - v_LineAlternateAcum;
+        END IF;
+        IF (v_istaxincluded = 'Y') THEN
+          SELECT COALESCE(MIN(DocTaxAmount), 'L') INTO v_DocTaxAmount FROM C_Tax WHERE (C_Tax_ID = Cur_BOM.TAX OR Parent_Tax_ID = Cur_BOM.TAX) AND IsSummary = 'N';
+          IF (v_DocTaxAmount = 'D') THEN
+            v_CalcLine := C_GET_NET_AMOUNT_FROM_GROSS(Cur_BOM.TAX, v_Line, v_LineAlternate);
+          ELSE
+            v_CalcLine := C_GET_NET_AMOUNT_FROM_GROSS(Cur_BOM.TAX, v_Line, v_LineAlternate, v_Prec);
+          END IF;
+          C_ORDERLINETAX_INSERT(:new.AD_Org_ID, :new.C_Order_ID, :new.C_OrderLine_ID, :new.UpdatedBy, Cur_BOM.TAX, Cur_BOM.TAX, v_CalcLine, v_CalcLine, v_Prec);
+        ELSE
+          C_ORDERLINETAX_INSERT(:new.AD_Org_ID, :new.C_Order_ID, :new.C_OrderLine_ID, :new.UpdatedBy, Cur_BOM.TAX, Cur_BOM.TAX, v_Line, v_LineAlternate, v_Prec);
+        END IF;
+      END LOOP;         
+    ELSE
+      -- Regular taxes
+      SELECT COALESCE(MIN(DocTaxAmount), 'L') INTO v_DocTaxAmount FROM C_Tax WHERE (C_Tax_ID = :new.C_Tax_ID OR Parent_Tax_ID = :new.C_Tax_ID) AND IsSummary = 'N';
+      IF (v_istaxincluded = 'Y' AND v_DocTaxAmount = 'D') THEN
+        v_newLineNetAmt := C_GET_NET_AMOUNT_FROM_GROSS(:new.c_tax_id, :new.line_gross_amount, :new.taxbaseamt);
+        C_ORDERLINETAX_INSERT(:new.AD_Org_ID, :new.C_Order_ID, :new.C_OrderLine_ID, :new.UpdatedBy, :new.C_Tax_ID, :new.C_Tax_ID, v_newLineNetAmt, v_newLineNetAmt, v_Prec);
+      ELSE
+        C_ORDERLINETAX_INSERT(:new.AD_Org_ID, :new.C_Order_ID, :new.C_OrderLine_ID, :new.UpdatedBy, :new.C_Tax_ID, :new.C_Tax_ID, v_newLineNetAmt, v_newLineAlternate, v_Prec);
+      END IF;
+    END IF;
+    IF (v_istaxincluded = 'Y') THEN
+      C_ORDERLINETAX_ROUNDING(:new.C_OrderLine_ID, :new.line_gross_amount, ROUND(v_newLineNetAmt, v_Prec), v_Prec);
+    END IF;
+
+    -- Get Total Tax Base Amt and Tax Amt
+    SELECT COALESCE(SUM(ot.TaxBaseAmt), 0), COALESCE(SUM(ot.TaxAmt), 0)
+    INTO v_taxBaseAmt, v_taxAmt
+    FROM (
+      SELECT CASE WHEN MIN(ot.TaxBaseAmt) > 0 THEN MIN(ROUND(ot.TaxBaseAmt, v_Prec)) ELSE MAX(ROUND(ot.TaxBaseAmt, v_Prec)) END as TaxBaseAmt, SUM(ot.TaxAmt) as TaxAmt
+      FROM C_OrderTax ot
+      WHERE ot.C_Order_ID = :new.C_Order_ID
+      GROUP BY c_tax_get_root(ot.c_tax_id)
+    ) ot;
+    -- DBMS_OUTPUT.PUT_LINE('TaxAmt = ' || v_taxAmt);
+    -- Update Header
+    UPDATE C_Order
+    SET TotalLines = CASE WHEN v_istaxincluded = 'Y' THEN CASE WHEN v_taxAmt = 0 THEN grandtotal - v_oldgrossamt + v_newgrossamt ELSE v_taxBaseAmt END ELSE TotalLines - v_oldLine + v_newLineNetAmt END,
+    GrandTotal = CASE WHEN v_istaxincluded = 'Y' THEN grandtotal - v_oldgrossamt + v_newgrossamt ELSE TotalLines - v_oldLine + v_newLineNetAmt + v_taxAmt END
+    WHERE C_Order_ID = :new.C_Order_ID;
+    END IF;
+  ELSE -- DELETING
+    -- Get Total Tax Base Amt and Tax Amt
+    SELECT COALESCE(SUM(ot.TaxBaseAmt), 0), COALESCE(SUM(ot.TaxAmt), 0)
+    INTO v_taxBaseAmt, v_taxAmt
+    FROM (
+      SELECT CASE WHEN MIN(ot.TaxBaseAmt) > 0 THEN MIN(ROUND(ot.TaxBaseAmt, v_Prec)) ELSE MAX(ROUND(ot.TaxBaseAmt, v_Prec)) END as TaxBaseAmt, SUM(ot.TaxAmt) as TaxAmt
+      FROM C_OrderTax ot
+      WHERE ot.C_Order_ID = :old.C_Order_ID
+      GROUP BY c_tax_get_root(ot.c_tax_id)
+    ) ot;
+    -- DBMS_OUTPUT.PUT_LINE('TaxAmt = ' || v_taxAmt);
+    -- Update Header
+    UPDATE C_Order
+    SET TotalLines = CASE WHEN v_istaxincluded = 'Y' THEN CASE WHEN v_taxAmt = 0 THEN grandtotal - v_oldgrossamt ELSE v_taxBaseAmt END ELSE TotalLines - v_oldLine + v_newLineNetAmt END,
+    GrandTotal = CASE WHEN v_istaxincluded = 'Y' THEN grandtotal - v_oldgrossamt ELSE TotalLines - v_oldLine + v_newLineNetAmt + v_taxAmt END
+    WHERE C_Order_ID=:old.C_Order_ID;
+  END IF;
+
+ IF (INSERTING OR UPDATING) THEN
+  --Does not allow to change the attribute set value
+  -- for products which attribute set value type is Fixed
+  IF (:NEW.M_PRODUCT_ID IS NOT NULL AND COALESCE(:new.M_AttributeSetInstance_ID,'0')!='0') THEN
+   SELECT ATTRSETVALUETYPE 
+   INTO v_AttrSetValueType
+   FROM M_PRODUCT 
+   WHERE M_PRODUCT_ID=:NEW.M_PRODUCT_ID;
+   IF (v_AttrSetValueType='F') THEN
+    RAISE_APPLICATION_ERROR(-20000, '@AttrSetValueFixed@');
+   END IF;
+  END IF;
+ END IF;
+ 
+END C_ORDERLINE_TRG2
+]]></body>
+    </trigger>
+  </database>

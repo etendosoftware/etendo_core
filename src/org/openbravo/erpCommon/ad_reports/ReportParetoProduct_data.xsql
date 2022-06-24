@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2001-2020 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="ReportParetoProductData" package="org.openbravo.erpCommon.ad_reports">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment>Five CTEs have been declared:
+  * org_prod_nonagg: this calculates the Value per warehouse's organization and product (it transforms each transaction cost to the given currency), 
+                     and it calculates the sum of movement quantities per warehouse's organization and product using the M_Transaction and M_Transaction_Cost tables directly.
+                     It takes into account transactions just after the last costing rule available for the legal entity was started, and transactions and transaction costs non-aggregated yet 
+                     (if aggregation is not ready, it takes all the information from the M_Transaction and M_Transaction_Cost tables).
+  * org_prod_agg: It takes all the information from the M_Valued_Stock_Agg table (if available). Note this table aggregates information per legal entity, so if the Pareto is launched for 
+                  a non-legal entity organization, this CTE will return no records. If the report's currency is different from the aggregated currency a conversion is performed.
+  * org_prod: Creates the union all between org_prod_nonagg and org_prod_agg, grouping both datasets. Note that at this point the valuation of both datasets is in the same currency
+  * org_prod_perc: based on org_prod, calculates the cost as (the Value per org and product calculated on org_prod) / (sum of movement quantities calculated on org_prod). This could have been calculated in org_prod cte directly, but it's done here for clarity.       
+     It also calculates the percentage per warehouse's organization and product as 100 * (the Value per record calculated on org_prod) / (total Value per warehouse's org).
+  * org_prod_perc_accum: based on org_prod_perc, calculates the percentage accumulated so far per warehouse's organization order by percentage desc. The accumulated percentages will be used to set ABC later on.
+  
+  The query outside the CTEs just gets the information from org_prod_perc_accum and calculates the ABC value based on the accumulated percentage, and joins with other tables to get the data to be printed.
+   </SqlMethodComment>
+    <Sql><![CDATA[
+with 
+ org_prod_nonagg (ad_org_id, m_product_id, movementqty, value_per_orgwarehouseproduct) as
+  (select w.ad_org_id,
+          t.m_product_id,
+          sum(t.movementqty) as movementqty,
+          sum(case when t.movementqty >= 0 then trxcost.cost else -trxcost.cost end) as value_per_orgwarehouseproduct
+   from m_transaction t
+   join (select tc.m_transaction_id,
+                sum(case when tc.c_currency_id = ?
+                then tc.cost
+                else c_currency_convert_precision(tc.cost, tc.c_currency_id, ?, tc.dateacct, null, ?, ?)
+                end) as cost
+         from m_transaction_cost tc
+         where tc.dateacct < to_date(trunc(now())) + 1
+         and tc.dateacct > to_date(?)
+         group by tc.m_transaction_id
+         ) trxcost on trxcost.m_transaction_id = t.m_transaction_id
+   join m_locator l on (t.m_locator_id = l.m_locator_id)
+   join m_warehouse w on (l.m_warehouse_id = w.m_warehouse_id)
+   where t.iscostcalculated = 'Y'
+     and t.transactioncost is not null
+     and t.trxprocessdate >= to_timestamp(?, ?)
+     and t.movementdate < to_date(trunc(now())) + 1
+     and t.movementdate > to_date(?)
+     and t.ad_client_id = ?
+     and 1=1
+     and ad_isorgincluded(w.AD_ORG_ID, ?, w.ad_client_id) <> -1 
+   group by w.ad_org_id, t.m_product_id),
+   
+ org_prod_agg (ad_org_id, m_product_id, movementqty, value_per_orgwarehouseproduct) as
+ (select wh.ad_org_id,
+         agg.m_product_id,
+         agg.stock as movementqty,
+         case when agg.c_currency_id = ?
+             then agg.valuation
+             else c_currency_convert_precision(agg.valuation, agg.c_currency_id, ?, agg.dateto, null, agg.ad_client_id, agg.ad_org_id)
+         end as value_per_orgwarehouseproduct
+  from m_valued_stock_agg agg
+  join m_locator l on (agg.m_locator_id = l.m_locator_id)
+  join m_warehouse wh on (l.m_warehouse_id = wh.m_warehouse_id)
+  where agg.dateto = to_date(?)
+  and agg.ad_org_id = ?
+  and 2=2 ),
+  
+ org_prod (ad_org_id, m_product_id, movementqty, value_per_orgwarehouseproduct) as
+  (select A.ad_org_id, A.m_product_id, sum(A.movementqty), sum(A.value_per_orgwarehouseproduct)
+   from (
+         select ad_org_id, m_product_id, movementqty, value_per_orgwarehouseproduct
+         from org_prod_nonagg opna
+         union all
+         select ad_org_id, m_product_id, movementqty, value_per_orgwarehouseproduct
+         from org_prod_agg opa
+        ) A
+   group by A.ad_org_id, A.m_product_id
+   having sum(A.movementqty) <> 0 
+  ), 
+  
+ org_prod_perc (ad_org_id, m_product_id, movementqty, value_per_orgwarehouseproduct, cost, total_value_per_orgwarehouse, percentage) as
+  (select owp.ad_org_id,
+          owp.m_product_id,
+          owp.movementqty,
+          owp.value_per_orgwarehouseproduct,
+          owp.value_per_orgwarehouseproduct / owp.movementqty as cost,
+          sum(value_per_orgwarehouseproduct) over (partition by owp.ad_org_id) as total_value_per_orgwarehouse,
+          100 * value_per_orgwarehouseproduct/(sum(value_per_orgwarehouseproduct) over (partition by owp.ad_org_id)) as percentage
+   from org_prod owp ), 
+ 
+ org_prod_perc_accum (ad_org_id, m_product_id, movementqty, value_per_orgwarehouseproduct, cost, total_value_per_orgwarehouse, percentage, percentageaccum) as
+  (select owpp.ad_org_id,
+          owpp.m_product_id,
+          owpp.movementqty,
+          owpp.value_per_orgwarehouseproduct,
+          owpp.cost,
+          owpp.total_value_per_orgwarehouse,
+          owpp.percentage,
+          sum(owpp.percentage) over (partition by owpp.ad_org_id
+                                     order by owpp.ad_org_id, owpp.percentage desc 
+                                     rows between unbounded preceding and current row) as percentageaccum
+   from org_prod_perc owpp ) 
+   
+select o.name as orgid,
+       p.value as searchkey,
+       coalesce(pt.name, p.name) as name,
+       coalesce(uomt.name, uom.name) as unit,
+       owppa.movementqty as qty,
+       owppa.cost,
+       owppa.value_per_orgwarehouseproduct as value,
+       owppa.percentage,
+       owppa.percentageaccum,
+       case
+           when owppa.percentageaccum <= 80 then 'A'
+           when owppa.percentageaccum > 80
+                and owppa.percentageaccum <= 95 then 'B'
+           else 'C'
+       end as isabc,
+       '' as padre, '' as id 
+from org_prod_perc_accum owppa 
+join m_product p on (owppa.m_product_id = p.m_product_id)
+left join m_product_trl pt on (p.m_product_id = pt.m_product_id and pt.ad_language = ? and pt.isactive = 'Y')
+join ad_org o on (o.ad_org_id = owppa.ad_org_id)
+join c_uom uom on (uom.c_uom_id = p.c_uom_id)
+left join c_uom_trl uomt on (uom.c_uom_id = uomt.c_uom_id and uomt.ad_language = ? and uomt.isactive = 'Y')
+order by o.name,
+         owppa.percentage desc
+    ]]></Sql>
+    <Field name="rownum" value="count"/>
+    <Parameter name="cCurrencyConv"/>
+    <Parameter name="cCurrencyConv"/>
+    <Parameter name="adClientId"/>
+    <Parameter name="legalEntityId"/>
+    <Parameter name="maxaggDate"/>
+    <Parameter name="processTime"/>
+    <Parameter name="dateTimeFormat"/>
+    <Parameter name="maxaggDate"/>
+    <Parameter name="adClientId"/>
+    <Parameter name="mWarehouseId" optional="true" after="1=1" text=" AND l.M_WAREHOUSE_ID = ? "/>
+    <Parameter name="adOrgId"/>
+    
+    <Parameter name="cCurrencyConv"/>
+    <Parameter name="cCurrencyConv"/>
+    <Parameter name="maxaggDate"/>
+    <Parameter name="legalEntityId"/>
+    <Parameter name="mWarehouseId" optional="true" after="2=2" text=" AND l.M_WAREHOUSE_ID = ? "/>
+    <Parameter name="language"/>
+    <Parameter name="language"/>
+  </SqlMethod>
+
+  <SqlMethod name="set" type="constant" return="multiple">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql></Sql>
+  </SqlMethod>
+
+  <SqlMethod name="selectWarehouseDouble" type="preparedStatement" return="Multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT M_WAREHOUSE.AD_ORG_ID AS PADRE, M_WAREHOUSE.M_WAREHOUSE_ID AS ID, TO_CHAR(M_WAREHOUSE.NAME) AS NAME
+        FROM M_WAREHOUSE
+        WHERE 1=1
+         AND M_WAREHOUSE.AD_Client_ID IN('1')
+         UNION 
+        SELECT null AS PADRE, M_WAREHOUSE.M_WAREHOUSE_ID AS ID, TO_CHAR(M_WAREHOUSE.NAME) AS NAME
+        FROM M_WAREHOUSE
+        WHERE 2=2 AND M_WAREHOUSE.AD_Client_ID IN('1')    
+        ORDER BY PADRE, NAME
+      ]]></Sql>
+    <Parameter name="adUserClient" type="replace" optional="true" after="M_WAREHOUSE.AD_Client_ID IN(" text="'1'"/>
+    <Parameter name="adUserClient" type="replace" optional="true" after=" 2=2 AND M_WAREHOUSE.AD_Client_ID IN(" text="'1'"/>    
+  </SqlMethod> 
+    
+  <SqlMethod name="mUpdateParetoProduct0" type="callableStatement" return="object" object="ReportParetoProductData">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_UPDATE_PARETO_PRODUCT0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"/>    
+   </SqlMethod>
+   
+   <SqlMethod name="selectMaxAggregatedDate" type="preparedStatement" return="date">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+       SELECT MAX(dateto)
+       FROM m_valued_stock_agg 
+       WHERE ad_org_id = ?
+      ]]>
+    </Sql>
+    <Parameter name="legalEntityId"/>
+  </SqlMethod>
+</SqlClass>

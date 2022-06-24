@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION FIN_AGING_PAYMENTCURRENCY_RATE">
+    <function name="FIN_AGING_PAYMENTCURRENCY_RATE" type="NUMERIC" volatility="STABLE">
+      <parameter name="p_payment_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_curto_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_curfrom_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2016-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+
+v_count NUMBER:=0;
+v_rate NUMBER:=1;
+v_client_id fin_payment.ad_client_id%TYPE;
+v_org_id fin_payment.ad_org_id%TYPE;
+v_paymentdate fin_payment.paymentdate%TYPE;
+
+BEGIN
+
+IF(p_curfrom_id <> p_curto_id) THEN  
+  SELECT count(*) 
+  INTO v_count 
+  FROM c_conversion_rate_document 
+  WHERE fin_payment_id = p_payment_id
+  and c_currency_id = p_curfrom_id
+  and c_currency_id_to = p_curto_id;
+
+  IF(v_count = 1) THEN
+    SELECT rate 
+    INTO v_rate 
+    FROM c_conversion_rate_document 
+    WHERE fin_payment_id = p_payment_id  
+    and c_currency_id = p_curfrom_id
+    and c_currency_id_to = p_curto_id;  
+  ELSE 
+    SELECT paymentdate, ad_client_id, ad_org_id 
+    into v_paymentdate, v_client_id, v_org_id
+    from fin_payment 
+    where fin_payment_id = p_payment_id;
+    v_rate:=c_currency_rate(p_curfrom_id, p_curto_id, v_paymentdate, 'S', v_client_id, v_org_id);  
+  END IF;
+END IF;
+
+RETURN v_rate;
+
+EXCEPTION
+WHEN OTHERS THEN  
+  RETURN NULL;
+END FIN_AGING_PAYMENTCURRENCY_RATE
+]]></body>
+    </function>
+  </database>

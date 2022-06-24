@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2019 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<beans xmlns="http://java.sun.com/xml/ns/javaee" 
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        xmlns:weld="http://jboss.org/schema/weld/beans" 
+        xsi:schemaLocation="
+           http://java.sun.com/xml/ns/javaee http://jboss.org/schema/cdi/beans_1_0.xsd
+           http://jboss.org/schema/weld/beans http://jboss.org/schema/weld/beans_1_1.xsd">
+    
+    <weld:scan>
+        <weld:include name="**"/>
+        <weld:exclude name="org.openbravo.erpCommon.info.**"/>
+        <weld:exclude name="org.openbravo.erpCommon.modules.**"/>
+        <weld:exclude name="org.openbravo.erpCommon.obps.**"/>
+        <weld:exclude name="org.openbravo.erpCommon.reference.**"/>
+        <weld:exclude name="org.openbravo.erpCommon.security.**"/>
+        <weld:exclude name="org.openbravo.erpCommon.utility.**"/>
+        <weld:exclude name="org.openbravo.erpWindows.**"/>
+        <weld:exclude name="org.openbravo.base.exception.**"/>
+        <weld:exclude name="org.openbravo.base.expression.**"/>
+        <weld:exclude name="org.openbravo.base.gen.**"/>
+        <weld:exclude name="org.openbravo.base.model.**"/>
+        <weld:exclude name="org.openbravo.base.provider.**"/>
+        <weld:exclude name="org.openbravo.base.secureApp.**"/>
+        <weld:exclude name="org.openbravo.base.session.**"/>
+        <weld:exclude name="org.openbravo.base.structure.**"/>
+        <weld:exclude name="org.openbravo.base.util.**"/>
+        <weld:exclude name="org.openbravo.base.validation.**"/>
+        <weld:exclude name="org.openbravo.dal.security.**"/>
+        <weld:exclude name="org.openbravo.dal.service.**"/>
+        <weld:exclude name="org.openbravo.dal.xml.**"/>
+        <weld:exclude name="org.openbravo.erpReports.**"/>
+        <weld:exclude name="org.openbravo.reference.**"/>
+        <weld:exclude name="org.openbravo.scheduling.**"/>
+        <weld:exclude name="org.openbravo.service.dataset.**"/>
+        <weld:exclude name="org.openbravo.service.db.**"/>
+        <weld:exclude name="org.openbravo.service.rest.**"/>
+        <weld:exclude name="org.openbravo.service.system.**"/>
+        <weld:exclude name="org.openbravo.service.web.**"/>
+        <weld:exclude name="org.openbravo.services.**"/>
+        <weld:exclude name="org.openbravo.model.**"/>
+        <weld:exclude name="org.openbravo.examples.**"/>
+        <weld:exclude name="org.openbravo.authentication.**"/>
+        <weld:exclude name="org.openbravo.**.ad_callouts.**"/>
+        <weld:exclude name="org.openbravo.**.ad_combos.**"/>
+        <weld:exclude name="org.openbravo.**.ad_forms.**"/>
+        <weld:exclude name="org.openbravo.**.ad_help.**"/>
+        <weld:exclude name="org.openbravo.**.ad_reports.**"/>
+        <weld:exclude name="org.openbravo.**.test.**">
+          <weld:if-class-available name="!org.jboss.ejb3.api.spi.EJBContainerWrapper"/>
+        </weld:exclude>
+    </weld:scan>
+
+</beans>

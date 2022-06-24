@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+  <database name="TABLE M_VALUED_STOCK_AGG">
+    <table name="M_VALUED_STOCK_AGG" primaryKey="M_VALUED_STOCK_AGG_KEY">
+      <column name="M_VALUED_STOCK_AGG_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_CLIENT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="AD_ORG_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="ISACTIVE" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[Y]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="CREATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATED" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default><![CDATA[SYSDATE]]></default>
+        <onCreateDefault/>
+      </column>
+      <column name="UPDATEDBY" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_PRODUCT_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_LOCATOR_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_UOM_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_PERIOD_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DATEFROM" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="DATETO" primaryKey="false" required="true" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="STOCK" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="VALUATION" primaryKey="false" required="true" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="C_CURRENCY_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="M_COSTING_RULE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="M_COSTING_RULE" name="M_VAL_STOCK_AGG_COST_RULE" onDelete="cascade">
+        <reference local="M_COSTING_RULE_ID" foreign="M_COSTING_RULE_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_CLIENT" name="M_VALUED_STOCK_AGG_CLIENT">
+        <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_CURRENCY" name="M_VALUED_STOCK_AGG_CURRENCY" onDelete="cascade">
+        <reference local="C_CURRENCY_ID" foreign="C_CURRENCY_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_LOCATOR" name="M_VALUED_STOCK_AGG_LOCATOR" onDelete="cascade">
+        <reference local="M_LOCATOR_ID" foreign="M_LOCATOR_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="M_VALUED_STOCK_AGG_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_PERIOD" name="M_VALUED_STOCK_AGG_PERIOD" onDelete="cascade">
+        <reference local="C_PERIOD_ID" foreign="C_PERIOD_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="M_PRODUCT" name="M_VALUED_STOCK_AGG_PRODUCT" onDelete="cascade">
+        <reference local="M_PRODUCT_ID" foreign="M_PRODUCT_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="C_UOM" name="M_VALUED_STOCK_AGG_UOM">
+        <reference local="C_UOM_ID" foreign="C_UOM_ID"/>
+      </foreign-key>
+      <index name="M_VALUED_STOCK_AGG_COSTRULE" unique="false">
+        <index-column name="M_COSTING_RULE_ID"/>
+      </index>
+      <index name="M_VALUED_STOCK_AGG_CURRENCY" unique="false">
+        <index-column name="C_CURRENCY_ID"/>
+      </index>
+      <index name="M_VALUED_STOCK_AGG_DATEFROM" unique="false">
+        <index-column name="DATEFROM"/>
+      </index>
+      <index name="M_VALUED_STOCK_AGG_LOCATOR" unique="false">
+        <index-column name="M_LOCATOR_ID"/>
+      </index>
+      <index name="M_VALUED_STOCK_AGG_ORG_DATETO" unique="false">
+        <index-column name="AD_ORG_ID"/>
+        <index-column name="DATETO"/>
+      </index>
+      <index name="M_VALUED_STOCK_AGG_PERIOD" unique="false">
+        <index-column name="C_PERIOD_ID"/>
+      </index>
+      <index name="M_VALUED_STOCK_AGG_PRODUCT" unique="false">
+        <index-column name="M_PRODUCT_ID"/>
+      </index>
+      <check name="M_VALUED_STOCK_ISACTIVE_CHECK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+    </table>
+  </database>

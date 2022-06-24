@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_CREATE_RESERVE_FROM_SOL">
+    <function name="M_CREATE_RESERVE_FROM_SOL" type="NULL">
+      <parameter name="p_orderline_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_process_reserve" type="CHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_reservation_id" type="VARCHAR" mode="out">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+/*************
+* Procedure to create reservations for the given Sales Order Line.
+**************/
+  v_product_id        VARCHAR2(32);
+  v_uom_id            VARCHAR2(32);
+  v_client_id         VARCHAR2(32);
+  v_org_id            VARCHAR2(32);
+  v_qtyordered        NUMBER;
+  v_qtydelivered      NUMBER;
+  v_issotrx           CHAR(1);
+  v_reservation_id    VARCHAR2(32) := get_uuid();
+  v_attributesetinstance_id VARCHAR2(32);
+  v_res_stock_id      VARCHAR2(32);
+  v_storage_detail_dummy_id VARCHAR2(32) := NULL;
+  
+  TYPE RECORD IS REF CURSOR;
+  cur_shipments       RECORD;
+
+BEGIN
+  SELECT ol.m_product_id, ol.c_uom_id, ol.qtyordered, ol.qtydelivered, o.issotrx,
+         ol.ad_client_id, ol.ad_org_id, ol.m_attributesetinstance_id
+    INTO v_product_id, v_uom_id, v_qtyordered, v_qtydelivered, v_issotrx,
+         v_client_id, v_org_id, v_attributesetinstance_id
+  FROM c_orderline ol JOIN c_order o ON ol.c_order_id = o.c_order_id
+  WHERE ol.c_orderline_id = p_orderline_id;
+
+  IF (v_issotrx = 'N') THEN
+    RAISE_APPLICATION_ERROR(-20000,'@cannotReservePurchaseOrder@');
+  END IF;
+  IF (v_qtyordered < 0) THEN
+    RAISE_APPLICATION_ERROR(-20000,'@cannotReserveNegativeOrders@');
+  END IF;
+  IF (v_qtyordered - v_qtydelivered <= 0) THEN
+    RAISE_APPLICATION_ERROR(-20000,'@cannotReserveDeliveredSalesOrderLine@');
+  END IF;
+
+  INSERT INTO m_reservation(
+    m_reservation_id, ad_client_id, ad_org_id, isactive,
+    created, createdby, updated, updatedby,
+    c_orderline_id,
+    m_product_id, c_uom_id, quantity, reservedqty, releasedqty,
+    res_status, res_process, m_attributesetinstance_id
+  ) VALUES (
+    v_reservation_id, v_client_id, v_org_id, 'Y',
+    now(), p_user_id, now(), p_user_id,
+    p_orderline_id,
+    v_product_id, v_uom_id, v_qtyordered, 0, 0,
+    'DR', 'CO', v_attributesetinstance_id
+  );
+  
+  FOR cur_shipments IN (
+      SELECT sd.m_storage_detail_id, iol.movementqty,iol.m_locator_id
+      FROM m_inoutline iol
+        JOIN m_inout io ON iol.m_inout_id = io.m_inout_id
+        LEFT JOIN m_storage_detail sd ON sd.m_product_id = iol.m_product_id
+                                    AND sd.c_uom_id = iol.c_uom_id
+                                    AND sd.m_product_uom_id IS NULL
+                                    AND sd.m_locator_id = iol.m_locator_id
+                                    AND COALESCE(sd.m_attributesetinstance_id, '0') = COALESCE(iol.m_attributesetinstance_id, '0')
+      WHERE iol.c_orderline_id = p_orderline_id
+        AND io.docstatus = 'CO'
+  ) LOOP
+    IF cur_shipments.m_storage_detail_id IS NULL THEN
+    -- If there is no Storage Detail, because the shipment has removed all the stock from the system, 
+    -- create a Storage Detail with 0 Stock before calling M_Reserve_Stock_Manual, then delete it
+      v_storage_detail_dummy_id := get_uuid();
+      INSERT INTO M_Storage_Detail
+        (
+          M_STORAGE_DETAIL_ID, M_PRODUCT_ID, M_LOCATOR_ID, M_ATTRIBUTESETINSTANCE_ID,
+          C_UOM_ID, M_PRODUCT_UOM_ID, AD_CLIENT_ID, AD_ORG_ID,
+          ISACTIVE, CREATED, CREATEDBY, UPDATED,
+          UPDATEDBY, QTYONHAND, QTYORDERONHAND, PREQTYONHAND,
+          PREQTYORDERONHAND, DATELASTINVENTORY
+        )
+        VALUES
+        (
+          v_storage_detail_dummy_id, v_product_id, cur_shipments.M_Locator_ID, COALESCE(v_attributesetinstance_id, '0'),
+          v_uom_id, NULL, v_client_id, v_org_id,
+          'Y', now(), p_user_id, now(),
+           p_user_id, 0, NULL, 0,
+           NULL, NULL
+        );
+      M_RESERVE_STOCK_MANUAL(v_reservation_id, 'SD', v_storage_detail_dummy_id, cur_shipments.movementqty, p_user_id, 'N', v_res_stock_id);
+      DELETE FROM m_storage_detail WHERE m_storage_detail_id = v_storage_detail_dummy_id;
+    ELSE 
+      M_RESERVE_STOCK_MANUAL(v_reservation_id, 'SD', cur_shipments.m_storage_detail_id, cur_shipments.movementqty, p_user_id, 'N', v_res_stock_id);
+    END IF;
+    UPDATE m_reservation_stock
+    SET releasedqty = COALESCE(releasedqty, 0) + cur_shipments.movementqty
+    WHERE m_reservation_stock_id = v_res_stock_id;
+  END LOOP;
+
+  IF (p_process_reserve = 'Y') THEN
+    M_RESERVATION_POST(null, v_reservation_id, 'PR', p_user_id);
+  END IF;
+
+  p_reservation_id := v_reservation_id;
+RETURN;
+END M_CREATE_RESERVE_FROM_SOL
+]]></body>
+    </function>
+  </database>

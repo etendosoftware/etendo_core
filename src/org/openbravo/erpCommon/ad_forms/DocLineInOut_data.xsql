@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ ******************************************************************************
+ * The contents of this file are subject to the   Compiere License  Version 1.1
+ * ("License"); You may not use this file except in compliance with the License
+ * You may obtain a copy of the License at http://www.compiere.org/license.html
+ * Software distributed under the License is distributed on an  "AS IS"  basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * The Original Code is                  Compiere  ERP & CRM  Business Solution
+ * The Initial Developer of the Original Code is Jorg Janke  and ComPiere, Inc.
+ * Portions created by Jorg Janke are Copyright (C) 1999-2001 Jorg Janke, parts
+ * created by ComPiere are Copyright (C) ComPiere, Inc.;   All Rights Reserved.
+ * Contributor(s): Openbravo SLU
+ * Contributions are Copyright (C) 2001-2010 Openbravo S.L.U.
+ ******************************************************************************
+-->
+
+
+
+
+
+<SqlClass name="DocLineInOutData" package="org.openbravo.erpCommon.ad_forms">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+          SELECT COALESCE(A.AD_ORG_ID,IO.AD_ORG_ID) AS AD_ORG_ID, IO.M_PRODUCT_ID, IO.LINE, IO.DESCRIPTION,
+          IO.C_UOM_ID, IO.M_INOUTLINE_ID, IO.M_LOCATOR_ID,
+          COALESCE(A.Quantity, IO.MOVEMENTQTY) as BREAKDOWNQTY, 
+          IO.MOVEMENTQTY as MOVEMENTQTY, 
+          A.C_Campaign_ID, COALESCE(A.C_Project_Id, IO.C_Project_Id) AS C_Project_Id, COALESCE(A.User1_ID, IO.User1_ID) AS user1Id,
+          COALESCE(A.User2_ID, IO.User2_ID) AS user2Id, COALESCE(A.C_Costcenter_ID, IO.C_Costcenter_ID) AS C_Costcenter_ID,
+          COALESCE(A.A_Asset_ID,IO.A_Asset_ID) AS A_Asset_ID, COALESCE(A.C_BPartner_ID, IO.C_BPartner_ID) AS C_BPartner_ID, A.C_Activity_ID
+          FROM M_InOutLine IO left join M_InOutLine_AcctDimension A ON IO.M_InOutLine_ID = A.M_InOutLine_ID
+          WHERE M_InOut_ID=?
+          AND COALESCE(A.Quantity, IO.MOVEMENTQTY) <> 0
+          ORDER BY Line
+     ]]>
+     </Sql>
+     <Parameter name="M_InOut_ID"/>
+   </SqlMethod>
+  </SqlClass>

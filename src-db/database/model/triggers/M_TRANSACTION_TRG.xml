@@ -1,0 +1,336 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER M_TRANSACTION_TRG">
+    <trigger name="M_TRANSACTION_TRG" table="M_TRANSACTION" fires="after" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+
+
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2001-2020 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_DATEINVENTORY DATE;
+  v_UOM_ID VARCHAR2(32) ;
+  v_ATTRIBUTESET_ID VARCHAR2(32);
+  v_AttrSetValueType M_Product.AttrSetValueType%TYPE;
+  v_Name M_Product.Name%TYPE;
+  v_IsOneAtSetValReq M_Attributeset.Isoneattrsetvalrequired%TYPE;
+  v_PRODUCTION_ID VARCHAR2(32);
+  v_LINE NUMBER;
+  v_DateNull DATE := TO_DATE('01-01-1900', 'DD-MM-YYYY');
+  v_DocumentLineNo M_InventoryLine.line%TYPE;
+  v_warehouse VARCHAR(32);
+  v_count NUMBER;
+  v_doIncrease BOOLEAN:= FALSE;
+  v_doDecrease BOOLEAN:= FALSE;
+  v_stockdiff NUMBER:= 0;
+  v_checkuom NUMBER:= 0;
+  v_inventoryLineQtyCount M_INVENTORYLINE.QTYCOUNT%TYPE;
+  v_qtyOnHand M_STORAGE_DETAIL.QTYONHAND%TYPE;
+  v_preQtyOnHand M_STORAGE_DETAIL.PREQTYONHAND%TYPE;
+  v_hasZeroStockOrPending BOOLEAN:= FALSE;
+  v_issotrx M_INOUT.ISSOTRX%TYPE;
+BEGIN
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+
+  IF INSERTING OR UPDATING THEN
+    SELECT P.NAME, P.C_UOM_ID, P.M_ATTRIBUTESET_ID, A.ISONEATTRSETVALREQUIRED, P.ATTRSETVALUETYPE
+    INTO v_name, v_UOM_ID, v_attributeset_id, v_IsOneAtSetValReq, v_AttrSetValueType 
+    FROM M_PRODUCT P LEFT JOIN M_ATTRIBUTESET A
+    ON A.M_ATTRIBUTESET_ID = P.M_ATTRIBUTESET_ID
+    WHERE P.M_PRODUCT_ID=:NEW.M_PRODUCT_ID;
+    
+		IF UPDATING THEN
+		  IF (COALESCE(:old.m_transaction_id, '0') <> COALESCE(:new.m_transaction_id, '0'))
+    	OR(COALESCE(:old.movementtype, '.') <> COALESCE(:new.movementtype, '.'))
+    	OR(COALESCE(:old.m_locator_id, '0') <> COALESCE(:new.m_locator_id, '0'))
+    	OR(COALESCE(:old.m_product_id, '0') <> COALESCE(:new.m_product_id, '0'))
+    	OR(COALESCE(:old.movementdate, v_DateNull) <> COALESCE(:new.movementdate, v_DateNull))
+	    OR(COALESCE(:old.movementqty, '0') <> COALESCE(:new.movementqty, '0'))
+	    OR(COALESCE(:old.m_inventoryline_id, '0') <> COALESCE(:new.m_inventoryline_id, '0'))
+    	OR(COALESCE(:old.m_movementline_id, '0') <> COALESCE(:new.m_movementline_id, '0'))
+    	OR(COALESCE(:old.m_inoutline_id, '0') <> COALESCE(:new.m_inoutline_id, '0'))
+    	OR(COALESCE(:old.m_productionline_id, '0') <> COALESCE(:new.m_productionline_id, '0'))
+    	OR(COALESCE(:old.c_projectissue_id, '0') <> COALESCE(:new.c_projectissue_id, '0'))
+    	OR(COALESCE(:old.m_attributesetinstance_id, '0') <> COALESCE(:new.m_attributesetinstance_id, '0'))
+    	OR(COALESCE(:old.m_product_uom_id, '0') <> COALESCE(:new.m_product_uom_id, '0'))
+    	OR(COALESCE(:old.quantityorder, '0') <> COALESCE(:new.quantityorder, '0'))
+    	OR(COALESCE(:old.c_uom_id, '0') <> COALESCE(:new.c_uom_id, '0'))
+    	OR(COALESCE(:old.m_internal_consumptionline_id ,'0') <> COALESCE(:new.m_internal_consumptionline_id ,'0')) THEN
+
+        IF(COALESCE(v_UOM_ID, '0') <> COALESCE(:NEW.C_UOM_ID, '0')) THEN
+       	  RAISE_APPLICATION_ERROR(-20000, '@20111@') ;
+        END IF;
+        IF(v_attributeset_id IS NOT NULL AND (v_AttrSetValueType IS NULL OR v_AttrSetValueType <> 'F') AND v_IsOneAtSetValReq = 'Y' AND COALESCE(:NEW.M_ATTRIBUTESETINSTANCE_ID, '0') = '0' ) THEN
+
+          SELECT SD.QTYONHAND, SD.PREQTYONHAND
+          INTO v_qtyOnHand, v_preQtyOnHand
+          FROM M_STORAGE_DETAIL SD
+          WHERE SD.M_PRODUCT_ID = :NEW.M_PRODUCT_ID
+          AND SD.M_LOCATOR_ID = :NEW.M_LOCATOR_ID
+          AND SD.M_ATTRIBUTESETINSTANCE_ID = '0'
+          AND SD.C_UOM_ID = :NEW.C_UOM_ID;
+
+          IF(:NEW.M_INVENTORYLINE_ID IS NOT NULL) THEN
+            SELECT IL.QTYCOUNT INTO v_inventoryLineQtyCount
+            FROM M_INVENTORYLINE IL
+            WHERE IL.M_INVENTORYLINE_ID = :NEW.M_INVENTORYLINE_ID;
+            
+            v_hasZeroStockOrPending:= (v_qtyOnHand = 0 OR v_preQtyOnHand = 0);
+
+            IF(v_inventoryLineQtyCount <> 0 OR (v_inventoryLineQtyCount = 0 AND v_hasZeroStockOrPending)) THEN
+              RAISE_APPLICATION_ERROR(-20000, '@20112@' || ' - ' || v_Name) ;
+            END IF;
+          ELSIF (:NEW.M_INOUTLINE_ID IS NOT NULL) THEN
+            SELECT io.issotrx
+            INTO v_issotrx
+            FROM m_inout io
+            JOIN m_inoutline iol ON (iol.m_inout_id = io.m_inout_id)
+            WHERE iol.m_inoutline_id = :NEW.m_inoutline_id;
+
+            IF (v_issotrx = 'N' OR v_qtyOnHand > 0) THEN
+              RAISE_APPLICATION_ERROR(-20000, '@20112@' || ' - ' || v_Name) ;
+            END IF;
+          ELSE
+            IF ( v_qtyOnHand > 0) THEN
+              RAISE_APPLICATION_ERROR(-20000, '@20112@' || ' - ' || v_Name) ;
+            END IF;
+          END IF;
+        END IF;
+        --Does not allow to change the attribute set value
+        -- for products which attribute set value type is Fixed
+        IF (:NEW.M_PRODUCT_ID IS NOT NULL AND COALESCE(:new.M_AttributeSetInstance_ID,'0')!='0') THEN
+         	SELECT ATTRSETVALUETYPE 
+           	INTO v_AttrSetValueType
+       	  FROM M_PRODUCT 
+         	WHERE M_PRODUCT_ID=:NEW.M_PRODUCT_ID;
+         	IF (v_AttrSetValueType='F') THEN
+           	RAISE_APPLICATION_ERROR(-20000, '@AttrSetValueFixed@');
+         	END IF;
+        END IF;
+      END IF;
+    END IF;
+    
+		IF INSERTING THEN
+			IF(COALESCE(v_UOM_ID, '0') <> COALESCE(:NEW.C_UOM_ID, '0')) THEN
+        IF (:new.M_InventoryLine_ID IS NOT NULL) THEN
+	        SELECT il.line, CASE WHEN i.inventory_type = 'O' OR i.inventory_type = 'C' THEN 1 ELSE 0 END
+	        INTO v_DocumentLineNo, v_checkuom
+	        FROM M_Inventory i JOIN M_InventoryLine il ON i.m_inventory_id = il.m_inventory_id
+	        WHERE il.m_inventoryline_id = :new.M_InventoryLine_ID;
+	      END IF;
+	      IF (:new.M_MovementLine_ID IS NOT NULL) THEN
+	        SELECT line INTO v_DocumentLineNo FROM M_MovementLine WHERE M_MovementLine_ID = :new.M_MovementLine_ID;
+	      END IF;
+	      IF (:new.M_InOutLine_ID IS NOT NULL) THEN
+	        SELECT line INTO v_DocumentLineNo FROM M_InOutLine WHERE M_InOutLine_ID = :new.M_InOutLine_ID;
+	      END IF;
+	      IF (:new.M_ProductionLine_ID IS NOT NULL) THEN
+	        SELECT line INTO v_DocumentLineNo FROM M_ProductionLine WHERE M_ProductionLine_ID = :new.M_ProductionLine_ID;
+	      END IF;
+	      IF (:new.M_Internal_ConsumptionLine_ID IS NOT NULL) THEN
+	        SELECT line INTO v_DocumentLineNo FROM M_Internal_ConsumptionLine WHERE M_Internal_ConsumptionLine_ID = :new.M_Internal_ConsumptionLine_ID;
+	      END IF;
+
+	      IF (v_checkuom = 0) THEN
+	        RAISE_APPLICATION_ERROR(-20000, '@DocUOMMismatch@' || ' ' || COALESCE(v_DocumentLineNo, 0));
+	      END IF;
+     	END IF;
+      IF(v_attributeset_id IS NOT NULL AND (v_AttrSetValueType IS NULL OR v_AttrSetValueType <> 'F') AND v_IsOneAtSetValReq = 'Y' AND COALESCE(:NEW.M_ATTRIBUTESETINSTANCE_ID, '0') = '0') THEN
+
+        SELECT SD.QTYONHAND, SD.PREQTYONHAND
+        INTO v_qtyOnHand, v_preQtyOnHand
+        FROM M_STORAGE_DETAIL SD
+        WHERE SD.M_PRODUCT_ID = :NEW.M_PRODUCT_ID
+        AND SD.M_LOCATOR_ID = :NEW.M_LOCATOR_ID
+        AND SD.M_ATTRIBUTESETINSTANCE_ID = '0'
+        AND SD.C_UOM_ID = :NEW.C_UOM_ID;
+
+        IF(:NEW.M_INVENTORYLINE_ID IS NOT NULL) THEN
+          SELECT IL.QTYCOUNT INTO v_inventoryLineQtyCount
+          FROM M_INVENTORYLINE IL
+          WHERE IL.M_INVENTORYLINE_ID = :NEW.M_INVENTORYLINE_ID;
+          
+          v_hasZeroStockOrPending:= (v_qtyOnHand = 0 OR v_preQtyOnHand = 0);
+
+          IF(v_inventoryLineQtyCount <> 0 OR (v_inventoryLineQtyCount = 0 AND v_hasZeroStockOrPending)) THEN
+            RAISE_APPLICATION_ERROR(-20000, '@20112@' || ' - ' || v_Name) ;
+          END IF;
+        ELSIF (:NEW.M_INOUTLINE_ID IS NOT NULL) THEN
+          SELECT io.issotrx
+          INTO v_issotrx
+          FROM m_inout io
+          JOIN m_inoutline iol ON (iol.m_inout_id = io.m_inout_id)
+          WHERE iol.m_inoutline_id = :NEW.m_inoutline_id;
+
+          IF (v_issotrx = 'N' OR v_qtyOnHand > 0) THEN
+            RAISE_APPLICATION_ERROR(-20000, '@20112@' || ' - ' || v_Name) ;
+          END IF;
+        ELSE
+          IF ( v_qtyOnHand > 0) THEN
+            RAISE_APPLICATION_ERROR(-20000, '@20112@' || ' - ' || v_Name) ;
+          END IF;
+        END IF; 
+      END IF;
+
+      --Does not allow to change the attribute set value
+      -- for products which attribute set value type is Fixed
+      IF (:NEW.M_PRODUCT_ID IS NOT NULL AND COALESCE(:new.M_AttributeSetInstance_ID,'0')!='0') THEN
+       	SELECT ATTRSETVALUETYPE 
+         	INTO v_AttrSetValueType
+       	FROM M_PRODUCT 
+        WHERE M_PRODUCT_ID=:NEW.M_PRODUCT_ID;
+       	IF (v_AttrSetValueType='F') THEN
+         	RAISE_APPLICATION_ERROR(-20000, '@AttrSetValueFixed@');
+       	END IF;
+     	END IF;
+		END IF;
+  END IF;
+  
+  -- Updating inventory
+  IF DELETING OR (UPDATING AND (
+    (COALESCE(:OLD.M_TRANSACTION_ID, '0') <> COALESCE(:NEW.M_TRANSACTION_ID, '0')) OR
+    (COALESCE(:OLD.AD_CLIENT_ID, '0') <> COALESCE(:NEW.AD_CLIENT_ID, '0')) OR
+    (COALESCE(:OLD.AD_ORG_ID, '0') <> COALESCE(:NEW.AD_ORG_ID, '0')) OR
+    (COALESCE(:OLD.ISACTIVE, 'Y') <> COALESCE(:NEW.ISACTIVE, 'Y')) OR
+    (COALESCE(:OLD.MOVEMENTTYPE, '.') <> COALESCE(:NEW.MOVEMENTTYPE, '.')) OR
+    (COALESCE(:OLD.M_LOCATOR_ID, '0') <> COALESCE(:NEW.M_LOCATOR_ID, '0')) OR
+    (COALESCE(:OLD.M_PRODUCT_ID, '0') <> COALESCE(:NEW.M_PRODUCT_ID, '0')) OR
+    (COALESCE(:OLD.MOVEMENTDATE, v_DateNull) <> COALESCE(:NEW.MOVEMENTDATE, v_DateNull)) OR
+    (COALESCE(:OLD.MOVEMENTQTY, '0') <> COALESCE(:NEW.MOVEMENTQTY, '0')) OR
+    (COALESCE(:OLD.M_INVENTORYLINE_ID, '0') <> COALESCE(:NEW.M_INVENTORYLINE_ID, '0')) OR
+    (COALESCE(:OLD.M_MOVEMENTLINE_ID, '0') <> COALESCE(:NEW.M_MOVEMENTLINE_ID, '0')) OR
+    (COALESCE(:OLD.M_INOUTLINE_ID, '0') <> COALESCE(:NEW.M_INOUTLINE_ID, '0')) OR
+    (COALESCE(:OLD.M_PRODUCTIONLINE_ID, '0') <> COALESCE(:NEW.M_PRODUCTIONLINE_ID, '0')) OR
+    (COALESCE(:OLD.C_PROJECTISSUE_ID, '0') <> COALESCE(:NEW.C_PROJECTISSUE_ID, '0')) OR
+    (COALESCE(:OLD.M_ATTRIBUTESETINSTANCE_ID, '0') <> COALESCE(:NEW.M_ATTRIBUTESETINSTANCE_ID, '0')) OR
+    (COALESCE(:OLD.M_PRODUCT_UOM_ID, '0') <> COALESCE(:NEW.M_PRODUCT_UOM_ID, '0')) OR
+    (COALESCE(:OLD.QUANTITYORDER, '0') <> COALESCE(:NEW.QUANTITYORDER, '0')) OR
+    (COALESCE(:OLD.C_UOM_ID, '0') <> COALESCE(:NEW.C_UOM_ID, '0')) OR
+    (COALESCE(:OLD.M_INTERNAL_CONSUMPTIONLINE_ID, '0') <> COALESCE(:NEW.M_INTERNAL_CONSUMPTIONLINE_ID, '0')) OR
+    (COALESCE(:OLD.TRXPROCESSDATE, v_DateNull) <> COALESCE(:NEW.TRXPROCESSDATE, v_DateNull)) OR
+    (COALESCE(:OLD.CHECKRESERVEDQTY, 'Y') <> COALESCE(:NEW.CHECKRESERVEDQTY, 'Y'))
+  )) THEN
+    M_UPDATE_INVENTORY(:OLD.AD_CLIENT_ID, :OLD.AD_ORG_ID, :OLD.UPDATEDBY, :OLD.M_PRODUCT_ID, :OLD.M_LOCATOR_ID, :OLD.M_ATTRIBUTESETINSTANCE_ID, :OLD.C_UOM_ID, :OLD.M_PRODUCT_UOM_ID, -:OLD.MOVEMENTQTY, -:OLD.QUANTITYORDER, NULL, :OLD.MOVEMENTQTY, :OLD.QUANTITYORDER) ;
+    -- FIXME: this shall be removed/reviewed when new warehouse management is implemented
+    IF (:OLD.M_PRODUCTIONLINE_ID IS NOT NULL) THEN     
+	    SELECT M_PRODUCTIONPLAN.M_PRODUCTION_ID , M_PRODUCTIONPLAN.LINE
+	    INTO v_PRODUCTION_ID, v_LINE
+	    FROM M_PRODUCTIONPLAN, M_PRODUCTIONLINE
+	    WHERE M_PRODUCTIONPLAN.M_PRODUCTIONPLAN_ID = M_PRODUCTIONLINE.M_PRODUCTIONPLAN_ID
+	    AND M_PRODUCTIONLINE_ID = :OLD.M_PRODUCTIONLINE_ID;
+	    M_UPDATE_STOCKAUX(:OLD.AD_CLIENT_ID, :OLD.AD_ORG_ID, :OLD.UPDATEDBY, :OLD.M_PRODUCT_ID, :OLD.M_LOCATOR_ID, :OLD.M_ATTRIBUTESETINSTANCE_ID, :OLD.C_UOM_ID, :OLD.M_PRODUCT_UOM_ID, :OLD.MOVEMENTQTY, :OLD.QUANTITYORDER, v_PRODUCTION_ID,'325', v_LINE) ;
+    END IF;
+    -- END FIXME
+  END IF;
+  IF INSERTING OR (UPDATING AND (
+    (COALESCE(:OLD.M_TRANSACTION_ID, '0') <> COALESCE(:NEW.M_TRANSACTION_ID, '0')) OR
+    (COALESCE(:OLD.AD_CLIENT_ID, '0') <> COALESCE(:NEW.AD_CLIENT_ID, '0')) OR
+    (COALESCE(:OLD.AD_ORG_ID, '0') <> COALESCE(:NEW.AD_ORG_ID, '0')) OR
+    (COALESCE(:OLD.ISACTIVE, 'Y') <> COALESCE(:NEW.ISACTIVE, 'Y')) OR
+    (COALESCE(:OLD.MOVEMENTTYPE, '.') <> COALESCE(:NEW.MOVEMENTTYPE, '.')) OR
+    (COALESCE(:OLD.M_LOCATOR_ID, '0') <> COALESCE(:NEW.M_LOCATOR_ID, '0')) OR
+    (COALESCE(:OLD.M_PRODUCT_ID, '0') <> COALESCE(:NEW.M_PRODUCT_ID, '0')) OR
+    (COALESCE(:OLD.MOVEMENTDATE, v_DateNull) <> COALESCE(:NEW.MOVEMENTDATE, v_DateNull)) OR
+    (COALESCE(:OLD.MOVEMENTQTY, '0') <> COALESCE(:NEW.MOVEMENTQTY, '0')) OR
+    (COALESCE(:OLD.M_INVENTORYLINE_ID, '0') <> COALESCE(:NEW.M_INVENTORYLINE_ID, '0')) OR
+    (COALESCE(:OLD.M_MOVEMENTLINE_ID, '0') <> COALESCE(:NEW.M_MOVEMENTLINE_ID, '0')) OR
+    (COALESCE(:OLD.M_INOUTLINE_ID, '0') <> COALESCE(:NEW.M_INOUTLINE_ID, '0')) OR
+    (COALESCE(:OLD.M_PRODUCTIONLINE_ID, '0') <> COALESCE(:NEW.M_PRODUCTIONLINE_ID, '0')) OR
+    (COALESCE(:OLD.C_PROJECTISSUE_ID, '0') <> COALESCE(:NEW.C_PROJECTISSUE_ID, '0')) OR
+    (COALESCE(:OLD.M_ATTRIBUTESETINSTANCE_ID, '0') <> COALESCE(:NEW.M_ATTRIBUTESETINSTANCE_ID, '0')) OR
+    (COALESCE(:OLD.M_PRODUCT_UOM_ID, '0') <> COALESCE(:NEW.M_PRODUCT_UOM_ID, '0')) OR
+    (COALESCE(:OLD.QUANTITYORDER, '0') <> COALESCE(:NEW.QUANTITYORDER, '0')) OR
+    (COALESCE(:OLD.C_UOM_ID, '0') <> COALESCE(:NEW.C_UOM_ID, '0')) OR
+    (COALESCE(:OLD.M_INTERNAL_CONSUMPTIONLINE_ID, '0') <> COALESCE(:NEW.M_INTERNAL_CONSUMPTIONLINE_ID, '0')) OR
+    (COALESCE(:OLD.TRXPROCESSDATE, v_DateNull) <> COALESCE(:NEW.TRXPROCESSDATE, v_DateNull)) OR
+    (COALESCE(:OLD.CHECKRESERVEDQTY, 'Y') <> COALESCE(:NEW.CHECKRESERVEDQTY, 'Y'))
+  )) THEN
+    SELECT MAX(MOVEMENTDATE)
+      INTO v_DATEINVENTORY
+    FROM M_INVENTORY I,
+      M_INVENTORYLINE IL
+    WHERE I.M_INVENTORY_ID=IL.M_INVENTORY_ID
+      AND IL.M_INVENTORYLINE_ID=:NEW.M_INVENTORYLINE_ID;
+        
+    M_UPDATE_INVENTORY(:NEW.AD_CLIENT_ID, :NEW.AD_ORG_ID, :NEW.UPDATEDBY, :NEW.M_PRODUCT_ID, :NEW.M_LOCATOR_ID, :NEW.M_ATTRIBUTESETINSTANCE_ID, :NEW.C_UOM_ID, :NEW.M_PRODUCT_UOM_ID, :NEW.MOVEMENTQTY, :NEW.QUANTITYORDER, v_DATEINVENTORY, -:NEW.MOVEMENTQTY, -:NEW.QUANTITYORDER) ;
+    -- FIXME: this shall be removed/reviewed when new warehouse management is implemented
+    IF (:NEW.M_PRODUCTIONLINE_ID IS NOT NULL) THEN    
+	SELECT M_PRODUCTIONPLAN.M_PRODUCTION_ID , M_PRODUCTIONPLAN.LINE
+	INTO v_PRODUCTION_ID, v_LINE
+	FROM M_PRODUCTIONPLAN, M_PRODUCTIONLINE
+	WHERE M_PRODUCTIONPLAN.M_PRODUCTIONPLAN_ID = M_PRODUCTIONLINE.M_PRODUCTIONPLAN_ID
+	AND M_PRODUCTIONLINE_ID = :NEW.M_PRODUCTIONLINE_ID;
+ M_UPDATE_STOCKAUX(:NEW.AD_CLIENT_ID, :NEW.AD_ORG_ID, :NEW.UPDATEDBY, :NEW.M_PRODUCT_ID, :NEW.M_LOCATOR_ID, :NEW.M_ATTRIBUTESETINSTANCE_ID, :NEW.C_UOM_ID, :NEW.M_PRODUCT_UOM_ID,-:NEW.MOVEMENTQTY, -:NEW.QUANTITYORDER, v_PRODUCTION_ID,'325', v_LINE) ;
+    END IF;
+    -- END FIXME
+  END IF;
+
+  --Update m_stock_valuation
+  SELECT COUNT(*) INTO v_count
+  FROM DUAL
+  WHERE EXISTS (SELECT 1 FROM ad_preference
+                WHERE property = 'UnitaryCost'
+                  AND ad_client_id IN (:NEW.ad_client_id, '0')
+                  AND TO_CHAR(value) = 'Y');
+
+  IF (v_count > 0) THEN
+    IF (INSERTING) THEN
+      IF (:NEW.iscostcalculated = 'Y') THEN
+        v_doIncrease := TRUE;
+      END IF;
+    ELSIF (DELETING) THEN
+      IF (:OLD.iscostcalculated = 'Y') THEN
+        v_doDecrease := TRUE;
+      END IF;
+    ELSIF (UPDATING) THEN
+      IF (:NEW.iscostcalculated = 'Y' AND :OLD.iscostcalculated = 'N') THEN
+        v_doIncrease := TRUE;
+      END IF;
+      IF (:NEW.iscostcalculated = 'N' AND :OLD.iscostcalculated = 'Y') THEN
+        v_doDecrease := TRUE;
+      END IF;
+    END IF;
+    IF (v_doIncrease) THEN
+      v_stockdiff := :NEW.movementqty;
+      IF (v_stockdiff <> 0) THEN
+        SELECT m_warehouse_id
+          INTO v_warehouse
+        FROM m_locator
+        WHERE m_locator_id = :NEW.m_locator_id;
+  
+        M_UPDATE_STOCK_VALUATION(:NEW.ad_client_id, ad_get_org_le_bu(:NEW.ad_org_id,'LE'), :NEW.createdby, v_warehouse, :NEW.m_product_id, v_stockdiff, 0);
+      END IF;
+    END IF;
+    IF (v_doDecrease) THEN
+      v_stockdiff := - :OLD.movementqty;
+      IF (v_stockdiff <> 0) THEN
+        SELECT m_warehouse_id
+          INTO v_warehouse
+        FROM m_locator
+        WHERE m_locator_id = :OLD.m_locator_id;
+  
+        M_UPDATE_STOCK_VALUATION(:OLD.ad_client_id, ad_get_org_le_bu(:OLD.ad_org_id,'LE'), :OLD.createdby, v_warehouse, :OLD.m_product_id, v_stockdiff, 0);
+      END IF;
+    END IF;
+  END IF;
+
+END M_TRANSACTION_TRG
+]]></body>
+    </trigger>
+  </database>

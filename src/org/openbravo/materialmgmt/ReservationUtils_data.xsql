@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License. 
+ * The Original Code is Openbravo ERP. 
+ * The Initial Developer of the Original Code is Openbravo SLU 
+ * All portions are Copyright (C) 2012 Openbravo SLU 
+ * All Rights Reserved. 
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+
+
+<SqlClass name="ReservationUtilsData" package="org.openbravo.materialmgmt">
+   <SqlClassComment></SqlClassComment>
+   <SqlMethod name="select" type="preparedStatement" return="multiple">
+     <Sql>
+       select 1 as a from dual
+     </Sql>
+   </SqlMethod>
+   <SqlMethod name="createReserveFromSalesOrderLine" connection="true" type="callableStatement" return="object" object="CSResponse">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_CREATE_RESERVE_FROM_SOL(?,?,?,?)
+      ]]></Sql>
+      <Parameter name="cOrderLineId"/>
+      <Parameter name="doProcess"/>
+      <Parameter name="adUserId"/>
+      <Parameter name="returnValue" type="out"/>
+   </SqlMethod>
+   <SqlMethod name="reserveStockAuto" connection="true" type="callableStatement" return="object" object="CSResponse">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_RESERVE_STOCK_AUTO(?,?,?)
+      ]]></Sql>
+      <Parameter name="mReservationId"/>
+      <Parameter name="adUserId"/>
+      <Parameter name="returnValue" type="out"/>
+   </SqlMethod>
+   <SqlMethod name="reserveStockManual" connection="true" type="callableStatement" return="object" object="CSResponse">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_RESERVE_STOCK_MANUAL(?,?,?,to_number(?),?,?,?)
+      ]]></Sql>
+      <Parameter name="mReservationId"/>
+      <Parameter name="type"/>
+      <Parameter name="stockId"/>
+      <Parameter name="quantity"/>
+      <Parameter name="adUserId"/>
+      <Parameter name="allocated"/>
+      <Parameter name="returnValue" type="out"/>
+   </SqlMethod>
+   <SqlMethod name="reallocateStock" connection="true" type="callableStatement" return="object" object="CSResponse">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_RESERVATION_REALLOCATE(?, ?, ?, to_number(?), ?, ?, ?)
+      ]]></Sql>
+      <Parameter name="mReservationId"/>
+      <Parameter name="mLocatorId"/>
+      <Parameter name="mAttributeSetInstanceId"/>
+      <Parameter name="quantity"/>
+      <Parameter name="adUserId"/>
+      <Parameter name="returnValue" type="out"/>
+      <Parameter name="returnValueMsg" type="out"/>
+   </SqlMethod>
+   
+</SqlClass>

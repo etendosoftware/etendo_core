@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+  <database name="TABLE OBSCHED_SCHEDULER_STATE">
+    <table name="OBSCHED_SCHEDULER_STATE" primaryKey="OBSCHED_SCH_STA_PK">
+      <column name="OBSCHED_SCHEDULER_STATE_ID" primaryKey="true" required="true" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SCHED_NAME" primaryKey="false" required="true" type="VARCHAR" size="120" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="INSTANCE_NAME" primaryKey="false" required="true" type="VARCHAR" size="200" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="LAST_CHECKIN_TIME" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CHECKIN_INTERVAL" primaryKey="false" required="true" type="DECIMAL" size="13,0" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="STATUS" primaryKey="false" required="true" type="VARCHAR" size="10" autoIncrement="false">
+        <default><![CDATA[STANDBY]]></default>
+        <onCreateDefault/>
+      </column>
+      <unique name="OBSCHED_SCH_STA_UK">
+        <unique-column name="SCHED_NAME"/>
+        <unique-column name="INSTANCE_NAME"/>
+      </unique>
+    </table>
+  </database>

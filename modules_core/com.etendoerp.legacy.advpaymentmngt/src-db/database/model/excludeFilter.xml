@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<vector>
+    <excludedFunction name="AD_SEQUENCE_DOC"/>
+    <excludedFunction name="AD_SEQUENCE_DOCTYPE"/>
+    <excludedFunction name="AD_SEQUENCE_NEXT"/>
+    <excludedFunction name="AD_SEQUENCE_NEXTONO"/>
+</vector>

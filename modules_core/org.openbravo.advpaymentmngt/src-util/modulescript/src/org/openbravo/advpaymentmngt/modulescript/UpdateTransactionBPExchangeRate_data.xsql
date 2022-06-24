@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012-2013 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ *************************************************************************
+-->
+<SqlClass name="UpdateTransactionBPExchangeRateData" package="org.openbravo.advpaymentmngt.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT 1 as name from dual
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="selectCheckBP" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT COUNT(1) AS NAME FROM DUAL
+        WHERE EXISTS(SELECT 1 FROM FIN_FINACC_TRANSACTION FT
+                     LEFT JOIN FIN_PAYMENT FP ON FP.FIN_PAYMENT_ID = FT.FIN_PAYMENT_ID 
+                     WHERE FT.C_BPARTNER_ID IS NULL AND FP.C_BPARTNER_ID IS NOT NULL)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateBP" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE FIN_FINACC_TRANSACTION SET C_BPARTNER_ID = (SELECT C_BPARTNER_ID FROM FIN_PAYMENT WHERE FIN_PAYMENT_ID = FIN_FINACC_TRANSACTION.FIN_PAYMENT_ID)
+        WHERE EXISTS(SELECT 1 FROM FIN_FINACC_TRANSACTION FT 
+                     LEFT JOIN FIN_PAYMENT FP ON FP.FIN_PAYMENT_ID = FT.FIN_PAYMENT_ID
+                     WHERE FT.C_BPARTNER_ID IS NULL AND FP.C_BPARTNER_ID IS NOT NULL
+                     AND FT.FIN_FINACC_TRANSACTION_ID = FIN_FINACC_TRANSACTION.FIN_FINACC_TRANSACTION_ID)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="selectCheckExchange" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT COUNT(1) AS NAME FROM DUAL
+        WHERE EXISTS(SELECT 1 FROM C_CONVERSION_RATE_DOCUMENT
+                              WHERE APRM_FINACC_TRANSACTION_V_ID IS NOT NULL AND FIN_FINACC_TRANSACTION_ID IS NULL)
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateExchange" type="preparedStatement" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE C_CONVERSION_RATE_DOCUMENT SET FIN_FINACC_TRANSACTION_ID = APRM_FINACC_TRANSACTION_V_ID
+        WHERE APRM_FINACC_TRANSACTION_V_ID IS NOT NULL AND FIN_FINACC_TRANSACTION_ID IS NULL
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>

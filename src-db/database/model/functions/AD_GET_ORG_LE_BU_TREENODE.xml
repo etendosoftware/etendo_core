@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION AD_GET_ORG_LE_BU_TREENODE">
+    <function name="AD_GET_ORG_LE_BU_TREENODE" type="VARCHAR" volatility="STABLE">
+      <parameter name="p_org_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_type" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2018-2019 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+/*
+* This function has very important performance issues and it should only
+* be used in flows involving organizations not set as ready yet.
+* For other flows it is highly recommended to use ad_legalentity_org_id or
+* ad_business_unit_id from ad_org directly as required.
+*/
+
+  v_org_header_id ad_org.ad_org_id%TYPE;
+  v_isbusinessunit ad_orgtype.isbusinessunit%TYPE := 'N';
+  v_islegalentity ad_orgtype.islegalentity%TYPE := 'N';
+
+BEGIN
+  v_org_header_id := p_org_id;
+  --Check if given org is legal entity or business unit
+  SELECT ot.islegalentity, ot.isbusinessunit
+    INTO v_islegalentity, v_isbusinessunit
+  FROM ad_org o JOIN ad_orgtype ot ON o.ad_orgtype_id = ot.ad_orgtype_id
+  WHERE o.ad_org_id = p_org_id;
+  -- Gets recursively the organization parent until finding a Business Unit or a Legal Entity
+  IF (p_type IS NULL) THEN
+    WHILE (v_isbusinessunit='N' AND v_islegalentity='N') LOOP
+      SELECT hh.parent_id, ad_orgtype.isbusinessunit, ad_orgtype.islegalentity
+        INTO v_org_header_id, v_isbusinessunit, v_islegalentity
+      FROM ad_org
+          JOIN ad_orgtype ON ad_org.ad_orgtype_id=ad_orgtype.ad_orgtype_id
+          JOIN ad_treenode pp ON pp.node_id=ad_org.ad_org_id
+          JOIN ad_treenode hh ON pp.node_id = hh.parent_id
+                                 AND hh.ad_tree_id = pp.ad_tree_id
+      WHERE hh.node_id=v_org_header_id
+        AND ad_org.isready='Y'
+        AND EXISTS (SELECT 1 FROM ad_tree
+                    WHERE ad_tree.ad_table_id='155'
+                      AND hh.ad_tree_id=ad_tree.ad_tree_id
+                      AND hh.ad_client_id=ad_tree.ad_client_id);
+    END LOOP;
+  -- Gets recursively the organization parent until finding a Legal Entity
+  ELSIF (p_type='LE') THEN
+    WHILE (v_islegalentity='N') LOOP
+      SELECT hh.parent_id, ad_orgtype.islegalentity
+        INTO v_org_header_id, v_islegalentity
+      FROM ad_org
+          JOIN ad_orgtype ON ad_org.ad_orgtype_id=ad_orgtype.ad_orgtype_id
+          JOIN ad_treenode pp ON pp.node_id=ad_org.ad_org_id
+          JOIN ad_treenode hh ON pp.node_id = hh.parent_id
+                                 AND hh.ad_tree_id = pp.ad_tree_id
+      WHERE hh.node_id=v_org_header_id
+        AND ad_org.isready='Y'
+        AND EXISTS (SELECT 1 FROM ad_tree
+                    WHERE ad_tree.ad_table_id='155'
+                      AND hh.ad_tree_id=ad_tree.ad_tree_id
+                      AND hh.ad_client_id=ad_tree.ad_client_id);
+    END LOOP;
+    -- Gets recursively the organization parent until finding a Business Unit
+  ELSIF (p_type='BU') THEN
+    WHILE (v_isbusinessunit='N') LOOP
+      SELECT hh.parent_id, ad_orgtype.isbusinessunit
+        INTO v_org_header_id, v_isbusinessunit
+      FROM ad_org
+          JOIN ad_orgtype ON ad_org.ad_orgtype_id=ad_orgtype.ad_orgtype_id
+          JOIN ad_treenode pp ON pp.node_id=ad_org.ad_org_id
+          JOIN ad_treenode hh ON pp.node_id = hh.parent_id
+                                 AND hh.ad_tree_id = pp.ad_tree_id
+      WHERE hh.node_id=v_org_header_id
+        AND ad_org.isready='Y'
+        AND EXISTS (SELECT 1 FROM ad_tree
+                    WHERE ad_tree.ad_table_id='155'
+                      AND hh.ad_tree_id=ad_tree.ad_tree_id
+                      AND hh.ad_client_id=ad_tree.ad_client_id);
+    END LOOP;
+  END IF;
+
+  RETURN v_org_header_id;
+END AD_GET_ORG_LE_BU_TREENODE
+]]></body>
+    </function>
+  </database>

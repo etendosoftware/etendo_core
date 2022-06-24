@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_PROMOTION_ADJUSTMENT">
+    <function name="M_PROMOTION_ADJUSTMENT" type="VARCHAR">
+      <parameter name="p_type" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_rule_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_line_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_priceprecision" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_stdprecision" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_taxincluded" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations 
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2014-2017 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  v_fixed NUMBER;
+  v_add NUMBER;
+  v_discount NUMBER;
+  v_qty_From NUMBER;
+  v_qty_To NUMBER;
+  v_apply_next VARCHAR(1);
+  v_qty NUMBER;
+  v_unitPrice NUMBER;
+  v_newUnitPrice NUMBER;
+  v_newGrossAmt NUMBER;
+  v_newNetAmt NUMBER;
+  v_newNetPrice NUMBER;
+  v_priceactual NUMBER;
+  v_basePrice NUMBER;
+
+  v_origGrossAmt NUMBER;
+  v_origLineNetAmt NUMBER;
+  v_totalPromotion NUMBER;
+  v_ismultiple CHAR(1);
+  v_multiple NUMBER;
+BEGIN
+  select fixed, coalesce(addamt, 0), coalesce(discount, 0),
+         qty_From, qty_To, apply_next, ismultiple, multiple
+    into v_fixed, v_add, v_discount,
+         v_qty_From, v_qty_To, v_apply_next, v_ismultiple, v_multiple
+    from m_offer
+   where m_offer_id = p_rule_id;
+
+  if (p_type ='O') then
+		select gross_unit_price, qtyordered, priceactual,
+		       line_gross_amount, linenetamt
+			into v_unitprice, v_qty, v_priceactual,
+			     v_origGrossAmt, v_origLineNetAmt
+			from c_orderline
+		 where c_orderline_id = p_line_id;
+  else 
+	 select gross_unit_price, qtyinvoiced, priceactual,
+	        line_gross_amount, linenetamt
+		 into v_unitprice, v_qty, v_priceactual,
+		      v_origGrossAmt, v_origLineNetAmt
+		 from c_invoiceline
+		where c_invoiceline_id = p_line_id;
+  end if;
+
+  if (v_qty_From is not null and v_qty < v_qty_From) or (v_qty_To is not null and v_qty > v_qty_To) or (v_ismultiple = 'Y' and ((v_multiple is null) or (MOD(v_qty, v_multiple) <> 0))) then
+    return 'Y'; -- rule not applied, apply next one if present
+  end if;
+   
+  if (p_taxIncluded = 'Y') then
+    if (v_fixed is not null) then
+      v_newUnitPrice := v_fixed;
+    else
+      v_newUnitPrice := round((v_unitprice - v_add) * (1 - v_discount / 100), p_priceprecision);
+    end if;
+    
+    v_newGrossAmt := round(v_newUnitPrice * v_qty, p_stdprecision);
+    v_totalPromotion := v_origGrossAmt - v_newGrossAmt;
+
+    v_newNetPrice := 0;
+    v_newNetAmt := 0;
+    v_basePrice := v_unitprice;
+  else
+    if (v_fixed is not null) then
+      v_newNetPrice := v_fixed;
+    else
+      v_newNetPrice := round((v_priceactual - v_add) * (1 - v_discount / 100), p_priceprecision);
+    end if;
+
+    v_newNetAmt := round(v_newNetPrice * v_qty, p_stdprecision);
+    v_totalPromotion := v_origLineNetAmt - v_newNetAmt;
+    v_basePrice := v_priceactual;
+  end if;
+
+  M_PROMOTION_ADD(p_type, p_line_id, p_rule_id, p_taxIncluded, v_newUnitPrice, v_newGrossAmt, v_newNetPrice, v_newNetAmt, v_totalPromotion, v_totalPromotion, v_basePrice, p_user_id);
+
+  return v_apply_next;
+END M_PROMOTION_ADJUSTMENT
+]]></body>
+    </function>
+  </database>

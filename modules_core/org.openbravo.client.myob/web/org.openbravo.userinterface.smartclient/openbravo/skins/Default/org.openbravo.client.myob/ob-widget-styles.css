@@ -1,0 +1,238 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being  the  Mozilla  Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html 
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2010-2013 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+ */
+/* Blue */
+/* Light Blue */
+/* Darker Blue */
+/* Gray */
+/* Darker Gray  */
+/* Yellow */
+/* White */
+/* Light Blue (20%) */
+/* Light Green */
+/* Light Blue (20%) */
+/* light Blue (10%) */
+/* Gray 10 % */
+/* Widget */
+.OBWidgetHeader {
+  border-color: #202452;
+  border-radius: 5px 5px 0 0;
+  border-width: 1px 1px 0px 1px;
+  border-style: solid;
+}
+
+.OBWidgetBody {
+  border-color: #202452;
+  border-radius: 0px 0px 5px 5px;
+  border-style: solid;
+  border-width: 0px 1px 1px 1px;
+  margin-bottom: 10px;
+}
+
+.OBWidgetHeaderText {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 18px;
+  vertical-align: left;
+  padding-left: 20px;
+  color: #202452;
+}
+
+/* Header icons */
+.OBWidgetIconMinimize,
+.OBWidgetIconMinimizeOver,
+.OBWidgetIconMinimizeDown,
+.OBWidgetIconMinimizeDisabled {
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #91A777;
+}
+
+.OBWidgetIconMaximize,
+.OBWidgetIconMaximizeOver,
+.OBWidgetIconMaximizeDown,
+.OBWidgetIconMaximizeDisabled {
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #91A777;
+}
+
+.OBWidgetIconRestore,
+.OBWidgetIconRestoreOver,
+.OBWidgetIconRestoreDown,
+.OBWidgetIconRestoreDisabled {
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #91A777;
+}
+
+.OBWidgetIconClose,
+.OBWidgetIconCloseOver,
+.OBWidgetIconCloseDown,
+.OBWidgetIconCloseDisabled {
+  margin: 0px 4px 0px 0px;
+  border: 1px solid #FA962F;
+}
+
+/* Widget Menu */
+.OBWidgetMenu {
+  order-color: blue;
+  background-color: white;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 5px;
+}
+
+.xOBWidgetMenuTable td {
+  font-size: 12px;
+}
+
+.OBWidgetMenuTable img {
+  display: none;
+}
+
+.OBWidgetMenuBody {
+  background: none;
+  border: 0;
+}
+
+.OBWidgetMenuCellTitleFieldOver {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.OBWidgetMenuCellOver,
+.OBWidgetMenuCellSelectedOver,
+.OBWidgetMenuCellTitleFieldOver,
+.OBWidgetMenuCellTitleFieldOverDark,
+.OBWidgetMenuCellTitleFieldSelectedOver,
+.OBWidgetMenuCellTitleFieldSelectedOverDark,
+.OBWidgetMenuCellIconFieldOver,
+.OBWidgetMenuCellIconFieldSelectedOver,
+.OBWidgetMenuCellIconFieldOverDark,
+.OBWidgetMenuCellIconFieldSelectedOver,
+.OBWidgetMenuCellIconFieldSelectedOverDark {
+  background: none;
+}
+
+.OBWidgetMenuCellIconField,
+.OBWidgetMenuCellIconFieldDark,
+.OBWidgetMenuCellIconFieldOver,
+.OBWidgetMenuCellIconFieldOverDark,
+.OBWidgetMenuCellIconFieldSelected,
+.OBWidgetMenuCellIconFieldSelectedDark,
+.OBWidgetMenuCellIconFieldSelectedOver,
+.OBWidgetMenuCellIconFieldSelectedOverDark,
+.OBWidgetMenuCellIconFieldDisabled {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.OBWidgetMenuCellTitleFieldDisabled hr {
+  border: 1px dashed #fad614;
+}
+
+.OBWidgetMenuCellIconFieldDisabled hr {
+  border: 1px dashed #fad614;
+}
+
+.OBWidgetMenuCellDisabled,
+.OBWidgetMenuCellIconFieldDisabled,
+.OBWidgetMenuCellTitleFieldDisabled {
+  color: #202452;
+}
+
+.OBWidgetMenuButton,
+.OBWidgetMenuButtonOver,
+.OBWidgetMenuButtonDown,
+.OBWidgetMenuButtonDisabled,
+.OBWidgetMenuButtonFocused,
+.OBWidgetMenuButtonFocusedOver {
+  width: 100px;
+}
+
+.OBWidgetMenuButton img,
+.OBWidgetMenuButtonOver img,
+.OBWidgetMenuButtonDown img,
+.OBWidgetMenuButtonDisabled img,
+.OBWidgetMenuButtonFocused img,
+.OBWidgetMenuButtonFocusedOver img {
+  margin: 5px 7px 14px -30px;
+  padding: 5px;
+}
+
+/* Community branding widget */
+.OBWidgetCommunityBranding {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.OBWidgetCommunityBrandingUnknown {
+  padding-top: 32px;
+  font-weight: bold;
+  font-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center 6px;
+  background-image: url(images/purpose/banner-unknown.png);
+}
+
+.OBWidgetCommunityBrandingDevelopment {
+  padding-top: 32px;
+  font-weight: bold;
+  font-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center 6px;
+  background-image: url(images/purpose/banner-development.png);
+}
+
+.OBWidgetCommunityBrandingEvaluation {
+  padding-top: 32px;
+  font-weight: bold;
+  font-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center 6px;
+  background-image: url(images/purpose/banner-evaluation.png);
+}
+
+.OBWidgetCommunityBrandingTesting {
+  padding-top: 32px;
+  font-weight: bold;
+  font-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center 6px;
+  background-image: url(images/purpose/banner-testing.png);
+}
+
+.OBWidgetCommunityBrandingProduction {
+  padding-top: 32px;
+  font-weight: bold;
+  font-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center 6px;
+  background-image: url(../../utility/ShowImageLogo?logo=banner-production);
+}
+
+.OBWidgetAboutLabels {
+  font-family: "lucida sans", sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.OBWidgetAboutFields {
+  font-family: arial, sans-serif;
+  font-size: 12px;
+}
+
+/*# sourceMappingURL=ob-widget-styles.css.map */

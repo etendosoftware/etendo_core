@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER OBUIAPP_AD_FIELD_MOD_TRG">
+    <trigger name="OBUIAPP_AD_FIELD_MOD_TRG" table="AD_FIELD" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[
+
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  devTemplate NUMBER;
+  devModule   CHAR(1);
+  cuerrentModuleID  VARCHAR2(32);
+    
+BEGIN
+    
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+  SELECT COUNT(*)
+    INTO devTemplate
+    FROM AD_MODULE
+   WHERE IsInDevelopment = 'Y'
+     AND Type = 'T';
+     
+  IF (UPDATING OR INSERTING) THEN
+    cuerrentModuleID := :new.AD_Module_ID;
+  ELSE
+    cuerrentModuleID := :old.AD_Module_ID;
+  END IF;
+  
+  SELECT M.IsInDevelopment
+    INTO devModule
+    FROM AD_MODULE M
+   WHERE M.AD_MODULE_ID = cuerrentModuleID;
+     
+  IF (UPDATING AND devTemplate=0 AND devModule='N') THEN
+    IF (
+        COALESCE(:NEW.EM_OBUIAPP_ROWSPAN , 1) != COALESCE(:OLD.EM_OBUIAPP_ROWSPAN , 1) OR
+        COALESCE(:NEW.EM_OBUIAPP_VALIDATOR , '.') != COALESCE(:OLD.EM_OBUIAPP_VALIDATOR , '.') OR
+        COALESCE(:NEW.EM_OBUIAPP_SHOWSUMMARY , '.') != COALESCE(:OLD.EM_OBUIAPP_SHOWSUMMARY , '.') OR
+        COALESCE(:NEW.EM_OBUIAPP_SUMMARYFN , '.') != COALESCE(:OLD.EM_OBUIAPP_SUMMARYFN , '.') OR
+        1=2) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@20532@');
+    END IF;
+  END IF;
+END OBUIAPP_AD_FIELD_MOD_TRG
+]]></body>
+    </trigger>
+  </database>

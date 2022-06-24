@@ -1,0 +1,288 @@
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2010-2021 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Etendo ERP.">
+    <title>Etendo ERP</title>
+    <link rel="stylesheet" href="../web/html/login/pure-min.css">
+    <link rel="stylesheet" href="../web/html/login/grids-responsive.min.css">
+    <style type="text/css">
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+ @font-face {
+     font-family: 'Poppins';
+     src: url('../web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/org.openbravo.client.application/fonts/Poppins-Regular.ttf');
+ }
+
+.content {
+  background-image: url('../web/images/etendo/right-bar.jpg');
+  background-repeat: no-repeat;
+  background-position: right;
+}
+h1, p, input, button {
+  text-align: center;
+  font-family: Poppins;
+}
+.logo {
+  margin-top: 50px;
+  margin-bottom: 50px;
+  margin-left: 100px;
+}
+.login-form {
+  margin-left: auto;
+  margin-right: auto;
+  width: 300px;
+  margin: 0 auto;
+  text-align: center;
+  padding-left: 70px;
+}
+h1, p {
+    color: #202452
+}
+h1 {
+    background-image: url('../web/images/etendo/stars.png');
+    background-position: right;
+    background-repeat: no-repeat;
+    font-size: 40px;
+    padding-right: 30px;
+    padding-top: 40px;
+    padding-left: 170px;
+    display: inline-block;
+}
+input {
+    width: 300px;
+    margin-bottom: 15px !important;
+    font-size: 90% !important;
+    line-height: 2;
+}
+
+.sidebar {
+    background-image: url('../web/images/etendo/left-img.jpg');
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+.footer p {
+    font-size: 70%;
+    text-align: right;
+    color: rgb(175, 175, 175);
+}
+.left-align {
+    text-align: left;
+}
+#errorMsg {
+    color: rgb(202, 60, 60);
+    font-size: 85%;
+    font-family: 'Poppins';
+}
+@media (min-width: 48em) {
+    .content {
+        padding: 2em 3em 0;
+        margin: 0 0 0 0;
+        text-align: center;
+        width: 100%;
+    }
+
+    .header {
+        margin: 80% 2em 0;
+        text-align: right;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        width: 400px;
+    }
+
+    .footer {
+        text-align: right;
+    }
+}
+dd {
+    margin-inline-start: 0px;
+}
+.Login_LogForm_Button_Container {
+    margin-bottom: 300px;
+    margin-left: 138px;
+}
+.Login_LogForm_Button_Container button {
+    box-sizing: border-box;
+    padding: .5em 1em;
+    border: none transparent;
+    width: 300px;
+    height: 50px;
+    border-radius: 5px !important;
+    font-size: 85% !important;
+    background-image: url("../web/images/etendo/arrow-button.jpg");
+    background-position: 98% 10px;
+    background-repeat: no-repeat;
+    background-color: #202452;
+    color: white;
+    cursor: pointer;
+    font-family: Poppins;
+}
+.Login_LogForm_Button_Container button:hover {
+    background-image: url("../web/images/etendo/arrow-button.jpg");
+    opacity: 80%;
+}
+    </style>
+    <script type="text/javascript" src="../../../../../web/js/login.js" type="text/javascript"></script>
+    <script type="text/javascript" src="../../../../../web/js/utils.js" type="text/javascript"></script>
+    <script type="text/javascript" src="../../../../../web/js/windowKeyboard.js" type="text/javascript"></script>
+    <script type="text/javascript" src="../utility/CheckCleanCache.js?cache=true" type="text/javascript"></script>
+    <script type="text/javascript" src="../utility/CheckCleanCache.js?cache=false" type="text/javascript"></script>
+    <script type="text/javascript" id="visualPrefs">var showCompanyLogo = true, showSupportLogo = true, urlCompany = 'http://www.openbravo.com/', urlSupport = 'http://support.openbravo.com/';/* Parameters retreived from Login.java */</script>
+    <script type="text/javascript">var urlForge = 'http://forge.openbravo.com/';</script>
+    <script type="text/javascript" id="expirationMessage"></script>
+    <script type="text/javascript" id="cacheMsg">var cacheMsg = 'xx';</script>
+    <script type="text/javascript" id="validBrowserMsg">var validBrowserMsg = 'xx';</script>
+    <script type="text/javascript" id="validBrowserMsgOrHigher">var validBrowserMsgOrHigher = 'xx';</script>
+    <script type="text/javascript" id="recBrowserMsgTitle">var recBrowserMsgTitle = 'xx';</script>
+    <script type="text/javascript" id="recBrowserMsgText">var recBrowserMsgText = 'xx';</script>
+    <script type="text/javascript" id="identificationFailureTitle">var identificationFailureTitle = 'xx';</script>
+    <script type="text/javascript" id="errorEmptyContent">var errorEmptyContent = 'xx';</script>
+    <script type="text/javascript" id="errorSamePassword">var errorSamePassword = 'xx';</script>
+    <script type="text/javascript" id="errorDifferentPasswordInFields">var errorDifferentPasswordInFields = 'xx';</script>
+    <script type="text/javascript">
+
+var validBrowserVersions = {
+		firefox: '68.0.0.0',
+		chrome: '90.0.0.0',
+		explorer: '11.0.0.0',
+		edge: '90.0.0.0',      // Starting Jan-2020: Chromium version
+		safari: '12.0.0.0',
+};
+
+var recBrowserVersions = {
+		firefox: '78.0.0.0',
+		chrome: '92.0.0.0',
+		//explorer: '11.0.0.0', // IE browser unsupported
+		edge: '92.0.0.0',      // Starting Jan-2020: Chromium version
+		safari: '14.0.0.0',
+};
+
+// currentRevision must be the same value as the one returned by getCurrentRevision() (see utils.js)
+var currentRevision = '35324';
+
+beforeLoadDo();
+</script>
+</head>
+<body onload="onLoadDo();">
+
+<div id="layout" class="pure-g">
+    <div class="sidebar">
+        <div class="header">
+            <!--
+            <img src="../web/etendo/left-img.jpg"/>
+            -->
+        </div>
+    </div>
+
+    <div class="content pure-u-1 pure-u-md-3-4">
+        <div>
+            <div class="left-align">
+                <img src="../web/images/etendo/logo-etendo.jpg" class="logo">
+            </div>
+            <h1>Welcome Back!</h1>
+            <!--
+            <form class="pure-form pure-form-stacked login-form" method="post" action="../secureApp/LoginHandler.html" name="frmIdentificacion" id="frmFormulario" autocomplete="off">
+                <input type="hidden" name="Command" value="" />
+                <input type="hidden" name="resetPassword" id="resetPassword" value="" />
+                <fieldset>
+                    <input class="dojoValidateValid Login_TextBox" type="text" maxlength="60" name="user" id="user" placeholder="User Name"/>
+                    <input class="dojoValidateValid Login_TextBox" type="password" maxlength="40" name="password" id="password" placeholder="Password"/>
+                    <button type="submit" id="buttonOK"
+                            class="pure-button login-button ButtonLink"
+                            onclick="doLogin();">
+                        Let's Continue
+                    </button>
+                </fieldset>
+                <div id="errorMsg" class="LabelText Login_ErrorMsg_Container" style="display:none;">
+                    <span id="errorMsgTitle_Container"><span id="errorMsgTitle" class="Login_ErrorMsg_Title">xx</span><br></span><span id="errorMsgContent" class="Login_ErrorMsg_Content">xx</span>
+                </div>
+            </form>
+            -->
+            <FORM method="post" action="../secureApp/LoginHandler.html" name="frmIdentificacion" id="frmFormulario" autocomplete="off" class="pure-form pure-form-stacked login-form">
+                <INPUT type="hidden" name="Command" value=""></INPUT>
+                <INPUT type="hidden" name="resetPassword" id="resetPassword" value=""></INPUT>
+
+                <DIV class="Login_LogForm_Input_Container">
+                    <DL>
+                        <!--
+                        <DT>
+                            <LABEL for="user" class="LabelText Login_LabelText" id="userlabel">User Name</LABEL>
+                        </DT>
+                        <DT>
+                            <LABEL for="user" class="LabelText Login_LabelText" id="newpasswordlabel" style="display:none;">New Password</LABEL>
+                        </DT>
+                        -->
+                        <DD>
+                            <INPUT class="dojoValidateValid Login_TextBox" type="text" maxlength="60" name="user" id="user" placeholder="User Name"></INPUT>
+                        </DD>
+                        <!--
+                        <DT>
+                            <LABEL for="password" class="LabelText Login_LabelText" id="passwordlabel">Password</LABEL>
+                        </DT>
+                        <DT>
+                            <LABEL for="password" class="LabelText Login_LabelText" id="confirmpasswordlabel" style="display:none;">Confirm Password</LABEL>
+                        </DT>
+                        -->
+                        <DD>
+                            <INPUT class="dojoValidateValid Login_TextBox" type="password" maxlength="40" name="password" id="password" placeholder="Password"></INPUT>
+                        </DD>
+                    </DL>
+                    <DIV id="errorMsg" class="LabelText Login_ErrorMsg_Container" style="display:none;">
+                        <SPAN id="errorMsgTitle_Container"><SPAN id="errorMsgTitle" class="Login_ErrorMsg_Title"></SPAN><BR></BR></SPAN><SPAN id="errorMsgContent" class="Login_ErrorMsg_Content"></SPAN>
+                    </DIV>
+                </DIV>
+            </FORM>
+            <DIV class="Login_LogForm_Button_Container">
+                <DIV class="Login_LogForm_Button">
+                    <BUTTON type="button" id="buttonOK" class="pure-button login-button ButtonLink" onclick="doLogin();" onfocus="buttonEvent('onfocus', this); window.status='Login'; return true;" onblur="buttonEvent('onblur', this);" onkeyup="buttonEvent('onkeyup', this);" onkeydown="buttonEvent('onkeydown', this);" onkeypress="buttonEvent('onkeypress', this);" onmouseup="buttonEvent('onmouseup', this);" onmousedown="buttonEvent('onmousedown', this);" onmouseover="buttonEvent('onmouseover', this); window.status='Login'; return true;" onmouseout="buttonEvent('onmouseout', this);">
+                        <!--
+                        <TABLE class="Button">
+                            <TR>
+                                <TD class="Button_left"><IMG class="Button_Icon Button_Icon_ok" alt="Login" title="Login" src="../web/images/blank.gif" border="0"></IMG></TD>
+                                <TD class="Button_text Button_width">Log in</TD>
+                                <TD class="Button_right"></TD>
+                            </TR>
+                        </TABLE>
+                        -->
+                        Let's Continue
+                    </BUTTON>
+                </DIV>
+            </DIV>
+
+            <div class="footer">
+                <p>@Copyright Etendo 2020-2021</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,346 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+ */
+
+ /* OBClassicWindow */
+
+.ob_cell,
+.ob_cellDark,
+.ob_cellOver,
+.ob_cellOverDark,
+.ob_cellSelected,
+.ob_cellSelectedDark,
+.ob_cellSelectedOver,
+.ob_cellSelectedOverDark,
+.ob_cellDisabled,
+.ob_cellDisabledDark,
+.ob_tallCell,
+.ob_tallCellDark,
+.ob_tallCellOver,
+.ob_tallCellOverDark,
+.ob_tallCellSelected,
+.ob_tallCellSelectedDark,
+.ob_tallCellSelectedOver,
+.ob_tallCellSelectedOverDark,
+.ob_tallCellDisabled,
+.ob_tallCellDisabledDark,
+.ob_gridSummaryCell,
+.ob_gridSummaryCellDisabled,
+.ob_groupSummaryCell,
+.ob_groupSummaryCellDisabled {
+  font-family: tahoma, arial, helvetica, sans-serif;
+  font-size: 8pt;
+  color: #000000;
+  font-weight: normal;
+  text-overflow: ellipsis;
+  padding: 0px 3px 0px 3px;
+
+  border-top: 0px solid #808080;
+  border-bottom: 1px solid #808080;
+  border-right: 1px solid #808080;
+  border-left : 0px solid #808080;
+}
+
+.ob_tallCell,
+.ob_tallCellDark,
+.ob_ob_tallCellOver,
+.ob_tallCellOverDark,
+.ob_tallCellSelected,
+.ob_tallCellSelectedDark,
+.ob_tallCellSelectedOver,
+.ob_tallCellSelectedOverDark,
+.ob_tallCellDisabled,
+.ob_tallCellDisabledDark {
+  border-bottom: 1px solid #E1E1E1;
+}
+.ob_cell {
+  background: #E1E1E1 url(./listgrid/rowEven.png) repeat-x top left scroll;
+}
+.ob_cellDark {
+  background: #C0CFDC url(./listgrid/rowOdd.png) repeat-x top left scroll;
+}
+.ob_tallCellDark {
+  background-color: #F6F7F9;
+}
+.ob_cellOver,
+.ob_cellOverDark {
+  background: #A3D77F url(./listgrid/row_Over.png) repeat-x top left scroll;
+}
+.ob_tallCellOver,
+.ob_tallCellOverDark {
+  background-color: #E5F6FF; border-bottom:1px solid #C4DEFF;
+}
+.ob_cellSelected,
+.ob_cellSelectedDark {
+  background: #569633 url(./listgrid/row_Selected.png) repeat-x top left scroll;
+  color: #FFFFFF;
+}
+.ob_tallCellSelected,
+.ob_tallCellSelectedDark {
+  background-color: #D4E8FF; border-bottom:1px solid #C4DEFF;
+}
+.ob_cellSelectedOver,
+.ob_cellSelectedOverDark {
+  background: #569633 url(./listgrid/row_Selected_Over.png) repeat-x top left scroll;
+  color: #FFFFFF;
+}
+.ob_tallCellSelectedOver,
+.ob_tallCellSelectedOverDark {
+  background-color: #A2CBFF;
+  border-bottom: 1px solid #9BC8FF;
+}
+.ob_cellDisabled,
+.ob_cellDisabledDark,
+.ob_tallCellDisabled,
+.ob_tallCellDisabledDark {
+  color: #AAAAAA;
+  background-color: #FFFFFF;
+}
+
+
+.ob_gridbody,
+.ob_alternateGridBody {
+  background-color: #E8E8E8;
+}
+
+.ob_summaryRowBody {
+  background-color: white;
+}
+
+
+
+
+/* ListGrid column header titles */
+.ob_headerbutton,
+.ob_headerbuttonselected,
+.ob_headerbuttondisabled,
+.ob_headerbuttonselecteddisabled,
+.ob_headerbuttonover,
+.ob_headerbuttondown,
+.ob_headerbuttonselectedover,
+.ob_headerbuttonselecteddown {
+  font-family: tahoma, arial, helvetica, sans-serif;
+  font-size: 8pt;
+  font-weight: 700;
+  padding: 0px 3px 0px 3px;
+  color: black;
+  font-size: 8pt;
+
+  border-bottom: 1px solid #000000;
+  border-left: 0px solid #000000;
+  border-right: 1px solid #000000;
+  border-top: 1px solid #000000;
+
+  background: url(./listgrid/header.png) repeat-x bottom left; 
+}
+
+.ob_sorterbutton,
+.ob_sorterbuttonselected,
+.ob_sorterbuttondisabled,
+.ob_sorterbuttonselecteddisabled,
+.ob_sorterbuttonover,
+.ob_sorterbuttondown,
+.ob_sorterbuttonselectedover,
+.ob_sorterbuttonselecteddown {
+  background: url(./listgrid/header.png) repeat-x bottom left; 
+}
+
+.ob_headerButtonOver {
+  background: url(./listgrid/header_Over.png) repeat-x bottom left; 
+}
+
+.ob_headerButtonSelected {
+  background: url(./listgrid/header_Selected.png) repeat-x bottom left; 
+}
+
+.ob_recordEditorCell {
+  background-color: #D0D0D0;
+}
+
+
+ /* OBClassicIButton */
+
+.ob_buttonTitle,
+.ob_buttonTitleOver,
+.ob_buttonTitleDown,
+.ob_buttonTitleSelected,
+.ob_buttonTitleFocused,
+.ob_buttonTitleSelectedFocused,
+.ob_buttonTitleSelectedOver,
+.ob_buttonTitleFocusedOver,
+.ob_buttonTitleSelectedFocusedOver,
+.ob_buttonTitleSelectedDown,
+.ob_buttonTitleFocusedDown,
+.ob_buttonTitleSelectedFocusedDown,
+.ob_buttonTitleDisabled,
+.ob_buttonTitleSelectedDisabled {
+  font-family: tahoma, arial, helvetica, sans-serif;
+  font-size: 8pt;
+  font-weight: bold;
+  color: #1B4106;
+}
+.ob_buttonTitleOver {
+  color: #1B4106;
+}
+.ob_buttonTitleDown,
+.ob_buttonTitleFocusedDown {
+  color: #EAF7E4;
+}
+.ob_buttonTitleFocused,
+.ob_buttonTitleFocusedOver {
+  color: #213E51;
+}
+.ob_buttonTitleDisabled,
+.ob_buttonTitleSelectedDisabled {
+  color: #1B4106;
+}
+
+.headerBar {
+  background: #FFFFFF url(./listgrid/header.png) repeat-x bottom left scroll;
+}
+
+
+/* OBClassicWindow */
+
+
+.ob_windowBody {
+  background-color: white;
+  border: 0px;
+  box-shadow: 0 0px;
+}
+
+
+/* Regular form item (inputs, combos, ...) are not specifically ob_xx styled.
+   The generic styles are directly overridden */
+
+
+/* text-based items common props */
+.textItem,
+.textItemFocused,
+.textItemDisabled,
+.textItemError,
+.textItemHint,
+.selectItemText,
+.selectItemTextError,
+.selectItemTextFocused,
+.selectItemTextHint {
+  height: 17px;
+  padding: 1px;
+  padding-left: 4px;
+  border: 1px solid #888888; 
+  background: #FFFFFF url(./control/text_input.png) repeat-x scroll;
+  color: #333333;
+}
+
+.selectItemTextRequired,
+.selectItemTextRequiredError,
+.selectItemTextRequiredFocused,
+.selectItemTextRequiredHint {
+  height:17px;
+  padding: 1px;
+  padding-left: 4px;
+  border: 1px solid #888888;
+  background: #FFFADE url(./control/text_input_Required.png) repeat-x scroll;
+  color: #333333;
+}
+
+.textItemDisabled,
+.selectItemTextDisabled,
+.selectItemTextRequiredDisabled {
+  height:17px;
+  padding: 1px;
+  padding-left: 4px;
+  border: 1px solid #888888;
+  background: #E8E8E8;
+  color: #606060;
+  background-color: #E8E8E8;
+}
+
+.textItemHint,
+.selectItemTextHint,
+.selectItemTextRequiredHint {
+  color: #204268;
+}
+
+
+/* selectItem */
+
+.textItemFocused,
+.selectItemTextFocused {
+  background-repeat: repeat-x ;
+  background-position: top left;
+  background-image: url(./control/text_input_Focused.png);
+  background-color: #D9F0FB;
+  padding: 0px;
+  padding-left: 3px;
+  outline: none;
+  -moz-outline-style: none;
+  border: 2px solid #4D98CA;
+}
+.selectItemTextRequiredFocused {
+  background-repeat: repeat-x ;
+  background-position: top left;
+  background-image: url(./control/text_input_Required_Focused.png);
+  background-color: #EAEED0;
+  padding: 0px;
+  padding-left: 3px;
+  outline: none;
+  -moz-outline-style: none;
+  border: 2px solid #4D98CA;
+}
+
+.selectItemText,
+.selectItemTextError,
+.selectItemTextFocused,
+.selectItemTextDisabled,
+.selectItemTextRequired,
+.selectItemTextRequiredError,
+.selectItemTextRequiredFocused,
+.selectItemTextRequiredDisabled {
+  border-right: 0px none;
+}
+
+
+.formlayout {
+  background-color: #E8E8E8;
+}
+
+
+/* Fix for IE9 + HTML5 to avoid weird horizontal scroll */
+.pickListMenuBody {
+  background-color: white;
+  background-repeat: repeat-x ;
+  background-position: bottom left;
+  background-image: url(./pickers/border.png);
+  border-width: 0px 1px 0px 1px;
+  border-style: solid;
+  border-color: #8fa7c7;
+}
+
+
+/* menuMain changes to avoid UI defects due to the CSS3 attributes introduced by SmartClient 8.3d 03-May-2012 */
+.menuMain {
+  background: #FFFFFF url(../../web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/smartclient/images/Menu/menu_background.png) repeat-y scroll;
+  filter: none;
+  -ms-filter: none;
+}
+.menuMainRTL {
+  background: #FFFFFF url(../../web/org.openbravo.userinterface.smartclient/openbravo/skins/Default/smartclient/images/Menu/menu_background_rtl.png) repeat-y right scroll;
+  filter: none;
+  -ms-filter: none;
+}

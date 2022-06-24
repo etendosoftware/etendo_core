@@ -1,0 +1,160 @@
+#!/bin/bash
+# *************************************************************************
+# * The contents of this file are subject to the Openbravo  Public  License
+# * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+# * Version 1.1  with a permitted attribution clause; you may not  use this
+# * file except in compliance with the License. You  may  obtain  a copy of
+# * the License at http://www.openbravo.com/legal/license.html
+# * Software distributed under the License  is  distributed  on  an "AS IS"
+# * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# * License for the specific  language  governing  rights  and  limitations
+# * under the License.
+# * The Original Code is Openbravo ERP.
+# * The Initial Developer of the Original Code is Openbravo SLU
+# * All portions are Copyright (C) 2019 Openbravo SLU
+# * All Rights Reserved.
+# * Contributor(s):  ______________________________________.
+# ************************************************************************
+#
+
+SCRIPT_NAME=$(basename "$0")
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+WRITE=false
+
+source ${SCRIPT_DIR}/../jsutils/dir-functions
+
+OPENBRAVO_ROOT_PATH=$(getOpenbravoRootPath)
+SCAN_BASE_PATH=$(getJsFilesScanPath)
+
+function usage() {
+  echo -n "Usage: ${SCRIPT_NAME} [-h][-w] [FILE ...]
+
+Utility to pass the Javascript Formatter to the given files, or all files from the current directory if none given.
+With no arguments, if executed from Openbravo root directory, formatting will be checked for all Core modules first and then
+it will be executed for each module that has a .prettierignore file in its root.
+
+ Options:
+  -h                Display this help and exit
+  -w                Write mode. Show formatting issues and overwrites the files with the fixes
+  -g                Git support, use git show and stdin as input for formatter
+
+"
+}
+
+#
+# Execute the Linter splitting the list of files in chunks of max 250 arguments. This is done because "npm run" argument
+# size limit is much lower than the one in bash commands.
+#
+function formatFiles {
+    if [[ -f "./.jsignore" ]]; then
+        exit 0
+    fi
+
+    IGNORE_PATH=""
+    if [[ "$(isCurrentFolderModuleRoot)" == true && -f "./.prettierignore" ]]; then
+        IGNORE_PATH="--ignore-path $(pwd)/.prettierignore"
+    fi
+
+    # If git is specified git show will be used to only show staged changes,
+    # realpath is needed for this to work, hash command is used to check for existence
+    if [[ $1 == "GIT" ]] && hash realpath 2>/dev/null; then
+      for FILE in ${@:2} ; do
+        FILE_RELATIVE=$(realpath --relative-to="$(pwd)" "$FILE")
+        git show :${FILE_RELATIVE} | npm run jsformat --prefix ${OPENBRAVO_ROOT_PATH}  --stdin-filepath ${FILE} --stdin -s -- ${FLAGS} ${IGNORE_PATH} || exit 1
+      done
+    else
+      echo "$@" | xargs -n 250 npm run jsformat --prefix ${OPENBRAVO_ROOT_PATH} -s -- ${FLAGS} ${IGNORE_PATH} || exit 1
+    fi
+}
+
+function getPrettierIgnorePatterns {
+    PATTERNS=""
+    for mod in ${@} ; do
+        PATTERNS="${PATTERNS} !"${mod}"/**"
+    done
+
+    echo "${PATTERNS}"
+}
+
+function formatAllFiles {
+    if [[ -d ${SCAN_BASE_PATH}/../modules ]]; then
+        echo "Formatter check for Core files"
+        MODS_WITH_IGNORE=$(getModulesPathWithIgnoreFile ".prettierignore")
+        MODS_COMPLETELY_IGNORED=$(getModulesPathWithIgnoreFile ".jsignore")
+        IGNORE_PATTERNS=$(getPrettierIgnorePatterns "${MODS_WITH_IGNORE}" "${MODS_COMPLETELY_IGNORED}")
+
+        runFormatterInCore "${IGNORE_PATTERNS}" "${FLAGS}"
+        for mod in ${MODS_WITH_IGNORE} ; do
+            if [[ ! "$mod" =~ .*"node_modules".* ]]; then
+                runFormatterInModule ${mod} "${FLAGS}"
+            fi        
+        done
+    elif [[ -d ${SCAN_BASE_PATH}/../../modules ]]; then
+        runFormatterInModule ${SCAN_BASE_PATH} "${FLAGS}"
+    fi
+}
+
+function runFormatterInCore {
+    IG_PATTERNS=$1
+    FORMATTER_FLAGS=$2
+    npm run jsformat -s -- ${FORMATTER_FLAGS} "modules/**/*.js" ${IG_PATTERNS}
+}
+
+function runFormatterInModule {
+    BASE=$1
+    FORMATTER_FLAGS=$2
+    IGNORE_PATH=""
+    if [[ -f "${BASE}/.prettierignore" ]]; then
+        IGNORE_PATH="--ignore-path ${BASE}/.prettierignore"
+    fi
+
+    if [[ -f "${BASE}/.jsignore" ]]; then
+        exit 0
+    fi
+
+    echo "Formatter check for module $(basename ${BASE})"
+    npm run jsformat --prefix ${OPENBRAVO_ROOT_PATH} -s -- ${FORMATTER_FLAGS} ${IGNORE_PATH} "${BASE}/**/*.js"
+}
+
+#Parse input arguments
+while getopts ":hwg" arg; do
+    case ${arg} in
+        h )
+            usage
+            exit 0
+        ;;
+        w )
+            WRITE=true
+        ;;
+        g )
+            GIT=true
+        ;;
+        \? )
+            echo "Invalid option: -$OPTARG" >&2
+            usage
+            exit 1
+        ;;
+    esac
+done
+shift "$((OPTIND-1))"
+
+source ${SCRIPT_DIR}/../jsutils/check-npm-deps
+
+FLAGS=""
+if [[ ${WRITE} == true ]]; then
+    FLAGS="--write"
+else
+    FLAGS="--check"
+fi
+
+
+if [[ $# > 0 ]]; then
+  if [[ ${GIT} == true ]]; then
+    formatFiles "GIT" $@
+  else
+    files=$(convertPathsToAbsolute $@)
+    formatFiles ${files}
+  fi
+else
+    formatAllFiles
+fi

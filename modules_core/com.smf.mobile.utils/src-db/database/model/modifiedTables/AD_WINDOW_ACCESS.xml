@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+  <database name="MODIFIED TABLE AD_WINDOW_ACCESS">
+    <table name="AD_WINDOW_ACCESS" primaryKey="AD_WINDOW_ACCESS_KEY">
+      <column name="EM_SMFMU_MOBILEVIEW" primaryKey="false" required="false" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
+    </table>
+  </database>

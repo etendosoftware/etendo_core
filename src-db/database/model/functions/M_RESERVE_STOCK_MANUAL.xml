@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+  <database name="FUNCTION M_RESERVE_STOCK_MANUAL">
+    <function name="M_RESERVE_STOCK_MANUAL" type="NULL">
+      <parameter name="p_reservation_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_type_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_stock_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_qty" type="NUMERIC" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_user_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_allocated" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_reservation_stock_id" type="VARCHAR" mode="out">
+        <default/>
+      </parameter>
+      <body><![CDATA[/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2012-2018 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+/*************
+* Function to reserve given stock or purchase order line.
+* Available types are:
+*   - 'SD': p_stock_id represents a m_storage_detail_id reserves stock in the warehouse.
+*   - 'PO': p_stock_id represents a c_orderline_id of a pending to receipt purchase order line.
+**************/
+  v_reservation_stock_ID    VARCHAR2(32) := get_uuid();
+  v_aux_rs_id               VARCHAR2(32);
+  v_client_id               VARCHAR2(32);
+  v_org_id                  VARCHAR2(32);
+  v_locator_id              VARCHAR2(32);
+  v_asi_id                  VARCHAR2(32) := '0';
+  v_poline_id               VARCHAR2(32);
+  v_reserve_attr_id         VARCHAR2(32);
+  v_reserve_product_id      VARCHAR2(32);
+  v_reserve_locator_id      VARCHAR2(32);
+  v_reserve_uom_id          VARCHAR2(32);
+  v_attr_description        VARCHAR2(255);
+  v_product_value           VARCHAR2(40);
+  v_locator_value           VARCHAR2(40);
+  v_uom_value               VARCHAR2(3);
+  v_count                   NUMBER;
+BEGIN
+  SELECT ad_client_id, ad_org_id, m_product_id, c_uom_id, m_locator_id, m_attributesetinstance_id
+    INTO v_client_id, v_org_id, v_reserve_product_id, v_reserve_uom_id, v_reserve_locator_id, v_reserve_attr_id
+  FROM m_reservation
+  WHERE m_reservation_id = p_reservation_id;
+  IF (p_type_id = 'SD') THEN
+    SELECT count(*) INTO v_count
+    FROM m_storage_detail sd
+      JOIN m_locator loc ON sd.m_locator_id = loc.m_locator_id
+      JOIN m_reservation res ON res.m_reservation_id = p_reservation_id
+    WHERE sd.m_storage_detail_id = p_stock_id
+      AND sd.m_product_id = res.m_product_id
+      AND sd.m_attributesetinstance_id = CASE WHEN sd.M_REFINVENTORY_ID IS NULL THEN COALESCE(res.m_attributesetinstance_id, sd.m_attributesetinstance_id) ELSE sd.m_attributesetinstance_id END
+      AND sd.m_locator_id = COALESCE(res.m_locator_id, sd.m_locator_id)
+      AND loc.m_warehouse_id = COALESCE(res.m_warehouse_id, loc.m_warehouse_id);
+    IF (v_count = 0) THEN
+      SELECT value
+        INTO v_product_value
+      FROM M_Product
+      WHERE M_Product_ID = v_reserve_product_id;
+
+      IF(v_reserve_attr_id IS NOT NULL) THEN
+        SELECT description
+          INTO v_attr_description
+        FROM M_AttributeSetInstance
+        WHERE M_AttributeSetInstance_ID = v_reserve_attr_id;
+      END IF;
+
+      SELECT uomsymbol
+        INTO v_uom_value
+      FROM C_Uom
+      WHERE C_Uom_ID = v_reserve_uom_id;
+
+      IF (v_reserve_locator_id IS NOT NULL) THEN
+        SELECT value
+          INTO v_locator_value
+        FROM M_Locator
+        WHERE M_Locator_ID = v_reserve_locator_id;
+      END IF;
+      RAISE_APPLICATION_ERROR(-20000, '@GivenStorageDetailDoesNotMatchReservationRequirements@' || ' @of@' || ' @Product@: ' || v_product_value || ', @AttributeSetInstance@: ' || COALESCE(v_attr_description, '-') || ', @UOM@: ' || v_uom_value || ' @And@'||' @StorageBin@: ' || COALESCE(v_locator_value, '-'));
+    END IF;
+
+    SELECT m_locator_id, m_attributesetinstance_id
+      INTO v_locator_id, v_asi_id
+    FROM m_storage_detail
+    WHERE m_storage_detail_id = p_stock_id;
+    SELECT max(m_reservation_stock_id) INTO v_aux_rs_id
+    FROM m_reservation_stock
+    WHERE m_reservation_id = p_reservation_id
+      AND m_locator_id = v_locator_id
+      AND m_attributesetinstance_id = COALESCE(v_asi_id, '0')
+      AND isallocated = p_allocated;
+  ELSIF (p_type_id = 'PO') THEN
+    v_poline_id := p_stock_id;
+    SELECT max(m_reservation_stock_id) INTO v_aux_rs_id
+    FROM m_reservation_stock
+    WHERE m_reservation_id = p_reservation_id
+      AND c_orderline_id = v_poline_id
+      AND isallocated = p_allocated;
+  ELSE
+    RAISE_APPLICATION_ERROR(-20000, '@UnsupportedReservationType@');
+  END IF;
+
+  IF (v_aux_rs_id IS NOT NULL) THEN
+    UPDATE m_reservation_stock
+    SET quantity = CASE WHEN (quantity + p_qty) <= 0 THEN 0 ELSE quantity + p_qty END
+    WHERE m_reservation_stock_id = v_aux_rs_id;
+    p_reservation_stock_id := v_aux_rs_id;
+    RETURN;
+  END IF;
+  INSERT INTO m_reservation_stock(
+    m_reservation_stock_id, ad_client_id, ad_org_id, isactive,
+    created, createdby, updated, updatedby,
+    m_reservation_id, m_attributesetinstance_id, m_locator_id, c_orderline_id,
+    quantity, releasedqty, isallocated
+  ) VALUES (
+    v_reservation_stock_id, v_client_id, v_org_id, 'Y',
+    now(), p_user_id, now(), p_user_id,
+    p_reservation_id, v_asi_id, v_locator_id, v_poline_id,
+    p_qty, 0, p_allocated
+  );
+
+  p_reservation_stock_id := v_reservation_stock_id;
+  RETURN ;
+END M_RESERVE_STOCK_MANUAL
+]]></body>
+    </function>
+  </database>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.etendoerp.sequences.model.SequenceConfiguration" lazy="false" table="ad_sequence_config">
+        <cache usage="read-write"/>
+
+        <id name="id" type="string" column="ad_sequence_config_id">
+            <generator class="org.openbravo.base.session.DalUUIDGenerator" />
+        </id>
+
+        <property name="generator" type="string" column="generator" />
+        <property name="dbSequenceName" column="db_sequence_name" />
+        <property name="dbSequenceInitial" column="db_sequence_initial" />
+        <property name="dbSequenceIncrement" column="db_sequence_increment" />
+
+        <many-to-one name="reference" not-null="true" class="org.openbravo.base.model.Reference" column="ad_reference_id" />
+
+        <property name="updated"/>
+
+    </class>
+
+</hibernate-mapping>

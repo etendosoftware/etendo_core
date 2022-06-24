@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="VIEW M_SOL_RESERVED_STOCK_V">
+    <view name="M_SOL_RESERVED_STOCK_V"><![CDATA[SELECT rs.m_reservation_stock_id AS m_sol_reserved_stock_v_id, rs.ad_client_id, rs.ad_org_id, rs.isactive, rs.created, rs.createdby, rs.updated, rs.updatedby, rs.m_reservation_stock_id, r.m_reservation_id, r.c_orderline_id FROM m_reservation_stock rs JOIN m_reservation r ON rs.m_reservation_id = r.m_reservation_id]]></view>
+  </database>

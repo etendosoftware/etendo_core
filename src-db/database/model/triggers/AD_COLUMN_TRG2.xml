@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER AD_COLUMN_TRG2">
+    <trigger name="AD_COLUMN_TRG2" table="AD_COLUMN" fires="after" insert="true" update="true" delete="false" foreach="row">
+      <body><![CDATA[
+/*************************************************************************
+* The contents of this file are subject to the Openbravo  Public  License
+* Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+* Version 1.1  with a permitted attribution clause; you may not  use this
+* file except in compliance with the License. You  may  obtain  a copy of
+* the License at http://www.openbravo.com/legal/license.html
+* Software distributed under the License  is  distributed  on  an "AS IS"
+* basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+* License for the specific  language  governing  rights  and  limitations
+* under the License.
+* The Original Code is Openbravo ERP.
+* The Initial Developer of the Original Code is Openbravo SLU
+* All portions are Copyright (C) 2008-2012 Openbravo SLU
+* All Rights Reserved.
+* Contributor(s):  ______________________________________.
+************************************************************************/
+  TYPE RECORD IS REF CURSOR;
+  CUR_Clients RECORD;
+  v_TableName VARCHAR2(40);
+  v_NextNo VARCHAR2(32);
+  v_Aux NUMBER;
+      
+BEGIN
+
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
+    END IF;
+
+      SELECT count(*) 
+        INTO v_Aux
+        FROM AD_TABLE T, 
+             AD_PACKAGE M
+       WHERE T.AD_TABLE_ID = :new.AD_Table_ID
+         AND M.AD_PACKAGE_ID = T.AD_PACKAGE_ID
+         AND M.AD_MODULE_ID != :new.AD_Module_ID
+         AND NOT EXISTS (SELECT 1 
+                          FROM AD_MODULE_DBPREFIX P
+                          WHERE P.AD_MODULE_ID = :new.AD_Module_ID 
+                          AND instr(upper(:new.columnname), 'EM_'||upper(P.name)||'_') = 1
+                          AND instr(upper(:new.name), 'EM_'||upper(P.name)||'_') = 1)
+         AND NOT EXISTS( SELECT 1
+                             FROM AD_EXCEPTIONS, ad_table t
+                             WHERE TYPE='COLUMN'
+                             AND t.AD_Table_ID = :new.AD_Table_ID
+                             AND UPPER(NAME2)=UPPER(T.Tablename)
+                             AND UPPER(NAME1)=UPPER(:new.Columnname));
+  
+  IF v_Aux != 0 THEN
+    RAISE_APPLICATION_ERROR(-20000, '@ColumnDBPrefix@') ;
+  END IF;
+  
+  IF AD_IsJavaWord(:new.Name)='Y' THEN
+    RAISE_APPLICATION_ERROR(-20000, '@NotAllowedColumnName@ "'||:new.name||'" @ReservedJavaWord@') ;
+  END IF;
+  
+  IF AD_IsJavaScriptWord(:new.ColumnName)='Y' THEN
+    RAISE_APPLICATION_ERROR(-20000, '@NotAllowedDBColumnName@ "'||:new.ColumnName||'" @ReservedJavaWord@') ;
+  END IF;
+
+END AD_COLUMN_TRG2
+]]></body>
+    </trigger>
+  </database>

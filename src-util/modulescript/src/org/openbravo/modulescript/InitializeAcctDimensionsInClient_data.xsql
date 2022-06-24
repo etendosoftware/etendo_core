@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ *************************************************************************
+ * The contents of this file are subject to the Openbravo  Public  License
+ * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
+ * Version 1.1  with a permitted attribution clause; you may not  use this
+ * file except in compliance with the License. You  may  obtain  a copy of
+ * the License at http://www.openbravo.com/legal/license.html
+ * Software distributed under the License  is  distributed  on  an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+ * License for the specific  language  governing  rights  and  limitations
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2012 Openbravo SLU
+ * All Rights Reserved.
+ * Contributor(s):  ______________________________________.
+ ************************************************************************
+-->
+<SqlClass name="InitializeAcctDimensionsInClientData" package="org.openbravo.modulescript">
+  <SqlClassComment></SqlClassComment>
+   <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        select '' as ismandatory , '' as exist, '' as ad_client_id
+        from dual
+      ]]>
+    </Sql>
+  </SqlMethod> 
+  <SqlMethod name="updateDimClient" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        update ad_client set product_acctdim_lines = 'Y' , bpartner_acctdim_header='Y' , 
+        bpartner_acctdim_lines='Y', product_acctdim_isenable = 'Y' , bpartner_acctdim_isenable='Y' , ORG_ACCTDIM_ISENABLE='Y',
+        ORG_ACCTDIM_HEADER='Y'
+      ]]>
+    </Sql>
+  </SqlMethod>  
+  <SqlMethod name="updatebpari" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'ARI', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+    <Parameter name="client"/>
+  </SqlMethod>  
+  <SqlMethod name="updatebparirm" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(),?, '0', 'Y', now(), '0', now(), '0', 'BP', 'ARI_RM', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>  
+   <SqlMethod name="updatebpesh" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+     INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'ESH', 'Y', 'Y', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>  
+  <SqlMethod name="updatebpmmr" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(),? , '0', 'Y', now(), '0', now(), '0', 'BP', 'MMR', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>  
+  
+  <SqlMethod name="updatebpsoo" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+    INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'SOO', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>   
+   <SqlMethod name="updatebpmms" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+   INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'MMS', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod> 
+  <SqlMethod name="updatebparr" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+   INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'ARR', 'N', 'Y', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod> 
+  <SqlMethod name="updatebpapc" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+  INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(),? , '0', 'Y', now(), '0', now(), '0', 'BP', 'APC', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod> 
+    <SqlMethod name="updatebpfat" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+  INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'FAT', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>  
+  <SqlMethod name="updatebpapp" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+  INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'APP', 'N', 'Y', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod> 
+  <SqlMethod name="updatebparf" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'ARF', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod> 
+  <SqlMethod name="updatebparc" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'ARC', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>    
+  <SqlMethod name="updatebpbgt" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?, '0', 'Y', now(), '0', now(), '0', 'BP', 'BGT', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+    <SqlMethod name="updatebpamz" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'AMZ', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updatebpapi" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(),? , '0', 'Y', now(), '0', now(), '0', 'BP', 'API', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+    <SqlMethod name="updatebpglj" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'BP', 'GLJ', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updatepresh" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'ESH', 'N', 'Y', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+   <SqlMethod name="updateprarirm" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'ARI_RM', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateprari" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'ARI', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateprapi" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'API', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateprglj" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'GLJ', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updatepramz" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(),? , '0', 'Y', now(), '0', now(), '0', 'PR', 'AMZ', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+    <SqlMethod name="updateprarc" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'ARC', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+    <SqlMethod name="updateprarf" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'ARF', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateprbgt" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'BGT', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateprapp" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'APP', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+    <SqlMethod name="updateprfat" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'FAT', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+      <SqlMethod name="updateprapc" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'APC', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateprpoo" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'POO', 'N', 'Y', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+ <SqlMethod name="updateprmms" type="preparedStatement" connection="true" return="rowcount">
+ <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(),? , '0', 'Y', now(), '0', now(), '0', 'PR', 'MMS', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+   <SqlMethod name="updateprarr" type="preparedStatement" connection="true" return="rowcount">
+ <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'ARR', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+     <SqlMethod name="updateprsoo" type="preparedStatement" connection="true" return="rowcount">
+ <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'SOO', 'N', 'Y', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+       <SqlMethod name="updateprmmr" type="preparedStatement" connection="true" return="rowcount">
+ <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'MMR', 'N', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+ <SqlMethod name="updateprmmi" type="preparedStatement" connection="true" return="rowcount">
+ <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'PR', 'MMI', 'N', 'Y', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+   <SqlMethod name="getClients" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+        select ad_client_id 
+        from ad_client 
+        where ad_Client_id not in(select ad_client_id from AD_Client_AcctDimension )
+        and ad_client_id <> '0'
+
+      ]]>
+    </Sql>
+  </SqlMethod>
+    <SqlMethod name="updateooamz" type="preparedStatement" connection="true" return="rowcount">
+ <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ? , '0', 'Y', now(), '0', now(), '0', 'OO', 'AMZ', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+      <SqlMethod name="updateooapc" type="preparedStatement" connection="true" return="rowcount">
+ <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'APC', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateooapi" type="preparedStatement" connection="true" return="rowcount">
+   <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'API', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+      <SqlMethod name="updateooapp" type="preparedStatement" connection="true" return="rowcount">
+  <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'APP', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+      <SqlMethod name="updateooarc" type="preparedStatement" connection="true" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'ARC', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+      <SqlMethod name="updateooarf" type="preparedStatement" connection="true" return="rowcount">
+   <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'ARF', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+     
+      <SqlMethod name="updateooari" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'ARI', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+  <SqlMethod name="updateooarirm" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'ARI_RM', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+    <SqlMethod name="updateooarr" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'ARR', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+      <SqlMethod name="updateoobgt" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'BGT', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+        <SqlMethod name="updateooesh" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'ESH', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+          <SqlMethod name="updateooglj" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'GLJ', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+            <SqlMethod name="updateoommi" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'MMI', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+              <SqlMethod name="updateoommm" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'MMM', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+               <SqlMethod name="updateoommr" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'MMR', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>  
+                 <SqlMethod name="updateoomms" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'MMS', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+ <SqlMethod name="updateoopoo" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'POO', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+ <SqlMethod name="updateoorec" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[ 
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'REC', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+<SqlMethod name="updateoosoo" type="preparedStatement" connection="true" return="rowcount">
+       <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+INSERT INTO ad_client_acctdimension(ad_client_acctdimension_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, dimension, docbasetype, show_in_header, show_in_lines, show_in_breakdown)
+values (get_uuid(), ?  , '0', 'Y', now(), '0', now(), '0', 'OO', 'SOO', 'Y', 'N', 'N')
+      ]]>
+    </Sql>
+     <Parameter name="client"/>
+  </SqlMethod>
+</SqlClass>

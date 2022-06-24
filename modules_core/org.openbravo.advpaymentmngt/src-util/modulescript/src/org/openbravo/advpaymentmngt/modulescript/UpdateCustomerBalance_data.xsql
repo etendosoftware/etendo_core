@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ ************************************************************************************
+ * Copyright (C) 2011-2016 Openbravo S.L.U.
+ * Licensed under the Openbravo Commercial License version 1.0
+ * You may obtain a copy of the License at http://www.openbravo.com/legal/obcl.html
+ * or in the legal folder of this module distribution.
+ ************************************************************************************
+-->
+<SqlClass name="UpdateCustomerBalanceData" package="org.openbravo.advpaymentmngt.modulescript">
+  <SqlClassComment></SqlClassComment>
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT '' as c_bpartner_id, '' as customercredit, '' as existpreference FROM DUAL
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="isCustomerBalanceFixed" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as existpreference
+        FROM ad_preference
+        WHERE attribute = 'IsCustomerBalanceRestoredV2'        
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="hasIsCustomerBalanceRestoredWithValue" type="preparedStatement" return="boolean">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT count(*) as existpreference
+        FROM ad_preference
+        WHERE attribute = 'IsCustomerBalanceRestoredV2' AND to_char(value)='Y'        
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="deleteIsCustomerBalanceRestoredWithValue" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        DELETE FROM ad_preference
+        WHERE attribute = 'IsCustomerBalanceRestoredV2' AND to_char(value)='Y'        
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="resetCustomerCredit" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE c_bpartner SET so_creditused = 0, updatedby='0', updated=now()
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="calculateCustomerCredit" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        SELECT A.c_bpartner_id, SUM(A.amount) as customercredit
+        FROM (
+          SELECT bp.c_bpartner_id, COALESCE(SUM(c_currency_convert(ps.outstandingamt * (CASE WHEN inv.issotrx = 'Y' THEN 1 ELSE -1 END), inv.c_currency_id, bp.bp_currency_id, inv.created, null, inv.ad_client_id, inv.ad_org_id)), 0) as amount
+          FROM c_invoice inv
+          JOIN c_bpartner bp
+          ON inv.c_bpartner_id = bp.c_bpartner_id
+          JOIN fin_payment_schedule ps
+          ON inv.c_invoice_id = ps.c_invoice_id
+          WHERE ps.outstandingamt <> 0
+          GROUP BY bp.c_bpartner_id
+          UNION ALL
+          SELECT bp.c_bpartner_id, COALESCE(SUM(c_currency_convert((p.generated_credit - p.used_credit) * (CASE WHEN p.isreceipt = 'Y' THEN -1 ELSE 1 END), p.c_currency_id, bp.bp_currency_id, p.created, null, p.ad_client_id, p.ad_org_id)), 0) as amount
+          FROM FIN_PAYMENT p
+          JOIN c_bpartner bp
+          ON p.c_bpartner_id = bp.c_bpartner_id
+          WHERE (p.generated_credit - p.used_credit) <> 0
+          AND p.generated_credit <> 0
+          AND p.processed = 'Y'
+          GROUP BY bp.c_bpartner_id
+        ) A
+        GROUP BY A.c_bpartner_id
+      ]]>
+    </Sql>
+  </SqlMethod>
+  <SqlMethod name="updateCustomerCredit" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        UPDATE c_bpartner SET so_creditused = TO_NUMBER(?), updatedby='0', updated=now() WHERE c_bpartner_id = ?
+      ]]>
+    </Sql>
+    <Parameter name="cumstomeCredit"/>
+    <Parameter name="businessPartnerId"/>
+  </SqlMethod>
+  <SqlMethod name="createPreference" type="preparedStatement" return="rowcount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+        INSERT INTO ad_preference (
+          ad_preference_id, ad_client_id, ad_org_id, isactive,
+          createdby, created, updatedby, updated,
+          attribute
+        ) VALUES (
+          get_uuid(), '0', '0', 'Y',
+          '0', NOW(), '0', NOW(),
+          'IsCustomerBalanceRestoredV2'
+        )
+      ]]>
+    </Sql>
+  </SqlMethod>
+</SqlClass>
