@@ -232,7 +232,8 @@ public class Posted extends HttpSecureAppServlet {
         }
         long start = System.currentTimeMillis();
         PostedData[] data = PostedData.select(this, strKey, strTableId);
-        OBError myMessage = ActionButtonUtility.resetAccounting(vars, data[0].client, data[0].org,strTableId, strKey, new DalConnectionProvider());
+        OBError myMessage = ActionButtonUtility.resetAccounting(vars, data[0].client, data[0].org, strTableId, strKey,
+            data[0].dateacct, new DalConnectionProvider());
         log4j.debug("Total deleting /milis: " + (System.currentTimeMillis() - start));
         vars.setMessage(strTabId, myMessage);
         printPageClosePopUp(response, vars);
@@ -263,7 +264,7 @@ public class Posted extends HttpSecureAppServlet {
       strDescription = data[0].description;
       strHelp = data[0].help;
     }
-    String[] discard = { "", "" };
+    String[] discard = {"", ""};
     if (strHelp.equals("")) {
       discard[0] = new String("helpDiscard");
     }

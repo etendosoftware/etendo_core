@@ -15,6 +15,7 @@
  */
 package org.openbravo.erpCommon.utility.reporting;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
 
-public class TemplateInfo {
+public class TemplateInfo implements Serializable {
   private static Logger log4j = LogManager.getLogger();
 
   private String _TemplateLocation;
@@ -38,7 +39,7 @@ public class TemplateInfo {
   private EmailDefinition _DefaultEmailDefinition;
   private Map<String, EmailDefinition> _EmailDefinitions;
 
-  public class EmailDefinition {
+  public class EmailDefinition implements Serializable {
     private String _Subject;
     private String _Body;
     private String _Language;

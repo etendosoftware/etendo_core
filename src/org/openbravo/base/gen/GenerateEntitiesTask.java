@@ -19,21 +19,6 @@
 
 package org.openbravo.base.gen;
 
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
-import freemarker.template.TemplateException;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.WordUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.tools.ant.Task;
-import org.openbravo.base.AntExecutor;
-import org.openbravo.base.exception.OBException;
-import org.openbravo.base.model.Entity;
-import org.openbravo.base.model.ModelProvider;
-import org.openbravo.base.model.Property;
-import org.openbravo.base.session.OBPropertiesProvider;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,7 +34,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.WordUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.tools.ant.Task;
+import org.openbravo.base.AntExecutor;
+import org.openbravo.base.exception.OBException;
+import org.openbravo.base.model.Entity;
+import org.openbravo.base.model.ModelProvider;
+import org.openbravo.base.model.Property;
+import org.openbravo.base.session.OBPropertiesProvider;
+
+import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.TemplateException;
 
 /**
  * Task generates the entities using the freemarker template engine.
@@ -136,14 +136,6 @@ public class GenerateEntitiesTask extends Task {
       return;
     }
 
-    final Properties obProperties = OBPropertiesProvider.getInstance().getOpenbravoProperties();
-    final String pathEntitiesRx = obProperties.getProperty("rx.path.entities");
-    final String pathJPARepoRx = obProperties.getProperty("rx.path.jparepo");
-    final boolean generateRxCode = Boolean.parseBoolean(obProperties.getProperty("rx.generateCode"));
-    log.info("Generate Etendo Rx Code={}", generateRxCode);
-    log.info("Path Entities Rx={}", pathEntitiesRx);
-    log.info("Path JPA Repo Rx={}", pathJPARepoRx);
-
     generateAllChildProperties = OBPropertiesProvider.getInstance()
             .getBooleanProperty("hb.generate.all.parent.child.properties");
 
@@ -167,15 +159,6 @@ public class GenerateEntitiesTask extends Task {
     File ftlSequenceContributorFile = new File(getBasePath(), ftlSequenceContributorFilename);
     freemarker.template.Template sequenceContributorTemplate = createTemplateImplementation(ftlSequenceContributorFile);
 
-    // template for Etendo RX
-    String ftlFileNameRX = "org/openbravo/base/gen/entityRX.ftl";
-    File ftlFileRX = new File(getBasePath(), ftlFileNameRX);
-    freemarker.template.Template templateRX = createTemplateImplementation(ftlFileRX);
-
-    String ftlFileNameJPARepo = "org/openbravo/base/gen/jpaRepoRX.ftl";
-    File ftlFileJPARepoRX = new File(getBasePath(), ftlFileNameJPARepo);
-    freemarker.template.Template templateJPARepoRX = createTemplateImplementation(ftlFileJPARepoRX);
-
     // process template & write file for each entity
     List<Entity> entities = ModelProvider.getInstance().getModel();
     ModelProvider.getInstance().addHelpAndDeprecationToModel(generateDeprecatedProperties);
@@ -188,6 +171,7 @@ public class GenerateEntitiesTask extends Task {
     }
 
     try (FileOutputStream excludedFilter = new FileOutputStream(basePath + GENERATED_DIR)) {
+
       for (Entity entity : entities) {
         // If the entity is associated with a datasource based table or based on an HQL query, do not
         // generate a Java file
@@ -196,7 +180,6 @@ public class GenerateEntitiesTask extends Task {
         }
 
         File outFile;
-        File outFileRepo;
         String classfileName;
 
         if (!entity.isVirtualEntity()) {
@@ -208,7 +191,7 @@ public class GenerateEntitiesTask extends Task {
           addClassInGenerated(excludedFilter, entity, null);
 
           try (Writer outWriter = new BufferedWriter(
-              new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8))) {
+                  new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8))) {
             Map<String, Object> data = new HashMap<>();
             data.put("entity", entity);
             data.put("util", this);
@@ -220,7 +203,7 @@ public class GenerateEntitiesTask extends Task {
 
         if (entity.hasComputedColumns()) {
           classfileName = entity.getPackageName().replaceAll("\\.", "/") + "/"
-              + entity.getSimpleClassName() + Entity.COMPUTED_COLUMNS_CLASS_APPENDIX + ".java";
+                  + entity.getSimpleClassName() + Entity.COMPUTED_COLUMNS_CLASS_APPENDIX + ".java";
           log.debug(GENERATING_FILE + classfileName);
           outFile = new File(srcGenPath, classfileName);
           new File(outFile.getParent()).mkdirs();
@@ -229,7 +212,7 @@ public class GenerateEntitiesTask extends Task {
           addClassInGenerated(excludedFilter, entity, Entity.COMPUTED_COLUMNS_CLASS_APPENDIX);
 
           try (Writer outWriter = new BufferedWriter(
-              new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8))) {
+                  new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8))) {
             Map<String, Object> data = new HashMap<>();
             data.put("entity", entity);
 
@@ -271,7 +254,7 @@ public class GenerateEntitiesTask extends Task {
           new File(outFile.getParent()).mkdirs();
 
           try (Writer outWriter = new BufferedWriter(
-              new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8))) {
+                  new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8))) {
             Map<String, Object> data = new HashMap<>();
             data.put("entity", entity);
             data.put("util", this);
@@ -281,38 +264,6 @@ public class GenerateEntitiesTask extends Task {
           }
           sequenceContributors.add(entity.getClassName() + Entity.SEQUENCE_CONTRIBUTOR_CLASS_APPENDIX);
           addClassInGenerated(excludedFilter, entity, Entity.SEQUENCE_CONTRIBUTOR_CLASS_APPENDIX);
-        }
-
-        if (generateRxCode && !entity.isVirtualEntity()) {
-            final String packageEntities = pathEntitiesRx.substring(pathEntitiesRx.lastIndexOf('/') + 1);
-            final String fullPathEntities = pathEntitiesRx + "/src/main/java/" + packageEntities.replace('.', '/');
-            final String className = entity.getClassName().replaceAll("\\.", "/");
-            final String onlyClassName = className.substring(className.lastIndexOf('/') + 1);
-
-            final String packageJPARepo = pathJPARepoRx.substring(pathJPARepoRx.lastIndexOf('/') + 1);
-            final String fullPathJPARepo = pathJPARepoRx + "/src/main/java/" + packageJPARepo.replace('.', '/');
-            final String repositoryClass = Utilities.toCamelCase(entity.getTableName()) + "Repository.java";
-
-            classfileName = className.replace(onlyClassName, Utilities.toCamelCase(entity.getTableName())) + ".java";
-            log.debug(GENERATING_FILE + classfileName);
-            outFile = new File(fullPathEntities, classfileName);
-            outFileRepo = new File(fullPathJPARepo, repositoryClass);
-            new File(outFile.getParent()).mkdirs();
-            new File(outFileRepo.getParent()).mkdirs();
-
-            Map<String, Object> data = new HashMap<>();
-            data.put("newClassName", Utilities.toCamelCase(entity.getTableName()));
-            data.put("entity", entity);
-            data.put("packageName", packageEntities);
-            data.put("packageJPARepo", packageJPARepo);
-            data.put("util", this);
-
-            Writer outWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFile), StandardCharsets.UTF_8));
-            processTemplate(templateRX, data, outWriter);
-
-            Writer outWriterRepo = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outFileRepo), StandardCharsets.UTF_8));
-            processTemplate(templateJPARepoRX, data, outWriterRepo);
-
         }
       }
     } catch (IOException e) {

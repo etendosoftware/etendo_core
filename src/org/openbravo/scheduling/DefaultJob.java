@@ -65,6 +65,8 @@ public class DefaultJob implements Job {
       SessionInfo.setQueryProfile("scheduledProcess");
 
       processInstance.execute(bundle);
+      bundle.applyLog();
+      jec.getMergedJobDataMap().put(ProcessBundle.KEY, bundle.getMap());
 
     } catch (final Exception e) {
       String processName = bundle != null && bundle.getProcessClass() != null

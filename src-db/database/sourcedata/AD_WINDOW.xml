@@ -2274,7 +2274,7 @@ WARNING: This window is not supported anymore and it is only kept for backward c
 <!--800083-->  <AD_WINDOW_ID><![CDATA[800083]]></AD_WINDOW_ID>
 <!--800083-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
 <!--800083-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
-<!--800083-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--800083-->  <ISACTIVE><![CDATA[N]]></ISACTIVE>
 <!--800083-->  <NAME><![CDATA[External Point of Sales]]></NAME>
 <!--800083-->  <DESCRIPTION><![CDATA[Define and synchonize Etendo to your points of sales and their respective attributes.]]></DESCRIPTION>
 <!--800083-->  <HELP><![CDATA[Define and synchonize Etendo to your points of sales and their respective attributes.]]></HELP>

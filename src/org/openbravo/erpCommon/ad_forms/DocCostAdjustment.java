@@ -43,7 +43,9 @@ public class DocCostAdjustment extends AcctServer {
   private static final long serialVersionUID = 1L;
   private static final Logger log4jDocCostAdjustment = LogManager.getLogger();
 
-  /** AD_Table_ID */
+  /**
+   * AD_Table_ID
+   */
   private String SeqNo = "0";
 
   public DocCostAdjustment() {
@@ -51,9 +53,9 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * Constructor
-   * 
+   *
    * @param AD_Client_ID
-   *          AD_Client_ID
+   *     AD_Client_ID
    */
   public DocCostAdjustment(String AD_Client_ID, String AD_Org_ID,
       ConnectionProvider connectionProvider) {
@@ -68,7 +70,7 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * Load Document Details
-   * 
+   *
    * @return true if loadDocumentType was set
    */
   @Override
@@ -86,7 +88,7 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * Load Invoice Line
-   * 
+   *
    * @return DocLine Array
    */
   private DocLine[] loadLines(ConnectionProvider conn) {
@@ -124,7 +126,7 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * Get Balance
-   * 
+   *
    * @return Zero (always balanced)
    */
   @Override
@@ -135,7 +137,7 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * Create Facts (the accounting logic) for MMS, MMR.
-   * 
+   *
    * <pre>
    *  Shipment
    *      CoGS            DR
@@ -147,9 +149,10 @@ public class DocCostAdjustment extends AcctServer {
    *      Inventory       DR
    *      NotInvoicedReceipt      CR
    * </pre>
-   * 
+   *
    * @param as
-   *          accounting schema
+   *     accounting schema
+   *
    * @return Fact
    */
   @Override
@@ -160,7 +163,8 @@ public class DocCostAdjustment extends AcctServer {
         DocumentType);
     if (StringUtils.isEmpty(strClassname)) {
       strClassname = AcctServerData.selectTemplate(conn, as.m_C_AcctSchema_ID, AD_Table_ID);
-    } else {
+    }
+    if (!strClassname.equals("")) {
       try {
         DocCostAdjustmentTemplate newTemplate = (DocCostAdjustmentTemplate) Class
             .forName(strClassname)
@@ -240,7 +244,7 @@ public class DocCostAdjustment extends AcctServer {
         // Inventory Adjustment CR
         log4jDocCostAdjustment.debug("********** DocCostAdjustment - factAcct - account - "
             + getAccountByWarehouse(AcctServer.ACCTTYPE_InvDifferences, as, line.getWarehouseId(),
-                conn).C_ValidCombination_ID);
+            conn).C_ValidCombination_ID);
         if (line.isTransactionNegative()) {
           amtDebit = amount.toPlainString();
           amtCredit = "";
@@ -262,7 +266,7 @@ public class DocCostAdjustment extends AcctServer {
         M_Warehouse_ID = line.getWarehouseId();
         log4jDocCostAdjustment.debug("********** DocCostAdjustment - factAcct - account - "
             + getAccountByWarehouse(AcctServer.ACCTTYPE_InvDifferences, as, line.getWarehouseId(),
-                conn).C_ValidCombination_ID);
+            conn).C_ValidCombination_ID);
         if (line.isTransactionNegative()) {
           amtDebit = amount.negate().toPlainString();
           amtCredit = "";
@@ -285,7 +289,7 @@ public class DocCostAdjustment extends AcctServer {
         M_Warehouse_ID = line.getWarehouseId();
         log4jDocCostAdjustment.debug("********** DocCostAdjustment - factAcct - account - "
             + getAccountByWarehouse(AcctServer.ACCTTYPE_InvDifferences, as, line.getWarehouseId(),
-                conn).C_ValidCombination_ID);
+            conn).C_ValidCombination_ID);
         if (line.isTransactionNegative()) {
           amtDebit = amount.toPlainString();
           amtCredit = "";
@@ -307,7 +311,7 @@ public class DocCostAdjustment extends AcctServer {
         M_Warehouse_ID = line.getWarehouseId();
         log4jDocCostAdjustment.debug("********** DocCostAdjustment - factAcct - account - "
             + getAccountByWarehouse(AcctServer.ACCTTYPE_InvDifferences, as, line.getWarehouseId(),
-                conn).C_ValidCombination_ID);
+            conn).C_ValidCombination_ID);
         if (line.isTransactionNegative()) {
           amtDebit = amount.toPlainString();
           amtCredit = "";
@@ -330,7 +334,7 @@ public class DocCostAdjustment extends AcctServer {
         M_Warehouse_ID = line.getWarehouseId();
         log4jDocCostAdjustment.debug("********** DocCostAdjustment - factAcct - account - "
             + getAccountByWarehouse(AcctServer.ACCTTYPE_InvDifferences, as, line.getWarehouseId(),
-                conn).C_ValidCombination_ID);
+            conn).C_ValidCombination_ID);
         if (line.isTransactionNegative()) {
           amtDebit = amount.toPlainString();
           amtCredit = "";
@@ -353,7 +357,7 @@ public class DocCostAdjustment extends AcctServer {
         M_Warehouse_ID = line.getWarehouseId();
         log4jDocCostAdjustment.debug("********** DocCostAdjustment - factAcct - account - "
             + getAccountByWarehouse(AcctServer.ACCTTYPE_InvDifferences, as, line.getWarehouseId(),
-                conn).C_ValidCombination_ID);
+            conn).C_ValidCombination_ID);
         if (line.isTransactionNegative()) {
           amtDebit = amount.toPlainString();
           amtCredit = "";
@@ -386,7 +390,7 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * @param seqNo
-   *          the seqNo to set
+   *     the seqNo to set
    */
   public void setSeqNo(String seqNo) {
     SeqNo = seqNo;
@@ -409,11 +413,12 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * Get the account for Accounting Schema
-   * 
+   *
    * @param AcctType
-   *          see ACCTTYPE_*
+   *     see ACCTTYPE_*
    * @param as
-   *          accounting schema
+   *     accounting schema
+   *
    * @return Account
    */
   public final Account getAccountByWarehouse(String AcctType, AcctSchema as, String WarehouseId,
@@ -458,7 +463,7 @@ public class DocCostAdjustment extends AcctServer {
 
   /**
    * Get Document Confirmation
-   * 
+   * <p>
    * not used
    */
   @Override
