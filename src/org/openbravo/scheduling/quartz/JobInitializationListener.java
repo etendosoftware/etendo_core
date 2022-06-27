@@ -22,13 +22,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.ConnectionProviderContextListener;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.scheduling.OBScheduler;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.listeners.JobListenerSupport;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -63,8 +63,10 @@ public class JobInitializationListener extends JobListenerSupport {
     }
     if (bundle.getConnection() == null) {
       // Set the ConnectionProvider if it was lost during serialization/deserialization
-      bundle.setConnection(
-          (ConnectionProvider) ctx.get(ConnectionProviderContextListener.POOL_ATTRIBUTE));
+      ConnectionProvider conn = (ConnectionProvider) ctx.get(ConnectionProviderContextListener.POOL_ATTRIBUTE);
+      if(conn == null)
+        conn = OBScheduler.getInstance().getConnection();
+      bundle.setConnection(conn);
     }
     bundle.setLog(new ProcessLogger(bundle.getConnection()));
   }

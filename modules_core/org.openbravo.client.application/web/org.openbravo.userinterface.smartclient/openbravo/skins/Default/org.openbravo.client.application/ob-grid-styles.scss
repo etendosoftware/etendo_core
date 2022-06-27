@@ -133,7 +133,7 @@
 
 .OBGridCellSelected,
 .OBGridCellSelectedDark {
-  background-color: $backgroundColor4; /* Orange for active grid, for non active grid: #b8d587 */
+  background-color: $backgroundColor8; /* Orange for active grid, for non active grid: #b8d587 */
 }
 
 .OBGridCellSelectedViewInactive,
@@ -143,17 +143,17 @@
 
 .OBGridCellEditSelected,
 .OBGridCellEditSelectedDark {
-  background-color: $backgroundColor4;
+  background-color: $backgroundColor8;
 }
 
 .OBGridCellSelectedOver,
 .OBGridCellSelectedOverDark {
-  background-color: $backgroundColor4;
+  background-color: $backgroundColor8;
 }
 
 .OBGridCellEditSelectedOver,
 .OBGridCellEditSelectedOverDark {
-  background-color: $backgroundColor4;
+  background-color: $backgroundColor8;
 }
 
 .OBGridCellError,
@@ -198,12 +198,12 @@
 }
 
 .OBGridFilterStaticTextLink:hover {
-  background-color: $backgroundColor4;
+  background-color: $backgroundColor8;
   cursor: pointer;
 }
 
 .OBGridFilterStaticTextLink:active {
-  background-color: $backgroundColor4;
+  background-color: $backgroundColor8;
   cursor: pointer;
 }
 
@@ -216,7 +216,7 @@
 .OBGridFilterFunnelIconDown,
 .OBGridFilterFunnelIconSelected,
 .OBGridFilterFunnelIconFocused {
-  background-color: $backgroundColor4;
+  background-color: $backgroundColor8;
   cursor: pointer;
 }
 

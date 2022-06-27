@@ -4,13 +4,18 @@ $skinUrlPath: "../../web/org.openbravo.userinterface.smartclient/openbravo/skins
 
 $fontFamily: 'Poppins', 'lucida sans', sans-serif;
 $color1: #202452; /* Blue */
-$color6: #3d4383; /* Light Blue */
-$color7: #131743; /* Darker Blue */
 $color2: #e1e1e1; /* Gray */
-$color5: #ababab; /* Darker Gray  */
 $color3: #fad614; /* Yellow */
 $color4: #ffffff; /* White */
+$color5: #ababab; /* Darker Gray  */
+$color6: #3d4383; /* Light Blue */
+$color7: #131743; /* Darker Blue */
 $color8: #dde0f7; /* Light Blue (20%) */
+
+$grey-font-input-disabled: #7d7d7d; /* Gray used for read-only input lettering. */
+
+$grey-title-tab: #333; /* Gray used for non-focused tab titles. */
+$black-font-grid: #111; /* Black for font of grid items. */
 
 $backgroundColor1: #ffffff;
 $backgroundColor2: #fad614;
@@ -19,7 +24,9 @@ $backgroundColor4: #e8f6e8; /* Light Green */
 $backgroundColor5: #DDE0F7; /* Light Blue (20%) */
 $backgroundColor6: #eff1f7; /* light Blue (10%) */
 $backgroundColor7: #f2f2f2; /* Gray 10 % */
+$backgroundColor8: #ffe883; /* Yellow: Record shading */
 
 $backgroundColorInputRequired: #faf3d0;
 $menuShadow: 0px 0px 20px 0px #ededed;
 
+$padding-view-form: 4px; /* Used to determine the padding of the grid form. (Custom padding 4px -- Standar padding 10px) */

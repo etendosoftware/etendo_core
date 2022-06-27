@@ -62,7 +62,7 @@ body {
 .normal {
   font-family: $fontFamily;
   font-size: 12px;
-  color: #333333;
+  color: $black-font-grid;
 }
 
 .normal:focus {

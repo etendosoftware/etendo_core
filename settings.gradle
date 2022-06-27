@@ -18,4 +18,4 @@ new File("${this.rootDir}/modules").listFiles().each {
     }
 }
 
-rootProject.name = "core"
+rootProject.name = "etendo"

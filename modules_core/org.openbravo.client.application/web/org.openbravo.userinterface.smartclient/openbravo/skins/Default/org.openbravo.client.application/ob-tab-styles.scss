@@ -113,7 +113,7 @@ if the tab headers are on the right, left or bottom the same styles can be used 
 .OBTabBarButtonMainTitleFocusedOver,
 .OBTabBarButtonMainTitleFocusedDown,
 .OBTabBarButtonMainTitleDisabled {
-    color: $color5;
+    color: $grey-title-tab;
     padding-top: 8px;
 }
 .OBTabBarButtonMainTitleSelected,

@@ -219,6 +219,19 @@ OB.APRM.AddPayment.paymentMethodMulticurrency = function(
     orgId = form.getItem('ad_org_id').getValue(),
     trxtype = form.getItem('trxtype') ? form.getItem('trxtype').getValue() : '';
 
+  if (paymentDate === undefined){
+    view.messageBar.setMessage(
+      isc.OBMessageBar.TYPE_ERROR,
+      '<div><div class="' +
+        OB.Styles.MessageBar.leftMsgContainerStyle +
+        '">' +
+        OB.I18N.getLabel("APRM_PAYMENTDATE_MISSING") +
+        '</div></div>',
+      ' '
+    );
+    return false;
+  }
+
   callback = function(response, data, request) {
     var isShown = false;
     if (data.currencyId) {

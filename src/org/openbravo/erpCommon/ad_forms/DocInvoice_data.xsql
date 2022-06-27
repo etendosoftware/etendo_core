@@ -20,7 +20,7 @@
 
 
 
-<SqlClass name="DocInvoiceData" package="org.openbravo.erpCommon.ad_forms">
+<SqlClass name="DocInvoiceData" package="org.openbravo.erpCommon.ad_forms" accessModifier="public">
   <SqlClassComment></SqlClassComment>
   <SqlMethod name="select" type="preparedStatement" return="multiple">
     <SqlMethodComment></SqlMethodComment>
