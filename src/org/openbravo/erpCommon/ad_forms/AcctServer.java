@@ -876,9 +876,7 @@ public abstract class AcctServer {
         if (m_fact != null && m_fact.length != 0) {
           log4j.debug("AcctServer - postCommit - m_fact.length = " + m_fact.length);
           for (int i = 0; i < m_fact.length; i++) {
-            if (m_fact[i].save(con, conn, vars)) {
-              ;
-            } else {
+            if (!m_fact[i].save(con, conn, vars)) {
               unlock(conn);
               Status = AcctServer.STATUS_Error;
             }
