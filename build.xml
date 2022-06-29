@@ -97,6 +97,15 @@ export.database: exports database structure and data to xml files.
     <istrue value="${isSourceJar}"/>
   </condition>
   <property name="build" location="${base.build.location}" />
+
+  <!-- Set the base war lib dir -->
+  <property name="base.lib.sources" location="lib" />
+  <property name="base.lib.jar" location="../../lib"/>
+  <condition property="base.lib.location" value="${base.lib.sources}" else="${base.lib.jar}">
+    <istrue value="${isSourceJar}"/>
+  </condition>
+  <property name="base.lib.war" location="${base.lib.location}" />
+
   <property name="build.apply.module" location="build.apply/classes" />
   <property name="build.AD" location="srcAD" />
   <property name="build.sqlc" location="build/javasqlc" />
@@ -274,9 +283,9 @@ export.database: exports database structure and data to xml files.
     <dirset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
       <include name="*/build/classes/" />
     </dirset>
-    <fileset dir="${extra.modules.location}" erroronmissingdir="false" >
+    <dirset dir="${extra.modules.location}" erroronmissingdir="false" >
       <include name="*/build/classes/" />
-    </fileset>
+    </dirset>
 
     <pathelement path="${basedir}/src-util/modulescript/build/classes/" />
     <pathelement path="${base.config}" />

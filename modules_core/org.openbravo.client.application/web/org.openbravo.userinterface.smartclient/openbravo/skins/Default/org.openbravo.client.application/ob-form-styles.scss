@@ -39,7 +39,7 @@ $inputBorderColor: $color2;
 =======================================================================*/
 
 .OBViewForm {
-  margin: 5px 25px 0px 25px;
+  margin: 5px 20px 0px 20px;
   padding: 0px 0px 20px 0px;
 
 }
@@ -155,7 +155,7 @@ $inputBorderColor: $color2;
     .OBViewForm &, .OBFlyoutLayout & {
         border-radius: 5px;
         height: auto;
-        padding: 10px;
+        padding: $padding-view-form;
     }
 }
 
@@ -309,8 +309,8 @@ html[data-useragent*='MSIE 7.0'] .OBFormFieldError .OBFormFieldDateInputHint {
 }
 
 .OBFormFieldStaticDisabled {
-  color: #7d7d7d;
- -webkit-text-fill-color: #7d7d7d;
+  color: $grey-font-input-disabled;
+  -webkit-text-fill-color: $grey-font-input-disabled;
 }
 
 .OBFormFieldInputRequiredDisabled,
@@ -325,8 +325,8 @@ html[data-useragent*='MSIE 7.0'] .OBFormFieldError .OBFormFieldDateInputHint {
 .OBFormFieldImageInputDisabled {
   border: 0px none;
   background-color: $backgroundColor7;
-  color: #7d7d7d;
-  -webkit-text-fill-color: #7d7d7d;
+  color: $grey-font-input-disabled;
+  -webkit-text-fill-color: $grey-font-input-disabled;
 }
 
 .OBFormFieldSelectControl,
@@ -818,22 +818,26 @@ html[data-useragent*='MSIE 7.0'] .OBFormFieldError .OBFormFieldDateInputHint {
 .OBFormButtonSelectedFocusedOver,
 .OBFormButtonDisabled,
 .OBFormButtonSelectedDisabled {
-  padding: 5px 20px 5px;
-  font-family: $fontFamily;
-  font-size:12px;
-  color: $color4;
-  cursor: pointer;
-  background-color: $color1;
-  border-radius: 5px;
-
-  & :hover {
-    opacity: 80%;
+  background-color: $backgroundColor2;
+  border-radius: 7px;
+  color: $color1;
+  font-family: "Poppins","lucida sans",sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 15px;
+  text-transform: uppercase;
+  display: block;
+  margin: 1px auto;
+  &:hover {
+      opacity: 80%;
   }
 }
 
 .OBFormButtonDisabled,
 .OBFormButtonSelectedDisabled {
-    background-color: $backgroundColor1;
+    background-color: $color1;
+    color: $color1;
+    cursor: default;
 }
 
 

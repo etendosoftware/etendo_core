@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2001-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2001-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -256,12 +256,13 @@ public class ActionButtonUtility {
     return data;
   }
 
-  public static OBError resetAccounting(VariablesSecureApp vars, String client, String org, String strTableId, String strKey, ConnectionProvider con) {
+  public static OBError resetAccounting(VariablesSecureApp vars, String client, String org, String strTableId,
+      String strKey, String dateAcct, ConnectionProvider con) {
     OBError myMessage = new OBError();
     myMessage.setType(Result.Type.SUCCESS.toString());
     try {
       HashMap<String, Integer> hm = ResetAccounting.delete(client, org,
-          strTableId, strKey, "", "");
+          strTableId, strKey, dateAcct, dateAcct);
       myMessage.setMessage(
           Utility.parseTranslation(con, vars, vars.getLanguage(), "@UnpostedDocuments@ = "
               + hm.get("updated") + ", @DeletedEntries@ = " + hm.get("deleted")));
@@ -274,15 +275,16 @@ public class ActionButtonUtility {
     return myMessage;
   }
 
- public static OBError processButton(VariablesSecureApp vars, String strKey, String strTableId, String strOrg, ConnectionProvider connectionProvider)
+  public static OBError processButton(VariablesSecureApp vars, String strKey, String strTableId, String strOrg,
+      ConnectionProvider connectionProvider)
       throws ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("ProcessButton strKey: {} strTableId: {}", strKey, strTableId);
     }
     OBError myMessage = null;
-   Connection con = null;
-   try {
-     con = connectionProvider.getConnection();
+    Connection con = null;
+    try {
+      con = connectionProvider.getConnection();
       AcctServer acct = AcctServer.get(strTableId, vars.getClient(), strOrg, connectionProvider);
       if (acct == null) {
         myMessage = Utility.translateError(connectionProvider, vars, vars.getLanguage(), "ProcessRunError");

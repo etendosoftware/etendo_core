@@ -814,8 +814,8 @@ build.war: build a war file in the lib directory.
   </target>
 
   <target name="build.war">
-    <delete failonerror="false" file="${base.lib}/${context.name}.war" />
-    <war compress="true" destfile="${base.lib}/${context.name}.war" encoding="UTF-8" webxml="${base.context}/WEB-INF/web.xml">
+    <delete failonerror="false" file="${base.lib.war}/${context.name}.war" />
+    <war compress="true" destfile="${base.lib.war}/${context.name}.war" encoding="UTF-8" webxml="${base.context}/WEB-INF/web.xml">
       <zipfileset dir="${base.context}">
         <exclude name="**/WEB-INF/web.xml" />
       </zipfileset>

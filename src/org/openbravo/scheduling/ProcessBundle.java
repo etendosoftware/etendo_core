@@ -606,4 +606,7 @@ public class ProcessBundle implements Serializable {
     },
   }
 
+  public void applyLog() {
+    this.serializedLog = getLogger().getLog();
+  }
 }
