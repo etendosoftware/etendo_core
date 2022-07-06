@@ -52,11 +52,10 @@ static def getVersionSuffix( versionTs ) {
     proc.in.eachLine { line -> branch = line }
     proc.err.eachLine { line -> println line }
     proc.waitFor()
-    if ("master" != branch) {
+    if ("main" != branch && !branch.contains("release")) {
         return '.' + versionTs + "-SNAPSHOT"
-    } else {
-        return ""
     }
+    return ""
 }
 
 version = '22.2.0' + getVersionSuffix( versionTs )

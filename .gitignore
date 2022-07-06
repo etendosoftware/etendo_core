@@ -90,3 +90,5 @@ test-reports
 #ignore maven builds
 target
 /utils/
+/config/backup.properties
+/config/redisson-config.yaml
