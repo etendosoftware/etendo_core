@@ -46,7 +46,6 @@ temp
 WebContent
 !WebContent/META-INF/MANIFEST.MF
 !WebContent/WEB-INF/.keep
-.ant-targets-build.xml
 
 config/*Openbravo.properties
 config/quartz.properties
@@ -87,31 +86,7 @@ test-reports
 # ignore all modules
 # except those ones included in OB3 distribution
 /modules/*
-!/modules_core/org.openbravo.advpaymentmngt
-!/modules_core/org.openbravo.apachejdbcconnectionpool
-!/modules_core/org.openbravo.base.weld
-!/modules_core/org.openbravo.client.application
-!/modules_core/org.openbravo.client.htmlwidget
-!/modules_core/org.openbravo.client.kernel
-!/modules_core/org.openbravo.client.kernel/web/org.openbravo.client.kernel/**/docs/
-!/modules_core/org.openbravo.client.myob
-!/modules_core/org.openbravo.client.querylist
-!/modules_core/org.openbravo.client.widgets
-!/modules_core/org.openbravo.financial.paymentreport
-!/modules_core/org.openbravo.reports.ordersawaitingdelivery
-!/modules_core/org.openbravo.service.datasource
-!/modules_core/org.openbravo.service.integration.google
-!/modules_core/org.openbravo.service.integration.openid
-!/modules_core/org.openbravo.service.json
-!/modules_core/org.openbravo.userinterface.selector
-!/modules_core/org.openbravo.userinterface.skin.250to300Comp
-!/modules_core/org.openbravo.userinterface.smartclient
-!/modules_core/org.openbravo.utility.cleanup.log
-!/modules_core/org.openbravo.utility.cleanup.log/**/log
-!/modules_core/org.openbravo.v3
-!/modules_core/org.openbravo.v3.datasets
-!/modules_core/org.openbravo.v3.framework
-!/modules/com.smf.userinterface.skin.legacy
+
 #ignore maven builds
 target
 /utils/

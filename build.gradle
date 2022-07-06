@@ -59,7 +59,7 @@ static def getVersionSuffix( versionTs ) {
     }
 }
 
-version = '22.1.3' + getVersionSuffix( versionTs )
+version = '22.2.0' + getVersionSuffix( versionTs )
 
 def artifactID = 'etendo-core'
 def javaPackage = group + '.' + artifactID

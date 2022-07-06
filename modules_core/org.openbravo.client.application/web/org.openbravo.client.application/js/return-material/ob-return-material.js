@@ -159,7 +159,7 @@ OB.RM.RMOrderSelectionChange = function(grid, record, state) {
       record.returnReason = contextInfo.inpcReturnReasonId;
     }
     OB.RemoteCallManager.call(
-      'org.openbravo.common.actionhandler.RFCServiceReturnableActionHandler',
+      'org.openbravo.common.actionhandler.ServiceReturnableActionHandler',
       {
         rfcOrderDate: contextInfo.inpdateordered,
         goodsShipmentId: record.id,

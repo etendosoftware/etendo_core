@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<data>
+<!--2F5880D885DE439D92E9F8919D20FAAB--><AD_VAL_RULE>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <AD_VAL_RULE_ID><![CDATA[2F5880D885DE439D92E9F8919D20FAAB]]></AD_VAL_RULE_ID>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <NAME><![CDATA[EAPMFinancialAccountValidation]]></NAME>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <TYPE><![CDATA[HQL_JS]]></TYPE>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <CODE><![CDATA[var pay_meth_id =  OB.getParameters().get('payment_method');
+var recv_in = OB.getParameters().get('received_in');
+var paid_out = OB.getParameters().get('paid_out');
+"e.id in (select ffp.account.id from FinancialMgmtFinAccPaymentMethod as ffp where ffp.paymentMethod.id = '"+pay_meth_id+"' and ((ffp.payinAllow = true and "+recv_in+" = true) or (ffp.payoutAllow = true and "+paid_out+" = true))) "]]></CODE>
+<!--2F5880D885DE439D92E9F8919D20FAAB-->  <AD_MODULE_ID><![CDATA[FF9AC97E86094F43A2842277D641A480]]></AD_MODULE_ID>
+<!--2F5880D885DE439D92E9F8919D20FAAB--></AD_VAL_RULE>
+
+</data>

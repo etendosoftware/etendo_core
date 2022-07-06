@@ -26,8 +26,8 @@ import javax.servlet.ServletException;
 import org.apache.commons.lang.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.weld.WeldUtils;
-import org.openbravo.common.hooks.OrderLineQtyChangedHookManager;
-import org.openbravo.common.hooks.OrderLineQtyChangedHookObject;
+import com.etendoerp.common.hooks.HookManager;
+import com.etendoerp.common.hooks.OrderLineQtyChangedHookObject;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.businessUtility.PriceAdjustment;
 import org.openbravo.erpCommon.utility.Utility;
@@ -110,7 +110,7 @@ public class SL_Order_Amt extends SimpleCallout {
         }
 
         hookObject.setChanged(strChanged);
-        WeldUtils.getInstanceFromStaticBeanManager(OrderLineQtyChangedHookManager.class)
+        WeldUtils.getInstanceFromStaticBeanManager(HookManager.class)
             .executeHooks(hookObject);
         if (isTaxIncludedPriceList) {
           if (grossBaseUnitPrice.compareTo(hookObject.getPrice()) != 0) {

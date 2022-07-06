@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2010-2018 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2010-2018 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -44,12 +44,12 @@ import org.openbravo.model.ad.domain.Reference;
 /**
  * A representation of the {@link DatasourceField} which can be read from the DataSourceField table
  * or created on the basis of an existing {@link Property} from the in-memory model.
- * 
+ * <p>
  * DataSourceProperties are passed into the data source template to generate the data source
  * representation.
- * 
+ * <p>
  * This class provides static factory methods for different ways of creating it.
- * 
+ *
  * @author mtaal
  */
 public class DataSourceProperty {
@@ -58,9 +58,10 @@ public class DataSourceProperty {
 
   /**
    * Create a DataSourceProperty using a model property.
-   * 
+   *
    * @param property
-   *          the property to use to initialize the data source property
+   *     the property to use to initialize the data source property
+   *
    * @return a new DataSourceProperty instance
    */
   public static DataSourceProperty createFromProperty(Property property) {
@@ -92,9 +93,10 @@ public class DataSourceProperty {
 
   /**
    * Create a DataSourceProperty using a {@link DatasourceField} to initialize it.
-   * 
+   *
    * @param dsField
-   *          the data source field used to initialize the new data source property
+   *     the data source field used to initialize the new data source property
+   *
    * @return a new DataSourceProperty instance
    */
   public static DataSourceProperty createFromDataSourceField(DatasourceField dsField) {
@@ -137,9 +139,9 @@ public class DataSourceProperty {
 
   /**
    * Gets a Set of allowed values for a List reference
-   * 
+   *
    * @param reference
-   *          List reference
+   *     List reference
    */
   public static Set<String> getAllowedValues(Reference reference) {
     Set<String> allowedValues = new HashSet<>();

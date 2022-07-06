@@ -502,19 +502,6 @@ public class ServicePriceUtils {
   }
 
   /**
-   * Method that returns a warning message if a service of a Return From Customer is not Returnable
-   * of the return period is expired.
-   * 
-   * @deprecated Use
-   *             {@link ProductPriceUtils#productReturnAllowedRFC(ShipmentInOutLine, Product, Date)}
-   */
-  @Deprecated
-  public static JSONObject serviceReturnAllowedRFC(ShipmentInOutLine shipmentLine,
-      Product serviceProduct, Date rfcOrderDate) {
-    return ProductPriceUtils.productReturnAllowedRFC(shipmentLine, serviceProduct, rfcOrderDate);
-  }
-
-  /**
    * Check if certain Service Price Range for certain amount is 'After Discounts' or not
    * 
    * @param orderline
