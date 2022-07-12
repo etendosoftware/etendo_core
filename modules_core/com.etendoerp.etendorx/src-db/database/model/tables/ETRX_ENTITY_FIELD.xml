@@ -37,7 +37,7 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="AD_COLUMN_ID" primaryKey="false" required="true" type="VARCHAR" size="32" autoIncrement="false">
+      <column name="PROPERTY" primaryKey="false" required="true" type="VARCHAR" size="255" autoIncrement="false">
         <default/>
         <onCreateDefault/>
       </column>
@@ -47,15 +47,12 @@
       <foreign-key foreignTable="AD_ORG" name="ETRX_FIELD_ADORG">
         <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="AD_COLUMN" name="ETRX_FIELD_COLUMN">
-        <reference local="AD_COLUMN_ID" foreign="AD_COLUMN_ID"/>
-      </foreign-key>
       <foreign-key foreignTable="ETRX_PROJECTION_ENTITY" name="ETRX_PROJECTION_ENTITY">
         <reference local="ETRX_PROJECTION_ENTITY_ID" foreign="ETRX_PROJECTION_ENTITY_ID"/>
       </foreign-key>
       <unique name="ETRX_ENTITY_FIELD_UNIQUE">
         <unique-column name="ETRX_PROJECTION_ENTITY_ID"/>
-        <unique-column name="AD_COLUMN_ID"/>
+        <unique-column name="PROPERTY"/>
       </unique>
     </table>
   </database>
