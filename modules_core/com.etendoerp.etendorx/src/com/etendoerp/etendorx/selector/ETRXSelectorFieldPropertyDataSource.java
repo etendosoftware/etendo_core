@@ -16,12 +16,12 @@ import java.util.Map;
 public class ETRXSelectorFieldPropertyDataSource extends ModelDataSourceService {
 
     private static final String SELECTOR_FIELD = "inpobuiselSelectorId";
-    private static final String TAB_ID = "inpTableId";
+    private static final String TABLE_ID = "inpTableId";
 
     @Override
     public void checkFetchDatasourceAccess(Map<String, String> parameter) {
         final OBContext obContext = OBContext.getOBContext();
-        final String tabId = parameter.get(TAB_ID);
+        final String tabId = parameter.get(TABLE_ID);
         try {
             final Entity entity = ModelProvider.getInstance().getEntityByTableId(tabId);
             if (entity != null) {
