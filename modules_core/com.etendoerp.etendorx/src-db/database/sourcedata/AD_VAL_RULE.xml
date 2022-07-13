@@ -7,8 +7,7 @@
 <!--2B29B9523A0B4E418FB5956550D3D2AC-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--2B29B9523A0B4E418FB5956550D3D2AC-->  <NAME><![CDATA[ETRXProjectionInDevelopment]]></NAME>
 <!--2B29B9523A0B4E418FB5956550D3D2AC-->  <TYPE><![CDATA[S]]></TYPE>
-<!--2B29B9523A0B4E418FB5956550D3D2AC-->  <CODE><![CDATA[etrx_projection_id in (select etrx_projection_id from etrx_projection where ad_module_id in
-(select ad_module_id from ad_module where em_etrx_isrx = 'Y' and isindevelopment = 'Y'))]]></CODE>
+<!--2B29B9523A0B4E418FB5956550D3D2AC-->  <CODE><![CDATA[exists (select 1 from ad_module am where am.em_etrx_isrx = 'Y' and am.isindevelopment = 'Y' and am.ad_module_id = td0.ad_module_id)]]></CODE>
 <!--2B29B9523A0B4E418FB5956550D3D2AC-->  <AD_MODULE_ID><![CDATA[BC7B2F721FD249F5A360C6AAD2A7EBF7]]></AD_MODULE_ID>
 <!--2B29B9523A0B4E418FB5956550D3D2AC--></AD_VAL_RULE>
 
@@ -20,7 +19,7 @@
 <!--C889E0B679CE4CB28EB823B899376D6F-->  <NAME><![CDATA[ETRXModuleValidation]]></NAME>
 <!--C889E0B679CE4CB28EB823B899376D6F-->  <DESCRIPTION><![CDATA[Filter the Etendo RX modules in development]]></DESCRIPTION>
 <!--C889E0B679CE4CB28EB823B899376D6F-->  <TYPE><![CDATA[S]]></TYPE>
-<!--C889E0B679CE4CB28EB823B899376D6F-->  <CODE><![CDATA[ad_module_id in (select ad_module_id from ad_module where em_etrx_isrx = 'Y' and isindevelopment = 'Y')]]></CODE>
+<!--C889E0B679CE4CB28EB823B899376D6F-->  <CODE><![CDATA[ em_etrx_isrx = 'Y' and isindevelopment = 'Y']]></CODE>
 <!--C889E0B679CE4CB28EB823B899376D6F-->  <AD_MODULE_ID><![CDATA[BC7B2F721FD249F5A360C6AAD2A7EBF7]]></AD_MODULE_ID>
 <!--C889E0B679CE4CB28EB823B899376D6F--></AD_VAL_RULE>
 
