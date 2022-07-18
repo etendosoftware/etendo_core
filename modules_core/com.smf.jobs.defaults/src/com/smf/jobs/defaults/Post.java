@@ -4,14 +4,17 @@ import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.RequestContext;
+import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_actionButton.ActionButtonUtility;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -60,13 +63,13 @@ public class Post extends Action {
         Organization org = (Organization) register.get("organization");
         Client client = (Client) register.get("client");
         String tableId = register.getEntity().getTableId();
-        Date date = (Date) register.get(getDateProperty(tableId, vars));
-        DateFormat dateFormat = new SimpleDateFormat(vars.getJavaDateFormat());
-        String strDate = dateFormat.format(date);
         if (!"Y".equals(posted)) {
           messageResult = ActionButtonUtility.processButton(vars, register.getId().toString(), tableId, org.getId(),
               new DalConnectionProvider());
         } else {
+          Date date = (Date) register.get(getDateProperty(tableId, vars));
+          DateFormat dateFormat = new SimpleDateFormat(vars.getJavaDateFormat());
+          String strDate = dateFormat.format(date);
           messageResult = ActionButtonUtility.resetAccounting(vars, client.getId(), org.getId(), tableId,
               register.getId().toString(), strDate, new DalConnectionProvider());
         }
@@ -78,7 +81,7 @@ public class Post extends Action {
           result.setType(Result.Type.SUCCESS);
           success++;
         }
-        result.setMessage(messageResult.getTitle().concat(": ").concat(messageResult.getMessage()));
+        result.setMessage(messageResult.getMessage());
       }
       massiveMessageHandler(result, registers, errors, success);
     } catch (Exception e) {
@@ -128,9 +131,32 @@ public class Post extends Action {
 
     String property = mapOfTablesSupported.get(adTableId);
     if (property == null) {
-      throw new OBException(OBMessageUtils.messageBD(new DalConnectionProvider(), "TableNotFound", vars.getLanguage()));
+      /*
+       * Position 0 = ACCTDATECOLUMN
+       * Position 1 = ACCTCLASSNAME
+       * */
+      Object[] acctinfo = getTableInfo(adTableId);
+      if (acctinfo == null) {
+        throw new OBException(
+            OBMessageUtils.messageBD(new DalConnectionProvider(), "TableNotFound", vars.getLanguage()));
+      }
+      if (acctinfo.length != 0 && (!acctinfo[1].equals("") && !acctinfo[0].equals(""))) {
+        property = StringUtils.uncapitalize((String) acctinfo[0]);
+      }
     }
     return property;
+  }
+
+  private Object[] getTableInfo(String adTableId) {
+    String hql = "SELECT c.dBColumnName as ACCTDATECOLUMN, t.acctclassname " +
+        "FROM ADTable t , ADColumn c " +
+        "WHERE t.acctdateColumn = c.id " +
+        "AND t.id = :adTableId ";
+
+    Query query = OBDal.getInstance().getSession().createQuery(hql);
+    query.setParameter("adTableId", adTableId);
+    query.setMaxResults(1);
+    return (Object[]) query.uniqueResult();
   }
 
 }
