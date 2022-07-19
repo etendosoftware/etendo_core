@@ -133,14 +133,13 @@ public class Post extends Action {
     if (property == null) {
       /*
        * Position 0 = ACCTDATECOLUMN
-       * Position 1 = ACCTCLASSNAME
        * */
       Object[] acctinfo = getTableInfo(adTableId);
       if (acctinfo == null) {
         throw new OBException(
             OBMessageUtils.messageBD(new DalConnectionProvider(), "TableNotFound", vars.getLanguage()));
       }
-      if (acctinfo.length != 0 && (!acctinfo[1].equals("") && !acctinfo[0].equals(""))) {
+      if (acctinfo.length != 0 && !acctinfo[0].equals("")) {
         property = StringUtils.uncapitalize((String) acctinfo[0]);
       }
     }
@@ -148,7 +147,7 @@ public class Post extends Action {
   }
 
   private Object[] getTableInfo(String adTableId) {
-    String hql = "SELECT c.dBColumnName as ACCTDATECOLUMN, t.acctclassname " +
+    String hql = "SELECT c.dBColumnName as ACCTDATECOLUMN " +
         "FROM ADTable t , ADColumn c " +
         "WHERE t.acctdateColumn = c.id " +
         "AND t.id = :adTableId ";
