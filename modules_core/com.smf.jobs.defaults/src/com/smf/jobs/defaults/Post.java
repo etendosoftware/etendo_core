@@ -134,19 +134,19 @@ public class Post extends Action {
       /*
        * Position 0 = ACCTDATECOLUMN
        * */
-      Object[] acctinfo = getTableInfo(adTableId);
-      if (acctinfo == null) {
+      String acctInfo = getTableInfo(adTableId);
+      if (acctInfo == null) {
         throw new OBException(
             OBMessageUtils.messageBD(new DalConnectionProvider(), "TableNotFound", vars.getLanguage()));
       }
-      if (acctinfo.length != 0 && !acctinfo[0].equals("")) {
-        property = StringUtils.uncapitalize((String) acctinfo[0]);
+      if (!StringUtils.isEmpty(acctInfo)) {
+        property = StringUtils.uncapitalize(acctInfo);
       }
     }
     return property;
   }
 
-  private Object[] getTableInfo(String adTableId) {
+  private String getTableInfo(String adTableId) {
     String hql = "SELECT c.dBColumnName as ACCTDATECOLUMN " +
         "FROM ADTable t , ADColumn c " +
         "WHERE t.acctdateColumn = c.id " +
@@ -155,7 +155,7 @@ public class Post extends Action {
     Query query = OBDal.getInstance().getSession().createQuery(hql);
     query.setParameter("adTableId", adTableId);
     query.setMaxResults(1);
-    return (Object[]) query.uniqueResult();
+    return (String) query.uniqueResult();
   }
 
 }
