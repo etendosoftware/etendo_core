@@ -161,7 +161,7 @@ OB.Jobs.ProcessShipment.onLoad = function(view) {
                 var action = actions[i];
                 if (currentValues[action]) {
                     newValues[action] = currentValues[action];
-                    }
+                }
             }
 
           docActionField.setValueMap(newValues);
