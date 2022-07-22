@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2018 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2009-2018 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -33,9 +33,9 @@ import java.util.Map;
  * Openbravo implementation of the Quartz Job interface to enable Openbravo processes to be
  * scheduled through the Quartz Scheduler. DefaultJob simply removes the {@link Process} and
  * {@link ProcessBundle} objects from the JobExecutionContext and executes them.
- * 
+ *
  * @author awolski
- * 
+ *
  */
 public class DefaultJob implements Job {
 
@@ -65,8 +65,6 @@ public class DefaultJob implements Job {
       SessionInfo.setQueryProfile("scheduledProcess");
 
       processInstance.execute(bundle);
-      bundle.applyLog();
-      jec.getMergedJobDataMap().put(ProcessBundle.KEY, bundle.getMap());
 
     } catch (final Exception e) {
       String processName = bundle != null && bundle.getProcessClass() != null
@@ -74,12 +72,21 @@ public class DefaultJob implements Job {
           : "";
       log.error("Error executing process " + processName, e);
       throw new JobExecutionException(e);
+    } finally {
+      if (bundle != null) {
+        try {
+          bundle.applyLog();
+          jec.getMergedJobDataMap().put(ProcessBundle.KEY, bundle.getMap());
+        } catch (Exception applyError) {
+          log.error(applyError);
+        }
+      }
     }
   }
 
   /**
    * Returns the process instance
-   * 
+   *
    * @return process instance
    */
   public Process getProcessInstance() {
