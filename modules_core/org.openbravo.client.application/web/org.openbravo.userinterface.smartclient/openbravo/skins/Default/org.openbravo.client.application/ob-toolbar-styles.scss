@@ -45,9 +45,6 @@
   font-size: 0pt;
 }
 
-.OBToolbarIconButton {
-}
-
 .OBToolbarIconButtonDisabledProgress {
   border: 1px solid $color1;
 }
@@ -319,23 +316,6 @@
     }
 }
 
-
-
-.OBToolbarTextButtonSelected,
-.OBToolbarTextButtonSelectedFocused,
-.OBToolbarTextButtonDown,
-.OBToolbarTextButtonFocusedDown,
-.OBToolbarTextButtonSelectedDown,
-.OBToolbarTextButtonSelectedFocusedDown,
-
-.OBToolbarTextButtonParentSelected,
-.OBToolbarTextButtonParentSelectedFocused,
-.OBToolbarTextButtonParentDown,
-.OBToolbarTextButtonParentFocusedDown,
-.OBToolbarTextButtonParentSelectedDown,
-.OBToolbarTextButtonParentSelectedFocusedDown {
-}
-
 .OBToolbarTextButtonDisabled,
 .OBToolbarTextButtonSelectedDisabled,
 
@@ -343,4 +323,11 @@
 .OBToolbarTextButtonParentSelectedDisabled {
   color: #777;
   background-color: #eff1f7;
+}
+
+.OBToolbar {
+  .OBFormButtonDisabled,
+  .OBFormButtonSelectedDisabled {
+    display: none;
+  }
 }

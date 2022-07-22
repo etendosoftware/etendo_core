@@ -918,9 +918,12 @@ html[data-useragent*="MSIE 7.0"] .OBFormFieldError .OBFormFieldDateInputHint {
 
 .OBFormButtonDisabled,
 .OBFormButtonSelectedDisabled {
-  background-color: #202452;
-  color: #202452;
-  cursor: default;
+  background-color: #ccc;
+  color: #ffffff;
+}
+.OBFormButtonDisabled:hover,
+.OBFormButtonSelectedDisabled:hover {
+  opacity: 80%;
 }
 
 .OBFormButtonTitle,
