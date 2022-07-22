@@ -134,6 +134,7 @@ OB.Jobs.ProcessShipment.onLoad = function(view) {
     var isProcessing = "";
     var tableId = "319";
     var documentStatuses = [];
+    var documentActions = [];
 
     for (i = 0; i < selectedRecords.length; i++) {
       var record = selectedRecords[i]
@@ -152,21 +153,32 @@ OB.Jobs.ProcessShipment.onLoad = function(view) {
         {
         },
         function(response, data, request) {
-          var actions = data.actions;
-          var currentValues = docActionField.getValueMap();
-          var newValues = {};
+            var actions = data.actions;
+            var currentValues = docActionField.getValueMap();
+            var newValues = {};
 
-          for (i = 0; i < actions.length; i++) {
-            var action = actions[i];
-            if (currentValues[action]) {
-                newValues[action] = currentValues[action];
+            for (i = 0; i < actions.length; i++) {
+                var action = actions[i];
+                if (currentValues[action]) {
+                    newValues[action] = currentValues[action];
+                    }
             }
-          }
 
           docActionField.setValueMap(newValues);
-          docActionField.setValueProgrammatically(newValues[actions[actions.length - 1]]);
+          // Avoid setting an action that is on the record(s) but not in the dropdown list
+          if (newValues[documentActions[0]]) {
+            docActionField.setValueProgrammatically(documentActions[0]);
+          } else {
+            // Set the first option if the record has an action that is not available in the list
+            docActionField.setValueProgrammatically(docActionField.getFirstOptionValue());
+          }
+
+          // If OK Button is not enabled but there are actions to select, enable it manually
+          if (actions.length > 0 && view.okButton && !view.okButton.isEnabled()) {
+            view.okButton.enable();
+          }
         }
-      );
+    );
 }
 
 OB.Utilities.Action.set('smartclientSay', function(paramObj) {
