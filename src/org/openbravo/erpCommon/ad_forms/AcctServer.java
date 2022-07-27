@@ -754,7 +754,7 @@ public abstract class AcctServer {
         log4j.error("An error ocurred posting RecordId: " + strClave + " - tableId: " + AD_Table_ID,
             e);
         if(throwErrors) {
-          throw new OBException(e.getMessage());
+          throw new OBException(messageResult.getMessage());
         }
       }
     } catch (ServletException e) {

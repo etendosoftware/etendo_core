@@ -394,8 +394,8 @@ html[data-useragent*="MSIE 7.0"] .OBFormFieldError .OBFormFieldDateInputHint {
 }
 
 .OBFormFieldStaticDisabled {
-  color: #7d7d7d;
-  -webkit-text-fill-color: #7d7d7d;
+  color: #515151;
+  -webkit-text-fill-color: #515151;
 }
 
 .OBFormFieldInputRequiredDisabled,
@@ -410,8 +410,8 @@ html[data-useragent*="MSIE 7.0"] .OBFormFieldError .OBFormFieldDateInputHint {
 .OBFormFieldImageInputDisabled {
   border: 0px none;
   background-color: #f2f2f2;
-  color: #7d7d7d;
-  -webkit-text-fill-color: #7d7d7d;
+  color: #515151;
+  -webkit-text-fill-color: #515151;
 }
 
 .OBFormFieldSelectControl,
