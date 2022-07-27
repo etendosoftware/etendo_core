@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
+import org.openbravo.base.model.Entity;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.RequestContext;
@@ -67,7 +68,7 @@ public class Post extends Action {
           messageResult = ActionButtonUtility.processButton(vars, register.getId().toString(), tableId, org.getId(),
               new DalConnectionProvider());
         } else {
-          Date date = (Date) register.get(getDateProperty(tableId, vars));
+          Date date = (Date) register.get(getDateProperty(tableId, vars, register.getEntity()));
           DateFormat dateFormat = new SimpleDateFormat(vars.getJavaDateFormat());
           String strDate = dateFormat.format(date);
           messageResult = ActionButtonUtility.resetAccounting(vars, client.getId(), org.getId(), tableId,
@@ -111,7 +112,7 @@ public class Post extends Action {
     return BaseOBObject.class;
   }
 
-  private String getDateProperty(String adTableId, VariablesSecureApp vars) {
+  private String getDateProperty(String adTableId, VariablesSecureApp vars, Entity entity) {
     Map<String, String> mapOfTablesSupported = Map.ofEntries(
         Map.entry("318", Invoice.PROPERTY_ACCOUNTINGDATE),
         Map.entry("800060", Amortization.PROPERTY_ACCOUNTINGDATE),
@@ -134,14 +135,12 @@ public class Post extends Action {
       /*
        * Position 0 = ACCTDATECOLUMN
        * */
-      String acctInfo = getTableInfo(adTableId);
-      if (acctInfo == null) {
+      String acctDateColumn = getTableInfo(adTableId);
+      if (acctDateColumn == null) {
         throw new OBException(
             OBMessageUtils.messageBD(new DalConnectionProvider(), "TableNotFound", vars.getLanguage()));
       }
-      if (!StringUtils.isEmpty(acctInfo)) {
-        property = StringUtils.uncapitalize(acctInfo);
-      }
+      property = entity.getPropertyByColumnName(acctDateColumn).getName();
     }
     return property;
   }
