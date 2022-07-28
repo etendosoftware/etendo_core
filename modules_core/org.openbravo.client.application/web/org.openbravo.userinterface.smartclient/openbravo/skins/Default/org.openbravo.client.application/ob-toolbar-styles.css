@@ -382,4 +382,9 @@
   background-color: #eff1f7;
 }
 
+.OBToolbar .OBFormButtonDisabled,
+.OBToolbar .OBFormButtonSelectedDisabled {
+  display: none;
+}
+
 /*# sourceMappingURL=ob-toolbar-styles.css.map */
