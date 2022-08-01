@@ -53,22 +53,22 @@
         <default><![CDATA[N]]></default>
         <onCreateDefault/>
       </column>
-      <foreign-key foreignTable="AD_CLIENT" name="JOBS_FILTER_CLIENT">
+      <foreign-key foreignTable="AD_CLIENT" name="JOBS_JOB_RESULT_CLIENT">
         <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="AD_USER" name="JOBS_FILTER_CREATED">
+      <foreign-key foreignTable="AD_USER" name="JOBS_JOB_RESULT_CREATED">
         <reference local="CREATEDBY" foreign="AD_USER_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="AD_ORG" name="JOBS_FILTER_ORG">
+      <foreign-key foreignTable="AD_ORG" name="JOBS_JOB_RESULT_ORG">
         <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="AD_USER" name="JOBS_FILTER_UPDATED">
+      <foreign-key foreignTable="AD_USER" name="JOBS_JOB_RESULT_UPDATED">
         <reference local="UPDATEDBY" foreign="AD_USER_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="JOBS_JOB" name="JOBS_JOBLINE_JOB">
+      <foreign-key foreignTable="JOBS_JOB" name="JOBS_JOB_RESULT_JOB">
         <reference local="JOBS_JOB_ID" foreign="JOBS_JOB_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="AD_PROCESS_REQUEST" name="JOBS_PROCESS_REQUEST_ID">
+      <foreign-key foreignTable="AD_PROCESS_REQUEST" name="JOBS_JOB_RESULT_REQUEST_ID">
         <reference local="AD_PROCESS_REQUEST_ID" foreign="AD_PROCESS_REQUEST_ID"/>
       </foreign-key>
       <index name="JOBS_JOB_RESULT_JOBS_JOB" unique="false">
