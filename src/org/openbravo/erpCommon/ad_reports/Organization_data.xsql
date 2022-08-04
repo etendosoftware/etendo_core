@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<SqlClass id="class" name="OrganizationData" package="org.openbravo.erpCommon.ad_reports">
+<SqlClass id="class" name="OrganizationData" package="org.openbravo.erpCommon.ad_reports" accessModifier="public">
   <SqlClassComment>Organization Data</SqlClassComment>
   <SqlMethod name="select" type="preparedStatement" return="multiple">
     <SqlMethodComment>Select Organization</SqlMethodComment>
