@@ -2258,6 +2258,8 @@ OB.ViewFormProperties = {
       parameters = parameters || {};
       parameters.willHandleError = true;
       parameters.formSave = true;
+      // prevent local order on new record
+      this.view.viewGrid._filteringAndSortingManually = true;
       // last parameter true prevents additional validation
       this.saveData(callback, parameters, true);
     }
