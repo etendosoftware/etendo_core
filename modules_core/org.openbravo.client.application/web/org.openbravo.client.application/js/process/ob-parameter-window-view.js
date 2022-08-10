@@ -395,7 +395,7 @@ isc.OBParameterWindowView.addProperties({
         }
       };
       if (refreshParent) {
-        if (this.button && this.button.multiRecord) {
+        if (this.button && this.button.multiRecord && me.buttonOwnerView.viewGrid.getSelectedRecords().length > 1) {
           this.buttonOwnerView.refresh(afterRefreshCallback);
         } else {
           if (
