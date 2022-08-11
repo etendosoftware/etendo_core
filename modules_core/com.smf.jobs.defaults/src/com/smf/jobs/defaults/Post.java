@@ -51,7 +51,7 @@ public class Post extends Action {
           result.setType(Result.Type.SUCCESS);
           success++;
         }
-        result.setMessage(messageResult.getTitle().concat(": ").concat(messageResult.getMessage()));
+        result.setMessage(messageResult.getTitle().isEmpty() ? messageResult.getMessage() : messageResult.getTitle().concat(": ").concat(messageResult.getMessage()));
       }
       massiveMessageHandler(result, registers, errors, success);
     } catch (Exception e) {
