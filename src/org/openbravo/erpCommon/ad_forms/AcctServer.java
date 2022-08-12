@@ -134,7 +134,9 @@ public abstract class AcctServer {
   public String Record_ID = "";
   public String IsReversal = "";
   public String IsReturn = "";
-  /** No Currency in Document Indicator */
+  /**
+   * No Currency in Document Indicator
+   */
   protected static final String NO_CURRENCY = "-1";
   // This is just for the initialization of the accounting
   public String m_IsOpening = "N";
@@ -160,50 +162,88 @@ public abstract class AcctServer {
    */
   public boolean MultiCurrency = false;
 
-  /** Amount Type - Invoice */
+  /**
+   * Amount Type - Invoice
+   */
   public static final int AMTTYPE_Gross = 0;
   public static final int AMTTYPE_Net = 1;
   public static final int AMTTYPE_Charge = 2;
-  /** Amount Type - Allocation */
+  /**
+   * Amount Type - Allocation
+   */
   public static final int AMTTYPE_Invoice = 0;
   public static final int AMTTYPE_Allocation = 1;
   public static final int AMTTYPE_Discount = 2;
   public static final int AMTTYPE_WriteOff = 3;
 
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_NotPosted = "N";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_NotBalanced = "b";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_NotConvertible = "c";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_PeriodClosed = "p";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_InvalidAccount = "i";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_PostPrepared = "y";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_Posted = "Y";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_Error = "E";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_InvalidCost = "C";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_NotCalculatedCost = "NC";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_NoRelatedPO = "NO";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_DocumentLocked = "L";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_DocumentDisabled = "D";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_TableDisabled = "T";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_BackgroundDisabled = "d";
-  /** Document Status */
+  /**
+   * Document Status
+   */
   public static final String STATUS_NoAccountingDate = "AD";
 
-  /** Table IDs for document level conversion rates */
+  /**
+   * Table IDs for document level conversion rates
+   */
   public static final String TABLEID_Invoice = "318";
   public static final String TABLEID_Payment = "D1A97202E832470285C9B1EB026D54E2";
   public static final String TABLEID_Transaction = "4D8C3B3C31D1410DA046140C9F024D17";
@@ -223,58 +263,104 @@ public abstract class AcctServer {
   OBError messageResult = null;
   String strMessage = null;
 
-  /** AR Invoices */
+  /**
+   * AR Invoices
+   */
   public static final String DOCTYPE_ARInvoice = "ARI";
-  /** Return Material Sales Invoice */
+  /**
+   * Return Material Sales Invoice
+   */
   public static final String DOCTYPE_RMSalesInvoice = "ARI_RM";
-  /** AR Credit Memo */
+  /**
+   * AR Credit Memo
+   */
   public static final String DOCTYPE_ARCredit = "ARC";
-  /** AR Receipt */
+  /**
+   * AR Receipt
+   */
   public static final String DOCTYPE_ARReceipt = "ARR";
-  /** AR ProForma */
+  /**
+   * AR ProForma
+   */
   public static final String DOCTYPE_ARProForma = "ARF";
 
-  /** AP Invoices */
+  /**
+   * AP Invoices
+   */
   public static final String DOCTYPE_APInvoice = "API";
-  /** AP Credit Memo */
+  /**
+   * AP Credit Memo
+   */
   public static final String DOCTYPE_APCredit = "APC";
-  /** AP Payment */
+  /**
+   * AP Payment
+   */
   public static final String DOCTYPE_APPayment = "APP";
 
-  /** CashManagement Bank Statement */
+  /**
+   * CashManagement Bank Statement
+   */
   public static final String DOCTYPE_BankStatement = "CMB";
-  /** CashManagement Cash Journals */
+  /**
+   * CashManagement Cash Journals
+   */
   public static final String DOCTYPE_CashJournal = "CMC";
-  /** CashManagement Allocations */
+  /**
+   * CashManagement Allocations
+   */
   public static final String DOCTYPE_Allocation = "CMA";
 
-  /** Amortization */
+  /**
+   * Amortization
+   */
   public static final String DOCTYPE_Amortization = "AMZ";
 
-  /** Material Shipment */
+  /**
+   * Material Shipment
+   */
   public static final String DOCTYPE_MatShipment = "MMS";
-  /** Material Receipt */
+  /**
+   * Material Receipt
+   */
   public static final String DOCTYPE_MatReceipt = "MMR";
-  /** Material Inventory */
+  /**
+   * Material Inventory
+   */
   public static final String DOCTYPE_MatInventory = "MMI";
-  /** Material Movement */
+  /**
+   * Material Movement
+   */
   public static final String DOCTYPE_MatMovement = "MMM";
-  /** Material Production */
+  /**
+   * Material Production
+   */
   public static final String DOCTYPE_MatProduction = "MMP";
-  /** Material Internal Consumption */
+  /**
+   * Material Internal Consumption
+   */
   public static final String DOCTYPE_MatInternalConsumption = "MIC";
 
-  /** Match Invoice */
+  /**
+   * Match Invoice
+   */
   public static final String DOCTYPE_MatMatchInv = "MXI";
-  /** Match PO */
+  /**
+   * Match PO
+   */
   public static final String DOCTYPE_MatMatchPO = "MXP";
 
-  /** GL Journal */
+  /**
+   * GL Journal
+   */
   public static final String DOCTYPE_GLJournal = "GLJ";
 
-  /** Purchase Order */
+  /**
+   * Purchase Order
+   */
   public static final String DOCTYPE_POrder = "POO";
-  /** Sales Order */
+  /**
+   * Sales Order
+   */
   public static final String DOCTYPE_SOrder = "SOO";
 
   // DPManagement
@@ -295,13 +381,17 @@ public abstract class AcctServer {
 
   /*************************************************************************/
 
-  /** Account Type - Invoice */
+  /**
+   * Account Type - Invoice
+   */
   public static final String ACCTTYPE_Charge = "0";
   public static final String ACCTTYPE_C_Receivable = "1";
   public static final String ACCTTYPE_V_Liability = "2";
   public static final String ACCTTYPE_V_Liability_Services = "3";
 
-  /** Account Type - Payment */
+  /**
+   * Account Type - Payment
+   */
   public static final String ACCTTYPE_UnallocatedCash = "10";
   public static final String ACCTTYPE_BankInTransit = "11";
   public static final String ACCTTYPE_PaymentSelect = "12";
@@ -311,35 +401,47 @@ public abstract class AcctServer {
   public static final String ACCTTYPE_ConvertChargeDefaultAmt = "15";
   public static final String ACCTTYPE_ConvertGainDefaultAmt = "16";
 
-  /** Account Type - Cash */
+  /**
+   * Account Type - Cash
+   */
   public static final String ACCTTYPE_CashAsset = "20";
   public static final String ACCTTYPE_CashTransfer = "21";
   public static final String ACCTTYPE_CashExpense = "22";
   public static final String ACCTTYPE_CashReceipt = "23";
   public static final String ACCTTYPE_CashDifference = "24";
 
-  /** Account Type - Allocation */
+  /**
+   * Account Type - Allocation
+   */
   public static final String ACCTTYPE_DiscountExp = "30";
   public static final String ACCTTYPE_DiscountRev = "31";
   public static final String ACCTTYPE_WriteOff = "32";
   public static final String ACCTTYPE_WriteOff_Revenue = "64";
 
-  /** Account Type - Bank Statement */
+  /**
+   * Account Type - Bank Statement
+   */
   public static final String ACCTTYPE_BankAsset = "40";
   public static final String ACCTTYPE_InterestRev = "41";
   public static final String ACCTTYPE_InterestExp = "42";
   public static final String ACCTTYPE_ConvertChargeLossAmt = "43";
   public static final String ACCTTYPE_ConvertChargeGainAmt = "44";
 
-  /** Inventory Accounts */
+  /**
+   * Inventory Accounts
+   */
   public static final String ACCTTYPE_InvDifferences = "50";
   public static final String ACCTTYPE_NotInvoicedReceipts = "51";
 
-  /** Project Accounts */
+  /**
+   * Project Accounts
+   */
   public static final String ACCTTYPE_ProjectAsset = "61";
   public static final String ACCTTYPE_ProjectWIP = "62";
 
-  /** GL Accounts */
+  /**
+   * GL Accounts
+   */
   public static final String ACCTTYPE_PPVOffset = "60";
 
   // Reference (to find SalesRegion from BPartner)
@@ -353,11 +455,11 @@ public abstract class AcctServer {
 
   /**
    * Constructor
-   * 
+   *
    * @param m_AD_Client_ID
-   *          Client ID of these Documents
+   *     Client ID of these Documents
    * @param connectionProvider
-   *          Provider for db connections.
+   *     Provider for db connections.
    */
   public AcctServer(String m_AD_Client_ID, String m_AD_Org_ID,
       ConnectionProvider connectionProvider) {
@@ -469,7 +571,7 @@ public abstract class AcctServer {
 
   /**
    * @param isBackground
-   *          the isBackground to set
+   *     the isBackground to set
    */
   public void setBackground(boolean isBackground) {
     this.isBackground = isBackground;
@@ -477,13 +579,13 @@ public abstract class AcctServer {
 
   /**
    * Factory - Create Posting document
-   * 
+   *
    * @param AD_Table_ID
-   *          Table ID of Documents
+   *     Table ID of Documents
    * @param AD_Client_ID
-   *          Client ID of Documents
+   *     Client ID of Documents
    * @param connectionProvider
-   *          Database connection provider
+   *     Database connection provider
    * @return Document
    */
   public static AcctServer get(String AD_Table_ID, String AD_Client_ID, String AD_Org_ID,
@@ -753,7 +855,13 @@ public abstract class AcctServer {
         save(conn, vars.getUser());
         log4j.error("An error ocurred posting RecordId: " + strClave + " - tableId: " + AD_Table_ID,
             e);
-        if(throwErrors) {
+        if (throwErrors) {
+          if (messageResult == null) {
+            OBError error = new OBError();
+            error.setMessage(e.getMessage());
+            error.setType(STATUS_Error);
+            setMessageResult(error);
+          }
           throw new OBException(messageResult.getMessage());
         }
       }
@@ -835,7 +943,8 @@ public abstract class AcctServer {
       log4j.debug("AcctServer - Post - Before the postCommit - C_CURRENCY_ID = " + C_Currency_ID);
     }
     for (int i = 0; i < m_fact.length; i++) {
-      if (m_fact[i] != null && (m_fact[i].getLines() == null || m_fact[i].getLines().length == 0) && !STATUS_Posted.equals(getStatus())) {
+      if (m_fact[i] != null && (m_fact[i].getLines() == null || m_fact[i].getLines().length == 0) && !STATUS_Posted.equals(
+          getStatus())) {
         return false;
       }
     }
@@ -859,9 +968,9 @@ public abstract class AcctServer {
 
   /**
    * Post Commit. Save Facts & Document
-   * 
+   *
    * @param status
-   *          status
+   *     status
    * @return Posting Status
    */
   private final String postCommit(String status, ConnectionProvider conn, VariablesSecureApp vars,
@@ -898,11 +1007,11 @@ public abstract class AcctServer {
 
   /**
    * Save to Disk - set posted flag
-   * 
+   *
    * @param conn
-   *          connection
+   *     connection
    * @param strUser
-   *          AD_User_ID
+   *     AD_User_ID
    * @return true if saved
    */
   private final boolean save(ConnectionProvider conn, String strUser) {
@@ -1093,8 +1202,8 @@ public abstract class AcctServer {
 
   /**
    * @deprecated During cleanup for 3.0 the entire table ad_node was removed from core, so this
-   *             insertNote method doesn't serve have any purpose anymore. Keep as deprecated noop
-   *             in case any module may call it.
+   *     insertNote method doesn't serve have any purpose anymore. Keep as deprecated noop
+   *     in case any module may call it.
    */
   @Deprecated
   public boolean insertNote(String aD_Client_ID, String aD_Org_ID, String AD_User_ID,
@@ -1105,9 +1214,9 @@ public abstract class AcctServer {
 
   /**
    * Posting logic for Accounting Schema index
-   * 
+   *
    * @param index
-   *          Accounting Schema index
+   *     Accounting Schema index
    * @return posting status/error code
    */
   private final String postLogic(int index, ConnectionProvider conn, Connection con,
@@ -1201,7 +1310,7 @@ public abstract class AcctServer {
 
   /**
    * Is the Source Document Balanced
-   * 
+   *
    * @return true if (source) balanced
    */
   public boolean isBalanced() {
@@ -1223,9 +1332,9 @@ public abstract class AcctServer {
 
   /**
    * Is Document convertible to currency and Conversion Type
-   * 
+   *
    * @param acctSchema
-   *          accounting schema
+   *     accounting schema
    * @return true, if convertible to accounting currency
    */
   public boolean isConvertible(AcctSchema acctSchema, ConnectionProvider conn)
@@ -1323,9 +1432,9 @@ public abstract class AcctServer {
 
   /**
    * Get the Amount (loaded in loadDocumentDetails)
-   * 
+   *
    * @param AmtType
-   *          see AMTTYPE_*
+   *     see AMTTYPE_*
    * @return Amount
    */
   public String getAmount(int AmtType) {
@@ -1337,7 +1446,7 @@ public abstract class AcctServer {
 
   /**
    * Get Amount with index 0
-   * 
+   *
    * @return Amount (primary document amount)
    */
   public String getAmount() {
@@ -1346,7 +1455,7 @@ public abstract class AcctServer {
 
   /**
    * Get the Convertion Date
-   * 
+   *
    * @return DateAcct
    */
   protected String getConversionDate() {
@@ -1355,17 +1464,17 @@ public abstract class AcctServer {
 
   /**
    * Convert an amount
-   * 
+   *
    * @param CurFrom_ID
-   *          The C_Currency_ID FROM
+   *     The C_Currency_ID FROM
    * @param CurTo_ID
-   *          The C_Currency_ID TO
+   *     The C_Currency_ID TO
    * @param ConvDate
-   *          The Conversion date - if null - use current date
+   *     The Conversion date - if null - use current date
    * @param RateType
-   *          The Conversion rate type - if null/empty - use Spot
+   *     The Conversion rate type - if null/empty - use Spot
    * @param Amt
-   *          The amount to be converted
+   *     The amount to be converted
    * @return converted amount
    */
   public static String getConvertedAmt(String Amt, String CurFrom_ID, String CurTo_ID,
@@ -1455,7 +1564,7 @@ public abstract class AcctServer {
 
   /**
    * Is Period Open
-   * 
+   *
    * @return true if period is open
    */
   public boolean isPeriodOpen() {
@@ -1510,7 +1619,7 @@ public abstract class AcctServer {
 
   /**
    * Matching
-   * 
+   *
    * <pre>
    *  Derive Invoice-Receipt Match from PO-Invoice and PO-Receipt
    *  Purchase Order (20)
@@ -1524,10 +1633,10 @@ public abstract class AcctServer {
    *  (b) Creates Indirects
    *      - Invoice1 - Receipt2 (5)
    *  (Not imlemented)
-   * 
-   * 
+   *
+   *
    * </pre>
-   * 
+   *
    * @return number of records created
    */
   public int match(VariablesSecureApp vars, ConnectionProvider conn, Connection con) {
@@ -1579,21 +1688,21 @@ public abstract class AcctServer {
 
   /**
    * Create MatchInv record
-   * 
+   *
    * @param aD_Client_ID
-   *          Client
+   *     Client
    * @param aD_Org_ID
-   *          Org
+   *     Org
    * @param M_InOutLine_ID
-   *          Receipt
+   *     Receipt
    * @param C_InvoiceLine_ID
-   *          Invoice
+   *     Invoice
    * @param m_Product_ID
-   *          Product
+   *     Product
    * @param DateTrx
-   *          Date
+   *     Date
    * @param qty
-   *          Qty
+   *     Qty
    * @return true if record created
    */
   private int createMatchInv(String aD_Client_ID, String aD_Org_ID, String M_InOutLine_ID,
@@ -1614,11 +1723,11 @@ public abstract class AcctServer {
 
   /**
    * Get the account for Accounting Schema
-   * 
+   *
    * @param AcctType
-   *          see ACCTTYPE_*
+   *     see ACCTTYPE_*
    * @param as
-   *          accounting schema
+   *     accounting schema
    * @return Account
    */
   public final Account getAccount(String AcctType, AcctSchema as, ConnectionProvider conn) {
@@ -1750,11 +1859,11 @@ public abstract class AcctServer {
 
   /**
    * Get the account for Accounting Schema
-   * 
+   *
    * @param cBPartnerId
-   *          business partner id
+   *     business partner id
    * @param as
-   *          accounting schema
+   *     accounting schema
    * @return Account
    */
   public final Account getAccountBPartner(String cBPartnerId, AcctSchema as, boolean isReceipt,
@@ -1764,11 +1873,11 @@ public abstract class AcctServer {
 
   /**
    * Get the account for Accounting Schema
-   * 
+   *
    * @param cBPartnerId
-   *          business partner id
+   *     business partner id
    * @param as
-   *          accounting schema
+   *     accounting schema
    * @return Account
    */
   public final Account getAccountBPartner(String cBPartnerId, AcctSchema as, boolean isReceipt,
@@ -1884,15 +1993,15 @@ public abstract class AcctServer {
 
   /**
    * It gets Account to be used to provision for the selected Business Partner
-   * 
+   *
    * @param BPartnerId
-   *          : ID of the Business Partner
+   *     : ID of the Business Partner
    * @param isExpense
-   *          : Provision Expense Account. If not it applies to Provision Applied account
+   *     : Provision Expense Account. If not it applies to Provision Applied account
    * @param as
-   *          : Accounting Schema
+   *     : Accounting Schema
    * @param conn
-   *          : Connection Provider
+   *     : Connection Provider
    * @return Account
    * @throws ServletException
    */
@@ -1942,13 +2051,13 @@ public abstract class AcctServer {
 
   /**
    * It gets Account to be used to provision for the selected Business Partner
-   * 
+   *
    * @param BPartnerId
-   *          : ID of the Business Partner
+   *     : ID of the Business Partner
    * @param as
-   *          : Accounting Schema
+   *     : Accounting Schema
    * @param conn
-   *          : Connection Provider
+   *     : Connection Provider
    * @return Account
    * @throws ServletException
    */
@@ -2109,9 +2218,9 @@ public abstract class AcctServer {
         Map<String, String> parameters = new HashMap<String, String>();
         String strAccount = bIsReceipt
             ? ("INT".equals(use) ? "@InTransitPaymentAccountIN@"
-                : ("DEP".equals(use) ? "@DepositAccount@" : "@ClearedPaymentAccount@"))
+            : ("DEP".equals(use) ? "@DepositAccount@" : "@ClearedPaymentAccount@"))
             : ("INT".equals(use) ? "@InTransitPaymentAccountOUT@"
-                : ("CLE".equals(use) ? "@ClearedPaymentAccountOUT@" : "@WithdrawalAccount@"));
+            : ("CLE".equals(use) ? "@ClearedPaymentAccountOUT@" : "@WithdrawalAccount@"));
         parameters.put("Account", strAccount);
         if (financialAccountAccounting.getAccount() != null) {
           parameters.put("Entity", financialAccountAccounting.getAccount().getIdentifier());
@@ -2140,16 +2249,16 @@ public abstract class AcctServer {
 
   /**
    * Get Source Currency Balance - subtracts line (and tax) amounts from total - no rounding
-   * 
+   *
    * @return positive amount, if total header is bigger than lines
    */
   public abstract BigDecimal getBalance();
 
   /**
    * Create Facts (the accounting logic)
-   * 
+   *
    * @param as
-   *          accounting schema
+   *     accounting schema
    * @return Fact
    */
   public abstract Fact createFact(AcctSchema as, ConnectionProvider conn, Connection con,
@@ -2534,17 +2643,17 @@ public abstract class AcctServer {
           || (isReceipt && amtDiff.compareTo(BigDecimal.ZERO) == -1)) {
         String convertAccount = StringUtils.isNotEmpty(FIN_Financial_Account_ID)
             && StringUtils.equals(OBDal.getInstance()
-                .get(FIN_FinancialAccount.class, FIN_Financial_Account_ID)
-                .getType(), "B") ? AcctServer.ACCTTYPE_ConvertChargeGainAmt
-                    : AcctServer.ACCTTYPE_ConvertGainDefaultAmt;
+            .get(FIN_FinancialAccount.class, FIN_Financial_Account_ID)
+            .getType(), "B") ? AcctServer.ACCTTYPE_ConvertChargeGainAmt
+            : AcctServer.ACCTTYPE_ConvertGainDefaultAmt;
         fact.createLine(line, getAccount(convertAccount, as, conn), currencyIDTo, "",
             amtDiff.abs().toString(), Fact_Acct_Group_ID, seqNo, DocumentType, conn);
       } else if (amtDiff.compareTo(BigDecimal.ZERO) != 0) {
         String convertAccount = StringUtils.isNotEmpty(FIN_Financial_Account_ID)
             && StringUtils.equals(OBDal.getInstance()
-                .get(FIN_FinancialAccount.class, FIN_Financial_Account_ID)
-                .getType(), "B") ? AcctServer.ACCTTYPE_ConvertChargeLossAmt
-                    : AcctServer.ACCTTYPE_ConvertChargeDefaultAmt;
+            .get(FIN_FinancialAccount.class, FIN_Financial_Account_ID)
+            .getType(), "B") ? AcctServer.ACCTTYPE_ConvertChargeLossAmt
+            : AcctServer.ACCTTYPE_ConvertChargeDefaultAmt;
         fact.createLine(line, getAccount(convertAccount, as, conn), currencyIDTo,
             amtDiff.abs().toString(), "", Fact_Acct_Group_ID, seqNo, DocumentType, conn);
       } else {
@@ -2882,17 +2991,17 @@ public abstract class AcctServer {
    * generated for compensate the difference between an Order and a related Invoice, it merges it's
    * amount with the next Payment Schedule Detail. Issue 19567:
    * https://issues.openbravo.com/view.php?id=19567
-   * 
+   *
    * @param paymentDetails
-   *          List of payment Details
+   *     List of payment Details
    * @param ps
-   *          Previous Payment Schedule
+   *     Previous Payment Schedule
    * @param psi
-   *          Invoice Payment Schedule of actual Payment Detail
+   *     Invoice Payment Schedule of actual Payment Detail
    * @param pso
-   *          Order Payment Schedule of actual Payment Detail
+   *     Order Payment Schedule of actual Payment Detail
    * @param currentPaymentDetailIndex
-   *          Index
+   *     Index
    */
   @Deprecated
   public BigDecimal getPaymentDetailAmount(List<FIN_PaymentDetail> paymentDetails,
@@ -2907,12 +3016,12 @@ public abstract class AcctServer {
       FIN_PaymentScheduleDetail psdNext = (currentPaymentDetailIndex == paymentDetails.size() - 1)
           ? null
           : paymentDetails.get(currentPaymentDetailIndex + 1)
-              .getFINPaymentScheduleDetailList()
-              .get(0);
+          .getFINPaymentScheduleDetailList()
+          .get(0);
       FIN_PaymentScheduleDetail psdPrevious = (currentPaymentDetailIndex == 0) ? null
           : paymentDetails.get(currentPaymentDetailIndex - 1)
-              .getFINPaymentScheduleDetailList()
-              .get(0);
+          .getFINPaymentScheduleDetailList()
+          .get(0);
       // If it has no Order related, and the next record belongs to the same Invoice Payment
       // Schedule and the next record has an Order related.
       if (pso == null && psdNext != null && psdNext.getInvoicePaymentSchedule() == psi
@@ -2940,17 +3049,17 @@ public abstract class AcctServer {
    * https://issues.openbravo.com/view.php?id=19567. Use
    * {@link #getPaymentDetailIdWriteOffAndAmount(List, FIN_PaymentSchedule, FIN_PaymentSchedule, FIN_PaymentSchedule, int)}
    * instead
-   * 
+   *
    * @param paymentDetails
-   *          List of payment Details
+   *     List of payment Details
    * @param ps
-   *          Previous Payment Schedule
+   *     Previous Payment Schedule
    * @param psi
-   *          Invoice Payment Schedule of actual Payment Detail
+   *     Invoice Payment Schedule of actual Payment Detail
    * @param pso
-   *          Order Payment Schedule of actual Payment Detail
+   *     Order Payment Schedule of actual Payment Detail
    * @param currentPaymentDetailIndex
-   *          Index
+   *     Index
    */
   @Deprecated
   public HashMap<String, BigDecimal> getPaymentDetailWriteOffAndAmount(
@@ -2965,17 +3074,17 @@ public abstract class AcctServer {
    * Detail was generated for compensate the difference between an Order and a related Invoice, it
    * merges it's amount with the next Payment Schedule Detail. Issue 19567:
    * https://issues.openbravo.com/view.php?id=19567
-   * 
+   *
    * @param paymentDetailsIds
-   *          List of payment Details Ids
+   *     List of payment Details Ids
    * @param ps
-   *          Previous Payment Schedule
+   *     Previous Payment Schedule
    * @param psi
-   *          Invoice Payment Schedule of actual Payment Detail
+   *     Invoice Payment Schedule of actual Payment Detail
    * @param pso
-   *          Order Payment Schedule of actual Payment Detail
+   *     Order Payment Schedule of actual Payment Detail
    * @param currentPaymentDetailIndex
-   *          Index
+   *     Index
    */
   public HashMap<String, BigDecimal> getPaymentDetailIdWriteOffAndAmount(
       List<String> paymentDetailsIds, FIN_PaymentSchedule ps, FIN_PaymentSchedule psi,
@@ -3003,20 +3112,20 @@ public abstract class AcctServer {
    * {@link #getPaymentDetailWriteOffAndAmount(List, FIN_PaymentSchedule, FIN_PaymentSchedule, FIN_PaymentSchedule, int)}
    * method, but it also stores a new field "MergedPaymentDetailId" inside the fieldProvider with
    * the merged payment detail id (if any).
-   * 
+   *
    * @param paymentDetails
-   *          List of payment Details
+   *     List of payment Details
    * @param ps
-   *          Previous Payment Schedule
+   *     Previous Payment Schedule
    * @param psi
-   *          Invoice Payment Schedule of actual Payment Detail
+   *     Invoice Payment Schedule of actual Payment Detail
    * @param pso
-   *          Order Payment Schedule of actual Payment Detail
+   *     Order Payment Schedule of actual Payment Detail
    * @param currentPaymentDetailIndex
-   *          Index
+   *     Index
    * @param fieldProvider
-   *          contains the FieldProvider with the Payment Detail currently being processed. Used to
-   *          store the "MergedPaymentDetailId" (if any) as a new field of the fieldProvider
+   *     contains the FieldProvider with the Payment Detail currently being processed. Used to
+   *     store the "MergedPaymentDetailId" (if any) as a new field of the fieldProvider
    */
   public HashMap<String, BigDecimal> getPaymentDetailWriteOffAndAmount(
       List<FIN_PaymentDetail> paymentDetails, FIN_PaymentSchedule ps, FIN_PaymentSchedule psi,
@@ -3043,22 +3152,22 @@ public abstract class AcctServer {
    * {@link #getPaymentDetailWriteOffAndAmount(List, FIN_PaymentSchedule, FIN_PaymentSchedule, FIN_PaymentSchedule, int)}
    * method, but it also stores a new field "MergedPaymentDetailId" inside the fieldProvider with
    * the merged payment detail id (if any).
-   * 
+   *
    * @param paymentDetail
-   *          Payment Detail
+   *     Payment Detail
    * @param paymentDetailNextId
-   *          Next Payment Detail id
+   *     Next Payment Detail id
    * @param paymentDetailPreviousId
-   *          Previous Payment Detail id
+   *     Previous Payment Detail id
    * @param ps
-   *          Previous Payment Schedule
+   *     Previous Payment Schedule
    * @param psi
-   *          Invoice Payment Schedule of actual Payment Detail
+   *     Invoice Payment Schedule of actual Payment Detail
    * @param pso
-   *          Order Payment Schedule of actual Payment Detail
+   *     Order Payment Schedule of actual Payment Detail
    * @param fieldProvider
-   *          contains the FieldProvider with the Payment Detail currently being processed. Used to
-   *          store the "MergedPaymentDetailId" (if any) as a new field of the fieldProvider
+   *     contains the FieldProvider with the Payment Detail currently being processed. Used to
+   *     store the "MergedPaymentDetailId" (if any) as a new field of the fieldProvider
    */
   public HashMap<String, BigDecimal> getPaymentDetailWriteOffAndAmount(
       FIN_PaymentDetail paymentDetail, String paymentDetailNextId, String paymentDetailPreviousId,
@@ -3123,16 +3232,16 @@ public abstract class AcctServer {
 
   }
 
-  public String catchPostError(String strKey, boolean force, VariablesSecureApp vars, ConnectionProvider connectionProvider, Connection con ){
-    try{
+  public String catchPostError(String strKey, boolean force, VariablesSecureApp vars,
+      ConnectionProvider connectionProvider, Connection con) {
+    try {
       AcctServer.throwErrors = true;
-      this.post(strKey, false,  vars, connectionProvider, con);
-    }
-    catch (OBException |ServletException e){
+      this.post(strKey, false, vars, connectionProvider, con);
+    } catch (OBException | ServletException e) {
       log4j.error(e);
       return e.toString();
 
-    }finally {
+    } finally {
       AcctServer.throwErrors = false;
     }
     return null;
