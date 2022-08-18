@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><ob:Openbravo xmlns:ob="http://www.openbravo.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <ETRX_Repository id="2C96796D5186407B9426B59796F7ECFB" identifier="AD_User">
+    <id>2C96796D5186407B9426B59796F7ECFB</id>
+    <active>true</active>
+    <module id="BC7B2F721FD249F5A360C6AAD2A7EBF7" entity-name="ADModule" identifier="Etendo RX - 1.0.0 - English (USA)"/>
+    <table id="114" entity-name="ADTable" identifier="AD_User"/>
+    <eTRXEntitySearchList>
+      <ETRX_Entity_Search id="7E8B17A798E44B248C41F8A6FA084E93" identifier="searchByUsername">
+        <id>7E8B17A798E44B248C41F8A6FA084E93</id>
+        <active>true</active>
+        <etrxRepository id="2C96796D5186407B9426B59796F7ECFB" entity-name="ETRX_Repository" identifier="AD_User"/>
+        <query>SELECT u FROM AdUser u WHERE u.username = :username and u.active = :active</query>
+        <methodName>searchByUsername</methodName>
+        <eTRXSearchParamList>
+          <ETRX_Search_Param id="A93CEF073C9141D091C62345E52A6F43" identifier="username">
+            <id>A93CEF073C9141D091C62345E52A6F43</id>
+            <active>true</active>
+            <etrxEntitySearch id="7E8B17A798E44B248C41F8A6FA084E93" entity-name="ETRX_Entity_Search" identifier="searchByUsername"/>
+            <name>username</name>
+            <type>java.lang.String</type>
+          </ETRX_Search_Param>
+          <ETRX_Search_Param id="C20A1E03A783442584F69D1E4BEC17FD" identifier="active">
+            <id>C20A1E03A783442584F69D1E4BEC17FD</id>
+            <active>true</active>
+            <etrxEntitySearch id="7E8B17A798E44B248C41F8A6FA084E93" entity-name="ETRX_Entity_Search" identifier="searchByUsername"/>
+            <name>active</name>
+            <type>java.lang.Boolean</type>
+          </ETRX_Search_Param>
+        </eTRXSearchParamList>
+      </ETRX_Entity_Search>
+    </eTRXEntitySearchList>
+  </ETRX_Repository>
+  <ETRX_Projection id="C416CEE539EE434BB9E418BCE3EE94F2" identifier="auth - Etendo RX - 1.0.0 - English (USA)">
+    <id>C416CEE539EE434BB9E418BCE3EE94F2</id>
+    <active>true</active>
+    <name>auth</name>
+    <module id="BC7B2F721FD249F5A360C6AAD2A7EBF7" entity-name="ADModule" identifier="Etendo RX - 1.0.0 - English (USA)"/>
+    <gRPC>false</gRPC>
+    <eTRXProjectionEntityList>
+      <ETRX_Projection_Entity id="929A729126144CB19FD68FA45AD0D56C" identifier="AD_User">
+        <id>929A729126144CB19FD68FA45AD0D56C</id>
+        <active>true</active>
+        <projection id="C416CEE539EE434BB9E418BCE3EE94F2" entity-name="ETRX_Projection" identifier="auth - Etendo RX - 1.0.0 - English (USA)"/>
+        <tableEntity id="114" entity-name="ADTable" identifier="AD_User"/>
+        <identity>false</identity>
+        <eTRXEntityFieldList>
+          <ETRX_Entity_Field id="2C7F7987E2B6492196DE6F1A1D9EE09B" identifier="organization">
+            <id>2C7F7987E2B6492196DE6F1A1D9EE09B</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>organization</property>
+          </ETRX_Entity_Field>
+          <ETRX_Entity_Field id="2E3060C91A9E4C4D8855EFB419F4EB4D" identifier="defaultOrganization">
+            <id>2E3060C91A9E4C4D8855EFB419F4EB4D</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>defaultOrganization</property>
+          </ETRX_Entity_Field>
+          <ETRX_Entity_Field id="409069683F2D426F831DBA8EBBBEAE0B" identifier="password">
+            <id>409069683F2D426F831DBA8EBBBEAE0B</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>password</property>
+          </ETRX_Entity_Field>
+          <ETRX_Entity_Field id="553C56ADCD4146458C9A543380037BC9" identifier="active">
+            <id>553C56ADCD4146458C9A543380037BC9</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>active</property>
+          </ETRX_Entity_Field>
+          <ETRX_Entity_Field id="8C3AC52AEA0441AFA781E52A02686139" identifier="client">
+            <id>8C3AC52AEA0441AFA781E52A02686139</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>client</property>
+          </ETRX_Entity_Field>
+          <ETRX_Entity_Field id="A1771833DEC0403EA8DCB2E119B5D14D" identifier="id">
+            <id>A1771833DEC0403EA8DCB2E119B5D14D</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>id</property>
+          </ETRX_Entity_Field>
+          <ETRX_Entity_Field id="E552E98280764728A3E0C47D65ACF7F4" identifier="defaultClient">
+            <id>E552E98280764728A3E0C47D65ACF7F4</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>defaultClient</property>
+          </ETRX_Entity_Field>
+          <ETRX_Entity_Field id="FC9988401CF849D4B677A7552EAFDF3D" identifier="username">
+            <id>FC9988401CF849D4B677A7552EAFDF3D</id>
+            <active>true</active>
+            <etrxProjectionEntity id="929A729126144CB19FD68FA45AD0D56C" entity-name="ETRX_Projection_Entity" identifier="AD_User"/>
+            <property>username</property>
+          </ETRX_Entity_Field>
+        </eTRXEntityFieldList>
+      </ETRX_Projection_Entity>
+    </eTRXProjectionEntityList>
+  </ETRX_Projection>
+</ob:Openbravo>
