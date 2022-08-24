@@ -9,7 +9,7 @@
         <id>7E8B17A798E44B248C41F8A6FA084E93</id>
         <active>true</active>
         <etrxRepository id="2C96796D5186407B9426B59796F7ECFB" entity-name="ETRX_Repository" identifier="AD_User"/>
-        <query>SELECT u FROM AdUser u WHERE u.username = :username and u.active = :active</query>
+        <query>SELECT u FROM ADUser u WHERE u.username = :username and u.active = :active</query>
         <methodName>searchByUsername</methodName>
         <eTRXSearchParamList>
           <ETRX_Search_Param id="A93CEF073C9141D091C62345E52A6F43" identifier="username">
