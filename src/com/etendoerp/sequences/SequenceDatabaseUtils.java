@@ -15,7 +15,6 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.domain.DimensionsList;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.domain.SequenceConfig;
-import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.enterprise.DocumentType;
 
 import java.util.*;
