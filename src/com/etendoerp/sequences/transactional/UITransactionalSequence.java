@@ -89,6 +89,10 @@ public class UITransactionalSequence implements UINextSequenceValueInterface {
             }
             log.error(message);
             throw new OBException(message, e);
+        } catch (Exception e) {
+            String message = e.getMessage();
+            log.error(message);
+            throw new OBException(message, e);
         }
 
         return nextSequenceValue;
