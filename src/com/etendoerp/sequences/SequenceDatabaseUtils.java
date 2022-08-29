@@ -105,7 +105,7 @@ public class SequenceDatabaseUtils {
         String documentType = (String) parameters.get(PROPERTY_DOCUMENTTYPE);
         if (!StringUtils.isEmpty(documentType)) {
             DocumentType currentDocType = OBDal.getInstance().get(DocumentType.class, documentType);
-            sequenceDocuments = sequenceDocuments.concat(currentDocType.getName());
+            sequenceDocuments = String.format(sequenceDocuments, currentDocType.getName());
         }
         return sequenceDocuments;
     }
