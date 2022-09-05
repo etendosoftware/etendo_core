@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -295,6 +296,7 @@ public class ActionButtonUtility {
         obException = acct.catchPostError(strKey, false, vars, connectionProvider, con);
         if (obException != null) {
           myMessage = Utility.translateError(connectionProvider, vars, vars.getLanguage(), obException);
+          SessionHandler.getInstance().commitAndStart();
           return myMessage;
         }
       }
