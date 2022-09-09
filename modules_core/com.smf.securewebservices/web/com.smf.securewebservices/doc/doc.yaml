@@ -4,44 +4,44 @@ info:
   version: 1.0.0
   title: Secure webservices
   description: |
-    ## Introducción
+    ## Introduction
 
-    Este módulo permite llamar a cualquier [web service estandar](http://wiki.openbravo.com/wiki/How_to_create_a_new_REST_webservice) de openbravo de la misma manera en la que se haría con el endpoint "**/ws**", pero utilizando la autenticación con token.
+    This module allows calling any standard Etendo web service in the same way as calling the "/ws" endpoint, but using token authentication.
 
-    Este metodo de autenticación permite, ademas, definir el contexto para las llamadas pudiendo elegir el rol y/o la organización al momento de solicitar un token. Tambien es posible renovar un token para refrescar la expiración o hacer cambio de rol/organización.
+    This authentication method also allows defining the context for the calls by choosing the role and/or organization when requesting a token. It is also possible to renew a token to refresh the expiration date or change the role/organization.
 
-    Ademas de la nueva implementación de autenticación, el modulo incluye utilidades para desarrolladores y web services útiles, como jsonDal (para acceder al Data Access Layer de OB con json).
+    Besides the new authentication implementation, the module includes utilities for developers and useful web services, such as jsonDal (to access the OB Data Access Layer with json).
 
-    ## Configuración inicial
-    
-    Es necesario configurar la clave de cifrado y el tiempo de expiración para los tokens de autenticación
-    en la ventana **Cliente** con el rol **System Administrator**.
+    ## Initial configuration
 
-    Si el tiempo de expiración es igual a "0" los tokens no expiran.
+    It is necessary to configure the encryption key and the expiration time for the authentication
+    tokens in the Client window with the System Administrator role.
 
-    Es altamente recomendable generar una calve aleatoria con el boton "**Generate key**".
+    If the expiration time is equal to "0" the tokens do not expire.
+
+    It is highly recommended to generate a random key with the "Generate key" button.
     
     ![screenshot](img/screen01.png "SWS Config")
 servers:
-  - url: http://localhost:8080/openbravo
+  - url: http://localhost:8080/etendo
 tags:
   - name: Login
-    description: endpoints relacionados a la autenticación
+    description: endpoints related with authentication
   - name: Dal
-    description: webservice de data access layer.
+    description: webservice from data access layer.
 paths:
   /sws/login:
     post:
-      summary: Obtener token de autenticación
+      summary: Obtain authentication token
       tags:
         - Login
       description: |
-        Obtiene un token de autenticación (JWT) asociado a un contexto de Openbravo (User, Role, Org, Warehouse) y la lista de roles, organizaciones y almacenes utilizables.
-        Tanto las listas de roles, organizaciones y almacenes pueden ocultarse para simplificar el resultado de la petición.
+        Obtains an authentication token (JWT) associated with an Etendo context (User, Role, Org, Warehouse) and the list of usable roles, organizations and warehouses.
+        Both the lists of roles, organizations and warehouses can be hidden to simplify the request result.
       parameters:
         - name: showRoles
           in: query
-          description: Mostrar lista de roles.
+          description: Show role list
           required: false
           schema:
             type: boolean
@@ -49,7 +49,7 @@ paths:
             example: true
         - name: showOrgs
           in: query
-          description: Mostrar listas de organizaciones.
+          description: Show Organization lists.
           required: false
           schema:
             type: boolean
@@ -57,14 +57,14 @@ paths:
             example: true
         - name: showWarehouses
           in: query
-          description: Mostrar listas de almacenes.
+          description: Show Warehouse lists.
           required: false
           schema:
             type: boolean
             default: true
             example: true
       requestBody:
-        description: Usuario, contraseña, id de rol, id de organziación, id de almacen. Solo los dos primero son obligatorios.
+        description: Username, password, role id, organization id, storage id. Only the first two are required.
         required: true
         content:
           application/json:
@@ -76,10 +76,10 @@ paths:
               properties:
                 username:
                   type: string
-                  example: Openbravo
+                  example: admin
                 password:
                   type: string
-                  example: openbravo
+                  example: admin
                 role:
                   type: string
                   example: "0"
@@ -98,7 +98,7 @@ paths:
                 $ref: "#/components/schemas/LogResp"
         401:
           description: No auth
-  /sws/com.smf.securewebservices.jsonDal/{modelName}:
+  /sws/com.smf.securewebservices.obRest/{modelName}:
     get:
       summary: List records
       security:
@@ -109,13 +109,13 @@ paths:
         - name: modelName
           in: path
           required: true
-          description: Nombre del modelo a obtener (campo name en AD_Table)
+          description: Name of the model to be obtained (field name in  AD_Table)
           schema:
             type: string
             example: Product
         - name: _startRow
           in: query
-          description: Primer resultado, usado para paginación.
+          description: First result, pagination use.
           required: false
           schema:
             type: integer
@@ -123,7 +123,7 @@ paths:
             example: "0"
         - name: _endRow
           in: query
-          description: Ultimo resultado, usado para paginación. Si _startRow es 0 y _endRow es 4 devolvera los primeros 5 resultados de la query.
+          description: Last result, used for pagination. If _startRow es 0 y _endRow is 4, it will return the first 5 query results.
           required: false
           schema:
             type: integer
@@ -131,7 +131,7 @@ paths:
             example: 4
         - name: includeChildren
           in: query
-          description: Incluye registros hijos.
+          description: Includes children records.
           required: false
           schema:
             type: boolean
@@ -139,27 +139,27 @@ paths:
             default: true
         - name: where
           in: query
-          description: Clausula where en HQL.
+          description: Clause where in HQL.
           required: false
           schema:
             type: string
             example: purchase = true
         - name: orderBy
           in: query
-          description: Clausula order by en HQL.
+          description: Clause order by in HQL
           required: false
           schema:
             type: string
         - name: _selectedProperties
           in: query
-          description: Campos a seleccionar separados por comas.
+          description: Fields to select separated by commas.
           required: false
           schema:
             type: string
             example: id, name
         - name: _noActiveFilter
           in: query
-          description: Si es verdadero tambien buscará los registros no activos.
+          description: If it is true, it will also search the non-active records.
           required: false
           schema:
             type: boolean
@@ -167,7 +167,7 @@ paths:
             example: true
       responses:
         '200':
-          description: Arreglo de objetos de openbravo.
+          description: Array of object from Etendo.
           content:
             application/json:
               schema:
@@ -190,7 +190,7 @@ paths:
       tags:
         - Dal
       requestBody:
-        description: Usuario, contraseña, id de rol e id de organziación. Solo los dos primero son obligatorios.
+        description: Username, password, role id, organization id, storage id. Only the first two are required.
         required: true
         content:
           application/json:
@@ -205,13 +205,13 @@ paths:
         - name: modelName
           in: path
           required: true
-          description: Nombre del modelo a insertar/modificar (campo name en AD_Table)
+          description: Name of the model to be obtained (field name in AD_Table)
           schema:
             type: string
             default: Product
       responses:
         '200':
-          description: Objeto creado o editado.
+          description: Object created or edited
           content:
             application/json:
               schema:
@@ -222,7 +222,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /sws/com.smf.securewebservices.jsonDal/{modelName}/{recordID}:
+  /sws/com.smf.securewebservices.obRest/{modelName}/{recordID}:
     get:
       summary: Get a record by ID
       security:
@@ -233,41 +233,41 @@ paths:
         - name: modelName
           in: path
           required: true
-          description: Nombre del modelo a obtener (campo name en AD_Table)
+          description: Name of the model to be obtained (field name in  AD_Table)
           schema:
             type: string
             default: Product
         - name: recordID
           in: path
           required: true
-          description: ID del registro a obtener
+          description: ID of the record to be obtained
           schema:
             type: string
             default: DA7FC1BB3BA44EC48EC1AB9C74168CED
         - name: includeChildren
           in: query
-          description: Incluye registros hijos.
+          description: Includes children records
           required: false
           schema:
             type: boolean
             default: false
         - name: _selectedProperties
           in: query
-          description: Campos a seleccionar separados por comas.
+          description: Fields to select separated by commas.
           required: false
           schema:
             type: string
             default: id, name
         - name: _noActiveFilter
           in: query
-          description: Si es verdadero tambien buscará los registros no activos.
+          description: If it is true, it will also search the non-active records.
           required: false
           schema:
             type: boolean
             default: true
       responses:
         '200':
-          description: Objeto solicitado.
+          description: Requested object.
           content:
             application/json:
               schema:
@@ -282,7 +282,7 @@ components:
   schemas:
     LogResp:
       type: object
-      title: Respuesta de login
+      title: Login response
       properties:
         status:
           type: string
@@ -396,23 +396,23 @@ components:
           default: ''
           example: Office supplies
         description:
-          
+
           default: null
           example: null
         comments:
-          
+
           default: null
           example: null
         helpComment:
-          
+
           default: null
           example: null
         uPCEAN:
-          
+
           default: null
           example: null
         sKU:
-          
+
           default: null
           example: null
         uOM:
@@ -430,7 +430,7 @@ components:
         salesRepresentative$_identifier:
           type: string
           default: ''
-          example: Openbravo
+          example: Etendo
         summaryLevel:
           type: boolean
           default: false
