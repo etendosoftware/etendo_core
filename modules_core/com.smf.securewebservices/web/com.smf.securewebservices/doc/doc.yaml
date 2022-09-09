@@ -23,7 +23,7 @@ info:
     
     ![screenshot](img/screen01.png "SWS Config")
 servers:
-  - url: http://localhost:8080/openbravo  
+  - url: http://localhost:8080/openbravo
 tags:
   - name: Login
     description: endpoints relacionados a la autenticación
@@ -41,7 +41,7 @@ paths:
       parameters:
         - name: showRoles
           in: query
-          description: Mostrar lista de roles.  
+          description: Mostrar lista de roles.
           required: false
           schema:
             type: boolean
@@ -49,7 +49,7 @@ paths:
             example: true
         - name: showOrgs
           in: query
-          description: Mostrar listas de organizaciones.  
+          description: Mostrar listas de organizaciones.
           required: false
           schema:
             type: boolean
@@ -57,7 +57,7 @@ paths:
             example: true
         - name: showWarehouses
           in: query
-          description: Mostrar listas de almacenes.  
+          description: Mostrar listas de almacenes.
           required: false
           schema:
             type: boolean
@@ -74,7 +74,7 @@ paths:
                 - username
                 - password
               properties:
-                username: 
+                username:
                   type: string
                   example: Openbravo
                 password:
@@ -115,7 +115,7 @@ paths:
             example: Product
         - name: _startRow
           in: query
-          description: Primer resultado, usado para paginación.  
+          description: Primer resultado, usado para paginación.
           required: false
           schema:
             type: integer
@@ -132,7 +132,7 @@ paths:
         - name: includeChildren
           in: query
           description: Incluye registros hijos.
-          required: false 
+          required: false
           schema:
             type: boolean
             example: false
@@ -140,27 +140,27 @@ paths:
         - name: where
           in: query
           description: Clausula where en HQL.
-          required: false 
+          required: false
           schema:
             type: string
             example: purchase = true
         - name: orderBy
           in: query
           description: Clausula order by en HQL.
-          required: false 
+          required: false
           schema:
             type: string
         - name: _selectedProperties
           in: query
           description: Campos a seleccionar separados por comas.
-          required: false 
+          required: false
           schema:
             type: string
             example: id, name
         - name: _noActiveFilter
           in: query
           description: Si es verdadero tambien buscará los registros no activos.
-          required: false 
+          required: false
           schema:
             type: boolean
             default: false
@@ -176,7 +176,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Product"      
+                      $ref: "#/components/schemas/Product"
         default:
           description: unexpected error
           content:
@@ -200,7 +200,7 @@ paths:
                 data:
                   type: array
                   items:
-                    $ref: "#/components/schemas/NewProduct"            
+                    $ref: "#/components/schemas/NewProduct"
       parameters:
         - name: modelName
           in: path
@@ -247,21 +247,21 @@ paths:
         - name: includeChildren
           in: query
           description: Incluye registros hijos.
-          required: false 
+          required: false
           schema:
             type: boolean
             default: false
         - name: _selectedProperties
           in: query
           description: Campos a seleccionar separados por comas.
-          required: false 
+          required: false
           schema:
             type: string
             default: id, name
         - name: _noActiveFilter
           in: query
           description: Si es verdadero tambien buscará los registros no activos.
-          required: false 
+          required: false
           schema:
             type: boolean
             default: true
