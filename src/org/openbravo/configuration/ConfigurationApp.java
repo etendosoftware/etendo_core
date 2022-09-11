@@ -901,7 +901,7 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
         replaceProperties.put(PREFIX_DB_SESSION, "ALTER SESSION SET NLS_DATE_FORMAT='YYYY"
             + dateSeparator + "MM" + dateSeparator + "DD' NLS_NUMERIC_CHARACTERS='.,'");
       }
-      String nameBBDD = "", serverBBDD = "", portBBDD = "";
+      String nameBBDD = "", serverBBDD = "", portBBDD = "", urlBBDD = "";
       for (ConfigureOption optionLastForReplace : optionOracle) {
         if (optionLastForReplace.getAskInfo().equals(DB_SID)) {
           nameBBDD = optionLastForReplace.getChosenOption();
@@ -916,14 +916,22 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
           replaceProperties.put(PREFIX_DB_PASS, optionLastForReplace.getChosenOption());
         } else if (optionLastForReplace.getAskInfo().equals(DB_SERVER)) {
           serverBBDD = optionLastForReplace.getChosenOption();
-        } else if (optionLastForReplace.getAskInfo().equals(DB_SERVER_PORT)) {
-          portBBDD = optionLastForReplace.getChosenOption();
+        } else if (optionLastForReplace.getAskInfo().equals(PREFIX_DB_URL)) {
+          // Contains the full 'bbdd.url' path
+          urlBBDD = optionLastForReplace.getChosenOption();
         }
       }
+
       replaceProperties.put(PREFIX_DB_RDBMS, "ORACLE");
       replaceProperties.put(PREFIX_DB_DRIVER, "oracle.jdbc.driver.OracleDriver");
-      replaceProperties.put(PREFIX_DB_URL,
-          "jdbc:oracle:thin:@" + serverBBDD + ":" + portBBDD + ":" + nameBBDD);
+
+      if (urlBBDD.equals("")) {
+        replaceProperties.put(PREFIX_DB_URL,
+                "jdbc:oracle:thin:@" + serverBBDD + ":" + portBBDD + ":" + nameBBDD);
+      } else {
+        replaceProperties.put(PREFIX_DB_URL, urlBBDD);
+      }
+
     } else if (database.equals(POSTGRE_SQL)) {
       if (dateFormat.substring(0, 1).equals("D")) {
         replaceProperties.put(PREFIX_DB_SESSION,
@@ -1356,20 +1364,26 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
     String separateString = searchOptionsProperties(fileO, PREFIX_DB_URL, p);
     if (separateString.equals("")) {
       separateString = "jdbc:oracle:thin:@localhost:1521:xe";
+      String[] separateUrl = separateString.split(":");
+
+      askInfo = DB_SERVER;
+      ConfigureOption o5 = new ConfigureOption(ConfigureOption.TYPE_OPT_STRING, askInfo,
+              new ArrayList<>());
+      o5.setChosenString(separateUrl[3].substring(1));
+      option.add(o5);
+
+      askInfo = DB_SERVER_PORT;
+      ConfigureOption o6 = new ConfigureOption(ConfigureOption.TYPE_OPT_STRING, askInfo,
+              new ArrayList<>());
+      o6.setChosenString(separateUrl[4]);
+      option.add(o6);
+    } else {
+      askInfo = PREFIX_DB_URL;
+      ConfigureOption o7 = new ConfigureOption(ConfigureOption.TYPE_OPT_STRING, askInfo,
+              new ArrayList<>());
+      o7.setChosenString(separateString);
+      option.add(o7);
     }
-    String[] separateUrl = separateString.split(":");
-
-    askInfo = DB_SERVER;
-    ConfigureOption o5 = new ConfigureOption(ConfigureOption.TYPE_OPT_STRING, askInfo,
-        new ArrayList<>());
-    o5.setChosenString(separateUrl[3].substring(1));
-    option.add(o5);
-
-    askInfo = DB_SERVER_PORT;
-    ConfigureOption o6 = new ConfigureOption(ConfigureOption.TYPE_OPT_STRING, askInfo,
-        new ArrayList<>());
-    o6.setChosenString(separateUrl[4]);
-    option.add(o6);
 
     // Delete auxiliar file
     if (fileO.getPath().equals(OPENBRAVO_PROPERTIES_AUX)) {
