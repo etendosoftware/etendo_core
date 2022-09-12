@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -925,7 +926,7 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
       replaceProperties.put(PREFIX_DB_RDBMS, "ORACLE");
       replaceProperties.put(PREFIX_DB_DRIVER, "oracle.jdbc.driver.OracleDriver");
 
-      if (urlBBDD.equals("")) {
+      if (StringUtils.isBlank(urlBBDD)) {
         replaceProperties.put(PREFIX_DB_URL,
                 "jdbc:oracle:thin:@" + serverBBDD + ":" + portBBDD + ":" + nameBBDD);
       } else {
