@@ -40,6 +40,7 @@ build: compile the project, including the xsql's files and generates the jar
      <include name="**/*.jar"/>
     </fileset>
     <pathelement path="${base.config}" />
+    <path refid="project.class.path"/>
   </path>
 
   <target name="init">
