@@ -10,6 +10,7 @@ import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 import com.smf.jobs.Action;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,10 +65,10 @@ public class ProcessOrders extends Action {
 
       for (Order order : input) {
         var message = processOrder(order, documentAction);
-        if (message.getType().equals("Error")) {
+        if (StringUtils.equals("Error", message.getType())) {
           errors++;
         }
-        if (message.getMessage().isBlank()) {
+        if (StringUtils.isBlank(message.getMessage())) {
           processMessages.append(order.getDocumentNo()).append(": ").append(message.getTitle()).append("\n");
         } else {
           processMessages.append(order.getDocumentNo()).append(": ").append(message.getMessage()).append("\n");
