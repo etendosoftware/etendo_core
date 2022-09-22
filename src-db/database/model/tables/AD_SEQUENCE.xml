@@ -115,9 +115,10 @@
       <unique name="AD_SEQUENCE_UNIQUE">
         <unique-column name="AD_CLIENT_ID"/>
         <unique-column name="AD_ORG_ID"/>
+        <unique-column name="NAME"/>
+        <unique-column name="AD_TABLE_ID"/>
         <unique-column name="AD_COLUMN_ID"/>
         <unique-column name="C_DOCTYPE_ID"/>
-        <unique-column name="AD_TABLE_ID"/>
       </unique>
       <check name="AD_SEQUENCE_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
       <check name="AD_SEQUENCE_ISAUTOSEQUENCE_CHK"><![CDATA[ISAUTOSEQUENCE IN ('Y', 'N')]]></check>
