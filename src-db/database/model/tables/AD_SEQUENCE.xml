@@ -112,10 +112,11 @@
       <foreign-key foreignTable="C_DOCTYPE" name="AD_SEQUENCE_C_DOCTYPE">
         <reference local="C_DOCTYPE_ID" foreign="C_DOCTYPE_ID"/>
       </foreign-key>
-      <unique name="AD_SEQUENCE_NAME">
+      <unique name="AD_SEQUENCE_UNIQUE">
         <unique-column name="AD_CLIENT_ID"/>
         <unique-column name="AD_ORG_ID"/>
         <unique-column name="NAME"/>
+        <unique-column name="AD_TABLE_ID"/>
         <unique-column name="AD_COLUMN_ID"/>
         <unique-column name="C_DOCTYPE_ID"/>
       </unique>
