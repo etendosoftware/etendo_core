@@ -277,6 +277,7 @@ export.database: exports database structure and data to xml files.
   <path id="project.class.path">
     <!-- Contains the paths of the dependencies defined with Gradle -->
     <pathelement path="${gradle.custom.dependencies}"/>
+    <pathelement path="${env.GRADLE_CLASSPATH}"/>
     <dirset dir="${base.modules}">
       <include name="*/build/classes/" />
     </dirset>

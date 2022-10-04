@@ -1,0 +1,299 @@
+pipeline {
+
+    options {
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        CONTEXT_NAME    = 'etendo'
+        BBDD_SID        = 'orclcdb'
+        BBDD_PORT       = '5432'
+        BBDD_SYSTEMUSER = 'sys AS SYSDBA'
+        BBDD_SYSTEMPASS = 'rEUC0GRpxA'
+        BBDD_USER       = 'C##TAD'
+        BBDD_PASSWORD   = 'tad'
+        NEXUS_USER      =  credentials('nexus-admin-user')
+        NEXUS_PASSWORD  =  credentials('nexus-admin-passwd')
+        JAVA_HOME       = '/usr/lib/jvm/java-11-openjdk-amd64'
+        CATALINA_HOME   = "${WORKSPACE}/apache-tomcat-8.5.75"
+    }
+
+    agent {
+        label 'etendo_core' //The id of the slave/agent where the build should be executed, if it doesn't matter use "agent any" instead.
+    }
+
+    stages {
+        stage('Build Environment') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                script {
+                    sh """
+                    wget https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
+                    tar xfz oracle-sqlcli-V1022102-01.tar.gz 2> /dev/null
+                    chmod a+x sqlcl/bin/sql
+                    """
+                    sh """
+                    echo "BEGIN
+                      FOR r IN (select sid,serial# from v\\\$session where username='${BBDD_USER}')
+                      LOOP
+                          EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' || r.serial# || ''' immediate';
+                      END LOOP;
+                    END;
+                    /
+
+                    DROP USER ${BBDD_USER} CASCADE;
+                    commit;
+
+                    exit; " > kill.sql
+                    """
+                    sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+                }
+                sh 'printenv'
+                echo 'Building Etendo Core'
+                script {
+                    try {
+                        sh """
+                        echo "context.name=${CONTEXT_NAME}\n
+                        bbdd.rdbms=ORACLE\n
+                        bbdd.driver=oracle.jdbc.driver.OracleDriver\n
+                        bbdd.url=jdbc:oracle:thin:@db19c-oracle-db.oracle:1521:orclcdb?oracle.net.disableOob=true\n
+                        bbdd.sid=${BBDD_SID}\n
+                        bbdd.systemUser=${BBDD_SYSTEMUSER}\n
+                        bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
+                        bbdd.user=${BBDD_USER}\n
+                        bbdd.password=${BBDD_PASSWORD}\n
+                        bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
+
+                        nexusUser=${NEXUS_USER}\n
+                        nexusPassword=${NEXUS_PASSWORD}" > gradle.properties
+                        """
+                        sh 'sed -i "s/1.0.3/1.0.4-SNAPSHOT/g" build.gradle'
+                        sh './gradlew prepareConfig --info --stacktrace'
+                        sh 'wget -O apache-tomcat-8.5.75.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz'
+                        sh 'tar -xvf apache-tomcat-8.5.75.tar.gz -C $WORKSPACE'
+                        sh './gradlew setup --info --stacktrace'
+                        sh './gradlew expandModules --info --stacktrace'
+                        sh './gradlew install --info --stacktrace'
+                        sh './gradlew smartbuild --info --stacktrace'
+                        sh './gradlew compileJava --info --stacktrace'
+                        sh './gradlew smartbuild --info --stacktrace'
+                        sh '$WORKSPACE/apache-tomcat-8.5.75/bin/catalina.sh start '
+                        sh 'sleep 1m'
+                        echo 'Build of Etendo Core Finished'
+                        env.STATUSTEST = "1" //flag to indicate if any test failed
+                        env.STATUSBUILD = "1"
+                    } catch (Exception e) {
+                        echo 'Build of Etendo Core FAILED'
+                        currentBuild.result = 'FAILED'
+                        error('Build Etendo Core FAILED!')
+                        env.STATUSBUILD = "0"
+                    }
+                }
+            }
+        }
+//___________________________________________________________________________________________
+// ------------------------------ WEB SERVICE TEST ------------------------------------------
+        stage ('Web Service Test Suite'){
+            when {
+                allOf {
+                    branch 'develop'
+                    expression {
+                        env.STATUSBUILD == "1"
+                    }
+                }
+            }
+            steps {
+                script {
+                    try {
+                        sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
+                        publishHTML([
+                            allowMissing: true,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: true,
+                            reportDir: 'build/reports/tests/test',
+                            reportFiles: '*.html',
+                            reportName: 'WEB SERVICES TESTS REPORT',
+                            reportTitles: ''
+                        ])
+                    } catch (Exception e) {
+                        echo 'Exception occurred: ' + e.toString()
+                        echo '....TEST WEBSERVICE FAILED....'
+                        currentBuild.result = 'UNSTABLE'
+                        unstable('Web Service Test Failed')
+                        env.STATUSTEST = "0"
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: true,
+                            reportDir: 'build/reports/tests/test',
+                            reportFiles: '*.html',
+                            reportName: 'WEBSERVICES TESTS REPORT',
+                            reportTitles: ''
+                        ])
+                    }
+                }
+                sh '$WORKSPACE/apache-tomcat-8.5.75/bin/catalina.sh stop'
+                sh './gradlew --stop'
+            }
+        }
+//___________________________________________________________________________________________
+// -------------------------------- CLEAN DATABASE ------------------------------------------
+        stage('Clean Database') {
+            when {
+                allOf {
+                    branch 'develop'
+                    expression {
+                        env.STATUSBUILD == "1"
+                    }
+                }
+            }
+            steps {
+                script {
+                    try {
+                        echo 'Cleaning Database...'
+                        sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+                        sh './gradlew install --info --stacktrace' //run a gradle task
+                        sh './gradlew smartbuild --info' //run a gradle task
+                        echo 'Database Cleaned'
+                    } catch (Exception e) {
+                        echo 'Clean Database FAILED'
+                        currentBuild.result = 'FAILED'
+                        error('Clean Database FAILED!')
+                        env.STATUSBUILD = "0"
+                    }
+                }
+            }
+        }
+//___________________________________________________________________________________________
+// ------------------------------- STANDALONE TEST ------------------------------------------
+        stage ('Standalone Test Suite'){
+            when {
+                allOf {
+                    branch 'develop'
+                    expression {
+                        env.STATUSBUILD == "1"
+                    }
+                }
+            }
+            steps {
+                script {
+                    try {
+                        sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
+                        publishHTML([
+                            allowMissing: true,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: true,
+                            reportDir: 'build/reports/tests/test',
+                            reportFiles: '*.html',
+                            reportName: 'STANDALONE TESTS REPORT',
+                            reportTitles: ''
+                        ])
+                    } catch (Exception e) {
+                        echo 'Exception occurred: ' + e.toString()
+                        echo '....TEST STANDALONE FAILED....'
+                        currentBuild.result = 'UNSTABLE'
+                        unstable('Standalone Test Failed!')
+                        env.STATUSTEST = "0"
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: true,
+                            reportDir: 'build/reports/tests/test',
+                            reportFiles: '*.html',
+                            reportName: 'STANDALONE TESTS REPORT',
+                            reportTitles: ''
+                        ])
+                    }
+                }
+            }
+        }
+//___________________________________________________________________________________________
+// ----------------------------------- SPOCK TEST -------------------------------------------
+        stage ('Spock Test') {
+            when {
+                allOf {
+                    branch 'develop'
+                    expression {
+                        env.STATUSBUILD == "1"
+                    }
+                }
+            }
+            steps {
+                script {
+                    try {
+                        sh './gradlew test --tests "com.etendoerp.*" --info'
+                        publishHTML([
+                            allowMissing: true,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: true,
+                            reportDir: 'build/spock-reports/',
+                            reportFiles: '*.html',
+                            reportName: 'SPOCK TESTS REPORT',
+                            reportTitles: ''
+                        ])
+                    } catch (Exception e) {
+                        echo 'Exception occurred: ' + e.toString()
+                        echo '....TEST SPOCK FAILED....'
+                        currentBuild.result = 'UNSTABLE'
+                        unstable('Spock Test failed!')
+                        env.STATUSTEST = "0"
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: false,
+                            keepAll: true,
+                            reportDir: 'build/spock-reports/',
+                            reportFiles: '*.html',
+                            reportName: 'SPOCK TESTS REPORT',
+                            reportTitles: ''
+                        ])
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                if (env.BRANCH_NAME == 'develop') {
+                    sh './gradlew --stop'
+                    sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+                }
+            }
+            cleanWs deleteDirs: true
+        }
+        unstable {
+            mail to: 'builds@smfconsulting.es',
+            subject: "🔥 FAILING TESTS ON ${currentBuild.fullDisplayName}",
+            body: """
+            ${new Date()}
+            __________________________________________________________
+
+            🔥 BUILD UNSTABLE 🔥
+
+            Tests have been detected that have failed in Etendo Core.
+            💡 These tests were run on an Oracle database environment.
+            To more information on the failing run visit:
+            ${env.BUILD_URL}
+            __________________________________________________________
+            """
+        }
+        failure {
+            mail to: 'builds@smfconsulting.es',
+            subject: "🚫 ERROR IN ${currentBuild.fullDisplayName}",
+            body:  """
+            ${new Date()}
+            __________________________________________________________
+
+            🚫 BUILD FAILED 🚫
+
+            The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.
+            💡 This build was on an Etendo Core environment with Oracle database.
+            To more information on the failing run visit:
+            ${env.BUILD_URL}
+            __________________________________________________________
+            """
+        }
+    }
+}
