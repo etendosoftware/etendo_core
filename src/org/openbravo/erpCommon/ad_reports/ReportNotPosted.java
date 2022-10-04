@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -73,79 +74,83 @@ public class ReportNotPosted extends HttpSecureAppServlet {
     }
 
 
-    if (!StringUtils.isEmpty(strDateFrom) && !isValidDate(strDateFrom) || !StringUtils.isEmpty(
-        strDateTo) && !isValidDate(strDateTo)) {
+    boolean notValidDate = (!StringUtils.isEmpty(strDateFrom) && !isValidDate(strDateFrom) || !StringUtils.isEmpty(
+        strDateTo) && !isValidDate(strDateTo));
+
+    boolean dateFromNotBeforeTo = !StringUtils.isEmpty(strDateFrom) && !isDateFromBeforeDateTo(strDateFrom, strDateTo);
+
+    if (notValidDate || dateFromNotBeforeTo) {
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       bdError(request, response, "", Utility.messageBD(readOnlyCP, "JS5", vars.getLanguage()));
-    }
+    } else {
+      response.setContentType("text/html; charset=UTF-8");
+      PrintWriter out = response.getWriter();
+      XmlDocument xmlDocument = xmlEngine.readXmlTemplate("org/openbravo/erpCommon/ad_reports/ReportNotPosted")
+          .createXmlDocument();
 
-    response.setContentType("text/html; charset=UTF-8");
-    PrintWriter out = response.getWriter();
-    XmlDocument xmlDocument = xmlEngine.readXmlTemplate("org/openbravo/erpCommon/ad_reports/ReportNotPosted")
-        .createXmlDocument();
+      // Use ReadOnly Connection Provider
+      ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
+      String orgIds = StringCollectionUtils
+          .commaSeparated(OBContext.getOBContext().getReadableOrganizations());
 
-    // Use ReadOnly Connection Provider
-    ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
-    String orgIds = StringCollectionUtils
-        .commaSeparated(OBContext.getOBContext().getReadableOrganizations());
+      ReportNotPostedData[] data = ReportNotPostedData.select(readOnlyCP, vars.getLanguage(),
+          vars.getClient(), orgIds, strDateFrom, strDateTo);
+      // }// DateTimeData.nDaysAfter
 
-    ReportNotPostedData[] data = ReportNotPostedData.select(readOnlyCP, vars.getLanguage(),
-        vars.getClient(), orgIds, strDateFrom, strDateTo);
-    // }// DateTimeData.nDaysAfter
+      ToolBar toolbar = new ToolBar(readOnlyCP, vars.getLanguage(), "ReportNotPosted", false, "", "",
+          "", false, "ad_reports", strReplaceWith, false, true);
+      toolbar.prepareSimpleToolBarTemplate();
 
-    ToolBar toolbar = new ToolBar(readOnlyCP, vars.getLanguage(), "ReportNotPosted", false, "", "",
-        "", false, "ad_reports", strReplaceWith, false, true);
-    toolbar.prepareSimpleToolBarTemplate();
+      xmlDocument.setParameter("toolbar", toolbar.toString());
 
-    xmlDocument.setParameter("toolbar", toolbar.toString());
-
-    try {
-      WindowTabs tabs = new WindowTabs(readOnlyCP, vars,
-          "org.openbravo.erpCommon.ad_reports.ReportNotPosted");
-      xmlDocument.setParameter("parentTabContainer", tabs.parentTabs());
-      xmlDocument.setParameter("mainTabContainer", tabs.mainTabs());
-      xmlDocument.setParameter("childTabContainer", tabs.childTabs());
-      xmlDocument.setParameter("theme", vars.getTheme());
-      NavigationBar nav = new NavigationBar(readOnlyCP, vars.getLanguage(), "ReportNotPosted.html",
-          classInfo.id, classInfo.type, strReplaceWith, tabs.breadcrumb());
-      xmlDocument.setParameter("navigationBar", nav.toString());
-      LeftTabsBar lBar = new LeftTabsBar(readOnlyCP, vars.getLanguage(), "ReportNotPosted.html",
-          strReplaceWith);
-      xmlDocument.setParameter("leftTabs", lBar.manualTemplate());
-    } catch (Exception ex) {
-      throw new ServletException(ex);
-    }
-    {
-      OBError myMessage = vars.getMessage("ReportNotPosted");
-      vars.removeMessage("ReportNotPosted");
-      if (myMessage != null) {
-        xmlDocument.setParameter("messageType", myMessage.getType());
-        xmlDocument.setParameter("messageTitle", myMessage.getTitle());
-        xmlDocument.setParameter("messageMessage", myMessage.getMessage());
+      try {
+        WindowTabs tabs = new WindowTabs(readOnlyCP, vars,
+            "org.openbravo.erpCommon.ad_reports.ReportNotPosted");
+        xmlDocument.setParameter("parentTabContainer", tabs.parentTabs());
+        xmlDocument.setParameter("mainTabContainer", tabs.mainTabs());
+        xmlDocument.setParameter("childTabContainer", tabs.childTabs());
+        xmlDocument.setParameter("theme", vars.getTheme());
+        NavigationBar nav = new NavigationBar(readOnlyCP, vars.getLanguage(), "ReportNotPosted.html",
+            classInfo.id, classInfo.type, strReplaceWith, tabs.breadcrumb());
+        xmlDocument.setParameter("navigationBar", nav.toString());
+        LeftTabsBar lBar = new LeftTabsBar(readOnlyCP, vars.getLanguage(), "ReportNotPosted.html",
+            strReplaceWith);
+        xmlDocument.setParameter("leftTabs", lBar.manualTemplate());
+      } catch (Exception ex) {
+        throw new ServletException(ex);
       }
-    }
+      {
+        OBError myMessage = vars.getMessage("ReportNotPosted");
+        vars.removeMessage("ReportNotPosted");
+        if (myMessage != null) {
+          xmlDocument.setParameter("messageType", myMessage.getType());
+          xmlDocument.setParameter("messageTitle", myMessage.getTitle());
+          xmlDocument.setParameter("messageMessage", myMessage.getMessage());
+        }
+      }
 
-    if (vars.commandIn("FIND") && data.length == 0) {
-      // No data has been found. Show warning message.
-      xmlDocument.setParameter("messageType", "WARNING");
-      xmlDocument.setParameter("messageTitle",
-          Utility.messageBD(readOnlyCP, "ProcessStatus-W", vars.getLanguage()));
-      xmlDocument.setParameter("messageMessage",
-          Utility.messageBD(readOnlyCP, "NoDataFound", vars.getLanguage()));
-    }
+      if (vars.commandIn("FIND") && data.length == 0) {
+        // No data has been found. Show warning message.
+        xmlDocument.setParameter("messageType", "WARNING");
+        xmlDocument.setParameter("messageTitle",
+            Utility.messageBD(readOnlyCP, "ProcessStatus-W", vars.getLanguage()));
+        xmlDocument.setParameter("messageMessage",
+            Utility.messageBD(readOnlyCP, "NoDataFound", vars.getLanguage()));
+      }
 
-    xmlDocument.setParameter("calendar", vars.getLanguage().substring(0, 2));
-    xmlDocument.setParameter("directory", "var baseDirectory = \"" + strReplaceWith + "/\";\n");
-    xmlDocument.setParameter("paramLanguage", "defaultLang=\"" + vars.getLanguage() + "\";");
-    xmlDocument.setParameter("dateFrom", strDateFrom);
-    xmlDocument.setParameter("dateFromdisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("dateFromsaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("dateTo", strDateTo);
-    xmlDocument.setParameter("dateTodisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setParameter("dateTosaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
-    xmlDocument.setData("structure1", data);
-    out.println(xmlDocument.print());
-    out.close();
+      xmlDocument.setParameter("calendar", vars.getLanguage().substring(0, 2));
+      xmlDocument.setParameter("directory", "var baseDirectory = \"" + strReplaceWith + "/\";\n");
+      xmlDocument.setParameter("paramLanguage", "defaultLang=\"" + vars.getLanguage() + "\";");
+      xmlDocument.setParameter("dateFrom", strDateFrom);
+      xmlDocument.setParameter("dateFromdisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+      xmlDocument.setParameter("dateFromsaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+      xmlDocument.setParameter("dateTo", strDateTo);
+      xmlDocument.setParameter("dateTodisplayFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+      xmlDocument.setParameter("dateTosaveFormat", vars.getSessionValue("#AD_SqlDateFormat"));
+      xmlDocument.setData("structure1", data);
+      out.println(xmlDocument.print());
+      out.close();
+    }
   }
 
   @Override
@@ -159,6 +164,18 @@ public class ReportNotPosted extends HttpSecureAppServlet {
       DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
       dateFormat.parse(input);
       return true;
+    } catch (ParseException e) {
+      return false;
+    }
+  }
+
+  public boolean isDateFromBeforeDateTo(String strDateFrom, String strDateTo) {
+    try {
+      String strDateFormat = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("dateFormat.java");
+      DateFormat dateFormat = new SimpleDateFormat(strDateFormat);
+      Date dateFrom = dateFormat.parse(strDateFrom);
+      Date dateTo = dateFormat.parse(strDateTo);
+      return dateFrom.before(dateTo);
     } catch (ParseException e) {
       return false;
     }
