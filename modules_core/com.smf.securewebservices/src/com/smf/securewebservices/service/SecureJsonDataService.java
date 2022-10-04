@@ -13,6 +13,7 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 import com.smf.securewebservices.utils.SecureWebServicesUtils;
+
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -56,21 +57,19 @@ import com.smf.securewebservices.utils.SecureJsonToData.JsonConversionError;
 /**
  * Implements generic data operations which have parameters and json as an input and return results
  * as json strings.
- * 
+ * <p>
  * Note the parameters, json input and generated json follow the Smartclient specs. See the
  * Smartclient <a href="http://www.smartclient.com/docs/7.0rc2/a/b/c/go.html#class..RestDataSource">
  * RestDataSource</a> for more information.
- * 
+ * <p>
  * The main usage of this class is through the {@link #getInstance()} method (as a singleton). This
  * class can however also be extended and instantiated directly.
- * 
+ * <p>
  * There are several methods to override/implement update and insert hooks, see the pre* and post*
  * methods.
- * 
- * @author mtaal
- * @deprecated
  *
- * TODO: This class needs to be refactored
+ * @author mtaal
+ * @deprecated TODO: This class needs to be refactored
  */
 @Deprecated
 public class SecureJsonDataService implements JsonDataService {
@@ -94,7 +93,7 @@ public class SecureJsonDataService implements JsonDataService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.openbravo.service.json.JsonDataService#fetch(java.util.Map)
    */
   @Override
@@ -289,11 +288,11 @@ public class SecureJsonDataService implements JsonDataService {
    * It checks if the request has a criteria that contains the selected records. In that case, if
    * the amount of selected records is higher than the page size, then the end row is increased so
    * that all the selected records can be returned within the same page.
-   * 
+   *
    * @param parameters
-   *          map of request parameters
+   *     map of request parameters
    * @param startRowStr
-   *          start row of the page
+   *     start row of the page
    * @return the new value for the end row
    */
   private String getEndRowForSelectedRecords(Map<String, String> parameters, String startRowStr) {
@@ -312,20 +311,9 @@ public class SecureJsonDataService implements JsonDataService {
   }
 
   public void fetch(Map<String, String> parameters, QueryResultWriter writer) {
-    // Time.printCurrentTime(
-    // "Class: SecureJsonDataService, Method: fetch(..), start call doPreAction() method, , line:
-    // 438");
     doPreAction(parameters, "",
         org.openbravo.service.json.DefaultJsonDataService.DataSourceAction.FETCH);
-    // Time.printCurrentTime(
-    // "Class: SecureJsonDataService, Method: fetch(..), doPreAction() finished, , line: 441");
-    // Time.printCurrentTime(
-    // "Class: SecureJsonDataService, Method: fetch(..), start call createQueryService() method , ,
-    // line : 442");
-    final DataEntityQueryService queryService = createSetQueryService(parameters, false);
-    // Time.printCurrentTime(
-    // "Class: SecureJsonDataService, Method: fetch(..), createQueryService() finished , , line :
-    // 444");
+
     String selectedProperties = parameters.get(JsonConstants.SELECTEDPROPERTIES_PARAMETER);
 
     final SecureDataToJson toJsonConverter = OBProvider.getInstance().get(SecureDataToJson.class);
@@ -337,46 +325,51 @@ public class SecureJsonDataService implements JsonDataService {
       toJsonConverter.setIncludeIdentifier(new Boolean(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
     }
     toJsonConverter.setIncludeChildren(new Boolean(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
-    // Time.printCurrentTime(
-    // "Class: SecureJsonDataService, Method: fetch(..), start call queryService.scroll() method , ,
-    // line : 467");
-    final ScrollableResults scrollableResults = queryService.scroll();
-    // Time.printCurrentTime(
-    // "Class: SecureJsonDataService, Method: fetch(..), queryService.scroll() finished , , line :
-    // 470");
-    try {
-      int i = 0;
-      // Time.printCurrentTime(
-      // "Class: SecureJsonDataService, Method: fetch(..), start cycle doPostFetch() method , , line
-      // : 442");
-      while (scrollableResults.next()) {
-        final Object result = scrollableResults.get()[0];
-        final JSONObject json = toJsonConverter.toJsonObject((BaseOBObject) result,
-            DataResolvingMode.FULL);
 
-        try {
-          // Time.printCurrentTime(
-          // "Class: SecureJsonDataService, Method: fetch(..), call cycle to doPostFetch() method,
-          // registry number "
-          // + i + ", line 472");
-          doPostFetch(parameters, json);
-        } catch (JSONException e) {
-          throw new OBException(e);
-        }
-
-        writer.write(json);
-
-        i++;
-        // Clear session every 1000 records to prevent huge memory consumption in case of big loops
-        if (i % 1000 == 0) {
-          OBDal.getInstance().getSession().clear();
+    if (parameters.containsKey(JsonConstants.ID)) {
+      final String id = parameters.get(JsonConstants.ID);
+      // if the id is set that's a special case of one object being requested
+      if (id != null) {
+        final String entityName = parameters.get(JsonConstants.ENTITYNAME);
+        final OBQuery<BaseOBObject> obq = OBDal.getInstance().createQuery(entityName,
+            JsonConstants.ID + " = :bobId");
+        obq.setNamedParameter("bobId", id);
+        obq.setFilterOnActive(false);
+        obq.setMaxResult(1);
+        final BaseOBObject bob = obq.uniqueResult();
+        if (bob != null) {
+          final JSONObject json = toJsonConverter.toJsonObject(bob, DataResolvingMode.FULL);
+          writer.write(json);
         }
       }
-      // Time.printCurrentTime(
-      // "Class: SecureJsonDataService, Method: fetch(..), call cycle doPostFetch() finished, ,
-      // line: 487");
-    } finally {
-      scrollableResults.close();
+    } else {
+      final DataEntityQueryService queryService = createSetQueryService(parameters, false);
+      final ScrollableResults scrollableResults = queryService.scroll();
+
+      try {
+        int i = 0;
+        while (scrollableResults.next()) {
+          final Object result = scrollableResults.get()[0];
+          final JSONObject json = toJsonConverter.toJsonObject((BaseOBObject) result,
+              DataResolvingMode.FULL);
+
+          try {
+            doPostFetch(parameters, json);
+          } catch (JSONException e) {
+            throw new OBException(e);
+          }
+
+          writer.write(json);
+
+          i++;
+          // Clear session every 1000 records to prevent huge memory consumption in case of big loops
+          if (i % 1000 == 0) {
+            OBDal.getInstance().getSession().clear();
+          }
+        }
+      } finally {
+        scrollableResults.close();
+      }
     }
   }
 
@@ -549,7 +542,7 @@ public class SecureJsonDataService implements JsonDataService {
             || key.equals(JsonConstants.CALCULATE_ORGS)
             || key.equals(JsonConstants.TARGETRECORDID_PARAMETER)
             || (key.startsWith(DataEntityQueryService.PARAM_DELIMITER)
-                && key.endsWith(DataEntityQueryService.PARAM_DELIMITER))
+            && key.endsWith(DataEntityQueryService.PARAM_DELIMITER))
             || (key.equals(SelectorConstants.DS_REQUEST_SELECTOR_ID_PARAMETER))) {
           queryService.addFilterParameter(key, parameters.get(key));
         }
@@ -734,7 +727,7 @@ public class SecureJsonDataService implements JsonDataService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.openbravo.service.json.JsonDataService#remove(java.util.Map)
    */
   @Override
@@ -798,7 +791,7 @@ public class SecureJsonDataService implements JsonDataService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.openbravo.service.json.JsonDataService#add(java.util.Map, java.lang.String)
    */
   @Override
@@ -809,7 +802,7 @@ public class SecureJsonDataService implements JsonDataService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.openbravo.service.json.JsonDataService#update(java.util.Map, java.lang.String)
    */
   @Override
@@ -1028,17 +1021,17 @@ public class SecureJsonDataService implements JsonDataService {
 
         // do the pre thing
         switch (action) {
-        case UPDATE:
-          doPreUpdate(parameters, dataElement);
-          break;
-        case ADD:
-          doPreInsert(parameters, dataElement);
-          break;
-        case REMOVE:
-          doPreRemove(parameters, dataElement);
-          break;
-        default:
-          throw new OBException("Unsupported action " + action);
+          case UPDATE:
+            doPreUpdate(parameters, dataElement);
+            break;
+          case ADD:
+            doPreInsert(parameters, dataElement);
+            break;
+          case REMOVE:
+            doPreRemove(parameters, dataElement);
+            break;
+          default:
+            throw new OBException("Unsupported action " + action);
         }
 
         // and set it in the new array
@@ -1077,20 +1070,20 @@ public class SecureJsonDataService implements JsonDataService {
 
         // do the pre thing
         switch (action) {
-        case FETCH:
-          doPostFetch(parameters, dataElement);
-          break;
-        case UPDATE:
-          doPostUpdate(parameters, dataElement, originalObject);
-          break;
-        case ADD:
-          doPostInsert(parameters, dataElement, originalObject);
-          break;
-        case REMOVE:
-          doPostRemove(parameters, dataElement);
-          break;
-        default:
-          throw new OBException("Unsupported action " + action);
+          case FETCH:
+            doPostFetch(parameters, dataElement);
+            break;
+          case UPDATE:
+            doPostUpdate(parameters, dataElement, originalObject);
+            break;
+          case ADD:
+            doPostInsert(parameters, dataElement, originalObject);
+            break;
+          case REMOVE:
+            doPostRemove(parameters, dataElement);
+            break;
+          default:
+            throw new OBException("Unsupported action " + action);
         }
 
         // and set it in the new array
@@ -1160,7 +1153,7 @@ public class SecureJsonDataService implements JsonDataService {
   /**
    * Is called after the insert action in the same transaction as the insert. The inserted
    * {@link JSONObject} can be changed, the changes are sent to the client.
-   * 
+   * <p>
    * The originalToInsert contains the json object/array string as it was passed into the
    * doPreInsert method. The inserted JSONObject is the object read from the database after it was
    * inserted. So it contains the changes done by stored procedures.
@@ -1184,7 +1177,7 @@ public class SecureJsonDataService implements JsonDataService {
    * Called after the updates have been done, within the same transaction as the main update.
    * Changes to the updated {@link JSONObject} are sent to the client (but not persisted to the
    * database).
-   * 
+   * <p>
    * The originalToUpdate contains the json object/array string as it was passed into the
    * doPreUpdate method. The updated JSONObject is the object read from the database after it was
    * updated. So it contains all the changes done by stored procedures.
@@ -1199,9 +1192,9 @@ public class SecureJsonDataService implements JsonDataService {
 
   /**
    * Checks whether a criteria is filtering by ID property
-   * 
+   *
    * @param jsonCriteria
-   *          criteria to check
+   *     criteria to check
    * @return <code>true</code> if the criteria is filtering by ID
    */
   private boolean isIDCriteria(JSONObject jsonCriteria) {
