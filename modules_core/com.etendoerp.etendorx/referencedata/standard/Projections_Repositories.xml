@@ -18,6 +18,7 @@
             <etrxEntitySearch id="7E8B17A798E44B248C41F8A6FA084E93" entity-name="ETRX_Entity_Search" identifier="searchByUsername"/>
             <name>username</name>
             <type>java.lang.String</type>
+            <line>10</line>
           </ETRX_Search_Param>
           <ETRX_Search_Param id="C20A1E03A783442584F69D1E4BEC17FD" identifier="active">
             <id>C20A1E03A783442584F69D1E4BEC17FD</id>
@@ -25,6 +26,7 @@
             <etrxEntitySearch id="7E8B17A798E44B248C41F8A6FA084E93" entity-name="ETRX_Entity_Search" identifier="searchByUsername"/>
             <name>active</name>
             <type>java.lang.Boolean</type>
+            <line>20</line>
           </ETRX_Search_Param>
         </eTRXSearchParamList>
       </ETRX_Entity_Search>
