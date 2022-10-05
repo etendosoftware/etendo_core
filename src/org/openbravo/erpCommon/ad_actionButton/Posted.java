@@ -170,8 +170,7 @@ public class Posted extends HttpSecureAppServlet {
             }
           }
         }
-      }
-      if (strEliminar.equals("N")) {
+      } else if (strEliminar.equals("N")) {
         PostedData[] data = PostedData.select(this, strKey, strTableId);
         if (data == null || data.length == 0 || data[0].id.equals("")) {
           vars.setMessage(strTabId,

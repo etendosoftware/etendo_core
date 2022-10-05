@@ -45,19 +45,16 @@ BEGIN
                                m_attributesetinstance si
                           where si.m_attributesetinstance_id = i.m_attributesetinstance_id
                           and i.m_attributevalue_id = :New.M_AttributeValue_ID) LOOP
-         select (case when isSerNo ='Y' then 1 else 0 end)+
-                (case when isLot ='Y' then 1 else 0 end)+
-                (case when isGuaranteeDate ='Y' then 1 else 0 end)+
-                (select count(*)
-                   from M_AttributeUse u1
-                  where u1.M_AttributeSet_ID = u.M_AttributeSet_ID
-                    and u1.seqno<u.seqno) +1
-           into pos
-           from M_AttributeSet s,
-                M_AttributeUse u
-          where u.M_Attribute_ID = CurSetInstance.M_Attribute_ID
-          and s.M_AttributeSet_ID = CurSetInstance.M_AttributeSet_ID
-          and s.m_attributeSet_id = u.m_attributeset_id;
+         select
+             (select count(*)
+             from M_AttributeUse u1
+             where u1.M_AttributeSet_ID = u.M_AttributeSet_ID
+             and u1.seqno<u.seqno) +1
+         into pos
+         from M_AttributeSet s, M_AttributeUse u
+         where u.M_Attribute_ID = CurSetInstance.M_Attribute_ID
+         and s.M_AttributeSet_ID = CurSetInstance.M_AttributeSet_ID
+         and s.M_AttributeSet_ID = u.M_AttributeSet_ID;
 
       v_desc := '_'||CurSetInstance.description||'_';
       v_desc:=substr(v_desc,1, instr(v_desc,'_',1,pos))||:new.Name||substr(v_desc,instr(v_desc,'_',1,pos+1));

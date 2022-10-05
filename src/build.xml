@@ -230,6 +230,11 @@ build.war: build a war file in the lib directory.
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
+      <!--
+        Set the gradle classpath in a environment variable
+        to prevent losing it when the task generate.entities.forked is called.
+      -->
+      <sysproperty key ="env.GRADLE_CLASSPATH" value="${env.GRADLE_CLASSPATH}" />
     </java>
     <!--
       see issue: https://issues.openbravo.com/view.php?id=9331

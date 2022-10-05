@@ -3,15 +3,19 @@ package com.etendoerp.sequences;
 
 import com.etendoerp.sequences.parameters.SequenceParameterList;
 import com.etendoerp.sequences.transactional.RequiredDimensionException;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.domain.DimensionsList;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.domain.SequenceConfig;
+import org.openbravo.model.common.enterprise.DocumentType;
 
 import java.util.*;
 
@@ -77,7 +81,7 @@ public class SequenceDatabaseUtils {
         List<String> orgList = structureProvider.getParentList((String) parameters.get(PROPERTY_ORGANIZATION), true);
         for (String orgId : orgList) {
             parameters.put(PROPERTY_ORGANIZATION, orgId);
-            BaseOBObject sequence = searchSequence(cls, sequenceParameterList.generateWhereClause(), parameters);
+            BaseOBObject sequence = search(cls, sequenceParameterList.generateWhereClause(), parameters);
             if (sequence != null) {
                 return sequence;
             }
@@ -85,10 +89,25 @@ public class SequenceDatabaseUtils {
         return null;
     }
 
-    public static BaseOBObject searchSequence(Class<? extends BaseOBObject> cls, String whereClause, Map<String, Object> parameters) {
-        final OBQuery<BaseOBObject> qry = OBDal.getInstance().createQuery((Class<BaseOBObject>) cls,whereClause);
+    public static BaseOBObject search(Class<? extends BaseOBObject> cls, String whereClause, Map<String, Object> parameters) {
+        final OBQuery<BaseOBObject> qry = OBDal.getInstance().createQuery((Class<BaseOBObject>) cls, whereClause);
         qry.setNamedParameters(parameters);
-        return qry.uniqueResult();
+        List<BaseOBObject> listOfSequences = qry.list();
+        if (listOfSequences.size() > 1) {
+            throw new OBException(getNameOfADSequencesOnConflicts(parameters));
+        } else {
+            return !listOfSequences.isEmpty() ? listOfSequences.get(0) : null;
+        }
+    }
+
+    private static String getNameOfADSequencesOnConflicts(Map<String, Object> parameters) {
+        String sequenceDocuments = OBMessageUtils.getI18NMessage("OneMoreSequencesWithDocumentType");
+        String documentType = (String) parameters.get(PROPERTY_DOCUMENTTYPE);
+        if (!StringUtils.isEmpty(documentType)) {
+            DocumentType currentDocType = OBDal.getInstance().get(DocumentType.class, documentType);
+            sequenceDocuments = String.format(sequenceDocuments, currentDocType.getName());
+        }
+        return sequenceDocuments;
     }
 
 }
