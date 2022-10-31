@@ -2,35 +2,41 @@
   <database name="TRIGGER AD_SEQUENCE_UNIQUECHECK_TRG">
     <trigger name="AD_SEQUENCE_UNIQUECHECK_TRG" table="AD_SEQUENCE" fires="before" insert="true" update="true" delete="false" foreach="row">
       <body><![CDATA[
+  v_Count NUMBER:= 0;
+ 
 BEGIN
 
-IF AD_isTriggerEnabled()='N' THEN
-IF DELETING THEN
-RETURN OLD;
-ELSE
-RETURN NEW;
-END IF;
-END IF;
-
-IF (INSERTING OR UPDATING) THEN
-
-    IF (:new.AD_Column_ID is not null OR :new.AD_Table_ID is not null OR :new.C_Doctype_ID is not null) THEN
-    
-        IF (SELECT 1 FROM AD_Sequence sec WHERE sec.AD_Client_ID = :new.AD_Client_ID AND sec.AD_Org_ID = :new.AD_Org_ID
-            AND sec.AD_Column_ID = :new.AD_Column_ID AND sec.AD_Table_ID = :new.AD_Table_ID
-            AND sec.C_Doctype_ID = :new.C_Doctype_ID AND (CASE WHEN UPDATING
-            THEN sec.AD_Sequence_ID <> :new.AD_Sequence_ID ELSE 1=1 END) is not null) THEN 
-            
-            RAISE_APPLICATION_ERROR(-20000, '@AD_Unique_Check@');
-            
-        END IF;       
-        
+    IF AD_isTriggerEnabled()='N' THEN RETURN;
     END IF;
 
-END IF;
+    IF (INSERTING OR UPDATING) THEN
+    
+        IF UPDATING  THEN 
+        
+            SELECT 1 INTO v_Count FROM AD_Sequence sec WHERE sec.AD_Client_ID = :new.AD_Client_ID AND sec.AD_Org_ID = :new.AD_Org_ID
+            AND sec.AD_Column_ID = :new.AD_Column_ID AND sec.AD_Table_ID = :new.AD_Table_ID
+            AND sec.C_Doctype_ID = :new.C_Doctype_ID AND sec.AD_Sequence_ID <> :new.AD_Sequence_ID ;
+        
+        ELSE
+        
+            SELECT 1 INTO v_Count FROM AD_Sequence sec WHERE sec.AD_Client_ID = :new.AD_Client_ID AND sec.AD_Org_ID = :new.AD_Org_ID
+            AND sec.AD_Column_ID = :new.AD_Column_ID AND sec.AD_Table_ID = :new.AD_Table_ID
+            AND sec.C_Doctype_ID = :new.C_Doctype_ID;
+        
+        END IF;
+        
+        IF (:new.AD_Column_ID is not null OR :new.AD_Table_ID is not null OR :new.C_Doctype_ID is not null) THEN
+                
+            IF (v_Count = 1) THEN 
+            
+                RAISE_APPLICATION_ERROR(-20000, '@AD_Unique_Check@');
+    
+            END IF;       
+            
+        END IF;
+    
+    END IF;
 
-IF DELETING THEN RETURN OLD; ELSE RETURN NEW; END IF;
-END AD_SEQUENCE_UNIQUECHECK_TRG
-]]></body>
+END AD_SEQUENCE_UNIQUECHECK_TRG]]></body>
     </trigger>
   </database>
