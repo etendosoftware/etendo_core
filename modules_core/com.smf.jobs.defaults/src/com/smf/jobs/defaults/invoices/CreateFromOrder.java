@@ -3,6 +3,8 @@ package com.smf.jobs.defaults.invoices;
 import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +23,8 @@ import org.openbravo.service.json.JsonUtils;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +69,13 @@ public class CreateFromOrder extends Action {
                 initSelection(selectedIds);
 
                 String invoiceDateStr = parameters.getString("invoiceDate");
-                var invoiceDate = JsonUtils.createDateFormat().parse(invoiceDateStr);
+                Date invoiceDate;
+
+                if (StringUtils.equals("null",invoiceDateStr)){
+                    invoiceDate = new Date();
+                }else{
+                    invoiceDate = JsonUtils.createDateFormat().parse(invoiceDateStr);
+                }
 
                 final Map<String, Object> processParameters = new HashMap<>();
                 processParameters.put("Selection", "Y"); // Selection is used to collect the orders marked by the initSelection method. See old GenerateInvoicesmanual.java
