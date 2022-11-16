@@ -30,7 +30,7 @@ ic.orderDate,
 case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end as amountlines,
 case 
     when ic.term = 'N' 
-        then 0 
+        then 0.0 
     when (ic.term = 'O' and ic.deliveredQuantity < ic.orderedQuantity) 
         then case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end 
     else 
@@ -39,12 +39,12 @@ end as notinvoicedlines,
 ic.term AS TermName,
 case 
     when ic.term = 'N' 
-        then 0 
+        then 0.0 
     when ic.term = 'I' 
         then (
                 case 
                     when ic.term = 'N' 
-                        then 0 
+                        then 0.0 
                     when (ic.term = 'O' and ic.deliveredQuantity < ic.orderedQuantity) 
                         then case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end 
                     else 
@@ -52,7 +52,7 @@ case
                 end
             )
     when (ic.term = 'O' and ic.deliveredQuantity < ic.orderedQuantity) 
-        then 0 
+        then 0.0 
     else ic.pendinglines 
 end as pendinglines,
 ic.orderedQuantity,
