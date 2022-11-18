@@ -1037,7 +1037,6 @@ OB.APRM.AddPayment.updateGLItemsTotal = function(form, rowNum, remove) {
     paidOutAmt,
     allRecords;
 
-  grid.saveAllEdits();
   // allRecords should be initialized after grid.saveAllEdits()
   allRecords = grid.data.allRows ? grid.data.allRows.length : 0;
   for (i = 0; i < allRecords; i++) {
