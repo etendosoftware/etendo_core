@@ -59,17 +59,17 @@
       <foreign-key foreignTable="AD_USER" name="JOBS_JOB_RESULT_CREATED">
         <reference local="CREATEDBY" foreign="AD_USER_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="AD_ORG" name="JOBS_JOB_RESULT_ORG">
-        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
-      </foreign-key>
-      <foreign-key foreignTable="AD_USER" name="JOBS_JOB_RESULT_UPDATED">
-        <reference local="UPDATEDBY" foreign="AD_USER_ID"/>
-      </foreign-key>
       <foreign-key foreignTable="JOBS_JOB" name="JOBS_JOB_RESULT_JOB">
         <reference local="JOBS_JOB_ID" foreign="JOBS_JOB_ID"/>
       </foreign-key>
+      <foreign-key foreignTable="AD_ORG" name="JOBS_JOB_RESULT_ORG">
+        <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
       <foreign-key foreignTable="AD_PROCESS_REQUEST" name="JOBS_JOB_RESULT_REQUEST_ID">
         <reference local="AD_PROCESS_REQUEST_ID" foreign="AD_PROCESS_REQUEST_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_USER" name="JOBS_JOB_RESULT_UPDATED">
+        <reference local="UPDATEDBY" foreign="AD_USER_ID"/>
       </foreign-key>
       <index name="JOBS_JOB_RESULT_JOBS_JOB" unique="false">
         <index-column name="JOBS_JOB_ID"/>
