@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.data.ScrollableFieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -711,7 +712,11 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
         return;
       }
 
-      ScrollableFieldProvider limitedData = new LimitRowsScrollableFieldProviderFilter(data, 65532);
+      String preferenceValueFormat = Utility.getPreference(vars, "ExcelExportFormat", "");
+      String extension = StringUtils.isEmpty(preferenceValueFormat) ? "xlsx" : preferenceValueFormat;
+      int limit = ReportingUtils.getLimit(extension);
+
+      ScrollableFieldProvider limitedData = new LimitRowsScrollableFieldProviderFilter(data, limit);
 
       String strReportName = "@basedesign@/org/openbravo/erpCommon/ad_reports/ReportGeneralLedgerExcel.jrxml";
 
@@ -730,7 +735,7 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
       strDateFormat = vars.getJavaDateFormat();
       parameters.put("strDateFormat", strDateFormat);
 
-      renderJR(vars, response, strReportName, null, "xls", parameters, limitedData, null);
+      renderJR(vars, response, strReportName, null, extension, parameters, limitedData, null);
     } finally {
       if (data != null) {
         data.close();
