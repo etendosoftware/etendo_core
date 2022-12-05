@@ -178,9 +178,12 @@ public class OBViewParameterHandler {
       // in case the sub-reference doesn't define a custom UIDefinition use parameter base reference
       // UIDefinition
       Reference paramReference;
-      if (param.getReferenceSearchKey() != null
-          && !param.getReferenceSearchKey().getOBCLKERUIDefinitionList().isEmpty()) {
-        paramReference = param.getReferenceSearchKey();
+      paramReference = param.getReferenceSearchKey();
+      if (paramReference != null) {
+          OBDal.getInstance().refresh(paramReference);
+          if (!paramReference.getOBCLKERUIDefinitionList().isEmpty()) {
+              paramReference = param.getReferenceSearchKey();
+          }
       } else {
         paramReference = param.getReference();
       }
