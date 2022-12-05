@@ -607,10 +607,7 @@ public class ReportInvoiceVendorDimensionalAnalysesJR extends HttpSecureAppServl
                 Utility.messageBD(readOnlyCP, "ProcessStatus-W", vars.getLanguage()),
                 Utility.messageBD(readOnlyCP, "NoDataFound", vars.getLanguage()));
           } else {
-            /*
-             * int rowLimit = 65532; ScrollableFieldProvider limitedData = new
-             * LimitRowsScrollableFieldProviderFilter( dataXLS, rowLimit);
-             */
+
             String strReportName = "@basedesign@/org/openbravo/erpCommon/ad_reports/ReportInvoiceVendorDimensionalAnalysesXLS.jrxml";
 
             HashMap<String, Object> parameters = new HashMap<String, Object>();

@@ -1453,4 +1453,11 @@ public class ReportingUtils {
     }
     return base + "/" + design;
   }
+
+  public static int getLimit(String action){
+    if (ExportType.XLSX.hasExtension(action)){
+      return 1048576;
+    }
+    return 65532;
+  }
 }
