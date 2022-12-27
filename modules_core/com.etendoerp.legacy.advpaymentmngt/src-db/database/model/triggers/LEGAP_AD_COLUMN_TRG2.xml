@@ -43,7 +43,6 @@ BEGIN
       WHERE NOT EXISTS (SELECT 1 FROM ad_sequence WHERE name = 'DocumentNo_' || v_tablename)
         AND ad_client_id <> '0'
     ) LOOP
-      SELECT * INTO  v_NextNo FROM Ad_Sequence_Next('AD_Sequence', CUR_Clients.ad_client_id) ;
       INSERT INTO AD_Sequence (
         AD_Sequence_ID, AD_Client_ID, AD_Org_ID, IsActive, 
         Created, CreatedBy, Updated, UpdatedBy,
@@ -52,7 +51,7 @@ BEGIN
         StartNo, CurrentNext, CurrentNextSys, 
         IsTableID, Prefix, Suffix, StartNewYear
       ) VALUES (
-        v_NextNo, CUR_Clients.ad_client_id, '0', 'Y',
+        get_uuid(), CUR_Clients.ad_client_id, '0', 'Y',
         now(), '0', now(), '0',
         'DocumentNo_' || v_TableName,  'DocumentNo/Value for Table ' || v_TableName,
         NULL,  'Y', 1,
