@@ -32,6 +32,7 @@ jandex {
  */
 dependencies {
     jandex 'org.jboss:jandex:2.0.5.Final'
+
 }
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
