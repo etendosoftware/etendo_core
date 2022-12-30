@@ -16,6 +16,7 @@ pipeline {
         NEXUS_PASSWORD  =  credentials('nexus-admin-passwd')
         JAVA_HOME       = '/usr/lib/jvm/java-11-openjdk-amd64'
         CATALINA_HOME   = "${WORKSPACE}/apache-tomcat-8.5.75"
+        TZ              = 'UTC'
     }
 
     agent {
