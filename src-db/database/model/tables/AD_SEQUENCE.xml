@@ -112,13 +112,13 @@
       <foreign-key foreignTable="C_DOCTYPE" name="AD_SEQUENCE_C_DOCTYPE">
         <reference local="C_DOCTYPE_ID" foreign="C_DOCTYPE_ID"/>
       </foreign-key>
-      <unique name="AD_SEQUENCE_UNIQUE">
-        <unique-column name="AD_CLIENT_ID"/>
-        <unique-column name="AD_ORG_ID"/>
-        <unique-column name="AD_COLUMN_ID"/>
-        <unique-column name="C_DOCTYPE_ID"/>
-        <unique-column name="AD_TABLE_ID"/>
-      </unique>
+      <index name="AD_SEQUENCE_UNIQUECHECK" unique="true">
+        <index-column name="functionBasedColumn" functionExpression="CASE  WHEN (AD_COLUMN_ID IS NULL AND AD_TABLE_ID IS NULL AND C_DOCTYPE_ID IS NULL) THEN NULL ELSE AD_ORG_ID END"/>
+        <index-column name="functionBasedColumn" functionExpression="CASE  WHEN (AD_COLUMN_ID IS NULL AND AD_TABLE_ID IS NULL AND C_DOCTYPE_ID IS NULL) THEN NULL ELSE AD_CLIENT_ID END"/>
+        <index-column name="AD_COLUMN_ID"/>
+        <index-column name="AD_TABLE_ID"/>
+        <index-column name="C_DOCTYPE_ID"/>
+      </index>
       <check name="AD_SEQUENCE_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
       <check name="AD_SEQUENCE_ISAUTOSEQUENCE_CHK"><![CDATA[ISAUTOSEQUENCE IN ('Y', 'N')]]></check>
       <check name="AD_SEQUENCE_ISTABLEID_CHK"><![CDATA[ISTABLEID IN ('Y', 'N')]]></check>

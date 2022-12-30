@@ -67,17 +67,16 @@ pipeline {
                         bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
 
                         nexusUser=${NEXUS_USER}\n
-                        nexusPassword=${NEXUS_PASSWORD}" > gradle.properties
+                        nexusPassword=${NEXUS_PASSWORD}\n
+                        allow.root=true\n
+                        org.gradle.jvmargs=-Xmx2g -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > gradle.properties
                         """
-                        sh 'sed -i "s/1.0.3/1.0.4-SNAPSHOT/g" build.gradle'
                         sh './gradlew prepareConfig --info --stacktrace'
                         sh 'wget -O apache-tomcat-8.5.75.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz'
                         sh 'tar -xvf apache-tomcat-8.5.75.tar.gz -C $WORKSPACE'
                         sh './gradlew setup --info --stacktrace'
                         sh './gradlew expandModules --info --stacktrace'
                         sh './gradlew install --info --stacktrace'
-                        sh './gradlew smartbuild --info --stacktrace'
-                        sh './gradlew compileJava --info --stacktrace'
                         sh './gradlew smartbuild --info --stacktrace'
                         sh '$WORKSPACE/apache-tomcat-8.5.75/bin/catalina.sh start '
                         sh 'sleep 1m'

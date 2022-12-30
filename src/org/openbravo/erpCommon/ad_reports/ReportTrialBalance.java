@@ -41,6 +41,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.AccountingSchemaMiscData;
@@ -585,11 +586,15 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
             strcAcctSchemaId, strLevel, strTreeAccount, strNotInitialBalance);
       }
 
+      String preferenceValueFormat = Utility.getPreference(vars, "ExcelExportFormat", "");
+      String extension = StringUtils.isEmpty(preferenceValueFormat) ? "xlsx" : preferenceValueFormat;
+      int limit = ReportingUtils.getLimit(extension);
+
       if (data == null || data.length == 0) {
         advisePopUp(request, response, "WARNING",
             Utility.messageBD(readOnlyCP, "ProcessStatus-W", vars.getLanguage()),
             Utility.messageBD(readOnlyCP, "NoDataFound", vars.getLanguage()));
-      } else if (data.length > 65532) {
+      } else if (data.length > limit) {
         advisePopUp(request, response, "ERROR",
             Utility.messageBD(readOnlyCP, "ProcessStatus-E", vars.getLanguage()),
             Utility.messageBD(readOnlyCP, "numberOfRowsExceeded", vars.getLanguage()));
@@ -627,7 +632,7 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
         parameters.put("DATE_FROM", strDateFrom);
         parameters.put("DATE_TO", strDateTo);
 
-        renderJR(vars, response, strReportName, "xls", parameters, data, null);
+        renderJR(vars, response, strReportName, extension, parameters, data, null);
       }
     } else {
       advisePopUp(request, response, "WARNING",
