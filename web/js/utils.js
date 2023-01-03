@@ -5422,3 +5422,48 @@ function auto_complete_date(field, fmt) {
 */
 
 utilsJSDirectExecution();
+
+/**
+ * This function must be called in case if the Browser is chrome 108 an upper because of security changes on
+ * opener behaviour
+ */
+function getReportValue(str) {
+  const reportIndex = str.indexOf('report=');
+  if (reportIndex === -1) return '';
+
+  const reportSubstring = str.substring((reportIndex + 'report=').length);
+  const ampersandIndex = reportSubstring.indexOf('&');
+  if (ampersandIndex === -1) return reportSubstring;
+
+  return reportSubstring.substring(0, ampersandIndex);
+}
+
+function getReportName(str) {
+  const firstDotIndex = str.indexOf('.');
+  if (firstDotIndex === -1) return str;
+
+  const firstElement = str.substring(0, firstDotIndex);
+  const lastDotIndex = str.lastIndexOf('.');
+  if (lastDotIndex === firstDotIndex) return firstElement;
+
+  const lastElement = str.substring(lastDotIndex + 1);
+  return firstElement + "." + lastElement;
+}
+
+function doDownload(document, url) {
+  const fileName = getReportName(getReportValue(url))
+
+  // Create an anchor element and set its attributes
+  const link = document.createElement('a');
+  link.name = fileName;
+  link.download = fileName;
+  link.href = url;
+
+  // Append the anchor element to the document and click it
+  document.body.appendChild(link);
+  link.click();
+
+  // Remove it from DOM
+  document.body.removeChild(link);
+  link.remove();
+}
