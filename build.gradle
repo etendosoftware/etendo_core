@@ -19,7 +19,7 @@ if (file('version.properties').exists()) {
         versionTs = props['version.ts']
     }
 }
-version = '21.4.8'
+version = '21.4.9'
 
 def artifactID = 'ob'
 def javaPackage = group + '.' + artifactID
