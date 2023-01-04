@@ -19,11 +19,16 @@
     function onLoadDo(url) {
       if (getFrame('LayoutMDI')) {
         getFrame('LayoutMDI').document.getElementById('background_target').src = url;
-      } else if (typeof top.opener.parent.appFrame !== 'undefined') {
-        top.opener.parent.appFrame.document.location.href = url;
-      }
-      else {
-        top.opener.parent.document.location.href = url;
+      } else {
+        if (top.opener && top.opener == null) {
+          if (typeof top.opener.parent.appFrame !== 'undefined') {
+            top.opener.parent.appFrame.document.location.href = url;
+          } else {
+            top.opener.parent.document.location.href = url;
+          }
+        } else {
+          doDownload(document, url);
+        }
       }
       closePage();
     }
