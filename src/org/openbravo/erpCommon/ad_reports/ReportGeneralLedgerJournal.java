@@ -43,6 +43,7 @@ import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesHistory;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.structure.BaseOBObject;
+import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -897,6 +898,10 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
     String strTreeOrg = TreeData.getTreeOrg(readOnlyCP, vars.getClient());
     String strOrgFamily = getFamily(strTreeOrg, strOrg);
     try {
+      String preferenceValueFormat = Utility.getPreference(vars, "ExcelExportFormat", "");
+      String extension = StringUtils.isEmpty(preferenceValueFormat) ? "xlsx" : preferenceValueFormat;
+      int limit = ReportingUtils.getLimit(extension);
+
       OBError myMessage = vars.getMessage("ReportGeneralLedgerJournal");
       vars.removeMessage("ReportGeneralLedgerJournal");
       if (myMessage != null) {
@@ -922,9 +927,10 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
             strOrgFamily, strCheck, strAllaccounts, strcelementvaluefrom, strcelementvalueto,
             StringUtils.equals(strShowDescription, "Y") ? "'Y'" : "'N'"));
         // Get the limit of number of records shown for a report based on the preference
-        int limit = Integer.parseInt(Utility.getPreference(vars, "ReportsLimit", ""));
         // Do not print the XLS report if there are more than 65532 records
-        if (vars.commandIn("XLS") && recordCount > 65532) {
+        // For print more records the extension will be XLSX
+
+        if (vars.commandIn("XLS") && recordCount > limit) {
           advisePopUp(request, response, "ERROR",
               Utility.messageBD(readOnlyCP, "ProcessStatus-E", vars.getLanguage()),
               Utility.messageBD(readOnlyCP, "numberOfRowsExceeded", vars.getLanguage()));
@@ -1003,7 +1009,7 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
           strOutput = "pdf";
           strReportName = "@basedesign@/org/openbravo/erpCommon/ad_reports/ReportGeneralLedgerJournal.jrxml";
         } else {
-          strOutput = "xls";
+          strOutput = extension;
           strReportName = "@basedesign@/org/openbravo/erpCommon/ad_reports/ReportGeneralLedgerJournalExcel.jrxml";
         }
 

@@ -166,8 +166,8 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       selectClause.append(" COALESCE(ips.expectedDate, ops.expectedDate) as expectedDate, ");
       selectClause.append(" max(COALESCE(ips.amount, ops.amount)) as expectedAmount, ");
       selectClause.append(" max(COALESCE(inv.grandTotalAmount, 0)) as invoicedAmount, ");
-      selectClause.append(" COALESCE(inv.createdBy.username, ord.createdBy.username) as createdBy, ");
-      selectClause.append(" COALESCE(inv.updatedBy.username, ord.updatedBy.username) as updatedBy, ");
+      selectClause.append(" COALESCE(invCreatedBy.username, ordCreatedBy.username) as createdBy, ");
+      selectClause.append(" COALESCE(invUpdatedBy.username, ordUpdatedBy.username) as updatedBy, ");
       selectClause.append(" COALESCE(inv.creationDate, ord.creationDate) as created, ");
       selectClause.append(" COALESCE(inv.updated, ord.updated) as updated, ");
     }
@@ -319,8 +319,10 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
       groupByClause.append(" oinfo.organization, ");
       groupByClause.append(" oinfo.aPRMPaymentDescription, ");
       groupByClause.append(" inv.orderReference, ");
-      groupByClause.append(" COALESCE(inv.createdBy.username, ord.createdBy.username), ");
-      groupByClause.append(" COALESCE(inv.updatedBy.username, ord.updatedBy.username), ");
+      groupByClause.append(" COALESCE(invCreatedBy.username, ordCreatedBy.username), ");
+      groupByClause.append(" COALESCE(invUpdatedBy.username, ordUpdatedBy.username), ");
+      groupByClause.append(" COALESCE(inv.creationDate, ord.creationDate), ");
+      groupByClause.append(" COALESCE(inv.updated, ord.updated), ");
     }
     groupByClause.append(" bp.id, ");
     groupByClause.append(" bp.name ");
