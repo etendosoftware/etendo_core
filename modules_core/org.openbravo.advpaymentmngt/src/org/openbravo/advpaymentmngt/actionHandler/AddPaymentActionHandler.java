@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
@@ -39,6 +42,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
+import org.openbravo.advpaymentmngt.hook.PaymentProcessHook;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentProcess;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
@@ -85,6 +89,10 @@ import org.openbravo.service.json.JsonUtils;
 public class AddPaymentActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 
+  @Inject
+  @Any
+  private Instance<PaymentProcessHook> hooks;
+
   @Override
   protected JSONObject doExecute(Map<String, Object> parameters, String content) {
     JSONObject jsonResponse = new JSONObject();
@@ -96,6 +104,10 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
       // Get Params
       JSONObject jsonRequest = new JSONObject(content);
       JSONObject jsonparams = jsonRequest.getJSONObject("_params");
+
+      for (PaymentProcessHook hook : hooks) {
+        jsonResponse = hook.preProcess(jsonResponse);
+      }
 
       if (jsonRequest.has("inpwindowId") && jsonRequest.get("inpwindowId") != JSONObject.NULL) {
         openedFromMenu = false;
@@ -240,6 +252,9 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
       }
     } finally {
       OBContext.restorePreviousMode();
+    }
+    for (PaymentProcessHook hook : hooks) {
+      jsonResponse = hook.preProcess(jsonResponse);
     }
     return jsonResponse;
   }
