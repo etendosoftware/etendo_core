@@ -27,18 +27,19 @@ import org.openbravo.service.db.CallProcess;
 public class ProcessShipmentUtil {
   private static final Logger log4j = LogManager.getLogger();
   private final AdvPaymentMngtDao dao = new AdvPaymentMngtDao();
+  private static final String ERROR = "Error";
 
   @Inject
   @Any
   private Instance<ProcessShipmentHook> hooks;
 
   /**
-   * Processes an shipment.
-   * This method uses the {@link ProcessShipmentHook} type hooks to execute pre and post hooks.
+   * Processes a shipment.
+   * This method uses the {@link ProcessShipmentHook} type hooks to execute pre and pos hooks.
    *
-   * @param strM_Inout_ID
+   * @param strMInoutID
    *     Shipment ID
-   * @param strdocaction
+   * @param strDocAction
    *     Document Action
    * @param vars
    *     {@link VariablesSecureApp} Used to obtain current language and by Payment Processes. Use {@link org.openbravo.client.kernel.RequestContext#getVariablesSecureApp()} outside of servlets.
@@ -46,35 +47,35 @@ public class ProcessShipmentUtil {
    *     {@link ConnectionProvider} Used to connect to the database. Use 'this' when in servlets.
    * @return an {@link OBError} with the message of the resulting operation. It can be a success.
    */
-  public OBError process(String strM_Inout_ID, String strdocaction, VariablesSecureApp vars, ConnectionProvider conn) {
-    OBError myMessage = null;
+  public OBError process(String strMInoutID, String strDocAction, VariablesSecureApp vars, ConnectionProvider conn) {
+    OBError myMessage;
     try {
 
-      ShipmentInOut shipment = dao.getObject(ShipmentInOut.class, strM_Inout_ID);
-      shipment.setDocumentAction(strdocaction);
+      ShipmentInOut shipment = dao.getObject(ShipmentInOut.class, strMInoutID);
+      shipment.setDocumentAction(strDocAction);
       OBDal.getInstance().save(shipment);
       OBDal.getInstance().flush();
 
       OBError msg;
       for (ProcessShipmentHook hook : hooks) {
-        msg = hook.preProcess(shipment, strdocaction);
-        if (msg != null && StringUtils.equals("Error", msg.getType())) {
+        msg = hook.preProcess(shipment, strDocAction);
+        if (msg != null && StringUtils.equals(ERROR, msg.getType())) {
           return msg;
         }
       }
       // check BP currency
-      if (StringUtils.equals("CO", strdocaction) && shipment.getBusinessPartner().getCurrency() == null) {
+      if (StringUtils.equals("CO", strDocAction) && shipment.getBusinessPartner().getCurrency() == null) {
         String errorMSG = Utility.messageBD(conn, "InitBPCurrencyLnk", vars.getLanguage(),
             false);
         msg = new OBError();
-        msg.setType("Error");
-        msg.setTitle(Utility.messageBD(conn, "Error", vars.getLanguage()));
+        msg.setType(ERROR);
+        msg.setTitle(Utility.messageBD(conn, ERROR, vars.getLanguage()));
         msg.setMessage(String.format(errorMSG, shipment.getBusinessPartner().getId(),
             shipment.getBusinessPartner().getName()));
         return msg;
       }
 
-      Process process = null;
+      Process process;
       try {
         OBContext.setAdminMode(true);
         process = dao.getObject(Process.class, "109");
@@ -83,16 +84,16 @@ public class ProcessShipmentUtil {
       }
 
 
-      final ProcessInstance pinstance = CallProcess.getInstance()
-          .call(process, strM_Inout_ID, null);
+      final ProcessInstance pInstance = CallProcess.getInstance()
+          .call(process, strMInoutID, null);
 
       try {
         OBContext.setAdminMode();
         // on error close popup and rollback
-        if (pinstance.getResult() == 0L) {
+        if (pInstance.getResult() == 0L) {
           OBDal.getInstance().rollbackAndClose();
           myMessage = Utility.translateError(conn, vars, vars.getLanguage(),
-              pinstance.getErrorMsg().replaceFirst("@ERROR=", ""));
+              pInstance.getErrorMsg().replaceFirst("@ERROR=", ""));
           log4j.debug(myMessage.getMessage());
 
           return myMessage;
@@ -102,17 +103,17 @@ public class ProcessShipmentUtil {
       }
 
       for (ProcessShipmentHook hook : hooks) {
-        msg = hook.postProcess(shipment, strdocaction);
-        if (msg != null && StringUtils.equals("Error", msg.getType())) {
+        msg = hook.postProcess(shipment, strDocAction);
+        if (msg != null && StringUtils.equals(ERROR, msg.getType())) {
           OBDal.getInstance().rollbackAndClose();
           return msg;
         }
       }
 
       OBDal.getInstance().commitAndClose();
-      final PInstanceProcessData[] pinstanceData = PInstanceProcessData.select(conn,
-          pinstance.getId());
-      myMessage = Utility.getProcessInstanceMessage(conn, vars, pinstanceData);
+      final PInstanceProcessData[] pInstanceData = PInstanceProcessData.select(conn,
+          pInstance.getId());
+      myMessage = Utility.getProcessInstanceMessage(conn, vars, pInstanceData);
       log4j.debug(myMessage.getMessage());
 
     } catch (ServletException ex) {
