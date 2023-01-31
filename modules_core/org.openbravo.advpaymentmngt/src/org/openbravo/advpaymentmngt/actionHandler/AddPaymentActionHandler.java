@@ -254,7 +254,7 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
       OBContext.restorePreviousMode();
     }
     for (PaymentProcessHook hook : hooks) {
-      jsonResponse = hook.preProcess(jsonResponse);
+      jsonResponse = hook.posProcess(jsonResponse);
     }
     return jsonResponse;
   }
