@@ -43,6 +43,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.hook.PaymentProcessHook;
+import org.openbravo.advpaymentmngt.hook.PaymentProcessOrderHook;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentProcess;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
@@ -99,13 +100,14 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
     OBContext.setAdminMode(true);
     boolean openedFromMenu = false;
     String comingFrom = null;
+    List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
     try {
       VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
       // Get Params
       JSONObject jsonRequest = new JSONObject(content);
       JSONObject jsonparams = jsonRequest.getJSONObject("_params");
 
-      for (PaymentProcessHook hook : hooks) {
+      for (PaymentProcessHook hook : hookList) {
         jsonResponse = hook.preProcess(jsonResponse);
       }
 
@@ -253,7 +255,7 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
     } finally {
       OBContext.restorePreviousMode();
     }
-    for (PaymentProcessHook hook : hooks) {
+    for (PaymentProcessHook hook : hookList) {
       jsonResponse = hook.posProcess(jsonResponse);
     }
     return jsonResponse;
@@ -299,7 +301,7 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
         .isLegalEntityWithAccounting();
     if (documentEnabled
         && !FIN_Utility.isPeriodOpen(OBContext.getOBContext().getCurrentClient().getId(),
-            strDocBaseType, org.getId(), OBDateUtils.formatDate(paymentDate))
+        strDocBaseType, org.getId(), OBDateUtils.formatDate(paymentDate))
         && orgLegalWithAccounting) {
       String messag = OBMessageUtils.messageBD("PeriodNotAvailable");
       log.debug(messag);
@@ -361,7 +363,7 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
         // Manage negative amounts
         if ((remainingAmount.signum() > 0 && remainingAmount.compareTo(outstandingAmount) >= 0)
             || (remainingAmount.signum() < 0
-                && remainingAmount.compareTo(outstandingAmount) <= 0)) {
+            && remainingAmount.compareTo(outstandingAmount) <= 0)) {
           assignAmount = outstandingAmount;
           if (!isFullPaydAndHasNegativeLines) {
             remainingAmount = remainingAmount.subtract(outstandingAmount);
@@ -643,8 +645,8 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
 
   private List<FIN_PaymentScheduleDetail> getOrderedPaymentScheduleDetails(List<String> psdSet) {
     //@formatter:off
-    String hql = 
-            "as psd" +
+    String hql =
+        "as psd" +
             " where psd.id in (:psdSet)" +
             " order by psd.paymentDetails, abs(psd.amount)";
     //@formatter:on
