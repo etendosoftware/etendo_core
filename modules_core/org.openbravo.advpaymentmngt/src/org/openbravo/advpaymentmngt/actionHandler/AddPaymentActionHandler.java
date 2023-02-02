@@ -100,6 +100,7 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
     OBContext.setAdminMode(true);
     boolean openedFromMenu = false;
     String comingFrom = null;
+    JSONObject resultHook;
     try {
       List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
       VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
@@ -108,7 +109,10 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
       JSONObject jsonparams = jsonRequest.getJSONObject("_params");
 
       for (PaymentProcessHook hook : hookList) {
-        jsonResponse = hook.preProcess(jsonResponse);
+        resultHook = hook.preProcess(jsonResponse);
+        if (StringUtils.equals("error", resultHook.getString("severity"))) {
+          jsonResponse = resultHook;
+        }
       }
 
       if (jsonRequest.has("inpwindowId") && jsonRequest.get("inpwindowId") != JSONObject.NULL) {
@@ -236,7 +240,10 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
 
       }
       for (PaymentProcessHook hook : hookList) {
-        jsonResponse = hook.posProcess(jsonResponse);
+        resultHook = hook.posProcess(jsonResponse);
+        if (StringUtils.equals("error", resultHook.getString("severity"))) {
+          jsonResponse = resultHook;
+        }
       }
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
