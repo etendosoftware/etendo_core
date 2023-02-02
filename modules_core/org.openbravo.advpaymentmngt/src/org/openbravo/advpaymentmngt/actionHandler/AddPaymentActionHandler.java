@@ -100,8 +100,8 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
     OBContext.setAdminMode(true);
     boolean openedFromMenu = false;
     String comingFrom = null;
-    JSONObject resultHook;
     try {
+      JSONObject resultHook;
       List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
       VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
       // Get Params
@@ -109,7 +109,7 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
       JSONObject jsonparams = jsonRequest.getJSONObject("_params");
 
       for (PaymentProcessHook hook : hookList) {
-        resultHook = hook.preProcess(jsonResponse);
+        resultHook = hook.preProcess(jsonparams);
         if (StringUtils.equals("error", resultHook.getString("severity"))) {
           jsonResponse = resultHook;
         }
@@ -240,7 +240,7 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
 
       }
       for (PaymentProcessHook hook : hookList) {
-        resultHook = hook.posProcess(jsonResponse);
+        resultHook = hook.posProcess(jsonparams);
         if (StringUtils.equals("error", resultHook.getString("severity"))) {
           jsonResponse = resultHook;
         }
