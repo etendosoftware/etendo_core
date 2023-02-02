@@ -21,7 +21,7 @@ public abstract class PaymentProcessOrderHook {
       public int compare(Object o1, Object o2) {
         int o1Priority = ((PaymentProcessOrderHook) o1).getPriority();
         int o2Priority = ((PaymentProcessOrderHook) o2).getPriority();
-        return (int) Math.signum(o1Priority - o2Priority);
+        return Float.valueOf(Math.signum(o1Priority - o2Priority)).intValue();
       }
     });
 
@@ -29,3 +29,4 @@ public abstract class PaymentProcessOrderHook {
   }
 
 }
+

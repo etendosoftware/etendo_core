@@ -100,8 +100,8 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
     OBContext.setAdminMode(true);
     boolean openedFromMenu = false;
     String comingFrom = null;
-    List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
     try {
+      List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
       VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
       // Get Params
       JSONObject jsonRequest = new JSONObject(content);
@@ -235,7 +235,9 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
         jsonResponse.put("responseActions", responseActions);
 
       }
-
+      for (PaymentProcessHook hook : hookList) {
+        jsonResponse = hook.posProcess(jsonResponse);
+      }
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
       log.error("Exception handling the new payment", e);
@@ -254,9 +256,6 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
       }
     } finally {
       OBContext.restorePreviousMode();
-    }
-    for (PaymentProcessHook hook : hookList) {
-      jsonResponse = hook.posProcess(jsonResponse);
     }
     return jsonResponse;
   }
