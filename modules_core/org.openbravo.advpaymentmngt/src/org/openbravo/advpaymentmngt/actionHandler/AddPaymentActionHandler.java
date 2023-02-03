@@ -110,7 +110,8 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
 
       for (PaymentProcessHook hook : hookList) {
         resultHook = hook.preProcess(jsonparams);
-        if (StringUtils.equals("error", resultHook.getString("severity"))) {
+        if (resultHook != null && resultHook.has("severity")
+            && StringUtils.equalsIgnoreCase("error", resultHook.getString("severity"))) {
           jsonResponse = resultHook;
         }
       }
@@ -241,7 +242,8 @@ public class AddPaymentActionHandler extends BaseProcessActionHandler {
       }
       for (PaymentProcessHook hook : hookList) {
         resultHook = hook.posProcess(jsonparams);
-        if (StringUtils.equals("error", resultHook.getString("severity"))) {
+        if (resultHook != null && resultHook.has("severity")
+            && StringUtils.equalsIgnoreCase("error", resultHook.getString("severity"))) {
           jsonResponse = resultHook;
         }
       }
