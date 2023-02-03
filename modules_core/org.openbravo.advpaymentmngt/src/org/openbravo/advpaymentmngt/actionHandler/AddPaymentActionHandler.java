@@ -107,11 +107,13 @@ public class AddPaymentActionHandler extends Action {
   private static final String TITLE = "title";
   private static final String RESPONSE_ACTION = "responseActions";
   private static final String DOCUMENT_ACTION = "document_action";
+  private static final String FIN_PAYMENT = "FIN_Payment";
 
   @Inject
   @Any
   private Instance<PaymentProcessHook> hooks;
 
+  /*
    * @param parameters
    *     Parameters (if any) defined in dictionary
    * @param isStopped
@@ -129,7 +131,7 @@ public class AddPaymentActionHandler extends Action {
       String entityName = content.getString("_entityName");
       boolean isOrderWithMoreThanOneRecord = StringUtils.equals("Order", entityName) && input.size() > 1;
       boolean isInvoiceWithMoreThanOneRecord = StringUtils.equals("Invoice", entityName) && input.size() > 1;
-      boolean isPaymentWithMoreThanOneRecord = StringUtils.equals("FIN_Payment", entityName) && input.size() > 1;
+      boolean isPaymentWithMoreThanOneRecord = StringUtils.equals(FIN_PAYMENT, entityName) && input.size() > 1;
       boolean isWebService = content.has("processByWebService") && content.getBoolean("processByWebService");
 
       if (isOrderWithMoreThanOneRecord || isInvoiceWithMoreThanOneRecord || (isPaymentWithMoreThanOneRecord && !isWebService)) {
@@ -138,20 +140,39 @@ public class AddPaymentActionHandler extends Action {
         return actionResult;
       }
 
-      if (input.isEmpty()){
+      if (input.isEmpty()) {
         actionResult.setType(Result.Type.ERROR);
         actionResult.setMessage(OBMessageUtils.messageBD("FindZeroRecords"));
         return actionResult;
       }
 
       boolean isDocumentActionMissing = isWebService && !content.has(DOCUMENT_ACTION);
+      // this is for Invoices and Order
+      if (!StringUtils.equals(entityName, FIN_PAYMENT)) {
+        callPaymentProcess(actionResult, content, content.getJSONObject("_params").getString("fin_payment_id"),
+            isWebService);
+        return actionResult;
+      }
+
+      // this is for payments, from WS or from Payment in/out windows
       if (!isDocumentActionMissing) {
+        var processMessages = new StringBuilder();
+        int errors = 0;
+        int success = 0;
         for (FIN_Payment payment : input) {
           callPaymentProcess(actionResult, content, payment.getId(), isWebService);
-          if (actionResult.getType().equals(Result.Type.SUCCESS)) {
+          if (StringUtils.equals(Result.Type.ERROR.toString(), actionResult.getType().toString())) {
+            errors++;
+            SessionHandler.getInstance().rollback();
+          } else {
+            success++;
             SessionHandler.getInstance().commitAndStart();
           }
+          processMessages.append(actionResult.getMessage());
         }
+        actionResult.setMessage(processMessages.toString());
+        massiveMessageHandler(actionResult, input, errors, success);
+        actionResult.setResponseActionsBuilder(null);
         return actionResult;
       }
       actionResult.setType(Result.Type.ERROR);
@@ -163,6 +184,20 @@ public class AddPaymentActionHandler extends Action {
       actionResult.setType(Result.Type.ERROR);
       actionResult.setMessage(e.getMessage());
       return actionResult;
+    }
+  }
+
+  private void massiveMessageHandler(ActionResult result, List<FIN_Payment> registers, int errors, int success) {
+    if (registers.size() > 1) {
+      if (success == registers.size()) {
+        result.setType(Result.Type.SUCCESS);
+      } else if (errors == registers.size()) {
+        result.setType(Result.Type.ERROR);
+      } else {
+        result.setType(Result.Type.WARNING);
+      }
+      result.setMessage(String.format(OBMessageUtils.messageBD("DJOBS_PostUnpostMessage"), success, errors));
+      result.setOutput(getInput());
     }
   }
 
@@ -203,7 +238,7 @@ public class AddPaymentActionHandler extends Action {
     JSONObject jsonResponse = new JSONObject();
     OBContext.setAdminMode(true);
     boolean openedFromMenu = false;
-    String comingFrom;
+    String comingFrom = null;
     try {
       JSONObject resultHook;
       List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
@@ -212,18 +247,9 @@ public class AddPaymentActionHandler extends Action {
         if (payment.isProcessed()) {
           JSONObject message = new JSONObject();
           message.put(SEVERITY, ERROR);
-          message.put(TEXT, "payment is processed");
+          message.put(TEXT, OBMessageUtils.messageBD("APRM_payment_is_processed"));
           jsonResponse.put(RETRY_EXECUTION, true);
           jsonResponse.put(MESSAGE, message);
-
-      for (PaymentProcessHook hook : hookList) {
-        resultHook = hook.preProcess(jsonparams);
-        if (resultHook != null && resultHook.has("severity")
-            && StringUtils.equalsIgnoreCase("error", resultHook.getString("severity"))) {
-          jsonResponse = resultHook;
-        }
-      }
-
         } else {
           OBError msg = processMultiPayment(payment, content.getString(DOCUMENT_ACTION));
           JSONObject message = new JSONObject();
@@ -235,16 +261,26 @@ public class AddPaymentActionHandler extends Action {
         return jsonResponse;
       } else {
         VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
-        // Get Params
         JSONObject jsonParams = content.getJSONObject("_params");
 
-        final String WINDOW_ID = "inpwindowId";
-        String windowId = content.getString(WINDOW_ID);
-        comingFrom = (content.has(
-            WINDOW_ID) && windowId != JSONObject.NULL && APRMConstants.TRANSACTION_WINDOW_ID.equals(
-            windowId)) ? "TRANSACTION" : null;
-        openedFromMenu = parameters.containsKey("windowId") && "null".equals(parameters.get("windowId").toString());
+        for (PaymentProcessHook hook : hookList) {
+          resultHook = hook.preProcess(jsonParams);
+          if (resultHook != null && resultHook.has(SEVERITY)
+              && StringUtils.equalsIgnoreCase(ERROR, resultHook.getString(SEVERITY))) {
+            return resultHook;
+          }
+          jsonResponse = resultHook;
+        }
 
+        // Get Params
+        final String WINDOW_ID = "inpwindowId";
+        if (content.has(WINDOW_ID) && content.get(WINDOW_ID) != JSONObject.NULL) {
+          if (APRMConstants.TRANSACTION_WINDOW_ID.equals(content.getString(WINDOW_ID))) {
+            comingFrom = "TRANSACTION";
+          }
+        } else {
+          openedFromMenu = parameters.containsKey("windowId") && "null".equals(parameters.get("windowId").toString());
+        }
         String strOrgId = null;
         final String AD_ORG_ID = "ad_org_id";
         final String INP_AD_ORG_ID = "inpadOrgId";
@@ -276,7 +312,7 @@ public class AddPaymentActionHandler extends Action {
         BigDecimal differenceAmount = BigDecimal.ZERO;
 
         String difference = jsonParams.optString("difference", "");
-        if (!difference.isEmpty()) {
+        if (!difference.isEmpty() && !"null".equals(difference)) {
           differenceAmount = new BigDecimal(difference);
           strDifferenceAction = jsonParams.getString("overpayment_action");
           strDifferenceAction = "RE".equals(strDifferenceAction) ? "refund" : "credit";
@@ -355,11 +391,12 @@ public class AddPaymentActionHandler extends Action {
           jsonResponse.put(RESPONSE_ACTION, responseActions);
 
         }
-      }
-      for (PaymentProcessHook hook : hookList) {
-        resultHook = hook.posProcess(jsonparams);
-        if (resultHook != null && resultHook.has("severity")
-            && StringUtils.equalsIgnoreCase("error", resultHook.getString("severity"))) {
+        for (PaymentProcessHook hook : hookList) {
+          resultHook = hook.posProcess(jsonParams);
+          if (resultHook != null && resultHook.has(SEVERITY)
+              && StringUtils.equalsIgnoreCase(ERROR, resultHook.getString(SEVERITY))) {
+            return resultHook;
+          }
           jsonResponse = resultHook;
         }
       }
@@ -445,7 +482,7 @@ public class AddPaymentActionHandler extends Action {
     String strPaymentAmount = "0";
     if (strPaymentDocumentNo.startsWith("<")) {
       // get DocumentNo
-      strPaymentDocumentNo = FIN_Utility.getDocumentNo(documentType, "FIN_Payment");
+      strPaymentDocumentNo = FIN_Utility.getDocumentNo(documentType, FIN_PAYMENT);
     }
 
     OBContext.setAdminMode(false);
