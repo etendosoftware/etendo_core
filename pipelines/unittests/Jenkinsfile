@@ -6,18 +6,22 @@ pipeline {
 
     environment {
         // variable for gradle.properties
-            CONTEXT_NAME    = 'etendo'
-            BBDD_SID        = 'etendo'
-            BBDD_PORT       = '5432'
-            BBDD_SYSTEMUSER = 'postgres'
-            BBDD_SYSTEMPASS = 'syspass'
-            BBDD_USER       = 'tad'
-            BBDD_PASSWORD   = 'tad'
-            NEXUS_USER      =  credentials('nexus-admin-user')
-            NEXUS_PASSWORD  =  credentials('nexus-admin-passwd')
-            JAVA_HOME       = '/usr/lib/jvm/java-11-openjdk-amd64'
-            CATALINA_HOME   = "${WORKSPACE}/apache-tomcat-8.5.75"
-            ACCESS_TOKEN    = credentials('access_token')
+            CONTEXT_NAME        = 'etendo'
+            BBDD_SID            = 'etendo'
+            BBDD_PORT           = '5432'
+            BBDD_SYSTEMUSER     = 'postgres'
+            BBDD_SYSTEMPASS     = 'syspass'
+            BBDD_USER           = 'tad'
+            BBDD_PASSWORD       = 'tad'
+            NEXUS_USER          = credentials('nexus-admin-user')
+            NEXUS_PASSWORD      = credentials('nexus-admin-passwd')
+            JAVA_HOME           = '/usr/lib/jvm/java-11-openjdk-amd64'
+            CATALINA_HOME       = "${WORKSPACE}/apache-tomcat-8.5.75"
+            ACCESS_TOKEN        = credentials('access_token')
+            EMAIL_ADDRESS       = credentials('email_builds')
+            URL_REPO            = 'https://github.com/etendosoftware/etendo_core'
+            COMMIT_AUTHOR_NAME  = sh(returnStdout: true, script: "git log -1 --pretty=format:'%an'").trim()
+            COMMIT_AUTHOR_EMAIL = sh(returnStdout: true, script: "git log -1 --pretty=format:'%ae'").trim()
     }
 
     agent {
@@ -27,33 +31,42 @@ pipeline {
     stages {
         stage('Build Environment') {
             steps {
-                sh 'printenv'
-                sh 'chmod a+x ./pipelines/unittests/build-update.sh'
-                sh './pipelines/unittests/build-update.sh etendo_core pending "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
-                sh """
-                echo -e "context.name=${CONTEXT_NAME}\n
-                bbdd.sid=${BBDD_SID}\n
-                bbdd.port=${BBDD_PORT}\n
-                bbdd.systemUser=${BBDD_SYSTEMUSER}\n
-                bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
-                bbdd.user=${BBDD_USER}\n
-                bbdd.password=${BBDD_PASSWORD}\n
-                nexusUser=${NEXUS_USER}\n
-                nexusPassword=${NEXUS_PASSWORD}\n
-                allow.root=true\n
-                org.gradle.jvmargs=-Xmx2g -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > gradle.properties
-                """
-                sh './gradlew prepareConfig --info --stacktrace'  //run a gradle task
-                sh 'wget -O apache-tomcat-8.5.75.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz'
-                sh 'tar -xvf apache-tomcat-8.5.75.tar.gz -C $WORKSPACE'
-                sh './gradlew setup --info --stacktrace' //run a gradle task
-                sh './gradlew expandModules --info --stacktrace' //run a gradle task
-                sh './gradlew install --info --stacktrace' //run a gradle task
-                sh './gradlew smartbuild --info --stacktrace' //run a gradle task
-                sh '$WORKSPACE/apache-tomcat-8.5.75/bin/catalina.sh start '
-                sh 'sleep 1m'
                 script {
-                    env.STATUSTEST = "1" //flag to indicate if any test failed
+                    try {
+                        sh 'printenv'
+                        sh 'chmod a+x ./pipelines/unittests/build-update.sh'
+                        sh './pipelines/unittests/build-update.sh etendo_core pending "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+                        sh """
+                        echo -e "context.name=${CONTEXT_NAME}\n
+                        bbdd.sid=${BBDD_SID}\n
+                        bbdd.port=${BBDD_PORT}\n
+                        bbdd.systemUser=${BBDD_SYSTEMUSER}\n
+                        bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
+                        bbdd.user=${BBDD_USER}\n
+                        bbdd.password=${BBDD_PASSWORD}\n
+                        nexusUser=${NEXUS_USER}\n
+                        nexusPassword=${NEXUS_PASSWORD}\n
+                        allow.root=true\n
+                        org.gradle.jvmargs=-Xmx2g -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > gradle.properties
+                        """
+                        sh './gradlew prepareConfig --info --stacktrace'  //run a gradle task
+                        sh 'wget -O apache-tomcat-8.5.75.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz'
+                        sh 'tar -xvf apache-tomcat-8.5.75.tar.gz -C $WORKSPACE'
+                        sh './gradlew setup --info --stacktrace' //run a gradle task
+                        sh './gradlew expandModules --info --stacktrace' //run a gradle task
+                        sh './gradlew install --info --stacktrace' //run a gradle task
+                        sh './gradlew smartbuild --info --stacktrace' //run a gradle task
+                        sh '$WORKSPACE/apache-tomcat-8.5.75/bin/catalina.sh start '
+                        sh 'sleep 1m'
+                        env.STATUSTEST = "1" //flag to indicate if any test failed
+                        sh 'echo Build Succesful'
+                        env.STATUSBUILD = "1"
+                    } catch (Exception e) {
+                        echo 'Build of Etendo Core FAILED'
+                        currentBuild.result = 'FAILED'
+                        error('Build Etendo Core FAILED!')
+                        env.STATUSBUILD = "0"
+                    }
                 }
             }
             post {
@@ -68,6 +81,11 @@ pipeline {
 //___________________________________________________________________________________________
 // ------------------------------ WEB SERVICE TEST ------------------------------------------
         stage ('Web Service Test Suite'){
+            when {
+                expression {
+                    env.STATUSBUILD == "1"
+                }
+            }
             steps {
                 sh './pipelines/unittests/build-update.sh etendo_core pending "Run test suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
                 script {
@@ -106,15 +124,36 @@ pipeline {
 //___________________________________________________________________________________________
 // -------------------------------- CLEAN DATABASE ------------------------------------------
         stage('Clean Database') {
+            when {
+                expression {
+                    env.STATUSBUILD == "1"
+                }
+            }
             steps {
-                sh 'PGPASSWORD=$BBDD_SYSTEMPASS psql -h localhost -d $BBDD_SYSTEMUSER -U $BBDD_SYSTEMUSER -c "DROP DATABASE etendo;"'
-                sh './gradlew install --info --stacktrace' //run a gradle task
-                sh './gradlew smartbuild --info' //run a gradle task
+                script {
+                    try {
+                        echo 'Cleaning Database...'
+                        sh 'PGPASSWORD=$BBDD_SYSTEMPASS psql -h localhost -d $BBDD_SYSTEMUSER -U $BBDD_SYSTEMUSER -c "DROP DATABASE etendo;"'
+                        sh './gradlew install --info --stacktrace' //run a gradle task
+                        sh './gradlew smartbuild --info' //run a gradle task
+                        echo 'Database Cleaned'
+                    } catch (Exception e) {
+                        echo 'Clean Database FAILED'
+                        currentBuild.result = 'FAILED'
+                        error('Clean Database FAILED!')
+                        env.STATUSBUILD = "0"
+                    }
+                }
             }
         }
 //___________________________________________________________________________________________
 // ------------------------------- STANDALONE TEST ------------------------------------------
         stage ('Standalone Test Suite'){
+            when {
+                expression {
+                    env.STATUSBUILD == "1"
+                }
+            }
             steps {
                 script {
                     try {
@@ -150,6 +189,11 @@ pipeline {
 //___________________________________________________________________________________________
 // ----------------------------------- SPOCK TEST -------------------------------------------
         stage ('Spock Test'){
+            when {
+                expression {
+                    env.STATUSBUILD == "1"
+                }
+            }
             steps {
                 script {
                     try {
@@ -230,7 +274,70 @@ pipeline {
             }
             sh './gradlew --stop'
             sh 'PGPASSWORD=$BBDD_SYSTEMPASS psql -h localhost -d $BBDD_SYSTEMUSER -U $BBDD_SYSTEMUSER -c "DROP DATABASE etendo;"'
+        }
+        success {
             cleanWs deleteDirs: true
+        }
+        fixed {
+            mail to: EMAIL_ADDRESS,
+            subject: "✅ FIXED - ${currentBuild.fullDisplayName}",
+            body: """
+${new Date()}
+__________________________________________________________
+
+✅ ERRORS FIXED ✅
+
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+The problems found in the previous run/s have been fixed! 💪
+Check out the output in the following link:
+${env.BUILD_URL}
+__________________________________________________________
+            """
+        }
+        unstable {
+            script {
+                sh './pipelines/unittests/build-update.sh etendo_core failure "Failed Tests" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+            }
+            cleanWs deleteDirs: true
+            mail to: EMAIL_ADDRESS,
+            subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
+            body: """
+${new Date()}
+__________________________________________________________
+
+⚠️ BUILD UNSTABLE ⚠️
+
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+Tests have been detected that have failed in Etendo Core.
+💡 These tests were run on a Postgres database environment.
+To more information on the failing run visit:
+${env.BUILD_URL}
+__________________________________________________________
+            """
+        }
+        failure {
+            cleanWs deleteDirs: true
+            mail to: EMAIL_ADDRESS,
+            subject: "⛔ ERROR - ${currentBuild.fullDisplayName}",
+            body:  """
+${new Date()}
+__________________________________________________________
+
+⛔ ERROR ⛔
+
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+The build or publication has failed unexpectedly.
+💡 This build was on an Etendo Core environment with Postgres database.
+To more information on the failing run visit:
+${env.BUILD_URL}
+__________________________________________________________
+            """
         }
     }
 }
