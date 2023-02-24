@@ -285,10 +285,6 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="POSTPROCESS" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
-        <default><![CDATA[N]]></default>
-        <onCreateDefault/>
-      </column>
       <foreign-key foreignTable="C_BPARTNER_LOCATION" name="C_BPLOCATION_CINVOICE">
         <reference local="C_BPARTNER_LOCATION_ID" foreign="C_BPARTNER_LOCATION_ID"/>
       </foreign-key>

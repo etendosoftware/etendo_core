@@ -269,10 +269,6 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="POSTPROCESS" primaryKey="false" required="true" type="VARCHAR" size="60" autoIncrement="false">
-        <default><![CDATA[N]]></default>
-        <onCreateDefault/>
-      </column>
       <foreign-key foreignTable="M_FREIGHTCATEGORY" name="M_FREIGHTCATEGORY_M_INOUT">
         <reference local="M_FREIGHTCATEGORY_ID" foreign="M_FREIGHTCATEGORY_ID"/>
       </foreign-key>
