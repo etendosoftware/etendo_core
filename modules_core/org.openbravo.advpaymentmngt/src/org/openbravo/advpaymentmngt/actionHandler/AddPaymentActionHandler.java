@@ -207,7 +207,7 @@ public class AddPaymentActionHandler extends Action {
     JSONObject resultProcess = oldProcessPaymentHandler(getRequestParameters(), content, paymentId, isWebService);
     JSONObject resultMessage = resultProcess.getJSONObject(MESSAGE);
     String severity = resultMessage.getString(SEVERITY);
-    String text = resultMessage.getString(TEXT);
+    String text = resultMessage.has(TEXT) ? resultMessage.getString(TEXT) : "";
     String title = resultMessage.has(TITLE) ? resultMessage.getString(TITLE) : "";
     actionResult.setType(Result.Type.valueOf(severity.toUpperCase()));
     actionResult.setMessage(text);
@@ -265,11 +265,12 @@ public class AddPaymentActionHandler extends Action {
 
         for (PaymentProcessHook hook : hookList) {
           resultHook = hook.preProcess(jsonParams);
-          if (resultHook != null && resultHook.has(SEVERITY)
-              && StringUtils.equalsIgnoreCase(ERROR, resultHook.getString(SEVERITY))) {
+          JSONObject message = (resultHook != null && resultHook.has(MESSAGE)) ? resultHook.getJSONObject(
+              MESSAGE) : null;
+          if (message != null && message.has(SEVERITY)
+              && StringUtils.equalsIgnoreCase(ERROR, message.getString(SEVERITY))) {
             return resultHook;
           }
-          jsonResponse = resultHook;
         }
 
         // Get Params
@@ -393,15 +394,15 @@ public class AddPaymentActionHandler extends Action {
         }
         for (PaymentProcessHook hook : hookList) {
           resultHook = hook.posProcess(jsonParams);
-          if (resultHook != null && resultHook.has(SEVERITY)
-              && StringUtils.equalsIgnoreCase(ERROR, resultHook.getString(SEVERITY))) {
+          JSONObject message = (resultHook != null && resultHook.has(MESSAGE)) ? resultHook.getJSONObject(
+              MESSAGE) : null;
+          if (message != null && message.has(SEVERITY)
+              && StringUtils.equalsIgnoreCase(ERROR, message.getString(SEVERITY))) {
             return resultHook;
           }
-          jsonResponse = resultHook;
         }
       }
     } catch (Exception e) {
-      OBDal.getInstance().rollbackAndClose();
       log.error("Exception handling the new payment", e);
 
       try {
