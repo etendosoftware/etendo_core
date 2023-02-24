@@ -994,19 +994,6 @@
             UpdatedBy=v_User
         WHERE C_Order_ID=v_Record_ID;
 
-        DELETE
-        FROM C_ORDERLINE
-        WHERE C_ORDER_DISCOUNT_ID IS NOT NULL
-          AND C_ORDER_ID = v_Record_ID
-          AND NOT EXISTS (SELECT C_INVOICELINE_ID FROM C_INVOICELINE WHERE C_INVOICELINE.C_ORDERLINE_ID = C_ORDERLINE.C_ORDERLINE_ID)
-          AND NOT EXISTS (SELECT M_INOUTLINE_ID FROM M_INOUTLINE WHERE M_INOUTLINE.C_ORDERLINE_ID = C_ORDERLINE.C_ORDERLINE_ID)
-          AND NOT EXISTS (SELECT M_MATCHPO_ID FROM M_MATCHPO WHERE M_MATCHPO.C_ORDERLINE_ID = C_ORDERLINE.C_ORDERLINE_ID);
-
-        UPDATE C_ORDERLINE
-        SET pricelist = 0, priceactual = 0, pricelimit = 0, linenetamt = 0, pricestd = 0
-        WHERE C_ORDER_DISCOUNT_ID IS NOT NULL
-          AND C_ORDER_ID=v_Record_ID;
-
         UPDATE C_ORDER
         SET DocStatus=v_DocStatus, -- restore
             Processing=v_IsProcessing,

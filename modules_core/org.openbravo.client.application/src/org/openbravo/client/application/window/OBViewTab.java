@@ -568,11 +568,14 @@ public class OBViewTab extends BaseTemplateComponent {
         if (fld.getColumn() == null || fld.getColumn().getReferenceSearchKey() == null) {
           continue;
         }
-        List<Selector> selectors = fld.getColumn().getReferenceSearchKey().getOBUISELSelectorList();
-        if (selectors.isEmpty()) {
+        final OBCriteria<Selector> criteria = OBDal.getInstance().createCriteria(Selector.class);
+        criteria.add(Restrictions.eq(Selector.PROPERTY_REFERENCE, fld.getColumn().getReferenceSearchKey()));
+        criteria.setMaxResults(1);
+        Selector selector = (Selector) criteria.uniqueResult();
+
+        if (selector==null) {
           continue;
         }
-        Selector selector = selectors.get(0);
 
         if (selector.getProcessDefintion() == null) {
           continue;
