@@ -18,7 +18,7 @@ public abstract class PaymentProcessOrderHook {
     hookList.sort((Comparator<Object>) (o1, o2) -> {
       int o1Priority = ((PaymentProcessOrderHook) o1).getPriority();
       int o2Priority = ((PaymentProcessOrderHook) o2).getPriority();
-      return (int) Math.signum(o1Priority - o2Priority);
+      return (int) Math.signum((float) o1Priority - (float) o2Priority);
     });
 
     return hookList;
