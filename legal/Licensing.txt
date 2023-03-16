@@ -113,7 +113,7 @@ http://people.apache.org/~andyc/neko/doc/html/
 All files under Apache Software License 2.0, available at
 http://www.apache.org/licenses/LICENSE-2.0
 
-# postgresql-42.2.20.jar
+# postgresql-42.5.4.jar
 Under the BSD license, also available at https://jdbc.postgresql.org/about/license.html
 
 # Dojo Foundation javascripts in web/js/dojo/
