@@ -21,7 +21,7 @@ List<String> _dependenciesListCOMPILATION = [
   'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.1.1.Final', 
   'org.javassist:javassist:3.24.0-GA', 
   'org.apache.logging.log4j:log4j-web:2.16.0', 
-  'org.postgresql:postgresql:42.2.2.jre7', 
+  'org.postgresql:postgresql:42.5.4',
   'nekohtml:nekohtml:0.9.5', 
   'org.apache.logging.log4j:log4j-core:2.16.0', 
   'commons-fileupload:commons-fileupload:1.4', 
