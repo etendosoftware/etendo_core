@@ -40,7 +40,7 @@ final String NEXT_RELEASE = "23.1.0"
 final String NEXT_HOTFIX = "22.4.6"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
-final String PROD_URL = "https://repo.futit.cloud/repository/maven-releases/"
+final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
 group = 'com.etendoerp.platform'
 def versionTs = 0;
 if (file('version.properties').exists()) {
@@ -227,14 +227,17 @@ task configPublishZIP(){
         publishTask.publication.version(project.version +'-ZIP')
         if(project.version.endsWith('-SNAPSHOT')) {
             publishing.repositories.maven.url = DEV_URL
+            publishing.repositories.maven.credentials {
+                username = "$nexusUser"
+                password = "$nexusPassword"
+            }
         }
         else {
             publishing.repositories.maven.url = PROD_URL
-        }
-
-        publishing.repositories.maven.credentials {
-            username = "$nexusUser"
-            password = "$nexusPassword"
+            publishing.repositories.maven.credentials {
+                username = "$gitHubUser"
+                password = "$gitHubToken"
+            }
         }
     }
 }
@@ -304,14 +307,18 @@ task configPublishJAR(){
         }
 
         if(project.version.endsWith('-SNAPSHOT')) {
-            publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-snapshots/"
+            publishing.repositories.maven.url = DEV_URL
+            publishing.repositories.maven.credentials {
+                username = "$nexusUser"
+                password = "$nexusPassword"
+            }
         }
         else {
-            publishing.repositories.maven.url = "https://repo.futit.cloud/repository/maven-releases/"
-        }
-        publishing.repositories.maven.credentials {
-            username = "$nexusUser"
-            password = "$nexusPassword"
+            publishing.repositories.maven.url = PROD_URL
+            publishing.repositories.maven.credentials {
+                username = "$gitHubUser"
+                password = "$gitHubToken"
+            }
         }
     }
 }
