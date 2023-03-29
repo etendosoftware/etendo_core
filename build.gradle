@@ -169,6 +169,9 @@ task upgradeCoreVersion {
         }
 
         def version = nextVersion.split("\\.")
+        if (version.length != 3) {
+            throw new GradleException("The version must be in the format major.minor.patch")
+        }
         def files = ['src-db/database/sourcedata/AD_MODULE.xml', 'modules_core/org.openbravo.v3/src-db/database/sourcedata/AD_MODULE.xml']
 
         //Update versions in AD_MODULE.xml files
