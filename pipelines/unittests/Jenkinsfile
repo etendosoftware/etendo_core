@@ -47,24 +47,6 @@ spec:
       hostPath:
         path: /var/run/docker.sock
         type: ''
-    - name: kube-api-access-tl4l4
-      projected:
-        sources:
-          - serviceAccountToken:
-              expirationSeconds: 3607
-              path: token
-          - configMap:
-              name: kube-root-ca.crt
-              items:
-                - key: ca.crt
-                  path: ca.crt
-          - downwardAPI:
-              items:
-                - path: namespace
-                  fieldRef:
-                    apiVersion: v1
-                    fieldPath: metadata.namespace
-        defaultMode: 420
   containers:
     - name: compiler
       image: futit/etendo_compiler:1.0.10
@@ -87,9 +69,6 @@ spec:
           mountPath: /root/.ssh/
         - name: docker-sock
           mountPath: /var/run/docker.sock
-        - name: kube-api-access-tl4l4
-          readOnly: true
-          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
       lifecycle:
         postStart:
           exec:
@@ -99,13 +78,7 @@ spec:
               - >-
                 chmod a+x /var/run/docker.sock && rm
                 /etc/apt/sources.list.d/pgdg.list || echo 0 && apt update && apt
-                install -y curl && curl -fsSL
-                https://deb.nodesource.com/setup_16.x | bash - && curl -sL
-                https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee
-                /usr/share/keyrings/yarnkey.gpg >/dev/null && echo "deb
-                [signed-by=/usr/share/keyrings/yarnkey.gpg]
-                https://dl.yarnpkg.com/debian stable main" | tee
-                /etc/apt/sources.list.d/yarn.list
+                install -y curl
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
@@ -116,10 +89,6 @@ spec:
         - name: POSTGRES_PASSWORD
           value: syspass
       resources: {}
-      volumeMounts:
-        - name: kube-api-access-tl4l4
-          readOnly: true
-          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
