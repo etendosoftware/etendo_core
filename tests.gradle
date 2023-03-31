@@ -62,10 +62,9 @@ if(file('modules_core').exists() && file('modules_core').isDirectory()){
 test.dependsOn('ant.compile.test')
 
 task depsTest {
-    afterEvaluate {
-        configurations.compile.collect {
-            dependencies.testImplementation files(it)
+    doLast {
+        configurations.compileClasspath.getFiles().each { file ->
+            dependencies.testImplementation files(file)
         }
     }
 }
-
