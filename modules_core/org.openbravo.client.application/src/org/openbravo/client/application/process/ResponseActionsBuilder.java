@@ -34,6 +34,7 @@ public class ResponseActionsBuilder {
   private JSONArray responseActions;
   private JSONObject retryExecutionMsg;
   private boolean retryExecution;
+  private boolean refreshParent;
   private boolean showResultsInProcessView;
 
   public enum MessageType {
@@ -249,6 +250,17 @@ public class ResponseActionsBuilder {
    */
   public ResponseActionsBuilder retryExecution() {
     retryExecution = true;
+    return this;
+  }
+
+  /**
+   * Allows to re-execute the process again, by enabling the process UI. This is useful to do
+   * backend validations as this allows the user to fix data and resubmit again.
+   *
+   * @return a ResponseActionsBuilder configured to retry the process execution.
+   */
+  public ResponseActionsBuilder refreshParent() {
+    refreshParent = true;
     return this;
   }
 

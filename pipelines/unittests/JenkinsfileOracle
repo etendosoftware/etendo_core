@@ -5,18 +5,22 @@ pipeline {
     }
 
     environment {
-        CONTEXT_NAME    = 'etendo'
-        BBDD_SID        = 'orclcdb'
-        BBDD_PORT       = '5432'
-        BBDD_SYSTEMUSER = 'sys AS SYSDBA'
-        BBDD_SYSTEMPASS = 'rEUC0GRpxA'
-        BBDD_USER       = 'C##TAD'
-        BBDD_PASSWORD   = 'tad'
-        NEXUS_USER      =  credentials('nexus-admin-user')
-        NEXUS_PASSWORD  =  credentials('nexus-admin-passwd')
-        JAVA_HOME       = '/usr/lib/jvm/java-11-openjdk-amd64'
-        CATALINA_HOME   = "${WORKSPACE}/apache-tomcat-8.5.75"
-        TZ              = 'UTC'
+        CONTEXT_NAME        = 'etendo'
+        BBDD_SID            = 'orclcdb'
+        BBDD_PORT           = '5432'
+        BBDD_SYSTEMUSER     = 'sys AS SYSDBA'
+        BBDD_SYSTEMPASS     = 'rEUC0GRpxA'
+        BBDD_USER           = 'C##TAD'
+        BBDD_PASSWORD       = 'tad'
+        NEXUS_USER          = credentials('nexus-admin-user')
+        NEXUS_PASSWORD      = credentials('nexus-admin-passwd')
+        JAVA_HOME           = '/usr/lib/jvm/java-11-openjdk-amd64'
+        CATALINA_HOME       = "${WORKSPACE}/apache-tomcat-8.5.75"
+        TZ                  = 'UTC'
+        EMAIL_ADDRESS       = credentials('email_builds')
+        URL_REPO            = 'https://github.com/etendosoftware/etendo_core'
+        COMMIT_AUTHOR_NAME  = sh(returnStdout: true, script: "git log -1 --pretty=format:'%an'").trim()
+        COMMIT_AUTHOR_EMAIL = sh(returnStdout: true, script: "git log -1 --pretty=format:'%ae'").trim()
     }
 
     agent {
@@ -263,36 +267,60 @@ pipeline {
             }
             cleanWs deleteDirs: true
         }
+        fixed {
+            mail to: EMAIL_ADDRESS,
+            subject: "✅ FIXED - ${currentBuild.fullDisplayName}",
+            body: """
+${new Date()}
+__________________________________________________________
+
+✅ ERRORS FIXED ✅
+
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+The problems found in the previous run/s have been fixed! 💪
+Check out the output in the following link:
+${env.BUILD_URL}
+__________________________________________________________
+            """
+        }
         unstable {
-            mail to: 'builds@smfconsulting.es',
+            mail to: EMAIL_ADDRESS,
             subject: "🔥 FAILING TESTS ON ${currentBuild.fullDisplayName}",
             body: """
-            ${new Date()}
-            __________________________________________________________
+${new Date()}
+__________________________________________________________
 
-            🔥 BUILD UNSTABLE 🔥
+🔥 BUILD UNSTABLE 🔥
 
-            Tests have been detected that have failed in Etendo Core.
-            💡 These tests were run on an Oracle database environment.
-            To more information on the failing run visit:
-            ${env.BUILD_URL}
-            __________________________________________________________
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+Tests have been detected that have failed in Etendo Core.
+💡 These tests were run on an Oracle database environment.
+To more information on the failing run visit:
+${env.BUILD_URL}
+__________________________________________________________
             """
         }
         failure {
-            mail to: 'builds@smfconsulting.es',
+            mail to: EMAIL_ADDRESS,
             subject: "🚫 ERROR IN ${currentBuild.fullDisplayName}",
             body:  """
-            ${new Date()}
-            __________________________________________________________
+${new Date()}
+__________________________________________________________
 
-            🚫 BUILD FAILED 🚫
+🚫 BUILD FAILED 🚫
 
-            The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.
-            💡 This build was on an Etendo Core environment with Oracle database.
-            To more information on the failing run visit:
-            ${env.BUILD_URL}
-            __________________________________________________________
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.
+💡 This build was on an Etendo Core environment with Oracle database.
+To more information on the failing run visit:
+${env.BUILD_URL}
+__________________________________________________________
             """
         }
     }
