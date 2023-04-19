@@ -140,12 +140,6 @@ public class AddPaymentActionHandler extends Action {
         return actionResult;
       }
 
-      if (input.isEmpty()) {
-        actionResult.setType(Result.Type.ERROR);
-        actionResult.setMessage(OBMessageUtils.messageBD("FindZeroRecords"));
-        return actionResult;
-      }
-
       boolean isDocumentActionMissing = isWebService && !content.has(DOCUMENT_ACTION);
       // this is for Invoices and Order
       if (!StringUtils.equals(entityName, FIN_PAYMENT)) {
@@ -205,8 +199,8 @@ public class AddPaymentActionHandler extends Action {
       String paymentId, boolean isWebService) throws JSONException {
     // process payments
     JSONObject resultProcess = oldProcessPaymentHandler(getRequestParameters(), content, paymentId, isWebService);
-    JSONObject resultMessage = resultProcess.getJSONObject(MESSAGE);
-    String severity = resultMessage.getString(SEVERITY);
+    JSONObject resultMessage = resultProcess.has(MESSAGE) ? resultProcess.getJSONObject(MESSAGE) : new JSONObject();
+    String severity = resultMessage.has(SEVERITY) ? resultMessage.getString(SEVERITY) : "";
     String text = resultMessage.has(TEXT) ? resultMessage.getString(TEXT) : "";
     String title = resultMessage.has(TITLE) ? resultMessage.getString(TITLE) : "";
     actionResult.setType(Result.Type.valueOf(severity.toUpperCase()));
@@ -370,13 +364,13 @@ public class AddPaymentActionHandler extends Action {
           OBError message = processPayment(payment, strAction, strDifferenceAction, differenceAmount,
               exchangeRate, jsonParams, comingFrom);
           JSONObject errorMessage = new JSONObject();
+          errorMessage.put(SEVERITY, message.getType().toLowerCase());
+          errorMessage.put(TITLE, message.getTitle());
+          errorMessage.put(TEXT, message.getMessage());
+          jsonResponse.put(RETRY_EXECUTION, openedFromMenu);
+          jsonResponse.put(MESSAGE, errorMessage);
           jsonResponse.put(REFRESH_PARENT, false);
           if (!"TRANSACTION".equals(comingFrom)) {
-            errorMessage.put(SEVERITY, message.getType().toLowerCase());
-            errorMessage.put(TITLE, message.getTitle());
-            errorMessage.put(TEXT, message.getMessage());
-            jsonResponse.put(RETRY_EXECUTION, openedFromMenu);
-            jsonResponse.put(MESSAGE, errorMessage);
             jsonResponse.put(REFRESH_PARENT, true);
           }
           JSONObject setSelectorValueFromRecord = new JSONObject();
