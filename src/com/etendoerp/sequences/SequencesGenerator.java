@@ -58,38 +58,37 @@ public class SequencesGenerator extends Action {
       Set<String> organizations = new OrganizationStructureProvider().getChildTree(parameters.getString("ad_org_id"),
           true);
 
-          int count = generateSequenceCombination(sequenceColumns, client, organizations);
-          result.setType(Result.Type.SUCCESS);
-            String message = OBMessageUtils.getI18NMessage("SequencesWereCreated", new String[] { String.valueOf(count) });
-            result.setMessage( message);
+      int count = generateSequenceCombination(sequenceColumns, client, organizations);
+      result.setType(Result.Type.SUCCESS);
+      String message = OBMessageUtils.getI18NMessage("SequencesWereCreated", new String[]{ String.valueOf(count) });
+      result.setMessage(message);
 
-        } catch (Exception e) {
-            log.error("Error in process", e);
-            result.setType(Result.Type.ERROR);
-            result.setMessage(e.getMessage());
-        }
-        finally {
-            restorePreviousMode();
-        }
-
-        return result;
+    } catch (Exception e) {
+      log.error("Error in process", e);
+      result.setType(Result.Type.ERROR);
+      result.setMessage(e.getMessage());
+    } finally {
+      restorePreviousMode();
     }
 
+    return result;
+  }
+
   public int generateSequenceCombination(List<Column> sequenceColumns, Client client, Set<String> organizations) {
-      int count = 0;
+    int count = 0;
       for (Column column : sequenceColumns) {
         //Get parents organization
         Set<String> parentOrganizations = new OrganizationStructureProvider().getParentTree(
             parameters.getString("ad_org_id"),
             true);
 
-        //Get Document Type
-        OBCriteria<DocumentType> documentTypeOBCriteria = OBDal.getInstance().createCriteria(DocumentType.class);
-        documentTypeOBCriteria.add(Restrictions.eq(DocumentType.PROPERTY_TABLE, column.getTable()));
+      //Get Document Type
+      OBCriteria<DocumentType> documentTypeOBCriteria = OBDal.getInstance().createCriteria(DocumentType.class);
+      documentTypeOBCriteria.add(Restrictions.eq(DocumentType.PROPERTY_TABLE, column.getTable()));
         documentTypeOBCriteria.add(Restrictions.in(DocumentType.PROPERTY_ORGANIZATION + ".id", parentOrganizations));
         List<DocumentType> documentTypes = documentTypeOBCriteria.list();
 
-        for (String orgId : organizations) {
+      for (String orgId : organizations) {
           Organization org = OBDal.getInstance().get(Organization.class, orgId);
           String name = column.getTable().getName().substring(0,
               Math.min(column.getTable().getName().length(), 29)) + "-"
@@ -102,7 +101,7 @@ public class SequencesGenerator extends Action {
           } else {
             count = count + createSequence(client, org, name, column, null);
           }
-        }
+      }
       }
       result.setType(Result.Type.SUCCESS);
       String message = OBMessageUtils.getI18NMessage("SequencesWereCreated", new String[]{ String.valueOf(count) });
@@ -130,14 +129,14 @@ public class SequencesGenerator extends Action {
   public int createSequence(Client client, Organization organization, String name, Column column,
       DocumentType documentType) {
     if (!existsSequence(column, client, organization, documentType)) {
-            setSequenceValues(client, organization, name, column, documentType);
-            return 1;
-        }
-        return 0;
+      setSequenceValues(client, organization, name, column, documentType);
+      return 1;
     }
+    return 0;
+  }
 
-    public Sequence setSequenceValues(Client client, Organization organization, String name, Column column,
-    DocumentType documentType) {
+  public Sequence setSequenceValues(Client client, Organization organization, String name, Column column,
+      DocumentType documentType) {
       final Sequence sequence = OBProvider.getInstance().get(Sequence.class);
       // set values
       sequence.setClient(client);
@@ -153,7 +152,7 @@ public class SequencesGenerator extends Action {
       sequence.setAutoNumbering(true);
       sequence.setNextAssignedNumber(1000000L);
       sequence.setIncrementBy(1L);
-        
+
       // store it in the database
       OBDal.getInstance().save(sequence);
       return 1;
