@@ -58,6 +58,25 @@ public class SequencesGenerator extends Action {
       Set<String> organizations = new OrganizationStructureProvider().getChildTree(parameters.getString("ad_org_id"),
           true);
 
+          int count = generateSequenceCombination(sequenceColumns, client, organizations);
+          result.setType(Result.Type.SUCCESS);
+            String message = OBMessageUtils.getI18NMessage("SequencesWereCreated", new String[] { String.valueOf(count) });
+            result.setMessage( message);
+
+        } catch (Exception e) {
+            log.error("Error in process", e);
+            result.setType(Result.Type.ERROR);
+            result.setMessage(e.getMessage());
+        }
+        finally {
+            restorePreviousMode();
+        }
+
+        return result;
+    }
+
+  public int generateSequenceCombination(List<Column> sequenceColumns, Client client, Set<String> organizations) {
+      int count = 0;
       for (Column column : sequenceColumns) {
         //Get parents organization
         Set<String> parentOrganizations = new OrganizationStructureProvider().getParentTree(
@@ -72,7 +91,6 @@ public class SequencesGenerator extends Action {
 
         for (String orgId : organizations) {
           Organization org = OBDal.getInstance().get(Organization.class, orgId);
-
           String name = column.getTable().getName().substring(0,
               Math.min(column.getTable().getName().length(), 29)) + "-"
               + column.getName().substring(0, Math.min(column.getName().length(), 30));
@@ -93,7 +111,6 @@ public class SequencesGenerator extends Action {
       responseActions.showResultsInProcessView();
       responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS, message);
       result.setResponseActionsBuilder(responseActions);
-
     } catch (Exception e) {
       log.error("Error in process", e);
       result.setType(Result.Type.ERROR);
@@ -101,7 +118,6 @@ public class SequencesGenerator extends Action {
     } finally {
       restorePreviousMode();
     }
-
     return result;
   }
 
@@ -113,8 +129,15 @@ public class SequencesGenerator extends Action {
 
   public int createSequence(Client client, Organization organization, String name, Column column,
       DocumentType documentType) {
-
     if (!existsSequence(column, client, organization, documentType)) {
+            setSequenceValues(client, organization, name, column, documentType);
+            return 1;
+        }
+        return 0;
+    }
+
+    public Sequence setSequenceValues(Client client, Organization organization, String name, Column column,
+    DocumentType documentType) {
       final Sequence sequence = OBProvider.getInstance().get(Sequence.class);
       // set values
       sequence.setClient(client);
@@ -130,8 +153,7 @@ public class SequencesGenerator extends Action {
       sequence.setAutoNumbering(true);
       sequence.setNextAssignedNumber(1000000L);
       sequence.setIncrementBy(1L);
-
-
+        
       // store it in the database
       OBDal.getInstance().save(sequence);
       return 1;
