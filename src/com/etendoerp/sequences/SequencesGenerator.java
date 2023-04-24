@@ -43,14 +43,6 @@ public class SequencesGenerator extends Action {
     setAdminMode();
     int count = 0;
     try {
-      //Get transactional Reference
-      Reference reference = OBDal.getInstance().get(Reference.class,
-          TransactionalSequenceUtils.TRANSACTIONAL_SEQUENCE_ID);
-      //Filter columns by transactional sequence references
-      OBCriteria<Column> columnOBCriteria = OBDal.getInstance().createCriteria(Column.class);
-      columnOBCriteria.add(Restrictions.eq(Column.PROPERTY_REFERENCE, reference));
-      List<Column> sequenceColumns = columnOBCriteria.list();
-
       //Get Current Client
       Client client = OBContext.getOBContext().getCurrentClient();
 
@@ -58,7 +50,7 @@ public class SequencesGenerator extends Action {
       Set<String> organizations = new OrganizationStructureProvider().getChildTree(parameters.getString("ad_org_id"),
           true);
 
-      int count = generateSequenceCombination(sequenceColumns, client, organizations);
+      int count = generateSequenceCombination(client, organizations);
       result.setType(Result.Type.SUCCESS);
       String message = OBMessageUtils.getI18NMessage("SequencesWereCreated", new String[]{ String.valueOf(count) });
       result.setMessage(message);
@@ -74,7 +66,15 @@ public class SequencesGenerator extends Action {
     return result;
   }
 
-  public int generateSequenceCombination(List<Column> sequenceColumns, Client client, Set<String> organizations) {
+  public int generateSequenceCombination(Client client, Set<String> organizations) {
+    //Get transactional Reference
+    Reference reference = OBDal.getInstance().get(Reference.class,
+        TransactionalSequenceUtils.TRANSACTIONAL_SEQUENCE_ID);
+    //Filter columns by transactional sequence references
+    OBCriteria<Column> columnOBCriteria = OBDal.getInstance().createCriteria(Column.class);
+    columnOBCriteria.add(Restrictions.eq(Column.PROPERTY_REFERENCE, reference));
+    List<Column> sequenceColumns = columnOBCriteria.list();
+
     int count = 0;
       for (Column column : sequenceColumns) {
         //Get parents organization
