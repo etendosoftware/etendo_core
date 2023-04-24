@@ -40,9 +40,9 @@ public class SequencesGenerator extends Action {
   @Override
   protected ActionResult action(JSONObject parameters, MutableBoolean isStopped) {
     var result = new ActionResult();
-    setAdminMode();
     int count = 0;
     try {
+      setAdminMode();
       //Get Current Client
       Client client = OBContext.getOBContext().getCurrentClient();
 
