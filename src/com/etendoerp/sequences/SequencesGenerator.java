@@ -13,6 +13,7 @@ import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBProvider;
+import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -53,15 +54,19 @@ public class SequencesGenerator extends Action {
             Set<String> organizations = new OrganizationStructureProvider().getChildTree(parameters.getString("ad_org_id"), true);
 
             for (Column column: sequenceColumns) {
+                //Get parents organization
+                Set<String> parentOrganizations = new OrganizationStructureProvider().getParentTree(
+                    parameters.getString("ad_org_id"),
+                    true);
+
                 //Get Document Type
                 OBCriteria<DocumentType> documentTypeOBCriteria = OBDal.getInstance().createCriteria(DocumentType.class);
                 documentTypeOBCriteria.add(Restrictions.eq(DocumentType.PROPERTY_TABLE, column.getTable()));
+                documentTypeOBCriteria.add(Restrictions.in(DocumentType.PROPERTY_ORGANIZATION + ".id", parentOrganizations));
                 List <DocumentType> documentTypes = documentTypeOBCriteria.list();
 
                 for (String orgId : organizations) {
                     Organization org = OBDal.getInstance().get(Organization.class, orgId);
-
-
 
                     String name =   column.getTable().getName().substring(0, Math.min(column.getTable().getName().length(), 29)) + "-"
                                     + column.getName().substring(0, Math.min(column.getName().length(), 30));
@@ -78,7 +83,11 @@ public class SequencesGenerator extends Action {
             }
             result.setType(Result.Type.SUCCESS);
             String message = OBMessageUtils.getI18NMessage("SequencesWereCreated", new String[] { String.valueOf(count) });
-            result.setMessage( message);
+            ResponseActionsBuilder responseActions = result.getResponseActionsBuilder().orElse(getResponseBuilder());
+            responseActions.retryExecution();
+            responseActions.showResultsInProcessView();
+            responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS, message);
+            result.setResponseActionsBuilder(responseActions);
 
         } catch (Exception e) {
             log.error("Error in process", e);
