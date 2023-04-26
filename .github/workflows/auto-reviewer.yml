@@ -22,12 +22,8 @@ jobs:
         id: run-docker
         run: |
           printenv
-
           echo "-------------------------------------------------------------------------"
-
-          docker run -d -p 5000:5000 -e REPO_API_TOKEN="${{ env.ETENDOBOT_TOKEN }}" -e PULL_REQUEST=${{ env.PULL_REQUEST }} -e PROJECT=${{ env.PROJECT }} -e REPO_SLUG=${{ env.REPO_SLUG }} -e OPENAI_API_KEY="${{ env.OPENAI_API_KEY }}" etendo/code-reviewer:latest
-          export CONTAINER_ID=$(docker ps -qf "ancestor=etendo/code-reviewer:latest")
-      
+          docker run -d -p 5000:5000 -e REPO_API_TOKEN="${{ env.ETENDOBOT_TOKEN }}" -e PULL_REQUEST=${{ env.PULL_REQUEST }} -e PROJECT=${{ env.PROJECT }} -e REPO_SLUG=${{ env.REPO_SLUG }} -e OPENAI_API_KEY="${{ env.OPENAI_API_KEY }}" etendo/code-reviewer:latest      
       - name: Make Reviewer API call
         id: call-api
         run: |
