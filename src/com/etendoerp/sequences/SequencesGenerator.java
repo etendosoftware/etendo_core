@@ -147,7 +147,8 @@ public class SequencesGenerator extends Action {
       sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_DOCUMENTTYPE, documentType));
     }
     sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_ORGANIZATION, organization));
-    return !sequenceOBCriteria.list().isEmpty();
+    sequenceOBCriteria.setMaxResults(1);
+    return sequenceOBCriteria.uniqueResult() != null;
   }
 
   @Override
