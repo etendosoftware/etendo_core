@@ -1,3 +1,6 @@
+githubUser=
+githubToken=
+
 context.name=etendo
 
 bbdd.sid=etendo
