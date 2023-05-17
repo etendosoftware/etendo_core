@@ -1,5 +1,7 @@
 githubUser=
 githubToken=
+nexusUser=
+nexusPassword=
 
 context.name=etendo
 
