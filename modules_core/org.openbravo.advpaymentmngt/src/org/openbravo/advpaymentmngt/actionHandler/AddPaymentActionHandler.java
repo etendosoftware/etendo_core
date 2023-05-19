@@ -205,7 +205,7 @@ public class AddPaymentActionHandler extends Action {
     actionResult.setType(Result.Type.valueOf(severity.toUpperCase()));
     actionResult.setMessage(text);
     ResponseActionsBuilder responseActions = actionResult.getResponseActionsBuilder().orElse(getResponseBuilder());
-    responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.valueOf(severity.toUpperCase()),text);
+    responseActions.showMsgInProcessView(ResponseActionsBuilder.MessageType.valueOf(severity.toUpperCase()), text);
     JSONObject actions = resultProcess.has(RESPONSE_ACTION) ? resultProcess.getJSONObject(
         RESPONSE_ACTION) : new JSONObject();
     Iterator<?> keys = actions.keys();
