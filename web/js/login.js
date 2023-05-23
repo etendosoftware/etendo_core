@@ -79,7 +79,7 @@ function doLogin(command) {
   var extraParams;
   if (
     document.getElementById('resetPassword').value === 'true' &&
-    document.getElementById('user').value !==
+    document.getElementById('newPass').value !==
       document.getElementById('password').value
   ) {
     setLoginMessage('Error', errorSamePassword, errorDifferentPasswordInFields);
@@ -166,12 +166,9 @@ function processResult(result) {
   }
   if (result.resetPassword) {
     document.getElementById('resetPassword').value = result.resetPassword;
-    document.getElementById('user').value = '';
-    document.getElementById('user').type = 'password';
-    document.getElementById('userlabel').style.display = 'none';
-    document.getElementById('passwordlabel').style.display = 'none';
-    document.getElementById('newpasswordlabel').style.display = '';
-    document.getElementById('confirmpasswordlabel').style.display = '';
+    document.getElementById('user').style.display = 'none';
+    document.getElementById('newPass').style.display = '';
+    document.getElementById('password').placeholder = 'Confirm Password';
   }
   if (shouldContinue) {
     if (result.showMessage && result.messageType === 'Confirmation') {
@@ -181,7 +178,6 @@ function processResult(result) {
     }
   } else if (result.resetPassword) {
     enableButton('buttonOK');
-    document.getElementById('user').value = '';
     setWindowElementFocus('user', 'id');
   } else {
     enableButton('buttonOK');
