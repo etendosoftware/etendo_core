@@ -195,9 +195,6 @@ beforeLoadDo();
 <div id="layout" class="pure-g">
     <div class="sidebar">
         <div class="header">
-            <!--
-            <img src="../web/etendo/left-img.jpg"/>
-            -->
         </div>
     </div>
 
@@ -207,49 +204,18 @@ beforeLoadDo();
                 <img src="../web/images/etendo/EtendoWithVersion_Logo.png" class="logo">
             </div>
             <h1>Welcome Back!</h1>
-            <!--
-            <form class="pure-form pure-form-stacked login-form" method="post" action="../secureApp/LoginHandler.html" name="frmIdentificacion" id="frmFormulario" autocomplete="off">
-                <input type="hidden" name="Command" value="" />
-                <input type="hidden" name="resetPassword" id="resetPassword" value="" />
-                <fieldset>
-                    <input class="dojoValidateValid Login_TextBox" type="text" maxlength="60" name="user" id="user" placeholder="User Name"/>
-                    <input class="dojoValidateValid Login_TextBox" type="password" maxlength="40" name="password" id="password" placeholder="Password"/>
-                    <button type="submit" id="buttonOK"
-                            class="pure-button login-button ButtonLink"
-                            onclick="doLogin();">
-                        Let's Continue
-                    </button>
-                </fieldset>
-                <div id="errorMsg" class="LabelText Login_ErrorMsg_Container" style="display:none;">
-                    <span id="errorMsgTitle_Container"><span id="errorMsgTitle" class="Login_ErrorMsg_Title">xx</span><br></span><span id="errorMsgContent" class="Login_ErrorMsg_Content">xx</span>
-                </div>
-            </form>
-            -->
             <FORM method="post" action="../secureApp/LoginHandler.html" name="frmIdentificacion" id="frmFormulario" autocomplete="off" class="pure-form pure-form-stacked login-form">
                 <INPUT type="hidden" name="Command" value=""></INPUT>
                 <INPUT type="hidden" name="resetPassword" id="resetPassword" value=""></INPUT>
 
                 <DIV class="Login_LogForm_Input_Container">
                     <DL>
-                        <!--
-                        <DT>
-                            <LABEL for="user" class="LabelText Login_LabelText" id="userlabel">User Name</LABEL>
-                        </DT>
-                        <DT>
-                            <LABEL for="user" class="LabelText Login_LabelText" id="newpasswordlabel" style="display:none;">New Password</LABEL>
-                        </DT>
-                        -->
                         <DD>
                             <INPUT class="dojoValidateValid Login_TextBox" type="text" maxlength="60" name="user" id="user" placeholder="User Name"></INPUT>
                         </DD>
-                        <!--
-                        <DT>
-                            <LABEL for="password" class="LabelText Login_LabelText" id="passwordlabel">Password</LABEL>
-                        </DT>
-                        <DT>
-                            <LABEL for="password" class="LabelText Login_LabelText" id="confirmpasswordlabel" style="display:none;">Confirm Password</LABEL>
-                        </DT>
-                        -->
+                        <DD>
+                            <INPUT class="dojoValidateValid Login_TextBox" type="password" maxlength="40" name="user" id="newPass" style="display:none;" placeholder="New Password"></INPUT>
+                        </DD>
                         <DD>
                             <INPUT class="dojoValidateValid Login_TextBox" type="password" maxlength="40" name="password" id="password" placeholder="Password"></INPUT>
                         </DD>
@@ -262,15 +228,6 @@ beforeLoadDo();
             <DIV class="Login_LogForm_Button_Container">
                 <DIV class="Login_LogForm_Button">
                     <BUTTON type="button" id="buttonOK" class="pure-button login-button ButtonLink" onclick="doLogin();" onfocus="buttonEvent('onfocus', this); window.status='Login'; return true;" onblur="buttonEvent('onblur', this);" onkeyup="buttonEvent('onkeyup', this);" onkeydown="buttonEvent('onkeydown', this);" onkeypress="buttonEvent('onkeypress', this);" onmouseup="buttonEvent('onmouseup', this);" onmousedown="buttonEvent('onmousedown', this);" onmouseover="buttonEvent('onmouseover', this); window.status='Login'; return true;" onmouseout="buttonEvent('onmouseout', this);">
-                        <!--
-                        <TABLE class="Button">
-                            <TR>
-                                <TD class="Button_left"><IMG class="Button_Icon Button_Icon_ok" alt="Login" title="Login" src="../web/images/blank.gif" border="0"></IMG></TD>
-                                <TD class="Button_text Button_width">Log in</TD>
-                                <TD class="Button_right"></TD>
-                            </TR>
-                        </TABLE>
-                        -->
                         Let's Continue
                     </BUTTON>
                 </DIV>
