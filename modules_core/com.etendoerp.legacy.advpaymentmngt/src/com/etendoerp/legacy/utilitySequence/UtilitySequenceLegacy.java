@@ -16,167 +16,204 @@ import java.sql.Connection;
 @Default
 public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
 
-    /**
-     * Gets the document number from the database.
-     *
-     * @param conn
-     *          Handler for the database connection.
-     * @param vars
-     *          Handler for the session info.
-     * @param WindowNo
-     *          Window id.
-     * @param TableName
-     *          Table name.
-     * @param C_DocTypeTarget_ID
-     *          Id of the doctype target.
-     * @param C_DocType_ID
-     *          id of the doctype.
-     * @param onlyDocType
-     *          Search only for doctype.
-     * @param updateNext
-     *          Save the new sequence in database.
-     * @return String with the new document number.
-     */
-    @Override
-    public String getDocumentNo(ConnectionProvider conn, VariablesSecureApp vars,
-                                       String WindowNo, String TableName, String C_DocTypeTarget_ID, String C_DocType_ID,
-                                       boolean onlyDocType, boolean updateNext) {
-        if (TableName == null || TableName.length() == 0) {
-            throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
-        }
-        final String AD_Client_ID = Utility.getContext(conn, vars, "AD_Client_ID", WindowNo);
+  /**
+   * Gets the document number from the database.
+   *
+   * @param conn
+   *     Handler for the database connection.
+   * @param vars
+   *     Handler for the session info.
+   * @param WindowNo
+   *     Window id.
+   * @param TableName
+   *     Table name.
+   * @param C_DocTypeTarget_ID
+   *     Id of the doctype target.
+   * @param C_DocType_ID
+   *     id of the doctype.
+   * @param onlyDocType
+   *     Search only for doctype.
+   * @param updateNext
+   *     Save the new sequence in database.
+   * @return String with the new document number.
+   */
+  @Override
+  public String getDocumentNo(ConnectionProvider conn, VariablesSecureApp vars, String WindowNo,
+      String TableName, String C_DocTypeTarget_ID, String C_DocType_ID, boolean onlyDocType,
+      boolean updateNext) {
+    if (TableName == null || TableName.length() == 0) {
+      throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
+    }
+    final String AD_Client_ID = Utility.getContext(conn, vars, "AD_Client_ID", WindowNo);
+    final String AD_Org_ID = Utility.getContext(conn, vars, "AD_Org_ID", WindowNo);
 
-        final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
-        if (cDocTypeID.equals("")) {
-            return getDocumentNo(conn, AD_Client_ID, TableName, updateNext);
-        }
-
-        if (AD_Client_ID.equals("0")) {
-            throw new UnsupportedOperationException("Utility.getDocumentNo - Cannot add System records");
-        }
-
-        CSResponse cs = null;
-        try {
-            cs = DocumentNoData.nextDocType(conn, cDocTypeID, AD_Client_ID, (updateNext ? "Y" : "N"));
-        } catch (final ServletException e) {
-        }
-
-        if (cs == null || cs.razon == null || cs.razon.equals("")) {
-            if (!onlyDocType) {
-                return getDocumentNo(conn, AD_Client_ID, TableName, updateNext);
-            } else {
-                return "0";
-            }
-        } else {
-            return cs.razon;
-        }
+    final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
+    if (cDocTypeID.equals("")) {
+      return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, TableName, updateNext);
     }
 
-    @Override
-    public String getDocumentNo(Connection conn, ConnectionProvider con,
-                                       VariablesSecureApp vars, String WindowNo, String TableName, String C_DocTypeTarget_ID,
-                                       String C_DocType_ID, boolean onlyDocType, boolean updateNext) {
-        if (TableName == null || TableName.length() == 0) {
-            throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
-        }
-        String AD_Client_ID = Utility.getContext(con, vars, "AD_Client_ID", WindowNo);
-        if ("".equals(AD_Client_ID)) {
-            AD_Client_ID = vars.getClient();
-        }
-
-        final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
-        if (cDocTypeID.equals("")) {
-            return getDocumentNo(con, AD_Client_ID, TableName, updateNext);
-        }
-
-        if (AD_Client_ID.equals("0")) {
-            throw new UnsupportedOperationException("Utility.getDocumentNo - Cannot add System records");
-        }
-
-        CSResponse cs = null;
-        try {
-
-            cs = DocumentNoData.nextDocTypeConnection(conn, con, cDocTypeID, AD_Client_ID,
-                    (updateNext ? "Y" : "N"));
-        } catch (final ServletException e) {
-        }
-
-        if (cs == null || cs.razon == null || cs.razon.equals("")) {
-            if (!onlyDocType) {
-                return getDocumentNoConnection(conn, con, AD_Client_ID, TableName, updateNext);
-            } else {
-                return "0";
-            }
-        } else {
-            return cs.razon;
-        }
+    if (AD_Client_ID.equals("0")) {
+      throw new UnsupportedOperationException("Utility.getDocumentNo - Cannot add System records");
     }
 
-    /**
-     * Gets the document number from database.
-     *
-     * @param conn
-     *          Handler for the database connection.
-     * @param AD_Client_ID
-     *          String with the client id.
-     * @param TableName
-     *          Table name.
-     * @param updateNext
-     *          Save the new sequence in database.
-     * @return String with the new document number.
-     */
-    @Override
-    public String getDocumentNo(ConnectionProvider conn, String AD_Client_ID, String TableName,
-                                       boolean updateNext) {
-        if (TableName == null || TableName.length() == 0) {
-            throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
-        }
-
-        CSResponse cs = null;
-        try {
-            cs = DocumentNoData.nextDoc(conn, "DocumentNo_" + TableName, AD_Client_ID,
-                    (updateNext ? "Y" : "N"));
-        } catch (final ServletException e) {
-        }
-
-        if (cs == null || cs.razon == null) {
-            return "";
-        } else {
-            return cs.razon;
-        }
+    CSResponse cs = null;
+    try {
+      cs = DocumentNoData.nextDocType(conn, cDocTypeID, AD_Client_ID, (updateNext ? "Y" : "N"));
+    } catch (final ServletException e) {
     }
 
-    /**
-     * Gets the document number from database.
-     *
-     * @param conn
-     *          Handler for the database connection.
-     * @param AD_Client_ID
-     *          String with the client id.
-     * @param TableName
-     *          Table name.
-     * @param updateNext
-     *          Save the new sequence in database.
-     * @return String with the new document number.
-     */
-    @Override
-    public String getDocumentNoConnection(Connection conn, ConnectionProvider con,
-                                                 String AD_Client_ID, String TableName, boolean updateNext) {
-        if (TableName == null || TableName.length() == 0) {
-            throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
-        }
-
-        CSResponse cs = null;
-        try {
-            cs = DocumentNoData.nextDocConnection(conn, con, "DocumentNo_" + TableName, AD_Client_ID,
-                    (updateNext ? "Y" : "N"));
-        } catch (final ServletException e) {
-        }
-
-        if (cs == null || cs.razon == null) {
-            return "";
-        } else {
-            return cs.razon;
-        }
+    if (cs == null || cs.razon == null || cs.razon.equals("")) {
+      if (!onlyDocType) {
+        return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, TableName, updateNext);
+      } else {
+        return "0";
+      }
+    } else {
+      return cs.razon;
     }
+  }
+
+  @Override
+  public String getDocumentNo(Connection conn, ConnectionProvider con, VariablesSecureApp vars,
+      String WindowNo, String TableName, String C_DocTypeTarget_ID, String C_DocType_ID,
+      boolean onlyDocType, boolean updateNext) {
+    if (TableName == null || TableName.length() == 0) {
+      throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
+    }
+    String AD_Client_ID = Utility.getContext(con, vars, "AD_Client_ID", WindowNo);
+    if ("".equals(AD_Client_ID)) {
+      AD_Client_ID = vars.getClient();
+    }
+    final String AD_Org_ID = Utility.getContext(con, vars, "AD_Org_ID", WindowNo);
+
+    final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
+    if (cDocTypeID.equals("")) {
+      return getDocumentNoByOrg(con, AD_Client_ID, AD_Org_ID, TableName, updateNext);
+    }
+
+    if (AD_Client_ID.equals("0")) {
+      throw new UnsupportedOperationException("Utility.getDocumentNo - Cannot add System records");
+    }
+
+    CSResponse cs = null;
+    try {
+
+      cs = DocumentNoData.nextDocTypeConnection(conn, con, cDocTypeID, AD_Client_ID,
+          (updateNext ? "Y" : "N"));
+    } catch (final ServletException e) {
+    }
+
+    if (cs == null || cs.razon == null || cs.razon.equals("")) {
+      if (!onlyDocType) {
+        return getDocumentNoConnection(conn, con, AD_Client_ID, TableName, updateNext);
+      } else {
+        return "0";
+      }
+    } else {
+      return cs.razon;
+    }
+  }
+
+  /**
+   * Gets the document number from database.
+   *
+   * @param conn
+   *     Handler for the database connection.
+   * @param AD_Client_ID
+   *     String with the client id.
+   * @param TableName
+   *     Table name.
+   * @param updateNext
+   *     Save the new sequence in database.
+   * @return String with the new document number.
+   */
+  @Override
+  public String getDocumentNo(ConnectionProvider conn, String AD_Client_ID, String TableName,
+      boolean updateNext) {
+    if (TableName == null || TableName.length() == 0) {
+      throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
+    }
+
+    CSResponse cs = null;
+    try {
+      cs = DocumentNoData.nextDoc(conn, "DocumentNo_" + TableName, AD_Client_ID,
+          (updateNext ? "Y" : "N"));
+    } catch (final ServletException e) {
+    }
+
+    if (cs == null || cs.razon == null) {
+      return "";
+    } else {
+      return cs.razon;
+    }
+  }
+
+  /**
+   * Gets the document number from database.
+   *
+   * @param conn
+   *     Handler for the database connection.
+   * @param AD_Client_ID
+   *     String with the client id.
+   * @param AD_Org_ID
+   *     String with the organization id.
+   * @param TableName
+   *     Table name.
+   * @param updateNext
+   *     Save the new sequence in database.
+   * @return String with the new document number.
+   */
+  public String getDocumentNoByOrg(ConnectionProvider conn, String AD_Client_ID, String AD_Org_ID,
+      String TableName, boolean updateNext) {
+    if (TableName == null || TableName.length() == 0) {
+      throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
+    }
+
+    CSResponse cs = null;
+    try {
+      cs = DocumentNoData.nextDocByOrg(conn, "DocumentNo_" + TableName, AD_Client_ID, AD_Org_ID,
+          (updateNext ? "Y" : "N"));
+    } catch (final ServletException e) {
+    }
+
+    if (cs == null || cs.razon == null) {
+      return "";
+    } else {
+      return cs.razon;
+    }
+  }
+
+  /**
+   * Gets the document number from database.
+   *
+   * @param conn
+   *     Handler for the database connection.
+   * @param AD_Client_ID
+   *     String with the client id.
+   * @param TableName
+   *     Table name.
+   * @param updateNext
+   *     Save the new sequence in database.
+   * @return String with the new document number.
+   */
+  @Override
+  public String getDocumentNoConnection(Connection conn, ConnectionProvider con,
+      String AD_Client_ID, String TableName, boolean updateNext) {
+    if (TableName == null || TableName.length() == 0) {
+      throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
+    }
+
+    CSResponse cs = null;
+    try {
+      cs = DocumentNoData.nextDocConnection(conn, con, "DocumentNo_" + TableName, AD_Client_ID,
+          (updateNext ? "Y" : "N"));
+    } catch (final ServletException e) {
+    }
+
+    if (cs == null || cs.razon == null) {
+      return "";
+    } else {
+      return cs.razon;
+    }
+  }
 }

@@ -49,6 +49,17 @@
       <Parameter name="updateNext"/>
       <Parameter name="razon" type="out"/>
    </SqlMethod>
+   <SqlMethod name="nextDocByOrg" type="callableStatement" return="object" object="CSResponse">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL legap_sequence_doc_by_org(?,?,?,?,?)
+      ]]></Sql>
+      <Parameter name="cDocTypeTableName"/>
+      <Parameter name="adClientId"/>
+      <Parameter name="adOrgId"/>
+      <Parameter name="updateNext"/>
+      <Parameter name="razon" type="out"/>
+   </SqlMethod>
    <SqlMethod name="nextDocConnection" connection="true" type="callableStatement" return="object" object="CSResponse">
       <SqlMethodComment></SqlMethodComment>
       <Sql><![CDATA[
@@ -58,7 +69,18 @@
       <Parameter name="adClientId"/>
       <Parameter name="updateNext"/>
       <Parameter name="razon" type="out"/>
-   </SqlMethod>   
+   </SqlMethod>
+   <SqlMethod name="nextDocConnectionByOrg" connection="true" type="callableStatement" return="object" object="CSResponse">
+      <SqlMethodComment></SqlMethodComment>
+      <Sql><![CDATA[
+        CALL legap_sequence_doc_by_org(?,?,?,?,?)
+      ]]></Sql>
+      <Parameter name="cDocTypeTableName"/>
+      <Parameter name="adClientId"/>
+      <Parameter name="adOrgId"/>
+      <Parameter name="updateNext"/>
+      <Parameter name="razon" type="out"/>
+   </SqlMethod> 
     <SqlMethod name="nextDocTypeConnection" type="callableStatement" return="object" object="CSResponse" connection="true">
       <SqlMethodComment></SqlMethodComment>
       <Sql><![CDATA[

@@ -1,10 +1,13 @@
 <?xml version="1.0"?>
-  <database name="FUNCTION LEGAP_SEQUENCE_DOC">
-    <function name="LEGAP_SEQUENCE_DOC" type="NULL">
+  <database name="FUNCTION LEGAP_SEQUENCE_DOC_BY_ORG">
+    <function name="LEGAP_SEQUENCE_DOC_BY_ORG" type="NULL">
       <parameter name="p_sequencename" type="VARCHAR" mode="in">
         <default/>
       </parameter>
       <parameter name="p_ad_client_id" type="VARCHAR" mode="in">
+        <default/>
+      </parameter>
+      <parameter name="p_ad_org_id" type="VARCHAR" mode="in">
         <default/>
       </parameter>
       <parameter name="p_update_next" type="CHAR" mode="in">
@@ -44,8 +47,24 @@
   v_Prefix VARCHAR2(30) ;
   v_Suffix VARCHAR2(30) ;
 BEGIN
-  PERFORM LEGAP_SEQUENCE_DOC_BY_ORG(p_sequencename, p_ad_client_id, '', p_update_next) ;
-END LEGAP_SEQUENCE_DOC
+  IF p_Update_Next='Y' THEN
+    UPDATE AD_Sequence
+      SET CurrentNext=CurrentNext + IncrementNo, Updated=now()
+    WHERE Name=p_SequenceName
+    AND ad_client_id=p_ad_client_id;
+  END IF;
+
+  SELECT CurrentNext - (CASE WHEN p_Update_Next='Y' THEN IncrementNo ELSE 0 END), Prefix, Suffix
+  INTO v_NextNo, v_Prefix, v_Suffix
+  FROM AD_Sequence
+  WHERE Name=p_SequenceName  AND IsActive='Y'  AND IsTableID='N'  AND IsAutoSequence='Y' AND AD_Client_ID=p_AD_Client_ID 
+  AND (p_ad_org_id <> '' OR ad_isorgincluded(p_ad_org_id, AD_Org_ID, p_ad_client_id) <> -1);
+
+  p_DocumentNo:=COALESCE(v_Prefix, '') || v_NextNo || COALESCE(v_Suffix, '') ;
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+  RAISE_APPLICATION_ERROR(-20000, '@DocumentSequenceNotFound@' || p_SequenceName) ;
+END LEGAP_SEQUENCE_DOC_BY_ORG
 ]]></body>
     </function>
   </database>
