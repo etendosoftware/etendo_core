@@ -1,5 +1,6 @@
 package com.etendoerp.legacy.utilitySequence;
 
+import org.apache.commons.lang.StringUtils;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.CSResponse;
@@ -48,11 +49,11 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
     final String AD_Org_ID = Utility.getContext(conn, vars, "AD_Org_ID", WindowNo);
 
     final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
-    if (cDocTypeID.equals("")) {
+    if (StringUtils.isEmpty(cDocTypeID)) {
       return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, TableName, updateNext);
     }
 
-    if (AD_Client_ID.equals("0")) {
+    if (StringUtils.equals("0", AD_Client_ID)) {
       throw new UnsupportedOperationException("Utility.getDocumentNo - Cannot add System records");
     }
 
@@ -62,7 +63,7 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
     } catch (final ServletException e) {
     }
 
-    if (cs == null || cs.razon == null || cs.razon.equals("")) {
+    if (cs == null || StringUtils.isBlank(cs.razon)) {
       if (!onlyDocType) {
         return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, TableName, updateNext);
       } else {
@@ -77,21 +78,21 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
   public String getDocumentNo(Connection conn, ConnectionProvider con, VariablesSecureApp vars,
       String WindowNo, String TableName, String C_DocTypeTarget_ID, String C_DocType_ID,
       boolean onlyDocType, boolean updateNext) {
-    if (TableName == null || TableName.length() == 0) {
+    if (StringUtils.isEmpty(TableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
     String AD_Client_ID = Utility.getContext(con, vars, "AD_Client_ID", WindowNo);
-    if ("".equals(AD_Client_ID)) {
+    if (StringUtils.isBlank(AD_Client_ID)) {
       AD_Client_ID = vars.getClient();
     }
     final String AD_Org_ID = Utility.getContext(con, vars, "AD_Org_ID", WindowNo);
 
     final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
-    if (cDocTypeID.equals("")) {
+    if (StringUtils.isBlank(cDocTypeID)) {
       return getDocumentNoByOrg(con, AD_Client_ID, AD_Org_ID, TableName, updateNext);
     }
 
-    if (AD_Client_ID.equals("0")) {
+    if (StringUtils.equals("0", AD_Client_ID)) {
       throw new UnsupportedOperationException("Utility.getDocumentNo - Cannot add System records");
     }
 
@@ -103,7 +104,7 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
     } catch (final ServletException e) {
     }
 
-    if (cs == null || cs.razon == null || cs.razon.equals("")) {
+    if (cs == null || StringUtils.isBlank(cs.razon)) {
       if (!onlyDocType) {
         return getDocumentNoConnection(conn, con, AD_Client_ID, TableName, updateNext);
       } else {
@@ -130,7 +131,7 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
   @Override
   public String getDocumentNo(ConnectionProvider conn, String AD_Client_ID, String TableName,
       boolean updateNext) {
-    if (TableName == null || TableName.length() == 0) {
+    if (StringUtils.isEmpty(TableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
 
@@ -165,7 +166,7 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
    */
   public String getDocumentNoByOrg(ConnectionProvider conn, String AD_Client_ID, String AD_Org_ID,
       String TableName, boolean updateNext) {
-    if (TableName == null || TableName.length() == 0) {
+    if (StringUtils.isEmpty(TableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
 
