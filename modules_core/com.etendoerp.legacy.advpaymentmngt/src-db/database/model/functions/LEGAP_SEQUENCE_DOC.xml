@@ -41,10 +41,9 @@
   *  if ID < 1000000, use System Doc Sequence
   ************************************************************************/
   v_NextNo VARCHAR2(32);
-  v_Prefix VARCHAR2(30) ;
-  v_Suffix VARCHAR2(30) ;
 BEGIN
-  PERFORM LEGAP_SEQUENCE_DOC_BY_ORG(p_sequencename, p_ad_client_id, '', p_update_next) ;
+  SELECT LEGAP_SEQUENCE_DOC_BY_ORG(p_sequencename, p_ad_client_id, '', p_update_next) INTO v_NextNo FROM dual;
+  p_documentno := v_NextNo;
 END LEGAP_SEQUENCE_DOC
 ]]></body>
     </function>

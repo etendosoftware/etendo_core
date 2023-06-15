@@ -58,7 +58,7 @@ BEGIN
   INTO v_NextNo, v_Prefix, v_Suffix
   FROM AD_Sequence
   WHERE Name=p_SequenceName  AND IsActive='Y'  AND IsTableID='N'  AND IsAutoSequence='Y' AND AD_Client_ID=p_AD_Client_ID 
-  AND (p_ad_org_id <> '' OR ad_isorgincluded(p_ad_org_id, AD_Org_ID, p_ad_client_id) <> -1);
+  AND (p_ad_org_id = '' OR ad_isorgincluded(p_ad_org_id, AD_Org_ID, p_ad_client_id) <> -1);
 
   p_DocumentNo:=COALESCE(v_Prefix, '') || v_NextNo || COALESCE(v_Suffix, '') ;
 EXCEPTION
