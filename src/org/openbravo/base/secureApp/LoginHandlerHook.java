@@ -1,4 +1,4 @@
-package org.openbravo.base.util;
+package org.openbravo.base.secureApp;
 
 import org.openbravo.erpCommon.utility.OBError;
 
