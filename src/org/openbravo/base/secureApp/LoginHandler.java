@@ -37,7 +37,6 @@ import org.openbravo.base.HttpBaseServlet;
 import org.openbravo.base.secureApp.LoginUtils.RoleDefaults;
 import org.openbravo.base.util.LoginHandlerHook;
 import org.openbravo.client.application.CachedPreference;
-import org.openbravo.client.application.UserInfoWidgetHook;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
