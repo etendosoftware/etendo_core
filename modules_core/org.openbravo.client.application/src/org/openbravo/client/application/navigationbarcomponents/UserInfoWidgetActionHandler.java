@@ -127,7 +127,7 @@ public class UserInfoWidgetActionHandler extends BaseActionHandler implements Po
 
     for (UserInfoWidgetHook hook : hooks) {
       var msg = hook.process(user, newPwd);
-      if (msg != null && "Error".equals(msg.getType())) {
+      if (msg != null && StringUtils.equals("Error", msg.getType())) {
         return createErrorResponse(newPwd, msg.getMessage());
       }
     }
