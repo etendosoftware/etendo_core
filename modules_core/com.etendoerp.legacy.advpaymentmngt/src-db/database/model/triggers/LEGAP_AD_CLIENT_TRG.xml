@@ -58,7 +58,7 @@ BEGIN
   LOOP
     -- DBMS_OUTPUT.PUT_LINE(' ' || :new.AD_Client_ID || ' - ' || CUR_DSequence.TableName);
     --
-    SELECT * INTO  v_NextNo FROM Ad_Sequence_Next('AD_Sequence', :NEW.AD_Client_ID) ;
+    Ad_Sequence_Next('AD_Sequence', :NEW.AD_Client_ID, v_NextNo) ;
     INSERT
     INTO AD_Sequence
       (

@@ -239,7 +239,7 @@
     <SqlMethod name="processHasOrgParam" type="preparedStatement" return="boolean">
     <Sql>
       <![CDATA[
-         select count(*)
+         select count(*) as count
            from ad_process_para 
           where lower(columnname) = 'ad_org_id'
             and ad_process_id = ?

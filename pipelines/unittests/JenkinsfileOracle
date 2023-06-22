@@ -5,21 +5,93 @@ pipeline {
     }
 
     environment {
-        CONTEXT_NAME    = 'etendo'
-        BBDD_SID        = 'orclcdb'
-        BBDD_PORT       = '5432'
-        BBDD_SYSTEMUSER = 'sys AS SYSDBA'
-        BBDD_SYSTEMPASS = 'rEUC0GRpxA'
-        BBDD_USER       = 'C##TAD'
-        BBDD_PASSWORD   = 'tad'
-        NEXUS_USER      =  credentials('nexus-admin-user')
-        NEXUS_PASSWORD  =  credentials('nexus-admin-passwd')
-        JAVA_HOME       = '/usr/lib/jvm/java-11-openjdk-amd64'
-        CATALINA_HOME   = "${WORKSPACE}/apache-tomcat-8.5.75"
+        CONTEXT_NAME        = 'etendo'
+        BBDD_SID            = 'orclcdb'
+        BBDD_PORT           = '5432'
+        BBDD_SYSTEMUSER     = 'sys AS SYSDBA'
+        BBDD_SYSTEMPASS     = 'rEUC0GRpxA'
+        BBDD_USER           = 'C##TAD'
+        BBDD_PASSWORD       = 'tad'
+        NEXUS_USER          = credentials('nexus-admin-user')
+        NEXUS_PASSWORD      = credentials('nexus-admin-passwd')
+        GITHUB_USER         = 'etendobot'
+        GITHUB_TOKEN        = credentials('github-read-package-token')
+        JAVA_HOME           = '/opt/java/openjdk/'
+        CATALINA_HOME       = "${WORKSPACE}/apache-tomcat-8.5.75"
+        TZ                  = 'UTC'
+        LANG                = 'en_US.UTF-8'
+        EMAIL_ADDRESS       = credentials('email_builds')
+        URL_REPO            = 'https://github.com/etendosoftware/etendo_core'
+        COMMIT_AUTHOR_NAME  = sh(returnStdout: true, script: "git log -1 --pretty=format:'%an'").trim()
+        COMMIT_AUTHOR_EMAIL = sh(returnStdout: true, script: "git log -1 --pretty=format:'%ae'").trim()
+        ORCL_VERSION        = '19c'
     }
 
     agent {
-        label 'etendo_core' //The id of the slave/agent where the build should be executed, if it doesn't matter use "agent any" instead.
+        kubernetes {
+            label 'jenkins-node-unittests-orcl'
+            defaultContainer 'jnlp'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jenkins-node-unittests-orcl-0
+  namespace: jenkins
+  labels:
+    app.kubernetes.io/name: jenkins-node-unittests-orcl
+spec:
+  volumes:
+    - name: rsa-keys
+      configMap:
+        name: rsa-keys
+        defaultMode: 384
+    - name: docker-sock
+      hostPath:
+        path: /var/run/docker.sock
+        type: ''
+  containers:
+    - name: compiler
+      image: futit/etendo_compiler:1.0.10
+      ports:
+        - name: ssh
+          containerPort: 22
+          protocol: TCP
+        - name: visualvm
+          containerPort: 8000
+          protocol: TCP
+      resources:
+        limits:
+          cpu: 3072m
+          memory: 5000Mi
+        requests:
+          cpu: 3072m
+          memory: 5000Mi
+      volumeMounts:
+        - name: rsa-keys
+          mountPath: /root/.ssh/
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+      lifecycle:
+        postStart:
+          exec:
+            command:
+              - bash
+              - '-c'
+              - >-
+                chmod a+x /var/run/docker.sock && rm
+                /etc/apt/sources.list.d/pgdg.list || echo 0 && apt update && apt
+                install -y curl
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 30
+  dnsPolicy: ClusterFirst
+  serviceAccountName: default
+  serviceAccount: default
+  securityContext: {}
+  """
+        }
     }
 
     stages {
@@ -30,7 +102,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    wget https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
+                    curl -O https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
                     tar xfz oracle-sqlcli-V1022102-01.tar.gz 2> /dev/null
                     chmod a+x sqlcl/bin/sql
                     """
@@ -67,17 +139,18 @@ pipeline {
                         bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
 
                         nexusUser=${NEXUS_USER}\n
-                        nexusPassword=${NEXUS_PASSWORD}" > gradle.properties
+                        nexusPassword=${NEXUS_PASSWORD}\n
+                        githubUser=${GITHUB_USER}\n
+                        githubToken=${GITHUB_TOKEN}\n
+                        allow.root=true\n
+                        org.gradle.jvmargs=-Xmx2g -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > gradle.properties
                         """
-                        sh 'sed -i "s/1.0.3/1.0.4-SNAPSHOT/g" build.gradle'
                         sh './gradlew prepareConfig --info --stacktrace'
-                        sh 'wget -O apache-tomcat-8.5.75.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz'
+                        sh 'curl -o apache-tomcat-8.5.75.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz'
                         sh 'tar -xvf apache-tomcat-8.5.75.tar.gz -C $WORKSPACE'
                         sh './gradlew setup --info --stacktrace'
                         sh './gradlew expandModules --info --stacktrace'
                         sh './gradlew install --info --stacktrace'
-                        sh './gradlew smartbuild --info --stacktrace'
-                        sh './gradlew compileJava --info --stacktrace'
                         sh './gradlew smartbuild --info --stacktrace'
                         sh '$WORKSPACE/apache-tomcat-8.5.75/bin/catalina.sh start '
                         sh 'sleep 1m'
@@ -263,36 +336,61 @@ pipeline {
             }
             cleanWs deleteDirs: true
         }
+        fixed {
+            mail to: EMAIL_ADDRESS,
+            subject: "✅ FIXED - ${currentBuild.fullDisplayName}",
+            body: """
+${new Date()}
+__________________________________________________________
+
+✅ ERRORS FIXED ✅
+
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+The problems found in the previous run/s have been fixed! 💪
+💡 These tests were run on an Oracle(${ORCL_VERSION}) database environment.
+Check out the output in the following link:
+${env.BUILD_URL}
+__________________________________________________________
+            """
+        }
         unstable {
-            mail to: 'builds@smfconsulting.es',
+            mail to: EMAIL_ADDRESS,
             subject: "🔥 FAILING TESTS ON ${currentBuild.fullDisplayName}",
             body: """
-            ${new Date()}
-            __________________________________________________________
+${new Date()}
+__________________________________________________________
 
-            🔥 BUILD UNSTABLE 🔥
+🔥 BUILD UNSTABLE 🔥
 
-            Tests have been detected that have failed in Etendo Core.
-            💡 These tests were run on an Oracle database environment.
-            To more information on the failing run visit:
-            ${env.BUILD_URL}
-            __________________________________________________________
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+Tests have been detected that have failed in Etendo Core.
+💡 These tests were run on an Oracle(${ORCL_VERSION}) database environment.
+To more information on the failing run visit:
+${env.BUILD_URL}
+__________________________________________________________
             """
         }
         failure {
-            mail to: 'builds@smfconsulting.es',
+            mail to: EMAIL_ADDRESS,
             subject: "🚫 ERROR IN ${currentBuild.fullDisplayName}",
             body:  """
-            ${new Date()}
-            __________________________________________________________
+${new Date()}
+__________________________________________________________
 
-            🚫 BUILD FAILED 🚫
+🚫 BUILD FAILED 🚫
 
-            The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.
-            💡 This build was on an Etendo Core environment with Oracle database.
-            To more information on the failing run visit:
-            ${env.BUILD_URL}
-            __________________________________________________________
+Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
+Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+
+The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.
+💡 This build was on an Etendo Core environment with Oracle(${ORCL_VERSION}) database.
+To more information on the failing run visit:
+${env.BUILD_URL}
+__________________________________________________________
             """
         }
     }

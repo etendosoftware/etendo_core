@@ -16,8 +16,11 @@ cp gradle.properties.template gradle.properties
 ```
 2. You can edit `gradle.properties` file updating the variables or use the default values
 
+> To configure GitHub credentials read [Using repositories on Etendo](https://docs.etendo.software/en/technical-documentation/etendo-environment/requirements-and-tools/developer-tools/use-of-repositories-in-etendo)
+
 | Variable                     | Description                                                               | Default value |
 |------------------------------|---------------------------------------------------------------------------|---------------|
+| githubUser <br> gitHubToken  | GitHub repository credentials (required)                                  |               |
 | nexusUser <br> nexusPassword | Nexus repository credentials, for access to commercial modules (optional) |               |
 | context.name                 | Environment name                                                          | etendo        |
 | bbdd.sid                     | Database name                                                             | etendo        |
