@@ -1,6 +1,7 @@
 package com.etendoerp.legacy.utilitySequence;
 
 import org.apache.commons.lang.StringUtils;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.CSResponse;
@@ -24,13 +25,13 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
    *     Handler for the database connection.
    * @param vars
    *     Handler for the session info.
-   * @param WindowNo
+   * @param windowNo
    *     Window id.
-   * @param TableName
+   * @param tableName
    *     Table name.
-   * @param C_DocTypeTarget_ID
+   * @param c_DocTypeTarget_ID
    *     Id of the doctype target.
-   * @param C_DocType_ID
+   * @param c_DocType_ID
    *     id of the doctype.
    * @param onlyDocType
    *     Search only for doctype.
@@ -39,18 +40,18 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
    * @return String with the new document number.
    */
   @Override
-  public String getDocumentNo(ConnectionProvider conn, VariablesSecureApp vars, String WindowNo,
-      String TableName, String C_DocTypeTarget_ID, String C_DocType_ID, boolean onlyDocType,
+  public String getDocumentNo(ConnectionProvider conn, VariablesSecureApp vars, String windowNo,
+      String tableName, String c_DocTypeTarget_ID, String c_DocType_ID, boolean onlyDocType,
       boolean updateNext) {
-    if (TableName == null || TableName.length() == 0) {
+    if (StringUtils.isEmpty(tableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
-    final String AD_Client_ID = Utility.getContext(conn, vars, "AD_Client_ID", WindowNo);
-    final String AD_Org_ID = Utility.getContext(conn, vars, "AD_Org_ID", WindowNo);
+    final String AD_Client_ID = Utility.getContext(conn, vars, "AD_Client_ID", windowNo);
+    final String AD_Org_ID = Utility.getContext(conn, vars, "AD_Org_ID", windowNo);
 
-    final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
+    final String cDocTypeID = StringUtils.defaultIfBlank(c_DocTypeTarget_ID, c_DocType_ID);
     if (StringUtils.isEmpty(cDocTypeID)) {
-      return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, TableName, updateNext);
+      return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, tableName, updateNext);
     }
 
     if (StringUtils.equals("0", AD_Client_ID)) {
@@ -61,11 +62,12 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
     try {
       cs = DocumentNoData.nextDocType(conn, cDocTypeID, AD_Client_ID, (updateNext ? "Y" : "N"));
     } catch (final ServletException e) {
+      throw new OBException("Error: Failed to find the next sequence number");
     }
 
     if (cs == null || StringUtils.isBlank(cs.razon)) {
       if (!onlyDocType) {
-        return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, TableName, updateNext);
+        return getDocumentNoByOrg(conn, AD_Client_ID, AD_Org_ID, tableName, updateNext);
       } else {
         return "0";
       }
@@ -76,20 +78,20 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
 
   @Override
   public String getDocumentNo(Connection conn, ConnectionProvider con, VariablesSecureApp vars,
-      String WindowNo, String TableName, String C_DocTypeTarget_ID, String C_DocType_ID,
+      String windowNo, String tableName, String c_DocTypeTarget_ID, String c_DocType_ID,
       boolean onlyDocType, boolean updateNext) {
-    if (StringUtils.isEmpty(TableName)) {
+    if (StringUtils.isEmpty(tableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
-    String AD_Client_ID = Utility.getContext(con, vars, "AD_Client_ID", WindowNo);
+    String AD_Client_ID = Utility.getContext(con, vars, "AD_Client_ID", windowNo);
     if (StringUtils.isBlank(AD_Client_ID)) {
       AD_Client_ID = vars.getClient();
     }
-    final String AD_Org_ID = Utility.getContext(con, vars, "AD_Org_ID", WindowNo);
+    final String AD_Org_ID = Utility.getContext(con, vars, "AD_Org_ID", windowNo);
 
-    final String cDocTypeID = (C_DocTypeTarget_ID.equals("") ? C_DocType_ID : C_DocTypeTarget_ID);
+    final String cDocTypeID = StringUtils.defaultIfBlank(c_DocTypeTarget_ID, c_DocType_ID);
     if (StringUtils.isBlank(cDocTypeID)) {
-      return getDocumentNoByOrg(con, AD_Client_ID, AD_Org_ID, TableName, updateNext);
+      return getDocumentNoByOrg(con, AD_Client_ID, AD_Org_ID, tableName, updateNext);
     }
 
     if (StringUtils.equals("0", AD_Client_ID)) {
@@ -102,11 +104,12 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
       cs = DocumentNoData.nextDocTypeConnection(conn, con, cDocTypeID, AD_Client_ID,
           (updateNext ? "Y" : "N"));
     } catch (final ServletException e) {
+      throw new OBException("Error: Failed to find the next sequence number");
     }
 
     if (cs == null || StringUtils.isBlank(cs.razon)) {
       if (!onlyDocType) {
-        return getDocumentNoConnection(conn, con, AD_Client_ID, TableName, updateNext);
+        return getDocumentNoConnection(conn, con, AD_Client_ID, tableName, updateNext);
       } else {
         return "0";
       }
@@ -122,22 +125,22 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
    *     Handler for the database connection.
    * @param AD_Client_ID
    *     String with the client id.
-   * @param TableName
+   * @param tableName
    *     Table name.
    * @param updateNext
    *     Save the new sequence in database.
    * @return String with the new document number.
    */
   @Override
-  public String getDocumentNo(ConnectionProvider conn, String AD_Client_ID, String TableName,
+  public String getDocumentNo(ConnectionProvider conn, String AD_Client_ID, String tableName,
       boolean updateNext) {
-    if (StringUtils.isEmpty(TableName)) {
+    if (StringUtils.isEmpty(tableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
 
     CSResponse cs = null;
     try {
-      cs = DocumentNoData.nextDoc(conn, "DocumentNo_" + TableName, AD_Client_ID,
+      cs = DocumentNoData.nextDoc(conn, "DocumentNo_" + tableName, AD_Client_ID,
           (updateNext ? "Y" : "N"));
     } catch (final ServletException e) {
     }
@@ -158,21 +161,21 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
    *     String with the client id.
    * @param AD_Org_ID
    *     String with the organization id.
-   * @param TableName
+   * @param tableName
    *     Table name.
    * @param updateNext
    *     Save the new sequence in database.
    * @return String with the new document number.
    */
   public String getDocumentNoByOrg(ConnectionProvider conn, String AD_Client_ID, String AD_Org_ID,
-      String TableName, boolean updateNext) {
-    if (StringUtils.isEmpty(TableName)) {
+      String tableName, boolean updateNext) {
+    if (StringUtils.isEmpty(tableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
 
     CSResponse cs = null;
     try {
-      cs = DocumentNoData.nextDocByOrg(conn, "DocumentNo_" + TableName, AD_Client_ID, AD_Org_ID,
+      cs = DocumentNoData.nextDocByOrg(conn, "DocumentNo_" + tableName, AD_Client_ID, AD_Org_ID,
           (updateNext ? "Y" : "N"));
     } catch (final ServletException e) {
     }
@@ -191,7 +194,7 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
    *     Handler for the database connection.
    * @param AD_Client_ID
    *     String with the client id.
-   * @param TableName
+   * @param tableName
    *     Table name.
    * @param updateNext
    *     Save the new sequence in database.
@@ -199,14 +202,14 @@ public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
    */
   @Override
   public String getDocumentNoConnection(Connection conn, ConnectionProvider con,
-      String AD_Client_ID, String TableName, boolean updateNext) {
-    if (TableName == null || TableName.length() == 0) {
+      String AD_Client_ID, String tableName, boolean updateNext) {
+    if (StringUtils.isEmpty(tableName)) {
       throw new IllegalArgumentException("Utility.getDocumentNo - required parameter missing");
     }
 
     CSResponse cs = null;
     try {
-      cs = DocumentNoData.nextDocConnection(conn, con, "DocumentNo_" + TableName, AD_Client_ID,
+      cs = DocumentNoData.nextDocConnection(conn, con, "DocumentNo_" + tableName, AD_Client_ID,
           (updateNext ? "Y" : "N"));
     } catch (final ServletException e) {
     }
