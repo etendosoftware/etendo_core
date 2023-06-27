@@ -1,0 +1,44 @@
+name: Auto Reviewer
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  make-review:
+    if:  github.head_ref != 'develop'
+    runs-on: ubuntu-latest
+    env:
+      PULL_REQUEST: ${{ github.event.pull_request.number }}
+      PROJECT: ${{ github.event.repository.owner.login }}
+      REPO_SLUG: ${{ github.event.repository.name }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ETENDOBOT_TOKEN: ${{ secrets.ETENDOBOT_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Docker container
+        id: run-docker
+        run: |
+          printenv
+          echo "-------------------------------------------------------------------------"
+          echo ${{ env.DOCKERHUB_PASSWORD }} | docker login --username "${{ env.DOCKERHUB_USERNAME }}" --password-stdin
+          docker run -d -p 5000:5000 -e REPO_API_TOKEN="${{ env.ETENDOBOT_TOKEN }}" -e PULL_REQUEST=${{ env.PULL_REQUEST }} -e PROJECT=${{ env.PROJECT }} -e REPO_SLUG=${{ env.REPO_SLUG }} -e OPENAI_API_KEY="${{ env.OPENAI_API_KEY }}" etendo/code-reviewer:latest      
+      - name: Make Reviewer API call
+        id: call-api
+        run: |
+          sleep 10s
+          response=$(curl -s -o response.txt -w "%{http_code}" -X GET http://localhost:5000/review/github)
+          if [ $response -ne 200 ]; then
+            echo "API call failed with status code $response. This is likely an error related to the PR data, or an internal API error"
+
+            echo "Response text:"
+            cat response.txt
+            exit 1
+          fi
+          echo "API call successful with status code $response"
+          echo "Response text:"
+          cat response.txt
