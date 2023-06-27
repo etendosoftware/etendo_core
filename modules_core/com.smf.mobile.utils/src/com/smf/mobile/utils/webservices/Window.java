@@ -278,6 +278,12 @@ public class Window implements WebService {
         if (isSelectorParameter(param)) {
           jsonParam.put("selector", getSelectorInfo(param.getId(), param.getReferenceSearchKey()));
         }
+        if (isListParameter(param)) {
+          Reference refList = param.getReferenceSearchKey();
+
+          JSONArray refListValues = getListInfo(refList);
+          jsonParam.put("refList", refListValues);
+        }
 
         parameters.put(jsonParam);
       }
@@ -289,15 +295,7 @@ public class Window implements WebService {
     if (isRefListField(field)) {
       Reference refList = field.getColumn().getReferenceSearchKey();
 
-      JSONArray refListValues = new JSONArray();
-
-      for (org.openbravo.model.ad.domain.List listValue : refList.getADListList()) {
-        JSONObject jsonListValue = new JSONObject();
-        jsonListValue.put("id", listValue.getId());
-        jsonListValue.put("label", listValue.getName());
-        jsonListValue.put("value", listValue.getSearchKey());
-        refListValues.put(jsonListValue);
-      }
+      JSONArray refListValues = getListInfo(refList);
       jsonField.put("refList", refListValues);
     }
 
@@ -306,6 +304,20 @@ public class Window implements WebService {
     }
 
     return jsonField;
+  }
+
+  private static JSONArray getListInfo(Reference refList) throws JSONException {
+    JSONArray refListValues = new JSONArray();
+
+
+    for (org.openbravo.model.ad.domain.List listValue : refList.getADListList()) {
+      JSONObject jsonListValue = new JSONObject();
+      jsonListValue.put("id", listValue.getId());
+      jsonListValue.put("label", listValue.getName());
+      jsonListValue.put("value", listValue.getSearchKey());
+      refListValues.put(jsonListValue);
+    }
+    return refListValues;
   }
 
   private boolean isProcessField(Field field) {
@@ -330,6 +342,10 @@ public class Window implements WebService {
 
   private boolean isSelectorParameter(Parameter parameter) {
     return SELECTOR_REFERENCES.contains(parameter.getReference().getId());
+  }
+
+  private boolean isListParameter(Parameter parameter) {
+    return LIST_REFERENCE_ID.contains(parameter.getReference().getId());
   }
 
   private boolean isParentRecordProperty(Field field, Tab tab) {
@@ -384,7 +400,7 @@ public class Window implements WebService {
       isProcessAndHasLogic = true;
     }
 
-    return field.getColumn() != null && !isProcessAndHasLogic && (
+    return field.getColumn() != null && (
         field.isDisplayed()
             || isScanProcess
             || field.getColumn().isStoredInSession()

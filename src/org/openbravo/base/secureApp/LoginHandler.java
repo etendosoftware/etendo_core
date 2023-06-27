@@ -16,6 +16,8 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -81,6 +83,10 @@ public class LoginHandler extends HttpBaseServlet {
 
   @Inject
   private PasswordStrengthChecker passwordStrengthChecker;
+
+  @Inject
+  @Any
+  private Instance<LoginHandlerHook> hooks;
 
   @Override
   public void doPost(HttpServletRequest req, HttpServletResponse res)
@@ -390,6 +396,18 @@ public class LoginHandler extends HttpBaseServlet {
         String title = Utility.messageBD(cp, "BACKEND_LOGIN_RESTRICTED_TITLE", vars.getLanguage());
         goToRetry(res, vars, msg, title, msgType, action);
         return;
+      }
+
+      for (LoginHandlerHook hook : hooks) {
+        OBError error = hook.process(username, action);
+        if (error != null) {
+          String msg = Utility.messageBD(cp, error.getMessage(), vars.getLanguage());
+          String title = Utility.messageBD(cp, error.getTitle(), vars.getLanguage());
+          final String urlToRedirect = StringUtils.equals("Error",
+              error.getType()) ? "../security/Login_FS.htm" : "../security/Menu.html";
+          goToRetry(res, vars, msg, title, error.getType(), urlToRedirect);
+          return;
+        }
       }
 
       RoleDefaults userLoginDefaults;
