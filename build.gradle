@@ -121,7 +121,6 @@ def whiteSyncCoreList = [
         'build.xml'
 ]
 dependencies {
-
     jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.28'
     jmh 'org.jboss.weld.se:weld-se-core:3.1.8.Final'
     jmhAnnotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.28')
@@ -237,8 +236,8 @@ task configPublishZIP(){
         else {
             publishing.repositories.maven.url = PROD_URL
             publishing.repositories.maven.credentials {
-                username = "$gitHubUser"
-                password = "$gitHubToken"
+                username = "$githubUser"
+                password = "$githubToken"
             }
         }
     }
@@ -318,8 +317,8 @@ task configPublishJAR(){
         else {
             publishing.repositories.maven.url = PROD_URL
             publishing.repositories.maven.credentials {
-                username = "$gitHubUser"
-                password = "$gitHubToken"
+                username = "$githubUser"
+                password = "$githubToken"
             }
         }
     }
