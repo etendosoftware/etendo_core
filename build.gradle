@@ -6,7 +6,7 @@ plugins {
     id 'idea'
     id 'groovy'
     id "me.champeau.jmh" version "0.6.5"
-    id 'com.etendoerp.gradleplugin' version '1.0.7'
+    id 'com.etendoerp.gradleplugin' version 'latest.release'
     id 'org.kordamp.gradle.jandex' version '0.11.0'
 }
 compileJava.options.encoding = "UTF-8"
@@ -35,9 +35,9 @@ dependencies {
 
 }
 
-final String CURRENT_VERSION = "23.1.5"
-final String NEXT_RELEASE = "23.2.0"
-final String NEXT_HOTFIX = "23.1.6"
+final String CURRENT_VERSION = "23.2.0"
+final String NEXT_RELEASE = "23.3.0"
+final String NEXT_HOTFIX = "23.2.1"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
@@ -121,7 +121,6 @@ def whiteSyncCoreList = [
         'build.xml'
 ]
 dependencies {
-
     jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.28'
     jmh 'org.jboss.weld.se:weld-se-core:3.1.8.Final'
     jmhAnnotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.28')
@@ -237,8 +236,8 @@ task configPublishZIP(){
         else {
             publishing.repositories.maven.url = PROD_URL
             publishing.repositories.maven.credentials {
-                username = "$gitHubUser"
-                password = "$gitHubToken"
+                username = "$githubUser"
+                password = "$githubToken"
             }
         }
     }
@@ -318,8 +317,8 @@ task configPublishJAR(){
         else {
             publishing.repositories.maven.url = PROD_URL
             publishing.repositories.maven.credentials {
-                username = "$gitHubUser"
-                password = "$gitHubToken"
+                username = "$githubUser"
+                password = "$githubToken"
             }
         }
     }

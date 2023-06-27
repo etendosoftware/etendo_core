@@ -14,6 +14,8 @@ pipeline {
     BBDD_PASSWORD       = 'tad'
     NEXUS_USER          = credentials('nexus-admin-user')
     NEXUS_PASSWORD      = credentials('nexus-admin-passwd')
+    GITHUB_USER         = 'etendobot'
+    GITHUB_TOKEN        = credentials('github-read-package-token')
     JAVA_HOME           = '/opt/java/openjdk/'
     LANG                = 'en_US.UTF-8'
     CATALINA_HOME       = "${WORKSPACE}/apache-tomcat-8.5.75"
@@ -120,6 +122,8 @@ spec:
             bbdd.password=${BBDD_PASSWORD}\n
             nexusUser=${NEXUS_USER}\n
             nexusPassword=${NEXUS_PASSWORD}\n
+            githubUser=${GITHUB_USER}\n
+            githubToken=${GITHUB_TOKEN}\n
             allow.root=true\n
             org.gradle.jvmargs=-Xmx3g -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > gradle.properties
             """
