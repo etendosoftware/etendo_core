@@ -540,7 +540,8 @@ public class MaterialReceiptPending extends HttpSecureAppServlet {
         if (conn != null && !conn.isClosed()) {
           conn.close();
         }
-      } catch (Exception ignored) {
+      } catch (Exception e) {
+        log4j.error("Error closing database connection", e);
       }
     }
     return myMessage;
