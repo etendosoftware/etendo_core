@@ -73,7 +73,7 @@ class PaidStatusEventHandler extends EntityPersistenceEventObserver {
                     && (!psd.getPaymentDetails().isPrepayment())) {
                   psd.setInvoicePaid(true);
                 }
-                if (psd.isInvoicePaid() && transaction.getReconciliation() == null) {
+                if (psd.isInvoicePaid()) {
                   FIN_Utility.updatePaymentAmounts(psd);
                   FIN_Utility.updateBusinessPartnerCredit(transaction.getFinPayment());
                 }
