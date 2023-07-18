@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
@@ -52,6 +54,8 @@ import org.openbravo.portal.PortalAccessible;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.password.PasswordStrengthChecker;
 
+import org.openbravo.client.application.UserInfoWidgetHook;
+
 /**
  * Action handler used to save the default user information of the 'Profile' widget and the password
  * change using the 'Change Password' widget.
@@ -63,6 +67,11 @@ public class UserInfoWidgetActionHandler extends BaseActionHandler implements Po
 
   @Inject
   private PasswordStrengthChecker passwordStrengthChecker;
+
+  @Inject
+  @Any
+  private Instance<UserInfoWidgetHook> hooks;
+
 
   /*
    * (non-Javadoc)
@@ -115,6 +124,14 @@ public class UserInfoWidgetActionHandler extends BaseActionHandler implements Po
     if (!passwordStrengthChecker.isStrongPassword(newPwd)) {
       return createErrorResponse("newPwd", "CPPasswordNotStrongEnough");
     }
+
+    for (UserInfoWidgetHook hook : hooks) {
+      var msg = hook.process(user, newPwd);
+      if (msg != null && StringUtils.equals("Error", msg.getType())) {
+        return createErrorResponse(newPwd, msg.getMessage());
+      }
+    }
+
     user.setPassword(PasswordHash.generateHash(newPwd));
     OBDal.getInstance().flush();
     return ApplicationConstants.ACTION_RESULT_SUCCESS;
