@@ -19,15 +19,7 @@
 package org.openbravo.financial;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -474,67 +466,59 @@ public class ResetAccounting {
     results.put("deleted", 0);
     results.put("updated", 0);
     String tableName = "";
-    String tableDate = "";
+    String dateAcct = "";
     OBContext.setAdminMode(false);
     try {
       final Table table = OBDal.getInstance().get(Table.class, tableId);
       if (!table.isView()) {
-        tableName = table.getDBTableName();
-        tableDate = ModelProvider.getInstance()
-            .getEntityByTableName(table.getDBTableName())
-            .getPropertyByColumnName(table.getAcctdateColumn().getDBColumnName())
-            .getColumnName();
+        tableName = table.getName();
+        dateAcct = ModelProvider.getInstance()
+                .getEntityByTableName(table.getDBTableName())
+                .getPropertyByColumnName(table.getAcctdateColumn().getDBColumnName())
+                .getName();
 
-        //@formatter:off
-        String strUpdate =
-            "update " + tableName +
-                "  set posted='N'";
-        //@formatter:on 
+        StringBuilder strUpdate = new StringBuilder();
+        strUpdate.append("update ")
+                .append(tableName)
+                .append(" t set t.posted='N'");
 
         if (hasProcessingColumn(table.getId())) {
-          //@formatter:off
-          strUpdate +=
-              "    , processing='N'";
-          //@formatter:on 
+          strUpdate.append(", t.processNow='N'");
         }
-        //@formatter:off
-        strUpdate +=
-            " where posted not in ('Y')" +
-                "   and processed = 'Y'" +
-                "   and AD_Org_ID in (:orgIds)";
-        //@formatter:on
 
-        if (!("".equals(datefrom))) {
-          //@formatter:off
-          strUpdate +=
-              "   and :tableDate >= :dateFrom";
-          //@formatter:on
+        Iterator<String> orgIdsIterator = new OrganizationStructureProvider().getNaturalTree(adOrgId).iterator();
+        StringBuilder orgIds = new StringBuilder();
+        orgIds.append("(");
+        while (orgIdsIterator.hasNext()) {
+          orgIds.append("'")
+                  .append(orgIdsIterator.next())
+                  .append("'");
+          if (orgIdsIterator.hasNext()) {
+            orgIds.append(",");
+          }
         }
-        if (!("".equals(dateto))) {
-          //@formatter:off
-          strUpdate +=
-              "   and :tableDate <= :dateTo";
-          //@formatter:on
+        orgIds.append(")");
+
+        strUpdate.append(" where t.posted not in ('Y') and t.processed = 'Y' and t.organization.id in ")
+                .append(orgIds);
+
+        if (StringUtils.isNotEmpty(datefrom)) {
+          strUpdate.append(" and t.")
+                  .append(dateAcct)
+                  .append(" >= '")
+                  .append(OBDateUtils.getDate(datefrom))
+                  .append("'");
+        }
+        if (StringUtils.isNotEmpty(dateto)) {
+          strUpdate.append(" and t.")
+                  .append(dateAcct)
+                  .append(" <= '")
+                  .append(OBDateUtils.getDate(dateto))
+                  .append("'");
         }
 
         @SuppressWarnings("rawtypes") final Query update = OBDal.getInstance()
-            .getSession()
-            .createNativeQuery(strUpdate)
-            .setParameterList("orgIds",
-                new OrganizationStructureProvider().getNaturalTree(adOrgId));
-        if (!("".equals(dateto)) || !("".equals(datefrom))) {
-          update.setParameter("tableDate", tableDate);
-        }
-        try {
-          if (!("".equals(datefrom))) {
-            update.setParameter("dateFrom", OBDateUtils.getDate(datefrom));
-          }
-          if (!("".equals(dateto))) {
-            update.setParameter("dateTo", OBDateUtils.getDate(dateto));
-          }
-        } catch (final ParseException e) {
-          log4j.error("Restore - Error parsisng dates", e);
-        }
+                .getSession().createQuery(strUpdate.toString());
 
         final int updated = update.executeUpdate();
         results.put("updated", updated);
