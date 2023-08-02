@@ -228,7 +228,7 @@ public class SL_Order_Amt extends SimpleCallout {
     // Discount calculated with the actual values of the order line
     BigDecimal calculatedDiscount = price.subtract(priceToSubtract)
         .multiply(BigDecimal.valueOf(100))
-        .divide(price.compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : price, stdPrecision)
+        .divide(BigDecimal.ZERO.compareTo(price) == 0 ? BigDecimal.ONE : price, stdPrecision)
         .setScale(0, RoundingMode.HALF_UP);
 
     if ((StringUtils.equals(strChanged, "inppricelist")
@@ -245,7 +245,7 @@ public class SL_Order_Amt extends SimpleCallout {
       if (calculatedDiscount.compareTo(newDiscount) != 0) {
         if (isTaxIncludedPriceList) {
           // Case of price list with tax included
-          grossUnitPrice = newDiscount.compareTo(BigDecimal.ZERO) == 0 ?
+          grossUnitPrice = BigDecimal.ZERO.compareTo(newDiscount) == 0 ?
               grossPriceList :
               calculateNewUnitPrice(newDiscount, grossPriceList);
           info.addResult("inpgrosspricestd", grossPriceList);
@@ -254,14 +254,14 @@ public class SL_Order_Amt extends SimpleCallout {
               grossUnitPrice.multiply(qtyOrdered).setScale(stdPrecision, RoundingMode.HALF_UP),
               stdPrecision, taxBaseAmt);
           BigDecimal netUnitPrice = BigDecimal.ZERO;
-          if (qtyOrdered.compareTo(BigDecimal.ZERO) != 0) {
+          if (BigDecimal.ZERO.compareTo(qtyOrdered) != 0) {
             netUnitPrice = netAmount.divide(qtyOrdered, pricePrecision, RoundingMode.HALF_UP);
           }
           priceActual = netUnitPrice;
           priceStd = netUnitPrice;
         } else {
           // Case of normal price list
-          priceActual = newDiscount.compareTo(BigDecimal.ZERO) == 0 ?
+          priceActual = BigDecimal.ZERO.compareTo(newDiscount) == 0 ?
               netPriceList :
               calculateNewUnitPrice(newDiscount, netPriceList);
           priceStd = priceActual;
