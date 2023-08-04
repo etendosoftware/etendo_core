@@ -172,7 +172,7 @@ public class SL_Order_Amt extends SimpleCallout {
       if (!cancelPriceAd) {
         priceStd = PriceAdjustment.calculatePriceStd(order, product, qtyOrdered, priceActual);
         // Check whether price adjustment sets priceStd as Zero
-        calcDiscount = priceStd.compareTo(priceActual) == 0 || priceStd.compareTo(BigDecimal.ZERO) != 0;
+        calcDiscount = priceStd.compareTo(priceActual) == 0 || BigDecimal.ZERO.compareTo(priceStd) != 0;
       } else {
         priceStd = priceActual;
       }
