@@ -123,6 +123,12 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
     fpp.processPayment(payment, strAction, paymentDate, comingFrom, null, true);
   }
 
+  public static void doProcessPayment(FIN_Payment payment, String strAction, String paymentDate,
+      String comingFrom, boolean changeBpCurrency) throws OBException {
+    FIN_PaymentProcess fpp = WeldUtils.getInstanceFromStaticBeanManager(FIN_PaymentProcess.class);
+    fpp.processPayment(payment, strAction, paymentDate, comingFrom, null, true, changeBpCurrency);
+  }
+
   @Deprecated
   public static void doProcessPayment(FIN_Payment payment, String strAction, Boolean isPosOrder,
       String paymentDate, String comingFrom) throws OBException {
@@ -131,6 +137,13 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
 
   private void processPayment(FIN_Payment payment, String strAction, String paymentDate,
       String comingFrom, String selectedCreditLineIds, boolean doFlush) throws OBException {
+    processPayment(payment, strAction, paymentDate, comingFrom, selectedCreditLineIds, doFlush, false
+    );
+  }
+
+
+  private void processPayment(FIN_Payment payment, String strAction, String paymentDate,
+      String comingFrom, String selectedCreditLineIds, boolean doFlush, boolean changeBpCurrency) throws OBException {
     dao = new AdvPaymentMngtDao();
     String msg = "";
     try {
@@ -325,7 +338,8 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
               throw new OBException(msg);
             }
             String currency = null;
-            if (businessPartner.getCurrency() == null) {
+
+            if (businessPartner.getCurrency() == null || changeBpCurrency) {
               currency = payment.getCurrency().getId();
               businessPartner.setCurrency(payment.getCurrency());
             } else {
@@ -501,7 +515,9 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
               flushDone = true;
             }
           }
-          if (!payment.getAccount().getCurrency().equals(payment.getCurrency())
+          //commparar por id
+          //ACUOUNT Y CURRENCY SON OBLIGATORIOS
+          if (!payment.getAccount().getCurrency().getId().equals(payment.getCurrency().getId())
               && getConversionRateDocument(payment).size() == 0) {
             insertConversionRateDocument(payment);
             flushDone = true;
