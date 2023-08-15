@@ -515,8 +515,6 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
               flushDone = true;
             }
           }
-          //commparar por id
-          //ACUOUNT Y CURRENCY SON OBLIGATORIOS
           if (!payment.getAccount().getCurrency().getId().equals(payment.getCurrency().getId())
               && getConversionRateDocument(payment).size() == 0) {
             insertConversionRateDocument(payment);
