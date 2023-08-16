@@ -118,7 +118,7 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
 
   // ProcessPayment without a return type
   public static void doProcessPayment(FIN_Payment payment, String strAction, String paymentDate,
-      String comingFrom) throws OBException {
+      String comingFrom) {
     FIN_PaymentProcess fpp = WeldUtils.getInstanceFromStaticBeanManager(FIN_PaymentProcess.class);
     fpp.processPayment(payment, strAction, paymentDate, comingFrom, null, true);
   }
@@ -140,7 +140,6 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
     processPayment(payment, strAction, paymentDate, comingFrom, selectedCreditLineIds, doFlush, false
     );
   }
-
 
   private void processPayment(FIN_Payment payment, String strAction, String paymentDate,
       String comingFrom, String selectedCreditLineIds, boolean doFlush, boolean changeBpCurrency) throws OBException {
@@ -516,7 +515,7 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
             }
           }
           if (!payment.getAccount().getCurrency().getId().equals(payment.getCurrency().getId())
-              && getConversionRateDocument(payment).size() == 0) {
+              && getConversionRateDocument(payment).isEmpty()) {
             insertConversionRateDocument(payment);
             flushDone = true;
           }
