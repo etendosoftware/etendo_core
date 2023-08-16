@@ -209,7 +209,7 @@ paths:
                   items:
                     $ref: "#/components/schemas/NewProduct"
       parameters:
-        - name: modelName
+        - name: _entityName
           in: path
           required: true
           description: Name of the model to be obtained (field name in AD_Table).
@@ -237,7 +237,7 @@ paths:
       tags:
         - Dal
       parameters:
-        - name: modelName
+        - name: _entityName
           in: path
           required: true
           description: Name of the model to be obtained (field name in  AD_Table).
