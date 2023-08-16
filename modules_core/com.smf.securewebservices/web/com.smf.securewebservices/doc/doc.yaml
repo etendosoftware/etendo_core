@@ -123,8 +123,8 @@ paths:
             example: "0"   
         - name: maxResults
           in: query
+          required: true
           description: Total number of results, used for pagination. E.g. If firstResult is 0, and maxResults is 4, then it will return 4 records starting the count from 0 (Records 0, 1, 2 and 3). Therefore, if firstResult is 10 and maxResults is 3, it will return the records 10, 11 and 12
-          required: false
           schema:
             type: integer
             format: int32
