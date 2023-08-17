@@ -276,6 +276,62 @@ export.database: exports database structure and data to xml files.
 
   <path id="project.class.path">
     <!-- Contains the paths of the dependencies defined with Gradle -->
+    <dirset dir="${base.modules}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <dirset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <include name="*/build/classes/" />
+    </dirset>
+    <dirset dir="${extra.modules.location}" erroronmissingdir="false" >
+      <include name="*/build/classes/" />
+    </dirset>
+
+    <pathelement path="${basedir}/src-util/modulescript/build/classes/" />
+    <pathelement path="${base.config}" />
+    <pathelement path="${build}" />
+    <pathelement path="${base.src}" />
+
+    <!-- This prevents failing YUI compression  -->
+    <pathelement location="${base.lib}/build/yuicompressor-2.4.2.jar" />
+    <pathelement location="${base.lib}/build/ob-rhino-1.6R7.jar" />
+    <pathelement location="${base.lib}/build/YUIAnt.jar" />
+
+    <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
+      <include name="build/*.jar" />
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${build.core.lib}" erroronmissingdir="${isSourceJar}">
+      <include name="openbravo-core.jar" />
+    </fileset>
+    <fileset dir="${build.trl.lib}" erroronmissingdir="${isSourceJar}">
+      <include name="openbravo-trl.jar" />
+    </fileset>
+    <fileset dir="${build.wad.lib}" erroronmissingdir="${isSourceJar}">
+      <include name="openbravo-wad.jar" />
+    </fileset>
+    <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
+      <include name="**/*.jar" />
+      <exclude name="**/test/*.jar" />
+    </fileset>
+    <fileset dir="${base.db}/lib/" erroronmissingdir="${isSourceJar}">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="${base.modules}">
+      <include name="*/lib/**" />
+      <exclude name="**/test/*.jar" />
+    </fileset>
+    <fileset dir="${base.modules_core}" erroronmissingdir="${isSourceJar}">
+      <include name="*/lib/**" />
+      <exclude name="**/test/*.jar" />
+    </fileset>
+    <fileset dir="${extra.modules.location}" erroronmissingdir="false" >
+      <include name="*/lib/**" />
+      <exclude name="**/test/*.jar" />
+    </fileset>
+  </path>
+
+  <path id="project.class.path.full">
+    <!-- Contains the paths of the dependencies defined with Gradle -->
     <pathelement path="${gradle.custom.dependencies}"/>
     <pathelement path="${env.GRADLE_CLASSPATH}"/>
     <dirset dir="${base.modules}">
@@ -421,8 +477,6 @@ export.database: exports database structure and data to xml files.
     <fileset dir="${extra.modules.location}" erroronmissingdir="false" >
       <include name="*/lib/**" />
     </fileset>
-    <pathelement path="${gradle.custom.dependencies}"/>
-    <pathelement path="${gradle.libs}" />
   </path>
 
   <path id="gradle.class.path">
