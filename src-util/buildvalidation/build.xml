@@ -186,7 +186,14 @@
   <target name="compile" depends="checkmodule, check.module.exists, init, sqlcCore, sqlcModules, sqlcModulesCore, sqlcExtraModule, javacCore, javacModule, javacModuleCore, javacExtraModule">
   </target>
 
-  <target name="buildvalidation" if="buildValidation.var">
+  <target name="list-files">
+    <pathconvert pathsep="${line.separator}" property="files.list" refid="project.class.path" />
+
+    <echo>Archivos incluidos en el fileset:</echo>
+    <echo>${files.list}</echo>
+  </target>
+
+  <target name="buildvalidation" if="buildValidation.var" depends="list-files">
     <java classname="org.openbravo.buildvalidation.BuildValidationHandler" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}" failonerror="yes">
       <arg value="${base.src}/../"/>
       <arg value="${module}"/>
