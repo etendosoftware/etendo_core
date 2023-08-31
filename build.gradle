@@ -347,3 +347,5 @@ task djmh(type: JavaExec, dependsOn: jmhCompileGeneratedClasses) {
     main = project.hasProperty("benchmark") ? project.getProperty("benchmark") : null
     classpath = sourceSets.jmh.compileClasspath + sourceSets.jmh.runtimeClasspath
 }
+
+ant.lifecycleLogLevel = "DEBUG"
