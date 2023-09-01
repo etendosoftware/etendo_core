@@ -348,4 +348,4 @@ task djmh(type: JavaExec, dependsOn: jmhCompileGeneratedClasses) {
     classpath = sourceSets.jmh.compileClasspath + sourceSets.jmh.runtimeClasspath
 }
 
-ant.lifecycleLogLevel = "DEBUG"
+//ant.lifecycleLogLevel = "DEBUG"

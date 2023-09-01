@@ -342,7 +342,6 @@ export.database: exports database structure and data to xml files.
     </dirset>
     <dirset dir="${extra.modules.location}" erroronmissingdir="false" >
       <include name="*/build/classes/" />
-      <include name="*/build/tmp/" />
     </dirset>
 
     <pathelement path="${basedir}/src-util/modulescript/build/classes/" />
