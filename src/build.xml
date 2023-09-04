@@ -300,7 +300,7 @@ build.war: build a war file in the lib directory.
   <target name="list-files">
     <pathconvert pathsep="${line.separator}" property="files.list" refid="project.class.path.full" />
 
-    <echo>Archivos incluidos en el fileset:</echo>
+    <echo>Files included in the fileset:</echo>
     <echo>${files.list}</echo>
   </target>
 
