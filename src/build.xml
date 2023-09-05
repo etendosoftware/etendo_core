@@ -297,10 +297,10 @@ build.war: build a war file in the lib directory.
     </dirset>
   </path>
 
-  <target name="compileSqlc" depends="sqlc" >
+  <target name="compileSqlc" depends="sqlc">
     <javac excludes="*/src-wad/**,*/src-util/**,**/org/openbravo/erpWindows/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
       <src refid="my-src-dirs"/>
-      <classpath refid="project.class.path.full" />
+      <classpath refid="project.class.path.full"/>
     </javac>
 
     <javac srcdir="${build.sqlc}/srcAD" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
