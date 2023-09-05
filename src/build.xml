@@ -297,13 +297,6 @@ build.war: build a war file in the lib directory.
     </dirset>
   </path>
 
-  <target name="list-files">
-    <pathconvert pathsep="${line.separator}" property="files.list" refid="project.class.path.full" />
-
-    <echo>Files included in the fileset:</echo>
-    <echo>${files.list}</echo>
-  </target>
-
   <target name="compileSqlc" depends="sqlc" >
     <javac excludes="*/src-wad/**,*/src-util/**,**/org/openbravo/erpWindows/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
       <src refid="my-src-dirs"/>
