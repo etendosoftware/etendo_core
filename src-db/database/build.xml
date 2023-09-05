@@ -56,7 +56,6 @@ export.database.structure: Exports the database structure in the xml's files.
     <fileset dir="${base.lib}" erroronmissingdir="false">
       <include name="**/*.jar" />
     </fileset>
-    <pathelement path="${gradle.custom.dependencies}"/>
     <pathelement path="${base.config}" />
   </path>
 
