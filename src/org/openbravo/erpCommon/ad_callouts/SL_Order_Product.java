@@ -116,11 +116,14 @@ public class SL_Order_Product extends SimpleCallout {
     }
 
     // Discount
+    BigDecimal calculatedDiscount = BigDecimal.ZERO;
     BigDecimal price = isTaxIncludedPriceList ? grossPriceList : netPriceList;
-    BigDecimal calculatedDiscount = price.subtract(priceActual)
-        .multiply(BigDecimal.valueOf(100))
-        .divide(price, 2)
-        .setScale(0, RoundingMode.HALF_UP);
+    if (!BigDecimal.ZERO.equals(price)) {
+      calculatedDiscount = price.subtract(priceActual)
+              .multiply(BigDecimal.valueOf(100))
+              .divide(price, 2)
+              .setScale(0, RoundingMode.HALF_UP);
+    }
     if (calculatedDiscount.compareTo(info.getBigDecimalParameter("inpdiscount")) != 0) {
       info.addResult("inpdiscount", calculatedDiscount);
     }
