@@ -26,7 +26,7 @@ servers:
   - url: http://localhost:8080/etendo
 tags:
   - name: Login
-    description: endpoints related with authentication
+    description: endpoints related with authentication.
   - name: Dal
     description: webservice from data access layer.
 paths:
@@ -41,7 +41,7 @@ paths:
       parameters:
         - name: showRoles
           in: query
-          description: Show role list
+          description: Show role list.
           required: false
           schema:
             type: boolean
@@ -91,13 +91,13 @@ paths:
                   example: "0"
       responses:
         200:
-          description: Ok
+          description: Ok.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/LogResp"
         401:
-          description: No auth
+          description: No auth.
   /sws/com.smf.securewebservices.obRest/{modelName}:
     get:
       summary: List records
@@ -106,60 +106,67 @@ paths:
       tags:
         - Dal
       parameters:
-        - name: modelName
+        - name: _entityName
           in: path
           required: true
-          description: Name of the model to be obtained (field name in  AD_Table)
+          description: Name of the model to be obtained (field name in  AD_Table).
           schema:
             type: string
             example: Product
-        - name: _startRow
+        - name: firstResult
           in: query
           description: First result, pagination use.
           required: false
           schema:
             type: integer
             format: int32
-            example: "0"
-        - name: _endRow
+            example: "0"   
+        - name: maxResults
           in: query
-          description: Last result, used for pagination. If _startRow es 0 y _endRow is 4, it will return the first 5 query results.
-          required: false
+          required: true
+          description: Total number of results, used for pagination. E.g. If firstResult is 0, and maxResults is 4, then it will return 4 records starting the count from 0 (Records 0, 1, 2 and 3). Therefore, if firstResult is 10 and maxResults is 3, it will return the records 10, 11 and 12
           schema:
             type: integer
             format: int32
             example: 4
-        - name: includeChildren
+        - name: distinct
           in: query
-          description: Includes children records.
           required: false
+          description: Only filters by entities. Returns the specified entity from the model.
+          schema:
+            type: string
+            example: Organization     
+        - name: identifiers
+          in: query
+          required: false
+          description: Include identifiers.
           schema:
             type: boolean
-            example: false
-            default: true
-        - name: where
+            example: true
+            default: false  
+        - name: q
           in: query
-          description: Clause where in HQL.
+          description: The "Q" parameter allows you to apply clauses to filter records based on specific criteria. For more information check <a href="https://etendoproject.atlassian.net/wiki/spaces/PUB/pages/3057614854/How+to+filter+using+the+q+parameter+in+SecureWebServices">the following documentation</a>.
           required: false
           schema:
             type: string
-            example: purchase = true
-        - name: orderBy
+            example: uOM == '100' 
+        - name: sortBy
           in: query
-          description: Clause order by in HQL
+          description: Clause order by in HQL. Field/s with which to sort the results.
           required: false
           schema:
             type: string
-        - name: _selectedProperties
+        - name: fields
           in: query
           description: Fields to select separated by commas.
           required: false
           schema:
             type: string
             example: id, name
-        - name: _noActiveFilter
+        - name: noActive
           in: query
-          description: If it is true, it will also search the non-active records.
+          description: If it is true, non-active records will also be returned.
           required: false
           schema:
             type: boolean
@@ -202,16 +209,16 @@ paths:
                   items:
                     $ref: "#/components/schemas/NewProduct"
       parameters:
-        - name: modelName
+        - name: _entityName
           in: path
           required: true
-          description: Name of the model to be obtained (field name in AD_Table)
+          description: Name of the model to be obtained (field name in AD_Table).
           schema:
             type: string
             default: Product
       responses:
         '200':
-          description: Object created or edited
+          description: Object created or edited.
           content:
             application/json:
               schema:
@@ -230,35 +237,36 @@ paths:
       tags:
         - Dal
       parameters:
-        - name: modelName
+        - name: _entityName
           in: path
           required: true
-          description: Name of the model to be obtained (field name in  AD_Table)
+          description: Name of the model to be obtained (field name in  AD_Table).
           schema:
             type: string
             default: Product
-        - name: recordID
+        - name: id
           in: path
           required: true
-          description: ID of the record to be obtained
+          description: ID of the record to be obtained.
           schema:
             type: string
             default: DA7FC1BB3BA44EC48EC1AB9C74168CED
-        - name: includeChildren
+        - name: identifiers
           in: query
-          description: Includes children records
           required: false
+          description: Include identifiers.
           schema:
             type: boolean
-            default: false
-        - name: _selectedProperties
+            example: true
+            default: false  
+        - name: fields
           in: query
           description: Fields to select separated by commas.
           required: false
           schema:
             type: string
             default: id, name
-        - name: _noActiveFilter
+        - name: noActive
           in: query
           description: If it is true, it will also search the non-active records.
           required: false
@@ -273,7 +281,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Product"
         default:
-          description: unexpected error
+          description: unexpected error.
           content:
             application/json:
               schema:

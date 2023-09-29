@@ -35,9 +35,9 @@ dependencies {
 
 }
 
-final String CURRENT_VERSION = "23.2.0"
+final String CURRENT_VERSION = "23.2.8"
 final String NEXT_RELEASE = "23.3.0"
-final String NEXT_HOTFIX = "23.2.1"
+final String NEXT_HOTFIX = "23.2.9"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
@@ -180,7 +180,7 @@ task upgradeCoreVersion {
             }
             adModuleContent = adModuleContent.replaceAll(/<VERSION><!\[CDATA\[\d+.\d+.\d+/, "<VERSION><![CDATA[${version[0]}.${version[1]}.${version[2]}")
             adModuleContent = adModuleContent.replaceAll(/<VERSION_LABEL><!\[CDATA\[\d+Q\d+.\d+/, "<VERSION_LABEL><![CDATA[${version[0]}Q${version[1]}.${version[2]}")
-            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/docs.etendo.software\/en\/Release-notes\/\d+Q\d+-\d+/, "<UPDATEINFO><![CDATA[https://docs.etendo.software/en/Release-notes/${version[0]}Q${version[1]}-${version[2]}")
+            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/docs.etendo.software\/whats-new\/release-notes\/etendo-classic\/versions\/\d+Q\d+-\d+/, "<UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/${version[0]}Q${version[1]}-${version[2]}")
             file(filePath).write(adModuleContent)
         }
 
@@ -347,3 +347,4 @@ task djmh(type: JavaExec, dependsOn: jmhCompileGeneratedClasses) {
     main = project.hasProperty("benchmark") ? project.getProperty("benchmark") : null
     classpath = sourceSets.jmh.compileClasspath + sourceSets.jmh.runtimeClasspath
 }
+
