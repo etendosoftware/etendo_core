@@ -321,12 +321,13 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
             OBDal.getInstance().save(paymentScheduleDetail3);
             OBDal.getInstance().save(paymentScheduleDetail4);
             OBDal.getInstance().save(paymentCredit);
-            FIN_PaymentProcess.doProcessPayment(payment3, "D", null, null);
+            FIN_PaymentProcess.doProcessPayment(payment3, "D", null, null, true);
 
             i++;
             if (i % 100 == 0) {
               OBDal.getInstance().flush();
               OBDal.getInstance().getSession().clear();
+              businessPartner = OBDal.getInstance().get(BusinessPartner.class, strBpartnerId);
             }
           }
         } finally {
@@ -345,7 +346,7 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
           businessPartner.setCreditUsed(creditUsed.multiply(rate));
         }
       }
-
+      OBDal.getInstance().save(businessPartner);
       String messageText = OBMessageUtils.messageBD("CurrencyUpdated");
       JSONObject msg = new JSONObject();
       msg.put("severity", "success");
