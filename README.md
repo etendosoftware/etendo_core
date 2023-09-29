@@ -6,7 +6,7 @@ We are developing an international ERP and a platform that supports business dev
 To more information visit [etendo.software](https://etendo.software)
 
 ### Requirements
-In this section you can read the [System Requirements](https://docs.etendo.software/en/technical-documentation/etendo-environment/requirements-and-tools/requirements).
+In this section you can read the [System Requirements](https://docs.etendo.software/getting-started/requirements/).
 
 ### Etendo Core Instalation
 
@@ -16,7 +16,7 @@ cp gradle.properties.template gradle.properties
 ```
 2. You can edit `gradle.properties` file updating the variables or use the default values
 
-> To configure GitHub credentials read [Using repositories on Etendo](https://docs.etendo.software/en/technical-documentation/etendo-environment/requirements-and-tools/developer-tools/use-of-repositories-in-etendo)
+> To configure GitHub credentials read [Using repositories on Etendo](https://docs.etendo.software/developer-guide/etendo-classic/getting-started/installation/use-of-repositories-in-etendo/)
 
 | Variable                     | Description                                                               | Default value |
 |------------------------------|---------------------------------------------------------------------------|---------------|
