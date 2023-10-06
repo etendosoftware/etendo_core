@@ -33,7 +33,7 @@ sourceSets{
     test {
         java {
             srcDirs 'src-test/src'
-            outputDir = file("src-test/build/classes")
+            classesDirectory.set(file("src-test/build/classes"))
         }
         resources {
             srcDirs 'src-test/resources'
@@ -47,15 +47,15 @@ sourceSets{
 if(file('modules').exists() && file('modules').isDirectory()){
     file('modules').eachDir {
         sourceSets.test.java.srcDirs += it.toString()+"/src-test/src"
-        sourceSets.test.java.outputDir = file("src-test/build/classes")
+        sourceSets.test.java.classesDirectory.set(file("src-test/build/classes"))
         sourceSets.test.groovy.srcDirs += it.toString()+"/src-test/test/groovy"
-        sourceSets.test.groovy.outputDir = file("src-test/build/classes")
+        sourceSets.test.groovy.classesDirectory.set(file("src-test/build/classes"))
     }
 }
 if(file('modules_core').exists() && file('modules_core').isDirectory()){
     file('modules_core').eachDir {
         sourceSets.test.java.srcDirs += it.toString()+"/src-test"
-        sourceSets.test.java.outputDir = file("src-test/build/classes")
+        sourceSets.test.java.classesDirectory.set(file("src-test/build/classes"))
     }
 }
 
