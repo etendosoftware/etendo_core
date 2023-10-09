@@ -83,7 +83,7 @@ build.war: build a war file in the lib directory.
     <attribute name="v" default="NOT SET"/>
     <sequential>
       <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
-        <classpath refid="project.class.path"/>
+        <classpath refid="project.class.path.full"/>
         <transaction> UPDATE ad_system_info SET system_status='@{v}' ;
         </transaction>
       </sql>
@@ -92,14 +92,14 @@ build.war: build a war file in the lib directory.
 
   <target name="validate.database">
     <taskdef name="validateDatabase" classname="org.openbravo.service.system.SystemValidationTask">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </taskdef>
     <validateDatabase userId="0" adminMode="true" propertiesFile="${base.config}/Openbravo.properties" type="database" />
   </target>
 
   <target name="validate.modules">
     <taskdef name="validateModules" classname="org.openbravo.service.system.SystemValidationTask">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </taskdef>
     <validateModules userId="0" adminMode="true" propertiesFile="${base.config}/Openbravo.properties" type="module" moduleJavaPackage="${module}"/>
   </target>
@@ -107,7 +107,7 @@ build.war: build a war file in the lib directory.
   <target name="trl.clean" if="translation">
     <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}/Openbravo.properties' clean" />
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -117,7 +117,7 @@ build.war: build a war file in the lib directory.
   <target name="trl.remove.unused" if="translation">
     <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}/Openbravo.properties' remove" />
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -145,7 +145,7 @@ build.war: build a war file in the lib directory.
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql . '${build.sqlc}'/src" />
       <jvmarg value="-Dsqlc.listOfFiles=ApplyModule_data.xsql,PInstanceProcess_data.xsql,Translation_data.xsql,MessageBD_data.xsql"/>
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -166,7 +166,7 @@ build.war: build a war file in the lib directory.
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${extra.modules.location}' '${build.sqlc}'/src */src" />
       <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -174,7 +174,7 @@ build.war: build a war file in the lib directory.
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules}' '${build.sqlc}'/src */src" />
       <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -190,7 +190,7 @@ build.war: build a war file in the lib directory.
   <target name="sqlc" depends="sqlcExtraModules" if="isSourceJar">
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql . '${build.sqlc}'/src" />
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -198,7 +198,7 @@ build.war: build a war file in the lib directory.
     <java classname="org.openbravo.data.Sqlc" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.config}'/Openbravo.properties .xsql '${base.modules_core}' '${build.sqlc}'/src */src" />
       <jvmarg value="-Dsqlc.queryExecutionStrategy=traditional"/>
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -226,7 +226,7 @@ build.war: build a war file in the lib directory.
   <target name="generate.entities.quick" depends="compile.src.gen">
     <java classname="org.openbravo.base.gen.GenerateEntitiesTask" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
       <arg line="'${base.src}' '${friendlyWarnings}'" />
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -240,7 +240,7 @@ build.war: build a war file in the lib directory.
       Custom columns in standard tables should support a reference to a table in the module
       if this occurs then possible the following javac has to be enabled instead of the two javacs below
     <javac srcdir="${base.src}:${base.src.gen}" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </javac>
     -->
     <javac includes="org/openbravo/model/**,org/openbravo/base/structure/**,org/openbravo/dal/**,org/openbravo/service/dataset/**,*/src/**/base/weld/**" excludes="**/*SequenceContributor.java" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
@@ -252,11 +252,11 @@ build.war: build a war file in the lib directory.
         <dirset dir="${base.modules_core}" erroronmissingdir="false"/>
         <dirset dir="${extra.modules.location}" erroronmissingdir="false"/>
       </src>
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <compilerarg value="-implicit:class" />
     </javac>
     <javac srcdir="${base.src.gen}" excludes="org/openbravo/model/**,org/openbravo/base/structure/**,org/openbravo/dal/**,org/openbravo/service/dataset/**,**/*SequenceContributor.java" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </javac>
     <copy todir="${build}">
       <fileset dir="${base.src.gen}">
@@ -272,7 +272,7 @@ build.war: build a war file in the lib directory.
 
   <!-- build-internal forking helper -->
   <target name="generate.entities.quick.forked" depends="compile.src.gen">
-    <taskdef name="workflow" classpathref="project.class.path" classname="org.openbravo.base.gen.GenerateEntitiesTask" />
+    <taskdef name="workflow" classpathref="project.class.path.full" classname="org.openbravo.base.gen.GenerateEntitiesTask" />
     <workflow friendlyWarnings="${friendlyWarnings}" srcGenPath="${base.src.gen}" propertiesFile="${base.config}/Openbravo.properties" />
   </target>
 
@@ -304,7 +304,7 @@ build.war: build a war file in the lib directory.
     </javac>
 
     <javac srcdir="${build.sqlc}/srcAD" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" nowarn="${friendlyWarnings}" includeantruntime="false">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </javac>
 
     <!-- When core in JAR, some java files could be autogenerated in the 'srcAD' dir and need to be compiled again  -->
@@ -315,7 +315,7 @@ build.war: build a war file in the lib directory.
 
   <target name="compile.src.gen" depends="init">
     <javac srcdir="${basedir}" includes="org/openbravo/base/exception/**,org/openbravo/base/gen/**,org/openbravo/base/expression/**,org/openbravo/base/provider/**,org/openbravo/base/model/**,org/openbravo/base/session/**,org/openbravo/base/validation/**,org/openbravo/base/util/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <compilerarg value="-implicit:class" />
     </javac>
     <copy todir="${build}">
@@ -327,12 +327,12 @@ build.war: build a war file in the lib directory.
 
     <!-- also compile the domaintypes in modules -->
     <javac srcdir="${basedir}/../" includes="modules_core/*/src/**/model/domaintype/**/*.java,modules/*/src/**/model/domaintype/**/*.java" destdir="${build}"  fork="true" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </javac>
 
     <!-- Compiles domaintypes in the extra module dir -->
     <javac srcdir="${extra.modules.location}/.." includes="modules/*/src/**/model/domaintype/**/*.java" destdir="${build}"  fork="true" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </javac>
 
     <!-- copy all configuration files in modules to the output path also -->
@@ -362,7 +362,7 @@ build.war: build a war file in the lib directory.
 
   <target name="wadvalidation">
     <taskdef name="WADValidation" classname="org.openbravo.wad.validation.WADValidatorTask">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </taskdef>
 
     <WADValidation propertiesFile="${base.config}/Openbravo.properties"
@@ -585,7 +585,7 @@ build.war: build a war file in the lib directory.
     </copy>
 
     <taskdef name="CheckSumCondition" classname="org.openbravo.utils.CheckSumCondition">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </taskdef>
 
     <CheckSumCondition obDir="${basedir}/.."
@@ -679,14 +679,23 @@ build.war: build a war file in the lib directory.
 
     <java classname="org.openbravo.translate.RTLSkin" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="${base.context}/web/skins/rtl ${base.context}/web/skins/ltr" />
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </java>
 
   </target>
 
+  <path id="postsrc.path">
+    <fileset dir="${base.lib}" erroronmissingdir="false">
+      <include name="**/*.jar" />
+    </fileset>
+    <fileset dir="../lib/build/" erroronmissingdir="false">
+      <include name="**/*.jar" />
+    </fileset>
+  </path>
+
   <target name="minimizeJSandCSS" description="minimize JS and CSS files" if="minimizeJSandCSSbool">
     <taskdef name="yuicompress" classname="com.yahoo.platform.yui.compressor.YUICompressTask">
-      <classpath refid="project.class.path" />
+      <classpath refid="postsrc.path" />
     </taskdef>
     <yuicompress linebreak="300" warn="false" munge="yes" preserveallsemicolons="true" outputfolder="${base.context}/web" charset="UTF-8">
       <fileset dir="${base.web}">
@@ -731,7 +740,7 @@ build.war: build a war file in the lib directory.
   <target name="smartbuild.new.wad" if="new.wad">
     <antcall inheritall="true" inheritrefs="true" target="wad" />
     <taskdef name="updateWADmd5" classname="org.openbravo.utils.WADCheckSumTask">
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
     </taskdef>
     <updateWADmd5 obDir="${basedir}/.." />
   </target>
@@ -754,7 +763,7 @@ build.war: build a war file in the lib directory.
   <target name="translate" if="translation">
     <java classname="org.openbravo.translate.Translate" jvm="${env.JAVA_HOME}/bin/java" fork="yes" maxmemory="${build.maxmemory}">
       <arg line="'${base.config}/Openbravo.properties' '${basedir}/..'" />
-      <classpath refid="project.class.path" />
+      <classpath refid="project.class.path.full" />
       <syspropertyset>
         <propertyref name="java.security.egd" />
       </syspropertyset>
@@ -830,7 +839,7 @@ build.war: build a war file in the lib directory.
 
   <target name="update.build.timestamp" unless="timestamp">
     <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" delimiter="/">
-      <classpath refid="project.class.path"/>
+      <classpath refid="project.class.path.full"/>
       <transaction>
         UPDATE AD_SYSTEM_INFO SET LAST_BUILD=NOW()
       </transaction>

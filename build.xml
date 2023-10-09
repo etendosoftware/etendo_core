@@ -87,7 +87,7 @@ export.database: exports database structure and data to xml files.
   </condition>
   <property name="base.context" location="${base.context.location}" />
   <property name="base.design" location="${base.context}/src-loc" />
-  <property name="base.lib" location="lib" />
+  <property name="base.lib" location="./build/lib" />
   <property name="base.modules" location="modules" />
   <property name="base.modules_core" location="modules_core" />
   <!-- Set the base build dir  -->
@@ -99,8 +99,8 @@ export.database: exports database structure and data to xml files.
   <property name="build" location="${base.build.location}" />
 
   <!-- Set the base war lib dir -->
-  <property name="base.lib.sources" location="lib" />
-  <property name="base.lib.jar" location="../../lib"/>
+  <property name="base.lib.sources" location="./build/lib" />
+  <property name="base.lib.jar" location="../../build/lib"/>
   <condition property="base.lib.location" value="${base.lib.sources}" else="${base.lib.jar}">
     <istrue value="${isSourceJar}"/>
   </condition>
@@ -293,8 +293,9 @@ export.database: exports database structure and data to xml files.
 
     <!-- This prevents failing YUI compression  -->
     <pathelement location="${base.lib}/build/yuicompressor-2.4.2.jar" />
-    <pathelement location="${base.lib}/build/ob-rhino-1.6R7.jar" />
+    <pathelement location="${base.lib}/build/js-1.6R7.jar" />
     <pathelement location="${base.lib}/build/YUIAnt.jar" />
+    <pathelement location="${base.lib}/build/rhino-1.7.13.jar" />
 
     <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
       <include name="build/*.jar" />
@@ -351,12 +352,14 @@ export.database: exports database structure and data to xml files.
 
     <!-- This prevents failing YUI compression  -->
     <pathelement location="${base.lib}/build/yuicompressor-2.4.2.jar" />
-    <pathelement location="${base.lib}/build/ob-rhino-1.6R7.jar" />
+    <pathelement location="${base.lib}/build/js-1.6R7.jar" />
     <pathelement location="${base.lib}/build/YUIAnt.jar" />
+    <pathelement location="${base.lib}/build/rhino-1.7.13.jar" />
 
-    <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
+    <fileset dir="${base.lib}">
       <include name="build/*.jar" />
       <include name="**/*.jar" />
+      <include name="./runtime/*.jar" />
     </fileset>
     <fileset dir="${build.core.lib}" erroronmissingdir="${isSourceJar}">
       <include name="openbravo-core.jar" />
@@ -489,7 +492,8 @@ export.database: exports database structure and data to xml files.
     <attribute name="v" default="NOT SET"/>
     <sequential>
       <sql driver="${bbdd.driver}" url="${bbdd.owner.url}" userid="${bbdd.user}" password="${bbdd.password}" onerror="continue" autocommit="true">
-        <classpath refid="project.class.path"/>
+        <classpath refid="project.class.path.full"/>
+        <classpath> <fileset dir="${base.lib}"> <include name="**/*.jar"> </include> </fileset> </classpath>
         <transaction> UPDATE ad_system_info SET system_status='@{v}' ;
         </transaction>
       </sql>
