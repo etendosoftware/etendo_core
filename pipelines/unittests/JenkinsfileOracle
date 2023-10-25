@@ -109,72 +109,74 @@ spec:
                 branch 'develop'
             }
             steps {
-                script {
-                    sh """
-                    curl -O https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
-                    tar xfz oracle-sqlcli-V1022102-01.tar.gz 2> /dev/null
-                    chmod a+x sqlcl/bin/sql
-                    """
-                    sh """
-                    echo "BEGIN
-                      FOR r IN (select sid,serial# from v\\\$session where username='${BBDD_USER}')
-                      LOOP
-                          EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' || r.serial# || ''' immediate';
-                      END LOOP;
-                    END;
-                    /
-
-                    DROP USER ${BBDD_USER} CASCADE;
-                    commit;
-
-                    exit; " > kill.sql
-                    """
-                    sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
-                }
-                sh 'printenv'
-                echo 'Building Etendo Core'
-                script {
-                    try {
+                container('compiler') {
+                    script {
                         sh """
-                        echo "context.name=${CONTEXT_NAME}\n
-                        bbdd.rdbms=ORACLE\n
-                        bbdd.driver=oracle.jdbc.driver.OracleDriver\n
-                        bbdd.url=jdbc:oracle:thin:@db19c-oracle-db.oracle:1521:orclcdb?oracle.net.disableOob=true\n
-                        bbdd.sid=${BBDD_SID}\n
-                        bbdd.systemUser=${BBDD_SYSTEMUSER}\n
-                        bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
-                        bbdd.user=${BBDD_USER}\n
-                        bbdd.password=${BBDD_PASSWORD}\n
-                        bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
-
-                        nexusUser=${NEXUS_USER}\n
-                        nexusPassword=${NEXUS_PASSWORD}\n
-                        githubUser=${GITHUB_USER}\n
-                        githubToken=${GITHUB_TOKEN}\n
-                        allow.root=true\n
-                        org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8" > gradle.properties
+                        curl -O https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
+                        tar xfz oracle-sqlcli-V1022102-01.tar.gz 2> /dev/null
+                        chmod a+x sqlcl/bin/sql
                         """
-                        sh './gradlew prepareConfig --info --stacktrace'
-                        sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
-                        sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
-                        env.CATALINA_HOME="${WORKSPACE}/${TOMCAT_FOLDER}"
-                        env.CATALINA_BASE="${WORKSPACE}/${TOMCAT_FOLDER}"
-                        sh './gradlew setup --info --stacktrace'
-                        sh './gradlew expandModules --info --stacktrace'
-                        sh './gradlew install --info --stacktrace'
-                        sh './gradlew smartbuild --info --stacktrace'
+                        sh """
+                        echo "BEGIN
+                          FOR r IN (select sid,serial# from v\\\$session where username='${BBDD_USER}')
+                          LOOP
+                              EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' || r.serial# || ''' immediate';
+                          END LOOP;
+                        END;
+                        /
 
-                        sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
-                        sh 'sleep 1m'
+                        DROP USER ${BBDD_USER} CASCADE;
+                        commit;
 
-                        echo 'Build of Etendo Core Finished'
-                        env.STATUSTEST = "1" //flag to indicate if any test failed
-                        env.STATUSBUILD = "1"
-                    } catch (Exception e) {
-                        echo 'Build of Etendo Core FAILED'
-                        currentBuild.result = FAILED
-                        error('Build Etendo Core FAILED!')
-                        env.STATUSBUILD = "0"
+                        exit; " > kill.sql
+                        """
+                        sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+                    }
+                    sh 'printenv'
+                    echo 'Building Etendo Core'
+                    script {
+                        try {
+                            sh """
+                            echo "context.name=${CONTEXT_NAME}\n
+                            bbdd.rdbms=ORACLE\n
+                            bbdd.driver=oracle.jdbc.driver.OracleDriver\n
+                            bbdd.url=jdbc:oracle:thin:@db19c-oracle-db.oracle:1521:orclcdb?oracle.net.disableOob=true\n
+                            bbdd.sid=${BBDD_SID}\n
+                            bbdd.systemUser=${BBDD_SYSTEMUSER}\n
+                            bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
+                            bbdd.user=${BBDD_USER}\n
+                            bbdd.password=${BBDD_PASSWORD}\n
+                            bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
+
+                            nexusUser=${NEXUS_USER}\n
+                            nexusPassword=${NEXUS_PASSWORD}\n
+                            githubUser=${GITHUB_USER}\n
+                            githubToken=${GITHUB_TOKEN}\n
+                            allow.root=true\n
+                            org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8" > gradle.properties
+                            """
+                            sh './gradlew prepareConfig --info --stacktrace'
+                            sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
+                            sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
+                            env.CATALINA_HOME="${WORKSPACE}/${TOMCAT_FOLDER}"
+                            env.CATALINA_BASE="${WORKSPACE}/${TOMCAT_FOLDER}"
+                            sh './gradlew setup --info --stacktrace'
+                            sh './gradlew expandModules --info --stacktrace'
+                            sh './gradlew install --info --stacktrace'
+                            sh './gradlew smartbuild --info --stacktrace'
+
+                            sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
+                            sh 'sleep 1m'
+
+                            echo 'Build of Etendo Core Finished'
+                            env.STATUSTEST = "1" //flag to indicate if any test failed
+                            env.STATUSBUILD = "1"
+                        } catch (Exception e) {
+                            echo 'Build of Etendo Core FAILED'
+                            currentBuild.result = FAILED
+                            error('Build Etendo Core FAILED!')
+                            env.STATUSBUILD = "0"
+                        }
                     }
                 }
             }
@@ -191,37 +193,39 @@ spec:
                 }
             }
             steps {
-                script {
-                    try {
-                        sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
-                        publishHTML([
-                            allowMissing: true,
-                            alwaysLinkToLastBuild: false,
-                            keepAll: true,
-                            reportDir: 'build/reports/tests/test',
-                            reportFiles: '*.html',
-                            reportName: 'WEB SERVICES TESTS REPORT',
-                            reportTitles: ''
-                        ])
-                    } catch (Exception e) {
-                        echo 'Exception occurred: ' + e.toString()
-                        echo '....TEST WEBSERVICE FAILED....'
-                        currentBuild.result = UNSTABLE
-                        unstable('Web Service Test Failed')
-                        env.STATUSTEST = "0"
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: false,
-                            keepAll: true,
-                            reportDir: 'build/reports/tests/test',
-                            reportFiles: '*.html',
-                            reportName: 'WEBSERVICES TESTS REPORT',
-                            reportTitles: ''
-                        ])
+                container('compiler') {
+                    script {
+                        try {
+                            sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
+                            publishHTML([
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: false,
+                                keepAll: true,
+                                reportDir: 'build/reports/tests/test',
+                                reportFiles: '*.html',
+                                reportName: 'WEB SERVICES TESTS REPORT',
+                                reportTitles: ''
+                            ])
+                        } catch (Exception e) {
+                            echo 'Exception occurred: ' + e.toString()
+                            echo '....TEST WEBSERVICE FAILED....'
+                            currentBuild.result = UNSTABLE
+                            unstable('Web Service Test Failed')
+                            env.STATUSTEST = "0"
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: false,
+                                keepAll: true,
+                                reportDir: 'build/reports/tests/test',
+                                reportFiles: '*.html',
+                                reportName: 'WEBSERVICES TESTS REPORT',
+                                reportTitles: ''
+                            ])
+                        }
                     }
+                    sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
+                    sh './gradlew --stop'
                 }
-                 sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
-                sh './gradlew --stop'
             }
         }
 //___________________________________________________________________________________________
@@ -236,18 +240,20 @@ spec:
                 }
             }
             steps {
-                script {
-                    try {
-                        echo 'Cleaning Database...'
-                        sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
-                        sh './gradlew install --info --stacktrace' //run a gradle task
-                        sh './gradlew smartbuild --info' //run a gradle task
-                        echo 'Database Cleaned'
-                    } catch (Exception e) {
-                        echo 'Clean Database FAILED'
-                        currentBuild.result = FAILED
-                        error('Clean Database FAILED!')
-                        env.STATUSBUILD = "0"
+                container('compiler') {
+                    script {
+                        try {
+                            echo 'Cleaning Database...'
+                            sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+                            sh './gradlew install --info --stacktrace' //run a gradle task
+                            sh './gradlew smartbuild --info' //run a gradle task
+                            echo 'Database Cleaned'
+                        } catch (Exception e) {
+                            echo 'Clean Database FAILED'
+                            currentBuild.result = FAILED
+                            error('Clean Database FAILED!')
+                            env.STATUSBUILD = "0"
+                        }
                     }
                 }
             }
@@ -264,33 +270,35 @@ spec:
                 }
             }
             steps {
-                script {
-                    try {
-                        sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
-                        publishHTML([
-                            allowMissing: true,
-                            alwaysLinkToLastBuild: false,
-                            keepAll: true,
-                            reportDir: 'build/reports/tests/test',
-                            reportFiles: '*.html',
-                            reportName: 'STANDALONE TESTS REPORT',
-                            reportTitles: ''
-                        ])
-                    } catch (Exception e) {
-                        echo 'Exception occurred: ' + e.toString()
-                        echo '....TEST STANDALONE FAILED....'
-                        currentBuild.result = UNSTABLE
-                        unstable('Standalone Test Failed!')
-                        env.STATUSTEST = "0"
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: false,
-                            keepAll: true,
-                            reportDir: 'build/reports/tests/test',
-                            reportFiles: '*.html',
-                            reportName: 'STANDALONE TESTS REPORT',
-                            reportTitles: ''
-                        ])
+                container('compiler') {
+                    script {
+                        try {
+                            sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
+                            publishHTML([
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: false,
+                                keepAll: true,
+                                reportDir: 'build/reports/tests/test',
+                                reportFiles: '*.html',
+                                reportName: 'STANDALONE TESTS REPORT',
+                                reportTitles: ''
+                            ])
+                        } catch (Exception e) {
+                            echo 'Exception occurred: ' + e.toString()
+                            echo '....TEST STANDALONE FAILED....'
+                            currentBuild.result = UNSTABLE
+                            unstable('Standalone Test Failed!')
+                            env.STATUSTEST = "0"
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: false,
+                                keepAll: true,
+                                reportDir: 'build/reports/tests/test',
+                                reportFiles: '*.html',
+                                reportName: 'STANDALONE TESTS REPORT',
+                                reportTitles: ''
+                            ])
+                        }
                     }
                 }
             }
@@ -307,33 +315,35 @@ spec:
                 }
             }
             steps {
-                script {
-                    try {
-                        sh './gradlew test --tests "com.etendoerp.*" --info'
-                        publishHTML([
-                            allowMissing: true,
-                            alwaysLinkToLastBuild: false,
-                            keepAll: true,
-                            reportDir: 'build/spock-reports/',
-                            reportFiles: '*.html',
-                            reportName: 'SPOCK TESTS REPORT',
-                            reportTitles: ''
-                        ])
-                    } catch (Exception e) {
-                        echo 'Exception occurred: ' + e.toString()
-                        echo '....TEST SPOCK FAILED....'
-                        currentBuild.result = UNSTABLE
-                        unstable('Spock Test failed!')
-                        env.STATUSTEST = "0"
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: false,
-                            keepAll: true,
-                            reportDir: 'build/spock-reports/',
-                            reportFiles: '*.html',
-                            reportName: 'SPOCK TESTS REPORT',
-                            reportTitles: ''
-                        ])
+                container('compiler') {
+                    script {
+                        try {
+                            sh './gradlew test --tests "com.etendoerp.*" --info'
+                            publishHTML([
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: false,
+                                keepAll: true,
+                                reportDir: 'build/spock-reports/',
+                                reportFiles: '*.html',
+                                reportName: 'SPOCK TESTS REPORT',
+                                reportTitles: ''
+                            ])
+                        } catch (Exception e) {
+                            echo 'Exception occurred: ' + e.toString()
+                            echo '....TEST SPOCK FAILED....'
+                            currentBuild.result = UNSTABLE
+                            unstable('Spock Test failed!')
+                            env.STATUSTEST = "0"
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: false,
+                                keepAll: true,
+                                reportDir: 'build/spock-reports/',
+                                reportFiles: '*.html',
+                                reportName: 'SPOCK TESTS REPORT',
+                                reportTitles: ''
+                            ])
+                        }
                     }
                 }
             }
@@ -341,13 +351,15 @@ spec:
     }
     post {
         always {
-            script {
-                if (env.BRANCH_NAME == 'develop') {
-                    sh './gradlew --stop'
-                    sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+            container('compiler') {
+                script {
+                    if (env.BRANCH_NAME == 'develop') {
+                        sh './gradlew --stop'
+                        sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+                    }
                 }
+                cleanWs deleteDirs: true
             }
-            cleanWs deleteDirs: true
         }
         fixed {
             mail to: EMAIL_ADDRESS,
