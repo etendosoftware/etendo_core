@@ -1,4 +1,5 @@
-List<String> _dependenciesListCOMPILATION = [ 
+List<String> _dependenciesListCOMPILATION = [
+        /*
   'org.apache.tomcat:tomcat-servlet-api:8.5.47', 
   'com.etendoerp:YUIAnt:1.0.0', 
   'com.etendoerp:yuicompressor:2.4.2', 
@@ -86,7 +87,8 @@ List<String> _dependenciesListCOMPILATION = [
   'org.jboss.spec.javax.annotation:jboss-annotations-api_1.3_spec:1.0.0.Final', 
   'org.jboss.weld.environment:weld-environment-common:3.1.1.Final', 
   'org.jboss.weld.servlet:weld-servlet-core:3.1.1.Final', 
-  'javax.inject:javax.inject:1', 
+  'javax.inject:javax.inject:1',
+         */
 ] 
  
 ext { 
