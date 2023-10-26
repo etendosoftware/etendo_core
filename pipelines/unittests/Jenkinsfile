@@ -39,7 +39,7 @@ pipeline {
 
   agent {
     kubernetes {
-      label 'jenkins-node-core-unittests'
+      inheritFrom 'jenkins-node-core-unittests'
       defaultContainer 'jnlp'
       yaml """
 apiVersion: v1
