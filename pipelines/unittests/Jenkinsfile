@@ -123,7 +123,7 @@ spec:
           script {
             try {
               sh 'printenv'
-							sh "sed -i 's/latest.release/1.3.0-SNAPSHOT/g' build.gradle"
+              sh "sed -i 's/latest.release/1.3.0-SNAPSHOT/g' build.gradle"
               sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
               sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
               env.CATALINA_HOME="${WORKSPACE}/${TOMCAT_FOLDER}"
@@ -131,30 +131,29 @@ spec:
               sh "git clone --branch $BRANCH_NAME $URL_REPO"
               dir('etendo_core') {
                 sh "sed -i 's/latest.release/1.3.0-SNAPSHOT/g' build.gradle"
-		            sh """
-								echo -e "context.name=${CONTEXT_NAME}\n
-		            bbdd.sid=${BBDD_SID}\n
-		            bbdd.port=${BBDD_PORT}\n
-		            bbdd.systemUser=${BBDD_SYSTEMUSER}\n
-		            bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
-		            bbdd.user=${BBDD_USER}\n
-		            bbdd.password=${BBDD_PASSWORD}\n
-		            nexusUser=${NEXUS_USER}\n
-		            nexusPassword=${NEXUS_PASSWORD}\n
-		            githubUser=${GITHUB_USER}\n
-		            githubToken=${GITHUB_TOKEN}\n
-		            allow.root=true\n
-		            -Dfile.encoding=UTF-8" > gradle.properties
-		            """
-
-		            sh """
-								./gradlew prepareConfig --info --stacktrace
-		            ./gradlew setup --info
-		            ./gradlew expandModules --info
-		            ./gradlew install --info
-		            ./gradlew smartbuild --info
-		            """
-							}
+                sh """
+                echo -e "context.name=${CONTEXT_NAME}\n
+                bbdd.sid=${BBDD_SID}\n
+                bbdd.port=${BBDD_PORT}\n
+                bbdd.systemUser=${BBDD_SYSTEMUSER}\n
+                bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
+                bbdd.user=${BBDD_USER}\n
+                bbdd.password=${BBDD_PASSWORD}\n
+                nexusUser=${NEXUS_USER}\n
+                nexusPassword=${NEXUS_PASSWORD}\n
+                githubUser=${GITHUB_USER}\n
+                githubToken=${GITHUB_TOKEN}\n
+                allow.root=true\n
+                -Dfile.encoding=UTF-8" > gradle.properties
+                """
+                sh """
+                ./gradlew prepareConfig --info --stacktrace
+                ./gradlew setup --info
+                ./gradlew expandModules --info
+                ./gradlew install --info
+                ./gradlew smartbuild --info
+                """
+              }
               sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
               sh "sleep 1m"
               env.STATUSTEST = "1" //flag to indicate if any test failed
@@ -174,7 +173,7 @@ spec:
             sh './pipelines/unittests/build-update.sh etendo_core pending "Build successful" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
           }
           failure {
-            sh './pipelines/unittests/build-update.sh etendo_core pending "Build failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+            sh './pipelines/unittests/build-update.sh etendo_core failure "Build failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
           }
       }
     }
@@ -190,37 +189,37 @@ spec:
         sh './pipelines/unittests/build-update.sh etendo_core pending "Run test suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
         container('compiler') {
           script {
-						dir('etendo_core') {
-		          try {
-		            sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info'
-		            publishHTML([
-		              allowMissing: true,
-		              alwaysLinkToLastBuild: false,
-		              keepAll: true,
-		              reportDir: 'build/reports/tests/test',
-		              reportFiles: '*.html',
-		              reportName: 'WEB SERVICES TESTS REPORT',
-		              reportTitles: ''
-		            ])
-		          } catch (Exception e) {
-		            echo 'Exception occurred: ' + e.toString()
-		            echo '....TEST WEBSERVICE FAILED....'
-		            currentBuild.result = UNSTABLE
-		            unstable('Web Service Test Failed')
-		            env.STATUSTEST = "0"
-		            publishHTML([
-		              allowMissing: false,
-		              alwaysLinkToLastBuild: false,
-		              keepAll: true,
-		              reportDir: 'build/reports/tests/test',
-		              reportFiles: '*.html',
-		              reportName: 'WEBSERVICES TESTS REPORT',
-		              reportTitles: ''
-		            ])
-		          }
-							sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
-        			sh './gradlew --stop'
-						}
+            dir('etendo_core') {
+              try {
+                sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info'
+                publishHTML([
+                  allowMissing: true,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/reports/tests/test',
+                  reportFiles: '*.html',
+                  reportName: 'WEB SERVICES TESTS REPORT',
+                  reportTitles: ''
+                ])
+              } catch (Exception e) {
+                echo 'Exception occurred: ' + e.toString()
+                echo '....TEST WEBSERVICE FAILED....'
+                currentBuild.result = UNSTABLE
+                unstable('Web Service Test Failed')
+                env.STATUSTEST = "0"
+                publishHTML([
+                  allowMissing: false,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/reports/tests/test',
+                  reportFiles: '*.html',
+                  reportName: 'WEBSERVICES TESTS REPORT',
+                  reportTitles: ''
+                ])
+              }
+              sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
+              sh './gradlew --stop'
+            }
           }
         }
       }
@@ -239,23 +238,23 @@ spec:
       steps {
         container('compiler') {
           script {
-						dir('etendo_core') {
-		          try {
-		            sh './gradlew --stop'
-		            sh 'sed -i "s/bbdd.sid=etendo/bbdd.sid=\${BBDD_SID}/g" gradle.properties'
-		            sh 'cat gradle.properties'
-		            sh './gradlew setup --info'
-		            echo 'Creating Database...'
-		            sh './gradlew install --info --stacktrace'
-		            sh './gradlew smartbuild --info'
-		            echo 'Database Cleaned'
-		          } catch (Exception e) {
-		            echo 'Clean Database FAILED'
-		            currentBuild.result = FAILED
-		            error('Clean Database FAILED!')
-		            env.STATUSBUILD = "0"
-		          }
-						}
+            dir('etendo_core') {
+              try {
+                sh './gradlew --stop'
+                sh 'sed -i "s/bbdd.sid=etendo/bbdd.sid=\${BBDD_SID}/g" gradle.properties'
+                sh 'cat gradle.properties'
+                sh './gradlew setup --info'
+                echo 'Creating Database...'
+                sh './gradlew install --info'
+                sh './gradlew smartbuild --info'
+                echo 'Database Cleaned'
+              } catch (Exception e) {
+                echo 'Clean Database FAILED'
+                currentBuild.result = FAILED
+                error('Clean Database FAILED!')
+                env.STATUSBUILD = "0"
+              }
+            }
           }
         }
       }
@@ -264,7 +263,7 @@ spec:
           sh './pipelines/unittests/build-update.sh etendo_core pending "Restart successful" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
         }
         failure {
-          sh './pipelines/unittests/build-update.sh etendo_core pending "Restart failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+          sh './pipelines/unittests/build-update.sh etendo_core failure "Restart failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
         }
       }
     }
@@ -279,35 +278,35 @@ spec:
       steps {
         container('compiler') {
           script {
-						dir('etendo_core') {
-		          try {
-		            sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
-		            publishHTML([
-		              allowMissing: true,
-		              alwaysLinkToLastBuild: false,
-		              keepAll: true,
-		              reportDir: 'build/reports/tests/test',
-		              reportFiles: '*.html',
-		              reportName: 'STANDALONE TESTS REPORT',
-		              reportTitles: ''
-		            ])
-		          } catch (Exception e) {
-		            echo 'Exception occurred: ' + e.toString()
-		            echo '....TEST STANDALONE FAILED....'
-		            currentBuild.result = UNSTABLE
-		            unstable('Standalone Test Failed!')
-		            env.STATUSTEST = "0"
-		            publishHTML([
-		              allowMissing: false,
-		              alwaysLinkToLastBuild: false,
-		              keepAll: true,
-		              reportDir: 'build/reports/tests/test',
-		              reportFiles: '*.html',
-		              reportName: 'STANDALONE TESTS REPORT',
-		              reportTitles: ''
-		            ])
-		          }
-						}
+            dir('etendo_core') {
+              try {
+                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
+                publishHTML([
+                  allowMissing: true,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/reports/tests/test',
+                  reportFiles: '*.html',
+                  reportName: 'STANDALONE TESTS REPORT',
+                  reportTitles: ''
+                ])
+              } catch (Exception e) {
+                echo 'Exception occurred: ' + e.toString()
+                echo '....TEST STANDALONE FAILED....'
+                currentBuild.result = UNSTABLE
+                unstable('Standalone Test Failed!')
+                env.STATUSTEST = "0"
+                publishHTML([
+                  allowMissing: false,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/reports/tests/test',
+                  reportFiles: '*.html',
+                  reportName: 'STANDALONE TESTS REPORT',
+                  reportTitles: ''
+                ])
+              }
+            }
           }
         }
       }
@@ -323,35 +322,35 @@ spec:
       steps {
         container('compiler') {
           script {
-						dir('etendo_core') {
-		          try {
-		            sh './gradlew test --tests "com.etendoerp.*" --info'
-		            publishHTML([
-		              allowMissing: true,
-		              alwaysLinkToLastBuild: false,
-		              keepAll: true,
-		              reportDir: 'build/spock-reports/',
-		              reportFiles: '*.html',
-		              reportName: 'SPOCK TESTS REPORT',
-		              reportTitles: ''
-		            ])
-		          } catch (Exception e) {
-		            echo 'Exception occurred: ' + e.toString()
-		            echo '....TEST SPOCK FAILED....'
-		            currentBuild.result = UNSTABLE
-		            unstable('Spock Test failed!')
-		            env.STATUSTEST = "0"
-		            publishHTML([
-		              allowMissing: false,
-		              alwaysLinkToLastBuild: false,
-		              keepAll: true,
-		              reportDir: 'build/spock-reports/',
-		              reportFiles: '*.html',
-		              reportName: 'SPOCK TESTS REPORT',
-		              reportTitles: ''
-		            ])
-		          }
-						}
+            dir('etendo_core') {
+              try {
+                sh './gradlew test --tests "com.etendoerp.*" --info'
+                publishHTML([
+                  allowMissing: true,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/spock-reports/',
+                  reportFiles: '*.html',
+                  reportName: 'SPOCK TESTS REPORT',
+                  reportTitles: ''
+                ])
+              } catch (Exception e) {
+                echo 'Exception occurred: ' + e.toString()
+                echo '....TEST SPOCK FAILED....'
+                currentBuild.result = UNSTABLE
+                unstable('Spock Test failed!')
+                env.STATUSTEST = "0"
+                publishHTML([
+                  allowMissing: false,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/spock-reports/',
+                  reportFiles: '*.html',
+                  reportName: 'SPOCK TESTS REPORT',
+                  reportTitles: ''
+                ])
+              }
+            }
           }
         }
       }
@@ -370,10 +369,10 @@ spec:
       steps {
         sh './pipelines/unittests/build-update.sh etendo_core pending "Deploying snapshot" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
         container('compiler') {
-					script {
-						dir('etendo_core') {
-				      withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
-				        withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+          script {
+            dir('etendo_core') {
+              withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
+                withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                   sh """
                   git config user.name "$GIT_USERNAME"
                   git config user.email "$GIT_USERNAME"
@@ -382,9 +381,9 @@ spec:
                   sh './gradlew publishCoreJar --info'
                   sh 'git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\"'
                   sh 'GIT_SSH_COMMAND=\"ssh -i ${keyfile}\" git push $GIT_URL \"v\$(grep version.ts version.properties|cut -c 11-)\"'
-				        }
-							}
-						}
+                }
+              }
+            }
           }
         }
       }
@@ -398,7 +397,7 @@ spec:
       }
     }
   }
-  post{
+  post {
     always {
       script {
         if (env.STATUSBUILD == "1") {
