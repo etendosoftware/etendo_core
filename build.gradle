@@ -134,7 +134,7 @@ dependencies {
     // database
     implementation("commons-betwixt:commons-betwixt:0.8") { transitive = false }  // ./src-db/database/lib/commons-betwixt-0.8.jar
     implementation("org.codehaus.woodstox:wstx-asl:3.0.2") { transitive = false }  // ./src-db/database/lib/wstx-asl-3.0.2.jar
-    //implementation("apache-oro:jakarta-oro:2.0.8") { transitive = false }  // ./src-db/database/lib/jakarta-oro-2.0.8.jar
+    implementation("apache-oro:jakarta-oro:2.1.0") { transitive = false }  // ./src-db/database/lib/jakarta-oro-2.0.8.jar
     implementation("commons-logging:commons-logging:1.2") { transitive = false }  // ./lib/runtime/commons-logging-1.2.jar
     implementation("net.sf.jasperreports:jasperreports-fonts:6.0.0") { transitive = false }  // ./lib/runtime/jasperreports-fonts-6.0.0.jar
     implementation("jfree:jcommon:1.0.15") { transitive = false }  // ./lib/runtime/jcommon-1.0.15.jar
