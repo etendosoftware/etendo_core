@@ -130,7 +130,7 @@ spec:
               env.CATALINA_BASE="${WORKSPACE}/${TOMCAT_FOLDER}"
               sh "git clone --branch $BRANCH_NAME $URL_REPO"
               dir('etendo_core') {
-                sh "sed -i 's/latest.release/1.3.0-SNAPSHOT/g' build.gradle"
+                sh "sed -i 's/latest.release/1.3.0-SNAPSHOT/g' build.gradle" // (TEMP)
                 sh """
                 echo -e "context.name=${CONTEXT_NAME}\n
                 bbdd.sid=${BBDD_SID}\n
@@ -146,7 +146,9 @@ spec:
                 allow.root=true\n
                 -Dfile.encoding=UTF-8" > gradle.properties
                 """
+                // mkdir -p build/lib/runtime (TEMP)
                 sh """
+                mkdir -p build/lib/runtime
                 ./gradlew prepareConfig --info --stacktrace
                 ./gradlew setup --info
                 ./gradlew expandModules --info
