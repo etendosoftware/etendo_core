@@ -144,7 +144,7 @@ spec:
                 githubUser=${GITHUB_USER}\n
                 githubToken=${GITHUB_TOKEN}\n
                 allow.root=true\n
-                -Dfile.encoding=UTF-8" > gradle.properties
+                org.gradle.jvmargs=-Dfile.encoding=UTF-8" > gradle.properties
                 """
                 // mkdir -p build/lib/runtime (TEMP)
                 sh """
