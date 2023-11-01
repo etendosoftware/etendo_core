@@ -202,6 +202,9 @@
     sortFieldAscendingText: getLabel('OBUISC_ListGrid.sortFieldAscendingText')
   });
   isc.ListGrid.addProperties({
+      configureSortText: getLabel('OBUISC_ListGrid.configureSortText')
+  });
+  isc.ListGrid.addProperties({
     sortFieldDescendingText: getLabel('OBUISC_ListGrid.sortFieldDescendingText')
   });
   isc.ListGrid.addProperties({
