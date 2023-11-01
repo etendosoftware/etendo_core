@@ -450,9 +450,15 @@ public class SystemService implements OBSingleton {
     Vector<File> dirs = new Vector<File>();
     dirs.add(new File(obDir, "/src-db/database/model/"));
     File modules = new File(obDir, "/modules");
-
     for (int j = 0; j < modules.listFiles().length; j++) {
       final File dirF = new File(modules.listFiles()[j], "/src-db/database/model/");
+      if (dirF.exists()) {
+        dirs.add(dirF);
+      }
+    }
+    File modulesCore = new File(obDir, "/modules_core");
+    for (int j = 0; j < modulesCore.listFiles().length; j++) {
+      final File dirF = new File(modulesCore.listFiles()[j], "/src-db/database/model/");
       if (dirF.exists()) {
         dirs.add(dirF);
       }
