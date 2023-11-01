@@ -167,8 +167,8 @@ spec:
                                 sh """
                                 mkdir -p build/lib/runtime
                                 ./gradlew prepareConfig --info
-                                ./gradlew install --info
                                 ./gradlew setup --info
+                                ./gradlew install --info
                                 ./gradlew expandModules --info
                                 ./gradlew smartbuild --info
                                 """
