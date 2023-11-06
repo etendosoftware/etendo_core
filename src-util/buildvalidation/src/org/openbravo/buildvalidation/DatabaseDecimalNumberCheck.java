@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.openbravo.base.ExecutionLimits;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.modulescript.OpenbravoVersion;
@@ -43,17 +44,14 @@ public class DatabaseDecimalNumberCheck extends BuildValidation {
     try {
       String numberString = new BigDecimal(ORIGINAL_NUMBER).toString();
       String returnedNumber;
-      if (cp.getRDBMS().equalsIgnoreCase("POSTGRE")) {
+      if (StringUtils.equalsIgnoreCase("POSTGRE", cp.getRDBMS())) {
         returnedNumber = DatabaseDecimalNumberCheckData.checkToNumberPG(cp, numberString);
       } else {
         returnedNumber = DatabaseDecimalNumberCheckData.checkToNumberORA(cp, numberString);
       }
-      if (!ORIGINAL_NUMBER.equals(returnedNumber)) {
-        errors
-            .add("The decimal numbers are not being retrieved properly from the database. "
-                + "This could be caused because the current database locale uses a decimal separator different from a period(.). "
-                + "For more information, please visit the following url: "
-                + "http://wiki.openbravo.com/wiki/Installation/Custom/PostgreSQL_Database");
+      if (!StringUtils.equals(ORIGINAL_NUMBER, returnedNumber)) {
+        errors.add(
+            "The decimal numbers are not being retrieved properly from the database. This could be caused because the current database locale uses a decimal separator different from a period(.). For more information, please visit the following url: https://docs.etendo.software/getting-started/installation/");
       }
     } catch (Exception e) {
       return handleError(e);
