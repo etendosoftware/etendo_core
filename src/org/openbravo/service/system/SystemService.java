@@ -448,15 +448,9 @@ public class SystemService implements OBSingleton {
     String obDir = obProp.getProperty("source.path");
 
     Vector<File> dirs = new Vector<File>();
-    dirs.add(new File(obDir, "/src-db/database/model/"));
-    File modules = new File(obDir, "/modules");
-
-    for (int j = 0; j < modules.listFiles().length; j++) {
-      final File dirF = new File(modules.listFiles()[j], "/src-db/database/model/");
-      if (dirF.exists()) {
-        dirs.add(dirF);
-      }
-    }
+    addDirectory(dirs, obDir, "/src-db/database/model/");
+    addModuleDirectories(dirs, obDir, "/modules");
+    addModuleDirectories(dirs, obDir, "/modules_core");
     File[] fileArray = new File[dirs.size()];
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
@@ -476,6 +470,24 @@ public class SystemService implements OBSingleton {
     } finally {
       if (con != null) {
         platform.returnConnection(con);
+      }
+    }
+  }
+
+  private void addDirectory(Vector<File> dirs, String baseDir, String subPath) {
+    File directory = new File(baseDir, subPath);
+    if (directory.exists()) {
+      dirs.add(directory);
+    }
+  }
+
+  private void addModuleDirectories(Vector<File> dirs, String baseDir, String modulePath) {
+    File modulesDir = new File(baseDir, modulePath);
+    File[] moduleFiles = modulesDir.listFiles();
+
+    if (moduleFiles != null) {
+      for (File moduleFile : moduleFiles) {
+        addDirectory(dirs, moduleFile.getAbsolutePath(), "/src-db/database/model/");
       }
     }
   }
