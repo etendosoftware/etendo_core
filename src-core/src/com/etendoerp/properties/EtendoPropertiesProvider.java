@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.URL;
 import java.util.Properties;
+import org.openbravo.base.session.OBPropertiesProvider;
 
 /**
  * Class used by the Dbsourcemanager to obtain the Openbravo.properties file and the 'source.path' dir
@@ -92,7 +93,13 @@ public class EtendoPropertiesProvider {
                 }
             }
         }
-
+        if (propertiesFile == null){
+            String sourcePath = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("source.path");
+            f = new File(sourcePath + File.separator + "config", fileName);
+            if (f.exists()) {
+                propertiesFile = f;
+            }
+        }
         return propertiesFile;
     }
 
