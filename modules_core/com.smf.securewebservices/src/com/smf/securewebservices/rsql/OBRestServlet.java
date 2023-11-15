@@ -43,7 +43,6 @@ public class OBRestServlet extends BaseWebService {
 		}
 
 		JSONStreamWriter writer = new JSONStreamWriter();
-		OBContext.setAdminMode(true);
 		try {
 			SecureJsonDataService.getInstance().fetch(parameters, writer);
 		} finally {
