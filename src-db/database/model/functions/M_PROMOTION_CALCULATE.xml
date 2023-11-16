@@ -225,6 +225,7 @@ BEGIN
           AND AD_ISORGINCLUDED(Cur_Order.AD_Org_ID, M_OFFER.AD_ORG_ID, M_OFFER.AD_CLIENT_ID) <> -1
           AND M_OFFER.IsActive = 'Y'
           AND t.M_Offer_Type_ID = M_Offer.M_Offer_Type_ID
+		  AND t.Apply_On_Completion = 'Y'
           AND ((PRICELIST_SELECTION='Y' AND NOT EXISTS (SELECT 1 FROM M_OFFER_PRICELIST
              WHERE M_OFFER_ID=M_OFFER.M_OFFER_ID
              AND M_PRICELIST_ID = v_priceList
