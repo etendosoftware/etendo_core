@@ -72,7 +72,7 @@ public class SL_Order_Amt extends SimpleCallout {
       to avoid errors when applying custom discounts using the
       discount field. Check EPL-512 for more information.
      */
-    boolean cancelPriceAd = true;
+    boolean cancelPriceAd = StringUtils.equals(info.getStringParameter("inpcancelpricead"), "Y");
 
     Order order = OBDal.getInstance().get(Order.class, strCOrderId);
     Product product = OBDal.getInstance().get(Product.class, strProduct);
