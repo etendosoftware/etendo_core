@@ -148,10 +148,13 @@ spec:
                         sh './gradlew prepareConfig --info --stacktrace'
                         sh 'curl -o apache-tomcat-8.5.75.tar.gz https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz'
                         sh 'tar -xvf apache-tomcat-8.5.75.tar.gz -C $WORKSPACE'
-                        sh './gradlew setup --info --stacktrace'
-                        sh './gradlew expandModules --info --stacktrace'
-                        sh './gradlew install --info --stacktrace'
-                        sh './gradlew smartbuild --info --stacktrace'
+                        sh """
+                        ./gradlew setup --stacktrace
+                        ./gradlew expandModules --stacktrace
+                        ./gradlew install --stacktrace
+                        ./gradlew update.database  --stacktrace
+                        ./gradlew smartbuild --stacktrace
+                        """
                         sh '$WORKSPACE/apache-tomcat-8.5.75/bin/catalina.sh start '
                         sh 'sleep 1m'
                         echo 'Build of Etendo Core Finished'
