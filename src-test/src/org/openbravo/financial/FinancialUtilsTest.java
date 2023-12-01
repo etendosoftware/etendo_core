@@ -21,12 +21,11 @@ public class FinancialUtilsTest extends WeldBaseTest {
   public void testGetProductPriceWithNullProduct() {
     // Given
     Date date = new Date();
-    boolean useSalesPriceList = true;
     BusinessPartner healthyFoodBP = OBDal.getInstance().get(BusinessPartner.class, BP_HEALTHY_FOOD);
     PriceList priceList = healthyFoodBP.getPurchasePricelist();
     // When
     try {
-      FinancialUtils.getProductPrice(null, date, useSalesPriceList, priceList);
+      FinancialUtils.getProductPrice(null, date, true, priceList);
       fail("Expected an OBException to be thrown");
     } catch (OBException e) {
       assertEquals("@ParameterMissing@ @Product@", e.getMessage());
