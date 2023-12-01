@@ -153,7 +153,7 @@ public class FinancialUtils {
       final boolean usePriceIncludeTax) throws OBException {
 
     if (product == null) {
-      throw new OBException("@ParameterMissing@");
+      throw new OBException("@ParameterMissing@ @Product@");
     }
     //@formatter:off
     String hql =

@@ -29,7 +29,7 @@ public class FinancialUtilsTest extends WeldBaseTest {
       FinancialUtils.getProductPrice(null, date, useSalesPriceList, priceList);
       fail("Expected an OBException to be thrown");
     } catch (OBException e) {
-      assertEquals("@ParameterMissing@", e.getMessage());
+      assertEquals("@ParameterMissing@ @Product@", e.getMessage());
     }
   }
 }
