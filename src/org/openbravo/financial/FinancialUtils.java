@@ -71,7 +71,7 @@ public class FinancialUtils {
    * ProductPrice to be used. In case a conversion is needed it uses the
    * {@link #getConvertedAmount(BigDecimal, Currency, Currency, Date, Organization, String)
    * getConvertedAmount()} method.
-   * 
+   *
    * @param product
    *          Product to get its ProductPrice.
    * @param date
@@ -131,7 +131,7 @@ public class FinancialUtils {
    * Method to get a valid ProductPrice for the given Product. It only considers PriceList versions
    * valid on the given date. If a PriceList is given it searches on that one. If PriceList null is
    * passed it search on any Sales or Purchase PriceList based on the useSalesPriceList.
-   * 
+   *
    * @param product
    *          Product to get its ProductPrice.
    * @param date
@@ -151,6 +151,10 @@ public class FinancialUtils {
   public static ProductPrice getProductPrice(final Product product, final Date date,
       final boolean useSalesPriceList, final PriceList priceList, final boolean throwException,
       final boolean usePriceIncludeTax) throws OBException {
+
+    if (product == null) {
+      throw new OBException("@ParameterMissing@ @Product@");
+    }
     //@formatter:off
     String hql =
             "as pp" +
@@ -209,7 +213,7 @@ public class FinancialUtils {
    * Method to get the conversion rate defined at system level. If there is not a conversion rate
    * defined on the given Organization it is searched recursively on its parent organization until
    * one is found. If no conversion rate is found null is returned.
-   * 
+   *
    * @param date
    *          Date conversion is being performed.
    * @param fromCurrency
@@ -274,7 +278,7 @@ public class FinancialUtils {
 
   /**
    * Converts an amount.
-   * 
+   *
    * @param amount
    *          BigDecimal amount to convert.
    * @param curFrom
@@ -343,7 +347,7 @@ public class FinancialUtils {
 
   /**
    * Calculates the net unit price using the C_GET_NET_PRICE_FROM_GROSS stored procedure.
-   * 
+   *
    * @param strTaxId
    *          Tax that applies to the price.
    * @param grossAmount
@@ -355,7 +359,7 @@ public class FinancialUtils {
    * @param quantity
    *          number of units to divide the amount to get the price.
    * @return the net unit price
-   * 
+   *
    * @deprecated Use {@link #calculateNetAmtFromGross} instead
    */
   @Deprecated
@@ -380,7 +384,7 @@ public class FinancialUtils {
 
   /**
    * Calculates the net unit price using the C_GET_NET_AMOUNT_FROM_GROSS stored procedure.
-   * 
+   *
    * @param strTaxId
    *          Tax that applies to the price.
    * @param grossAmount
