@@ -35,7 +35,7 @@ pipeline {
     JAVA_HOME           = "/usr/lib/jvm/java-11-openjdk-amd64"
     TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz"
     TOMCAT_FOLDER       = "apache-tomcat-8.5.75"
-    POSTGRES_VERSION    = "16"
+    POSTGRES_VERSION    = "14"
   }
 
   agent {
@@ -122,7 +122,6 @@ spec:
           script {
             try {
               sh 'printenv'
-              sh 'chmod a+x ./pipelines/unittests/build-update.sh'
               sh './pipelines/unittests/build-update.sh etendo_core pending "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
               sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
               sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
@@ -379,7 +378,6 @@ spec:
                     git config user.name "$GIT_USERNAME"
                     git config user.email "$GIT_USERNAME"
                     """
-                    sh './pipelines/unittests/build-update.sh etendo_core pending "Deploying snapshot" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
                     sh 'echo version.ts=\$(date +\"%s\") > version.properties'
                     sh './gradlew publishCoreJar --info'
                     sh 'git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\"'
