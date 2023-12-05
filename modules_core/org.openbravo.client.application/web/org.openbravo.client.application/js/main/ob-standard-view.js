@@ -1698,7 +1698,7 @@ isc.OBStandardView.addProperties({
       // at this point the time fields of the record are formatted in local time
       localTime = true;
     this.messageBar.hide();
-    if (this.parentView) {
+    if (this.parentView && (this.parentView.entity !== this.entity)) {
       this.parentView.messageBar.hide();
     }
 
