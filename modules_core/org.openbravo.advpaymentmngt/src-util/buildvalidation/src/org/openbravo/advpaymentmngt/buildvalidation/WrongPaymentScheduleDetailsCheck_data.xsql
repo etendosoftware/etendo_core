@@ -158,20 +158,11 @@
             SELECT o.c_order_id
             FROM c_order o
                 JOIN fin_payment_schedule pso ON o.c_order_id = pso.c_order_id
-            WHERE EXISTS (SELECT 1 
-                          FROM c_invoice i
-                              JOIN c_invoiceline il ON il.c_invoice_id = i.c_invoice_id
-                              JOIN c_orderline ol ON il.c_orderline_id = ol.c_orderline_id
-                          WHERE ol.c_order_id = o.c_order_id
-                            AND i.docstatus = ''CO''
-                            AND NOT EXISTS (SELECT 1 FROM fin_payment_scheduledetail psd
-                                                          JOIN fin_payment_schedule psi ON psd.fin_payment_schedule_invoice = psi.fin_payment_schedule_id
-                                            WHERE il.c_invoice_id = psi.c_invoice_id
-                                              AND psd.fin_payment_schedule_order = pso.fin_payment_schedule_id)
-                          GROUP BY il.c_invoice_id
-                          HAVING sum(il.linenetamt +coalesce(c_getinvoiceline_taxamount(il.c_invoiceline_id),0)) != 0)
-              AND EXISTS (SELECT 1 FROM fin_payment_scheduledetail psdo
-                        WHERE psdo.fin_payment_schedule_order = pso.fin_payment_schedule_id)) o
+            WHERE EXISTS (SELECT 1  FROM c_invoice i JOIN c_invoiceline il ON il.c_invoice_id = i.c_invoice_id JOIN c_orderline ol ON il.c_orderline_id = ol.c_orderline_id
+                          WHERE ol.c_order_id = o.c_order_id AND i.docstatus = ''CO'' AND NOT EXISTS (SELECT 1 FROM fin_payment_scheduledetail psd JOIN fin_payment_schedule psi ON psd.fin_payment_schedule_invoice = psi.fin_payment_schedule_id
+                                            WHERE il.c_invoice_id = psi.c_invoice_id AND psd.fin_payment_schedule_order = pso.fin_payment_schedule_id)
+                          GROUP BY il.c_invoice_id HAVING sum(il.linenetamt +coalesce(c_getinvoiceline_taxamount(il.c_invoiceline_id),0)) != 0)
+              AND EXISTS (SELECT 1 FROM fin_payment_scheduledetail psdo WHERE psdo.fin_payment_schedule_order = pso.fin_payment_schedule_id)) o
             JOIN c_orderline ol ON ol.c_order_id = o.c_order_id
             JOIN c_invoiceline il ON il.c_orderline_id = ol.c_orderline_id
             JOIN c_invoice inv ON inv.c_invoice_id = il.c_invoice_id
