@@ -163,13 +163,17 @@ BEGIN
       AND C_Tax_ID = :old.C_Tax_ID
       AND Recalculate = 'Y';
     END IF;
-
+	
     DELETE FROM C_INVOICETAX 
     WHERE C_INVOICE_ID = :OLD.C_Invoice_ID
     AND C_TAX_ID = :OLD.C_TAX_ID
-    AND ROUND(TAXBASEAMT, v_Prec) = 0
-    AND TAXAMT = 0;
-    
+    AND NOT EXISTS 
+        (
+            SELECT 1
+            FROM C_INVOICELINETAX
+            WHERE C_TAX_ID = :OLD.C_TAX_ID
+            AND C_INVOICE_ID = :OLD.C_INVOICE_ID
+        );    
   END IF;
 END IF;
 END C_INVOICELINETAX_TRG
