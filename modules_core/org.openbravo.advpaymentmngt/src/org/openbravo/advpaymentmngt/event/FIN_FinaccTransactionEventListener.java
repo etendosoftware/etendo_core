@@ -32,6 +32,7 @@ import org.openbravo.client.kernel.event.EntityNewEvent;
 import org.openbravo.client.kernel.event.EntityPersistenceEvent;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
@@ -79,8 +80,10 @@ class FIN_FinaccTransactionEventListener extends EntityPersistenceEventObserver 
     if ((StringUtils.equals(transactionType, APRMConstants.TRXTYPE_BPDeposit)
         || StringUtils.equals(transactionType, APRMConstants.TRXTYPE_BPWithdrawal))
         && glItem == null && payment == null) {
-      logger.debug("@APRM_INVALID_TRANSACTION@");
-      throw new OBException("@APRM_INVALID_TRANSACTION@");
+      if (logger.isDebugEnabled()) {
+        logger.debug(OBMessageUtils.parseTranslation("@APRM_INVALID_TRANSACTION@"));
+      }
+      throw new OBException(OBMessageUtils.parseTranslation("@APRM_INVALID_TRANSACTION@"));
     }
   }
 }
