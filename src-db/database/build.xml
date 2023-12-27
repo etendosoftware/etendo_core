@@ -242,5 +242,12 @@ export.database.structure: Exports the database structure in the xml's files.
       </transaction>
     </sql>
   </target>
+
+  <target name="delete.client">
+    <taskdef name="deleteClient" classname="org.openbravo.service.system.SystemDeleteClientTask">
+      <classpath refid="project.class.path" />
+    </taskdef>
+    <deleteClient clientId="${clientId}" userid="0"  propertiesFile="${base.config}/Openbravo.properties" />
+  </target>
 </project>
 
