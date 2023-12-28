@@ -899,6 +899,10 @@ export.database: exports database structure and data to xml files.
     <ant dir="${base.db}" target="import.sample.data" inheritAll="true" inheritRefs="true" />
   </target>
 
+  <target name="delete.client" depends="init, core.lib">
+    <ant dir="${base.db}" target="delete.client" inheritAll="true" inheritRefs="true" />
+  </target>
+
   <target name="db.apply.modules" if="apply.modules.on.update">
     <antcall inheritall="true" inheritrefs="true" target="apply.module" />
   </target>

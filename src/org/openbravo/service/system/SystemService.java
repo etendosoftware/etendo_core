@@ -38,6 +38,7 @@ import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBProvider;
@@ -275,6 +276,7 @@ public class SystemService implements OBSingleton {
       sqlCommands.add("DELETE FROM obuiapp_uipersonalization p where visibleat_client_id=?");
 
       for (String command : sqlCommands) {
+        log4j.debug(command);
         try (PreparedStatement ps = con.prepareStatement(command)) {
           ps.setString(1, clientId);
           ps.executeUpdate();
@@ -451,6 +453,7 @@ public class SystemService implements OBSingleton {
     addDirectory(dirs, obDir, "/src-db/database/model/");
     addModuleDirectories(dirs, obDir, "/modules");
     addModuleDirectories(dirs, obDir, "/modules_core");
+    addModuleDirectories(dirs, obDir, "/build/etendo/modules");
     File[] fileArray = new File[dirs.size()];
     for (int i = 0; i < dirs.size(); i++) {
       fileArray[i] = dirs.get(i);
@@ -467,6 +470,8 @@ public class SystemService implements OBSingleton {
       platform.enableAllTriggers(con, xmlModel, false);
       log4j.info("   Enabling foreign keys");
       platform.enableAllFK(con, xmlModel, false);
+    } catch (Exception e) {
+      throw new OBException(e.getMessage(), true);
     } finally {
       if (con != null) {
         platform.returnConnection(con);
