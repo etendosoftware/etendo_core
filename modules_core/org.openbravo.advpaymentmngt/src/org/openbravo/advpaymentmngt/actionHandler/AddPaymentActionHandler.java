@@ -933,9 +933,9 @@ public class AddPaymentActionHandler extends Action {
     List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
     for (PaymentProcessHook hook : hookList) {
       JSONObject resultHook = null;
-      if ("preProcess".equals(methodName)) {
+      if (StringUtils.equals(methodName, PRE_PROCESS_METHOD)) {
         resultHook = hook.preProcess(jsonParams);
-      } else if ("posProcess".equals(methodName)) {
+      } else if (StringUtils.equals(methodName, POST_PROCESS_METHOD)) {
         resultHook = hook.posProcess(jsonParams);
       }
 
