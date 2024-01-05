@@ -35,9 +35,9 @@ dependencies {
 
 }
 
-final String CURRENT_VERSION = "23.3.3"
-final String NEXT_RELEASE = "23.4.0"
-final String NEXT_HOTFIX = "23.3.4"
+final String CURRENT_VERSION = "23.4.0"
+final String NEXT_RELEASE = "24.1.0"
+final String NEXT_HOTFIX = "23.4.1"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
@@ -187,7 +187,7 @@ task upgradeCoreVersion {
         // Recalculate the constants CURRENT_VERSION, NEXT_RELEASE and NEXT_HOTFIX
         if (versionType == RELEASE) {
             nextHotfix = "${version[0]}.${version[1]}.1"
-            if (version[1] == 4) {
+            if (version[1] == "4") {
                 version[0]++
                 version[1] = 1
             } else {
