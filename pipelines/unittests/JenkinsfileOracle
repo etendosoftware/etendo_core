@@ -106,7 +106,9 @@ spec:
     stages {
         stage('Build Environment') {
             when {
-                branch 'develop'
+                expression { 
+                    env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
+                }
             }
             steps {
                 container('compiler') {
@@ -191,7 +193,9 @@ spec:
         stage ('Web Service Test Suite'){
             when {
                 allOf {
-                    branch 'develop'
+                    expression {
+                        env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
+                    }
                     expression {
                         env.STATUSBUILD == "1"
                     }
@@ -240,7 +244,9 @@ spec:
         stage('Clean Database') {
             when {
                 allOf {
-                    branch 'develop'
+                    expression {
+                        env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
+                    }
                     expression {
                         env.STATUSBUILD == "1"
                     }
@@ -275,7 +281,9 @@ spec:
         stage ('Standalone Test Suite'){
             when {
                 allOf {
-                    branch 'develop'
+                    expression {
+                        env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
+                    }
                     expression {
                         env.STATUSBUILD == "1"
                     }
@@ -322,7 +330,9 @@ spec:
         stage ('Spock Test') {
             when {
                 allOf {
-                    branch 'develop'
+                    expression {
+                        env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
+                    }
                     expression {
                         env.STATUSBUILD == "1"
                     }
@@ -369,7 +379,7 @@ spec:
         always {
             container('compiler') {
                 script {
-                    if (env.BRANCH_NAME == 'develop') {
+                    if (env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main') {
                         dir('etendo_core') {
                             sh "./gradlew --stop"
                         }
