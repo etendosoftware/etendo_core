@@ -152,8 +152,9 @@ public class CostingUtils {
         false);
     if (stdCost == null && pp == null) {
       throw new OBException(
-          "@NoPriceListOrStandardCostForProduct@ @Organization@: " + org.getName() + ", @Product@: "
-              + product.getSearchKey() + ", @Date@: " + OBDateUtils.formatDate(costDate));
+          "@NoPriceListOrStandardCostForProduct@ @Organization@: " + org.getName()
+              + ", @Product@: " + product.getName() + ", @ACCS_VALUE@: " + product.getSearchKey()
+              + ", @Date@: " + OBDateUtils.formatDate(costDate));
     } else if (stdCost != null && pp == null) {
       BigDecimal standardCost = getStandardCost(product, org, costDate, costDimensions, currency);
       return qty.abs().multiply(standardCost);
