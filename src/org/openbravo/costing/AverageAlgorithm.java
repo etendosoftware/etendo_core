@@ -83,8 +83,8 @@ public class AverageAlgorithm extends CostingAlgorithm {
     final Costing currentCosting = getProductCost();
     if (currentCosting == null) {
       throw new OBException("@NoAvgCostDefined@ @Organization@: " + costOrg.getName()
-          + ", @Product@: " + transaction.getProduct().getName() + ", @Date@: "
-          + OBDateUtils.formatDate(transaction.getTransactionProcessDate()));
+          + ", @Product@: " + transaction.getProduct().getName() + ", @ACCS_VALUE@: " + transaction.getProduct().getSearchKey()
+          + ", @Date@: " + OBDateUtils.formatDate(transaction.getTransactionProcessDate()));
     }
     BigDecimal cost = currentCosting.getCost();
     if (currentCosting.getCurrency() != costCurrency) {
