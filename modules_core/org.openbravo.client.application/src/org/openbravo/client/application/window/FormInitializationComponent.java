@@ -121,7 +121,7 @@ public class FormInitializationComponent extends BaseActionHandler {
   private static final String DOCUMENTNO = "documentno";
   private static final String MESSAGE = "MESSAGE";
   private static final String TEXT = "text";
-  private static final String OVER_WRITTEN_AUXILIARY_INPUTS = "overwrittenAuxiliaryInputs";
+  private static final String OVERWRITTEN_AUXILIARY_INPUTS = "overwrittenAuxiliaryInputs";
   private static final String ID = "id";
   private static final String AD_ORG_ID = "Ad_Org_Id";
   private static final String SEVERITY = "severity";
@@ -209,9 +209,9 @@ public class FormInitializationComponent extends BaseActionHandler {
       // whether a callout have modified them in a previous request with the exception of NEW. In
       // NEW mode auxiliary inputs are not recomputed if they were previously calculated by callouts
       // (within in the same request)
-      if (jsContent.has(OVER_WRITTEN_AUXILIARY_INPUTS) && StringUtils.equals(CHANGE, mode)) {
+      if (jsContent.has(OVERWRITTEN_AUXILIARY_INPUTS) && StringUtils.equals(CHANGE, mode)) {
         overwrittenAuxiliaryInputs = convertJSONArray(
-            jsContent.getJSONArray(OVER_WRITTEN_AUXILIARY_INPUTS));
+            jsContent.getJSONArray(OVERWRITTEN_AUXILIARY_INPUTS));
       }
 
       // If the table is not based in a db table, don't try to create a BaseOBObject
@@ -501,7 +501,7 @@ public class FormInitializationComponent extends BaseActionHandler {
             columnValues.get(INP + Sqlc.TransformaNombreColumna(auxIn.getName())));
       }
       finalObject.put("auxiliaryInputValues", jsonAuxiliaryInputValues);
-      finalObject.put(OVER_WRITTEN_AUXILIARY_INPUTS, new JSONArray(overwrittenAuxiliaryInputs));
+      finalObject.put(OVERWRITTEN_AUXILIARY_INPUTS, new JSONArray(overwrittenAuxiliaryInputs));
 
       if (StringUtils.equals(NEW, mode) || StringUtils.equals(EDIT, mode) || StringUtils.equals(SET_SESSION, mode)) {
         // We also include information related to validation dependencies
