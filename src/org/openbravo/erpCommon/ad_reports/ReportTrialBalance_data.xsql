@@ -83,7 +83,8 @@
     <SqlMethodComment></SqlMethodComment>
     <Sql>
       <![CDATA[
-         select a.id, ev.value as account_id, ev.name,
+         select a.id, ev.value as account_id,
+         COALESCE(ev_trl.name, ev.name) as name,
        a.initialamt as SALDO_INICIAL, a.amtacctcr, a.amtacctdr, A.INITIALAMT+A.AMTACCTDR-A.AMTACCTCR AS SALDO_FINAL, 
        a.groupbyid, CASE ad_column_identifier ('C_BPARTNER',groupbyid,TO_CHAR(?))
          WHEN '**' THEN ''
@@ -102,9 +103,10 @@
              AND 1=1
              AND F.ISACTIVE='Y'
              group by F.ACCOUNT_ID, f.c_bpartner_id
-         ) a, c_elementvalue ev
-          where a.id = ev.c_elementvalue_id
-          and ev.elementlevel = ?
+         ) a
+          LEFT JOIN c_elementvalue ev ON a.id = ev.c_elementvalue_id
+          LEFT JOIN c_elementvalue_trl ev_trl ON ev.c_elementvalue_id = ev_trl.c_elementvalue_id AND ev_trl.ad_language = ?
+          WHERE ev.elementlevel = ?
           AND 2=2
           and (a.initialamt <>0 or a.amtacctcr <>0 or a.amtacctdr<>0)
           order by  ev.value, ev.name, id, groupbyname 
@@ -133,6 +135,7 @@
     <Parameter name="mProductId" optional="true" type="argument" after="AND 1=1"><![CDATA[ AND F.M_PRODUCT_ID IN]]></Parameter>
     <Parameter name="cProjectId" optional="true" type="argument" after="AND 1=1"><![CDATA[ AND F.C_PROJECT_ID IN]]></Parameter>
     <Parameter name="acctSchema" optional="true" after="AND 1=1"><![CDATA[ AND F.C_ACCTSCHEMA_ID = ?]]></Parameter>
+    <Parameter name="adLanguage"/>
     <Parameter name="accountLevel"/>
     <Parameter name="grouByIdSql2" type="replace" optional="true" after="group by F.ACCOUNT_ID" text=", f.c_bpartner_id"/>
     <Parameter name="accountFrom" optional="true" after="AND 2=2"><![CDATA[AND EV.VALUE >= ?]]></Parameter>
