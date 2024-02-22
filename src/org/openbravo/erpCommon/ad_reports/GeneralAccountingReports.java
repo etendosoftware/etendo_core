@@ -380,12 +380,8 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
 
         for (int i = 0; i < strGroups.length; i++) {
           // All account tree is obtained
-          if (StringUtils.equals(vars.getLanguage(), "en_US")) {
-            elements[i] = AccountTreeData.select(readOnlyCP, strConCodigo, treeID);
-          } else {
-            elements[i] = AccountTreeData.selectTrl(readOnlyCP, strConCodigo, vars.getLanguage(),
-                treeID);
-          }
+          elements[i] = AccountTreeData.selectTrl(readOnlyCP, strConCodigo, vars.getLanguage(),
+              treeID);
           // For each account with movements in the year, debit and credit total amounts are
           // calculated according to fact_acct movements.
           AccountTreeData[] accounts = AccountTreeData.selectFactAcct(readOnlyCP,

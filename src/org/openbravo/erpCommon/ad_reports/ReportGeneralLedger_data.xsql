@@ -39,7 +39,7 @@
               ? AS groupby, '' as bpid, '' as bpname, '' as pdid, '' as pdname, '' as pjid, '' as pjname, factaccttype
               , 0 AS AMTACCTDRPREVSUM, 0 AS AMTACCTCRPREVSUM
           FROM
-            (SELECT FACT_ACCT.ACCTVALUE AS VALUE, FACT_ACCT.ACCTDESCRIPTION AS NAME,
+            (SELECT FACT_ACCT.ACCTVALUE AS VALUE, COALESCE(ev_trl.NAME, ev.NAME) AS NAME,
                 DATEACCT, AMTACCTDR, AMTACCTCR, FACT_ACCT_ID,
                 FACT_ACCT_GROUP_ID, FACT_ACCT.ACCOUNT_ID AS ID, FACT_ACCT.DESCRIPTION,
                 CASE ?
@@ -58,6 +58,8 @@
               LEFT JOIN C_BPARTNER ON FACT_ACCT.C_BPARTNER_ID = C_BPARTNER.C_BPARTNER_ID
               LEFT JOIN M_PRODUCT ON FACT_ACCT.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
               LEFT JOIN C_PROJECT ON FACT_ACCT.C_PROJECT_ID = C_PROJECT.C_PROJECT_ID
+              LEFT JOIN c_elementvalue ev ON FACT_ACCT.ACCOUNT_ID = ev.c_elementvalue_id
+              LEFT JOIN c_elementvalue_trl ev_trl ON ev.c_elementvalue_id = ev_trl.c_elementvalue_id AND ev_trl.ad_language = ?
             WHERE (?='Y' OR FACT_ACCT.ACCOUNT_ID IN (
                       SELECT c_elementvalue_id as name
                       FROM C_ELEMENTVALUE
@@ -85,6 +87,7 @@
     <Parameter name="groupbytext"/>
     <Parameter name="groupby"/>
     <Parameter name="groupby"/>
+    <Parameter name="adLanguage"/>
     <Parameter name="allaccounts"/>
     <Parameter name="accountFrom"/>
     <Parameter name="accountTo"/>

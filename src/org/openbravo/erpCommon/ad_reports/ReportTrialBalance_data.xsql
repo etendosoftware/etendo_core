@@ -147,7 +147,7 @@
     <SqlMethodComment></SqlMethodComment>
     <Sql>
       <![CDATA[
-      SELECT ID, ACCOUNT_ID, NAME,
+      SELECT ID, ACCOUNT_ID, COALESCE(C.NAMETRL, C.NAME) AS NAME,
              SUM(SALDO_INICIAL) AS SALDO_INICIAL,
              SUM(AMTACCTDR) AS AMTACCTDR,
              SUM(AMTACCTCR) AS AMTACCTCR,
@@ -170,17 +170,19 @@
                 ELSE ad_column_identifier(TO_CHAR('C_COSTCENTER'), TO_CHAR(ccid), TO_CHAR(?))
              END AS ccname
       FROM
-          ((SELECT ID, ACCOUNT_ID, NAME,
+          ((SELECT ID, ACCOUNT_ID, A.NAME AS NAME, A.NAMETRL,
                    0 AS AMTACCTDR, 0 AS AMTACCTCR, 
                    COALESCE(SUM(AMTACCTDR-AMTACCTCR), 0) AS SALDO_INICIAL,
                    bpid, pdid, pjid, ccid, bpname, pdname, ccname
           FROM
-              ((SELECT F.ACCOUNT_ID AS ID, EV.VALUE AS ACCOUNT_ID, EV.NAME AS NAME,
+              ((SELECT F.ACCOUNT_ID AS ID, EV.VALUE AS ACCOUNT_ID, EV.NAME AS NAME, EV_TRL.NAME AS NAMETRL,
                       F.AMTACCTDR, F.AMTACCTCR, F.FACTACCTTYPE, F.DATEACCT,
                       c_bpartner.c_bpartner_id as bpid, m_product.m_product_id as pdid, c_project.c_project_id as pjid,
                       c_costcenter.c_costcenter_id as ccid, c_bpartner.name as bpname, m_product.name as pdname,
                       c_costcenter.name as ccname
-               FROM C_ELEMENTVALUE EV, FACT_ACCT F
+               FROM C_ELEMENTVALUE EV
+                    LEFT JOIN c_elementvalue_trl ev_trl ON EV.C_ELEMENTVALUE_ID = ev_trl.C_ELEMENTVALUE_ID AND ev_trl.ad_language = ?
+                    LEFT JOIN FACT_ACCT F ON F.ACCOUNT_ID = EV.C_ELEMENTVALUE_ID
                     LEFT JOIN C_BPARTNER ON f.C_BPARTNER_ID = C_BPARTNER.C_BPARTNER_ID
                     LEFT JOIN M_PRODUCT ON f.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
                     LEFT JOIN C_PROJECT ON f.C_PROJECT_ID = C_PROJECT.C_PROJECT_ID
@@ -193,12 +195,14 @@
                      AND 1=1
                      AND F.ISACTIVE = 'Y')
                 UNION ALL
-                (SELECT F.ACCOUNT_ID AS ID, EV.VALUE AS ACCOUNT_ID, EV.NAME AS NAME,
+                (SELECT F.ACCOUNT_ID AS ID, EV.VALUE AS ACCOUNT_ID, EV.NAME AS NAME, EV_TRL.NAME AS NAMETRL,
                       F.AMTACCTDR, F.AMTACCTCR, F.FACTACCTTYPE, F.DATEACCT,
                       c_bpartner.c_bpartner_id as bpid, m_product.m_product_id as pdid, c_project.c_project_id as pjid,
                       c_costcenter.c_costcenter_id as ccid, c_bpartner.name as bpname, m_product.name as pdname,
                       c_costcenter.name as ccname
-               FROM C_ELEMENTVALUE EV, FACT_ACCT F
+                FROM C_ELEMENTVALUE EV
+                    LEFT JOIN c_elementvalue_trl ev_trl ON EV.C_ELEMENTVALUE_ID = ev_trl.C_ELEMENTVALUE_ID AND ev_trl.ad_language = ?
+                    LEFT JOIN FACT_ACCT F ON F.ACCOUNT_ID = EV.C_ELEMENTVALUE_ID
                     LEFT JOIN C_BPARTNER ON f.C_BPARTNER_ID = C_BPARTNER.C_BPARTNER_ID
                     LEFT JOIN M_PRODUCT ON f.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
                     LEFT JOIN C_PROJECT ON f.C_PROJECT_ID = C_PROJECT.C_PROJECT_ID
@@ -211,20 +215,22 @@
                      AND 3=3
                      AND F.ISACTIVE = 'Y'
                      )) A
-          GROUP BY ACCOUNT_ID, ID, bpid, pdid, pjid, ccid, bpname, pdname, ccname, NAME
+          GROUP BY ACCOUNT_ID, ID, bpid, pdid, pjid, ccid, bpname, pdname, ccname, A.NAME, A.NAMETRL
           HAVING SUM(AMTACCTDR) - SUM(AMTACCTCR) <> 0 )
           UNION
-          (SELECT ID, ACCOUNT_ID, NAME,
+          (SELECT ID, ACCOUNT_ID, B.NAME, B.NAMETRL,
                   SUM(AMTACCTDR) AS AMTACCTDR,
                   SUM(AMTACCTCR) AS AMTACCTCR,
                   0 AS SALDO_INICIAL, bpid, pdid, pjid, ccid, bpname, pdname, ccname
            FROM
-               (SELECT F.ACCOUNT_ID AS ID, EV.VALUE AS ACCOUNT_ID, EV.NAME AS NAME,
+               (SELECT F.ACCOUNT_ID AS ID, EV.VALUE AS ACCOUNT_ID, EV.NAME AS NAME, EV_TRL.NAME AS NAMETRL,
                        F.AMTACCTDR, F.AMTACCTCR, F.FACTACCTTYPE,
                        c_bpartner.c_bpartner_id as bpid, m_product.m_product_id as pdid, c_project.c_project_id as pjid,
                        c_costcenter.c_costcenter_id as ccid, c_bpartner.name as bpname, m_product.name as pdname, 
                        c_costcenter.name as ccname
-                FROM C_ELEMENTVALUE EV, FACT_ACCT F
+                FROM C_ELEMENTVALUE EV
+                     LEFT JOIN c_elementvalue_trl ev_trl ON EV.C_ELEMENTVALUE_ID = ev_trl.C_ELEMENTVALUE_ID AND ev_trl.ad_language = ?
+                     LEFT JOIN FACT_ACCT F ON F.ACCOUNT_ID = EV.C_ELEMENTVALUE_ID
                      LEFT JOIN C_BPARTNER ON f.C_BPARTNER_ID = C_BPARTNER.C_BPARTNER_ID
                      LEFT JOIN M_PRODUCT ON f.M_PRODUCT_ID = M_PRODUCT.M_PRODUCT_ID
                      LEFT JOIN C_PROJECT ON f.C_PROJECT_ID = C_PROJECT.C_PROJECT_ID
@@ -238,11 +244,12 @@
                       AND F.FACTACCTTYPE <> 'R'
                       AND F.FACTACCTTYPE <> 'C'
                       AND F.ISACTIVE = 'Y') B
-           GROUP BY ACCOUNT_ID, ID, NAME, bpname, bpid, pdname, pdid, pjid, ccid, ccname )) C
-      GROUP BY ACCOUNT_ID, ID, NAME, bpname, bpid, pdname, pdid, pjid, ccid, ccname
+           GROUP BY ACCOUNT_ID, ID, B.NAME, B.NAMETRL, bpname, bpid, pdname, pdid, pjid, ccid, ccname )) C
+      GROUP BY ACCOUNT_ID, ID, NAME, NAMETRL, bpname, bpid, pdname, pdid, pjid, ccid, ccname
       ORDER BY ACCOUNT_ID, ID, NAME, bpname, bpid, pdname, pdid, pjid, ccid, ccname
       ]]></Sql>
     <Field name="rownum" value="count"/>
+    <Parameter name="adLanguage"/>
     <Parameter name="adLanguage"/>
     <Parameter name="adLanguage"/>
     <Parameter name="adLanguage"/>
@@ -263,6 +270,7 @@
     <Parameter name="cProjectId" optional="true" type="argument" after="AND 1=1"><![CDATA[ AND F.C_PROJECT_ID IN]]></Parameter>
     <Parameter name="acctSchema" optional="true" after="AND 1=1"><![CDATA[ AND F.C_ACCTSCHEMA_ID = ?]]></Parameter>
     <!--  -->
+    <Parameter name="adLanguage"/>
     <Parameter name="accountLevel"/>
     <Parameter name="orgFamily" type="replace" optional="true" after="   f.AD_ORG_ID IN(" text="'2'"/>
     <Parameter name="adUserClient" type="replace" optional="true" after="   F.AD_CLIENT_ID IN (" text="'1'"/>
@@ -276,6 +284,7 @@
     <Parameter name="acctSchema" optional="true" after="AND 3=3"><![CDATA[ AND F.C_ACCTSCHEMA_ID = ?]]></Parameter>
     <Parameter name="factaccttype" optional="true" after="AND 3=3"><![CDATA[ AND F.FACTACCTTYPE = ?]]></Parameter>
     <!--  -->
+    <Parameter name="adLanguage"/>
     <Parameter name="accountLevel"/>
     <Parameter name="orgFamily" type="replace" optional="true" after="AND  f.AD_ORG_ID IN(" text="'2'"/>
     <Parameter name="adUserClient" type="replace" optional="true" after="AND  F.AD_CLIENT_ID IN (" text="'1'"/>
