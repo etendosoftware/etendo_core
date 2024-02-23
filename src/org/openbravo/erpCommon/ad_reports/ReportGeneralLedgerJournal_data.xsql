@@ -26,7 +26,7 @@
   <SqlClassComment></SqlClassComment>
   <SqlMethod name="select" type="preparedStatement" return="scrollable">
     <SqlMethodComment></SqlMethodComment>
-  <Sql>
+    <Sql>
     <![CDATA[
       SELECT *
       FROM ( SELECT '0' AS RN1, B.* FROM (

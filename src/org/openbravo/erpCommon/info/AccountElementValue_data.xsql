@@ -41,7 +41,7 @@
 	            			  WHERE C_ACCTSCHEMA_ELEMENT.C_ELEMENT_ID = C.C_ELEMENT_ID
 	            			  AND 1=1)
 	            AND 2=2
-              AND C.ELEMENTLEVEL = 'S'
+                    AND C.ELEMENTLEVEL = 'S'
 	            AND C.AD_ORG_ID = O.AD_ORG_ID
 	            AND C.ISACTIVE = 'Y'
 	            AND C.AD_Client_ID IN ('1')
