@@ -322,7 +322,7 @@ public class AccountElementValue extends HttpSecureAppServlet {
           } else {
             pgLimit = TableSQLData.maxRowsPerGridPage + " OFFSET " + offset;
           }
-          strNumRows = AccountElementValueData.countRows(this, rownum, strAcctSchema, strValue,
+          strNumRows = AccountElementValueData.countRows(this, rownum, vars.getLanguage(), strAcctSchema, strValue,
               strName, strOrganization, strAccountElementValue,
               Utility.getContext(this, vars, "#User_Client", "AccountElementValue"),
               Utility.getContext(this, vars, "#AccessibleOrgTree", "AccountElementValue"), pgLimit,
