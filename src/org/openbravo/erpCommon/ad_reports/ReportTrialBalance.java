@@ -97,11 +97,11 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
           "ReportTrialBalance|includeZeroFigures", "");
       String strcElementValueFromDes = "", strcElementValueToDes = "";
       if (StringUtils.isNotEmpty(strcElementValueFrom)) {
-        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueFrom);
       }
       if (StringUtils.isNotEmpty(strcElementValueTo)) {
-        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueTo);
       }
       strcElementValueFromDes = (strcElementValueFromDes == null) ? "" : strcElementValueFromDes;
@@ -141,11 +141,11 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
       String strcElementValueFromDes = "", strcElementValueToDes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcElementValueFrom)) {
-        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueFrom);
       }
       if (StringUtils.isNotEmpty(strcElementValueTo)) {
-        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueTo);
       }
       vars.setSessionValue("inpElementValueIdFrom_DES", strcElementValueFromDes);
@@ -171,11 +171,11 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
       String strcElementValueFromDes = "", strcElementValueToDes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcElementValueFrom)) {
-        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueFrom);
       }
       if (StringUtils.isNotEmpty(strcElementValueTo)) {
-        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueTo);
       }
       strcElementValueFromDes = (strcElementValueFromDes == null) ? "" : strcElementValueFromDes;

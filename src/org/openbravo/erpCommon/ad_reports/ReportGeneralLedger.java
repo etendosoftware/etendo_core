@@ -82,11 +82,11 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
       String strcelementvaluefromdes = "", strcelementvaluetodes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvaluefrom);
       }
       if (StringUtils.isNotEmpty(strcelementvalueto)) {
-        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvalueto);
       }
       strcelementvaluefromdes = (StringUtils.equals(strcelementvaluefromdes, "null")) ? ""
@@ -127,11 +127,11 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
       String strcelementvaluefromdes = "", strcelementvaluetodes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvaluefrom);
       }
       if (StringUtils.isNotEmpty(strcelementvalueto)) {
-        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvalueto);
       }
       vars.setSessionValue("inpElementValueIdFrom_DES", strcelementvaluefromdes);
@@ -310,7 +310,7 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
         if (StringUtils.isEmpty(localStrcelementvalueto)) {
           localStrcelementvalueto = strcelementvaluefrom;
           localStrcelementvaluetodes = ReportGeneralLedgerData
-              .selectSubaccountDescription(readOnlyCP, localStrcelementvalueto);
+              .selectSubaccountDescription(readOnlyCP, vars.getLanguage(), localStrcelementvalueto);
           vars.setSessionValue("inpElementValueIdTo_DES", localStrcelementvaluetodes);
 
         }

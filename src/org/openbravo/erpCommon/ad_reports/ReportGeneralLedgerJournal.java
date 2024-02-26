@@ -156,11 +156,11 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
       String strcelementvaluefromdes = "", strcelementvaluetodes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvaluefrom);
       }
       if (StringUtils.isNotEmpty(strcelementvalueto)) {
-        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvalueto);
       }
       strcelementvaluefromdes = (StringUtils.equals(strcelementvaluefromdes, "null")) ? ""
@@ -296,11 +296,11 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
         String strcelementvaluefromdes = "", strcelementvaluetodes = "";
         ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
         if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-          strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+          strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
               strcelementvaluefrom);
         }
         if (StringUtils.isNotEmpty(strcelementvalueto)) {
-          strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+          strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
               strcelementvalueto);
         }
         vars.setSessionValue("inpElementValueIdFrom_DES", strcelementvaluefromdes);

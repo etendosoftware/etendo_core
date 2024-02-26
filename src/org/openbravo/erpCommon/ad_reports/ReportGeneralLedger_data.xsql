@@ -403,10 +403,15 @@
   <SqlMethod name="selectSubaccountDescription" type="preparedStatement" return="string">
     <SqlMethodComment></SqlMethodComment>
     <Sql><![CDATA[
-      SELECT COALESCE(TO_CHAR(NAME),TO_CHAR(''))
-      FROM C_ELEMENTVALUE
-      WHERE C_ELEMENTVALUE_ID = ?
+      SELECT COALESCE(TO_CHAR(ev_trl.NAME), TO_CHAR(ev.NAME), '') AS NAME
+      FROM C_ELEMENTVALUE ev
+        LEFT JOIN C_ELEMENTVALUE_TRL ev_trl
+          ON ev.C_ELEMENTVALUE_ID = ev_trl.C_ELEMENTVALUE_ID
+          AND ev_trl.AD_LANGUAGE = ?
+      WHERE
+        ev.C_ELEMENTVALUE_ID = ?
     ]]></Sql>
+    <Parameter name="adLanguage"/>
     <Parameter name="elementValueId"/>
   </SqlMethod>
 </SqlClass>
