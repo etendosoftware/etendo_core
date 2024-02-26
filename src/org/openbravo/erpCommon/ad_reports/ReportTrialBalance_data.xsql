@@ -24,26 +24,30 @@
     <SqlMethodComment></SqlMethodComment>
     <Sql>
     <![CDATA[
-      SELECT MAX(PARENT_ID) AS PARENT_ID, ID, NAME, ACCOUNT_ID, ELEMENTLEVEL, SUM(AMTACCTDR) AS AMTACCTDR, 
-      SUM(AMTACCTCR) AS AMTACCTCR, 0 AS SALDO_INICIAL,0 AS TOTALAMTACCTDR, 0 AS TOTALAMTACCTCR,
+      SELECT MAX(A.PARENT_ID) AS PARENT_ID, A.ID, COALESCE(A.NAME_TRANSLATED, A.NAME) AS NAME, A.ACCOUNT_ID, A.ELEMENTLEVEL, SUM(A.AMTACCTDR) AS AMTACCTDR,
+      SUM(A.AMTACCTCR) AS AMTACCTCR, 0 AS SALDO_INICIAL,0 AS TOTALAMTACCTDR, 0 AS TOTALAMTACCTCR,
       0 AS SALDO_FINAL, TO_DATE(?) AS DATE_FROM, TO_DATE(?) AS DATE_TO, ? AS AD_ORG_ID,
       '' AS BP, '' AS PADRE, '' AS groupbyname, '' AS groupbyid, '' AS groupbytext,
       '' as bpid, '' as bpname, '' as pdid, '' as pdname, '' as pjid, '' as pjname, '' as ccid, '' as ccname
       FROM
       (SELECT AD_TREENODE.PARENT_ID, C_ELEMENTVALUE.C_ELEMENTVALUE_ID AS ID, C_ELEMENTVALUE.ELEMENTLEVEL, 
-      C_ELEMENTVALUE.NAME AS NAME, C_ELEMENTVALUE.VALUE AS ACCOUNT_ID, 0 AS AMTACCTDR, 
+      C_ELEMENTVALUE.NAME, ev_trl.NAME AS NAME_TRANSLATED, C_ELEMENTVALUE.VALUE AS ACCOUNT_ID, 0 AS AMTACCTDR, 
       0 AS AMTACCTCR
-      FROM AD_TREENODE, C_ELEMENTVALUE
+      FROM AD_TREENODE 
+      JOIN C_ELEMENTVALUE ON AD_TREENODE.NODE_ID = C_ELEMENTVALUE.C_ELEMENTVALUE_ID 
+      LEFT JOIN c_elementvalue_trl ev_trl ON C_ELEMENTVALUE.C_ELEMENTVALUE_ID = ev_trl.c_elementvalue_id AND ev_trl.ad_language = ?
       WHERE AD_TREENODE.NODE_ID = C_ELEMENTVALUE.C_ELEMENTVALUE_ID
       AND AD_TREENODE.AD_TREE_ID = ?
       AND AD_TREENODE.ISACTIVE = 'Y'
       AND C_ELEMENTVALUE.ISACTIVE = 'Y'
       AND (select max(c_element_id) from c_acctschema_element where c_acctschema_id = ? and ELEMENTTYPE = 'AC') = C_ELEMENTVALUE.C_ELEMENT_ID
       UNION		
-      SELECT '0' AS PARENT_ID, F.ACCOUNT_ID AS ID, EV.ELEMENTLEVEL, EV.NAME AS NAME, EV.VALUE AS ACCOUNT_ID, 
+      SELECT '0' AS PARENT_ID, F.ACCOUNT_ID AS ID, EV.ELEMENTLEVEL, EV.NAME, ev_trl.NAME AS NAME_TRANSLATED, EV.VALUE AS ACCOUNT_ID, 
       SUM((CASE f.FACTACCTTYPE WHEN ? THEN 0 ELSE F.AMTACCTDR END)) AS AMTACCTDR, 
       SUM((CASE f.FACTACCTTYPE WHEN ? THEN 0 ELSE f.AMTACCTCR END)) AS AMTACCTCR 
-      FROM FACT_ACCT F, C_ELEMENTVALUE EV
+      FROM FACT_ACCT F 
+      JOIN C_ELEMENTVALUE EV ON F.ACCOUNT_ID = EV.C_ELEMENTVALUE_ID 
+      LEFT JOIN c_elementvalue_trl ev_trl ON EV.C_ELEMENTVALUE_ID = ev_trl.c_elementvalue_id AND ev_trl.ad_language = ?
       WHERE F.ACCOUNT_ID = EV.C_ELEMENTVALUE_ID
       AND f.AD_ORG_ID IN('2')
       AND F.AD_CLIENT_ID IN ('1')
@@ -53,18 +57,20 @@
       AND F.FACTACCTTYPE <> 'C'
       AND F.FACTACCTTYPE <> 'O'
       AND F.ISACTIVE = 'Y'
-      GROUP BY ACCOUNT_ID,EV.NAME, EV.VALUE, EV.ELEMENTLEVEL) A
-      GROUP BY ID, NAME, ACCOUNT_ID, ELEMENTLEVEL
+      GROUP BY F.ACCOUNT_ID, EV.ELEMENTLEVEL, EV.NAME, ev_trl.NAME, EV.VALUE) A
+      GROUP BY A.ID, A.NAME_TRANSLATED, A.NAME,  A.ACCOUNT_ID, A.ELEMENTLEVEL 
       ORDER BY PARENT_ID, ID, NAME, ACCOUNT_ID, ELEMENTLEVEL
       ]]></Sql>
     <Field name="rownum" value="count"/>
     <Parameter name="dateFrom"/>
     <Parameter name="dateTo"/>
     <Parameter name="org"/>
+    <Parameter name="adLanguage"/>
     <Parameter name="treeAcct"/>
     <Parameter name="acctSchema"/>
     <Parameter name="factaccttype"/>
     <Parameter name="factaccttype"/>
+    <Parameter name="adLanguage"/>
     <Parameter name="orgFamily" type="replace" optional="true" after="f.AD_ORG_ID IN(" text="'2'"/>
     <Parameter name="adUserClient" type="replace" optional="true" after="F.AD_CLIENT_ID IN (" text="'1'"/>
     <Parameter name="adUserOrg" type="replace" optional="true" after="F.AD_ORG_ID IN(" text="'1'"/>

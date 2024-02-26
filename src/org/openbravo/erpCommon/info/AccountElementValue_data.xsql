@@ -30,7 +30,7 @@
       		SELECT * FROM ( SELECT '0' AS RN1, '' AS ID, A.* FROM (
 	            SELECT C.C_ELEMENTVALUE_ID, C.VALUE as value, COALESCE(CT.NAME, C.NAME) as name, C.DESCRIPTION,
 	            C.AD_ORG_ID, (O.VALUE || ' - ' || O.NAME) AS AD_ORG_ID_D,
-                C.C_ELEMENTVALUE_ID || '@_##_@' || C.NAME AS rowkey
+                C.C_ELEMENTVALUE_ID || '@_##_@' || COALESCE(CT.NAME, C.NAME) AS rowkey
 	            FROM C_ELEMENTVALUE C
                 LEFT JOIN C_ELEMENTVALUE_TRL CT
                 ON C.C_ELEMENTVALUE_ID = CT.C_ELEMENTVALUE_ID 

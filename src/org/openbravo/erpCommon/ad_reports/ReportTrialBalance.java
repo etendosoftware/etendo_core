@@ -769,7 +769,7 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
     ReportTrialBalanceData[] data = null;
     ReportTrialBalanceData[] dataAux = null;
     ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
-    dataAux = ReportTrialBalanceData.select(readOnlyCP, strDateFrom, strDateTo, strOrg,
+    dataAux = ReportTrialBalanceData.select(readOnlyCP, strDateFrom, strDateTo, strOrg, vars.getLanguage(),
         strTreeAccount, strcAcctSchemaId, StringUtils.equals(strNotInitialBalance, "Y") ? "O" : "P",
         strOrgFamily, Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportTrialBalance"),
         Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportTrialBalance"),

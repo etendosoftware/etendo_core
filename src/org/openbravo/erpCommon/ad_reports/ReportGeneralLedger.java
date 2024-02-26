@@ -698,7 +698,7 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
 
     ReportGeneralLedgerData data = null;
     try {
-      data = ReportGeneralLedgerData.selectXLS2(readOnlyCP, strAllaccounts, strcelementvaluefrom,
+      data = ReportGeneralLedgerData.selectXLS2(readOnlyCP, vars.getLanguage(), strAllaccounts, strcelementvaluefrom,
           localStrcelementvalueto,
           Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
           Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportGeneralLedger"),
