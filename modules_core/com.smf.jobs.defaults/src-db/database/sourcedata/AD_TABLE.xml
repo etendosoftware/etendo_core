@@ -107,11 +107,11 @@ where (
             and ol.orderedQuantity != ol.invoicedQuantity
             )
     )
-	or
-	(
-	    ic.term = 'O'
-	    and ic.orderedQuantity = ic.deliveredQuantity
-	)
+    or
+    (
+        ic.term = 'O'
+        and ic.orderedQuantity = ic.deliveredQuantity
+    )
 )
 and @additional_filters@]]></HQLQUERY>
 <!--903BE70A11F849F19BAD389E9A84BDF9-->  <ENTITY_ALIAS><![CDATA[ic]]></ENTITY_ALIAS>
