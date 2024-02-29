@@ -123,7 +123,7 @@ public class SL_Order_Product extends SimpleCallout {
       calculatedDiscount = price.subtract(priceActual)
               .multiply(BigDecimal.valueOf(100))
               .divide(price, precision)
-              .setScale(2, RoundingMode.HALF_UP);
+              .setScale(precision, RoundingMode.HALF_UP);
     }
     if (calculatedDiscount.compareTo(info.getBigDecimalParameter("inpdiscount")) != 0) {
       info.addResult("inpdiscount", calculatedDiscount);

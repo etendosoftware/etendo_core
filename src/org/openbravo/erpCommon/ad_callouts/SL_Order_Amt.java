@@ -229,7 +229,7 @@ public class SL_Order_Amt extends SimpleCallout {
     BigDecimal calculatedDiscount = price.subtract(priceToSubtract)
         .multiply(BigDecimal.valueOf(100))
         .divide(BigDecimal.ZERO.compareTo(price) == 0 ? BigDecimal.ONE : price, stdPrecision)
-        .setScale(2, RoundingMode.HALF_UP);
+        .setScale(pricePrecision, RoundingMode.HALF_UP);
 
     if ((StringUtils.equals(strChanged, "inppricelist")
         || StringUtils.equals(strChanged, "inppriceactual")
