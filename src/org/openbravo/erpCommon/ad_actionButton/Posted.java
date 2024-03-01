@@ -18,9 +18,10 @@
  */
 package org.openbravo.erpCommon.ad_actionButton;
 
+import static org.openbravo.erpCommon.ad_actionButton.ActionButtonUtility.processButton;
+
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
 import java.util.HashMap;
 
 import javax.servlet.ServletConfig;
@@ -28,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -35,20 +37,18 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.erpCommon.ad_forms.AcctServer;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.financial.ResetAccounting;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.ui.Process;
 import org.openbravo.model.financialmgmt.accounting.AccountingFact;
-import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.xmlEngine.XmlDocument;
-
-import static org.openbravo.erpCommon.ad_actionButton.ActionButtonUtility.processButton;
 
 public class Posted extends HttpSecureAppServlet {
   private static final long serialVersionUID = 1L;
+  private static final String SUCCESS = "Success";
+  public static final String REPORT_GENERAL_LEDGER = "ReportGeneralLedger";
 
   @Override
   public void init(ServletConfig config) {
@@ -106,16 +106,14 @@ public class Posted extends HttpSecureAppServlet {
       if (log4j.isDebugEnabled()) {
         log4j.debug("SAVE, strPosted: " + strPosted + " Elim " + strEliminar);
       }
-      if (!"Y".equals(strPosted)) {
+      if (!StringUtils.equals("Y", strPosted)) {
         OBError messageResult = processButton(vars, strKey, strTableId, vars.getOrg(), this);
-        if (!"Success".equals(messageResult.getType())) {
+        if (!StringUtils.equals(SUCCESS, messageResult.getType())) {
           vars.setMessage(strTabId, messageResult);
           printPageClosePopUp(response, vars);
         } else {
           PostedData[] data = PostedData.select(this, strKey, strTableId);
-          if (data == null || data.length == 0 || data[0].id.equals("")) {
-            // vars.setSessionValue(strWindowId + "|" + strTabName +
-            // ".message", messageResult);
+          if (data.length == 0 || StringUtils.isEmpty(data[0].id)) {
             vars.setMessage(strTabId, messageResult);
             printPageClosePopUp(response, vars);
           } else {
@@ -132,10 +130,9 @@ public class Posted extends HttpSecureAppServlet {
             } finally {
               OBContext.restorePreviousMode();
             }
-            PostedData[] data2 = null;
-            data2 = PostedData.selectAccSchemas(this, "ACCTDESCRIPTION",
-                Utility.getContext(this, vars, "#User_Client", "ReportGeneralLedger"),
-                Utility.getContext(this, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
+            PostedData[] data2 = PostedData.selectAccSchemas(this, "ACCTDESCRIPTION",
+                Utility.getContext(this, vars, "#User_Client", REPORT_GENERAL_LEDGER),
+                Utility.getContext(this, vars, "#AccessibleOrgTree", REPORT_GENERAL_LEDGER),
                 strTableId, strKey, vars.getLanguage());
 
             String accSchemas = "";
@@ -192,8 +189,8 @@ public class Posted extends HttpSecureAppServlet {
           }
           PostedData[] data2 = null;
           data2 = PostedData.selectAccSchemas(this, "ACCTDESCRIPTION",
-              Utility.getContext(this, vars, "#User_Client", "ReportGeneralLedger"),
-              Utility.getContext(this, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
+              Utility.getContext(this, vars, "#User_Client", REPORT_GENERAL_LEDGER),
+              Utility.getContext(this, vars, "#AccessibleOrgTree", REPORT_GENERAL_LEDGER),
               strTableId, strKey, vars.getLanguage());
 
           String accSchemas = "";
@@ -230,9 +227,18 @@ public class Posted extends HttpSecureAppServlet {
           log4j.debug("SAVE, delete");
         }
         long start = System.currentTimeMillis();
+        OBError myMessage = new OBError();
+        myMessage.setType(SUCCESS);
         PostedData[] data = PostedData.select(this, strKey, strTableId);
-        OBError myMessage = ActionButtonUtility.resetAccounting(vars, data[0].client, data[0].org, strTableId, strKey,
-            data[0].dateacct, new DalConnectionProvider());
+        try {
+          HashMap<String, Integer> hm = ResetAccounting.delete(data[0].client, data[0].org, strTableId, strKey, "", "");
+          myMessage.setMessage(Utility.parseTranslation(this, vars, vars.getLanguage(),
+              "@UnpostedDocuments@ = " + hm.get("updated") + " , @DeletedEntries@ = " + hm.get("deleted")));
+          myMessage.setTitle(Utility.messageBD(this, SUCCESS, vars.getLanguage()));
+        } catch (OBException e) {
+          myMessage.setType("Error");
+          myMessage.setMessage(Utility.parseTranslation(this, vars, vars.getLanguage(), e.getMessage()));
+        }
         log4j.debug("Total deleting /milis: " + (System.currentTimeMillis() - start));
         vars.setMessage(strTabId, myMessage);
         printPageClosePopUp(response, vars);
@@ -252,7 +258,8 @@ public class Posted extends HttpSecureAppServlet {
     }
 
     ActionButtonDefaultData[] data = null;
-    String strHelp = "", strDescription = "";
+    String strHelp = "";
+    String strDescription = "";
     if (vars.getLanguage().equals("en_US")) {
       data = ActionButtonDefaultData.select(this, strProcessId);
     } else {
@@ -263,12 +270,12 @@ public class Posted extends HttpSecureAppServlet {
       strDescription = data[0].description;
       strHelp = data[0].help;
     }
-    String[] discard = {"", ""};
+    String[] discard = { "", "" };
     if (strHelp.equals("")) {
-      discard[0] = new String("helpDiscard");
+      discard[0] = "helpDiscard";
     }
     if (!"Y".equals(strPosted)) {
-      discard[1] = new String("selEliminar");
+      discard[1] = "selEliminar";
     }
     XmlDocument xmlDocument = xmlEngine
         .readXmlTemplate("org/openbravo/erpCommon/ad_actionButton/Posted", discard)
