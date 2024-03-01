@@ -79,7 +79,7 @@ public class Posted extends HttpSecureAppServlet {
           strWindowId + "|FORCED_TABLE_ID", "");
       String strTabName = vars.getGlobalVariable("inpTabName", "Posted|tabName", "");
       String strModify = "N";
-      if (strPosted.equals("Y")) {
+      if (StringUtils.equals("Y", strPosted)) {
         final Table table = OBDal.getInstance().get(Table.class, strTableId);
         final OBCriteria<AccountingFact> fact = OBDal.getInstance()
             .createCriteria(AccountingFact.class);
@@ -167,9 +167,9 @@ public class Posted extends HttpSecureAppServlet {
             }
           }
         }
-      } else if (strEliminar.equals("N")) {
+      } else if (StringUtils.equals("N", strEliminar)) {
         PostedData[] data = PostedData.select(this, strKey, strTableId);
-        if (data == null || data.length == 0 || data[0].id.equals("")) {
+        if (data.length == 0 || StringUtils.isEmpty(data[0].id)) {
           vars.setMessage(strTabId,
               Utility.translateError(this, vars, vars.getLanguage(), "NoFactAcct"));
           printPageClosePopUp(response, vars);
@@ -260,21 +260,21 @@ public class Posted extends HttpSecureAppServlet {
     ActionButtonDefaultData[] data = null;
     String strHelp = "";
     String strDescription = "";
-    if (vars.getLanguage().equals("en_US")) {
+    if (StringUtils.equals("en_US", vars.getLanguage())) {
       data = ActionButtonDefaultData.select(this, strProcessId);
     } else {
       data = ActionButtonDefaultData.selectLanguage(this, vars.getLanguage(), strProcessId);
     }
 
-    if (data != null && data.length != 0) {
+    if (data.length != 0) {
       strDescription = data[0].description;
       strHelp = data[0].help;
     }
     String[] discard = { "", "" };
-    if (strHelp.equals("")) {
+    if (StringUtils.isEmpty(strHelp)) {
       discard[0] = "helpDiscard";
     }
-    if (!"Y".equals(strPosted)) {
+    if (!StringUtils.equals("Y", strPosted)) {
       discard[1] = "selEliminar";
     }
     XmlDocument xmlDocument = xmlEngine
@@ -284,7 +284,7 @@ public class Posted extends HttpSecureAppServlet {
     xmlDocument.setParameter("window", windowId);
     xmlDocument.setParameter("tab", strTab);
     xmlDocument.setParameter("process", strProcessId);
-    if ("".equals(strForcedTableId) || strForcedTableId == null) {
+    if (StringUtils.isEmpty(strForcedTableId)) {
       xmlDocument.setParameter("table", strTableId);
     } else {
       xmlDocument.setParameter("table", strForcedTableId);
