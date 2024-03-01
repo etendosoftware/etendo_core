@@ -49,6 +49,7 @@ import static org.openbravo.erpCommon.ad_actionButton.ActionButtonUtility.proces
 
 public class Posted extends HttpSecureAppServlet {
   private static final long serialVersionUID = 1L;
+  private static final String SUCCESS = "Success";
 
   @Override
   public void init(ServletConfig config) {
@@ -108,7 +109,7 @@ public class Posted extends HttpSecureAppServlet {
       }
       if (!"Y".equals(strPosted)) {
         OBError messageResult = processButton(vars, strKey, strTableId, vars.getOrg(), this);
-        if (!"Success".equals(messageResult.getType())) {
+        if (!SUCCESS.equals(messageResult.getType())) {
           vars.setMessage(strTabId, messageResult);
           printPageClosePopUp(response, vars);
         } else {
@@ -230,9 +231,17 @@ public class Posted extends HttpSecureAppServlet {
           log4j.debug("SAVE, delete");
         }
         long start = System.currentTimeMillis();
+        OBError myMessage = new OBError();
+        myMessage.setType(SUCCESS);
         PostedData[] data = PostedData.select(this, strKey, strTableId);
-        OBError myMessage = ActionButtonUtility.resetAccounting(vars, data[0].client, data[0].org, strTableId, strKey,
-            data[0].dateacct, new DalConnectionProvider());
+        try{
+          HashMap<String, Integer> hm = ResetAccounting.delete(data[0].client, data[0].org, strTableId, strKey, "", "");
+          myMessage.setMessage(Utility.parseTranslation(this, vars, vars.getLanguage(), "@UnpostedDocuments@ = " + hm.get("updated") + " , @DeletedEntries@ = " + hm.get("deleted")));
+          myMessage.setTitle(Utility.messageBD(this, SUCCESS, vars.getLanguage()));
+        } catch (OBException e) {
+          myMessage.setType("Error");
+          myMessage.setMessage(Utility.parseTranslation(this, vars, vars.getLanguage(), e.getMessage()));
+        }
         log4j.debug("Total deleting /milis: " + (System.currentTimeMillis() - start));
         vars.setMessage(strTabId, myMessage);
         printPageClosePopUp(response, vars);
