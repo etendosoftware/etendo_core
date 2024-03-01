@@ -11,6 +11,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.ProcessInvoiceUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
+import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.common.invoice.Invoice;
@@ -48,9 +49,21 @@ public class ProcessInvoices extends Action {
             log.debug(parameters.toString());
 
             for (Invoice invoice : input) {
-                var message = processInvoice(invoice, documentAction, voidDate, voidAcctDate);
+                Boolean lockedRecord=false;
+                //The following condition checks if the record is locked, this makes sense for Oracle databases
+                if (invoice.isProcessNow() && "CO".equals(documentAction)){
+                    lockedRecord=true;
+                }
+                //In case of a locked record, the docAction will be forced to XL, this will unlock the record and proceed to complete
+                var message = processInvoice(invoice,lockedRecord ? "XL": documentAction, voidDate, voidAcctDate);
+
                 if (message.getType().equals("Error")) {
                     errors++;
+                }
+                if (!message.getType().equals("Error") && lockedRecord){
+                    invoice.setAPRMProcessinvoice("--");
+                    OBDal.getInstance().save(invoice);
+                    OBDal.getInstance().flush();
                 }
                 if (message.getMessage().isBlank()) {
                     processMessages.append(invoice.getDocumentNo()).append(": ").append(message.getTitle()).append("\n");
