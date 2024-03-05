@@ -3,6 +3,7 @@ package com.smf.jobs.defaults;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 import com.smf.jobs.Action;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,21 +50,20 @@ public class ProcessInvoices extends Action {
             log.debug(parameters.toString());
 
             for (Invoice invoice : input) {
-                Boolean lockedRecord=false;
+                boolean lockedRecord=false;
                 //The following condition checks if the record is locked, this makes sense for Oracle databases
-                if (invoice.isProcessNow() && "CO".equals(documentAction)){
+                if (invoice.isProcessNow() && StringUtils.equals("CO",documentAction)){
                     lockedRecord=true;
                 }
                 //In case of a locked record, the docAction will be forced to XL, this will unlock the record and proceed to complete
                 var message = processInvoice(invoice,lockedRecord ? "XL": documentAction, voidDate, voidAcctDate);
 
-                if (message.getType().equals("Error")) {
+                if (StringUtils.equals("Error", message.getType())) {
                     errors++;
                 }
-                if (!message.getType().equals("Error") && lockedRecord){
+                if (lockedRecord && !StringUtils.equals("Error", message.getType())){
                     invoice.setAPRMProcessinvoice("--");
                     OBDal.getInstance().save(invoice);
-                    OBDal.getInstance().flush();
                 }
                 if (message.getMessage().isBlank()) {
                     processMessages.append(invoice.getDocumentNo()).append(": ").append(message.getTitle()).append("\n");
