@@ -68,6 +68,16 @@ public class SecureDataToJson extends DataToJsonConverter {
 			final boolean isDerivedReadable = OBContext.getOBContext().getEntityAccessChecker()
 					.isDerivedReadable(bob.getEntity());
 
+			// validate if this entity is readable.
+			if (OBContext.getOBContext().isInAdministratorMode()) {
+				boolean orgClientAccessCheck = OBContext.getOBContext().doOrgClientAccessCheck();
+				OBContext.restorePreviousMode();
+				OBContext.getOBContext().getEntityAccessChecker().checkReadable(bob.getEntity());
+				OBContext.setAdminMode(orgClientAccessCheck);
+			} else {
+				OBContext.getOBContext().getEntityAccessChecker().checkReadable(bob.getEntity());
+			}
+
 			for (Property property : bob.getEntity().getProperties()) {
 				String selectedPropertyPrefix = (parentProperty != null ? parentProperty + "." : "");
 				String propertyWithParent = selectedPropertyPrefix + property.getName();
