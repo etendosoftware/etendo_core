@@ -22,7 +22,9 @@ package org.openbravo.common.actionhandler.createlinesfromprocess;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -149,7 +151,84 @@ public class CreateInvoiceLinesFromProcess {
         linesToProcess.put(selectedLine);
       }
     }
-    return linesToProcess;
+    return orderByBOM(linesToProcess);
+  }
+
+  /**
+   * Orders a JSONArray of lines to process based on the parent_bom_id of each JSONObject.
+   *
+   * @param linesToProcess
+   *     the JSONArray of lines to be processed
+   * @return a sorted JSONArray based on the parent_bom_id of each JSONObject
+   * @throws JSONException
+   *     if there is an issue with JSON processing
+   */
+  public static JSONArray orderByBOM(JSONArray linesToProcess) throws JSONException {
+    // Map from id to JSONObject for direct access
+    // Map a BOM_Parent_Id to a list of its child JSONObjects (related lines)
+    Map<String, List<JSONObject>> parentIdToChildrenMap = new HashMap<>();
+    // List containing root elements (those that have BOM_Parent_Id = null)
+    List<JSONObject> roots = new ArrayList<>();
+
+    // Fill previous mappings
+    for (int i = 0; i < linesToProcess.length(); i++) {
+      JSONObject object = linesToProcess.getJSONObject(i);
+      String id = object.getString("id");
+      String bomParentId = getBOMParentIdByShipmentLineId(id);
+
+      // If the element does not have a BOM_Parent_Id, then it is a "root element"
+      // (there can be other lines that have it as BOM Parent)
+      if (bomParentId == null) {
+        roots.add(object);
+      } else {
+        parentIdToChildrenMap.computeIfAbsent(bomParentId, k -> new ArrayList<>()).add(object);
+      }
+    }
+
+    // Order and construct the structure
+    List<JSONObject> sortedObjects = new ArrayList<>();
+    for (JSONObject root : roots) {
+      sortedObjects.add(root);
+      addChildrenRecursively(root.getString("id"), sortedObjects, parentIdToChildrenMap);
+    }
+
+    // Convert the ordered list to a JSONArray
+    JSONArray sortedJsonArray = new JSONArray();
+    sortedObjects.forEach(sortedJsonArray::put);
+
+    return sortedJsonArray;
+  }
+
+  /**
+   * Retrieves the BOM Parent ID based on the given Shipment Line ID.
+   *
+   * @param shipmentLineId
+   *     the ID of the shipment line to retrieve the BOM Parent ID from
+   * @return the BOM Parent ID associated with the given Shipment Line ID
+   */
+  private static String getBOMParentIdByShipmentLineId(String shipmentLineId) {
+    ShipmentInOutLine shipmentLineBOM = OBDal.getInstance().get(ShipmentInOutLine.class, shipmentLineId).getBOMParent();
+    if (shipmentLineBOM == null) {
+      return null;
+    }
+    return shipmentLineBOM.getId();
+  }
+
+  /**
+   * Recursively adds children to the sorted list based on the parent ID.
+   *
+   * @param parentId the parent ID to retrieve children for
+   * @param sortedList the list to add the sorted children to
+   * @param parentIdToChildrenMap the mapping of parent IDs to their children
+   * @throws JSONException if there is an issue with JSON processing
+   */
+  private static void addChildrenRecursively(String parentId, List<JSONObject> sortedList,
+      Map<String, List<JSONObject>> parentIdToChildrenMap) throws JSONException {
+    List<JSONObject> children = parentIdToChildrenMap.getOrDefault(parentId, new ArrayList<>());
+    for (JSONObject child : children) {
+      sortedList.add(child);
+      addChildrenRecursively(child.getString("id"), sortedList, parentIdToChildrenMap);
+    }
   }
 
   private List<JSONObject> getRelatedInOutLinesNotAlreadyInvoiced(JSONObject selectedLine,
