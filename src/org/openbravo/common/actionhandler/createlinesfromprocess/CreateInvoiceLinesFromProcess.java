@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2018-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2018-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -72,14 +72,14 @@ public class CreateInvoiceLinesFromProcess {
    * <li>5. Calculate Acc and Def Plan from Product</li>
    * <li>6. Recalculate Taxes</li>
    * </ul>
-   * 
+   *
    * @param selectedLinesParam
    *          Order/InOut Lines selected by the user from which the invoice lines will be created
    * @param currentInvoice
    *          The invoice currently being created
    * @param selectedLinesFromClass
    *          The class of the lines being copied (Order/InOut)
-   * 
+   *
    * @return The number of invoice lines created by the process
    */
   public int createInvoiceLinesFromDocumentLines(final JSONArray selectedLinesParam,
@@ -124,14 +124,14 @@ public class CreateInvoiceLinesFromProcess {
   /**
    * Loop over the lines selected by the user and returns a JSONArray with the lines from which an
    * invoice line will be created.
-   * 
+   *
    * If either the line is an order not related to an InOut or if the line is an InOut line, it
    * directly adds it to the lines to be processed.
-   * 
+   *
    * When the line belongs to an order linked to an InOut, it adds any related InOut line (instead
    * of the order line itself) to the lines to be processed.
-   * 
-   * 
+   *
+   *
    */
   private JSONArray getLinesToProcess(final JSONArray selectedLinesParam) throws JSONException {
     final JSONArray linesToProcess = new JSONArray();
@@ -163,7 +163,7 @@ public class CreateInvoiceLinesFromProcess {
    * @throws JSONException
    *     if there is an issue with JSON processing
    */
-  public static JSONArray orderByBOM(JSONArray linesToProcess) throws JSONException {
+  private JSONArray orderByBOM(JSONArray linesToProcess) throws JSONException {
     // Map from id to JSONObject for direct access
     // Map a BOM_Parent_Id to a list of its child JSONObjects (related lines)
     Map<String, List<JSONObject>> parentIdToChildrenMap = new HashMap<>();
@@ -174,7 +174,8 @@ public class CreateInvoiceLinesFromProcess {
     for (int i = 0; i < linesToProcess.length(); i++) {
       JSONObject object = linesToProcess.getJSONObject(i);
       String id = object.getString("id");
-      String bomParentId = getBOMParentIdByShipmentLineId(id);
+      String bomParentId = (linesFromClass.equals(ShipmentInOutLine.class)) ? getBOMParentIdByShipmentLineId(
+          id) : getBOMParentIdByOrderLineId(id);
 
       // If the element does not have a BOM_Parent_Id, then it is a "root element"
       // (there can be other lines that have it as BOM Parent)
@@ -206,7 +207,7 @@ public class CreateInvoiceLinesFromProcess {
    *     the ID of the shipment line to retrieve the BOM Parent ID from
    * @return the BOM Parent ID associated with the given Shipment Line ID
    */
-  private static String getBOMParentIdByShipmentLineId(String shipmentLineId) {
+  private String getBOMParentIdByShipmentLineId(String shipmentLineId) {
     ShipmentInOutLine shipmentLineBOM = OBDal.getInstance().get(ShipmentInOutLine.class, shipmentLineId).getBOMParent();
     if (shipmentLineBOM == null) {
       return null;
@@ -217,10 +218,14 @@ public class CreateInvoiceLinesFromProcess {
   /**
    * Recursively adds children to the sorted list based on the parent ID.
    *
-   * @param parentId the parent ID to retrieve children for
-   * @param sortedList the list to add the sorted children to
-   * @param parentIdToChildrenMap the mapping of parent IDs to their children
-   * @throws JSONException if there is an issue with JSON processing
+   * @param parentId
+   *     the parent ID to retrieve children for
+   * @param sortedList
+   *     the list to add the sorted children to
+   * @param parentIdToChildrenMap
+   *     the mapping of parent IDs to their children
+   * @throws JSONException
+   *     if there is an issue with JSON processing
    */
   private static void addChildrenRecursively(String parentId, List<JSONObject> sortedList,
       Map<String, List<JSONObject>> parentIdToChildrenMap) throws JSONException {
@@ -229,6 +234,21 @@ public class CreateInvoiceLinesFromProcess {
       sortedList.add(child);
       addChildrenRecursively(child.getString("id"), sortedList, parentIdToChildrenMap);
     }
+  }
+
+  /**
+   * Retrieves the BOM Parent ID based on the given Order Line ID.
+   *
+   * @param orderLineId
+   *     the ID of the order line to retrieve the BOM Parent ID from
+   * @return the BOM Parent ID associated with the given Order Line ID
+   */
+  private String getBOMParentIdByOrderLineId(String orderLineId) {
+    OrderLine orderLineBOM = OBDal.getInstance().get(OrderLine.class, orderLineId).getBOMParent();
+    if (orderLineBOM == null) {
+      return null;
+    }
+    return orderLineBOM.getId();
   }
 
   private List<JSONObject> getRelatedInOutLinesNotAlreadyInvoiced(JSONObject selectedLine,
