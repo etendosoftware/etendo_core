@@ -104,7 +104,7 @@ where (
             from OrderLine ol
             where ol.salesOrder = ord 
             and ol.deliveredQuantity != 0
-            and ol.orderedQuantity != ol.invoicedQuantity
+            and ol.deliveredQuantity != ol.invoicedQuantity
             )
     )
     or
