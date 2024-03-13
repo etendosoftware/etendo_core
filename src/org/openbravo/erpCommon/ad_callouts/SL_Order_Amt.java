@@ -41,6 +41,11 @@ import org.openbravo.utils.FormatUtilities;
 
 public class SL_Order_Amt extends SimpleCallout {
 
+  public static final String INPQTYORDERED = "inpqtyordered";
+  public static final String INPPRICELIST = "inppricelist";
+  public static final String INPGROSSPRICESTD = "inpgrosspricestd";
+  public static final String INPDISCOUNT = "inpdiscount";
+
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
 
@@ -56,17 +61,17 @@ public class SL_Order_Amt extends SimpleCallout {
     String strAttribute = info.getStringParameter("inpmAttributesetinstanceId",
         IsIDFilter.instance);
     String strTaxId = info.getStringParameter("inpcTaxId", IsIDFilter.instance);
-    BigDecimal qtyOrdered = info.getBigDecimalParameter("inpqtyordered");
+    BigDecimal qtyOrdered = info.getBigDecimalParameter(INPQTYORDERED);
     BigDecimal priceActual = info.getBigDecimalParameter("inppriceactual");
     BigDecimal priceLimit = info.getBigDecimalParameter("inppricelimit");
-    BigDecimal netPriceList = info.getBigDecimalParameter("inppricelist");
+    BigDecimal netPriceList = info.getBigDecimalParameter(INPPRICELIST);
     BigDecimal priceStd = info.getBigDecimalParameter("inppricestd");
     BigDecimal lineNetAmt = info.getBigDecimalParameter("inplinenetamt");
     BigDecimal taxBaseAmt = info.getBigDecimalParameter("inptaxbaseamt");
     BigDecimal grossUnitPrice = info.getBigDecimalParameter("inpgrossUnitPrice");
     BigDecimal grossPriceList = info.getBigDecimalParameter("inpgrosspricelist");
-    BigDecimal grossBaseUnitPrice = info.getBigDecimalParameter("inpgrosspricestd");
-    BigDecimal newDiscount = info.getBigDecimalParameter("inpdiscount");
+    BigDecimal grossBaseUnitPrice = info.getBigDecimalParameter(INPGROSSPRICESTD);
+    BigDecimal newDiscount = info.getBigDecimalParameter(INPDISCOUNT);
     /*
       Always cancel price adjustment recalculation in this callout
       to avoid errors when applying custom discounts using the
@@ -100,7 +105,7 @@ public class SL_Order_Amt extends SimpleCallout {
     // selected a product
     boolean forceSetPriceStd = false;
     boolean isGrossUnitPriceChanged = StringUtils.equals(strChanged, "inpgrossUnitPrice");
-    if (StringUtils.equals(strChanged, "inpqtyordered") && StringUtils.isNotEmpty(strProduct)) {
+    if (StringUtils.equals(strChanged, INPQTYORDERED) && StringUtils.isNotEmpty(strProduct)) {
       try {
         OrderLineQtyChangedHookObject hookObject = new OrderLineQtyChangedHookObject();
         hookObject.setProductId(strProduct);
@@ -145,7 +150,7 @@ public class SL_Order_Amt extends SimpleCallout {
     }
 
     // Price Actual, Gross Unit Price
-    if (StringUtils.equals(strChanged, "inpqtyordered") && !cancelPriceAd) {
+    if (StringUtils.equals(strChanged, INPQTYORDERED) && !cancelPriceAd) {
       if (isTaxIncludedPriceList) {
         grossUnitPrice = PriceAdjustment.calculatePriceActual(order, product, qtyOrdered,
             grossBaseUnitPrice);
@@ -216,20 +221,20 @@ public class SL_Order_Amt extends SimpleCallout {
             || grossBaseUnitPrice.compareTo(BigDecimal.ZERO) != 0);
       }
 
-      info.addResult("inpgrosspricestd", grossBaseUnitPrice);
+      info.addResult(INPGROSSPRICESTD, grossBaseUnitPrice);
       info.addResult("inppriceactual", priceActual);
-      info.addResult("inppricelist", netUnitPrice);
+      info.addResult(INPPRICELIST, netUnitPrice);
       info.addResult("inppricelimit", netUnitPrice);
       info.addResult("inppricestd", priceStd);
     }
 
     // Calculate Discount
-    if (StringUtils.equals(strChanged, "inppricelist")
+    if (StringUtils.equals(strChanged, INPPRICELIST)
         || StringUtils.equals(strChanged, "inppriceactual")
         || StringUtils.equals(strChanged, "inplinenetamt")
         || StringUtils.equals(strChanged, "inpgrosspricelist")
         || StringUtils.equals(strChanged, "inpgrossUnitPrice")
-        || StringUtils.equals(strChanged, "inpqtyordered")) {
+        || StringUtils.equals(strChanged, INPQTYORDERED)) {
       BigDecimal priceList = isTaxIncludedPriceList ? grossPriceList : netPriceList;
       BigDecimal unitPrice = isTaxIncludedPriceList ? grossBaseUnitPrice : priceStd;
       BigDecimal discount = priceList.compareTo(BigDecimal.ZERO) == 0 || !calcDiscount
@@ -238,9 +243,9 @@ public class SL_Order_Amt extends SimpleCallout {
           .multiply(new BigDecimal("100"))
           .divide(priceList, stdPrecision, RoundingMode.HALF_UP);
       log4j.debug("Discount rounded: " + discount.toString());
-      info.addResult("inpdiscount", discount);
+      info.addResult(INPDISCOUNT, discount);
 
-    } else if (StringUtils.equals(strChanged, "inpdiscount")) {
+    } else if (StringUtils.equals(strChanged, INPDISCOUNT)) {
 
       // Calculate PriceStd, PriceActual, GrossPriceStd, GrossUnitPrice
       BigDecimal origDiscount = BigDecimal.ZERO;
@@ -259,7 +264,7 @@ public class SL_Order_Amt extends SimpleCallout {
         if (isTaxIncludedPriceList) {
           grossUnitPrice = PriceAdjustment.calculatePriceActual(order, product, qtyOrdered,
               baseUnitPrice);
-          info.addResult("inpgrosspricestd", baseUnitPrice);
+          info.addResult(INPGROSSPRICESTD, baseUnitPrice);
           info.addResult("inpgrossUnitPrice", grossUnitPrice);
           BigDecimal grossAmount = grossUnitPrice.multiply(qtyOrdered)
               .setScale(stdPrecision, RoundingMode.HALF_UP);
@@ -315,7 +320,7 @@ public class SL_Order_Amt extends SimpleCallout {
     }
 
     // Check Price Limit
-    if (!StringUtils.equals(strChanged, "inpqtyordered")
+    if (!StringUtils.equals(strChanged, INPQTYORDERED)
         || StringUtils.equals(strChanged, "inplinenetamt")) {
       boolean enforced = SLOrderAmtData.listPriceType(this, currentPriceList.getId());
       if (enforced && priceLimit.compareTo(BigDecimal.ZERO) != 0
