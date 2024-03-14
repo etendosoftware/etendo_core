@@ -218,8 +218,8 @@ public class AddPaymentActionHandler extends Action {
     if (resultProcess.has(RETRY_EXECUTION) && resultProcess.getBoolean(RETRY_EXECUTION)) {
       responseActions.retryExecution();
     }
-    if (resultProcess.has(REFRESH_PARENT) && resultProcess.getBoolean(REFRESH_PARENT)) {
-      responseActions.refreshParent();
+    if (resultProcess.has(REFRESH_PARENT)) {
+      responseActions.setRefreshParent(resultProcess.getBoolean(REFRESH_PARENT));
     }
     actionResult.setResponseActionsBuilder(responseActions);
     actionResult.setOutput(getInput());
