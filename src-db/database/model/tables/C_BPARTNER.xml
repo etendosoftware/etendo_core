@@ -428,7 +428,7 @@
       <foreign-key foreignTable="FIN_PAYMENTMETHOD" name="C_BPARTNER_FIN_PAYMENTMETHOD">
         <reference local="FIN_PAYMENTMETHOD_ID" foreign="FIN_PAYMENTMETHOD_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="M_PRICELIST" name="C_BPARTNER_M_PRICELIST" onDelete="setnull">
+      <foreign-key foreignTable="M_PRICELIST" name="C_BPARTNER_M_PRICELIST">
         <reference local="M_PRICELIST_ID" foreign="M_PRICELIST_ID"/>
       </foreign-key>
       <foreign-key foreignTable="C_BANKACCOUNT" name="C_BPARTNER_PO_BANKACCOUNT">
@@ -446,7 +446,7 @@
       <foreign-key foreignTable="C_PAYMENTTERM" name="C_BPARTNER_PO_PAYMENTTERM">
         <reference local="PO_PAYMENTTERM_ID" foreign="C_PAYMENTTERM_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="M_PRICELIST" name="C_BPARTNER_PO_PRICELIST" onDelete="setnull">
+      <foreign-key foreignTable="M_PRICELIST" name="C_BPARTNER_PO_PRICELIST">
         <reference local="PO_PRICELIST_ID" foreign="M_PRICELIST_ID"/>
       </foreign-key>
       <foreign-key foreignTable="C_BANKACCOUNT" name="C_BPARTNER_SO_BANKACCOUNT">
