@@ -116,18 +116,16 @@ public class SL_Order_Product extends SimpleCallout {
     }
 
     // Discount
-    BigDecimal calculatedDiscount = BigDecimal.ZERO;
+    BigDecimal discount = BigDecimal.ZERO;
+    int scale = Math.toIntExact(order.getCurrency().getPricePrecision());
     BigDecimal price = isTaxIncludedPriceList ? grossPriceList : netPriceList;
-    if (!BigDecimal.ZERO.equals(price)) {
-      int precision = order.getCurrency().getPricePrecision().intValue();
-      calculatedDiscount = price.subtract(priceActual)
-              .multiply(BigDecimal.valueOf(100))
-              .divide(price, precision)
-              .setScale(0, RoundingMode.HALF_UP);
+    BigDecimal priceToSubtract = isTaxIncludedPriceList ? grossBaseUnitPrice : priceStd;
+    if (price.compareTo(BigDecimal.ZERO) != 0) {
+      discount = price.subtract(priceToSubtract)
+          .multiply(new BigDecimal("100"))
+          .divide(price, scale, RoundingMode.HALF_UP);
     }
-    if (calculatedDiscount.compareTo(info.getBigDecimalParameter("inpdiscount")) != 0) {
-      info.addResult("inpdiscount", calculatedDiscount);
-    }
+    info.addResult("inpdiscount", discount);
 
     // Attribute Set Instance
     if (StringUtils.isNotEmpty(strMProductID)) {
