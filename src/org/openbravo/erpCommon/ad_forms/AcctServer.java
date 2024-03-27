@@ -129,7 +129,7 @@ public abstract class AcctServer {
   public String M_Warehouse_ID = "";
   public String Posted = "";
   public String DocumentType = "";
-  public String Has_Document_Type = "";
+  private String hasDocumentType = "";
   public String TaxIncluded = "";
   public String GL_Category_ID = "";
   public String Record_ID = "";
@@ -244,7 +244,7 @@ public abstract class AcctServer {
   /**
    * Document Status
    */
-  public static final String STATUS_NoDocumentType = "DT";
+  public static final String STATUS_NODOCTYPE = "DT";
 
   /**
    * Table IDs for document level conversion rates
@@ -1240,8 +1240,8 @@ public abstract class AcctServer {
       return STATUS_PeriodClosed;
     }
     // rejectNoDocType
-    if ("N".equals(Has_Document_Type)) {
-      return STATUS_NoDocumentType;
+    if (StringUtils.equals("N", hasDocumentType)) {
+      return STATUS_NODOCTYPE;
     }
 
     // createFacts
@@ -1615,7 +1615,7 @@ public abstract class AcctServer {
       data = AcctServerData.selectPeriodOpen(connectionProvider, DocumentType, AD_Client_ID,
           strOrgCalendarOwner, DateAcct);
       C_Period_ID = data[0].period;
-      Has_Document_Type = data[0].hasdoctype;
+      hasDocumentType = data[0].hasdoctype;
 
       if (log4j.isDebugEnabled()) {
         log4j.debug("AcctServer - setC_Period_ID - " + AD_Client_ID + "/" + DateAcct + "/"
@@ -2363,88 +2363,107 @@ public abstract class AcctServer {
   /*
    * Sets OBError message for the given status
    */
-  public void setMessageResult(ConnectionProvider conn, VariablesSecureApp vars, String _strStatus,
-      String strMessageType, Map<String, String> _parameters) {
-    String strStatus = StringUtils.isEmpty(_strStatus) ? getStatus() : _strStatus;
+  public void setMessageResult(ConnectionProvider conn, VariablesSecureApp vars, String stringStatus,
+      String strMessageType, Map<String, String> parameters) {
+    String strStatus = StringUtils.isEmpty(stringStatus) ? getStatus() : stringStatus;
     setStatus(strStatus);
     String strTitle = "";
-    Map<String, String> parameters = _parameters != null ? _parameters
-        : new HashMap<String, String>();
+    Map<String, String> params = parameters != null ? parameters : new HashMap<>();
     if (messageResult == null) {
       messageResult = new OBError();
     }
-    if (strMessageType == null || strMessageType.equals("")) {
+    if (strMessageType == null || strMessageType.isEmpty()) {
       messageResult.setType("Error");
     } else {
       messageResult.setType(strMessageType);
     }
-    if (strStatus.equals(STATUS_Error)) {
-      strTitle = "@ProcessRunError@";
-    } else if (strStatus.equals(STATUS_DocumentLocked)) {
-      strTitle = "@OtherPostingProcessActive@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_NotCalculatedCost)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@NotCalculatedCost@";
-      } else {
-        strTitle = "@NotCalculatedCostWithTransaction@";
-      }
-    } else if (strStatus.equals(STATUS_InvalidCost)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@InvalidCost@";
-      } else {
-        strTitle = "@InvalidCostWhichProduct@";
-        // Transalate account name from messages
-        parameters.put("Account",
-            Utility.parseTranslation(conn, vars, vars.getLanguage(), parameters.get("Account")));
-      }
-    } else if (strStatus.equals(STATUS_NoRelatedPO)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@GoodsReceiptTransactionWithNoPO@";
-      } else {
-        strTitle = "@GoodsReceiptTransactionWithNoPOWichProduct@";
-      }
-    } else if (strStatus.equals(STATUS_DocumentDisabled)) {
-      strTitle = "@DocumentDisabled@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_BackgroundDisabled)) {
-      strTitle = "@BackgroundDisabled@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_InvalidAccount)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@InvalidAccount@";
-      } else {
-        strTitle = "@InvalidWhichAccount@";
-        // Transalate account name from messages
-        parameters.put("Account",
-            Utility.parseTranslation(conn, vars, vars.getLanguage(), parameters.get("Account")));
-      }
-    } else if (strStatus.equals(STATUS_NoDocumentType)) {
-      strTitle = "@NoDocTypeForDocument@";
-    } else if (strStatus.equals(STATUS_PeriodClosed)) {
-      strTitle = "@PeriodNotAvailable@";
-    } else if (strStatus.equals(STATUS_NotConvertible)) {
-      strTitle = "@NotConvertible@";
-    } else if (strStatus.equals(STATUS_NotBalanced)) {
-      strTitle = "@NotBalanced@";
-    } else if (strStatus.equals(STATUS_NotPosted)) {
-      strTitle = "@NotPosted@";
-    } else if (strStatus.equals(STATUS_PostPrepared)) {
-      strTitle = "@PostPrepared@";
-    } else if (strStatus.equals(STATUS_Posted)) {
-      strTitle = "@Posted@";
-    } else if (strStatus.equals(STATUS_TableDisabled)) {
-      strTitle = "@TableDisabled@";
-      parameters.put("Table", tableName);
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_NoAccountingDate)) {
-      strTitle = "@NoAccountingDate@";
-    }
-    messageResult.setMessage(Utility.parseTranslation(conn, vars, parameters, vars.getLanguage(),
+    strTitle = determineTitleByStatus(conn, vars, strStatus, params);
+    messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
         Utility.parseTranslation(conn, vars, vars.getLanguage(), strTitle)));
     if (strMessage != null) {
-      messageResult.setMessage(Utility.parseTranslation(conn, vars, parameters, vars.getLanguage(),
+      messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
           Utility.parseTranslation(conn, vars, vars.getLanguage(), strMessage)));
+    }
+  }
+
+  /**
+   * Determines the title message based on the provided status code. This method examines the status
+   * code and returns a specific message key corresponding to that status. For certain status codes,
+   * additional information is included in the message if the provided parameters map is not empty.
+   * Additionally, for some status codes indicating a warning, this method also sets the message
+   * type of a global {@link OBError} object to "Warning".
+   *
+   * @param conn
+   *     the {@link ConnectionProvider} used for database connections
+   * @param vars
+   *     the {@link VariablesSecureApp} containing user session variables
+   * @param strStatus
+   *     the status code used to determine the message key
+   * @param params
+   *     a map of parameters that may affect the returned message. This map can be modified
+   *     by the method (e.g., translating account names).
+   * @return a {@link String} message key corresponding to the status code. This key can be used to
+   *     fetch a localized error or warning message. If the status code is not recognized, an empty
+   *     string is returned.
+   * @see OBError
+   */
+  private String determineTitleByStatus(ConnectionProvider conn, VariablesSecureApp vars, String strStatus,
+      Map<String, String> params) {
+    switch (strStatus) {
+      case STATUS_Error:
+        return "@ProcessRunError@";
+      case STATUS_DocumentLocked:
+        return "@OtherPostingProcessActive@";
+      case STATUS_NotCalculatedCost:
+        return (params.isEmpty()) ? "@NotCalculatedCost@" : "@NotCalculatedCostWithTransaction@";
+      case STATUS_InvalidCost:
+        if (params.isEmpty()) {
+          return "@InvalidCost@";
+        } else {
+          // Translate account name from messages
+          params.put("Account",
+              Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get("Account")));
+          return "@InvalidCostWhichProduct@";
+        }
+      case STATUS_NoRelatedPO:
+        return params.isEmpty() ? "@GoodsReceiptTransactionWithNoPO@" : "@GoodsReceiptTransactionWithNoPOWichProduct@";
+      case STATUS_DocumentDisabled:
+        messageResult.setType("Warning");
+        return "@DocumentDisabled@";
+      case STATUS_BackgroundDisabled:
+        messageResult.setType("Warning");
+        return "@BackgroundDisabled@";
+      case STATUS_InvalidAccount:
+        if (params.isEmpty()) {
+          return "@InvalidAccount@";
+        } else {
+          // Translate account name from messages
+          params.put("Account",
+              Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get("Account")));
+          return "@InvalidWhichAccount@";
+        }
+      case STATUS_NODOCTYPE:
+        return "@NoDocTypeForDocument@";
+      case STATUS_PeriodClosed:
+        return "@PeriodNotAvailable@";
+      case STATUS_NotConvertible:
+        return "@NotConvertible@";
+      case STATUS_NotBalanced:
+        return "@NotBalanced@";
+      case STATUS_NotPosted:
+        return "@NotPosted@";
+      case STATUS_PostPrepared:
+        return "@PostPrepared@";
+      case STATUS_Posted:
+        return "@Posted@";
+      case STATUS_TableDisabled:
+        params.put("Table", tableName);
+        messageResult.setType("Warning");
+        return "@TableDisabled@";
+      case STATUS_NoAccountingDate:
+        return "@NoAccountingDate@";
+      default:
+        return "";
     }
   }
 
