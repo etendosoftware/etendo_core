@@ -129,6 +129,7 @@ public abstract class AcctServer {
   public String M_Warehouse_ID = "";
   public String Posted = "";
   public String DocumentType = "";
+  public String Has_Document_Type = "";
   public String TaxIncluded = "";
   public String GL_Category_ID = "";
   public String Record_ID = "";
@@ -240,6 +241,10 @@ public abstract class AcctServer {
    * Document Status
    */
   public static final String STATUS_NoAccountingDate = "AD";
+  /**
+   * Document Status
+   */
+  public static final String STATUS_NoDocumentType = "DT";
 
   /**
    * Table IDs for document level conversion rates
@@ -1234,6 +1239,10 @@ public abstract class AcctServer {
     if (!isPeriodOpen()) {
       return STATUS_PeriodClosed;
     }
+    // rejectNoDocType
+    if ("N".equals(Has_Document_Type)) {
+      return STATUS_NoDocumentType;
+    }
 
     // createFacts
     try {
@@ -1603,9 +1612,10 @@ public abstract class AcctServer {
           .getPeriodControlAllowedOrganization(
               OBDal.getInstance().get(Organization.class, AD_Org_ID))
           .getId();
-      data = AcctServerData.selectPeriodOpen(connectionProvider, AD_Client_ID, DocumentType,
+      data = AcctServerData.selectPeriodOpen(connectionProvider, DocumentType, AD_Client_ID,
           strOrgCalendarOwner, DateAcct);
       C_Period_ID = data[0].period;
+      Has_Document_Type = data[0].hasdoctype;
 
       if (log4j.isDebugEnabled()) {
         log4j.debug("AcctServer - setC_Period_ID - " + AD_Client_ID + "/" + DateAcct + "/"
@@ -2409,6 +2419,8 @@ public abstract class AcctServer {
         parameters.put("Account",
             Utility.parseTranslation(conn, vars, vars.getLanguage(), parameters.get("Account")));
       }
+    } else if (strStatus.equals(STATUS_NoDocumentType)) {
+      strTitle = "@NoDocTypeForDocument@";
     } else if (strStatus.equals(STATUS_PeriodClosed)) {
       strTitle = "@PeriodNotAvailable@";
     } else if (strStatus.equals(STATUS_NotConvertible)) {
