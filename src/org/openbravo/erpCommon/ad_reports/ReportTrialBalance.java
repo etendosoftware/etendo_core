@@ -97,11 +97,11 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
           "ReportTrialBalance|includeZeroFigures", "");
       String strcElementValueFromDes = "", strcElementValueToDes = "";
       if (StringUtils.isNotEmpty(strcElementValueFrom)) {
-        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueFrom);
       }
       if (StringUtils.isNotEmpty(strcElementValueTo)) {
-        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueTo);
       }
       strcElementValueFromDes = (strcElementValueFromDes == null) ? "" : strcElementValueFromDes;
@@ -141,11 +141,11 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
       String strcElementValueFromDes = "", strcElementValueToDes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcElementValueFrom)) {
-        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueFrom);
       }
       if (StringUtils.isNotEmpty(strcElementValueTo)) {
-        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueTo);
       }
       vars.setSessionValue("inpElementValueIdFrom_DES", strcElementValueFromDes);
@@ -171,11 +171,11 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
       String strcElementValueFromDes = "", strcElementValueToDes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcElementValueFrom)) {
-        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueFromDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueFrom);
       }
       if (StringUtils.isNotEmpty(strcElementValueTo)) {
-        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP,
+        strcElementValueToDes = ReportTrialBalanceData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcElementValueTo);
       }
       strcElementValueFromDes = (strcElementValueFromDes == null) ? "" : strcElementValueFromDes;
@@ -769,7 +769,7 @@ public class ReportTrialBalance extends HttpSecureAppServlet {
     ReportTrialBalanceData[] data = null;
     ReportTrialBalanceData[] dataAux = null;
     ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
-    dataAux = ReportTrialBalanceData.select(readOnlyCP, strDateFrom, strDateTo, strOrg,
+    dataAux = ReportTrialBalanceData.select(readOnlyCP, strDateFrom, strDateTo, strOrg, vars.getLanguage(),
         strTreeAccount, strcAcctSchemaId, StringUtils.equals(strNotInitialBalance, "Y") ? "O" : "P",
         strOrgFamily, Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportTrialBalance"),
         Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportTrialBalance"),

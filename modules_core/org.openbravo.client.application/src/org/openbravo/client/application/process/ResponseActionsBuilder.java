@@ -67,6 +67,7 @@ public class ResponseActionsBuilder {
 
   ResponseActionsBuilder() {
     responseActions = new JSONArray();
+    refreshParent = true;
   }
 
   /**
@@ -256,11 +257,27 @@ public class ResponseActionsBuilder {
   /**
    * Allows to re-execute the process again, by enabling the process UI. This is useful to do
    * backend validations as this allows the user to fix data and resubmit again.
+   * @deprecated
+   * This method is no longer acceptable to compute time between versions.
+   * <p> Use {@link ResponseActionsBuilder#setRefreshParent(boolean)} instead.
    *
    * @return a ResponseActionsBuilder configured to retry the process execution.
    */
+  @Deprecated
   public ResponseActionsBuilder refreshParent() {
     refreshParent = true;
+    return this;
+  }
+
+  /**
+   * Allows refresh parent window when the process execution finished. This is useful to shows
+   * changes in values of current records selected.
+   * @param refreshParent
+   *          If true, the parent window when the process execution finished it will do a refresh.
+   * @return a ResponseActionsBuilder configured to refresh parent window when the process execution finished.
+   */
+  public ResponseActionsBuilder setRefreshParent(boolean refreshParent) {
+    this.refreshParent = refreshParent;
     return this;
   }
 
@@ -345,6 +362,9 @@ public class ResponseActionsBuilder {
       if (showResultsInProcessView) {
         result.put("showResultsInProcessView", true);
       }
+
+      result.put("refreshParent", refreshParent);
+
       return result;
     } catch (JSONException jsonex) {
       log.error("Error building process response actions", jsonex);

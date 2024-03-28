@@ -28,16 +28,20 @@
       <SqlMethodComment></SqlMethodComment>
       <Sql> <![CDATA[
       		SELECT * FROM ( SELECT '0' AS RN1, '' AS ID, A.* FROM (
-	            SELECT C.C_ELEMENTVALUE_ID, C.VALUE as value, C.NAME as name, C.DESCRIPTION,
+	            SELECT C.C_ELEMENTVALUE_ID, C.VALUE as value, COALESCE(CT.NAME, C.NAME) as name, C.DESCRIPTION,
 	            C.AD_ORG_ID, (O.VALUE || ' - ' || O.NAME) AS AD_ORG_ID_D,
-                C.C_ELEMENTVALUE_ID || '@_##_@' || C.NAME AS rowkey
-	            FROM C_ELEMENTVALUE C,
-	            AD_ORG O
+                C.C_ELEMENTVALUE_ID || '@_##_@' || COALESCE(CT.NAME, C.NAME) AS rowkey
+	            FROM C_ELEMENTVALUE C
+                LEFT JOIN C_ELEMENTVALUE_TRL CT
+                ON C.C_ELEMENTVALUE_ID = CT.C_ELEMENTVALUE_ID 
+                AND CT.AD_LANGUAGE = ?
+              JOIN 
+              AD_ORG O ON C.AD_ORG_ID = O.AD_ORG_ID
 	            WHERE EXISTS (SELECT 1 FROM C_ACCTSCHEMA_ELEMENT
 	            			  WHERE C_ACCTSCHEMA_ELEMENT.C_ELEMENT_ID = C.C_ELEMENT_ID
 	            			  AND 1=1)
 	            AND 2=2
-                AND C.ELEMENTLEVEL = 'S'
+                    AND C.ELEMENTLEVEL = 'S'
 	            AND C.AD_ORG_ID = O.AD_ORG_ID
 	            AND C.ISACTIVE = 'Y'
 	            AND C.AD_Client_ID IN ('1')
@@ -47,9 +51,10 @@
 			WHERE 1=1
       ]]></Sql>
         <Parameter name="rownum" type="replace" optional="true" after="FROM ( SELECT " text="'0'" />
+        <Parameter name="adLanguage"/>
         <Parameter name="acctschema" optional="true" after="AND 1=1"><![CDATA[ AND C_ACCTSCHEMA_ID = ?]]></Parameter>
         <Parameter name="value" optional="true" after="AND 2=2"><![CDATA[ AND (C.VALUE IS NULL  OR UPPER(C.VALUE) LIKE UPPER(?)) ]]></Parameter>
-        <Parameter name="name" ignoreValue="%" optional="true" after="AND 2=2"><![CDATA[ AND UPPER(C.NAME) LIKE UPPER(?) ]]></Parameter>
+        <Parameter name="name" ignoreValue="%" optional="true" after="AND 2=2"><![CDATA[ AND UPPER(COALESCE(CT.NAME, C.NAME)) LIKE UPPER(?) ]]></Parameter>
         <Parameter name="organization" optional="true" after="AND 2=2"><![CDATA[ AND C.AD_ORG_ID = ? ]]></Parameter>
         <Parameter name="elementValue" optional="true" after="AND 2=2"><![CDATA[ AND C.C_ELEMENTVALUE_ID = ? ]]></Parameter>
         <Parameter name="adUserClient" type="replace" optional="true" after="C.AD_Client_ID IN (" text="'1'"/>
@@ -70,13 +75,14 @@
       <SqlMethodComment></SqlMethodComment>
       <Sql> <![CDATA[
       		SELECT COUNT(*) AS VALUE FROM ( SELECT '0' AS RN1, B.* FROM ( SELECT 1
-	            FROM C_ELEMENTVALUE C,
-	            AD_ORG O
+	            FROM C_ELEMENTVALUE C 
+              JOIN AD_ORG O ON C.AD_ORG_ID = O.AD_ORG_ID 
+              LEFT JOIN C_ELEMENTVALUE_TRL CT ON C.C_ELEMENTVALUE_ID = CT.C_ELEMENTVALUE_ID AND CT.AD_LANGUAGE = ?
 	            WHERE EXISTS (SELECT 1 FROM C_ACCTSCHEMA_ELEMENT
 	            			  WHERE C_ACCTSCHEMA_ELEMENT.C_ELEMENT_ID = C.C_ELEMENT_ID
 	            			  AND 1=1)
 	            AND 2=2
-                AND C.ELEMENTLEVEL = 'S'
+              AND C.ELEMENTLEVEL = 'S'
 	            AND C.AD_ORG_ID = O.AD_ORG_ID
 	            AND C.ISACTIVE = 'Y'
 	            AND C.AD_Client_ID IN ('1')
@@ -87,9 +93,10 @@
       ]]></Sql>
         <Field name="position" value="count"/>
         <Parameter name="rownum" type="replace" optional="true" after="FROM ( SELECT " text="'0'" />
+        <Parameter name="adLanguage" />
         <Parameter name="acctschema" optional="true" after="AND 1=1"><![CDATA[ AND C_ACCTSCHEMA_ID = ?]]></Parameter>
         <Parameter name="value" optional="true" after="AND 2=2"><![CDATA[ AND (C.VALUE IS NULL  OR UPPER(C.VALUE) LIKE UPPER(?)) ]]></Parameter>
-        <Parameter name="name" ignoreValue="%" optional="true" after="AND 2=2"><![CDATA[ AND UPPER(C.NAME) LIKE UPPER(?) ]]></Parameter>
+        <Parameter name="name" ignoreValue="%" optional="true" after="AND 2=2"><![CDATA[ AND UPPER(COALESCE(CT.NAME, C.NAME)) LIKE UPPER(?) ]]></Parameter>
         <Parameter name="organization" optional="true" after="AND 2=2"><![CDATA[ AND C.AD_ORG_ID = ? ]]></Parameter>
         <Parameter name="elementValue" optional="true" after="AND 2=2"><![CDATA[ AND C.C_ELEMENTVALUE_ID = ? ]]></Parameter>
         <Parameter name="adUserClient" type="replace" optional="true" after="C.AD_Client_ID IN (" text="'1'"/>

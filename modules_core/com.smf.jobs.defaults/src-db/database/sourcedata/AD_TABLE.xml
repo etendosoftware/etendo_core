@@ -104,8 +104,13 @@ where (
             from OrderLine ol
             where ol.salesOrder = ord 
             and ol.deliveredQuantity != 0
-            and ol.orderedQuantity != ol.invoicedQuantity
+            and ol.deliveredQuantity != ol.invoicedQuantity
             )
+    )
+    or
+    (
+        ic.term = 'O'
+        and ic.orderedQuantity = ic.deliveredQuantity
     )
 )
 and @additional_filters@]]></HQLQUERY>

@@ -484,7 +484,7 @@ isc.OBParameterWindowView.addProperties({
         },
         function(rpcResponse, data, rpcRequest) {
           view.handleResponse(
-            !(data && data.refreshParent === false),
+            data && data.refreshParent === true,
             data && data.message,
             data && data.responseActions,
             data && data.retryExecution,

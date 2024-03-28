@@ -156,11 +156,11 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
       String strcelementvaluefromdes = "", strcelementvaluetodes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvaluefrom);
       }
       if (StringUtils.isNotEmpty(strcelementvalueto)) {
-        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvalueto);
       }
       strcelementvaluefromdes = (StringUtils.equals(strcelementvaluefromdes, "null")) ? ""
@@ -296,11 +296,11 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
         String strcelementvaluefromdes = "", strcelementvaluetodes = "";
         ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
         if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-          strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+          strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
               strcelementvaluefrom);
         }
         if (StringUtils.isNotEmpty(strcelementvalueto)) {
-          strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+          strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
               strcelementvalueto);
         }
         vars.setSessionValue("inpElementValueIdFrom_DES", strcelementvaluefromdes);
@@ -616,7 +616,7 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
             pgLimit = intRecordRangeUsed + " OFFSET "
                 + (initRecordNumber == 0 ? initRecordNumber : initRecordNumber - 1);
           }
-          scrollData = ReportGeneralLedgerJournalData.select(readOnlyCP, rowNum, "'N'",
+          scrollData = ReportGeneralLedgerJournalData.select(readOnlyCP, rowNum, "'N'", vars.getLanguage(),
               Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportGeneralLedger"),
               Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
               strDateFrom, DateTimeData.nDaysAfter(readOnlyCP, strDateTo, "1"), strDocument,
@@ -943,7 +943,7 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
                   .replace("@limit@", String.valueOf(limit)));
         } else {
           scrollData = ReportGeneralLedgerJournalData.select(readOnlyCP, "0",
-              StringUtils.equals(strShowDescription, "Y") ? "'Y'" : "'N'",
+              StringUtils.equals(strShowDescription, "Y") ? "'Y'" : "'N'", vars.getLanguage(),
               Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportGeneralLedger"),
               Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
               strDateFrom, DateTimeData.nDaysAfter(readOnlyCP, strDateTo, "1"), strDocument,

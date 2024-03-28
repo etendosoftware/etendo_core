@@ -1,16 +1,20 @@
 package com.smf.jobs.defaults;
 
 import com.smf.jobs.ActionResult;
+import com.smf.jobs.Data;
 import com.smf.jobs.Result;
 import com.smf.jobs.Action;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.ProcessInvoiceUtil;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
+import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.common.invoice.Invoice;
@@ -26,7 +30,8 @@ import java.text.ParseException;
  */
 public class ProcessInvoices extends Action {
     Logger log = LogManager.getLogger();
-
+    private static final String VOIDDATE = "VoidDate";
+    private static final String VOIDACCOUNTINGDATE = "VoidAccountingDate";
     @Inject
     private WeldUtils weldUtils;
 
@@ -37,8 +42,8 @@ public class ProcessInvoices extends Action {
         try {
             var input = getInputContents(getInputClass());
             var documentAction = parameters.getString("DocAction");
-            var voidDate = parameters.isNull("VoidDate") ? null : parameters.getString("VoidDate");
-            var voidAcctDate = parameters.isNull("VoidAccountingDate") ? null : parameters.getString("VoidAccountingDate");
+            var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
+            var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
             var processMessages = new StringBuilder();
             int errors = 0;
 
@@ -108,6 +113,40 @@ public class ProcessInvoices extends Action {
                 RequestContext.get().getVariablesSecureApp(),
                 new DalConnectionProvider(false)
         );
+    }
+
+    @Override
+    protected Data preRun(JSONObject jsonContent) {
+        log.debug(jsonContent);
+        try {
+            var parameters = jsonContent.optJSONObject("_params");
+            var input = getInputContents(getInputClass());
+            var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
+            var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
+            log.debug("Process Invoice preRun Parameters:");
+            log.debug(parameters.toString());
+
+            var doFlush = false;
+            for (Invoice invoice : input) {
+                // The following condition checks if the record is locked, this makes sense for Oracle databases
+                if (!invoice.isProcessNow()) {
+                    continue;
+                }
+                // In case of a locked record, the docAction will be forced to XL, this will unlock the record and proceed to complete
+                var message = processInvoice(invoice, "XL", voidDate, voidAcctDate);
+                if (!StringUtils.equals("Error", message.getType())){
+                    invoice.setAPRMProcessinvoice("--");
+                    OBDal.getInstance().save(invoice);
+                    doFlush = true;
+                }
+            }
+            if (doFlush) {
+                OBDal.getInstance().flush();
+            }
+        } catch (Exception e){
+            throw new OBException(e);
+        }
+        return getInput();
     }
 
     @Override

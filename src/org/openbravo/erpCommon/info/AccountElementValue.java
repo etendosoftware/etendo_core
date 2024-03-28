@@ -182,7 +182,7 @@ public class AccountElementValue extends HttpSecureAppServlet {
       data = AccountElementValueData.set(strValue.equals("") && strName.equals("") ? "%" : strValue,
           strName);
     } else {
-      data = AccountElementValueData.select(this, "1", "", "", "", "", strElementValue,
+      data = AccountElementValueData.select(this, "1", vars.getLanguage(), "", "", "", "", strElementValue,
           Utility.getContext(this, vars, "#User_Client", "AccountElementValue"),
           Utility.getContext(this, vars, "#User_Org", "AccountElementValue"), "1 ASC", "", "");
     }
@@ -322,7 +322,7 @@ public class AccountElementValue extends HttpSecureAppServlet {
           } else {
             pgLimit = TableSQLData.maxRowsPerGridPage + " OFFSET " + offset;
           }
-          strNumRows = AccountElementValueData.countRows(this, rownum, strAcctSchema, strValue,
+          strNumRows = AccountElementValueData.countRows(this, rownum, vars.getLanguage(), strAcctSchema, strValue,
               strName, strOrganization, strAccountElementValue,
               Utility.getContext(this, vars, "#User_Client", "AccountElementValue"),
               Utility.getContext(this, vars, "#AccessibleOrgTree", "AccountElementValue"), pgLimit,
@@ -335,14 +335,14 @@ public class AccountElementValue extends HttpSecureAppServlet {
         // Filtering result
         if (this.myPool.getRDBMS().equalsIgnoreCase("ORACLE")) {
           String oraLimit = (offset + 1) + " AND " + String.valueOf(offset + pageSize);
-          data = AccountElementValueData.select(this, "ROWNUM", strAcctSchema, strValue, strName,
+          data = AccountElementValueData.select(this, "ROWNUM", vars.getLanguage(), strAcctSchema, strValue, strName,
               strOrganization, strAccountElementValue,
               Utility.getContext(this, vars, "#User_Client", "AccountElementValue"),
               Utility.getContext(this, vars, "#AccessibleOrgTree", "AccountElementValue"),
               strOrderBy, oraLimit, "");
         } else {
           String pgLimit = pageSize + " OFFSET " + offset;
-          data = AccountElementValueData.select(this, "1", strAcctSchema, strValue, strName,
+          data = AccountElementValueData.select(this, "1", vars.getLanguage(), strAcctSchema, strValue, strName,
               strOrganization, strAccountElementValue,
               Utility.getContext(this, vars, "#User_Client", "AccountElementValue"),
               Utility.getContext(this, vars, "#AccessibleOrgTree", "AccountElementValue"),

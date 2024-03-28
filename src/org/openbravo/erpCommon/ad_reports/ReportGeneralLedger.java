@@ -82,11 +82,11 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
       String strcelementvaluefromdes = "", strcelementvaluetodes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvaluefrom);
       }
       if (StringUtils.isNotEmpty(strcelementvalueto)) {
-        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvalueto);
       }
       strcelementvaluefromdes = (StringUtils.equals(strcelementvaluefromdes, "null")) ? ""
@@ -127,11 +127,11 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
       String strcelementvaluefromdes = "", strcelementvaluetodes = "";
       ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
       if (StringUtils.isNotEmpty(strcelementvaluefrom)) {
-        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluefromdes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvaluefrom);
       }
       if (StringUtils.isNotEmpty(strcelementvalueto)) {
-        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP,
+        strcelementvaluetodes = ReportGeneralLedgerData.selectSubaccountDescription(readOnlyCP, vars.getLanguage(),
             strcelementvalueto);
       }
       vars.setSessionValue("inpElementValueIdFrom_DES", strcelementvaluefromdes);
@@ -310,7 +310,7 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
         if (StringUtils.isEmpty(localStrcelementvalueto)) {
           localStrcelementvalueto = strcelementvaluefrom;
           localStrcelementvaluetodes = ReportGeneralLedgerData
-              .selectSubaccountDescription(readOnlyCP, localStrcelementvalueto);
+              .selectSubaccountDescription(readOnlyCP, vars.getLanguage(), localStrcelementvalueto);
           vars.setSessionValue("inpElementValueIdTo_DES", localStrcelementvaluetodes);
 
         }
@@ -325,7 +325,7 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
       Long initMainSelect = System.currentTimeMillis();
       ReportGeneralLedgerData scroll = null;
       try {
-        scroll = ReportGeneralLedgerData.select2(readOnlyCP, rowNum, strGroupByText, strGroupBy,
+        scroll = ReportGeneralLedgerData.select2(readOnlyCP, rowNum, strGroupByText, strGroupBy, vars.getLanguage(),
             strAllaccounts, strcelementvaluefrom, localStrcelementvalueto,
             Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
             Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportGeneralLedger"),
@@ -399,7 +399,8 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
             subreportElement[0].total = previousDebit.subtract(previousCredit).toPlainString();
           } else {
             if (StringUtils.isEmpty(data[i].groupbyid)) {
-              // The argument " " is used to simulate one value and put the optional parameter-->
+              // The argument " " is used to simulate one value and put the optional
+              // parameter-->
               // AND FACT_ACCT.C_PROJECT_ID IS NULL for example
               Long init = System.currentTimeMillis();
               subreportElement = ReportGeneralLedgerData.selectTotal2(readOnlyCP, strcBpartnerId,
@@ -441,7 +442,8 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
         if (!StringUtils.equals(strTotal, (data[i].groupbyid + data[i].id))) {
           subreportElement = new ReportGeneralLedgerData[1];
           if (StringUtils.isEmpty(data[i].groupbyid)) {
-            // The argument " " is used to simulate one value and put the optional parameter--> AND
+            // The argument " " is used to simulate one value and put the optional
+            // parameter--> AND
             // FACT_ACCT.C_PROJECT_ID IS NULL for example
             Long init = System.currentTimeMillis();
             subreportElement = ReportGeneralLedgerData.selectTotal2(readOnlyCP, strcBpartnerId,
@@ -511,7 +513,6 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
 
     xmlDocument.setParameter("calendar", vars.getLanguage().substring(0, 2));
 
-    
     xmlDocument.setData("reportAD_ORGID", "liststructure",
         SelectorUtilityData.selectAllOrganizations(readOnlyCP,
             Utility.getContext(readOnlyCP, vars, "#User_Org", "ReportGeneralLedger"),
@@ -616,7 +617,7 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
 
     ReportGeneralLedgerData data = null;
     try {
-      data = ReportGeneralLedgerData.select2(readOnlyCP, "0", strGroupByText, strGroupBy,
+      data = ReportGeneralLedgerData.select2(readOnlyCP, "0", strGroupByText, strGroupBy, vars.getLanguage(),
           strAllaccounts, strcelementvaluefrom, localStrcelementvalueto,
           Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
           Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportGeneralLedger"),
@@ -697,7 +698,7 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
 
     ReportGeneralLedgerData data = null;
     try {
-      data = ReportGeneralLedgerData.selectXLS2(readOnlyCP, strAllaccounts, strcelementvaluefrom,
+      data = ReportGeneralLedgerData.selectXLS2(readOnlyCP, vars.getLanguage(), strAllaccounts, strcelementvaluefrom,
           localStrcelementvalueto,
           Utility.getContext(readOnlyCP, vars, "#AccessibleOrgTree", "ReportGeneralLedger"),
           Utility.getContext(readOnlyCP, vars, "#User_Client", "ReportGeneralLedger"),
@@ -782,7 +783,8 @@ public class ReportGeneralLedger extends HttpSecureAppServlet {
       // adjust data as needed
       if (!StringUtils.equals(strOld, (cur.groupbyid + cur.id))) {
         if (StringUtils.isEmpty(cur.groupbyid)) {
-          // The argument " " is used to simulate one value and put the optional parameter--> AND
+          // The argument " " is used to simulate one value and put the optional
+          // parameter--> AND
           // FACT_ACCT.C_PROJECT_ID IS NULL for example
           subreport = ReportGeneralLedgerData.selectTotal2(conn, strcBpartnerId,
               (StringUtils.equals(strGroupBy, "BPartner") ? " " : null), strmProductId,
