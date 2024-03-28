@@ -35,6 +35,7 @@ import java.util.Vector;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,6 +85,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 
 public abstract class AcctServer {
+  public static final String WARNING = "Warning";
+  public static final String NOT_CONVERTIBLE_MESSAGE = "@NotConvertible@";
+  public static final String ACCOUNT_PARAM = "Account";
   static Logger log4j = LogManager.getLogger();
 
   protected ConnectionProvider connectionProvider;
@@ -129,7 +133,7 @@ public abstract class AcctServer {
   public String M_Warehouse_ID = "";
   public String Posted = "";
   public String DocumentType = "";
-  public String Has_Document_Type = "";
+  private String hasDocumentType = "";
   public String TaxIncluded = "";
   public String GL_Category_ID = "";
   public String Record_ID = "";
@@ -244,7 +248,7 @@ public abstract class AcctServer {
   /**
    * Document Status
    */
-  public static final String STATUS_NoDocumentType = "DT";
+  public static final String STATUS_NODOCTYPE = "DT";
 
   /**
    * Table IDs for document level conversion rates
@@ -919,7 +923,7 @@ public abstract class AcctServer {
       OBContext.restorePreviousMode();
     }
     if (!isTableActive) {
-      setMessageResult(conn, vars, STATUS_TableDisabled, "Warning");
+      setMessageResult(conn, vars, STATUS_TableDisabled, WARNING);
       return false;
     }
     // for all Accounting Schema
@@ -1240,8 +1244,8 @@ public abstract class AcctServer {
       return STATUS_PeriodClosed;
     }
     // rejectNoDocType
-    if ("N".equals(Has_Document_Type)) {
-      return STATUS_NoDocumentType;
+    if (StringUtils.equals("N", hasDocumentType)) {
+      return STATUS_NODOCTYPE;
     }
 
     // createFacts
@@ -1256,7 +1260,7 @@ public abstract class AcctServer {
             || (messageResult != null && StringUtils.isBlank(messageResult.getMessage()))) {
           setMessageResult(OBMessageUtils.translateError(strMessageError));
         }
-        if ("@NotConvertible@".equals(strMessageError)) {
+        if (StringUtils.equals(NOT_CONVERTIBLE_MESSAGE, strMessageError)) {
           return STATUS_NotConvertible;
         } else if (StringUtils.equals(strMessageError, "@PeriodNotAvailable@")) {
           return STATUS_PeriodClosed;
@@ -1615,7 +1619,7 @@ public abstract class AcctServer {
       data = AcctServerData.selectPeriodOpen(connectionProvider, DocumentType, AD_Client_ID,
           strOrgCalendarOwner, DateAcct);
       C_Period_ID = data[0].period;
-      Has_Document_Type = data[0].hasdoctype;
+      hasDocumentType = data[0].hasdoctype;
 
       if (log4j.isDebugEnabled()) {
         log4j.debug("AcctServer - setC_Period_ID - " + AD_Client_ID + "/" + DateAcct + "/"
@@ -1919,7 +1923,7 @@ public abstract class AcctServer {
           }
           if (strValidCombination.equals("")) {
             Map<String, String> parameters = new HashMap<String, String>();
-            parameters.put("Account", "@DoubtfulDebt@");
+            parameters.put(ACCOUNT_PARAM, "@DoubtfulDebt@");
             parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
             parameters.put("AccountingSchema",
                 OBDal.getInstance()
@@ -1980,7 +1984,7 @@ public abstract class AcctServer {
       }
       if (strValidCombination.equals("")) {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("Account",
+        parameters.put(ACCOUNT_PARAM,
             isReceipt ? (isPrepayment ? "@CustomerPrepayment@" : "@CustomerReceivables@")
                 : (isPrepayment ? "@VendorPrepayment@" : "@VendorLiability@"));
         BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, cBPartnerId);
@@ -2043,9 +2047,9 @@ public abstract class AcctServer {
     if (strValidCombination.equals("")) {
       Map<String, String> parameters = new HashMap<String, String>();
       if (isExpense) {
-        parameters.put("Account", "@BadDebtExpenseAccount@");
+        parameters.put(ACCOUNT_PARAM, "@BadDebtExpenseAccount@");
       } else {
-        parameters.put("Account", "@BadDebtRevenueAccount@");
+        parameters.put(ACCOUNT_PARAM, "@BadDebtRevenueAccount@");
       }
       parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
       parameters.put("AccountingSchema",
@@ -2095,7 +2099,7 @@ public abstract class AcctServer {
     }
     if (strValidCombination.equals("")) {
       Map<String, String> parameters = new HashMap<String, String>();
-      parameters.put("Account", "@AllowanceForDoubtfulDebtAccount@");
+      parameters.put(ACCOUNT_PARAM, "@AllowanceForDoubtfulDebtAccount@");
       parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
       parameters.put("AccountingSchema",
           OBDal.getInstance()
@@ -2139,7 +2143,7 @@ public abstract class AcctServer {
       OBContext.restorePreviousMode();
       if (account == null) {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("Account", bIsReceipt ? "@GlitemCreditAccount@" : "@GlitemDebitAccount@");
+        parameters.put(ACCOUNT_PARAM, bIsReceipt ? "@GlitemCreditAccount@" : "@GlitemDebitAccount@");
         if (glItem != null) {
           parameters.put("Entity", glItem.getIdentifier());
         }
@@ -2179,7 +2183,7 @@ public abstract class AcctServer {
       OBContext.restorePreviousMode();
       if (account == null) {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("Account", "@BankfeeAccount@");
+        parameters.put(ACCOUNT_PARAM, "@BankfeeAccount@");
         if (finAccount != null) {
           parameters.put("Entity", finAccount.getIdentifier());
         }
@@ -2231,7 +2235,7 @@ public abstract class AcctServer {
             : ("DEP".equals(use) ? "@DepositAccount@" : "@ClearedPaymentAccount@"))
             : ("INT".equals(use) ? "@InTransitPaymentAccountOUT@"
             : ("CLE".equals(use) ? "@ClearedPaymentAccountOUT@" : "@WithdrawalAccount@"));
-        parameters.put("Account", strAccount);
+        parameters.put(ACCOUNT_PARAM, strAccount);
         if (financialAccountAccounting.getAccount() != null) {
           parameters.put("Entity", financialAccountAccounting.getAccount().getIdentifier());
         }
@@ -2363,95 +2367,114 @@ public abstract class AcctServer {
   /*
    * Sets OBError message for the given status
    */
-  public void setMessageResult(ConnectionProvider conn, VariablesSecureApp vars, String _strStatus,
-      String strMessageType, Map<String, String> _parameters) {
-    String strStatus = StringUtils.isEmpty(_strStatus) ? getStatus() : _strStatus;
+  public void setMessageResult(ConnectionProvider conn, VariablesSecureApp vars, String stringStatus,
+      String strMessageType, Map<String, String> parameters) {
+    String strStatus = StringUtils.isEmpty(stringStatus) ? getStatus() : stringStatus;
     setStatus(strStatus);
-    String strTitle = "";
-    Map<String, String> parameters = _parameters != null ? _parameters
-        : new HashMap<String, String>();
+    Map<String, String> params = parameters != null ? parameters : new HashMap<>();
     if (messageResult == null) {
       messageResult = new OBError();
     }
-    if (strMessageType == null || strMessageType.equals("")) {
+    if (strMessageType == null || StringUtils.isEmpty(strMessageType)) {
       messageResult.setType("Error");
     } else {
       messageResult.setType(strMessageType);
     }
-    if (strStatus.equals(STATUS_Error)) {
-      strTitle = "@ProcessRunError@";
-    } else if (strStatus.equals(STATUS_DocumentLocked)) {
-      strTitle = "@OtherPostingProcessActive@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_NotCalculatedCost)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@NotCalculatedCost@";
-      } else {
-        strTitle = "@NotCalculatedCostWithTransaction@";
-      }
-    } else if (strStatus.equals(STATUS_InvalidCost)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@InvalidCost@";
-      } else {
-        strTitle = "@InvalidCostWhichProduct@";
-        // Transalate account name from messages
-        parameters.put("Account",
-            Utility.parseTranslation(conn, vars, vars.getLanguage(), parameters.get("Account")));
-      }
-    } else if (strStatus.equals(STATUS_NoRelatedPO)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@GoodsReceiptTransactionWithNoPO@";
-      } else {
-        strTitle = "@GoodsReceiptTransactionWithNoPOWichProduct@";
-      }
-    } else if (strStatus.equals(STATUS_DocumentDisabled)) {
-      strTitle = "@DocumentDisabled@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_BackgroundDisabled)) {
-      strTitle = "@BackgroundDisabled@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_InvalidAccount)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@InvalidAccount@";
-      } else {
-        strTitle = "@InvalidWhichAccount@";
-        // Transalate account name from messages
-        parameters.put("Account",
-            Utility.parseTranslation(conn, vars, vars.getLanguage(), parameters.get("Account")));
-      }
-    } else if (strStatus.equals(STATUS_NoDocumentType)) {
-      strTitle = "@NoDocTypeForDocument@";
-    } else if (strStatus.equals(STATUS_PeriodClosed)) {
-      strTitle = "@PeriodNotAvailable@";
-    } else if (strStatus.equals(STATUS_NotConvertible)) {
-      strTitle = "@NotConvertible@";
-    } else if (strStatus.equals(STATUS_NotBalanced)) {
-      strTitle = "@NotBalanced@";
-    } else if (strStatus.equals(STATUS_NotPosted)) {
-      strTitle = "@NotPosted@";
-    } else if (strStatus.equals(STATUS_PostPrepared)) {
-      strTitle = "@PostPrepared@";
-    } else if (strStatus.equals(STATUS_Posted)) {
-      strTitle = "@Posted@";
-    } else if (strStatus.equals(STATUS_TableDisabled)) {
-      strTitle = "@TableDisabled@";
-      parameters.put("Table", tableName);
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_NoAccountingDate)) {
-      strTitle = "@NoAccountingDate@";
-    }
-    messageResult.setMessage(Utility.parseTranslation(conn, vars, parameters, vars.getLanguage(),
+    String strTitle = determineTitleByStatus(conn, vars, strStatus, params);
+
+    messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
         Utility.parseTranslation(conn, vars, vars.getLanguage(), strTitle)));
     if (strMessage != null) {
-      messageResult.setMessage(Utility.parseTranslation(conn, vars, parameters, vars.getLanguage(),
+      messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
           Utility.parseTranslation(conn, vars, vars.getLanguage(), strMessage)));
+    }
+  }
+
+  /**
+   * Determines the title message based on the provided status code. This method examines the status
+   * code and returns a specific message key corresponding to that status. For certain status codes,
+   * additional information is included in the message if the provided parameters map is not empty.
+   * Additionally, for some status codes indicating a warning, this method also sets the message
+   * type of a global {@link OBError} object to "Warning".
+   *
+   * @param conn
+   *     the {@link ConnectionProvider} used for database connections
+   * @param vars
+   *     the {@link VariablesSecureApp} containing user session variables
+   * @param strStatus
+   *     the status code used to determine the message key
+   * @param params
+   *     a map of parameters that may affect the returned message. This map can be modified
+   *     by the method (e.g., translating account names).
+   * @return a {@link String} message key corresponding to the status code. This key can be used to
+   *     fetch a localized error or warning message. If the status code is not recognized, an empty
+   *     string is returned.
+   * @see OBError
+   */
+  private String determineTitleByStatus(ConnectionProvider conn, VariablesSecureApp vars, String strStatus,
+      Map<String, String> params) {
+    switch (strStatus) {
+      case STATUS_Error:
+        return "@ProcessRunError@";
+      case STATUS_DocumentLocked:
+        return "@OtherPostingProcessActive@";
+      case STATUS_NotCalculatedCost:
+        return (params.isEmpty()) ? "@NotCalculatedCost@" : "@NotCalculatedCostWithTransaction@";
+      case STATUS_InvalidCost:
+        if (params.isEmpty()) {
+          return "@InvalidCost@";
+        } else {
+          // Translate account name from messages
+          params.put(ACCOUNT_PARAM,
+              Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
+          return "@InvalidCostWhichProduct@";
+        }
+      case STATUS_NoRelatedPO:
+        return params.isEmpty() ? "@GoodsReceiptTransactionWithNoPO@" : "@GoodsReceiptTransactionWithNoPOWichProduct@";
+      case STATUS_DocumentDisabled:
+        messageResult.setType(WARNING);
+        return "@DocumentDisabled@";
+      case STATUS_BackgroundDisabled:
+        messageResult.setType(WARNING);
+        return "@BackgroundDisabled@";
+      case STATUS_InvalidAccount:
+        if (params.isEmpty()) {
+          return "@InvalidAccount@";
+        } else {
+          // Translate account name from messages
+          params.put(ACCOUNT_PARAM,
+              Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
+          return "@InvalidWhichAccount@";
+        }
+      case STATUS_NODOCTYPE:
+        return "@NoDocTypeForDocument@";
+      case STATUS_PeriodClosed:
+        return "@PeriodNotAvailable@";
+      case STATUS_NotConvertible:
+        return NOT_CONVERTIBLE_MESSAGE;
+      case STATUS_NotBalanced:
+        return "@NotBalanced@";
+      case STATUS_NotPosted:
+        return "@NotPosted@";
+      case STATUS_PostPrepared:
+        return "@PostPrepared@";
+      case STATUS_Posted:
+        return "@Posted@";
+      case STATUS_TableDisabled:
+        params.put("Table", tableName);
+        messageResult.setType(WARNING);
+        return "@TableDisabled@";
+      case STATUS_NoAccountingDate:
+        return "@NoAccountingDate@";
+      default:
+        return "";
     }
   }
 
   public Map<String, String> getInvalidAccountParameters(String strAccount, String strEntity,
       String strAccountingSchema) {
     Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("Account", strAccount);
+    parameters.put(ACCOUNT_PARAM, strAccount);
     parameters.put("Entity", strEntity);
     parameters.put("AccountingSchema", strAccountingSchema);
     return parameters;
@@ -2580,7 +2603,7 @@ public abstract class AcctServer {
         if (convertedAmt != null && !"".equals(convertedAmt)) {
           amtFrom = new BigDecimal(convertedAmt);
         } else {
-          throw new OBException("@NotConvertible@");
+          throw new OBException(NOT_CONVERTIBLE_MESSAGE);
         }
       }
     }
@@ -2631,7 +2654,7 @@ public abstract class AcctServer {
         if (convertedAmt != null && !"".equals(convertedAmt)) {
           amtTo = new BigDecimal(convertedAmt);
         } else {
-          throw new OBException("@NotConvertible@");
+          throw new OBException(NOT_CONVERTIBLE_MESSAGE);
         }
         if (amtTo.compareTo(BigDecimal.ZERO) != 0) {
           amtFromSourcecurrency = amtFrom.multiply(_amount)
