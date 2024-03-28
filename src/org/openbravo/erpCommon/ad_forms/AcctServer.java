@@ -35,7 +35,6 @@ import java.util.Vector;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1616,7 +1615,7 @@ public abstract class AcctServer {
           .getPeriodControlAllowedOrganization(
               OBDal.getInstance().get(Organization.class, AD_Org_ID))
           .getId();
-      data = AcctServerData.selectPeriodOpen(connectionProvider, DocumentType, AD_Client_ID,
+      data = AcctServerData.selectPeriodOpen(connectionProvider, AD_Client_ID, DocumentType,
           strOrgCalendarOwner, DateAcct);
       C_Period_ID = data[0].period;
       hasDocumentType = data[0].hasdoctype;
@@ -1921,7 +1920,7 @@ public abstract class AcctServer {
               && customerAccounts.get(0).getDoubtfulDebtAccount() != null) {
             strValidCombination = customerAccounts.get(0).getDoubtfulDebtAccount().getId();
           }
-          if (strValidCombination.equals("")) {
+          if (StringUtils.isEmpty(strValidCombination)) {
             Map<String, String> parameters = new HashMap<String, String>();
             parameters.put(ACCOUNT_PARAM, "@DoubtfulDebt@");
             parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
@@ -1982,7 +1981,7 @@ public abstract class AcctServer {
           strValidCombination = vendorAccounts.get(0).getVendorPrepayment().getId();
         }
       }
-      if (strValidCombination.equals("")) {
+      if (StringUtils.isEmpty(strValidCombination)) {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(ACCOUNT_PARAM,
             isReceipt ? (isPrepayment ? "@CustomerPrepayment@" : "@CustomerReceivables@")
@@ -2044,7 +2043,7 @@ public abstract class AcctServer {
         && customerAccounts.get(0).getBadDebtRevenueAccount() != null && !isExpense) {
       strValidCombination = customerAccounts.get(0).getBadDebtRevenueAccount().getId();
     }
-    if (strValidCombination.equals("")) {
+    if (StringUtils.isEmpty(strValidCombination)) {
       Map<String, String> parameters = new HashMap<String, String>();
       if (isExpense) {
         parameters.put(ACCOUNT_PARAM, "@BadDebtExpenseAccount@");
@@ -2097,7 +2096,7 @@ public abstract class AcctServer {
         && customerAccounts.get(0).getAllowanceForDoubtfulDebtAccount() != null) {
       strValidCombination = customerAccounts.get(0).getAllowanceForDoubtfulDebtAccount().getId();
     }
-    if (strValidCombination.equals("")) {
+    if (StringUtils.isEmpty(strValidCombination)) {
       Map<String, String> parameters = new HashMap<String, String>();
       parameters.put(ACCOUNT_PARAM, "@AllowanceForDoubtfulDebtAccount@");
       parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
@@ -2375,7 +2374,7 @@ public abstract class AcctServer {
     if (messageResult == null) {
       messageResult = new OBError();
     }
-    if (strMessageType == null || StringUtils.isEmpty(strMessageType)) {
+    if (StringUtils.isEmpty(strMessageType)) {
       messageResult.setType("Error");
     } else {
       messageResult.setType(strMessageType);
@@ -2384,7 +2383,7 @@ public abstract class AcctServer {
 
     messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
         Utility.parseTranslation(conn, vars, vars.getLanguage(), strTitle)));
-    if (strMessage != null) {
+    if (StringUtils.isEmpty(strMessage)) {
       messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
           Utility.parseTranslation(conn, vars, vars.getLanguage(), strMessage)));
     }
@@ -2423,12 +2422,11 @@ public abstract class AcctServer {
       case STATUS_InvalidCost:
         if (params.isEmpty()) {
           return "@InvalidCost@";
-        } else {
-          // Translate account name from messages
-          params.put(ACCOUNT_PARAM,
-              Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
-          return "@InvalidCostWhichProduct@";
         }
+        // Translate account name from messages
+        params.put(ACCOUNT_PARAM,
+            Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
+        return "@InvalidCostWhichProduct@";
       case STATUS_NoRelatedPO:
         return params.isEmpty() ? "@GoodsReceiptTransactionWithNoPO@" : "@GoodsReceiptTransactionWithNoPOWichProduct@";
       case STATUS_DocumentDisabled:
@@ -2440,12 +2438,11 @@ public abstract class AcctServer {
       case STATUS_InvalidAccount:
         if (params.isEmpty()) {
           return "@InvalidAccount@";
-        } else {
-          // Translate account name from messages
-          params.put(ACCOUNT_PARAM,
-              Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
-          return "@InvalidWhichAccount@";
         }
+        // Translate account name from messages
+        params.put(ACCOUNT_PARAM,
+            Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
+        return "@InvalidWhichAccount@";
       case STATUS_NODOCTYPE:
         return "@NoDocTypeForDocument@";
       case STATUS_PeriodClosed:
@@ -2467,7 +2464,7 @@ public abstract class AcctServer {
       case STATUS_NoAccountingDate:
         return "@NoAccountingDate@";
       default:
-        return "";
+        return "@ProcessRunError@";
     }
   }
 
@@ -2600,7 +2597,7 @@ public abstract class AcctServer {
       } else {
         String convertedAmt = getConvertedAmt(_amount.toString(), currencyIDFrom, currencyIDTo,
             conversionDate, "", AD_Client_ID, AD_Org_ID, conn);
-        if (convertedAmt != null && !"".equals(convertedAmt)) {
+        if (StringUtils.isNotEmpty(convertedAmt)) {
           amtFrom = new BigDecimal(convertedAmt);
         } else {
           throw new OBException(NOT_CONVERTIBLE_MESSAGE);
@@ -2651,12 +2648,12 @@ public abstract class AcctServer {
       } else {
         String convertedAmt = getConvertedAmt(_amount.toString(), currencyIDFrom, currencyIDTo,
             conversionDate, "", AD_Client_ID, AD_Org_ID, conn);
-        if (convertedAmt != null && !"".equals(convertedAmt)) {
+        if (StringUtils.isNotEmpty(convertedAmt)) {
           amtTo = new BigDecimal(convertedAmt);
         } else {
           throw new OBException(NOT_CONVERTIBLE_MESSAGE);
         }
-        if (amtTo.compareTo(BigDecimal.ZERO) != 0) {
+        if (BigDecimal.ZERO.compareTo(amtTo) != 0) {
           amtFromSourcecurrency = amtFrom.multiply(_amount)
               .divide(amtTo, conversionRatePrecision, RoundingMode.HALF_EVEN);
         } else {

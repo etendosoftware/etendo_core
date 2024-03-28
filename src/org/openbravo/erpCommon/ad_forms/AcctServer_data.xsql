@@ -165,8 +165,9 @@
       <Sql>
       <![CDATA[
       select max(c_period.c_period_id) as period,
-      case when exists(select 1 from c_doctype d where d.docbasetype = ?
-      and ad_client_id = ?)
+      case when exists(select 1 from c_doctype d
+      where ad_client_id = ?
+      and d.docbasetype = ?)
       then 'Y' else 'N' end as hasDocType
       from c_period, c_periodcontrol
       where c_period.c_period_id = c_periodcontrol.c_period_id
@@ -179,8 +180,8 @@
       and to_date(?) < c_period.EndDate + 1
       ]]>
       </Sql>
-      <Parameter name="DocumentType"/>
       <Parameter name="AD_Client_ID"/>
+      <Parameter name="DocumentType"/>
       <Parameter name="AD_Client_ID"/>
       <Parameter name="DocumentType"/>
       <Parameter name="Org"/>
