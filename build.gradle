@@ -5,8 +5,7 @@ plugins {
     id 'war'
     id 'idea'
     id 'groovy'
-    id "me.champeau.jmh" version "0.6.5"
-    id 'com.etendoerp.gradleplugin' version 'latest.release'
+    id 'com.etendoerp.gradleplugin' version '1.3.3'
     id 'org.kordamp.gradle.jandex' version '0.11.0'
 }
 compileJava.options.encoding = "UTF-8"
@@ -35,9 +34,9 @@ dependencies {
 
 }
 
-final String CURRENT_VERSION = "23.4.5"
-final String NEXT_RELEASE = "24.1.0"
-final String NEXT_HOTFIX = "23.4.6"
+final String CURRENT_VERSION = "24.1.0"
+final String NEXT_RELEASE = "24.2.0"
+final String NEXT_HOTFIX = "24.1.1"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
@@ -77,29 +76,6 @@ jar{
     zip64 = true
 }
 
-jmh {
-    zip64 = true
-}
-// hack so that the jmhJar task configures the zip64 property
-project.tasks.findByName("jmhJar").configure {
-    it.zip64 = true
-    it.manifest {
-        // make lo4j2 work in the generated jar
-        attributes 'Multi-Release': 'true'
-    }
-}
-
-sourceSets {
-    jmh {
-        java {
-            srcDirs 'src-jmh'
-        }
-        resources {
-            srcDirs 'src-jmh/resources'
-        }
-    }
-}
-
 def whiteSyncCoreList = [
         'legal/**',
         'lib/**',
@@ -109,7 +85,6 @@ def whiteSyncCoreList = [
         'src-db/**',
         'src-test/**',
         'src-core/**',
-        'src-jmh/**',
         'src-trl/**',
         'src-util/**',
         'src-wad/**',
@@ -120,12 +95,6 @@ def whiteSyncCoreList = [
         'gradle.bat',
         'build.xml'
 ]
-dependencies {
-    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.28'
-    jmh 'org.jboss.weld.se:weld-se-core:3.1.8.Final'
-    jmhAnnotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.28')
-    annotationProcessor('org.openjdk.jmh:jmh-generator-annprocess:1.28')
-}
 
 publishing {
     publications {
@@ -341,10 +310,5 @@ task call_sass(type: Exec) {}
 
 task deploySkin (dependsOn: ["cssCompile", "deploy.skin"]) doLast {
 
-}
-
-task djmh(type: JavaExec, dependsOn: jmhCompileGeneratedClasses) {
-    main = project.hasProperty("benchmark") ? project.getProperty("benchmark") : null
-    classpath = sourceSets.jmh.compileClasspath + sourceSets.jmh.runtimeClasspath
 }
 
