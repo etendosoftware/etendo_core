@@ -108,6 +108,8 @@ public class AddPaymentActionHandler extends Action {
   private static final String RESPONSE_ACTION = "responseActions";
   private static final String DOCUMENT_ACTION = "document_action";
   private static final String FIN_PAYMENT = "FIN_Payment";
+  private static final String PRE_PROCESS_METHOD = "preProcess";
+  private static final String POST_PROCESS_METHOD = "posProcess";
 
   @Inject
   @Any
@@ -232,8 +234,6 @@ public class AddPaymentActionHandler extends Action {
     boolean openedFromMenu = false;
     String comingFrom = null;
     try {
-      JSONObject resultHook;
-      List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
       if (isWebService) {
         FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, paymentId);
         if (payment.isProcessed()) {
@@ -255,14 +255,9 @@ public class AddPaymentActionHandler extends Action {
         VariablesSecureApp vars = RequestContext.get().getVariablesSecureApp();
         JSONObject jsonParams = content.getJSONObject("_params");
 
-        for (PaymentProcessHook hook : hookList) {
-          resultHook = hook.preProcess(jsonParams);
-          JSONObject message = (resultHook != null && resultHook.has(MESSAGE)) ? resultHook.getJSONObject(
-              MESSAGE) : null;
-          if (message != null && message.has(SEVERITY)
-              && StringUtils.equalsIgnoreCase(ERROR, message.getString(SEVERITY))) {
-            return resultHook;
-          }
+        JSONObject resultPre = executeHooks(jsonParams, PRE_PROCESS_METHOD);
+        if (resultPre != null) {
+          return resultPre;
         }
 
         // Get Params
@@ -384,14 +379,9 @@ public class AddPaymentActionHandler extends Action {
           jsonResponse.put(RESPONSE_ACTION, responseActions);
 
         }
-        for (PaymentProcessHook hook : hookList) {
-          resultHook = hook.posProcess(jsonParams);
-          JSONObject message = (resultHook != null && resultHook.has(MESSAGE)) ? resultHook.getJSONObject(
-              MESSAGE) : null;
-          if (message != null && message.has(SEVERITY)
-              && StringUtils.equalsIgnoreCase(ERROR, message.getString(SEVERITY))) {
-            return resultHook;
-          }
+        JSONObject resultPost = executeHooks(jsonParams, POST_PROCESS_METHOD);
+        if(resultPost != null) {
+          return resultPost;
         }
       }
     } catch (Exception e) {
@@ -937,5 +927,24 @@ public class AddPaymentActionHandler extends Action {
       log.info(e);
       throw e;
     }
+  }
+
+  protected JSONObject executeHooks(JSONObject jsonParams, String methodName) throws JSONException {
+    List<PaymentProcessHook> hookList = PaymentProcessOrderHook.sortHooksByPriority(hooks);
+    for (PaymentProcessHook hook : hookList) {
+      JSONObject resultHook = null;
+      if (StringUtils.equals(methodName, PRE_PROCESS_METHOD)) {
+        resultHook = hook.preProcess(jsonParams);
+      } else if (StringUtils.equals(methodName, POST_PROCESS_METHOD)) {
+        resultHook = hook.posProcess(jsonParams);
+      }
+
+      JSONObject message = (resultHook != null && resultHook.has(MESSAGE)) ? resultHook.getJSONObject(MESSAGE) : null;
+      if (message != null && message.has(SEVERITY)
+          && StringUtils.equalsIgnoreCase(ERROR, message.getString(SEVERITY))) {
+        return resultHook;
+      }
+    }
+    return null;
   }
 }
