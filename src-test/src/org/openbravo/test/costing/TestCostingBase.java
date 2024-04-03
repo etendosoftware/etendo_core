@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2018 Openbravo SLU
- * All Rights Reserved. 
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -34,10 +34,13 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.datamodel.Table;
+import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.currency.Currency;
+import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchemaTable;
+import org.openbravo.model.financialmgmt.gl.GLCategory;
 import org.openbravo.model.materialmgmt.cost.CostingAlgorithm;
 import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.test.costing.utils.TestCostingConstants;
@@ -79,6 +82,33 @@ public class TestCostingBase extends WeldBaseTest {
             .get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID);
         organization.setCurrency(OBDal.getInstance().get(Currency.class, EURO_ID));
         OBDal.getInstance().save(organization);
+
+        // Create Internal Consumption Document Type if it does not exist for this context
+        OBCriteria<DocumentType> internalConsCrit = OBDal.getInstance().createCriteria(DocumentType.class);
+        internalConsCrit.add(
+            Restrictions.eq(DocumentType.PROPERTY_CLIENT, OBDal.getInstance().get(Client.class, QA_TEST_CLIENT_ID)));
+        internalConsCrit.add(
+            Restrictions.eq(DocumentType.PROPERTY_ORGANIZATION,
+                OBDal.getInstance().get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID)));
+        internalConsCrit.add(Restrictions.eq(DocumentType.PROPERTY_DOCUMENTCATEGORY, "MIC"));
+        internalConsCrit.add(
+            Restrictions.eq(DocumentType.PROPERTY_TABLE, OBDal.getInstance().get(Table.class, "800168")));
+        internalConsCrit.setMaxResults(1);
+
+        if (internalConsCrit.uniqueResult() == null) {
+          DocumentType internalConsumptionDocType = OBProvider.getInstance().get(DocumentType.class);
+          internalConsumptionDocType.setClient(
+              OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID));
+          internalConsumptionDocType.setOrganization(
+              OBDal.getInstance().get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID));
+          internalConsumptionDocType.setName("Internal Consumption");
+          internalConsumptionDocType.setPrintText("Internal Consumption");
+          internalConsumptionDocType.setDocumentCategory("MIC");
+          internalConsumptionDocType.setGLCategory(
+              OBDal.getInstance().get(GLCategory.class, TestCostingConstants.GL_CAT_STANDARD_ID));
+          internalConsumptionDocType.setTable(OBDal.getInstance().get(Table.class, "800168"));
+          OBDal.getInstance().save(internalConsumptionDocType);
+        }
 
         // Set allow negatives in General Ledger
         AcctSchema acctSchema = OBDal.getInstance()

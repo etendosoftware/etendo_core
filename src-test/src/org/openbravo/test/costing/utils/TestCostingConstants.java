@@ -116,6 +116,7 @@ public class TestCostingConstants {
   public static final String ENABLE_AUTOMATIC_PRICE_CORRECTION_TRXS = "enableAutomaticPriceCorrectionTrxs";
   // Negative Stock Correction Preference
   public static final String ENABLE_NEGATIVE_STOCK_CORRECTION_PREFERENCE = "enableNegativeStockCorrections";
+  public static final String GL_CAT_STANDARD_ID = "FF8080812C2ABFC6012C2B3BE4980098";
 
   public static final Organization ALL_ORGANIZATIONS = OBDal.getInstance()
       .get(Organization.class, "0");
