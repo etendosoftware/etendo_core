@@ -170,10 +170,11 @@ BEGIN
     AND NOT EXISTS 
         (
             SELECT 1
-            FROM C_INVOICELINETAX
+            FROM C_INVOICELINE
             WHERE C_TAX_ID = :OLD.C_TAX_ID
             AND C_INVOICE_ID = :OLD.C_INVOICE_ID
-        );    
+            AND C_INVOICELINE_ID <> :OLD.C_INVOICELINE_ID
+        );   
   END IF;
 END IF;
 END C_INVOICELINETAX_TRG

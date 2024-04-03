@@ -169,9 +169,10 @@ BEGIN
     AND NOT EXISTS 
         (
             SELECT 1
-            FROM C_ORDERLINETAX
+            FROM C_ORDERLINE
             WHERE C_TAX_ID = :OLD.C_TAX_ID
             AND C_ORDER_ID = :OLD.C_ORDER_ID
+            AND C_ORDERLINE_ID <> :OLD.C_ORDERLINE_ID
         );
   END IF;
 END C_ORDERLINETAX_TRG
