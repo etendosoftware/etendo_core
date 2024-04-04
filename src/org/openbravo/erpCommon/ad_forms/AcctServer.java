@@ -132,7 +132,7 @@ public abstract class AcctServer {
   public String M_Warehouse_ID = "";
   public String Posted = "";
   public String DocumentType = "";
-  private String hasDocumentType = "";
+  public String hasDocumentType = "";
   public String TaxIncluded = "";
   public String GL_Category_ID = "";
   public String Record_ID = "";

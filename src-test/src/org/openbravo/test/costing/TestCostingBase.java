@@ -85,11 +85,6 @@ public class TestCostingBase extends WeldBaseTest {
 
         // Create Internal Consumption Document Type if it does not exist for this context
         OBCriteria<DocumentType> internalConsCrit = OBDal.getInstance().createCriteria(DocumentType.class);
-        internalConsCrit.add(
-            Restrictions.eq(DocumentType.PROPERTY_CLIENT, OBDal.getInstance().get(Client.class, QA_TEST_CLIENT_ID)));
-        internalConsCrit.add(
-            Restrictions.eq(DocumentType.PROPERTY_ORGANIZATION,
-                OBDal.getInstance().get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID)));
         internalConsCrit.add(Restrictions.eq(DocumentType.PROPERTY_DOCUMENTCATEGORY, "MIC"));
         internalConsCrit.add(
             Restrictions.eq(DocumentType.PROPERTY_TABLE, OBDal.getInstance().get(Table.class, "800168")));
@@ -97,10 +92,6 @@ public class TestCostingBase extends WeldBaseTest {
 
         if (internalConsCrit.uniqueResult() == null) {
           DocumentType internalConsumptionDocType = OBProvider.getInstance().get(DocumentType.class);
-          internalConsumptionDocType.setClient(
-              OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID));
-          internalConsumptionDocType.setOrganization(
-              OBDal.getInstance().get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID));
           internalConsumptionDocType.setName("Internal Consumption");
           internalConsumptionDocType.setPrintText("Internal Consumption");
           internalConsumptionDocType.setDocumentCategory("MIC");
