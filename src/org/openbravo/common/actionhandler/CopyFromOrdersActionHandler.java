@@ -76,6 +76,7 @@ public class CopyFromOrdersActionHandler extends BaseProcessActionHandler {
         int createdOrderLinesCount = copyFromOrdersProcess.copyOrderLines(processingOrder,
             selectedOrders);
         jsonRequest.put(MESSAGE, getSuccessMessage(createdOrderLinesCount));
+        jsonRequest.put("refreshParent", true);
       }
     } catch (Exception e) {
       log.error("Error in CopyFromOrders Action Handler", e);
@@ -88,7 +89,6 @@ public class CopyFromOrdersActionHandler extends BaseProcessActionHandler {
         log.error(e.getMessage(), e2);
       }
     }
-
     return jsonRequest;
   }
 
