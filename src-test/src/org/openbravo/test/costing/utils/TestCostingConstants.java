@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2017-2018 Openbravo SLU
- * All Rights Reserved. 
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -118,8 +118,10 @@ public class TestCostingConstants {
   public static final String ENABLE_NEGATIVE_STOCK_CORRECTION_PREFERENCE = "enableNegativeStockCorrections";
   public static final String GL_CAT_STANDARD_ID = "FF8080812C2ABFC6012C2B3BE4980098";
 
+  public static final String MAT_INT_CONSUMPTION_DOC_CAT = "MIC";
+  public static final String INTERNAL_CONSUMPTION = "Internal Consumption";
+  public static final String INTERNAL_CONSUMPTION_TABLE_ID = "800168";
   public static final Organization ALL_ORGANIZATIONS = OBDal.getInstance()
       .get(Organization.class, "0");
-
   public static boolean runBefore = true;
 }

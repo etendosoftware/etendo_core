@@ -34,7 +34,6 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.datamodel.Table;
-import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
@@ -85,19 +84,22 @@ public class TestCostingBase extends WeldBaseTest {
 
         // Create Internal Consumption Document Type if it does not exist for this context
         OBCriteria<DocumentType> internalConsCrit = OBDal.getInstance().createCriteria(DocumentType.class);
-        internalConsCrit.add(Restrictions.eq(DocumentType.PROPERTY_DOCUMENTCATEGORY, "MIC"));
+        internalConsCrit.add(Restrictions.eq(DocumentType.PROPERTY_DOCUMENTCATEGORY,
+            TestCostingConstants.MAT_INT_CONSUMPTION_DOC_CAT));
         internalConsCrit.add(
-            Restrictions.eq(DocumentType.PROPERTY_TABLE, OBDal.getInstance().get(Table.class, "800168")));
+            Restrictions.eq(DocumentType.PROPERTY_TABLE, OBDal.getInstance().get(Table.class,
+                TestCostingConstants.INTERNAL_CONSUMPTION_TABLE_ID)));
         internalConsCrit.setMaxResults(1);
 
         if (internalConsCrit.uniqueResult() == null) {
           DocumentType internalConsumptionDocType = OBProvider.getInstance().get(DocumentType.class);
-          internalConsumptionDocType.setName("Internal Consumption");
-          internalConsumptionDocType.setPrintText("Internal Consumption");
-          internalConsumptionDocType.setDocumentCategory("MIC");
+          internalConsumptionDocType.setName(TestCostingConstants.INTERNAL_CONSUMPTION);
+          internalConsumptionDocType.setPrintText(TestCostingConstants.INTERNAL_CONSUMPTION);
+          internalConsumptionDocType.setDocumentCategory(TestCostingConstants.MAT_INT_CONSUMPTION_DOC_CAT);
           internalConsumptionDocType.setGLCategory(
               OBDal.getInstance().get(GLCategory.class, TestCostingConstants.GL_CAT_STANDARD_ID));
-          internalConsumptionDocType.setTable(OBDal.getInstance().get(Table.class, "800168"));
+          internalConsumptionDocType.setTable(OBDal.getInstance().get(Table.class,
+              TestCostingConstants.INTERNAL_CONSUMPTION_TABLE_ID));
           OBDal.getInstance().save(internalConsumptionDocType);
         }
 

@@ -178,6 +178,7 @@
       and c_periodcontrol.ad_org_id = ?
       and to_date(?) >= c_period.StartDate
       and to_date(?) < c_period.EndDate + 1
+      group by c_period.c_period_id , c_period.ad_client_id, c_periodcontrol.docbasetype
       ]]>
       </Sql>
       <Parameter name="AD_Client_ID"/>
