@@ -1348,14 +1348,16 @@ public abstract class AcctServer {
       if (messageResult == null || StringUtils.isBlank(messageResult.getMessage())) {
         setMessageResult(OBMessageUtils.translateError(strMessageError));
       }
-      if (StringUtils.equals(NOT_CONVERTIBLE_MESSAGE, strMessageError)) {
-        return STATUS_NotConvertible;
-      } else if (StringUtils.equals(strMessageError, "@PeriodNotAvailable@")) {
-        return STATUS_PeriodClosed;
-      } else if (StringUtils.equals(strMessageError, "@NotCalculatedCost@")) {
-        return STATUS_NotCalculatedCost;
+      switch (strMessageError) {
+        case NOT_CONVERTIBLE_MESSAGE:
+          return STATUS_NotConvertible;
+        case "@PeriodNotAvailable@":
+          return STATUS_PeriodClosed;
+        case "@NotCalculatedCost@":
+          return STATUS_NotCalculatedCost;
+        default:
+          return STATUS_Error;
       }
-      return STATUS_Error;
     } catch (Exception e) {
       log4j.warn("Accounting process failed. RecordID: %s - TableId: %s - %s", Record_ID, AD_Table_ID, e);
       return STATUS_Error;
