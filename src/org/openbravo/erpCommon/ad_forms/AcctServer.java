@@ -1662,6 +1662,10 @@ public abstract class AcctServer {
           .getId();
       data = AcctServerData.selectPeriodOpen(connectionProvider, AD_Client_ID, DocumentType,
           strOrgCalendarOwner, DateAcct);
+      if(data.length == 0) {
+        C_Period_ID = "";
+        return;
+      }
       C_Period_ID = data[0].period;
       hasDocumentType = data[0].hasdoctype;
 
@@ -2574,7 +2578,7 @@ public abstract class AcctServer {
 
     messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
         Utility.parseTranslation(conn, vars, vars.getLanguage(), strTitle)));
-    if (StringUtils.isEmpty(strMessage)) {
+    if (StringUtils.isNotEmpty(strMessage)) {
       messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
           Utility.parseTranslation(conn, vars, vars.getLanguage(), strMessage)));
     }
