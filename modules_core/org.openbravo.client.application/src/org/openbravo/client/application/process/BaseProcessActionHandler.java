@@ -55,6 +55,7 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 
   private static final String GRID_REFERENCE_ID = "FF80818132D8F0F30132D9BC395D0038";
+  public static final String REFRESH_PARENT = "refreshParent";
 
   @Override
   protected final JSONObject execute(Map<String, Object> parameters, String content) {
@@ -150,7 +151,8 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
           }
         }
       }
-      return doExecute(parameters, updatedContent);
+      JSONObject result = doExecute(parameters, updatedContent);
+      return doRefreshParent(result);
 
     } catch (Exception e) {
       log.error("Error trying to execute process [{}]: ", processId, e);
@@ -165,6 +167,12 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     } finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  private JSONObject doRefreshParent(JSONObject result) throws JSONException {
+    boolean deRefresh = !result.has(REFRESH_PARENT) || result.getBoolean(REFRESH_PARENT);
+    result.put(REFRESH_PARENT, deRefresh);
+    return result;
   }
 
   /**
