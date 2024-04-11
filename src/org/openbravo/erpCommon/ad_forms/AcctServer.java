@@ -44,6 +44,7 @@ import org.openbravo.advpaymentmngt.APRM_FinaccTransactionV;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
+import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -84,6 +85,18 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 
 public abstract class AcctServer {
+  public static final String WARNING = "Warning";
+  public static final String NOT_CONVERTIBLE_MESSAGE = "@NotConvertible@";
+  public static final String ACCOUNT_PARAM = "Account";
+  public static final String BP_CATEGORY_ID = "bpCategoryID";
+  public static final String ACCT_SCHEMA_ID = "acctSchemaID";
+  public static final String ENTITY = "Entity";
+  public static final String ACCOUNTING_SCHEMA = "AccountingSchema";
+  public static final String DATE_FORMAT_JAVA_FILE = "dateFormat.java";
+  public static final String CURRENCY_ID_TO = "CurrencyIDTo";
+  public static final String CURRENCY_ID_FROM = "CurrencyIDFrom";
+  public static final String CUSCATA_TABLE_ALIAS = " as cuscata ";
+  public static final String WHERE_CLAUSE_CUSCATA_BPCAT = " where cuscata.businessPartnerCategory.id = :bpCategoryID";
   static Logger log4j = LogManager.getLogger();
 
   protected ConnectionProvider connectionProvider;
@@ -129,6 +142,7 @@ public abstract class AcctServer {
   public String M_Warehouse_ID = "";
   public String Posted = "";
   public String DocumentType = "";
+  public String hasDocumentType = "";
   public String TaxIncluded = "";
   public String GL_Category_ID = "";
   public String Record_ID = "";
@@ -240,6 +254,10 @@ public abstract class AcctServer {
    * Document Status
    */
   public static final String STATUS_NoAccountingDate = "AD";
+  /**
+   * Document Status
+   */
+  public static final String STATUS_NODOCTYPE = "DT";
 
   /**
    * Table IDs for document level conversion rates
@@ -914,7 +932,7 @@ public abstract class AcctServer {
       OBContext.restorePreviousMode();
     }
     if (!isTableActive) {
-      setMessageResult(conn, vars, STATUS_TableDisabled, "Warning");
+      setMessageResult(conn, vars, STATUS_TableDisabled, WARNING);
       return false;
     }
     // for all Accounting Schema
@@ -1234,33 +1252,16 @@ public abstract class AcctServer {
     if (!isPeriodOpen()) {
       return STATUS_PeriodClosed;
     }
-
-    // createFacts
-    try {
-      m_fact[index] = createFact(m_as[index], conn, con, vars);
-    } catch (OBException e) {
-      log4j.warn("Accounting process failed. RecordID: " + Record_ID + " - TableId: " + AD_Table_ID,
-          e);
-      String strMessageError = e.getMessage();
-      if (strMessageError.indexOf("") != -1) {
-        if (messageResult == null
-            || (messageResult != null && StringUtils.isBlank(messageResult.getMessage()))) {
-          setMessageResult(OBMessageUtils.translateError(strMessageError));
-        }
-        if ("@NotConvertible@".equals(strMessageError)) {
-          return STATUS_NotConvertible;
-        } else if (StringUtils.equals(strMessageError, "@PeriodNotAvailable@")) {
-          return STATUS_PeriodClosed;
-        } else if (StringUtils.equals(strMessageError, "@NotCalculatedCost@")) {
-          return STATUS_NotCalculatedCost;
-        }
-      }
-      return STATUS_Error;
-    } catch (Exception e) {
-      log4j.warn("Accounting process failed. RecordID: " + Record_ID + " - TableId: " + AD_Table_ID,
-          e);
-      return STATUS_Error;
+    // rejectNoDocType
+    if (StringUtils.equals("N", hasDocumentType)) {
+      return STATUS_NODOCTYPE;
     }
+
+    String createFactsStatus = createFacts(index, conn, con, vars);
+    if (createFactsStatus != null) {
+      return createFactsStatus;
+    }
+
     if (!Status.equals(STATUS_NotPosted)) {
       return Status;
     }
@@ -1283,11 +1284,32 @@ public abstract class AcctServer {
     if (!m_fact[index].isAcctBalanced()) {
       m_fact[index].balanceAccounting(conn);
     }
+    return executeAcctTemplatesAndGetFinalStatus(conn, con, vars, as);
+  } // postLogic
+
+  /**
+   * Executes the account templates and returns the final status.
+   * This method processes defined actions to be executed at posting time for the given accounting schema.
+   *
+   * @param conn
+   *     the connection provider for database access
+   * @param con
+   *     the database connection object
+   * @param vars
+   *     the secure application variables for the current session
+   * @param as
+   *     the accounting schema for which the templates are executed
+   * @return the final status after executing the account templates
+   * @throws ServletException
+   *     if an error occurs during execution, such as class instantiation or template execution failure
+   */
+  private String executeAcctTemplatesAndGetFinalStatus(ConnectionProvider conn, Connection con, VariablesSecureApp vars,
+      AcctSchema as) throws ServletException {
     // Here processes defined to be executed at posting time, when existing, will be executed
     AcctServerData[] data = AcctServerData.selectAcctProcess(conn, as.m_C_AcctSchema_ID);
-    for (int i = 0; data != null && i < data.length; i++) {
-      String strClassname = data[i].classname;
-      if (!strClassname.equals("")) {
+    for (AcctServerData datum : data) {
+      String strClassname = datum.classname;
+      if (!StringUtils.isNotEmpty(strClassname)) {
         try {
           AcctProcessTemplate newTemplate = (AcctProcessTemplate) Class.forName(strClassname)
               .getDeclaredConstructor()
@@ -1297,7 +1319,7 @@ public abstract class AcctServer {
             return getStatus();
           }
         } catch (Exception e) {
-          log4j.error("Error while creating new instance for AcctProcessTemplate - " + e);
+          log4j.error("Error while creating new instance for AcctProcessTemplate - %s", e);
           return AcctServer.STATUS_Error;
         }
       }
@@ -1306,7 +1328,42 @@ public abstract class AcctServer {
       return getStatus();
     }
     return STATUS_Posted;
-  } // postLogic
+  }
+
+  /**
+   * Creates Financial Acct Accounting entries for the given accounting schema.
+   *
+   * @param acctSchemaIndex the index of the accounting schema
+   * @param conn the connection provider
+   * @param con the connection object
+   * @param vars the VariablesSecureApp object
+   * @return the status of the fact creation process
+   */
+  private String createFacts(int acctSchemaIndex, ConnectionProvider conn, Connection con, VariablesSecureApp vars) {
+    try {
+      m_fact[acctSchemaIndex] = createFact(m_as[acctSchemaIndex], conn, con, vars);
+    } catch (OBException e) {
+      log4j.warn("Accounting process failed. RecordID: %s - TableId: %s - %s", Record_ID, AD_Table_ID, e);
+      String strMessageError = e.getMessage();
+      if (messageResult == null || StringUtils.isBlank(messageResult.getMessage())) {
+        setMessageResult(OBMessageUtils.translateError(strMessageError));
+      }
+      switch (strMessageError) {
+        case NOT_CONVERTIBLE_MESSAGE:
+          return STATUS_NotConvertible;
+        case "@PeriodNotAvailable@":
+          return STATUS_PeriodClosed;
+        case "@NotCalculatedCost@":
+          return STATUS_NotCalculatedCost;
+        default:
+          return STATUS_Error;
+      }
+    } catch (Exception e) {
+      log4j.warn("Accounting process failed. RecordID: %s - TableId: %s - %s", Record_ID, AD_Table_ID, e);
+      return STATUS_Error;
+    }
+    return null;
+  }
 
   /**
    * Is the Source Document Balanced
@@ -1606,6 +1663,7 @@ public abstract class AcctServer {
       data = AcctServerData.selectPeriodOpen(connectionProvider, AD_Client_ID, DocumentType,
           strOrgCalendarOwner, DateAcct);
       C_Period_ID = data[0].period;
+      hasDocumentType = data[0].hasdoctype;
 
       if (log4j.isDebugEnabled()) {
         log4j.debug("AcctServer - setC_Period_ID - " + AD_Client_ID + "/" + DateAcct + "/"
@@ -1872,6 +1930,91 @@ public abstract class AcctServer {
   }
 
   /**
+   * This method generates parameters for a message based on the provided use, financial account accounting, and a boolean flag indicating if it is a receipt.
+   *
+   * @param use
+   *     The intended use of the message
+   * @param financialAccountAccounting
+   *     The financial account accounting object containing account and accounting schema information
+   * @param bIsReceipt
+   *     A boolean flag indicating if it is a receipt
+   * @return A map of parameters for the message, including account, entity, and accounting schema
+   */
+  private static Map<String, String> getParametersForMessage(String use,
+      FIN_FinancialAccountAccounting financialAccountAccounting, boolean bIsReceipt) {
+    Map<String, String> parameters = new HashMap<>();
+    String strAccount = getStrAccount(use, bIsReceipt);
+    parameters.put(ACCOUNT_PARAM, strAccount);
+    if (financialAccountAccounting.getAccount() != null) {
+      parameters.put(ENTITY, financialAccountAccounting.getAccount().getIdentifier());
+    }
+    parameters.put(ACCOUNTING_SCHEMA,
+        financialAccountAccounting.getAccountingSchema().getIdentifier());
+    return parameters;
+  }
+
+  /**
+   * This method generates a string representation of an account based on the provided use and a boolean flag indicating if it is a receipt.
+   *
+   * @param use
+   *     The intended use of the account
+   * @param bIsReceipt
+   *     A boolean flag indicating if it is a receipt
+   * @return A string representing the account based on the use and receipt status
+   */
+
+  private static String getStrAccount(String use, boolean bIsReceipt) {
+    String strAccount;
+    if (bIsReceipt) {
+      if (StringUtils.equals("INT", use)) strAccount = "@InTransitPaymentAccountIN@";
+      else strAccount = StringUtils.equals("DEP", use) ? "@DepositAccount@" : "@ClearedPaymentAccount@";
+    } else {
+      if (StringUtils.equals("INT", use)) {
+        strAccount = ("@InTransitPaymentAccountOUT@");
+      } else {
+        if (StringUtils.equals("CLE", use)) strAccount = "@ClearedPaymentAccountOUT@";
+        else strAccount = "@WithdrawalAccount@";
+      }
+    }
+    return strAccount;
+  }
+
+  /**
+   * This method retrieves the conversion date based on the provided table ID, record ID, and date format.
+   *
+   * @param tableId
+   *     The ID of the table associated with the conversion date
+   * @param recordId
+   *     The ID of the record for which the conversion date is needed
+   * @param dateFormat
+   *     The date format to be used for formatting the conversion date
+   * @return A string representing the conversion date based on the table ID and record ID
+   * @throws IllegalStateException
+   *     if an invalid table ID is provided
+   */
+  private static String getConversionDate(String tableId, String recordId, SimpleDateFormat dateFormat) {
+    String conversionDate;
+    switch (tableId) {
+      case TABLEID_Invoice:
+        Invoice invoice = OBDal.getInstance().get(Invoice.class, recordId);
+        conversionDate = dateFormat.format(invoice.getAccountingDate());
+        break;
+      case TABLEID_Payment:
+        FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, recordId);
+        conversionDate = dateFormat.format(payment.getPaymentDate());
+        break;
+      case TABLEID_Transaction:
+        FIN_FinaccTransaction transaction = OBDal.getInstance()
+            .get(FIN_FinaccTransaction.class, recordId);
+        conversionDate = dateFormat.format(transaction.getDateAcct());
+        break;
+      default:
+        throw new IllegalStateException();
+    }
+    return conversionDate;
+  }
+
+  /**
    * Get the account for Accounting Schema
    *
    * @param cBPartnerId
@@ -1888,102 +2031,14 @@ public abstract class AcctServer {
     OBContext.setAdminMode();
     try {
       if (isReceipt) {
-        String whereClause = "";
-        if (isDoubtfuldebt) {
-          BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, cBPartnerId);
-          //@formatter:off
-          whereClause += " as cuscata "
-              + " where cuscata.businessPartnerCategory.id = :bpCategoryID"
-              + "  and cuscata.accountingSchema.id = :acctSchemaID";
-          //@formatter:on
-          final OBQuery<CategoryAccounts> obqParameters = OBDal.getInstance()
-              .createQuery(CategoryAccounts.class, whereClause);
-          obqParameters.setFilterOnReadableClients(false);
-          obqParameters.setFilterOnReadableOrganization(false);
-          obqParameters.setNamedParameter("bpCategoryID", bp.getBusinessPartnerCategory().getId());
-          obqParameters.setNamedParameter("acctSchemaID", as.m_C_AcctSchema_ID);
-          final List<CategoryAccounts> customerAccounts = obqParameters.list();
-          if (customerAccounts != null && customerAccounts.size() > 0
-              && customerAccounts.get(0).getDoubtfulDebtAccount() != null) {
-            strValidCombination = customerAccounts.get(0).getDoubtfulDebtAccount().getId();
-          }
-          if (strValidCombination.equals("")) {
-            Map<String, String> parameters = new HashMap<String, String>();
-            parameters.put("Account", "@DoubtfulDebt@");
-            parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
-            parameters.put("AccountingSchema",
-                OBDal.getInstance()
-                    .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
-                        as.getC_AcctSchema_ID())
-                    .getIdentifier());
-            setMessageResult(conn, STATUS_InvalidAccount, "error", parameters);
-            throw new IllegalStateException();
-          }
-          return new Account(conn, strValidCombination);
-        }
-
-        //@formatter:off
-        whereClause +=" as cusa "
-            + " where cusa.businessPartner.id = :bpartnerId"
-            + " and cusa.accountingSchema.id = :accountId"
-            + " and (cusa.status is null or cusa.status = 'DE')";
-        //@formatter:on
-
-        final OBQuery<CustomerAccounts> obqParameters = OBDal.getInstance()
-            .createQuery(CustomerAccounts.class, whereClause);
-        obqParameters.setNamedParameter("bpartnerId", cBPartnerId);
-        obqParameters.setNamedParameter("accountId", as.m_C_AcctSchema_ID);
-        obqParameters.setFilterOnReadableClients(false);
-        obqParameters.setFilterOnReadableOrganization(false);
-        final List<CustomerAccounts> customerAccounts = obqParameters.list();
-        if (customerAccounts != null && customerAccounts.size() > 0
-            && customerAccounts.get(0).getCustomerReceivablesNo() != null && !isPrepayment) {
-          strValidCombination = customerAccounts.get(0).getCustomerReceivablesNo().getId();
-        }
-        if (customerAccounts != null && customerAccounts.size() > 0
-            && customerAccounts.get(0).getCustomerPrepayment() != null && isPrepayment) {
-          strValidCombination = customerAccounts.get(0).getCustomerPrepayment().getId();
-        }
+        strValidCombination = isDoubtfuldebt ?
+            processDoubtfulDebt(cBPartnerId, as, conn) :
+            processCustomerAccount(cBPartnerId, as, isPrepayment);
       } else {
-        //@formatter:off
-        final String whereClause = " as vena "
-            + " where vena.businessPartner.id = :bpartnerId"
-            + " and vena.accountingSchema.id = :accountId"
-            + " and (vena.status is null or vena.status = 'DE')";
-        //@formatter:on
-
-        final OBQuery<VendorAccounts> obqParameters = OBDal.getInstance()
-            .createQuery(VendorAccounts.class, whereClause);
-        obqParameters.setNamedParameter("bpartnerId", cBPartnerId);
-        obqParameters.setNamedParameter("accountId", as.m_C_AcctSchema_ID);
-        obqParameters.setFilterOnReadableClients(false);
-        obqParameters.setFilterOnReadableOrganization(false);
-        final List<VendorAccounts> vendorAccounts = obqParameters.list();
-        if (vendorAccounts != null && vendorAccounts.size() > 0
-            && vendorAccounts.get(0).getVendorLiability() != null && !isPrepayment) {
-          strValidCombination = vendorAccounts.get(0).getVendorLiability().getId();
-        }
-        if (vendorAccounts != null && vendorAccounts.size() > 0
-            && vendorAccounts.get(0).getVendorPrepayment() != null && isPrepayment) {
-          strValidCombination = vendorAccounts.get(0).getVendorPrepayment().getId();
-        }
+        strValidCombination = processVendorAccount(cBPartnerId, as, isPrepayment);
       }
-      if (strValidCombination.equals("")) {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("Account",
-            isReceipt ? (isPrepayment ? "@CustomerPrepayment@" : "@CustomerReceivables@")
-                : (isPrepayment ? "@VendorPrepayment@" : "@VendorLiability@"));
-        BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, cBPartnerId);
-        if (bp != null) {
-          parameters.put("Entity", bp.getIdentifier());
-        }
-        parameters.put("AccountingSchema",
-            OBDal.getInstance()
-                .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
-                    as.getC_AcctSchema_ID())
-                .getIdentifier());
-        setMessageResult(conn, STATUS_InvalidAccount, "error", parameters);
-        throw new IllegalStateException();
+      if (StringUtils.isEmpty(strValidCombination)) {
+        handleInvalidAccountScenario(cBPartnerId, as, isReceipt, isPrepayment, conn);
       }
     } finally {
       OBContext.restorePreviousMode();
@@ -1992,9 +2047,169 @@ public abstract class AcctServer {
   } // getAccount
 
   /**
+   * Retrieve the Doubtful Debt account combination for a specific business partner and accounting schema,
+   * fetching the business partner information based on the provided ID and then querying the database to find the
+   * relevant Category Accounts based on the business partner category and accounting schema.
+   * If a valid Doubtful Debt account combination is found, return the ID of the account.
+   * If no valid combination is found, throw an IllegalStateException.
+   *
+   * @param cBPartnerId
+   *     The ID of the business partner for which the Doubtful Debt account combination is being processed.
+   * @param as
+   *     The accounting schema used to determine the account combination.
+   * @param conn
+   *     The connection provider for database operations.
+   * @return The ID of the valid Doubtful Debt account combination, if found.
+   * @throws IllegalStateException
+   *     If a valid Doubtful Debt account combination is not found for the given parameters.
+   */
+  private String processDoubtfulDebt(String cBPartnerId, AcctSchema as, ConnectionProvider conn) {
+    BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, cBPartnerId);
+    String strValidCombination = "";
+    String whereClause = CUSCATA_TABLE_ALIAS
+        + WHERE_CLAUSE_CUSCATA_BPCAT
+        + "  and cuscata.accountingSchema.id = :acctSchemaID";
+    final OBQuery<CategoryAccounts> obqParameters = OBDal.getInstance()
+        .createQuery(CategoryAccounts.class, whereClause);
+    obqParameters.setFilterOnReadableClients(false);
+    obqParameters.setFilterOnReadableOrganization(false);
+    obqParameters.setNamedParameter(BP_CATEGORY_ID, bp.getBusinessPartnerCategory().getId());
+    obqParameters.setNamedParameter(ACCT_SCHEMA_ID, as.m_C_AcctSchema_ID);
+    final List<CategoryAccounts> customerAccounts = obqParameters.list();
+    if (customerAccounts != null && !customerAccounts.isEmpty()
+        && customerAccounts.get(0).getDoubtfulDebtAccount() != null) {
+      strValidCombination = customerAccounts.get(0).getDoubtfulDebtAccount().getId();
+    }
+    if (StringUtils.isEmpty(strValidCombination)) {
+      Map<String, String> parameters = new HashMap<>();
+      parameters.put(ACCOUNT_PARAM, "@DoubtfulDebt@");
+      parameters.put(ENTITY, bp.getBusinessPartnerCategory().getIdentifier());
+      parameters.put(ACCOUNTING_SCHEMA,
+          OBDal.getInstance()
+              .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
+                  as.getC_AcctSchema_ID())
+              .getIdentifier());
+      setMessageResult(conn, STATUS_InvalidAccount, ResponseActionsBuilder.MessageType.ERROR.name(), parameters);
+      throw new IllegalStateException();
+    }
+    return strValidCombination;
+  }
+
+  /**
+   * Process Customer Account based on the provided parameters.
+   *
+   * @param cBPartnerId
+   *     The ID of the customer business partner.
+   * @param as
+   *     The accounting schema.
+   * @param isPrepayment
+   *     A boolean flag indicating if the account is for prepayment.
+   * @return The valid combination for the customer account based on the parameters.
+   */
+  private String processCustomerAccount(String cBPartnerId, AcctSchema as, boolean isPrepayment) {
+    String strValidCombination = "";
+    String whereClause = " as cusa "
+        + " where cusa.businessPartner.id = :bpartnerId"
+        + " and cusa.accountingSchema.id = :accountId"
+        + " and (cusa.status is null or cusa.status = 'DE')";
+
+    final OBQuery<CustomerAccounts> obqParameters = OBDal.getInstance()
+        .createQuery(CustomerAccounts.class, whereClause);
+    obqParameters.setNamedParameter("bpartnerId", cBPartnerId);
+    obqParameters.setNamedParameter("accountId", as.m_C_AcctSchema_ID);
+    obqParameters.setFilterOnReadableClients(false);
+    obqParameters.setFilterOnReadableOrganization(false);
+    final List<CustomerAccounts> customerAccounts = obqParameters.list();
+    if (customerAccounts != null && !customerAccounts.isEmpty()
+        && customerAccounts.get(0).getCustomerReceivablesNo() != null && !isPrepayment) {
+      strValidCombination = customerAccounts.get(0).getCustomerReceivablesNo().getId();
+    }
+    if (customerAccounts != null && !customerAccounts.isEmpty()
+        && customerAccounts.get(0).getCustomerPrepayment() != null && isPrepayment) {
+      strValidCombination = customerAccounts.get(0).getCustomerPrepayment().getId();
+    }
+    return strValidCombination;
+  }
+
+  /**
+   * Process Vendor Account based on the provided parameters.
+   *
+   * This method retrieves the valid combination for the vendor account based on the vendor business partner ID,
+   * accounting schema, and prepayment flag. It queries the database to find the relevant Vendor Accounts that match
+   * the specified criteria. If a valid account combination is found for either vendor liability or vendor prepayment,
+   * it returns the ID of the account. If no valid combination is found, it returns an empty string.
+   *
+   * @param cBPartnerId The ID of the vendor business partner for which the account is being processed.
+   * @param as The accounting schema used to determine the account combination.
+   * @param isPrepayment A boolean flag indicating if the account is for prepayment.
+   * @return The ID of the valid Vendor Account combination, or an empty string if no valid combination is found.
+   */
+  private String processVendorAccount(String cBPartnerId, AcctSchema as, boolean isPrepayment) {
+    String strValidCombination = "";
+    final String whereClause = " as vena "
+        + " where vena.businessPartner.id = :bpartnerId"
+        + " and vena.accountingSchema.id = :accountId"
+        + " and (vena.status is null or vena.status = 'DE')";
+
+    final OBQuery<VendorAccounts> obqParameters = OBDal.getInstance()
+        .createQuery(VendorAccounts.class, whereClause);
+    obqParameters.setNamedParameter("bpartnerId", cBPartnerId);
+    obqParameters.setNamedParameter("accountId", as.m_C_AcctSchema_ID);
+    obqParameters.setFilterOnReadableClients(false);
+    obqParameters.setFilterOnReadableOrganization(false);
+    final List<VendorAccounts> vendorAccounts = obqParameters.list();
+    if (vendorAccounts != null && !vendorAccounts.isEmpty()
+        && vendorAccounts.get(0).getVendorLiability() != null && !isPrepayment) {
+      strValidCombination = vendorAccounts.get(0).getVendorLiability().getId();
+    }
+    if (vendorAccounts != null && !vendorAccounts.isEmpty()
+        && vendorAccounts.get(0).getVendorPrepayment() != null && isPrepayment) {
+      strValidCombination = vendorAccounts.get(0).getVendorPrepayment().getId();
+    }
+    return strValidCombination;
+  }
+
+  /**
+   * Handle the scenario of an invalid account by setting error parameters and throwing an exception.
+   *
+   * This method is responsible for handling the scenario when an invalid account is encountered. It constructs
+   * error parameters based on the provided business partner ID, accounting schema, receipt status, and prepayment flag.
+   * The error message includes details such as the account parameter, entity identifier, and accounting schema identifier.
+   * Finally, it sets the error message result using the connection provider and throws an IllegalStateException.
+   *
+   * @param cBPartnerId The ID of the business partner associated with the invalid account scenario.
+   * @param as The accounting schema related to the invalid account scenario.
+   * @param isReceipt A boolean flag indicating if the scenario involves a receipt.
+   * @param isPrepayment A boolean flag indicating if the scenario involves a prepayment.
+   * @param conn The connection provider for database operations.
+   */
+  private void handleInvalidAccountScenario(String cBPartnerId, AcctSchema as, boolean isReceipt,
+      boolean isPrepayment, ConnectionProvider conn) {
+    Map<String, String> parameters = new HashMap<>();
+    if (isReceipt) {
+      parameters.put(ACCOUNT_PARAM,
+          isPrepayment ? "@CustomerPrepayment@" : "@CustomerReceivables@");
+    } else {
+      parameters.put(ACCOUNT_PARAM,
+          isPrepayment ? "@VendorPrepayment@" : "@VendorLiability@");
+    }
+    BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, cBPartnerId);
+    if (bp != null) {
+      parameters.put(ENTITY, bp.getIdentifier());
+    }
+    parameters.put(ACCOUNTING_SCHEMA,
+        OBDal.getInstance()
+            .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
+                as.getC_AcctSchema_ID())
+            .getIdentifier());
+    setMessageResult(conn, STATUS_InvalidAccount, ResponseActionsBuilder.MessageType.ERROR.name(), parameters);
+    throw new IllegalStateException();
+  }
+
+  /**
    * It gets Account to be used to provision for the selected Business Partner
    *
-   * @param BPartnerId
+   * @param bPartnerId
    *     : ID of the Business Partner
    * @param isExpense
    *     : Provision Expense Account. If not it applies to Provision Applied account
@@ -2005,14 +2220,14 @@ public abstract class AcctServer {
    * @return Account
    * @throws ServletException
    */
-  public final Account getAccountBPartnerBadDebt(String BPartnerId, boolean isExpense,
+  public final Account getAccountBPartnerBadDebt(String bPartnerId, boolean isExpense,
       AcctSchema as, ConnectionProvider conn) throws ServletException {
 
     String strValidCombination = "";
-    BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, BPartnerId);
+    BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, bPartnerId);
     //@formatter:off
-    final String whereClause = " as cuscata "
-        + " where cuscata.businessPartnerCategory.id = :bpCategoryID"
+    final String whereClause = CUSCATA_TABLE_ALIAS
+        + WHERE_CLAUSE_CUSCATA_BPCAT
         + "  and cuscata.accountingSchema.id = :acctSchemaID";
     //@formatter:on
 
@@ -2020,30 +2235,30 @@ public abstract class AcctServer {
         .createQuery(CategoryAccounts.class, whereClause);
     obqParameters.setFilterOnReadableClients(false);
     obqParameters.setFilterOnReadableOrganization(false);
-    obqParameters.setNamedParameter("bpCategoryID", bp.getBusinessPartnerCategory().getId());
-    obqParameters.setNamedParameter("acctSchemaID", as.m_C_AcctSchema_ID);
+    obqParameters.setNamedParameter(BP_CATEGORY_ID, bp.getBusinessPartnerCategory().getId());
+    obqParameters.setNamedParameter(ACCT_SCHEMA_ID, as.m_C_AcctSchema_ID);
     final List<CategoryAccounts> customerAccounts = obqParameters.list();
-    if (customerAccounts != null && customerAccounts.size() > 0
+    if (customerAccounts != null && !customerAccounts.isEmpty()
         && customerAccounts.get(0).getBadDebtExpenseAccount() != null && isExpense) {
       strValidCombination = customerAccounts.get(0).getBadDebtExpenseAccount().getId();
-    } else if (customerAccounts != null && customerAccounts.size() > 0
+    } else if (customerAccounts != null && !customerAccounts.isEmpty()
         && customerAccounts.get(0).getBadDebtRevenueAccount() != null && !isExpense) {
       strValidCombination = customerAccounts.get(0).getBadDebtRevenueAccount().getId();
     }
-    if (strValidCombination.equals("")) {
-      Map<String, String> parameters = new HashMap<String, String>();
+    if (StringUtils.isEmpty(strValidCombination)) {
+      Map<String, String> parameters = new HashMap<>();
       if (isExpense) {
-        parameters.put("Account", "@BadDebtExpenseAccount@");
+        parameters.put(ACCOUNT_PARAM, "@BadDebtExpenseAccount@");
       } else {
-        parameters.put("Account", "@BadDebtRevenueAccount@");
+        parameters.put(ACCOUNT_PARAM, "@BadDebtRevenueAccount@");
       }
-      parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
-      parameters.put("AccountingSchema",
+      parameters.put(ENTITY, bp.getBusinessPartnerCategory().getIdentifier());
+      parameters.put(ACCOUNTING_SCHEMA,
           OBDal.getInstance()
               .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
                   as.getC_AcctSchema_ID())
               .getIdentifier());
-      setMessageResult(conn, STATUS_InvalidAccount, "error", parameters);
+      setMessageResult(conn, STATUS_InvalidAccount, ResponseActionsBuilder.MessageType.ERROR.name(), parameters);
       throw new IllegalStateException();
     }
     return new Account(conn, strValidCombination);
@@ -2067,8 +2282,8 @@ public abstract class AcctServer {
     String strValidCombination = "";
     BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, BPartnerId);
     //@formatter:off
-    String whereClause = " as cuscata "
-        + " where cuscata.businessPartnerCategory.id = :bpCategoryID"
+    String whereClause = CUSCATA_TABLE_ALIAS
+        + WHERE_CLAUSE_CUSCATA_BPCAT
         + "   and cuscata.accountingSchema.id = :acctSchemaID";
     //@formatter:on
 
@@ -2076,23 +2291,23 @@ public abstract class AcctServer {
         .createQuery(CategoryAccounts.class, whereClause);
     obqParameters.setFilterOnReadableClients(false);
     obqParameters.setFilterOnReadableOrganization(false);
-    obqParameters.setNamedParameter("bpCategoryID", bp.getBusinessPartnerCategory().getId());
-    obqParameters.setNamedParameter("acctSchemaID", as.m_C_AcctSchema_ID);
+    obqParameters.setNamedParameter(BP_CATEGORY_ID, bp.getBusinessPartnerCategory().getId());
+    obqParameters.setNamedParameter(ACCT_SCHEMA_ID, as.m_C_AcctSchema_ID);
     final List<CategoryAccounts> customerAccounts = obqParameters.list();
     if (customerAccounts != null && customerAccounts.size() > 0
         && customerAccounts.get(0).getAllowanceForDoubtfulDebtAccount() != null) {
       strValidCombination = customerAccounts.get(0).getAllowanceForDoubtfulDebtAccount().getId();
     }
-    if (strValidCombination.equals("")) {
+    if (StringUtils.isEmpty(strValidCombination)) {
       Map<String, String> parameters = new HashMap<String, String>();
-      parameters.put("Account", "@AllowanceForDoubtfulDebtAccount@");
-      parameters.put("Entity", bp.getBusinessPartnerCategory().getIdentifier());
-      parameters.put("AccountingSchema",
+      parameters.put(ACCOUNT_PARAM, "@AllowanceForDoubtfulDebtAccount@");
+      parameters.put(ENTITY, bp.getBusinessPartnerCategory().getIdentifier());
+      parameters.put(ACCOUNTING_SCHEMA,
           OBDal.getInstance()
               .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
                   as.getC_AcctSchema_ID())
               .getIdentifier());
-      setMessageResult(conn, STATUS_InvalidAccount, "error", parameters);
+      setMessageResult(conn, STATUS_InvalidAccount, ResponseActionsBuilder.MessageType.ERROR.name(), parameters);
       throw new IllegalStateException();
     }
     return new Account(conn, strValidCombination);
@@ -2128,17 +2343,17 @@ public abstract class AcctServer {
     } finally {
       OBContext.restorePreviousMode();
       if (account == null) {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("Account", bIsReceipt ? "@GlitemCreditAccount@" : "@GlitemDebitAccount@");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(ACCOUNT_PARAM, bIsReceipt ? "@GlitemCreditAccount@" : "@GlitemDebitAccount@");
         if (glItem != null) {
-          parameters.put("Entity", glItem.getIdentifier());
+          parameters.put(ENTITY, glItem.getIdentifier());
         }
-        parameters.put("AccountingSchema",
+        parameters.put(ACCOUNTING_SCHEMA,
             OBDal.getInstance()
                 .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
                     as.getC_AcctSchema_ID())
                 .getIdentifier());
-        setMessageResult(conn, STATUS_InvalidAccount, "error", parameters);
+        setMessageResult(conn, STATUS_InvalidAccount, ResponseActionsBuilder.MessageType.ERROR.name(), parameters);
         throw new IllegalStateException();
       }
     }
@@ -2161,26 +2376,26 @@ public abstract class AcctServer {
       accounts.setFilterOnReadableClients(false);
       accounts.setFilterOnReadableOrganization(false);
       List<FIN_FinancialAccountAccounting> accountList = accounts.list();
-      if (accountList == null || accountList.size() == 0) {
+      if (accountList == null || accountList.isEmpty()) {
         return account;
       }
       account = new Account(conn, accountList.get(0).getFINBankfeeAcct().getId());
-    } finally {
-      OBContext.restorePreviousMode();
       if (account == null) {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("Account", "@BankfeeAccount@");
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(ACCOUNT_PARAM, "@BankfeeAccount@");
         if (finAccount != null) {
-          parameters.put("Entity", finAccount.getIdentifier());
+          parameters.put(ENTITY, finAccount.getIdentifier());
         }
-        parameters.put("AccountingSchema",
+        parameters.put(ACCOUNTING_SCHEMA,
             OBDal.getInstance()
                 .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
                     as.getC_AcctSchema_ID())
                 .getIdentifier());
-        setMessageResult(conn, STATUS_InvalidAccount, "error", parameters);
+        setMessageResult(conn, STATUS_InvalidAccount, ResponseActionsBuilder.MessageType.ERROR.name(), parameters);
         throw new IllegalStateException();
       }
+    } finally {
+      OBContext.restorePreviousMode();
     }
     return account;
   }
@@ -2196,40 +2411,29 @@ public abstract class AcctServer {
     Account account = null;
     String strvalidCombination = "";
     try {
-      if ("INT".equals(use)) {
+      if (StringUtils.equals("INT", use)) {
         strvalidCombination = bIsReceipt
             ? financialAccountAccounting.getInTransitPaymentAccountIN().getId()
             : financialAccountAccounting.getFINOutIntransitAcct().getId();
-      } else if ("DEP".equals(use)) {
+      } else if (StringUtils.equals("DEP", use)) {
         strvalidCombination = financialAccountAccounting.getDepositAccount().getId();
-      } else if ("CLE".equals(use)) {
+      } else if (StringUtils.equals("CLE", use)) {
         strvalidCombination = bIsReceipt
             ? financialAccountAccounting.getClearedPaymentAccount().getId()
             : financialAccountAccounting.getClearedPaymentAccountOUT().getId();
-      } else if ("WIT".equals(use)) {
+      } else if (StringUtils.equals("WIT", use)) {
         strvalidCombination = financialAccountAccounting.getWithdrawalAccount().getId();
       } else {
         return account;
       }
       account = new Account(conn, strvalidCombination);
-    } finally {
-      OBContext.restorePreviousMode();
       if (account == null) {
-        Map<String, String> parameters = new HashMap<String, String>();
-        String strAccount = bIsReceipt
-            ? ("INT".equals(use) ? "@InTransitPaymentAccountIN@"
-            : ("DEP".equals(use) ? "@DepositAccount@" : "@ClearedPaymentAccount@"))
-            : ("INT".equals(use) ? "@InTransitPaymentAccountOUT@"
-            : ("CLE".equals(use) ? "@ClearedPaymentAccountOUT@" : "@WithdrawalAccount@"));
-        parameters.put("Account", strAccount);
-        if (financialAccountAccounting.getAccount() != null) {
-          parameters.put("Entity", financialAccountAccounting.getAccount().getIdentifier());
-        }
-        parameters.put("AccountingSchema",
-            financialAccountAccounting.getAccountingSchema().getIdentifier());
-        setMessageResult(conn, STATUS_InvalidAccount, "error", parameters);
+        Map<String, String> parameters = getParametersForMessage(use, financialAccountAccounting, bIsReceipt);
+        setMessageResult(conn, STATUS_InvalidAccount, ResponseActionsBuilder.MessageType.ERROR.name(), parameters);
         throw new IllegalStateException();
       }
+    } finally {
+      OBContext.restorePreviousMode();
     }
     return account;
   }
@@ -2353,95 +2557,113 @@ public abstract class AcctServer {
   /*
    * Sets OBError message for the given status
    */
-  public void setMessageResult(ConnectionProvider conn, VariablesSecureApp vars, String _strStatus,
-      String strMessageType, Map<String, String> _parameters) {
-    String strStatus = StringUtils.isEmpty(_strStatus) ? getStatus() : _strStatus;
+  public void setMessageResult(ConnectionProvider conn, VariablesSecureApp vars, String stringStatus,
+      String strMessageType, Map<String, String> parameters) {
+    String strStatus = StringUtils.isEmpty(stringStatus) ? getStatus() : stringStatus;
     setStatus(strStatus);
-    String strTitle = "";
-    Map<String, String> parameters = _parameters != null ? _parameters
-        : new HashMap<String, String>();
+    Map<String, String> params = parameters != null ? parameters : new HashMap<>();
     if (messageResult == null) {
       messageResult = new OBError();
     }
-    if (strMessageType == null || strMessageType.equals("")) {
+    if (StringUtils.isEmpty(strMessageType)) {
       messageResult.setType("Error");
     } else {
       messageResult.setType(strMessageType);
     }
-    if (strStatus.equals(STATUS_Error)) {
-      strTitle = "@ProcessRunError@";
-    } else if (strStatus.equals(STATUS_DocumentLocked)) {
-      strTitle = "@OtherPostingProcessActive@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_NotCalculatedCost)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@NotCalculatedCost@";
-      } else {
-        strTitle = "@NotCalculatedCostWithTransaction@";
-      }
-    } else if (strStatus.equals(STATUS_InvalidCost)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@InvalidCost@";
-      } else {
-        strTitle = "@InvalidCostWhichProduct@";
-        // Transalate account name from messages
-        parameters.put("Account",
-            Utility.parseTranslation(conn, vars, vars.getLanguage(), parameters.get("Account")));
-      }
-    } else if (strStatus.equals(STATUS_NoRelatedPO)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@GoodsReceiptTransactionWithNoPO@";
-      } else {
-        strTitle = "@GoodsReceiptTransactionWithNoPOWichProduct@";
-      }
-    } else if (strStatus.equals(STATUS_DocumentDisabled)) {
-      strTitle = "@DocumentDisabled@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_BackgroundDisabled)) {
-      strTitle = "@BackgroundDisabled@";
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_InvalidAccount)) {
-      if (parameters.isEmpty()) {
-        strTitle = "@InvalidAccount@";
-      } else {
-        strTitle = "@InvalidWhichAccount@";
-        // Transalate account name from messages
-        parameters.put("Account",
-            Utility.parseTranslation(conn, vars, vars.getLanguage(), parameters.get("Account")));
-      }
-    } else if (strStatus.equals(STATUS_PeriodClosed)) {
-      strTitle = "@PeriodNotAvailable@";
-    } else if (strStatus.equals(STATUS_NotConvertible)) {
-      strTitle = "@NotConvertible@";
-    } else if (strStatus.equals(STATUS_NotBalanced)) {
-      strTitle = "@NotBalanced@";
-    } else if (strStatus.equals(STATUS_NotPosted)) {
-      strTitle = "@NotPosted@";
-    } else if (strStatus.equals(STATUS_PostPrepared)) {
-      strTitle = "@PostPrepared@";
-    } else if (strStatus.equals(STATUS_Posted)) {
-      strTitle = "@Posted@";
-    } else if (strStatus.equals(STATUS_TableDisabled)) {
-      strTitle = "@TableDisabled@";
-      parameters.put("Table", tableName);
-      messageResult.setType("Warning");
-    } else if (strStatus.equals(STATUS_NoAccountingDate)) {
-      strTitle = "@NoAccountingDate@";
-    }
-    messageResult.setMessage(Utility.parseTranslation(conn, vars, parameters, vars.getLanguage(),
+    String strTitle = determineTitleByStatus(conn, vars, strStatus, params);
+
+    messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
         Utility.parseTranslation(conn, vars, vars.getLanguage(), strTitle)));
-    if (strMessage != null) {
-      messageResult.setMessage(Utility.parseTranslation(conn, vars, parameters, vars.getLanguage(),
+    if (StringUtils.isEmpty(strMessage)) {
+      messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
           Utility.parseTranslation(conn, vars, vars.getLanguage(), strMessage)));
+    }
+  }
+
+  /**
+   * Determines the title message based on the provided status code. This method examines the status
+   * code and returns a specific message key corresponding to that status. For certain status codes,
+   * additional information is included in the message if the provided parameters map is not empty.
+   * Additionally, for some status codes indicating a warning, this method also sets the message
+   * type of a global {@link OBError} object to "Warning".
+   *
+   * @param conn
+   *     the {@link ConnectionProvider} used for database connections
+   * @param vars
+   *     the {@link VariablesSecureApp} containing user session variables
+   * @param strStatus
+   *     the status code used to determine the message key
+   * @param params
+   *     a map of parameters that may affect the returned message. This map can be modified
+   *     by the method (e.g., translating account names).
+   * @return a {@link String} message key corresponding to the status code. This key can be used to
+   *     fetch a localized error or warning message. If the status code is not recognized, an empty
+   *     string is returned.
+   * @see OBError
+   */
+  private String determineTitleByStatus(ConnectionProvider conn, VariablesSecureApp vars, String strStatus,
+      Map<String, String> params) {
+    switch (strStatus) {
+      case STATUS_DocumentLocked:
+        return "@OtherPostingProcessActive@";
+      case STATUS_NotCalculatedCost:
+        return (params.isEmpty()) ? "@NotCalculatedCost@" : "@NotCalculatedCostWithTransaction@";
+      case STATUS_InvalidCost:
+        if (params.isEmpty()) {
+          return "@InvalidCost@";
+        }
+        // Translate account name from messages
+        params.put(ACCOUNT_PARAM,
+            Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
+        return "@InvalidCostWhichProduct@";
+      case STATUS_NoRelatedPO:
+        return params.isEmpty() ? "@GoodsReceiptTransactionWithNoPO@" : "@GoodsReceiptTransactionWithNoPOWichProduct@";
+      case STATUS_DocumentDisabled:
+        messageResult.setType(WARNING);
+        return "@DocumentDisabled@";
+      case STATUS_BackgroundDisabled:
+        messageResult.setType(WARNING);
+        return "@BackgroundDisabled@";
+      case STATUS_InvalidAccount:
+        if (params.isEmpty()) {
+          return "@InvalidAccount@";
+        }
+        // Translate account name from messages
+        params.put(ACCOUNT_PARAM,
+            Utility.parseTranslation(conn, vars, vars.getLanguage(), params.get(ACCOUNT_PARAM)));
+        return "@InvalidWhichAccount@";
+      case STATUS_NODOCTYPE:
+        return "@NoDocTypeForDocument@";
+      case STATUS_PeriodClosed:
+        return "@PeriodNotAvailable@";
+      case STATUS_NotConvertible:
+        return NOT_CONVERTIBLE_MESSAGE;
+      case STATUS_NotBalanced:
+        return "@NotBalanced@";
+      case STATUS_NotPosted:
+        return "@NotPosted@";
+      case STATUS_PostPrepared:
+        return "@PostPrepared@";
+      case STATUS_Posted:
+        return "@Posted@";
+      case STATUS_TableDisabled:
+        params.put("Table", tableName);
+        messageResult.setType(WARNING);
+        return "@TableDisabled@";
+      case STATUS_NoAccountingDate:
+        return "@NoAccountingDate@";
+      case STATUS_Error:
+      default:
+        return "@ProcessRunError@";
     }
   }
 
   public Map<String, String> getInvalidAccountParameters(String strAccount, String strEntity,
       String strAccountingSchema) {
-    Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("Account", strAccount);
-    parameters.put("Entity", strEntity);
-    parameters.put("AccountingSchema", strAccountingSchema);
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put(ACCOUNT_PARAM, strAccount);
+    parameters.put(ENTITY, strEntity);
+    parameters.put(ACCOUNTING_SCHEMA, strAccountingSchema);
     return parameters;
   }
 
@@ -2523,149 +2745,336 @@ public abstract class AcctServer {
         currencyIDTo, line, as, fact, Fact_Acct_Group_ID, seqNo, conn, true);
   }
 
-  /*
-   * Returns an amount without applying currency precision for rounding purposes
+  /**
+   * This method converts an amount from one currency to another based on the provided parameters and context.
+   *
+   * @param amount
+   *     The amount to be converted
+   * @param isReceipt
+   *     A boolean flag indicating if it is a receipt
+   * @param acctDate
+   *     The accounting date associated with the conversion
+   * @param tableId
+   *     The ID of the table associated with the conversion
+   * @param recordId
+   *     The ID of the record for which the conversion rate is applied
+   * @param currencyIDFrom
+   *     The currency ID of the source currency
+   * @param currencyIDTo
+   *     The currency ID to convert to
+   * @param line
+   *     The document line associated with the conversion
+   * @param as
+   *     The accounting schema
+   * @param fact
+   *     The fact object for accounting operations
+   * @param factAcctGroupId
+   *     The fact accounting group ID
+   * @param seqNo
+   *     The sequence number for the transaction
+   * @param conn
+   *     The connection provider for database operations
+   * @param bookDifferences
+   *     A boolean flag indicating if differences should be booked
+   * @return The converted amount in the source currency
    */
-  public BigDecimal convertAmount(BigDecimal _amount, boolean isReceipt, String acctDate,
-      String table_ID, String record_ID, String currencyIDFrom, String currencyIDTo, DocLine line,
-      AcctSchema as, Fact fact, String Fact_Acct_Group_ID, String seqNo, ConnectionProvider conn,
-      boolean bookDifferences) throws ServletException {
-    BigDecimal amtDiff = BigDecimal.ZERO;
-    if (_amount == null || _amount.compareTo(BigDecimal.ZERO) == 0) {
-      return _amount;
+  public BigDecimal convertAmount(BigDecimal amount, boolean isReceipt, String acctDate,
+      String tableId, String recordId, String currencyIDFrom, String currencyIDTo, DocLine line,
+      AcctSchema as, Fact fact, String factAcctGroupId, String seqNo, ConnectionProvider conn,
+      boolean bookDifferences) {
+    BigDecimal amtDiff;
+    BigDecimal amtFrom;
+    BigDecimal amtFromSourceCurrency;
+    BigDecimal amtTo;
+
+    if (amount == null || amount.compareTo(BigDecimal.ZERO) == 0) {
+      return amount;
     }
-    String conversionDate = acctDate;
     String strDateFormat = OBPropertiesProvider.getInstance()
         .getOpenbravoProperties()
-        .getProperty("dateFormat.java");
+        .getProperty(DATE_FORMAT_JAVA_FILE);
     final SimpleDateFormat dateFormat = new SimpleDateFormat(strDateFormat);
-    ConversionRateDoc conversionRateDoc = getConversionRateDoc(table_ID, record_ID, currencyIDFrom,
-        currencyIDTo);
-    BigDecimal amtFrom = BigDecimal.ZERO;
-    BigDecimal amtFromSourcecurrency = BigDecimal.ZERO;
-    BigDecimal amtTo = BigDecimal.ZERO;
-    if (table_ID.equals(TABLEID_Invoice)) {
-      Invoice invoice = OBDal.getInstance().get(Invoice.class, record_ID);
-      conversionDate = dateFormat.format(invoice.getAccountingDate());
-    } else if (table_ID.equals(TABLEID_Payment)) {
-      FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, record_ID);
-      conversionDate = dateFormat.format(payment.getPaymentDate());
-    } else if (table_ID.equals(TABLEID_Transaction)) {
-      FIN_FinaccTransaction transaction = OBDal.getInstance()
-          .get(FIN_FinaccTransaction.class, record_ID);
-      conversionDate = dateFormat.format(transaction.getDateAcct());
-    }
-    if (conversionRateDoc != null && record_ID != null) {
-      amtFrom = applyRate(_amount, conversionRateDoc, true);
-    } else {
-      // I try to find a reversal rate for the doc, if exists i apply it reversal as well
-      conversionRateDoc = getConversionRateDoc(table_ID, record_ID, currencyIDTo, currencyIDFrom);
-      if (conversionRateDoc != null) {
-        amtFrom = applyRate(_amount, conversionRateDoc, false);
-      } else {
-        String convertedAmt = getConvertedAmt(_amount.toString(), currencyIDFrom, currencyIDTo,
-            conversionDate, "", AD_Client_ID, AD_Org_ID, conn);
-        if (convertedAmt != null && !"".equals(convertedAmt)) {
-          amtFrom = new BigDecimal(convertedAmt);
-        } else {
-          throw new OBException("@NotConvertible@");
-        }
-      }
-    }
+    amtFrom = applyConversionRateToAmount(amount, tableId, recordId, currencyIDFrom, currencyIDTo, conn, dateFormat);
+    String conversionDate;
     ConversionRateDoc conversionRateCurrentDoc = getConversionRateDoc(AD_Table_ID, Record_ID,
         currencyIDFrom, currencyIDTo);
-    if (AD_Table_ID.equals(TABLEID_Invoice)) {
-      Invoice invoice = OBDal.getInstance().get(Invoice.class, Record_ID);
-      conversionDate = dateFormat.format(invoice.getAccountingDate());
-    } else if (AD_Table_ID.equals(TABLEID_Payment)) {
-      FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, Record_ID);
-      conversionDate = dateFormat.format(payment.getPaymentDate());
-    } else if (AD_Table_ID.equals(TABLEID_Transaction)
-        || AD_Table_ID.equals(TABLEID_Reconciliation)) {
-      String transactionID = Record_ID;
-      // When TableID= Reconciliation info is loaded from transaction
-      if (AD_Table_ID.equals(AcctServer.TABLEID_Reconciliation)
-          && line instanceof DocLine_FINReconciliation) {
-        transactionID = ((DocLine_FINReconciliation) line).getFinFinAccTransactionId();
-      }
-      FIN_FinaccTransaction transaction = OBDal.getInstance()
-          .get(FIN_FinaccTransaction.class, transactionID);
-      conversionDate = dateFormat.format(transaction.getDateAcct());
-      conversionRateCurrentDoc = getConversionRateDoc(TABLEID_Transaction, transaction.getId(),
-          currencyIDFrom, currencyIDTo);
-    } else {
-      conversionDate = acctDate;
-    }
-    if (conversionRateCurrentDoc != null) {
-      amtTo = applyRate(_amount, conversionRateCurrentDoc, true);
-      amtFromSourcecurrency = applyRate(amtFrom, conversionRateCurrentDoc, false);
-    } else {
-      // I try to find a reversal rate for the doc, if exists i apply it reversal as well
-      if (AD_Table_ID.equals(AcctServer.TABLEID_Reconciliation)
-          && line instanceof DocLine_FINReconciliation) {
-        String transactionID = ((DocLine_FINReconciliation) line).getFinFinAccTransactionId();
-        conversionRateCurrentDoc = getConversionRateDoc(TABLEID_Transaction, transactionID,
-            currencyIDTo, currencyIDFrom);
-      } else {
-        conversionRateCurrentDoc = getConversionRateDoc(AD_Table_ID, Record_ID, currencyIDTo,
-            currencyIDFrom);
-      }
-      if (conversionRateCurrentDoc != null) {
-        amtTo = applyRate(_amount, conversionRateCurrentDoc, false);
-        amtFromSourcecurrency = applyRate(amtFrom, conversionRateCurrentDoc, true);
-      } else {
-        String convertedAmt = getConvertedAmt(_amount.toString(), currencyIDFrom, currencyIDTo,
-            conversionDate, "", AD_Client_ID, AD_Org_ID, conn);
-        if (convertedAmt != null && !"".equals(convertedAmt)) {
-          amtTo = new BigDecimal(convertedAmt);
-        } else {
-          throw new OBException("@NotConvertible@");
+    switch (AD_Table_ID) {
+      case TABLEID_Invoice:
+        Invoice invoice = OBDal.getInstance().get(Invoice.class, Record_ID);
+        conversionDate = dateFormat.format(invoice.getAccountingDate());
+        break;
+      case TABLEID_Payment:
+        FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, Record_ID);
+        conversionDate = dateFormat.format(payment.getPaymentDate());
+        break;
+      case TABLEID_Transaction:
+      case TABLEID_Reconciliation:
+        String transactionID = Record_ID;
+        // When TableID= Reconciliation info is loaded from transaction
+        if (StringUtils.equals(AD_Table_ID, AcctServer.TABLEID_Reconciliation)
+            && line instanceof DocLine_FINReconciliation) {
+          transactionID = ((DocLine_FINReconciliation) line).getFinFinAccTransactionId();
         }
-        if (amtTo.compareTo(BigDecimal.ZERO) != 0) {
-          amtFromSourcecurrency = amtFrom.multiply(_amount)
-              .divide(amtTo, conversionRatePrecision, RoundingMode.HALF_EVEN);
-        } else {
-          amtFromSourcecurrency = amtFrom;
-        }
-      }
+        FIN_FinaccTransaction transaction = OBDal.getInstance()
+            .get(FIN_FinaccTransaction.class, transactionID);
+        conversionDate = dateFormat.format(transaction.getDateAcct());
+        conversionRateCurrentDoc = getConversionRateDoc(TABLEID_Transaction, transaction.getId(),
+            currencyIDFrom, currencyIDTo);
+        break;
+      default:
+        conversionDate = acctDate;
+        break;
     }
+
+    Map<String, String> currencies = new HashMap<>();
+    currencies.put(CURRENCY_ID_FROM, currencyIDFrom);
+    currencies.put(CURRENCY_ID_TO, currencyIDTo);
+    ConversionResult conversionResult = getConversionResult(amount, currencies, line, conn, conversionRateCurrentDoc,
+        amtFrom, conversionDate);
+    amtTo = conversionResult.getAmtTo();
+    amtFromSourceCurrency = conversionResult.getAmtFromSourceCurrency();
     amtDiff = (amtTo).subtract(amtFrom);
+
     // Add differences related to Different rates for accounting among currencies
-    // _amount * ((TrxRate *
+    // amount * ((TrxRate *
     // AccountingRateCurrencyFromCurrencyTo)-AccountingRateCurrencyDocCurrencyTo)
     amtDiff = amtDiff
-        .add(calculateMultipleRatesDifferences(_amount, currencyIDFrom, currencyIDTo, line, conn));
+        .add(calculateMultipleRatesDifferences(amount, currencyIDFrom, currencyIDTo, line, conn));
     Currency currencyTo = OBDal.getInstance().get(Currency.class, currencyIDTo);
     amtDiff = amtDiff.setScale(currencyTo.getStandardPrecision().intValue(),
         RoundingMode.HALF_EVEN);
+
+    Map<String, Object> accountingContext = new HashMap<>();
+    accountingContext.put("acctSchema", as);
+    accountingContext.put("fact", fact);
+    accountingContext.put("factAcctGroupId", factAcctGroupId);
+
     if (bookDifferences) {
-      if ((!isReceipt && amtDiff.compareTo(BigDecimal.ZERO) == 1)
-          || (isReceipt && amtDiff.compareTo(BigDecimal.ZERO) == -1)) {
-        String convertAccount = StringUtils.isNotEmpty(FIN_Financial_Account_ID)
-            && StringUtils.equals(OBDal.getInstance()
-            .get(FIN_FinancialAccount.class, FIN_Financial_Account_ID)
-            .getType(), "B") ? AcctServer.ACCTTYPE_ConvertChargeGainAmt
-            : AcctServer.ACCTTYPE_ConvertGainDefaultAmt;
-        fact.createLine(line, getAccount(convertAccount, as, conn), currencyIDTo, "",
-            amtDiff.abs().toString(), Fact_Acct_Group_ID, seqNo, DocumentType, conn);
-      } else if (amtDiff.compareTo(BigDecimal.ZERO) != 0) {
-        String convertAccount = StringUtils.isNotEmpty(FIN_Financial_Account_ID)
-            && StringUtils.equals(OBDal.getInstance()
-            .get(FIN_FinancialAccount.class, FIN_Financial_Account_ID)
-            .getType(), "B") ? AcctServer.ACCTTYPE_ConvertChargeLossAmt
-            : AcctServer.ACCTTYPE_ConvertChargeDefaultAmt;
-        fact.createLine(line, getAccount(convertAccount, as, conn), currencyIDTo,
-            amtDiff.abs().toString(), "", Fact_Acct_Group_ID, seqNo, DocumentType, conn);
-      } else {
-        return amtFromSourcecurrency;
-      }
+      handleCurrencyConversionDifferences(isReceipt, currencyIDTo, line, accountingContext, seqNo, conn, amtDiff);
     }
     if (log4j.isDebugEnabled()) {
-      log4j.debug("Amt from: " + amtFrom + "[" + currencyIDFrom + "]" + " Amt to: " + amtTo + "["
-          + currencyIDTo + "] - amtFromSourcecurrency: " + amtFromSourcecurrency);
+      log4j.debug("Amt from: %s[%s] Amt to: %s[%s] - amtFromSourceCurrency: %s", amtFrom, currencyIDFrom, amtTo,
+          currencyIDTo, amtFromSourceCurrency);
     }
     // return value in original currency
-    return amtFromSourcecurrency;
+    return amtFromSourceCurrency;
+  }
+
+  /**
+   * This method handles currency conversion differences for a given transaction line, based on the provided parameters.
+   *
+   * @param isReceipt
+   *     A boolean flag indicating if it is a receipt
+   * @param currencyIDTo
+   *     The currency ID to convert to
+   * @param line
+   *     The transaction line to handle currency conversion for
+   * @param accountingContext
+   *     A map containing accounting context information
+   * @param seqNo
+   *     The sequence number for the transaction
+   * @param conn
+   *     The connection provider for database operations
+   * @param amtDiff
+   *     The amount difference for currency conversion
+   */
+  private void handleCurrencyConversionDifferences(boolean isReceipt, String currencyIDTo, DocLine line,
+      Map<String, Object> accountingContext, String seqNo, ConnectionProvider conn, BigDecimal amtDiff) {
+    Fact fact = (Fact) accountingContext.get("fact");
+    AcctSchema as = (AcctSchema) accountingContext.get("acctSchema");
+    String factAcctGroupId = (String) accountingContext.get("factAcctGroupId");
+    String convertAccount;
+    if ((!isReceipt && amtDiff.compareTo(BigDecimal.ZERO) > 0) || (isReceipt && amtDiff.compareTo(
+        BigDecimal.ZERO) < 0)) {
+      if (StringUtils.isNotEmpty(FIN_Financial_Account_ID) && StringUtils.equals(
+          OBDal.getInstance().get(FIN_FinancialAccount.class, FIN_Financial_Account_ID).getType(), "B")) {
+        convertAccount = AcctServer.ACCTTYPE_ConvertChargeGainAmt;
+      } else {
+        convertAccount = AcctServer.ACCTTYPE_ConvertGainDefaultAmt;
+      }
+      fact.createLine(line, getAccount(convertAccount, as, conn), currencyIDTo, "", amtDiff.abs().toString(),
+          factAcctGroupId, seqNo, DocumentType, conn);
+    } else if (amtDiff.compareTo(BigDecimal.ZERO) != 0) {
+      convertAccount = StringUtils.isNotEmpty(FIN_Financial_Account_ID) && StringUtils.equals(
+          OBDal.getInstance().get(FIN_FinancialAccount.class, FIN_Financial_Account_ID).getType(),
+          "B") ? AcctServer.ACCTTYPE_ConvertChargeLossAmt : AcctServer.ACCTTYPE_ConvertChargeDefaultAmt;
+      fact.createLine(line, getAccount(convertAccount, as, conn), currencyIDTo, amtDiff.abs().toString(), "",
+          factAcctGroupId, seqNo, DocumentType, conn);
+    }
+  }
+
+  /**
+   * This method calculates the conversion result for a given amount based on the provided parameters and context.
+   *
+   * @param amount
+   *     The amount to be converted
+   * @param currencies
+   *     A map containing currency information
+   * @param line
+   *     The document line associated with the conversion
+   * @param conn
+   *     The connection provider for database operations
+   * @param conversionRateCurrentDoc
+   *     The current conversion rate for the document
+   * @param amtFrom
+   *     The amount in the source currency
+   * @param conversionDate
+   *     The date of the conversion
+   * @return A ConversionResult object containing the converted amounts
+   * @throws OBException
+   *     if the conversion is not possible
+   */
+  private ConversionResult getConversionResult(BigDecimal amount, Map<String, String> currencies,
+      DocLine line, ConnectionProvider conn, ConversionRateDoc conversionRateCurrentDoc, BigDecimal amtFrom,
+      String conversionDate) {
+    BigDecimal amtFromSourceCurrency;
+    BigDecimal amtTo;
+    if (conversionRateCurrentDoc != null) {
+      amtTo = applyRate(amount, conversionRateCurrentDoc, true);
+      amtFromSourceCurrency = applyRate(amtFrom, conversionRateCurrentDoc, false);
+      return new ConversionResult(amtFromSourceCurrency, amtTo);
+    }
+
+    // Try to find a reversal rate for the doc, if it exists apply it reversal as well
+    if (StringUtils.equals(AD_Table_ID, AcctServer.TABLEID_Reconciliation)
+        && line instanceof DocLine_FINReconciliation) {
+      String transactionID = ((DocLine_FINReconciliation) line).getFinFinAccTransactionId();
+      conversionRateCurrentDoc = getConversionRateDoc(TABLEID_Transaction, transactionID,
+          currencies.get(CURRENCY_ID_TO), currencies.get(CURRENCY_ID_FROM));
+    } else {
+      conversionRateCurrentDoc = getConversionRateDoc(AD_Table_ID, Record_ID, currencies.get(CURRENCY_ID_TO),
+          currencies.get(CURRENCY_ID_FROM));
+    }
+    if (conversionRateCurrentDoc != null) {
+      amtTo = applyRate(amount, conversionRateCurrentDoc, false);
+      amtFromSourceCurrency = applyRate(amtFrom, conversionRateCurrentDoc, true);
+      return new ConversionResult(amtFromSourceCurrency, amtTo);
+    }
+
+    String convertedAmt = getConvertedAmt(amount.toString(), currencies.get(CURRENCY_ID_FROM),
+        currencies.get(CURRENCY_ID_TO),
+        conversionDate, "", AD_Client_ID, AD_Org_ID, conn);
+    if (StringUtils.isNotEmpty(convertedAmt)) {
+      amtTo = new BigDecimal(convertedAmt);
+    } else {
+      throw new OBException(NOT_CONVERTIBLE_MESSAGE);
+    }
+    if (BigDecimal.ZERO.compareTo(amtTo) != 0) {
+      amtFromSourceCurrency = amtFrom.multiply(amount)
+          .divide(amtTo, conversionRatePrecision, RoundingMode.HALF_EVEN);
+    } else {
+      amtFromSourceCurrency = amtFrom;
+    }
+
+    return new ConversionResult(amtFromSourceCurrency, amtTo);
+  }
+
+  /**
+   * This method applies a conversion rate to a given amount based on the provided parameters and context.
+   *
+   * @param amount
+   *     The amount to be converted
+   * @param tableId
+   *     The ID of the table associated with the conversion
+   * @param recordId
+   *     The ID of the record for which the conversion rate is applied
+   * @param currencyIDFrom
+   *     The currency ID of the source currency
+   * @param currencyIDTo
+   *     The currency ID to convert to
+   * @param conn
+   *     The connection provider for database operations
+   * @param dateFormat
+   *     The date format to be used for the conversion date
+   * @return The converted amount after applying the conversion rate
+   * @throws OBException
+   *     if the conversion is not possible
+   */
+  private BigDecimal applyConversionRateToAmount(BigDecimal amount, String tableId, String recordId,
+      String currencyIDFrom,
+      String currencyIDTo, ConnectionProvider conn, SimpleDateFormat dateFormat) {
+    BigDecimal amtFrom;
+    String conversionDate;
+    conversionDate = getConversionDate(tableId, recordId, dateFormat);
+    ConversionRateDoc conversionRateDoc = getConversionRateDoc(tableId, recordId, currencyIDFrom,
+        currencyIDTo);
+    if (conversionRateDoc != null && recordId != null) {
+      amtFrom = applyRate(amount, conversionRateDoc, true);
+    } else {
+      // Try to find a reversal rate for the doc, if it exists apply it reversal as well
+      conversionRateDoc = getConversionRateDoc(tableId, recordId, currencyIDTo, currencyIDFrom);
+      if (conversionRateDoc != null) {
+        amtFrom = applyRate(amount, conversionRateDoc, false);
+      } else {
+        String convertedAmt = getConvertedAmt(amount.toString(), currencyIDFrom, currencyIDTo,
+            conversionDate, "", AD_Client_ID, AD_Org_ID, conn);
+        if (StringUtils.isNotEmpty(convertedAmt)) {
+          amtFrom = new BigDecimal(convertedAmt);
+        } else {
+          throw new OBException(NOT_CONVERTIBLE_MESSAGE);
+        }
+      }
+    }
+    return amtFrom;
+  }
+
+  /**
+   * This class represents the result of a currency conversion, containing the amounts in the source currency and the converted currency.
+   */
+  private static class ConversionResult {
+    private BigDecimal amtFromSourceCurrency;
+    private BigDecimal amtTo;
+
+    /**
+     * Constructor for the ConversionResult class.
+     *
+     * @param amtFromSourceCurrency
+     *     The amount in the source currency
+     * @param amtTo
+     *     The converted amount
+     */
+    public ConversionResult(BigDecimal amtFromSourceCurrency, BigDecimal amtTo) {
+      this.amtFromSourceCurrency = amtFromSourceCurrency;
+      this.amtTo = amtTo;
+    }
+
+    /**
+     * Get method to retrieve the amount in the source currency.
+     *
+     * @return The amount in the source currency
+     */
+    public BigDecimal getAmtFromSourceCurrency() {
+      return amtFromSourceCurrency;
+    }
+
+    /**
+     * Set method to update the amount in the source currency.
+     *
+     * @param amtFromSourceCurrency
+     *     The amount in the source currency to set
+     */
+    public void setAmtFromSourceCurrency(BigDecimal amtFromSourceCurrency) {
+      this.amtFromSourceCurrency = amtFromSourceCurrency;
+    }
+
+    /**
+     * Get method to retrieve the converted amount.
+     *
+     * @return The converted amount
+     */
+    public BigDecimal getAmtTo() {
+      return amtTo;
+    }
+
+    /**
+     * Set method to update the converted amount.
+     *
+     * @param amtTo
+     *     The converted amount to set
+     */
+    public void setAmtTo(BigDecimal amtTo) {
+      this.amtTo = amtTo;
+    }
   }
 
   @Deprecated
@@ -2721,7 +3130,7 @@ public abstract class AcctServer {
           String strDateFormat;
           strDateFormat = OBPropertiesProvider.getInstance()
               .getOpenbravoProperties()
-              .getProperty("dateFormat.java");
+              .getProperty(DATE_FORMAT_JAVA_FILE);
           final SimpleDateFormat dateFormat = new SimpleDateFormat(strDateFormat);
           localConvDate = dateFormat
               .format(reversedCriteria.list().get(0).getReversedInvoice().getAccountingDate());
@@ -2798,7 +3207,7 @@ public abstract class AcctServer {
     String conversionDate = DateAcct;
     String strDateFormat = OBPropertiesProvider.getInstance()
         .getOpenbravoProperties()
-        .getProperty("dateFormat.java");
+        .getProperty(DATE_FORMAT_JAVA_FILE);
     final SimpleDateFormat dateFormat = new SimpleDateFormat(strDateFormat);
     // Calculate accountingRateCurrencyFromCurrencyTo
     BigDecimal accountingRateCurrencyFromCurrencyTo = BigDecimal.ONE;

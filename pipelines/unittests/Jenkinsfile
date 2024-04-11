@@ -1,5 +1,31 @@
-pipeline {
+// Calculates the Java version from JAVA_HOME
+def calculateJavaVersion() {
+    def javaVersion = sh(script: "echo ${JAVA_HOME} | awk -F'/' '{print \$NF}'", returnStdout: true).trim()
+    return javaVersion
+}
 
+// Calculates the Tomcat folder from the URL
+def calculateTomcatFolder() {
+    def tomcatFolder = sh(script: "basename ${TOMCAT_URL} .tar.gz", returnStdout: true).trim()
+    return tomcatFolder
+}
+
+// Generates the stack message using calculated values
+def generateStackMessage() {
+    def postgresVersion = POSTGRES_VERSION
+    def tomcatFolder = calculateTomcatFolder()
+    def javaVersion = calculateJavaVersion()
+
+    def stackMessage = "💡 The stack for this execution is: " +
+                      "\n  - Postgres: ${postgresVersion} " +
+                      "\n  - Tomcat: ${tomcatFolder} " +
+                      "\n  - Java: ${javaVersion}"
+
+    return stackMessage
+}
+
+
+pipeline {
   options {
     disableConcurrentBuilds()
   }
@@ -33,8 +59,7 @@ pipeline {
 
     // Stack
     JAVA_HOME           = "/usr/lib/jvm/java-11-openjdk-amd64"
-    TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.75/bin/apache-tomcat-8.5.75.tar.gz"
-    TOMCAT_FOLDER       = "apache-tomcat-8.5.75"
+    TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.86/bin/apache-tomcat-9.0.86.tar.gz"
     POSTGRES_VERSION    = "14"
   }
 
@@ -123,10 +148,20 @@ spec:
             try {
               sh 'printenv'
               sh './pipelines/unittests/build-update.sh etendo_core pending "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+
+              echo "---------------- Stack Configuration ----------------"
               sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
               sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
+
+              env.TOMCAT_FOLDER = calculateTomcatFolder()
               env.CATALINA_HOME="${WORKSPACE}/${TOMCAT_FOLDER}"
               env.CATALINA_BASE="${WORKSPACE}/${TOMCAT_FOLDER}"
+
+              env.STACK_INFO = generateStackMessage()
+              echo "__________________________________________________"
+              echo "${env.STACK_INFO}"
+              echo "__________________________________________________"
+
               withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
                 sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone --branch $BRANCH_NAME $URL_REPO_GIT"
               }
@@ -162,6 +197,7 @@ spec:
               env.STATUSBUILD = "1"
             } catch (Exception e) {
               echo 'Build of Etendo Core FAILED'
+              echo "Exception occurred: " + e.toString()
               currentBuild.result = FAILED
               error('Build Etendo Core FAILED!')
               env.STATUSBUILD = "0"
@@ -203,8 +239,8 @@ spec:
                   reportTitles: ''
                 ])
               } catch (Exception e) {
-                echo 'Exception occurred: ' + e.toString()
                 echo '....TEST WEBSERVICE FAILED....'
+                echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
                 unstable('Web Service Test Failed')
                 env.STATUSTEST = "0"
@@ -251,6 +287,7 @@ spec:
                 echo 'Database Cleaned'
               } catch (Exception e) {
                 echo 'Clean Database FAILED'
+                echo "Exception occurred: " + e.toString()
                 currentBuild.result = FAILED
                 error('Clean Database FAILED!')
                 env.STATUSBUILD = "0"
@@ -292,8 +329,8 @@ spec:
                   reportTitles: ''
                 ])
               } catch (Exception e) {
-                echo 'Exception occurred: ' + e.toString()
                 echo '....TEST STANDALONE FAILED....'
+                echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
                 unstable('Standalone Test Failed!')
                 env.STATUSTEST = "0"
@@ -336,8 +373,8 @@ spec:
                   reportTitles: ''
                 ])
               } catch (Exception e) {
-                echo 'Exception occurred: ' + e.toString()
                 echo '....TEST SPOCK FAILED....'
+                echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
                 unstable('Spock Test failed!')
                 env.STATUSTEST = "0"
@@ -424,7 +461,8 @@ __________________________________________________________
 Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
 Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
 
-💡 These tests were run on a Postgres(${POSTGRES_VERSION}) database environment.
+${env.STACK_INFO}
+
 The problems found in the previous run/s have been fixed! 💪
 Check out the output in the following link:
 ${env.BUILD_URL}
@@ -446,8 +484,9 @@ __________________________________________________________
 Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
 Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
 
+${env.STACK_INFO}
+
 Tests have been detected that have failed in Etendo Core.
-💡 These tests were run on a Postgres(${POSTGRES_VERSION}) database environment.
 To more information on the failing run visit:
 ${env.BUILD_URL}
 __________________________________________________________
@@ -465,8 +504,9 @@ __________________________________________________________
 Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
 Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
 
+${env.STACK_INFO}
+
 The build or publication has failed unexpectedly.
-💡 This build was on an Etendo Core environment with Postgres(${POSTGRES_VERSION}) database.
 To more information on the failing run visit:
 ${env.BUILD_URL}
 __________________________________________________________
