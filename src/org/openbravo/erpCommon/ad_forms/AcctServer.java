@@ -83,6 +83,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentDetail;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
+import org.openbravo.service.db.DbUtility;
 
 public abstract class AcctServer {
   public static final String WARNING = "Warning";
@@ -1662,6 +1663,10 @@ public abstract class AcctServer {
           .getId();
       data = AcctServerData.selectPeriodOpen(connectionProvider, AD_Client_ID, DocumentType,
           strOrgCalendarOwner, DateAcct);
+      if (data.length == 0) {
+        C_Period_ID = "";
+        return;
+      }
       C_Period_ID = data[0].period;
       hasDocumentType = data[0].hasdoctype;
 
@@ -2572,11 +2577,9 @@ public abstract class AcctServer {
     }
     String strTitle = determineTitleByStatus(conn, vars, strStatus, params);
 
-    messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
-        Utility.parseTranslation(conn, vars, vars.getLanguage(), strTitle)));
-    if (StringUtils.isEmpty(strMessage)) {
-      messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(),
-          Utility.parseTranslation(conn, vars, vars.getLanguage(), strMessage)));
+    messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(), strTitle));
+    if (StringUtils.isNotEmpty(strMessage)) {
+      messageResult.setMessage(Utility.parseTranslation(conn, vars, params, vars.getLanguage(), strMessage));
     }
   }
 
@@ -3646,13 +3649,13 @@ public abstract class AcctServer {
     try {
       AcctServer.throwErrors = true;
       this.post(strKey, false, vars, connectionProvider, con);
+      return null;
     } catch (OBException | ServletException e) {
       log4j.error(e);
-      return e.toString();
+      return e.getMessage();
 
     } finally {
       AcctServer.throwErrors = false;
     }
-    return null;
   }
 }
