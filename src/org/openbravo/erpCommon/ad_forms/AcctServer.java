@@ -1663,7 +1663,7 @@ public abstract class AcctServer {
           .getId();
       data = AcctServerData.selectPeriodOpen(connectionProvider, AD_Client_ID, DocumentType,
           strOrgCalendarOwner, DateAcct);
-      if(data.length == 0) {
+      if (data.length == 0) {
         C_Period_ID = "";
         return;
       }
@@ -3649,13 +3649,13 @@ public abstract class AcctServer {
     try {
       AcctServer.throwErrors = true;
       this.post(strKey, false, vars, connectionProvider, con);
+      return null;
     } catch (OBException | ServletException e) {
       log4j.error(e);
-      return DbUtility.getUnderlyingSQLException(e).getMessage();
+      return e.getMessage();
 
     } finally {
       AcctServer.throwErrors = false;
     }
-    return null;
   }
 }
