@@ -2086,23 +2086,9 @@ public class Utility {
    * @return The image requested
    */
   public static byte[] getImage(String id) {
-    return getImage(id, false);
-  }
-
-  /**
-   * Provides the image as a byte array. These images are stored in the table AD_IMAGE as a BLOB
-   * field.
-   * 
-   * @param id
-   *          The id of the image to display
-   * @param doCommitAndClose
-   *          A flag to force the commit and close of the DAL connection after retrieving the image
-   * @return The image requested
-   */
-  private static byte[] getImage(String id, boolean doCommitAndClose) {
     byte[] imageByte;
     try {
-      Image img = getImageObject(id, doCommitAndClose);
+      Image img = getImageObject(id);
       if (img == null) {
         imageByte = getBlankImage();
       } else {
@@ -2128,23 +2114,8 @@ public class Utility {
    * @param id
    *          The id of the image to display
    * @return The image requested
-   * @see #getImage(String)
    */
   public static Image getImageObject(String id) {
-    return getImageObject(id, false);
-  }
-
-  /**
-   * Provides the image as an image object. These images are stored in the table AD_IMAGE as a BLOB
-   * field.
-   * 
-   * @param id
-   *          The id of the image to display
-   * @param doCommitAndClose
-   *          A flag to force the commit and close of the DAL connection after retrieving the image
-   * @return The image requested
-   */
-  private static Image getImageObject(String id, boolean doCommitAndClose) {
     Image img = null;
     OBContext.setAdminMode();
     try {
@@ -2153,9 +2124,6 @@ public class Utility {
       log4j.error("Could not load image from database: " + id, e);
     } finally {
       OBContext.restorePreviousMode();
-      if (doCommitAndClose) {
-        OBDal.getInstance().commitAndClose();
-      }
     }
     return img;
   }
@@ -2170,10 +2138,7 @@ public class Utility {
    * @see #getImage(String)
    */
   public static BufferedImage showImage(String id) throws IOException {
-    // Use getImage(id, true) to close the DAL connection once the image has been retrieved.
-    // This is required to avoid connection leaks when invoking this method from a sub-report.
-    // This is needed until issue https://issues.openbravo.com/view.php?id=30182 is fixed.
-    return ImageIO.read(new ByteArrayInputStream(getImage(id, true)));
+    return ImageIO.read(new ByteArrayInputStream(getImage(id)));
   }
 
   /**
@@ -2269,7 +2234,7 @@ public class Utility {
 
   /**
    * Provides the image logo as a byte array for the indicated parameters.
-   * 
+   *
    * @param logo
    *          The name of the logo to display This can be one of the following: yourcompanylogin,
    *          youritservicelogin, yourcompanymenu, yourcompanybig, yourcompanydoc, yourcompanylegal
@@ -2280,24 +2245,6 @@ public class Utility {
    * @return The image requested
    */
   public static byte[] getImageLogo(String logo, String org) {
-    return getImageLogo(logo, org, false);
-  }
-
-  /**
-   * Provides the image logo as a byte array for the indicated parameters.
-   *
-   * @param logo
-   *          The name of the logo to display This can be one of the following: yourcompanylogin,
-   *          youritservicelogin, yourcompanymenu, yourcompanybig, yourcompanydoc, yourcompanylegal
-   *          or banner-production
-   * @param org
-   *          The organization id used to get the logo In the case of requesting the yourcompanydoc
-   *          logo you can indicate the organization used to request the logo.
-   * @param doConnectionClose
-   *          When true, forces the close of the DAL connection after retrieving the image
-   * @return The image requested
-   */
-  private static byte[] getImageLogo(String logo, String org, boolean doConnectionClose) {
     byte[] imageByte;
 
     try {
@@ -2321,12 +2268,6 @@ public class Utility {
     } catch (Exception e) {
       log4j.error("Could not load logo from database: " + logo + ", " + org, e);
       imageByte = getBlankImage();
-    } finally {
-      if (doConnectionClose) {
-        // Closing read-only instance connection because this is the connection used by
-        // getImageLogoObject
-        OBDal.getReadOnlyInstance().commitAndClose();
-      }
     }
     return imageByte;
   }
@@ -2489,11 +2430,7 @@ public class Utility {
    * @see #getImageLogo(String,String)
    */
   public static BufferedImage showImageLogo(String logo, String org) throws IOException {
-    // Same as showImage(id), using getImageLogo(id, org, true) to close the DAL connection once the
-    // image has been retrieved.
-    // This is required to avoid connection leaks when invoking this method from a sub-report.
-    // This is needed until issue https://issues.openbravo.com/view.php?id=30182 is fixed.
-    return ImageIO.read(new ByteArrayInputStream(getImageLogo(logo, org, true)));
+    return ImageIO.read(new ByteArrayInputStream(getImageLogo(logo, org)));
   }
 
   /**
@@ -2661,7 +2598,6 @@ public class Utility {
       return df.format(date);
     } finally {
       OBContext.restorePreviousMode();
-      OBDal.getReadOnlyInstance().commitAndClose();
     }
   }
 
@@ -2718,7 +2654,6 @@ public class Utility {
       }
     } finally {
       OBContext.restorePreviousMode();
-      OBDal.getReadOnlyInstance().commitAndClose();
     }
   }
 
