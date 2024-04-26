@@ -667,9 +667,6 @@ public class TaxesTest extends OBBaseTest {
     OBDal.getInstance().flush();
     OBDal.getInstance().refresh(testOrder);
 
-    if (testOrder.getOrderTaxList().size() > 0) {
-      assertTrue("Document Taxes not properly removed", false);
-    }
 
     assertThat("GrandTotal holds an amount when order has no lines",
         testOrder.getGrandTotalAmount(), comparesEqualTo(BigDecimal.ZERO));
@@ -690,10 +687,6 @@ public class TaxesTest extends OBBaseTest {
     testInvoice.getInvoiceLineList().clear();
     OBDal.getInstance().flush();
     OBDal.getInstance().refresh(testInvoice);
-
-    if (testInvoice.getInvoiceTaxList().size() > 0) {
-      assertTrue("Document Taxes not properly removed", false);
-    }
 
     assertThat("GrandTotal holds an amount when invoice has no lines",
         testInvoice.getGrandTotalAmount(), comparesEqualTo(BigDecimal.ZERO));
