@@ -935,6 +935,9 @@ public class ResetAccounting {
 
   private static void validateOpenPeriodsForDocBaseType(List<String> docBaseTypesWithoutFacctAcct,
       final String clientId, final Set<String> orgIds, final String tableId, String dateFrom) {
+    if (docBaseTypesWithoutFacctAcct.isEmpty()) {
+      throw new OBException("@NoDocTypeForDocument@");
+    }
 
     for (String dbt : docBaseTypesWithoutFacctAcct) {
       //@formatter:off
@@ -945,31 +948,17 @@ public class ResetAccounting {
               " where ad_org_id in (:orgIds)";
       //@formatter:on
 
-      final ScrollableResults scroll = OBDal.getInstance()
+      try (ScrollableResults scroll = OBDal.getInstance()
           .getSession()
           .createNativeQuery(query)
           .setParameterList("orgIds", orgIds)
-          .scroll(ScrollMode.FORWARD_ONLY);
-      int i = 0;
-      try {
+          .scroll(ScrollMode.FORWARD_ONLY)) {
+        int i = 0;
         while (scroll.next()) {
           final Object[] resultSet = scroll.get();
           final String orgPeriodControl = (String) resultSet[1];
 
-          if (orgPeriodControl != null) {
-            final String organization = (String) resultSet[0];
-            /* Parameters Order by
-             * 0            1             2         3          4        5         6           7
-             * clientId, docBaseType, calendarId, tableId, recordId, dateFrom, dateTo, orgPeriodControl
-             * */
-            List<String> parameters = new LinkedList<>(
-                Arrays.asList(clientId, dbt, getCalendarId(organization), tableId, "", dateFrom, dateFrom,
-                    orgPeriodControl));
-            List<Period> periodsOpen = getOpenPeriods(parameters, orgIds);
-            if (periodsOpen.isEmpty()) {
-              throw new OBException("@PeriodClosedForUnPosting@");
-            }
-          }
+          validatePeriods(clientId, orgIds, tableId, dateFrom, dbt, orgPeriodControl, resultSet);
 
           i++;
           if (i % 100 == 0) {
@@ -980,10 +969,25 @@ public class ResetAccounting {
       } catch (Exception e) {
         log4j.error(e);
         throw e;
-      } finally {
-        scroll.close();
       }
     }
   }
 
+  private static void validatePeriods(String clientId, Set<String> orgIds, String tableId, String dateFrom, String dbt,
+      String orgPeriodControl, Object[] resultSet) {
+    if (orgPeriodControl != null) {
+      final String organization = (String) resultSet[0];
+      /* Parameters Order by
+       * 0            1             2         3          4        5         6           7
+       * clientId, docBaseType, calendarId, tableId, recordId, dateFrom, dateTo, orgPeriodControl
+       * */
+      List<String> parameters = new LinkedList<>(
+          Arrays.asList(clientId, dbt, getCalendarId(organization), tableId, "", dateFrom, dateFrom,
+              orgPeriodControl));
+      List<Period> periodsOpen = getOpenPeriods(parameters, orgIds);
+      if (periodsOpen.isEmpty()) {
+        throw new OBException("@PeriodClosedForUnPosting@");
+      }
+    }
+  }
 }

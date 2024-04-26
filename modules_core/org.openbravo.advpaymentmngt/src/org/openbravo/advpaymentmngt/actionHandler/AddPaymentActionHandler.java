@@ -159,7 +159,7 @@ public class AddPaymentActionHandler extends Action {
           callPaymentProcess(actionResult, content, payment.getId(), isWebService);
           if (StringUtils.equals(Result.Type.ERROR.toString(), actionResult.getType().toString())) {
             errors++;
-            SessionHandler.getInstance().rollback();
+            OBDal.getInstance().rollbackAndClose();
           } else {
             success++;
             SessionHandler.getInstance().commitAndStart();

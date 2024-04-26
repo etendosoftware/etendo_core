@@ -38,7 +38,8 @@
         '' AS CREATEFROM, '' AS GENERATETO, '' AS SENDEMAIL, '' AS AD_USER_ID, '' AS COPYFROM, '' AS ISSELFSERVICE, '' AS AD_ORGTRX_ID,
         '' AS USER1_ID, '' AS USER2_ID, '' AS CONVERTED, '' AS PERIOD, '' AS C_INVOICELINE_ID,'' AS M_INOUTLINE_ID, '' AS M_PRODUCT_ID,
         '' AS DATETRX1, '' AS DATETRX2, '' AS QTY1, '' AS QTY2, '' AS ACCOUNT_ID, '' AS C_INVOICE_ID, '' AS NAME, '' AS CLASSNAME,
-        '' AS ACCTDATECOLUMN, '' AS TABLENAME, '' AS ACCTCLASSNAME, '' as ISREVERSAL, '' as ISRETURN,   a.DATEACCT as da, '' AS RN1
+        '' AS ACCTDATECOLUMN, '' AS TABLENAME, '' AS ACCTCLASSNAME, '' as ISREVERSAL, '' as ISRETURN,   a.DATEACCT as da, '' AS RN1,
+        '' AS HASDOCTYPE
         FROM C_INVOICE a WHERE a.AD_CLIENT_ID=?
         and a.ad_org_id in ('1')
         AND PROCESSED='Y'
@@ -163,7 +164,11 @@
       <SqlMethodComment></SqlMethodComment>
       <Sql>
       <![CDATA[
-      select max(c_period.c_period_id) as period
+      select max(c_period.c_period_id) as period,
+      case when exists(select 1 from c_doctype d
+      where ad_client_id = ?
+      and d.docbasetype = ?)
+      then 'Y' else 'N' end as hasDocType
       from c_period, c_periodcontrol
       where c_period.c_period_id = c_periodcontrol.c_period_id
       and c_period.ad_client_id = ?
@@ -173,8 +178,11 @@
       and c_periodcontrol.ad_org_id = ?
       and to_date(?) >= c_period.StartDate
       and to_date(?) < c_period.EndDate + 1
+      group by c_period.c_period_id , c_period.ad_client_id, c_periodcontrol.docbasetype
       ]]>
       </Sql>
+      <Parameter name="AD_Client_ID"/>
+      <Parameter name="DocumentType"/>
       <Parameter name="AD_Client_ID"/>
       <Parameter name="DocumentType"/>
       <Parameter name="Org"/>

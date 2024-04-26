@@ -88,7 +88,6 @@ public class CopyFromOrdersActionHandler extends BaseProcessActionHandler {
         log.error(e.getMessage(), e2);
       }
     }
-
     return jsonRequest;
   }
 
