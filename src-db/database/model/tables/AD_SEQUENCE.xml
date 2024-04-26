@@ -113,8 +113,8 @@
         <reference local="C_DOCTYPE_ID" foreign="C_DOCTYPE_ID"/>
       </foreign-key>
       <index name="AD_SEQUENCE_UNIQUECHECK" unique="true">
-        <index-column name="functionBasedColumn" functionExpression="CASE  WHEN (AD_COLUMN_ID IS NULL AND AD_TABLE_ID IS NULL AND C_DOCTYPE_ID IS NULL) THEN NULL ELSE AD_ORG_ID END"/>
-        <index-column name="functionBasedColumn" functionExpression="CASE  WHEN (AD_COLUMN_ID IS NULL AND AD_TABLE_ID IS NULL AND C_DOCTYPE_ID IS NULL) THEN NULL ELSE AD_CLIENT_ID END"/>
+        <index-column name="functionBasedColumn" functionExpression="CASE WHEN AD_COLUMN_ID IS NULL AND AD_TABLE_ID IS NULL AND C_DOCTYPE_ID IS NULL THEN NULL ELSE AD_ORG_ID END"/>
+        <index-column name="functionBasedColumn" functionExpression="CASE WHEN AD_COLUMN_ID IS NULL AND AD_TABLE_ID IS NULL AND C_DOCTYPE_ID IS NULL THEN NULL ELSE AD_CLIENT_ID END"/>
         <index-column name="AD_COLUMN_ID"/>
         <index-column name="AD_TABLE_ID"/>
         <index-column name="C_DOCTYPE_ID"/>
