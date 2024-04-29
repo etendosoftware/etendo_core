@@ -185,7 +185,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       param.add(internalConsumption.getId());
       param.add("CO");
 
-      CallStoredProcedure.getInstance().call("m_internal_consumption_post1", param, null, true);
+      CallStoredProcedure.getInstance().call("m_internal_consumption_post1", param, null, true, false);
     } catch (Exception e) {
       log4j.error(e.getMessage(), e);
       throw new OBException(e);
