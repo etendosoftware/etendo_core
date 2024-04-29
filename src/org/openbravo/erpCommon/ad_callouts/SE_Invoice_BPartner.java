@@ -66,7 +66,9 @@ public class SE_Invoice_BPartner extends SimpleCallout {
         && StringUtils.isNotEmpty(strBPartner)) {
       String message = isAutomaticCombination(info.vars, strBPartner, isSales,
           strfinPaymentmethodId, strOrgId);
-      info.addResult("MESSAGE", message);
+      if (StringUtils.isNotEmpty(message)) {
+        info.addResult("MESSAGE", message);
+      }
     }
 
     else {
