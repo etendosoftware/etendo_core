@@ -62,7 +62,7 @@ import org.openbravo.test.base.TestConstants;
 
 public class PostedNoDocConfigTest extends WeldBaseTest {
   private static final String ORGANIZATION_SPAIN = "B843C30461EA4501935CB1D125C9C25A";
-  private static final String PRODUCT_ID = "DA7FC1BB3BA44EC48EC1AB9C74168CED"; // Cerveza Ale 0,5L
+  private static final String PRODUCT_ID = "C0E3824CC5184B7F9746D195ACAC2CCF"; // Cerveza Lager 0,5L
   private static final String STORAGE_BIN_ID = "54EB861A446D464EAA433477A1D867A6"; // Rn-0-0-0
   private static final String MATERIAL_MANAGEMENT_CONSUMPTION = "B70331659B1142FFB0AA0F862B3A9079";
   private static final String GL_CATEGORY = "2B5AE4A4047540A1A5DCEC9E3B9441C1"; // ES AP Invoice
@@ -91,15 +91,18 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
 
       createInternalConsumptionLine(internalConsumption);
 
+      TestCostingUtils.runCostingBackground();
+
       processInternalConsumption(internalConsumption);
 
       activeOrDeactiveMaterialManagementConsumptionTable(true);
+
 
       OBDal.getInstance().commitAndClose();
 
       String result = postDocument(internalConsumption);
 
-      assertEquals(result, OBMessageUtils.messageBD(DB_MESSAGE_NAME));
+      assertEquals(OBMessageUtils.messageBD(DB_MESSAGE_NAME), result);
       assertEquals("N", internalConsumption.getPosted());
     } catch (Exception e) {
       log4j.error(e.getMessage(), e);
@@ -125,6 +128,9 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       OBDal.getInstance().commitAndClose();
 
       postDocument(internalConsumption);
+
+      OBDal.getInstance().refresh(internalConsumption);
+      assertEquals("Y", internalConsumption.getPosted());
 
       OBDal.getInstance().remove(docType);
       OBDal.getInstance().flush();
