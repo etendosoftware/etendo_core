@@ -81,6 +81,14 @@ function onloadFunctions() {
     resizeArea();
   }
   </script>
+  <script language="JavaScript" type="text/javascript">
+    function onClickDo() {
+      submitCommandForm('OK',true);
+      document.getElementById('buttonOK').disabled = true;
+      document.getElementById('labelButtonOk').innerHTML='Loading...';
+      return false;
+    }
+  </script>
 </head>
 <body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="onLoadDo();" onresize="onResizeDo();">
   <form name="frmMain" method="post" action="UpdateReferenceData.html" enctype="multipart/form-data" id="form"> 
@@ -320,7 +328,7 @@ function onloadFunctions() {
                       <button type="button" 
                         id="buttonOK" 
                         class="ButtonLink" 
-                        onclick="submitCommandForm('OK',true);return false;" 
+                        onclick="onClickDo();" 
                         onfocus="buttonEvent('onfocus', this); window.status='Accept'; return true;" 
                         onblur="buttonEvent('onblur', this);" 
                         onkeyup="buttonEvent('onkeyup', this);" 
@@ -333,7 +341,7 @@ function onloadFunctions() {
                         <table class="Button">
                           <tr>
                             <td class="Button_left"><img class="Button_Icon Button_Icon_ok" alt="Accept" title="Accept" src="../../../../../web/images/blank.gif" border="0" /></td>
-                            <td class="Button_text Button_width">OK</td>
+                            <td class="Button_text Button_width" id="labelButtonOk">OK</td>
                             <td class="Button_right"></td>
                           </tr>
                         </table>
