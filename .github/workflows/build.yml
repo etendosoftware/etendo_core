@@ -2,24 +2,53 @@ name: Build
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - develop
+      - main
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: syspass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Copy gradle.properties.template to gradle.properties and set values
+        run: |
+          cp gradle.properties.template gradle.properties
+          sed -i "s/githubUser=/githubUser=${GITHUB_USER}/" gradle.properties
+          sed -i "s/githubToken=/githubToken=${GITHUB_TOKEN}/" gradle.properties
+          cat gradle.properties
+        env:
+          GITHUB_USER: ${{ secrets.ETENDOBOT_NAME }}
+          GITHUB_TOKEN: ${{ secrets.ETENDOBOT_TOKEN }}
+      - name: Run setup
+        run: ./gradlew setup
+      - name: Run install
+        run: ./gradlew install
+      - name: Run tests
+        run: |
+          ./gradlew test --tests org.openbravo.test.WebserviceTestSuite
+          ./gradlew test --tests org.openbravo.test.StandaloneTestSuite
+          ./gradlew test --tests "com.etendoerp.*"
+        continue-on-error: true
+      - name: Run jacocoTestReport
+        run: ./gradlew jacocoTestReport
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_SCANNER_OPTS: "-Xmx4096m"
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # We do not recommend to use this in a pull request. Prefer using pull request
-      # decoration instead.
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

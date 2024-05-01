@@ -144,10 +144,11 @@ sonarqube {
         property "sonar.sources", "src"
         property "sonar.tests", "src-test/src"
         property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.coverage.jacoco.xmlReportPaths", "../../build/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "$rootProject"+"/build/reports/jacoco/test/jacocoTestReport.xml"
         property "sonar.branch.name", "$sonarBranchName"
         property "sonar.projectVersion", "$sonarVersion"
         property "sonar.scm.disabled", "true"
+        property "sonar.exclusions", "src-gen"
     }
 }
 
