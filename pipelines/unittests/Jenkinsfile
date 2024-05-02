@@ -1,30 +1,3 @@
-// Calculates the Java version from JAVA_HOME
-def calculateJavaVersion() {
-    def javaVersion = sh(script: "echo ${JAVA_HOME} | awk -F'/' '{print \$NF}'", returnStdout: true).trim()
-    return javaVersion
-}
-
-// Calculates the Tomcat folder from the URL
-def calculateTomcatFolder() {
-    def tomcatFolder = sh(script: "basename ${TOMCAT_URL} .tar.gz", returnStdout: true).trim()
-    return tomcatFolder
-}
-
-// Generates the stack message using calculated values
-def generateStackMessage() {
-    def postgresVersion = POSTGRES_VERSION
-    def tomcatFolder = calculateTomcatFolder()
-    def javaVersion = calculateJavaVersion()
-
-    def stackMessage = "💡 The stack for this execution is: " +
-                      "\n  - Postgres: ${postgresVersion} " +
-                      "\n  - Tomcat: ${tomcatFolder} " +
-                      "\n  - Java: ${javaVersion}"
-
-    return stackMessage
-}
-
-
 pipeline {
   options {
     disableConcurrentBuilds()
@@ -150,14 +123,17 @@ spec:
               sh './pipelines/unittests/build-update.sh etendo_core pending "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
 
               echo "---------------- Stack Configuration ----------------"
+              def rootDir = pwd()
+              def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
+
               sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
               sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
 
-              env.TOMCAT_FOLDER = calculateTomcatFolder()
+              env.TOMCAT_FOLDER=stackConfig.getTomcatFolder()
               env.CATALINA_HOME="${WORKSPACE}/${TOMCAT_FOLDER}"
               env.CATALINA_BASE="${WORKSPACE}/${TOMCAT_FOLDER}"
 
-              env.STACK_INFO = generateStackMessage()
+              env.STACK_INFO = stackConfig.generateStackMessage()
               echo "__________________________________________________"
               echo "${env.STACK_INFO}"
               echo "__________________________________________________"
@@ -166,6 +142,10 @@ spec:
                 sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone --branch $BRANCH_NAME $URL_REPO_GIT"
               }
               dir('etendo_core') {
+                echo "---------------- Getting Commit Information ----------------"
+                def infoCommit = load "${rootDir}/pipelines/unittests/utils/infoCommit.groovy"
+                env.COMMIT_INFO = infoCommit.generateCommitInfo(env.URL_REPO)
+
                 sh """
                 echo -e "context.name=${CONTEXT_NAME}\n
                 bbdd.sid=${BBDD_SID}\n
@@ -258,50 +238,6 @@ spec:
               sh './gradlew --stop'
             }
           }
-        }
-      }
-    }
-//___________________________________________________________________________________________
-// -------------------------------- CLEAN DATABASE ------------------------------------------
-    stage('Restart Environment') {
-      environment {
-        BBDD_SID = 'etendo2'
-      }
-      when {
-        expression {
-          env.STATUSBUILD == "1"
-        }
-      }
-      steps {
-        container('compiler') {
-          script {
-            dir('etendo_core') {
-              try {
-                sh './gradlew --stop'
-                sh 'sed -i "s/bbdd.sid=etendo/bbdd.sid=\${BBDD_SID}/g" gradle.properties'
-                sh 'cat gradle.properties'
-                sh './gradlew setup --info'
-                echo 'Creating Database...'
-                sh './gradlew install --info'
-                sh './gradlew smartbuild --info'
-                echo 'Database Cleaned'
-              } catch (Exception e) {
-                echo 'Clean Database FAILED'
-                echo "Exception occurred: " + e.toString()
-                currentBuild.result = FAILED
-                error('Clean Database FAILED!')
-                env.STATUSBUILD = "0"
-              }
-            }
-          }
-        }
-      }
-      post {
-        success {
-          sh './pipelines/unittests/build-update.sh etendo_core pending "Restart successful" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
-        }
-        failure {
-          sh './pipelines/unittests/build-update.sh etendo_core failure "Restart failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
         }
       }
     }
@@ -452,65 +388,95 @@ spec:
     fixed {
       mail to: EMAIL_ADDRESS,
       subject: "✅ FIXED - ${currentBuild.fullDisplayName}",
-      body: """
-${new Date()}
-__________________________________________________________
+      mimeType: "text/html",
+      body:  """
+        <html>
+          <head>
+              <style>
+                  body { font-family: 'Arial', sans-serif; }
+                  .header { font-size: 16px; font-weight: bold; color: #333; }
+              </style>
+          </head>
+          <body>
+            <p><em>${new Date()}</em></p>
+            <p>__________________________________________________________</p>
 
-✅ ERRORS FIXED ✅
+            <h2 class="header">✅ ERRORS FIXED ✅</h2>
 
-Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
-Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+            ${env.COMMIT_INFO}
 
-${env.STACK_INFO}
+            ${env.STACK_INFO}
 
-The problems found in the previous run/s have been fixed! 💪
-Check out the output in the following link:
-${env.BUILD_URL}
-__________________________________________________________
-"""
-      }
+            <p>The problems found in the previous run/s have been fixed! 💪<br>Check out the output in the following link: ${env.BUILD_URL}</p>
+
+            <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
+            <p>__________________________________________________________</p>
+          </body>
+        </html>
+      """
+    }
     unstable {
       script {
         sh './pipelines/unittests/build-update.sh etendo_core failure "Failed Tests" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
       }
-        mail to: EMAIL_ADDRESS,
-        subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
-        body: """
-${new Date()}
-__________________________________________________________
+      mail to: EMAIL_ADDRESS,
+      subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
+      mimeType: "text/html",
+      body:  """
+        <html>
+          <head>
+              <style>
+                  body { font-family: 'Arial', sans-serif; }
+                  .header { font-size: 16px; font-weight: bold; color: #333; }
+              </style>
+          </head>
+          <body>
+            <p><em>${new Date()}</em></p>
+            <p>__________________________________________________________</p>
 
-⚠️ BUILD UNSTABLE ⚠️
+            <h2 class="header">⚠️ BUILD UNSTABLE ⚠️</h2>
 
-Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
-Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+            ${env.COMMIT_INFO}
 
-${env.STACK_INFO}
+            ${env.STACK_INFO}
 
-Tests have been detected that have failed in Etendo Core.
-To more information on the failing run visit:
-${env.BUILD_URL}
-__________________________________________________________
-        """
+            <p>Tests have been detected that have failed in Etendo Core.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
+
+            <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
+            <p>__________________________________________________________</p>
+          </body>
+        </html>
+      """
     }
     failure {
       mail to: EMAIL_ADDRESS,
       subject: "⛔ ERROR - ${currentBuild.fullDisplayName}",
+      mimeType: "text/html",
       body:  """
-${new Date()}
-__________________________________________________________
+        <html>
+          <head>
+              <style>
+                  body { font-family: 'Arial', sans-serif; }
+                  .header { font-size: 16px; font-weight: bold; color: #333; }
+              </style>
+          </head>
+          <body>
+            <p><em>${new Date()}</em></p>
+            <p>__________________________________________________________</p>
 
-⛔ ERROR ⛔
+            <h2 class="header">🚫 BUILD FAILED 🚫</h2>
 
-Commit: ${URL_REPO}/commit/${env.GIT_COMMIT}
-Author: ${COMMIT_AUTHOR_NAME} <${COMMIT_AUTHOR_EMAIL}>
+            ${env.COMMIT_INFO}
 
-${env.STACK_INFO}
+            ${env.STACK_INFO}
 
-The build or publication has failed unexpectedly.
-To more information on the failing run visit:
-${env.BUILD_URL}
-__________________________________________________________
-"""
+            <p>The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
+
+            <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
+            <p>__________________________________________________________</p>
+          </body>
+        </html>
+      """
     }
   }
 }
