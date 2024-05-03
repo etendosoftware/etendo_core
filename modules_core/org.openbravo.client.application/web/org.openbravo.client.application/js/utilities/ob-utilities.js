@@ -796,7 +796,10 @@ OB.Utilities.logout = function(confirmed) {
       {},
       {},
       function() {
-        window.location.href = OB.Application.contextUrl;
+        var logoutRedirectUrl = OB.Application.logoutRedirect;
+        window.location.href = (logoutRedirectUrl != null && logoutRedirectUrl != undefined && logoutRedirectUrl != '')
+          ? logoutRedirectUrl
+          : OB.Application.contextUrl;
       }
     ]
   });
