@@ -163,16 +163,6 @@ BEGIN
       WHERE C_Order_ID = :OLD.C_Order_ID
       AND C_Tax_ID = :OLD.C_Tax_ID;
     END IF;
-    DELETE FROM C_ORDERTAX 
-    WHERE C_ORDER_ID = :OLD.C_Order_ID
-    AND C_TAX_ID = :OLD.C_TAX_ID
-    AND NOT EXISTS 
-        (
-            SELECT 1
-            FROM C_ORDERLINETAX
-            WHERE C_TAX_ID = :OLD.C_TAX_ID
-            AND C_ORDER_ID = :OLD.C_ORDER_ID
-        );
   END IF;
 END C_ORDERLINETAX_TRG
 ]]></body>
