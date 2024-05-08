@@ -130,4 +130,6 @@ public class KernelConstants {
    */
   public static final String BOOTSTRAP_ERROR_HANDLER_NAME = "indexErrorHandler";
 
+  public static final String LOGOUT_REDIRECT_URL_PREFERENCE = "LogoutRedirectURL";
+  public static final String DEFAULT_VALUE_LOGOUT = "Default";
 }

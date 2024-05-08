@@ -24,11 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang.StringUtils;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.kernel.reference.UIDefinitionController;
 import org.openbravo.client.kernel.reference.UIDefinitionController.FormatDefinition;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.User;
@@ -139,6 +141,29 @@ public class ApplicationComponent extends BaseTemplateComponent {
 
   public String getButlerUtilsUrl() {
     return Utility.BUTLER_UTILS_URL;
+  }
+
+  /**
+   * This method retrieves the logout redirect URL based on the preferences set in the system.
+   * If the logout redirect URL preference is set to "Default", it retrieves the context URL from the Openbravo properties.
+   *
+   * @return The logout redirect URL to be used after logging out.
+   */
+  public String getLogoutRedirect() {
+    String logoutRedirectUrl;
+    try {
+      logoutRedirectUrl = Preferences.getPreferenceValue(KernelConstants.LOGOUT_REDIRECT_URL_PREFERENCE, true,
+          OBContext.getOBContext().getCurrentClient(),
+          OBContext.getOBContext().getCurrentOrganization(),
+          OBContext.getOBContext().getUser(),
+          OBContext.getOBContext().getRole(), null);
+      if (StringUtils.equals(KernelConstants.DEFAULT_VALUE_LOGOUT, logoutRedirectUrl)) {
+        return StringUtils.EMPTY;
+      }
+    } catch (Exception e) {
+      return StringUtils.EMPTY;
+    }
+    return logoutRedirectUrl;
   }
 
   public static class ModuleVersionParameter {
