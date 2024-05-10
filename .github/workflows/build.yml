@@ -2,6 +2,10 @@ name: Build
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - develop
+      - main
 jobs:
   build:
     name: Build
