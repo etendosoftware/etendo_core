@@ -146,12 +146,7 @@ sonarqube {
         property "sonar.java.coveragePlugin", "jacoco"
         property "sonar.coverage.jacoco.xmlReportPaths", "$buildDir"+"/reports/jacoco/test/jacocoTestReport.xml"
         property "sonar.projectVersion", "$sonarVersion"
-        if (project.hasProperty('sonarChangeID')) {
-            property "sonar.pullrequest.key", "$sonarChangeID"
-            property "sonar.pullrequest.branch", "$sonarBranchName"
-        } else {
-            property "sonar.branch.name", "$sonarBranchName"
-        }
+        property "sonar.branch.name", "$sonarBranchName"
         property "sonar.scm.disabled", "true"
         property "sonar.exclusions", "src-gen"
     }
