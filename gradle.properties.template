@@ -19,6 +19,7 @@ sonarToken=
 sonarProjectBaseDir=
 sonarProjectName=
 sonarProjectKey=
+sonarSources=
 sonarBranchName=
 sonarVersion=
 sonarChangeID=
