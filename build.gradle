@@ -117,7 +117,15 @@ jacoco {
     toolVersion = "0.8.10"
 }
 
+tasks.withType(Test) {
+    jacoco {
+        includeNoLocationClasses = true
+        destinationFile = file("$buildDir/jacoco/test.exec")
+    }
+}
+
 jacocoTestReport {
+    executionData tasks.withType(Test)*.jacoco
     reports {
         xml.required = true
         html.required = true
