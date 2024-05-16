@@ -46,6 +46,7 @@ import org.openbravo.scheduling.ProcessSchedulingTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
 import org.openbravo.scheduling.trigger.TriggerProviderTest;
 import org.openbravo.test.accounting.PostDocumentTest;
+import org.openbravo.test.accounting.PostedNoDocConfigTest;
 import org.openbravo.test.accounting.RecordID2Test;
 import org.openbravo.test.authentication.AuthenticationManagerTest;
 import org.openbravo.test.cancelandreplace.CancelAndReplaceTest;
@@ -368,8 +369,11 @@ import org.openbravo.financial.FinancialUtilsTest;
     InvoiceFromShipmentTest.class,
 
     // Conversion Rate Document Unique constraint refactor
-    ConversionRateDocUniqueTestSuite.class
+    ConversionRateDocUniqueTestSuite.class,
 
+    // Count and Discount a Document without Doc base type configured and get an error. [EPL-534]
+    PostedNoDocConfigTest.class
+    
 })
 public class StandaloneTestSuite {
 }
