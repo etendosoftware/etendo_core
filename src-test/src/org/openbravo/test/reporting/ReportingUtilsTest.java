@@ -96,6 +96,6 @@ public class ReportingUtilsTest extends WeldBaseTest {
   }
 
   private Path getReportPath() throws URISyntaxException {
-    return Paths.get(getClass().getResource("reports/Main.jrxml").toURI());
+    return Paths.get(System.getProperty("user.dir"), "src-test/resources/reports/Main.jrxml").normalize();
   }
 }
