@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2017 Openbravo SLU 
+ * All portions are Copyright (C) 2008-2022 Openbravo SLU 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -39,41 +39,11 @@ public abstract class DalThreadHandler extends ThreadHandler {
   /** @see ThreadHandler#doFinal */
   @Override
   public void doFinal(boolean errorOccured) {
-    try {
-      closeDefaultPoolSession(errorOccured);
-    } finally {
-      try {
-        closeOtherSessions();
-      } finally {
-        SessionHandler.deleteSessionHandler();
-        // note before the code below was enabled, however for longer running transactions
-        // openbravo does multiple http requests, so while the long running transaction
-        // had set inadministratormode, the subsequence http requests put it to false again
-        // if (OBContext.getOBContext() != null) {
-        // OBContext.getOBContext().setInAdministratorMode(false);
-        // }
-        OBContext.setOBContext((OBContext) null);
-      }
-    }
-  }
-
-  private void closeDefaultPoolSession(boolean errorOccured) {
-    SessionHandler sessionHandler = SessionHandler.isSessionHandlerPresent()
-        ? SessionHandler.getInstance()
-        : null;
-    if (sessionHandler != null && sessionHandler.doSessionInViewPatter()) {
-      // application software can force a rollback
-      if (sessionHandler.getDoRollback() || errorOccured) {
-        sessionHandler.rollback();
-      } else if (sessionHandler.getSession().getTransaction().isActive()) {
-        sessionHandler.commitAndClose();
-      }
-    }
-  }
-
-  private void closeOtherSessions() {
-    if (SessionHandler.existsOpenedSessions()) {
-      SessionHandler.getInstance().cleanUpSessions();
+    DalThreadCleaner cleaner = DalThreadCleaner.getInstance();
+    if (errorOccured) {
+      cleaner.cleanWithRollback();
+    } else {
+      cleaner.cleanWithCommit();
     }
   }
 }
