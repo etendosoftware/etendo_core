@@ -10,6 +10,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Delete build.gradle (if exists)
+        run: |
+          if [ -f build.gradle ]; then
+            rm build.gradle
+            echo "'build.gradle' file deleted..."
+          fi
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_SCANNER_OPTS: "-Xmx4096m"
