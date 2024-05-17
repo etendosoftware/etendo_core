@@ -7,7 +7,7 @@
 	<property name="ireport.y" value="238"/>
 	<parameter name="SUBREP_Subreport" class="net.sf.jasperreports.engine.JasperReport" isForPrompting="false"/>
 	<queryString language="SQL">
-		<![CDATA[select ad_org_id, name from ad_org p where name = 'Spain']]>
+		<![CDATA[select ad_org_id, name from ad_org p where ad_org_id = '357947E87C284935AD1D783CF6F099A1']]>
 	</queryString>
 	<field name="ad_org_id" class="java.lang.String"/>
 	<field name="name" class="java.lang.String"/>
