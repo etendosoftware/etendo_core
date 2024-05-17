@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
+<!-- 2022-01-21T08:05:53 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Product" pageWidth="285" pageHeight="435" columnWidth="245" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="60b4f323-d94c-4f60-8e2d-c69fca96543a">
+	<property name="ireport.zoom" value="1.8660295208389333"/>
+	<property name="ireport.x" value="231"/>
+	<property name="ireport.y" value="238"/>
+	<parameter name="ad_org_id" class="java.lang.String" isForPrompting="false"/>
+	<queryString language="SQL">
+		<![CDATA[select p.name from m_product p where p.ad_org_id = $P{ad_org_id}]]>
+	</queryString>
+	<field name="name" class="java.lang.String"/>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="85" splitType="Stretch">
+			<textField>
+				<reportElement x="10" y="70" width="100" height="12" uuid="c4f95b59-35a6-4a96-a789-3bf7cd01cdd2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>
