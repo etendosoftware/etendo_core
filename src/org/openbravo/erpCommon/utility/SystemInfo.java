@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -174,7 +174,7 @@ public class SystemInfo {
         case ANT_VERSION:
           systemInfo.put(i, getVersion(SystemInfoData.selectAntVersion(conn)));
           break;
-        case OB_VERSION:
+        case ETENDO_VERSION:
           OBVersion version = OBVersion.getInstance();
           systemInfo.put(i, version.getVersionNumber() + version.getMP());
           break;
@@ -319,7 +319,7 @@ public class SystemInfo {
 
   /**
    * Obtains mac address a CRC of the byte[] array for the obtained mac address.
-   * 
+   *
    * In case multiple interfaces are present, it is taken the first one with mac address of the list
    * sorted in this way: loopbacks are sorted at the end, the rest of interfaces are sorted by name.
    */
@@ -456,7 +456,7 @@ public class SystemInfo {
   /**
    * Runs a native command to try and locate the user's web server version. Tests all combinations
    * of paths + commands.
-   * 
+   *
    * Currently only checks for Apache.
    */
   private final static String[] getWebserver() {
@@ -543,6 +543,9 @@ public class SystemInfo {
         modInfo.add(mod.getVersion());
         modInfo.add(mod.isEnabled() ? "Y" : "N");
         modInfo.add(mod.getName());
+        modInfo.add(mod.getJavaPackage());
+        modInfo.add(mod.getDescription());
+        modInfo.add(mod.isCommercial() ? "Y" : "N");
 
         if (usageAuditEnabled) {
           OBCriteria<SessionUsageAudit> qUsage = OBDal.getInstance()
@@ -593,7 +596,7 @@ public class SystemInfo {
    * Returns the string representation of a numerical version from a longer string. For example,
    * given the string: 'Apache Ant version 1.7.0 compiled on August 29 2007' getVersion() will
    * return '1.7.0'
-   * 
+   *
    * @param str
    * @return the string representation of a numerical version from a longer string.
    */
@@ -645,8 +648,8 @@ public class SystemInfo {
   private static void loadSessionInfo() {
     // Obtain login counts
     //@formatter:off
-    String hql = 
-            "select min(s.creationDate) as firstLogin, " +
+    String hql =
+        "select min(s.creationDate) as firstLogin, " +
             "       max(s.creationDate) as lastLogin, " +
             "       count(*) as totalLogins " +
             "  from ADSession s";
@@ -784,8 +787,8 @@ public class SystemInfo {
 
   private static List<Long> getWsLogins(String type, Date fromDate) {
     //@formatter:off
-    String hql = 
-            "select count(*) " +
+    String hql =
+        "select count(*) " +
             "  from ADSession " +
             " where loginStatus = :type " +
             "   and creationDate > :firstDay " +
@@ -810,7 +813,7 @@ public class SystemInfo {
 
   /**
    * Returns the date to start the computation data period which is 30 days before now.
-   * 
+   *
    * @return Starting date
    */
   private static Calendar getStartOfPeriod() {
@@ -823,7 +826,7 @@ public class SystemInfo {
    * Auxiliary class to keep track of session events. It contains the time when the event occurred
    * and which kind of event is (in sessionCount field) +1 in case it is login, -1 for logout, so
    * then it is possible to compute number of users taking into account all the events.
-   * 
+   *
    */
   private static class Event implements Comparable<Event> {
     Date eventDate;
@@ -859,7 +862,7 @@ public class SystemInfo {
     SERVLET_CONTAINER("servletContainer", false),
     SERVLET_CONTAINER_VERSION("servletContainerVersion", false),
     ANT_VERSION("antVersion", false),
-    OB_VERSION("obVersion", false),
+    ETENDO_VERSION("etendoVersion", false),
     OB_INSTALL_MODE("obInstallMode", false),
     NUM_REGISTERED_USERS("numRegisteredUsers", false),
     ISHEARTBEATACTIVE("isheartbeatactive", true),
