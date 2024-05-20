@@ -283,7 +283,7 @@ public class HeartbeatProcess implements Process {
     }
 
     if (httpsConnection != null) {
-      log.info("Heartbeat sending: ");
+      log.debug("Heartbeat sending: ");
       return sendSecure(httpsConnection, request);
     } else {
       log.error("Failed to open HTTPS connection.");
