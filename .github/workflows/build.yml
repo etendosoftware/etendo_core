@@ -1,10 +1,14 @@
-name: Build
+name: Sonar Build
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+      - develop
 jobs:
   build:
-    name: Build
+    name: Sonar Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
