@@ -158,7 +158,8 @@ public class DocInternalConsumption extends AcctServer {
         DocumentType);
     if (StringUtils.isEmpty(strClassname)) {
       strClassname = AcctServerData.selectTemplate(conn, as.m_C_AcctSchema_ID, AD_Table_ID);
-    } else {
+    }
+    if (!StringUtils.isEmpty(strClassname)) {
       try {
         DocInternalConsumptionTemplate newTemplate = (DocInternalConsumptionTemplate) Class
             .forName(strClassname)
