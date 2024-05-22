@@ -1,7 +1,8 @@
 name: Sonar Build
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: [Git Police]
+    types: [completed]
   push:
     branches:
       - main
