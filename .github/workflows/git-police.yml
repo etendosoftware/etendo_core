@@ -45,5 +45,5 @@ jobs:
             exit 1
           fi
           echo "API call successful with status code $response"
-          echo "Response text:"
+          echo "Response text"
           cat response.txt
