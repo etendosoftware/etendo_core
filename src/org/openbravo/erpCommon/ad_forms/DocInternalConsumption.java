@@ -84,7 +84,7 @@ public class DocInternalConsumption extends AcctServer {
    * @return DocLine Array
    */
   private DocLine[] loadLines(ConnectionProvider conn) {
-    ArrayList<Object> list = new ArrayList<Object>();
+    ArrayList<Object> list = new ArrayList<>();
     DocLineInternalConsumptionData[] data = null;
     OBContext.setAdminMode(false);
     try {
@@ -101,15 +101,9 @@ public class DocInternalConsumption extends AcctServer {
         // Get related M_Transaction_ID
         InternalConsumptionLine intConsLine = OBDal.getInstance()
             .get(InternalConsumptionLine.class, Line_ID);
-        if (intConsLine.getMaterialMgmtMaterialTransactionList().size() > 0) {
-          docLine.setTransaction(intConsLine.getMaterialMgmtMaterialTransactionList().get(0));
-        }
-        DocInternalConsumptionData[] data1 = null;
-        try {
-          data1 = DocInternalConsumptionData.selectWarehouse(conn, docLine.m_M_Locator_ID);
-        } catch (ServletException e) {
-          log4jDocInternalConsumption.warn(e);
-        }
+        updateTransactionForDocLine(intConsLine, docLine);
+
+        DocInternalConsumptionData[] data1 = getInternalConsumptionWarehouse(conn, docLine);
         if (data1 != null && data1.length > 0) {
           this.M_Warehouse_ID = data1[0].mWarehouseId;
         }
@@ -126,9 +120,26 @@ public class DocInternalConsumption extends AcctServer {
     return dl;
   } // loadLines
 
+  private DocInternalConsumptionData[] getInternalConsumptionWarehouse(ConnectionProvider conn,
+      DocLine_Material docLine) {
+    DocInternalConsumptionData[] data = null;
+    try {
+      data = DocInternalConsumptionData.selectWarehouse(conn, docLine.m_M_Locator_ID);
+    } catch (ServletException e) {
+      log4jDocInternalConsumption.warn(e);
+    }
+    return data;
+  }
+
+  private void updateTransactionForDocLine(InternalConsumptionLine intConsLine, DocLine_Material docLine) {
+    if (!intConsLine.getMaterialMgmtMaterialTransactionList().isEmpty()) {
+      docLine.setTransaction(intConsLine.getMaterialMgmtMaterialTransactionList().get(0));
+    }
+  }
+
   /**
    * Get Balance
-   * 
+   *
    * @return Zero (always balanced)
    */
   @Override
@@ -139,100 +150,129 @@ public class DocInternalConsumption extends AcctServer {
 
   /**
    * Create Facts (the accounting logic) for MIC.
-   * 
+   *
    * <pre>
    *  Internal Consumption
-   *      CoGS            DR      
+   *      CoGS            DR
    *      Inventory               CR
    * </pre>
-   * 
+   *
    * @param as
-   *          account schema
+   *     account schema
    * @return Fact
    */
   @Override
   public Fact createFact(AcctSchema as, ConnectionProvider conn, Connection con,
       VariablesSecureApp vars) throws ServletException {
     // Select specific definition
-    String strClassname = AcctServerData.selectTemplateDoc(conn, as.m_C_AcctSchema_ID,
-        DocumentType);
-    if (StringUtils.isEmpty(strClassname)) {
-      strClassname = AcctServerData.selectTemplate(conn, as.m_C_AcctSchema_ID, AD_Table_ID);
-    }
+    String strClassname = getTemplateClassname(as, conn);
     if (!StringUtils.isEmpty(strClassname)) {
-      try {
-        DocInternalConsumptionTemplate newTemplate = (DocInternalConsumptionTemplate) Class
-            .forName(strClassname)
-            .getDeclaredConstructor()
-            .newInstance();
-        return newTemplate.createFact(this, as, conn, con, vars);
-      } catch (Exception e) {
-        log4j.error("Error while creating new instance for DocInternalConsumptionTemplate - " + e);
-      }
+      return instantiateTemplateAndCreateFact(strClassname, as, conn, con, vars);
     }
 
     C_Currency_ID = as.getC_Currency_ID();
     // create Fact Header
     Fact fact = new Fact(this, as, Fact.POST_Actual);
-    String Fact_Acct_Group_ID = SequenceIdData.getUUID();
+    String factAcctGroupId = SequenceIdData.getUUID();
     // Line pointers
     FactLine dr = null;
     FactLine cr = null;
     log4jDocInternalConsumption.debug("CreateFact - before loop");
-    for (int i = 0; i < p_lines.length; i++) {
-      DocLine_Material line = (DocLine_Material) p_lines[i];
+    for (DocLine p_line : p_lines) {
+      DocLine_Material line = (DocLine_Material) p_line;
 
-      Currency costCurrency = FinancialUtils
-          .getLegalEntityCurrency(OBDal.getInstance().get(Organization.class, line.m_AD_Org_ID));
-      if (line.transaction != null && line.transaction.getCurrency() != null) {
-        costCurrency = line.transaction.getCurrency();
-      }
-      if (line.transaction != null && !line.transaction.isCostCalculated()) {
-        Map<String, String> parameters = getNotCalculatedCostParameters(line.transaction);
-        setMessageResult(conn, STATUS_NotCalculatedCost, "error", parameters);
-        throw new IllegalStateException();
-      }
-      String costs = line.getProductCosts(DateAcct, as, conn, con);
-      log4jDocInternalConsumption.debug("CreateFact - before DR - Costs: " + costs);
-      BigDecimal b_Costs = new BigDecimal(costs);
-      String strCosts = b_Costs.toPlainString();
-      Account cogsAccount = line.getAccount(ProductInfo.ACCTTYPE_P_Cogs, as, conn);
-      Product product = OBDal.getInstance().get(Product.class, line.m_M_Product_ID);
-      if (cogsAccount == null) {
-        org.openbravo.model.financialmgmt.accounting.coa.AcctSchema schema = OBDal.getInstance()
-            .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
-                as.m_C_AcctSchema_ID);
-        log4j.error("No Account COGS for product: " + product.getName() + " in accounting schema: "
-            + schema.getName());
-      }
-      Account assetAccount = line.getAccount(ProductInfo.ACCTTYPE_P_Asset, as, conn);
-      if (assetAccount == null) {
-        org.openbravo.model.financialmgmt.accounting.coa.AcctSchema schema = OBDal.getInstance()
-            .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
-                as.m_C_AcctSchema_ID);
-        log4j.error("No Account Asset for product: " + product.getName() + " in accounting schema: "
-            + schema.getName());
-      }
-      dr = fact.createLine(line, cogsAccount, costCurrency.getId(), strCosts, "",
-          Fact_Acct_Group_ID, nextSeqNo(SeqNo), DocumentType, conn);
-      if (dr != null) {
-        dr.setM_Locator_ID(line.m_M_Locator_ID);
-        dr.setLocationFromLocator(line.m_M_Locator_ID, true, conn); // from
-        dr.setLocationFromBPartner(C_BPartner_Location_ID, false, conn); // to
-      }
-      log4jDocInternalConsumption.debug("CreateFact - before CR");
-      cr = fact.createLine(line, assetAccount, costCurrency.getId(), "", strCosts,
-          Fact_Acct_Group_ID, nextSeqNo(SeqNo), DocumentType, conn);
-      if (cr != null) {
-        cr.setM_Locator_ID(line.m_M_Locator_ID);
-        cr.setLocationFromLocator(line.m_M_Locator_ID, true, conn); // from
-        cr.setLocationFromBPartner(C_BPartner_Location_ID, false, conn); // to
-      }
+      Currency costCurrency = determineCostCurrency(line);
+      validateCostCalculation(line, conn);
+
+      String strCosts = getCostsString(line, as, conn, con);
+      createFactLines(as, fact, line, costCurrency, strCosts, factAcctGroupId, conn);
     }
     log4jDocInternalConsumption.debug("CreateFact - after loop");
     SeqNo = "0";
     return fact;
   } // createFact
+
+  private String getTemplateClassname(AcctSchema as, ConnectionProvider conn) throws ServletException {
+    String strClassname = AcctServerData.selectTemplateDoc(conn, as.m_C_AcctSchema_ID, DocumentType);
+    if (StringUtils.isEmpty(strClassname)) {
+      strClassname = AcctServerData.selectTemplate(conn, as.m_C_AcctSchema_ID, AD_Table_ID);
+    }
+    return strClassname;
+  }
+
+  private Fact instantiateTemplateAndCreateFact(String strClassname, AcctSchema as, ConnectionProvider conn,
+      Connection con, VariablesSecureApp vars) throws ServletException {
+    try {
+      DocInternalConsumptionTemplate newTemplate = (DocInternalConsumptionTemplate) Class.forName(strClassname)
+          .getDeclaredConstructor().newInstance();
+      return newTemplate.createFact(this, as, conn, con, vars);
+    } catch (Exception e) {
+      log4j.error("Error while creating new instance for DocInternalConsumptionTemplate - " + e);
+      throw new ServletException(e);
+    }
+  }
+
+  private Currency determineCostCurrency(DocLine_Material line) {
+    if (line.transaction != null && line.transaction.getCurrency() != null) {
+      return line.transaction.getCurrency();
+    }
+    return FinancialUtils.getLegalEntityCurrency(
+        OBDal.getInstance().get(Organization.class, line.m_AD_Org_ID));
+  }
+
+  private void validateCostCalculation(DocLine_Material line, ConnectionProvider conn) {
+    if (line.transaction != null && !line.transaction.isCostCalculated()) {
+      Map<String, String> parameters = getNotCalculatedCostParameters(line.transaction);
+      setMessageResult(conn, STATUS_NotCalculatedCost, "error", parameters);
+      throw new IllegalStateException();
+    }
+  }
+
+  private String getCostsString(DocLine_Material line, AcctSchema as, ConnectionProvider conn,
+      Connection con) {
+    String costs = line.getProductCosts(DateAcct, as, conn, con);
+    log4jDocInternalConsumption.debug("CreateFact - before DR - Costs: " + costs);
+    BigDecimal bCosts = new BigDecimal(costs);
+    return bCosts.toPlainString();
+  }
+
+  private void createFactLines(AcctSchema as, Fact fact, DocLine_Material line, Currency costCurrency, String strCosts,
+      String factAcctGroupId, ConnectionProvider conn) throws ServletException {
+    Account cogsAccount = getAccount(line, ProductInfo.ACCTTYPE_P_Cogs, as, conn, "COGS");
+    Account assetAccount = getAccount(line, ProductInfo.ACCTTYPE_P_Asset, as, conn, "Asset");
+
+    FactLine dr = fact.createLine(line, cogsAccount, costCurrency.getId(), strCosts, "", factAcctGroupId,
+        nextSeqNo(SeqNo), DocumentType, conn);
+    if (dr != null) {
+      setFactLineLocations(dr, line, conn);
+    }
+
+    FactLine cr = fact.createLine(line, assetAccount, costCurrency.getId(), "", strCosts, factAcctGroupId,
+        nextSeqNo(SeqNo), DocumentType, conn);
+    if (cr != null) {
+      setFactLineLocations(cr, line, conn);
+    }
+  }
+
+  private Account getAccount(DocLine_Material line, String acctType, AcctSchema as, ConnectionProvider conn,
+      String accountTypeName) {
+    Account account = line.getAccount(acctType, as, conn);
+    if (account == null) {
+      org.openbravo.model.financialmgmt.accounting.coa.AcctSchema schema = OBDal.getInstance()
+          .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class, as.m_C_AcctSchema_ID);
+      Product product = OBDal.getInstance().get(Product.class, line.m_M_Product_ID);
+      log4j.error(
+          "No Account " + accountTypeName + " for product: " + product.getName() + " in accounting schema: " + schema.getName());
+    }
+    return account;
+  }
+
+  private void setFactLineLocations(FactLine factLine, DocLine_Material line,
+      ConnectionProvider conn) {
+    factLine.setM_Locator_ID(line.m_M_Locator_ID);
+    factLine.setLocationFromLocator(line.m_M_Locator_ID, true, conn); // from
+    factLine.setLocationFromBPartner(C_BPartner_Location_ID, false, conn); // to
+  }
 
   /**
    * Get Document Confirmation
