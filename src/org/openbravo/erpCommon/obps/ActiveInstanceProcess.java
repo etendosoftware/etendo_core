@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2009-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -105,65 +105,59 @@ public class ActiveInstanceProcess implements Process {
       String previousLicenseClass = ActivationKey.getInstance().getLicenseClass().getCode();
 
       ActivationKey ak = new ActivationKey(publicKey, activationKey);
-      String nonAllowedMods = ak.verifyInstalledModules(false);
-      if (!nonAllowedMods.isEmpty()) {
-        msg.setType("Error");
-        msg.setMessage("@LicenseWithoutAccessTo@ " + nonAllowedMods);
-      } else {
-        sys.setActivationKey(activationKey);
-        sys.setInstanceKey(publicKey);
+      sys.setActivationKey(activationKey);
+      sys.setInstanceKey(publicKey);
 
-        // flushing to get new updated time that will be used in new activation key
-        OBDal.getInstance().flush();
+      // flushing to get new updated time that will be used in new activation key
+      OBDal.getInstance().flush();
 
-        ActivationKey.setInstance(ak);
-        if (ak.isActive()) {
-          SystemInformation sysInfo = OBDal.getInstance().get(SystemInformation.class, "0");
-          sysInfo.setInstancePurpose(ak.getProperty("purpose"));
+      ActivationKey.setInstance(ak);
+      if (ak.isActive()) {
+        SystemInformation sysInfo = OBDal.getInstance().get(SystemInformation.class, "0");
+        sysInfo.setInstancePurpose(ak.getProperty("purpose"));
 
-          // Only reset the maturity level when changing from a
-          // community to a professional license
-          // See issue https://issues.openbravo.com/view.php?id=21251
-          String newLicenseClass = ActivationKey.getInstance().getLicenseClass().getCode();
-          if (LicenseClass.COMMUNITY.getCode().equals(previousLicenseClass)
-              && LicenseClass.STD.getCode().equals(newLicenseClass)) {
-            sysInfo.setMaturitySearch(Integer.toString(MaturityLevel.CS_MATURITY));
-            sysInfo.setMaturityUpdate(Integer.toString(MaturityLevel.CS_MATURITY));
+        // Only reset the maturity level when changing from a
+        // community to a professional license
+        // See issue https://issues.openbravo.com/view.php?id=21251
+        String newLicenseClass = ActivationKey.getInstance().getLicenseClass().getCode();
+        if (LicenseClass.COMMUNITY.getCode().equals(previousLicenseClass)
+            && LicenseClass.STD.getCode().equals(newLicenseClass)) {
+          sysInfo.setMaturitySearch(Integer.toString(MaturityLevel.CS_MATURITY));
+          sysInfo.setMaturityUpdate(Integer.toString(MaturityLevel.CS_MATURITY));
 
-            int modUpdatesReset = OBDal.getInstance()
-                .getSession()
-                .createQuery("update ADModule set availableUpdate = null, upgradeAvailable = null "
-                    + "where availableUpdate is not null or upgradeAvailable is not null")
-                .executeUpdate();
-            log.info(
-                "Module maturity for update and search set to Confirmed Stable. Reset {} module available updates.",
-                modUpdatesReset);
-          }
-
-          updateShowProductionFields("Y");
-
-          if (ak.isTrial() && !EVALUATION_PURPOSE.equals(purpose)) {
-            sysInfo.setInstancePurpose(EVALUATION_PURPOSE);
-            msg.setType("Warning");
-            msg.setMessage("@TrialLicenseForcedEvaluation@");
-          } else {
-            msg.setType("Success");
-            msg.setMessage("@Success@");
-          }
-
-          // When reactivating a cloned instance insert a dummy heartbeat log so it is not detected
-          // as a cloned instance anymore.
-          if (HeartbeatProcess.isClonedInstance()) {
-            insertDummyHBLog();
-          }
-
-          if (PRODUCTION_PURPOSE.equals(purpose)) {
-            setModulesAsNotInDevelopment();
-          }
-        } else {
-          msg.setType("Error");
-          msg.setMessage(ak.getErrorMessage());
+          int modUpdatesReset = OBDal.getInstance()
+              .getSession()
+              .createQuery("update ADModule set availableUpdate = null, upgradeAvailable = null "
+                  + "where availableUpdate is not null or upgradeAvailable is not null")
+              .executeUpdate();
+          log.info(
+              "Module maturity for update and search set to Confirmed Stable. Reset {} module available updates.",
+              modUpdatesReset);
         }
+
+        updateShowProductionFields("Y");
+
+        if (ak.isTrial() && !EVALUATION_PURPOSE.equals(purpose)) {
+          sysInfo.setInstancePurpose(EVALUATION_PURPOSE);
+          msg.setType("Warning");
+          msg.setMessage("@TrialLicenseForcedEvaluation@");
+        } else {
+          msg.setType("Success");
+          msg.setMessage("@Success@");
+        }
+
+        // When reactivating a cloned instance insert a dummy heartbeat log so it is not detected
+        // as a cloned instance anymore.
+        if (HeartbeatProcess.isClonedInstance()) {
+          insertDummyHBLog();
+        }
+
+        if (PRODUCTION_PURPOSE.equals(purpose)) {
+          setModulesAsNotInDevelopment();
+        }
+      } else {
+        msg.setType("Error");
+        msg.setMessage(ak.getErrorMessage());
       }
     } else if (result != null && "@NoChange@".equals(result[0])) {
       msg.setType("Success");
@@ -208,19 +202,19 @@ public class ActiveInstanceProcess implements Process {
 
   /**
    * Sends the request for the activation key.
-   * 
+   *
    * @param publickey
-   *          Instance's public key
+   *     Instance's public key
    * @param purpose
-   *          Instance's purpose
+   *     Instance's purpose
    * @param instanceNo
-   *          current instance number (for reactivation purposes)
+   *     current instance number (for reactivation purposes)
    * @param activate
-   *          activate (true) or cancel (false)
+   *     activate (true) or cancel (false)
    * @param updated
-   *          last time current license was updated remotely
+   *     last time current license was updated remotely
    * @return returns a String[] with 2 elements, the first one in the message (@Success@ in case of
-   *         success) and the second one the activation key
+   *     success) and the second one the activation key
    * @throws Exception
    */
   private String[] send(String publickey, String purpose, String instanceNo, boolean activate,
