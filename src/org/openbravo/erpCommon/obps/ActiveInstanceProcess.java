@@ -53,7 +53,7 @@ import org.openbravo.scheduling.ProcessBundle;
 public class ActiveInstanceProcess implements Process {
 
   private static final Logger log = LogManager.getLogger();
-  private static final String BUTLER_URL = "https://subscription.futit.cloud:443/activate";
+  private static final String BUTLER_URL = "https://subscription.etendo.cloud/activate";
   private static final String EVALUATION_PURPOSE = "E";
   private static final String PRODUCTION_PURPOSE = "P";
 
