@@ -1,0 +1,49 @@
+name: Git Police
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  git-police:
+    name: Git Police
+    if: github.head_ref != 'develop'
+    runs-on: ubuntu-latest
+    env:
+      PR_ID: ${{ github.event.pull_request.number }}
+      REPO_NAME: ${{ github.event.repository.name }}
+      ETENDOBOT_TOKEN: ${{ secrets.ETENDOBOT_TOKEN }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Docker container
+        id: run-docker
+        run: |
+          printenv
+          echo "-------------------------------------------------------------------------"
+          echo ${{ env.DOCKERHUB_PASSWORD }} | docker login --username "${{ env.DOCKERHUB_USERNAME }}" --password-stdin
+          docker run -d -p 5000:5000 -e REPO_TOKEN="${{ env.ETENDOBOT_TOKEN }}" -e PR_ID=${{ env.PR_ID }} -e REPO_NAME=${{ env.REPO_NAME }} etendo/gitpolice:latest      
+      - name: Git Police API call
+        id: call-api
+        run: |
+          sleep 10s
+          response=$(curl -s -o response.txt -w "%{http_code}" -X GET http://localhost:5000/api/github)
+          if [ $response -ne 200 ]; then
+            echo "API call failed with status code $response. This is likely an error related to the PR data, or an internal API error"
+
+            echo "Response text:"
+            cat response.txt
+            exit 1
+          fi
+          if ! grep -q "Valid branch name and correct destination" response.txt; then
+            echo "Git Police check failed: response does not contain 'Valid branch name and correct destination'"
+            echo "Full response:"
+            cat response.txt
+            exit 1
+          fi
+          echo "API call successful with status code $response"
+          echo "Response text:"
+          cat response.txt
