@@ -14,17 +14,13 @@
 package org.openbravo.erpCommon.utility.reporting.printing;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -47,9 +42,10 @@ import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.session.OBPropertiesProvider;
+import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.application.report.ReportingUtils.ExportType;
+import org.openbravo.common.hooks.PrintControllerHookManager;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -58,11 +54,7 @@ import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.BasicUtility;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.PropertyException;
-import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.erpCommon.utility.Utility;
-import org.openbravo.erpCommon.utility.poc.EmailInfo;
-import org.openbravo.erpCommon.utility.poc.EmailManager;
-import org.openbravo.erpCommon.utility.poc.EmailType;
 import org.openbravo.erpCommon.utility.reporting.DocumentType;
 import org.openbravo.erpCommon.utility.reporting.Report;
 import org.openbravo.erpCommon.utility.reporting.Report.OutputTypeEnum;
@@ -71,7 +63,6 @@ import org.openbravo.erpCommon.utility.reporting.ReportingException;
 import org.openbravo.erpCommon.utility.reporting.TemplateData;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo.EmailDefinition;
-import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -86,6 +77,8 @@ import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 
 @SuppressWarnings("serial")
 public class PrintController extends HttpSecureAppServlet {
+  private static final String DOCUMENT_ID = "documentId";
+  private static final String DOCUMENT_TYPE = "documentType";
   private final Map<String, TemplateData[]> differentDocTypes = new HashMap<String, TemplateData[]>();
   private boolean multiReports = false;
   private boolean archivedReports = false;
@@ -211,7 +204,8 @@ public class PrintController extends HttpSecureAppServlet {
       final ReportManager reportManager = new ReportManager(globalParameters.strFTPDirectory,
           strReplaceWithFull, globalParameters.strBaseDesignPath,
           globalParameters.strDefaultDesignPath, globalParameters.prefix, multiReports);
-
+      PrintControllerHookManager hookManager = WeldUtils.getInstanceFromStaticBeanManager(PrintControllerHookManager.class);
+      JSONObject jsonParams = new JSONObject();
       if (vars.commandIn("PRINT")) {
         archivedReports = false;
         // Order documents by Document No.
@@ -230,6 +224,9 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int i = 0; i < documentIds.length; i++) {
           String documentId = documentIds[i];
+          jsonParams.put(DOCUMENT_ID, documentId);
+          jsonParams.put(DOCUMENT_TYPE, documentType);
+          JSONObject preProcessResult = hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
           try {
@@ -241,6 +238,11 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error(e.getMessage());
             e.getStackTrace();
           }
+          jsonParams.put(DOCUMENT_ID, documentId);
+          jsonParams.put(DOCUMENT_TYPE, documentType);
+          jsonParams.put("reportFilePath", report.getTargetLocation());
+          jsonParams.put("preProcessResult", preProcessResult);
+          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
           if (multiReports) {
             reportManager.saveTempReport(report, vars);
@@ -264,6 +266,9 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int index = 0; index < documentIds.length; index++) {
           String documentId = documentIds[index];
+          jsonParams.put(DOCUMENT_ID, documentId);
+          jsonParams.put(DOCUMENT_TYPE, documentType);
+          JSONObject preProcessResult = hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
           buildReport(response, vars, documentId, reports, reportManager);
@@ -274,6 +279,11 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error(e);
           }
           reportManager.saveTempReport(report, vars);
+          jsonParams.put(DOCUMENT_ID, documentId);
+          jsonParams.put(DOCUMENT_TYPE, documentType);
+          jsonParams.put("reportFilePath", report.getTargetLocation());
+          jsonParams.put("preProcessResult", preProcessResult);
+          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
