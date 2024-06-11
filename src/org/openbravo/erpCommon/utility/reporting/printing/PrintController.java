@@ -79,6 +79,7 @@ import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 public class PrintController extends HttpSecureAppServlet {
   private static final String DOCUMENT_ID = "documentId";
   private static final String DOCUMENT_TYPE = "documentType";
+  public static final String REPORT_FILE_PATH = "reportFilePath";
   private final Map<String, TemplateData[]> differentDocTypes = new HashMap<String, TemplateData[]>();
   private boolean multiReports = false;
   private boolean archivedReports = false;
@@ -226,7 +227,7 @@ public class PrintController extends HttpSecureAppServlet {
           String documentId = documentIds[i];
           jsonParams.put(DOCUMENT_ID, documentId);
           jsonParams.put(DOCUMENT_TYPE, documentType);
-          JSONObject preProcessResult = hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+          hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
           try {
@@ -240,8 +241,7 @@ public class PrintController extends HttpSecureAppServlet {
           }
           jsonParams.put(DOCUMENT_ID, documentId);
           jsonParams.put(DOCUMENT_TYPE, documentType);
-          jsonParams.put("reportFilePath", report.getTargetLocation());
-          jsonParams.put("preProcessResult", preProcessResult);
+          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
           hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
           if (multiReports) {
@@ -268,7 +268,7 @@ public class PrintController extends HttpSecureAppServlet {
           String documentId = documentIds[index];
           jsonParams.put(DOCUMENT_ID, documentId);
           jsonParams.put(DOCUMENT_TYPE, documentType);
-          JSONObject preProcessResult = hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+          hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
           buildReport(response, vars, documentId, reports, reportManager);
@@ -281,8 +281,7 @@ public class PrintController extends HttpSecureAppServlet {
           reportManager.saveTempReport(report, vars);
           jsonParams.put(DOCUMENT_ID, documentId);
           jsonParams.put(DOCUMENT_TYPE, documentType);
-          jsonParams.put("reportFilePath", report.getTargetLocation());
-          jsonParams.put("preProcessResult", preProcessResult);
+          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
           hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
         }
