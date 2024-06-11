@@ -76,7 +76,7 @@ public class HeartbeatProcess implements Process {
 
   private static final Logger log = LogManager.getLogger();
 
-  private static final String HEARTBEAT_URL = "https://activation.futit.cloud:443/license-instance/heartbeat";
+  private static final String HEARTBEAT_URL = "https://subscription.etendo.cloud/license-instance/heartbeat";
 
   private static final String ENABLING_BEAT = "E";
   private static final String SCHEDULED_BEAT = "S";
