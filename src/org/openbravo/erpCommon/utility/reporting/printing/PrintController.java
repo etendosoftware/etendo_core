@@ -71,6 +71,8 @@ import org.openbravo.model.common.enterprise.EmailTemplate;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.xmlEngine.XmlDocument;
 
+import com.google.common.collect.HashBasedTable;
+
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
@@ -207,6 +209,10 @@ public class PrintController extends HttpSecureAppServlet {
           globalParameters.strDefaultDesignPath, globalParameters.prefix, multiReports);
       PrintControllerHookManager hookManager = WeldUtils.getInstanceFromStaticBeanManager(PrintControllerHookManager.class);
       JSONObject jsonParams = new JSONObject();
+      JSONObject results = new JSONObject();
+      results.put(PrintControllerHookManager.FAILURES, false);
+      results.put(PrintControllerHookManager.MESSAGE, HashBasedTable.create());
+      jsonParams.put(PrintControllerHookManager.RESULTS, results);
       if (vars.commandIn("PRINT")) {
         archivedReports = false;
         // Order documents by Document No.

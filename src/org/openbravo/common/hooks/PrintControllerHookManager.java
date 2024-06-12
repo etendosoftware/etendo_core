@@ -12,14 +12,14 @@ import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-public class PrintControllerHookManager {
-  private static final String MESSAGE = "message";
-  private static final String SEVERITY = "severity";
-  private static final String ERROR = "error";
-  private static final String PREPROCESS = "preProcess";
-  private static final String POSTPROCESS = "postProcess";
-  public static final String PREV_HOOK_RESULT = "previousHookResult";
+import com.google.common.collect.HashBasedTable;
 
+public class PrintControllerHookManager {
+  public static final String RESULTS = "results";
+  public static final String FAILURES = "failures";
+  public static final String PREPROCESS = "preProcess";
+  public static final String POSTPROCESS = "postProcess";
+  public static final String MESSAGE = "message";
 
   @Inject
   @Any
@@ -47,6 +47,29 @@ public class PrintControllerHookManager {
   }
 
   /**
+   * Handles errors encountered during hook execution, recording the error message in the JSON parameters.
+   *
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @param isPreProcess
+   *     whether the error occurred during preProcess
+   * @param e
+   *     the exception that was thrown
+   * @param hook
+   *     the hook that encountered the error
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   */
+  private static void handleHookError(JSONObject jsonParams, boolean isPreProcess, Exception e,
+      PrintControllerHook hook) throws JSONException {
+    jsonParams.getJSONObject(RESULTS).put(FAILURES, true);
+    HashBasedTable<String, Boolean, String> messageInfo = (HashBasedTable<String, Boolean, String>) jsonParams.getJSONObject(
+        RESULTS).get(MESSAGE);
+    messageInfo.put(hook.getClass().getSimpleName(), isPreProcess, e.getMessage());
+    jsonParams.getJSONObject(RESULTS).put(MESSAGE, messageInfo);
+  }
+
+  /**
    * Executes the hooks based on the specified method name (preProcess or postProcess).
    * If any hook returns an error message, the execution stops and the error message is returned.
    *
@@ -54,22 +77,24 @@ public class PrintControllerHookManager {
    *     the JSON parameters to be processed by the hooks
    * @param methodName
    *     the name of the method to be executed (preProcess or postProcess)
-   * @return the result of the hook execution, which contains an error message if any hook fails, or null if all hooks succeed
    * @throws JSONException
    *     if there is an error processing the JSON parameters
    */
   public void executeHooks(JSONObject jsonParams, String methodName) throws JSONException {
     List<PrintControllerHook> hookList = sortHooksByPriority(hooks);
     for (PrintControllerHook hook : hookList) {
-      JSONObject resultHook = null;
       if (StringUtils.equals(methodName, PREPROCESS)) {
-        resultHook = hook.preProcess(jsonParams);
+        try {
+          hook.preProcess(jsonParams);
+        } catch (Exception e) {
+          handleHookError(jsonParams, true, e, hook);
+        }
       } else if (StringUtils.equals(methodName, POSTPROCESS)) {
-        resultHook = hook.postProcess(jsonParams);
-      }
-      JSONObject message = (resultHook != null && resultHook.has(MESSAGE)) ? resultHook.getJSONObject(MESSAGE) : null;
-      if (message != null && message.has(SEVERITY) && StringUtils.equalsIgnoreCase(ERROR, message.getString(SEVERITY))) {
-        jsonParams.put(PREV_HOOK_RESULT, resultHook);
+        try {
+          hook.postProcess(jsonParams);
+        } catch (Exception e) {
+          handleHookError(jsonParams, false, e, hook);
+        }
       }
     }
   }
