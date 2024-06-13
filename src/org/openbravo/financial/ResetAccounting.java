@@ -18,6 +18,8 @@
  */
 package org.openbravo.financial;
 
+
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,16 +42,19 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
+import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.accounting.AccountingFact;
 import org.openbravo.model.financialmgmt.calendar.Period;
+import org.openbravo.service.db.DbUtility;
 
 import javax.persistence.PersistenceException;
 
@@ -384,12 +389,19 @@ public class ResetAccounting {
         OBDal.getInstance().getSession().clear();
       }
       return result;
-    } catch (final Exception e) {
+    } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      throw new OBException("Error Deleting Accounting", e);
+      String errorMessage = getErrorMessage(e);
+      throw new OBException(String.format(OBMessageUtils.messageBD("Error_Deleting_Accounting"), errorMessage));
     } finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  private static String getErrorMessage(Exception e) {
+    return (e instanceof PersistenceException)
+        ? OBMessageUtils.translateError(DbUtility.getUnderlyingSQLException(e.getCause()).getMessage()).getMessage()
+        : e.getMessage();
   }
 
   private static String updateTableOneRecord(final String tableName, final String tableIdName,
