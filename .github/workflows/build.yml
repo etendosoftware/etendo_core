@@ -1,16 +1,13 @@
 name: Sonar Build
 on:
-  workflow_run:
-    workflows: [Git Police]
-    types:
-      - completed
+  pull_request:
+    types: [opened, synchronize, reopened]
   push:
     branches:
       - main
       - develop
 jobs:
   build:
-    if: github.event.workflow_run.conclusion == 'success'
     name: Sonar Build
     runs-on: ubuntu-latest
     steps:
