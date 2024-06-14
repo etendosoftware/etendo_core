@@ -19892,20 +19892,6 @@ The causes are The Requisition to Order window or the inclusion of the demand in
 <!--1005100000-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--1005100000--></AD_ELEMENT>
 
-<!--1005400001--><AD_ELEMENT>
-<!--1005400001-->  <AD_ELEMENT_ID><![CDATA[1005400001]]></AD_ELEMENT_ID>
-<!--1005400001-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
-<!--1005400001-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
-<!--1005400001-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
-<!--1005400001-->  <COLUMNNAME><![CDATA[Complexity_Rate]]></COLUMNNAME>
-<!--1005400001-->  <NAME><![CDATA[Complexity Rate]]></NAME>
-<!--1005400001-->  <PRINTNAME><![CDATA[Complexity Rate]]></PRINTNAME>
-<!--1005400001-->  <DESCRIPTION><![CDATA[The rate of complexity within the system.]]></DESCRIPTION>
-<!--1005400001-->  <HELP><![CDATA[The rate of complexity within the system.]]></HELP>
-<!--1005400001-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
-<!--1005400001-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
-<!--1005400001--></AD_ELEMENT>
-
 <!--1005400007--><AD_ELEMENT>
 <!--1005400007-->  <AD_ELEMENT_ID><![CDATA[1005400007]]></AD_ELEMENT_ID>
 <!--1005400007-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
@@ -19947,20 +19933,6 @@ The causes are The Requisition to Order window or the inclusion of the demand in
 <!--1005400009-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--1005400009-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--1005400009--></AD_ELEMENT>
-
-<!--1005400010--><AD_ELEMENT>
-<!--1005400010-->  <AD_ELEMENT_ID><![CDATA[1005400010]]></AD_ELEMENT_ID>
-<!--1005400010-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
-<!--1005400010-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
-<!--1005400010-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
-<!--1005400010-->  <COLUMNNAME><![CDATA[Activity_Rate]]></COLUMNNAME>
-<!--1005400010-->  <NAME><![CDATA[Activity Rate]]></NAME>
-<!--1005400010-->  <PRINTNAME><![CDATA[Activity Rate]]></PRINTNAME>
-<!--1005400010-->  <DESCRIPTION><![CDATA[The rate of activity within the system.]]></DESCRIPTION>
-<!--1005400010-->  <HELP><![CDATA[The rate of activity within the system.]]></HELP>
-<!--1005400010-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
-<!--1005400010-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
-<!--1005400010--></AD_ELEMENT>
 
 <!--1005400011--><AD_ELEMENT>
 <!--1005400011-->  <AD_ELEMENT_ID><![CDATA[1005400011]]></AD_ELEMENT_ID>
