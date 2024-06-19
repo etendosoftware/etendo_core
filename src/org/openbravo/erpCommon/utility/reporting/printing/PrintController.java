@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.persistence.PersistenceException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -37,8 +39,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -174,7 +178,6 @@ public class PrintController extends HttpSecureAppServlet {
       String strDocumentId) throws IOException, ServletException {
     String localStrDocumentId = strDocumentId;
     try {
-
       String fullDocumentIdentifier = localStrDocumentId + documentType.getTableName();
 
       // reports is set in session: defining it as a Serializable HashMap
@@ -207,12 +210,16 @@ public class PrintController extends HttpSecureAppServlet {
       final ReportManager reportManager = new ReportManager(globalParameters.strFTPDirectory,
           strReplaceWithFull, globalParameters.strBaseDesignPath,
           globalParameters.strDefaultDesignPath, globalParameters.prefix, multiReports);
-      PrintControllerHookManager hookManager = WeldUtils.getInstanceFromStaticBeanManager(PrintControllerHookManager.class);
+      PrintControllerHookManager hookManager = WeldUtils.getInstanceFromStaticBeanManager(
+          PrintControllerHookManager.class);
       JSONObject jsonParams = new JSONObject();
       JSONObject results = new JSONObject();
+      StringBuilder errorPopUpMessage = new StringBuilder(
+          "The following errors have arisen when printing the selected documents: \n<ul>");
       results.put(PrintControllerHookManager.FAILURES, false);
       results.put(PrintControllerHookManager.MESSAGE, HashBasedTable.create());
       jsonParams.put(PrintControllerHookManager.RESULTS, results);
+      jsonParams.put(PrintControllerHookManager.CANCELLATION, false);
       if (vars.commandIn("PRINT")) {
         archivedReports = false;
         // Order documents by Document No.
@@ -233,26 +240,36 @@ public class PrintController extends HttpSecureAppServlet {
           String documentId = documentIds[i];
           jsonParams.put(DOCUMENT_ID, documentId);
           jsonParams.put(DOCUMENT_TYPE, documentType);
-          hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+          try {
+              hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+          } catch (final OBException e) {
+            String documentNo = getDocumentNo(documentType, jsonParams);
+            errorPopUpMessage.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>\n");
+          }
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
           try {
             jasperPrint = reportManager.processReport(report, vars);
             jrPrintReports.add(jasperPrint);
-          } catch (final ReportingException e) {
-            advisePopUp(request, response, "Report processing failed",
-                "Unable to process report selection");
+          }catch (final ReportingException e) {
+            advisePopUp(request, response, "Report processing failed","Unable to process report selection");
             log4j.error(e.getMessage());
             e.getStackTrace();
           }
-          jsonParams.put(DOCUMENT_ID, documentId);
-          jsonParams.put(DOCUMENT_TYPE, documentType);
-          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
-          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
           if (multiReports) {
             reportManager.saveTempReport(report, vars);
           }
+          if (!jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
+            jsonParams.put(DOCUMENT_ID, documentId);
+            jsonParams.put(DOCUMENT_TYPE, documentType);
+            jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+            hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
+          }
+        }
+        if (jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
+          errorPopUpMessage.append("</ul>");
+          throw new OBException(errorPopUpMessage.toString());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
       } else if (vars.commandIn("ARCHIVE")) {
@@ -274,7 +291,12 @@ public class PrintController extends HttpSecureAppServlet {
           String documentId = documentIds[index];
           jsonParams.put(DOCUMENT_ID, documentId);
           jsonParams.put(DOCUMENT_TYPE, documentType);
-          hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+          try {
+            hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+          } catch (final OBException e) {
+            String documentNo = getDocumentNo(documentType, jsonParams);
+            errorPopUpMessage.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>\n");
+          }
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
           buildReport(response, vars, documentId, reports, reportManager);
@@ -285,11 +307,18 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error(e);
           }
           reportManager.saveTempReport(report, vars);
-          jsonParams.put(DOCUMENT_ID, documentId);
-          jsonParams.put(DOCUMENT_TYPE, documentType);
-          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
-          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
+          if (!jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
+            jsonParams.put(DOCUMENT_ID, documentId);
+            jsonParams.put(DOCUMENT_TYPE, documentType);
+            jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+            hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
+          }
           savedReports.add(report);
+        }
+        if (jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
+          errorPopUpMessage.append("</ul>");
+          //bdErrorGeneralPopUp(request, response, "Warning",errorPopUpMessage.toString());
+          throw new OBException(errorPopUpMessage.toString());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
       } else {
@@ -510,6 +539,20 @@ public class PrintController extends HttpSecureAppServlet {
       bdErrorGeneralPopUp(request, response, "Error",
           Utility.translateError(this, vars, vars.getLanguage(), e.getMessage()).getMessage());
     }
+  }
+
+  /**
+   * Retrieves the document number for a specified document type and document ID.
+   *
+   * @param documentType the type of the document for which to retrieve the document number
+   * @param jsonParams a JSONObject containing the parameters, including the document ID
+   * @return the document number as a String
+   * @throws JSONException if there is an error parsing the document ID from jsonParams
+   */
+  private static String getDocumentNo(DocumentType documentType, JSONObject jsonParams) throws JSONException {
+    String querry = "SELECT documentNo FROM " + documentType.getTableName() + " WHERE " + documentType.getTableName() + "_id" + " = :id";
+    return (String) OBDal.getInstance().getSession().createNativeQuery(querry).setParameter("id",
+        jsonParams.getString(DOCUMENT_ID)).uniqueResult();
   }
 
   public void printReports(HttpServletResponse response, Collection<JasperPrint> jrPrintReports,

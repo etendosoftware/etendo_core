@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.openbravo.base.exception.OBException;
 
 import com.google.common.collect.HashBasedTable;
 
@@ -20,6 +21,7 @@ public class PrintControllerHookManager {
   public static final String PREPROCESS = "preProcess";
   public static final String POSTPROCESS = "postProcess";
   public static final String MESSAGE = "message";
+  public static final String CANCELLATION = "cancellation";
 
   @Inject
   @Any
@@ -62,6 +64,9 @@ public class PrintControllerHookManager {
    */
   private static void handleHookError(JSONObject jsonParams, boolean isPreProcess, Exception e,
       PrintControllerHook hook) throws JSONException {
+    if (jsonParams.getBoolean(CANCELLATION)) {
+      throw new OBException(e.getMessage());
+    }
     jsonParams.getJSONObject(RESULTS).put(FAILURES, true);
     HashBasedTable<String, Boolean, String> messageInfo = (HashBasedTable<String, Boolean, String>) jsonParams.getJSONObject(
         RESULTS).get(MESSAGE);
