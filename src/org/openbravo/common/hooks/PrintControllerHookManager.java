@@ -90,6 +90,7 @@ public class PrintControllerHookManager {
     for (PrintControllerHook hook : hookList) {
       if (StringUtils.equals(methodName, PREPROCESS)) {
         try {
+          jsonParams.put(CANCELLATION, false);
           hook.preProcess(jsonParams);
         } catch (Exception e) {
           handleHookError(jsonParams, true, e, hook);

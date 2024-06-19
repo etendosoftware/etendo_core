@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringJoiner;
 
 import javax.persistence.PersistenceException;
 import javax.servlet.ServletConfig;
@@ -214,8 +215,9 @@ public class PrintController extends HttpSecureAppServlet {
           PrintControllerHookManager.class);
       JSONObject jsonParams = new JSONObject();
       JSONObject results = new JSONObject();
-      StringBuilder errorPopUpMessage = new StringBuilder(
-          "The following errors have arisen when printing the selected documents: \n<ul>");
+      StringBuilder errorMessages = new StringBuilder();
+      StringJoiner errorPopUpMessage = new StringJoiner("\n",
+          "The following errors have arisen when printing the selected documents: \n<ul>\n", "\n</ul>");
       results.put(PrintControllerHookManager.FAILURES, false);
       results.put(PrintControllerHookManager.MESSAGE, HashBasedTable.create());
       jsonParams.put(PrintControllerHookManager.RESULTS, results);
@@ -244,7 +246,7 @@ public class PrintController extends HttpSecureAppServlet {
               hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           } catch (final OBException e) {
             String documentNo = getDocumentNo(documentType, jsonParams);
-            errorPopUpMessage.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>\n");
+            errorMessages.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>");
           }
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
@@ -267,8 +269,9 @@ public class PrintController extends HttpSecureAppServlet {
             hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           }
         }
-        if (jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
-          errorPopUpMessage.append("</ul>");
+        if (!errorMessages.toString().isEmpty()) {
+          errorMessages.append("</ul>");
+          errorPopUpMessage.add(errorMessages);
           throw new OBException(errorPopUpMessage.toString());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
@@ -295,7 +298,7 @@ public class PrintController extends HttpSecureAppServlet {
             hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           } catch (final OBException e) {
             String documentNo = getDocumentNo(documentType, jsonParams);
-            errorPopUpMessage.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>\n");
+            errorMessages.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>");
           }
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
@@ -315,9 +318,9 @@ public class PrintController extends HttpSecureAppServlet {
           }
           savedReports.add(report);
         }
-        if (jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
-          errorPopUpMessage.append("</ul>");
-          //bdErrorGeneralPopUp(request, response, "Warning",errorPopUpMessage.toString());
+        if (!errorMessages.toString().isEmpty()) {
+          errorMessages.append("</ul>");
+          errorPopUpMessage.add(errorMessages);
           throw new OBException(errorPopUpMessage.toString());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
