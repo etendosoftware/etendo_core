@@ -59,6 +59,7 @@ import org.openbravo.email.EmailUtils;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.BasicUtility;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.erpCommon.utility.reporting.DocumentType;
@@ -216,9 +217,6 @@ public class PrintController extends HttpSecureAppServlet {
           PrintControllerHookManager.class);
       JSONObject jsonParams = new JSONObject();
       JSONObject results = new JSONObject();
-      StringBuilder errorMessages = new StringBuilder();
-      StringJoiner errorPopUpMessage = new StringJoiner("\n",
-          "The following errors have arisen when printing the selected documents: \n<ul>\n", "\n</ul>");
       results.put(PrintControllerHookManager.FAILURES, false);
       results.put(PrintControllerHookManager.MESSAGE, HashBasedTable.create());
       jsonParams.put(PrintControllerHookManager.RESULTS, results);
@@ -247,7 +245,8 @@ public class PrintController extends HttpSecureAppServlet {
               hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           } catch (final OBException e) {
             String documentNo = getDocumentNo(documentType, jsonParams);
-            errorMessages.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>");
+            throw new OBException(String.format(OBMessageUtils.messageBD("Error_Printing_Document"),
+                "<li>" + documentNo + ": " + e.getMessage() + "</li>"));
           }
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
@@ -263,17 +262,10 @@ public class PrintController extends HttpSecureAppServlet {
           if (multiReports) {
             reportManager.saveTempReport(report, vars);
           }
-          if (!jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
-            jsonParams.put(DOCUMENT_ID, documentId);
-            jsonParams.put(DOCUMENT_TYPE, documentType);
-            jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
-            hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
-          }
-        }
-        if (StringUtils.isNotEmpty(errorMessages.toString())) {
-          errorMessages.append("</ul>");
-          errorPopUpMessage.add(errorMessages.toString());
-          throw new OBException(errorPopUpMessage.toString());
+          jsonParams.put(DOCUMENT_ID, documentId);
+          jsonParams.put(DOCUMENT_TYPE, documentType);
+          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
       } else if (vars.commandIn("ARCHIVE")) {
@@ -299,7 +291,8 @@ public class PrintController extends HttpSecureAppServlet {
             hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
           } catch (final OBException e) {
             String documentNo = getDocumentNo(documentType, jsonParams);
-            errorMessages.append("<li>").append(documentNo).append(": ").append(e.getMessage()).append("</li>");
+            throw new OBException(String.format(OBMessageUtils.messageBD("Error_Printing_Document"),
+                "<li>" + documentNo + ": " + e.getMessage() + "</li>"));
           }
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
@@ -311,18 +304,11 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error(e);
           }
           reportManager.saveTempReport(report, vars);
-          if (!jsonParams.getBoolean(PrintControllerHookManager.CANCELLATION)) {
-            jsonParams.put(DOCUMENT_ID, documentId);
-            jsonParams.put(DOCUMENT_TYPE, documentType);
-            jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
-            hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
-          }
+          jsonParams.put(DOCUMENT_ID, documentId);
+          jsonParams.put(DOCUMENT_TYPE, documentType);
+          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
-        }
-        if (StringUtils.isNotEmpty(errorMessages.toString())) {
-          errorMessages.append("</ul>");
-          errorPopUpMessage.add(errorMessages.toString());
-          throw new OBException(errorPopUpMessage.toString());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
       } else {
@@ -547,6 +533,7 @@ public class PrintController extends HttpSecureAppServlet {
 
   /**
    * Retrieves the document number for a specified document type and document ID.
+   * The document must be active (isactive = 'Y').
    *
    * @param documentType
    *     the type of the document for which to retrieve the document number
@@ -557,8 +544,8 @@ public class PrintController extends HttpSecureAppServlet {
    *     if there is an error parsing the document ID from jsonParams
    */
   private static String getDocumentNo(DocumentType documentType, JSONObject jsonParams) throws JSONException {
-    String query = String.format("SELECT documentNo FROM %s WHERE %s_id = :id", documentType.getTableName(),
-        documentType.getTableName());
+    String query = String.format("SELECT documentNo FROM %s WHERE %s_id = :id AND isactive = 'Y'",
+        documentType.getTableName(), documentType.getTableName());
     return (String) OBDal.getInstance().getSession().createNativeQuery(query).setParameter("id",
         jsonParams.getString(DOCUMENT_ID)).uniqueResult();
   }
