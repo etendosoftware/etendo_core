@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 import javax.persistence.PersistenceException;
@@ -269,9 +270,9 @@ public class PrintController extends HttpSecureAppServlet {
             hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           }
         }
-        if (!errorMessages.toString().isEmpty()) {
+        if (StringUtils.isNotEmpty(errorMessages.toString())) {
           errorMessages.append("</ul>");
-          errorPopUpMessage.add(errorMessages);
+          errorPopUpMessage.add(errorMessages.toString());
           throw new OBException(errorPopUpMessage.toString());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
@@ -318,9 +319,9 @@ public class PrintController extends HttpSecureAppServlet {
           }
           savedReports.add(report);
         }
-        if (!errorMessages.toString().isEmpty()) {
+        if (StringUtils.isNotEmpty(errorMessages.toString())) {
           errorMessages.append("</ul>");
-          errorPopUpMessage.add(errorMessages);
+          errorPopUpMessage.add(errorMessages.toString());
           throw new OBException(errorPopUpMessage.toString());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
@@ -547,14 +548,18 @@ public class PrintController extends HttpSecureAppServlet {
   /**
    * Retrieves the document number for a specified document type and document ID.
    *
-   * @param documentType the type of the document for which to retrieve the document number
-   * @param jsonParams a JSONObject containing the parameters, including the document ID
+   * @param documentType
+   *     the type of the document for which to retrieve the document number
+   * @param jsonParams
+   *     a JSONObject containing the parameters, including the document ID
    * @return the document number as a String
-   * @throws JSONException if there is an error parsing the document ID from jsonParams
+   * @throws JSONException
+   *     if there is an error parsing the document ID from jsonParams
    */
   private static String getDocumentNo(DocumentType documentType, JSONObject jsonParams) throws JSONException {
-    String querry = "SELECT documentNo FROM " + documentType.getTableName() + " WHERE " + documentType.getTableName() + "_id" + " = :id";
-    return (String) OBDal.getInstance().getSession().createNativeQuery(querry).setParameter("id",
+    String query = String.format("SELECT documentNo FROM %s WHERE %s_id = :id", documentType.getTableName(),
+        documentType.getTableName());
+    return (String) OBDal.getInstance().getSession().createNativeQuery(query).setParameter("id",
         jsonParams.getString(DOCUMENT_ID)).uniqueResult();
   }
 
