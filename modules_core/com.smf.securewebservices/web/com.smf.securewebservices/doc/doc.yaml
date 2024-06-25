@@ -98,7 +98,7 @@ paths:
                 $ref: "#/components/schemas/LogResp"
         401:
           description: No auth.
-  /sws/com.smf.securewebservices.obRest/{modelName}:
+  /sws/com.smf.securewebservices.obRest/{_entityName}:
     get:
       summary: List records
       security:
@@ -229,7 +229,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /sws/com.smf.securewebservices.obRest/{modelName}/{recordID}:
+  /sws/com.smf.securewebservices.obRest/{_entityName}/{recordID}:
     get:
       summary: Get a record by ID
       security:
