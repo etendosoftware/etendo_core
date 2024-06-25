@@ -42,7 +42,7 @@ public class PrintControllerHookManager {
       int o1Priority = (o1 instanceof PrintControllerHookPrioritizer) ? ((PrintControllerHookPrioritizer) o1).getPriority() : 100;
       int o2Priority = (o2 instanceof PrintControllerHookPrioritizer) ? ((PrintControllerHookPrioritizer) o2).getPriority() : 100;
 
-      return (int) Math.signum((float) o1Priority - (float) o2Priority);
+      return Integer.compare(o1Priority, o2Priority);
     });
 
     return hookList;
