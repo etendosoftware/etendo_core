@@ -21,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -30,10 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.StringJoiner;
 
-import javax.persistence.PersistenceException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -41,10 +37,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -239,15 +233,8 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int i = 0; i < documentIds.length; i++) {
           String documentId = documentIds[i];
-          jsonParams.put(DOCUMENT_ID, documentId);
-          jsonParams.put(DOCUMENT_TYPE, documentType);
-          try {
-              hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
-          } catch (final OBException e) {
-            String documentNo = getDocumentNo(documentType, jsonParams);
-            throw new OBException(String.format(OBMessageUtils.messageBD("Error_Printing_Document"),
-                "<li>" + documentNo + ": " + e.getMessage() + "</li>"));
-          }
+          setPreHookParams(documentType, jsonParams, documentId);
+          executePreProcessHooks(documentType, hookManager, jsonParams);
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
           try {
@@ -262,9 +249,7 @@ public class PrintController extends HttpSecureAppServlet {
           if (multiReports) {
             reportManager.saveTempReport(report, vars);
           }
-          jsonParams.put(DOCUMENT_ID, documentId);
-          jsonParams.put(DOCUMENT_TYPE, documentType);
-          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+          setPostHookParams(documentType, jsonParams, documentId, report);
           hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
@@ -285,15 +270,8 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int index = 0; index < documentIds.length; index++) {
           String documentId = documentIds[index];
-          jsonParams.put(DOCUMENT_ID, documentId);
-          jsonParams.put(DOCUMENT_TYPE, documentType);
-          try {
-            hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
-          } catch (final OBException e) {
-            String documentNo = getDocumentNo(documentType, jsonParams);
-            throw new OBException(String.format(OBMessageUtils.messageBD("Error_Printing_Document"),
-                "<li>" + documentNo + ": " + e.getMessage() + "</li>"));
-          }
+          setPreHookParams(documentType, jsonParams, documentId);
+          executePreProcessHooks(documentType, hookManager, jsonParams);
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
           buildReport(response, vars, documentId, reports, reportManager);
@@ -304,9 +282,7 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error(e);
           }
           reportManager.saveTempReport(report, vars);
-          jsonParams.put(DOCUMENT_ID, documentId);
-          jsonParams.put(DOCUMENT_TYPE, documentType);
-          jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+          setPostHookParams(documentType, jsonParams, documentId, report);
           hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
         }
@@ -528,6 +504,72 @@ public class PrintController extends HttpSecureAppServlet {
       log4j.error("Error captured: ", e);
       bdErrorGeneralPopUp(request, response, "Error",
           Utility.translateError(this, vars, vars.getLanguage(), e.getMessage()).getMessage());
+    }
+  }
+
+  /**
+   * Sets the parameters for postProcess hooks in the given JSON parameters.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @param documentId
+   *     the ID of the document being processed
+   * @param report
+   *     the report associated with the document
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   * @throws IOException
+   *     if there is an error retrieving the report file path
+   */
+  private static void setPostHookParams(DocumentType documentType, JSONObject jsonParams, String documentId,
+      Report report) throws JSONException, IOException {
+    jsonParams.put(DOCUMENT_ID, documentId);
+    jsonParams.put(DOCUMENT_TYPE, documentType);
+    jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+  }
+
+  /**
+   * Sets the parameters for preProcess hooks in the given JSON parameters.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @param documentId
+   *     the ID of the document being processed
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   */
+  private static void setPreHookParams(DocumentType documentType, JSONObject jsonParams,
+      String documentId) throws JSONException {
+    jsonParams.put(DOCUMENT_ID, documentId);
+    jsonParams.put(DOCUMENT_TYPE, documentType);
+  }
+
+  /**
+   * Executes the preProcess hooks for the given document type and handles any errors encountered during execution.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param hookManager
+   *     the manager responsible for handling hooks
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   * @throws OBException
+   *     if an error occurs during the execution of hooks
+   */
+  private static void executePreProcessHooks(DocumentType documentType, PrintControllerHookManager hookManager,
+      JSONObject jsonParams) throws JSONException {
+    try {
+      hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+    } catch (final OBException e) {
+      String documentNo = getDocumentNo(documentType, jsonParams);
+      throw new OBException(String.format(OBMessageUtils.messageBD("Error_Printing_Document"),
+          "<li>" + documentNo + ": " + e.getMessage() + "</li>"));
     }
   }
 
