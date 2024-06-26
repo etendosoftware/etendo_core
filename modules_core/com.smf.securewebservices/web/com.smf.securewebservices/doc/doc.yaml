@@ -132,10 +132,10 @@ paths:
         - name: distinct
           in: query
           required: false
-          description: Only filters by entities. Returns the specified entity from the model.
+          description: Specifies that only unique values will be returned of the described entity.
           schema:
             type: string
-            example: Organization     
+            example: organization
         - name: identifiers
           in: query
           required: false
