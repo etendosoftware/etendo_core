@@ -637,8 +637,9 @@ public class HeartbeatProcess implements Process {
       heartbeatObj.put("maxUsers", parseLongSafely(systemInfo, SystemInfo.Item.MAX_CONCURRENT_USERS));
       heartbeatObj.put("avgUsers", systemInfo.getProperty(SystemInfo.Item.AVG_CONCURRENT_USERS.getLabel()));
       heartbeatObj.put("obpsId", systemInfo.getProperty(SystemInfo.Item.OBPS_INSTANCE.getLabel()));
-      heartbeatObj.put("totalLoginsLastMonth", systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MOTH.getLabel()));
-
+      heartbeatObj.put("totalLoginsLastMonth",
+          systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MOTH.getLabel()));
+      heartbeatObj.put("status", ActivationKey.getInstance().getSubscriptionStatus().getStatusCode());
       heartbeatArray.put(heartbeatObj);
     } catch (Exception e) {
       log.error(e.getMessage());

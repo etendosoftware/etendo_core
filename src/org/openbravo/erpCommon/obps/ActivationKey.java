@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
+ * under the License.
  * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2009-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -234,6 +234,15 @@ public class ActivationKey {
       return Utility.getListValueName("OBPSLicenseStatus", code, language);
     }
 
+    /**
+     * Returns the status code associated with this subscription status.
+     *
+     * @return the status code as a String
+     */
+    public String getStatusCode() {
+      return code;
+    }
+
   }
 
   private static final int ONE_DAY = 24 * 60;
@@ -268,7 +277,7 @@ public class ActivationKey {
 
   /**
    * @see ActivationKey#getInstance(boolean)
-   * 
+   *
    */
   public static ActivationKey getInstance() {
     return getInstance(false);
@@ -277,12 +286,12 @@ public class ActivationKey {
   /**
    * Obtains the ActivationKey instance. Instances should be get in this way, rather than creating a
    * new one.
-   * 
+   *
    * If refreshIfNeeded parameter is true, license is tried to be refreshed if it is needed to.
-   * 
+   *
    * @param refreshIfNeeded
    *          refresh license if needed to
-   * 
+   *
    */
   public static ActivationKey getInstance(boolean refreshIfNeeded) {
     if (refreshIfNeeded) {
@@ -731,7 +740,7 @@ public class ActivationKey {
 
   /**
    * Deprecated, use instead {@link ActivationKey#checkOPSLimitations(String)}
-   * 
+   *
    */
   @Deprecated
   public LicenseRestriction checkOPSLimitations() {
@@ -745,14 +754,14 @@ public class ActivationKey {
 
   /**
    * Checks the current activation key
-   * 
+   *
    * @param currentSession
    *          Current session, used for checking the concurrent users limitation.
    * @param sessionType
    *          Successful session type: if the session is finally successful this is the type that
    *          will be marked with in {@code AD_Session}, it is used to determine whether it should
    *          or not count for CU limitation. In case it is {@code null} it will be counted.
-   * 
+   *
    * @return {@link LicenseRestriction} with the status of the restrictions
    */
   public LicenseRestriction checkOPSLimitations(String currentSession, String sessionType) {
@@ -1024,7 +1033,7 @@ public class ActivationKey {
 
   /**
    * Obtains a List of all the modules that are installed in the instance which license has expired.
-   * 
+   *
    * @return List of the expired modules
    */
   public ArrayList<Module> getExpiredInstalledModules() {
@@ -1050,7 +1059,7 @@ public class ActivationKey {
 
   /**
    * Obtains a list for modules ID the instance is subscribed to and their statuses
-   * 
+   *
    * @return HashMap&lt;String, CommercialModuleStatus&gt; containing the subscribed modules
    */
   public HashMap<String, CommercialModuleStatus> getSubscribedModules() {
@@ -1138,7 +1147,7 @@ public class ActivationKey {
   /**
    * Checks whether a disabled module can be enabled again. A commercial module cannot be enabled in
    * case its license has expired or the instance is not commercial.
-   * 
+   *
    * @param module
    * @return true in case the module can be enabled
    */
@@ -1164,7 +1173,7 @@ public class ActivationKey {
   /**
    * Returns the status for the commercial module passed as parameter. Note that module tier is not
    * checked here, this should be correctly handled in the license itself.
-   * 
+   *
    * @param moduleId
    * @return the status for the commercial module passed as parameter
    */
@@ -1287,7 +1296,7 @@ public class ActivationKey {
   /**
    * Checks whether there is access to an artifact because of license restrictions (checking core
    * advance and premium features).
-   * 
+   *
    * @param type
    *          Type of artifact (Window, Report, Process...)
    * @param id
@@ -1348,7 +1357,7 @@ public class ActivationKey {
 
   /**
    * Verifies all the commercial installed modules are allowed to the instance.
-   * 
+   *
    * @return List of non allowed modules
    */
   public String verifyInstalledModules() {
@@ -1408,7 +1417,7 @@ public class ActivationKey {
   /**
    * Returns a JSONObject with a message warning about near expiration or already expired instance
    * to be displayed in Login page.
-   * 
+   *
    */
   public JSONObject getExpirationMessage(String lang) {
     JSONObject result = new JSONObject();
@@ -1492,7 +1501,7 @@ public class ActivationKey {
   /**
    * This method checks web service can be called. If <code>updateCounter</code> parameter is
    * <code>true</code> number of daily calls is increased by one.
-   * 
+   *
    * @param updateCounter
    *          daily calls should be updated
    */
