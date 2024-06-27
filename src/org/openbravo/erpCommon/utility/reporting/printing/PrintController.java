@@ -234,13 +234,13 @@ public class PrintController extends HttpSecureAppServlet {
         for (int i = 0; i < documentIds.length; i++) {
           String documentId = documentIds[i];
           setPreHookParams(documentType, jsonParams, documentId);
-          executePreProcessHooks(documentType, hookManager, jsonParams);
+          executePreProcessHooks(documentType, hookManager, jsonParams, vars.getLanguage());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
           try {
             jasperPrint = reportManager.processReport(report, vars);
             jrPrintReports.add(jasperPrint);
-          }catch (final ReportingException e) {
+          } catch (final ReportingException e) {
             advisePopUp(request, response, "Report processing failed",
                 "Unable to process report selection");
             log4j.error(e.getMessage());
@@ -272,7 +272,7 @@ public class PrintController extends HttpSecureAppServlet {
         for (int index = 0; index < documentIds.length; index++) {
           String documentId = documentIds[index];
           setPreHookParams(documentType, jsonParams, documentId);
-          executePreProcessHooks(documentType, hookManager, jsonParams);
+          executePreProcessHooks(documentType, hookManager, jsonParams, vars.getLanguage());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
           buildReport(response, vars, documentId, reports, reportManager);
@@ -564,31 +564,33 @@ public class PrintController extends HttpSecureAppServlet {
    *     if an error occurs during the execution of hooks
    */
   private static void executePreProcessHooks(DocumentType documentType, PrintControllerHookManager hookManager,
-      JSONObject jsonParams) throws JSONException {
+      JSONObject jsonParams, String language) throws JSONException {
     try {
       hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
     } catch (final OBException e) {
-      String documentNo = getDocumentNo(documentType, jsonParams);
+      String documentNo = getDocumentIdentifier(documentType, jsonParams, language);
       throw new OBException(String.format(OBMessageUtils.messageBD("Error_Printing_Document"),
           "<li>" + documentNo + ": " + e.getMessage() + "</li>"));
     }
   }
 
   /**
-   * Retrieves the document number for a specified document type and document ID.
-   * The document must be active (isactive = 'Y').
+   * Retrieves the document identifier for a given document type and JSON parameters.
    *
    * @param documentType
-   *     the type of the document for which to retrieve the document number
+   *     the type of document for which the identifier is being retrieved
    * @param jsonParams
-   *     a JSONObject containing the parameters, including the document ID
-   * @return the document number as a String
+   *     the JSON object containing the parameters, including the document ID
+   * @param language
+   *     the language in which the identifier should be retrieved
+   * @return the document identifier as a String
    * @throws JSONException
-   *     if there is an error parsing the document ID from jsonParams
+   *     if there is an error parsing the JSON parameters
    */
-  private static String getDocumentNo(DocumentType documentType, JSONObject jsonParams) throws JSONException {
-    String query = String.format("SELECT documentNo FROM %s WHERE %s_id = :id AND isactive = 'Y'",
-        documentType.getTableName(), documentType.getTableName());
+  private static String getDocumentIdentifier(DocumentType documentType, JSONObject jsonParams,
+      String language) throws JSONException {
+    String query = String.format("select ad_column_identifier( '%s', :id, '%s')", documentType.getTableName(),
+        language);
     return (String) OBDal.getInstance().getSession().createNativeQuery(query).setParameter("id",
         jsonParams.getString(DOCUMENT_ID)).uniqueResult();
   }
