@@ -31,6 +31,7 @@ var OB = (OBLayoutMDI && OBLayoutMDI.OB) ? OBLayoutMDI.shallowClone(OBLayoutMDI.
     Application : {
         testEnvironment: ${data.testEnvironment?string},
         contextUrl: '${data.contextUrl}',
+        logoutRedirect: '${data.logoutRedirect?js_string}',
         communityBrandingStaticUrl: '${data.communityBrandingStaticUrl?js_string}',
         butlerUtilsUrl: '${data.butlerUtilsUrl?js_string}'
     },
