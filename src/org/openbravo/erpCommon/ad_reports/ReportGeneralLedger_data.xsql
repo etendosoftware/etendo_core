@@ -27,7 +27,7 @@
       <![CDATA[
         SELECT *
         FROM ( SELECT '0' AS RN1, C.* FROM (
-          SELECT VALUE, NAME, DATEACCT,
+          SELECT VALUE, NAME, DATEACCT, CREATED,
               COALESCE(SUM(AMTACCTDR),0) AS AMTACCTDR, COALESCE(SUM(AMTACCTCR),0) AS AMTACCTCR, COALESCE(SUM(AMTACCTDR-AMTACCTCR),0) AS TOTAL,
               MAX(FACT_ACCT_ID) AS FACT_ACCT_ID,
               FACT_ACCT_GROUP_ID, ID, groupbyid, groupbyname,
@@ -40,8 +40,8 @@
               , 0 AS AMTACCTDRPREVSUM, 0 AS AMTACCTCRPREVSUM
           FROM
             (SELECT FACT_ACCT.ACCTVALUE AS VALUE, COALESCE(ev_trl.NAME, ev.NAME) AS NAME,
-                DATEACCT, AMTACCTDR, AMTACCTCR, FACT_ACCT_ID,
-                FACT_ACCT_GROUP_ID, FACT_ACCT.ACCOUNT_ID AS ID, FACT_ACCT.DESCRIPTION,
+                FACT_ACCT.DATEACCT, AMTACCTDR, AMTACCTCR, FACT_ACCT_ID,
+                FACT_ACCT_GROUP_ID, FACT_ACCT.ACCOUNT_ID AS ID, FACT_ACCT.DESCRIPTION, GL.CREATED,
                 CASE ?
                   WHEN 'BPartner' THEN c_bpartner.c_bpartner_id
                   WHEN 'Product' THEN m_product.m_product_id
@@ -60,6 +60,7 @@
               LEFT JOIN C_PROJECT ON FACT_ACCT.C_PROJECT_ID = C_PROJECT.C_PROJECT_ID
               LEFT JOIN c_elementvalue ev ON FACT_ACCT.ACCOUNT_ID = ev.c_elementvalue_id
               LEFT JOIN c_elementvalue_trl ev_trl ON ev.c_elementvalue_id = ev_trl.c_elementvalue_id AND ev_trl.ad_language = ?
+              LEFT JOIN GL_JOURNAL GL ON FACT_ACCT.RECORD_ID = GL.GL_JOURNAL_ID
             WHERE (?='Y' OR FACT_ACCT.ACCOUNT_ID IN (
                       SELECT c_elementvalue_id as name
                       FROM C_ELEMENTVALUE
@@ -75,10 +76,10 @@
               AND 3=3) D
             WHERE 6=6
             GROUP BY groupbyname, groupbyid, VALUE, NAME, ID,
-            DATEACCT, FACTACCTTYPE, FACT_ACCT_GROUP_ID, DESCRIPTION, ISDEBIT
+            DATEACCT, FACTACCTTYPE, FACT_ACCT_GROUP_ID, DESCRIPTION, ISDEBIT, D.CREATED
             HAVING SUM(AMTACCTDR) - SUM(AMTACCTCR) <> 0
             ORDER  BY groupbyname, groupbyid, VALUE, NAME, ID,
-            DATEACCT, FACTACCTTYPE, FACT_ACCT_GROUP_ID,  FACT_ACCT_ID, DESCRIPTION, ISDEBIT
+            DATEACCT, CREATED ASC NULLS FIRST, FACTACCTTYPE, FACT_ACCT_GROUP_ID,  FACT_ACCT_ID, DESCRIPTION, ISDEBIT
           ) C
         ) B WHERE 1=1
       ]]></Sql>
