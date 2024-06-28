@@ -43,6 +43,7 @@
        AND R.ISACTIVE = 'Y'
        AND A_R_O.AD_ROLE_ID = ? 
        AND A_O.AD_Org_ID IN('1')
+       AND A_O.ISACTIVE = 'Y'
        ORDER BY A_O.NAME
      ]]></Sql>
        <Parameter name="rol"/>
