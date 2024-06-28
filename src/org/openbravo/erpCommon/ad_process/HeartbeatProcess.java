@@ -333,7 +333,7 @@ public class HeartbeatProcess implements Process {
         hbLog.setFirstLogin(parseDateSafely(systemInfo, SystemInfo.Item.FIRST_LOGIN));
         hbLog.setLastLogin(parseDateSafely(systemInfo, SystemInfo.Item.LAST_LOGIN));
         hbLog.setTotalLogins(parseLongSafely(systemInfo, SystemInfo.Item.TOTAL_LOGINS));
-        hbLog.setTotalLoginsLastMonth(parseLongSafely(systemInfo, SystemInfo.Item.TOTAL_LOGINS_LAST_MOTH));
+        hbLog.setTotalLoginsLastMonth(parseLongSafely(systemInfo, SystemInfo.Item.TOTAL_LOGINS_LAST_MONTH));
         hbLog.setConcurrentUsersAverage(parseBigDecimalSafely(systemInfo, SystemInfo.Item.AVG_CONCURRENT_USERS));
         hbLog.setUsagePercentage(parseBigDecimalSafely(systemInfo, SystemInfo.Item.PERC_TIME_USAGE));
         hbLog.setMaximumConcurrentUsers(parseLongSafely(systemInfo, SystemInfo.Item.MAX_CONCURRENT_USERS));
@@ -638,7 +638,7 @@ public class HeartbeatProcess implements Process {
       heartbeatObj.put("avgUsers", systemInfo.getProperty(SystemInfo.Item.AVG_CONCURRENT_USERS.getLabel()));
       heartbeatObj.put("obpsId", systemInfo.getProperty(SystemInfo.Item.OBPS_INSTANCE.getLabel()));
       heartbeatObj.put("totalLoginsLastMonth",
-          systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MOTH.getLabel()));
+          systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MONTH.getLabel()));
       heartbeatObj.put("status", ActivationKey.getInstance().getSubscriptionStatus().getStatusCode());
       heartbeatArray.put(heartbeatObj);
     } catch (Exception e) {
