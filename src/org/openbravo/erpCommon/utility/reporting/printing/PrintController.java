@@ -14,17 +14,13 @@
 package org.openbravo.erpCommon.utility.reporting.printing;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -47,9 +42,10 @@ import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.session.OBPropertiesProvider;
+import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.application.report.ReportingUtils.ExportType;
+import org.openbravo.common.hooks.PrintControllerHookManager;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -57,12 +53,9 @@ import org.openbravo.email.EmailUtils;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.BasicUtility;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.PropertyException;
-import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.erpCommon.utility.Utility;
-import org.openbravo.erpCommon.utility.poc.EmailInfo;
-import org.openbravo.erpCommon.utility.poc.EmailManager;
-import org.openbravo.erpCommon.utility.poc.EmailType;
 import org.openbravo.erpCommon.utility.reporting.DocumentType;
 import org.openbravo.erpCommon.utility.reporting.Report;
 import org.openbravo.erpCommon.utility.reporting.Report.OutputTypeEnum;
@@ -71,7 +64,6 @@ import org.openbravo.erpCommon.utility.reporting.ReportingException;
 import org.openbravo.erpCommon.utility.reporting.TemplateData;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo.EmailDefinition;
-import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -80,12 +72,17 @@ import org.openbravo.model.common.enterprise.EmailTemplate;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.xmlEngine.XmlDocument;
 
+import com.google.common.collect.HashBasedTable;
+
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 
 @SuppressWarnings("serial")
 public class PrintController extends HttpSecureAppServlet {
+  private static final String DOCUMENT_ID = "documentId";
+  private static final String DOCUMENT_TYPE = "documentType";
+  public static final String REPORT_FILE_PATH = "reportFilePath";
   private final Map<String, TemplateData[]> differentDocTypes = new HashMap<String, TemplateData[]>();
   private boolean multiReports = false;
   private boolean archivedReports = false;
@@ -178,7 +175,6 @@ public class PrintController extends HttpSecureAppServlet {
       String strDocumentId) throws IOException, ServletException {
     String localStrDocumentId = strDocumentId;
     try {
-
       String fullDocumentIdentifier = localStrDocumentId + documentType.getTableName();
 
       // reports is set in session: defining it as a Serializable HashMap
@@ -211,7 +207,14 @@ public class PrintController extends HttpSecureAppServlet {
       final ReportManager reportManager = new ReportManager(globalParameters.strFTPDirectory,
           strReplaceWithFull, globalParameters.strBaseDesignPath,
           globalParameters.strDefaultDesignPath, globalParameters.prefix, multiReports);
-
+      PrintControllerHookManager hookManager = WeldUtils.getInstanceFromStaticBeanManager(
+          PrintControllerHookManager.class);
+      JSONObject jsonParams = new JSONObject();
+      JSONObject results = new JSONObject();
+      results.put(PrintControllerHookManager.FAILURES, false);
+      results.put(PrintControllerHookManager.MESSAGE, HashBasedTable.create());
+      jsonParams.put(PrintControllerHookManager.RESULTS, results);
+      jsonParams.put(PrintControllerHookManager.CANCELLATION, false);
       if (vars.commandIn("PRINT")) {
         archivedReports = false;
         // Order documents by Document No.
@@ -230,6 +233,8 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int i = 0; i < documentIds.length; i++) {
           String documentId = documentIds[i];
+          setPreHookParams(documentType, jsonParams, documentId);
+          executePreProcessHooks(documentType, hookManager, jsonParams, vars.getLanguage());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
           try {
@@ -245,6 +250,8 @@ public class PrintController extends HttpSecureAppServlet {
           if (multiReports) {
             reportManager.saveTempReport(report, vars);
           }
+          setPostHookParams(documentType, jsonParams, documentId, report);
+          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
       } else if (vars.commandIn("ARCHIVE")) {
@@ -264,6 +271,8 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int index = 0; index < documentIds.length; index++) {
           String documentId = documentIds[index];
+          setPreHookParams(documentType, jsonParams, documentId);
+          executePreProcessHooks(documentType, hookManager, jsonParams, vars.getLanguage());
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
           buildReport(response, vars, documentId, reports, reportManager);
@@ -274,6 +283,8 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error(e);
           }
           reportManager.saveTempReport(report, vars);
+          setPostHookParams(documentType, jsonParams, documentId, report);
+          hookManager.executeHooks(jsonParams, hookManager.getPostProcess());
           savedReports.add(report);
         }
         printReports(response, jrPrintReports, savedReports, isDirectPrint(vars));
@@ -495,6 +506,93 @@ public class PrintController extends HttpSecureAppServlet {
       bdErrorGeneralPopUp(request, response, "Error",
           Utility.translateError(this, vars, vars.getLanguage(), e.getMessage()).getMessage());
     }
+  }
+
+  /**
+   * Sets the parameters for postProcess hooks in the given JSON parameters.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @param documentId
+   *     the ID of the document being processed
+   * @param report
+   *     the report associated with the document
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   * @throws IOException
+   *     if there is an error retrieving the report file path
+   */
+  private static void setPostHookParams(DocumentType documentType, JSONObject jsonParams, String documentId,
+      Report report) throws JSONException, IOException {
+    jsonParams.put(DOCUMENT_ID, documentId);
+    jsonParams.put(DOCUMENT_TYPE, documentType);
+    jsonParams.put(REPORT_FILE_PATH, report.getTargetLocation());
+  }
+
+  /**
+   * Sets the parameters for preProcess hooks in the given JSON parameters.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @param documentId
+   *     the ID of the document being processed
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   */
+  private static void setPreHookParams(DocumentType documentType, JSONObject jsonParams,
+      String documentId) throws JSONException {
+    jsonParams.put(DOCUMENT_ID, documentId);
+    jsonParams.put(DOCUMENT_TYPE, documentType);
+  }
+
+  /**
+   * Executes the preProcess hooks for the given document type and handles any errors encountered during execution.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param hookManager
+   *     the manager responsible for handling hooks
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   * @throws OBException
+   *     if an error occurs during the execution of hooks
+   */
+  private static void executePreProcessHooks(DocumentType documentType, PrintControllerHookManager hookManager,
+      JSONObject jsonParams, String language) throws JSONException {
+    try {
+      hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+    } catch (final OBException e) {
+      String documentNo = getDocumentIdentifier(documentType, jsonParams, language);
+      throw new OBException(String.format(OBMessageUtils.messageBD("Error_Printing_Document"),
+          "<li>" + documentNo + ": " + e.getMessage() + "</li>"));
+    }
+  }
+
+  /**
+   * Retrieves the document identifier for a given document type and JSON parameters.
+   *
+   * @param documentType
+   *     the type of document for which the identifier is being retrieved
+   * @param jsonParams
+   *     the JSON object containing the parameters, including the document ID
+   * @param language
+   *     the language in which the identifier should be retrieved
+   * @return the document identifier as a String
+   * @throws JSONException
+   *     if there is an error parsing the JSON parameters
+   */
+  private static String getDocumentIdentifier(DocumentType documentType, JSONObject jsonParams,
+      String language) throws JSONException {
+    String query = String.format("select ad_column_identifier( '%s', :id, '%s')", documentType.getTableName(),
+        language);
+    return (String) OBDal.getInstance().getSession().createNativeQuery(query).setParameter("id",
+        jsonParams.getString(DOCUMENT_ID)).uniqueResult();
   }
 
   public void printReports(HttpServletResponse response, Collection<JasperPrint> jrPrintReports,
