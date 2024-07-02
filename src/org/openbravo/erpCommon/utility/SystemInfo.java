@@ -236,7 +236,7 @@ public class SystemInfo {
         case PERC_TIME_USAGE:
           systemInfo.put(i, usagePercentageTime.toString());
           break;
-        case TOTAL_LOGINS_LAST_MOTH:
+        case TOTAL_LOGINS_LAST_MONTH:
           systemInfo.put(i, Integer.toString(numberOfLoginsThisMonth));
           break;
         case WS_CALLS_MAX:
@@ -875,7 +875,7 @@ public class SystemInfo {
     FIRST_LOGIN("firstLogin", false),
     LAST_LOGIN("lastLogin", false),
     TOTAL_LOGINS("totalLogins", false),
-    TOTAL_LOGINS_LAST_MOTH("loginsMoth", false),
+    TOTAL_LOGINS_LAST_MONTH("loginsMonth", false),
     MAX_CONCURRENT_USERS("maxUsers", false),
     AVG_CONCURRENT_USERS("avgUsers", false),
     PERC_TIME_USAGE("timeUsage", false),
