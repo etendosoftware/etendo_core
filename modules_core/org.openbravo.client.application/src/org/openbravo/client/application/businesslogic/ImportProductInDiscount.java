@@ -24,12 +24,14 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -113,12 +115,15 @@ public class ImportProductInDiscount extends ProcessUploadedFile {
 
   @SuppressWarnings("unchecked")
   protected List<String> getProductIds(String clientId, String orgId, String productKey) {
-    String sql = "SELECT m_product_id from m_product where ad_client_id=:clientId and ad_org_id=:orgId and value=:value";
+    String sql = "SELECT m_product_id from m_product where ad_client_id=:clientId and ad_org_id in (:orgs) and value=:value";
     Session session = OBDal.getInstance().getSession();
     @SuppressWarnings("rawtypes")
     NativeQuery qry = session.createNativeQuery(sql);
     qry.setParameter("clientId", clientId);
-    qry.setParameter("orgId", orgId);
+    OrganizationStructureProvider osp = OBContext.getOBContext()
+        .getOrganizationStructureProvider(clientId);
+    Set<String> orgs = osp.getNaturalTree(orgId);
+    qry.setParameter("orgs", orgs);
     qry.setParameter("value", productKey);
     // only need max 2 to identify that there is more than one
     qry.setMaxResults(2);
