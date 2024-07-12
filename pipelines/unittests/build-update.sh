@@ -9,7 +9,7 @@ DESCRIPTION=$3
 TARGET_URL="$6"
 ACCESS_TOKEN=$4
 GIT_STATUS_URL="https://$ACCESS_TOKEN:x-oauth-basic@$URI/repos/$OWNER/$REPO_SLUG/statuses/${REVISION}"
-TEMPLATE='{"state":"%s", "target_url":"%s", "description":"%s", "context":"build/job"}'
+TEMPLATE='{"state":"%s", "target_url":"%s", "description":"%s", "context":"Etendo Core Unit Tests"}'
 PAYLOAD=$(printf "$TEMPLATE" "$STATUS" "$TARGET_URL" "$DESCRIPTION")
 
 echo $PAYLOAD

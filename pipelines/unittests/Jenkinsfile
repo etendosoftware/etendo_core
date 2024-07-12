@@ -18,7 +18,7 @@ pipeline {
     GITHUB_TOKEN        = credentials('github-read-package-token')
     LANG                = 'en_US.UTF-8'
 
-    ACCESS_TOKEN        = credentials('access_token')
+    ACCESS_TOKEN        = credentials('access_token_github')
     EMAIL_ADDRESS       = credentials('email_builds')
 
     URL_REPO            = 'https://github.com/etendosoftware/etendo_core'
