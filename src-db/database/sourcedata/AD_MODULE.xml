@@ -6,7 +6,7 @@
 <!--0-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--0-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--0-->  <NAME><![CDATA[Core]]></NAME>
-<!--0-->  <VERSION><![CDATA[24.2.2]]></VERSION>
+<!--0-->  <VERSION><![CDATA[24.2.3]]></VERSION>
 <!--0-->  <DESCRIPTION><![CDATA[Core module is the base one]]></DESCRIPTION>
 <!--0-->  <HELP><![CDATA[Core module is the base one, all developments in core are included as part of the standard Etendo ERP.]]></HELP>
 <!--0-->  <URL><![CDATA[www.etendo.software]]></URL>
@@ -21,9 +21,9 @@ You may obtain a copy of the License at support@etendo.software or in the legal 
 <!--0-->  <HASCHARTOFACCOUNTS><![CDATA[N]]></HASCHARTOFACCOUNTS>
 <!--0-->  <ISTRANSLATIONMODULE><![CDATA[N]]></ISTRANSLATIONMODULE>
 <!--0-->  <HASREFERENCEDATA><![CDATA[Y]]></HASREFERENCEDATA>
-<!--0-->  <UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/24Q2-2]]></UPDATEINFO>
+<!--0-->  <UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/24Q2-3]]></UPDATEINFO>
 <!--0-->  <REFERENCEDATAINFO><![CDATA[Standard document types for orders, invoices, etc. and settings]]></REFERENCEDATAINFO>
-<!--0-->  <VERSION_LABEL><![CDATA[24Q2.2]]></VERSION_LABEL>
+<!--0-->  <VERSION_LABEL><![CDATA[24Q2.3]]></VERSION_LABEL>
 <!--0-->  <ISCOMMERCIAL><![CDATA[N]]></ISCOMMERCIAL>
 <!--0-->  <ISTRIALALLOWED><![CDATA[N]]></ISTRIALALLOWED>
 <!--0--></AD_MODULE>
