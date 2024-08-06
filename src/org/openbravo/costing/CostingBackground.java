@@ -219,7 +219,7 @@ public class CostingBackground extends DalBaseProcess implements KillableProcess
         + "   and p.stocked = true"
         + "   and trxtype.reference.id = :refid"
         + "   and trxtype.searchKey = trx.movementType"
-        + "   and trx.transactionProcessDate <= :now"
+        + "   and trx.transactionProcessDate <= now()"
         + "   and trx.organization.id in (:orgs)"
         + " order by trx.transactionProcessDate, trxtype.sequenceNumber, "
         + " trx.movementQuantity desc, trx.id";
@@ -228,7 +228,6 @@ public class CostingBackground extends DalBaseProcess implements KillableProcess
     Query<String> trxQry = OBDal.getInstance().getSession().createQuery(where, String.class);
 
     trxQry.setParameter("refid", CostAdjustmentUtils.MovementTypeRefID);
-    trxQry.setParameter("now", new Date());
     trxQry.setParameterList("orgs", orgsWithRule);
     trxQry.setMaxResults(BATCH_SIZE);
     return trxQry.list();
