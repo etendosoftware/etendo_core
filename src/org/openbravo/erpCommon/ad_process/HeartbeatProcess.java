@@ -355,7 +355,16 @@ public class HeartbeatProcess implements Process {
   }
 
   /**
-   * @param response
+   * Parses the given JSON response to extract alert information.
+   * The response can be a JSON object or a JSON array. If it is an array,
+   * it iterates through each JSON object in the array and processes them individually.
+   * This method sets the administrative mode to allow database operations without restrictions.
+   *
+   * @param response The JSON response string to be parsed. It is expected to be either a JSON object
+   *                 or a JSON array. The JSON should contain an "alerts" key if it is an object.
+   *                 If it is an array, each object in the array should have an "alerts" key.
+   *
+   * @throws JSONException if there is an error parsing the JSON response.
    */
   private void parseResponse(String response) {
     logger.logln(logger.messageDb("HB_UPDATES", ctx.getLanguage()));
@@ -365,9 +374,23 @@ public class HeartbeatProcess implements Process {
 
     OBContext.setAdminMode();
     try {
-      JSONObject json = new JSONObject(response);
-      String alertsResponse = (String) json.get("alerts");
-      parseAlerts(alertsResponse);
+      if (StringUtils.startsWith(response, "[")) {
+        JSONArray jsonArray = new JSONArray(response);
+        for (int i = 0; i < jsonArray.length(); i++) {
+          JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+          String alertsResponse = jsonObject.optString("alerts");
+          if (alertsResponse != null && !alertsResponse.isEmpty()) {
+            parseAlerts(alertsResponse);
+          }
+        }
+      } else {
+        JSONObject jsonObject = new JSONObject(response);
+        String alertsResponse = jsonObject.optString("alerts");
+        if (alertsResponse != null && !alertsResponse.isEmpty()) {
+          parseAlerts(alertsResponse);
+        }
+      }
     } catch (JSONException e) {
       log.error(e.getMessage(), e);
     } finally {
