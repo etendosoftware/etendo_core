@@ -378,23 +378,23 @@ public class HeartbeatProcess implements Process {
         JSONArray jsonArray = new JSONArray(response);
         for (int i = 0; i < jsonArray.length(); i++) {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-
-          String alertsResponse = jsonObject.optString("alerts");
-          if (alertsResponse != null && !alertsResponse.isEmpty()) {
-            parseAlerts(alertsResponse);
-          }
+          processAlerts(jsonObject);
         }
       } else {
         JSONObject jsonObject = new JSONObject(response);
-        String alertsResponse = jsonObject.optString("alerts");
-        if (alertsResponse != null && !alertsResponse.isEmpty()) {
-          parseAlerts(alertsResponse);
-        }
+        processAlerts(jsonObject);
       }
     } catch (JSONException e) {
       log.error(e.getMessage(), e);
     } finally {
       OBContext.restorePreviousMode();
+    }
+  }
+
+  private void processAlerts(JSONObject jsonObject) {
+    String alertsResponse = jsonObject.optString("alerts");
+    if (!StringUtils.isBlank(alertsResponse)) {
+      parseAlerts(alertsResponse);
     }
   }
 
