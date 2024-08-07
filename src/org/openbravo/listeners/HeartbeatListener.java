@@ -34,7 +34,7 @@ public class HeartbeatListener implements ServletContextListener {
   private static final Logger log = LogManager.getLogger(HeartbeatListener.class);
   private ScheduledExecutorService scheduler;
   private static final String DEFAULT_SECURE_APP_ID = "0";
-  private static final long HEARTBEAT_PERIOD = 1;
+  private static final long HEARTBEAT_PERIOD_DAYS = 1;
 
   /**
    * Initializes the HeartbeatListener. This method sets up a single-threaded scheduled
@@ -46,10 +46,11 @@ public class HeartbeatListener implements ServletContextListener {
   @Override
   public void contextInitialized(ServletContextEvent event) {
     log.info("Initializing HeartbeatListener...");
-    scheduler = Executors.newSingleThreadScheduledExecutor();
-
+    if (scheduler == null || scheduler.isShutdown()) {
+      scheduler = Executors.newSingleThreadScheduledExecutor();
+    }
     // Schedule the HeartbeatProcess to run once per day
-    scheduler.scheduleAtFixedRate(HeartbeatListener::runHeartbeat, 0, HEARTBEAT_PERIOD, TimeUnit.DAYS);
+    scheduler.scheduleAtFixedRate(HeartbeatListener::runHeartbeat, 0, HEARTBEAT_PERIOD_DAYS, TimeUnit.DAYS);
   }
 
   /**
