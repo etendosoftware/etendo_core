@@ -91,12 +91,11 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
 
       createInternalConsumptionLine(internalConsumption);
 
-      TestCostingUtils.runCostingBackground();
-
       processInternalConsumption(internalConsumption);
 
       activeOrDeactiveMaterialManagementConsumptionTable(true);
 
+      TestCostingUtils.runCostingBackground();
 
       OBDal.getInstance().commitAndClose();
 
