@@ -100,7 +100,6 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
   @Test
   public void testCountWithoutDocTypeConfigured() {
     InternalConsumption internalConsumption = null;
-    Table materialManagementConsumptionTable = null;
     try {
       internalConsumption = createHeaderAndMaterialManagementConsumptionLines();
       processInternalConsumption(internalConsumption, "CO");
@@ -109,7 +108,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       activeOrDeactiveMaterialManagementConsumptionTable(true);
       TestCostingUtils.runCostingBackground();
 
-      materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
+      Table materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
       String result = postDocument(internalConsumption, materialManagementConsumptionTable);
       OBDal.getInstance().refresh(internalConsumption);
 
@@ -153,12 +152,11 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
   public void testDiscountWithoutDocTypeConfigured() {
     String docTypeId = null;
     InternalConsumption internalConsumption = null;
-    Table materialManagementConsumptionTable = null;
     try {
       internalConsumption = createHeaderAndMaterialManagementConsumptionLines();
       processInternalConsumption(internalConsumption, "CO");
 
-      materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
+      Table materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
       activeOrDeactiveMaterialManagementConsumptionTable(true);
       docTypeId = createDocumentType(materialManagementConsumptionTable).getId();
       TestCostingUtils.runCostingBackground();
@@ -179,12 +177,13 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       assertEquals("@NoDocTypeForDocument@", e.getMessage());
     } finally {
       if (internalConsumption != null) {
+        OBDal.getInstance().refresh(internalConsumption);
         if (StringUtils.equals("Y", internalConsumption.getPosted())) {
           processInternalConsumption(internalConsumption, "VO");
           OBDal.getInstance().flush();
         }
       }
-      if (docTypeId != null) {
+      if (!StringUtils.isEmpty(docTypeId)) {
         removeDocType(docTypeId);
       }
     }
