@@ -24,8 +24,6 @@ pipeline {
 
         REPO_URL            = 'https://github.com/etendosoftware/etendo_core'
         REPO_NAME           = 'etendo_core'
-        COMMIT_AUTHOR_NAME  = sh(returnStdout: true, script: "git log -1 --pretty=format:'%an'").trim()
-        COMMIT_AUTHOR_EMAIL = sh(returnStdout: true, script: "git log -1 --pretty=format:'%ae'").trim()
 
         SUCCESS             = "SUCCESS"
         FAILED              = "FAILED"
@@ -154,7 +152,7 @@ spec:
                             env.CATALINA_BASE = "${WORKSPACE}/${TOMCAT_FOLDER}"
 
                             sh "git clone ${REPO_URL} ${REPO_NAME}"
-                            dir('etendo_core') {
+                            dir(REPO_NAME) {
                                 sh "git checkout ${GIT_COMMIT}"
                                 sh """
                                 echo "context.name=${CONTEXT_NAME}\n
@@ -212,9 +210,9 @@ spec:
             steps {
                 container('compiler') {
                     script {
-                        dir('etendo_core') {
+                        dir(REPO_NAME) {
                             try {
-                                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Run test suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+                                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
                                 sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
                                 publishHTML([
                                     allowMissing: true,
@@ -259,7 +257,7 @@ spec:
             steps {
                 container('compiler') {
                     script {
-                        dir('etendo_core') {
+                        dir(REPO_NAME) {
                             try {
                                 sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
                                 publishHTML([
@@ -303,7 +301,7 @@ spec:
             steps {
                 container('compiler') {
                     script {
-                        dir('etendo_core') {
+                        dir(REPO_NAME) {
                             try {
                                 sh './gradlew test --tests "com.etendoerp.*" --info'
                                 publishHTML([
@@ -349,7 +347,7 @@ spec:
                     env.COMMIT_INFO = infoCommit.generateCommitInfo(env.REPO_URL)
                     env.STACK_INFO = stackConfig.generateStackMessage()
 
-                    dir('etendo_core') {
+                    dir(REPO_NAME) {
                         sh "./gradlew --stop"
                     }
                     sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
