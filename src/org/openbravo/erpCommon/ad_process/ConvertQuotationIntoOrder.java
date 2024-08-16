@@ -47,6 +47,8 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBErrorBuilder;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
+import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.businesspartner.Location;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderDiscount;
@@ -113,6 +115,11 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
       final String quotationId) {
     // Create Sales Order
     Order quotation = OBDal.getInstance().get(Order.class, quotationId);
+
+    if (!checkBusinessPartnerInvoiceAddress(quotation)) {
+      throw new OBException(OBMessageUtils.messageBD("NoInvoiceAddressForOrders"));
+    }
+
     Order newSalesOrder = (Order) DalUtil.copy(quotation, false);
 
     if (FIN_Utility.isBlockedBusinessPartner(quotation.getBusinessPartner().getId(), true, 1)) {
@@ -300,6 +307,18 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
     OBDal.getInstance().refresh(quotation);
 
     return newSalesOrder;
+  }
+
+  /**
+   * Checks if the given Order has a invoice address associated with its Business Partner.
+   *
+   * @param quotation
+   *     the order containing the Business Partner to check
+   * @return true if the Business Partner has at least one location marked as a billing address, false otherwise
+   */
+  private boolean checkBusinessPartnerInvoiceAddress(Order quotation) {
+    BusinessPartner businessPartner = quotation.getBusinessPartner();
+    return businessPartner.getBusinessPartnerLocationList().stream().anyMatch(Location::isInvoiceToAddress);
   }
 
   /**
