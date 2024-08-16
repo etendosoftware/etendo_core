@@ -340,7 +340,7 @@ spec:
         }
       }
       steps {
-        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Deploying Snapshot" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Deploying Snapshot" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
         container('compiler') {
           script {
             dir(REPO_NAME) {
