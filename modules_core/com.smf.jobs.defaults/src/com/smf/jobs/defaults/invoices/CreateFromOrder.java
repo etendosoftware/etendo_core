@@ -20,6 +20,7 @@ import org.openbravo.erpCommon.ad_forms.GenerateInvoicesHook;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.ui.Process;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.businesspartner.Location;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DalConnectionProvider;
@@ -59,7 +60,7 @@ public class CreateFromOrder extends Action {
         return result;
       }
 
-      if (checkBusinessPartnerInvoiceAddress(parameters)) {
+      if (!checkBusinessPartnerInvoiceAddress(parameters)) {
         throw new OBException(OBMessageUtils.messageBD("NoInvoicingAddress"));
       }
 
@@ -151,7 +152,9 @@ public class CreateFromOrder extends Action {
         Restrictions.eq(Order.PROPERTY_ID, orderId));
 
     Order order = (Order) orderOBCriteria.setMaxResults(1).uniqueResult();
-
+    if (order == null) {
+      throw new OBException(OBMessageUtils.messageBD("OrderNotFound"));
+    }
     return hasInvoiceAddress(order.getBusinessPartner());
   }
 
@@ -163,14 +166,9 @@ public class CreateFromOrder extends Action {
    * @return true if the business partner has an invoice address; false otherwise.
    */
   private boolean hasInvoiceAddress(BusinessPartner businessPartner) {
-    final String hql = "select 1 from BusinessPartnerLocation bpl where bpl.invoiceToAddress = true and bpl.businessPartner = :bp";
-
-    final Query<Integer> query = OBDal.getInstance().getSession().createQuery(hql, Integer.class);
-    query.setParameter("bp", businessPartner);
-    query.setMaxResults(1);
-
-    return query.uniqueResult() != null;
+    return businessPartner.getBusinessPartnerLocationList().stream().anyMatch(Location::isInvoiceToAddress);
   }
+
 
   private void initSelection(List<String> selection) {
     String deselectAllQueryString = "update Order set selected = false where selected = true";
