@@ -1,6 +1,8 @@
 package com.smf.jobs.defaults;
 
 import com.smf.jobs.hooks.CloneRecordHook;
+
+import org.apache.commons.lang.time.DateUtils;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.core.DalUtil;
@@ -16,6 +18,7 @@ import org.openbravo.service.db.CallStoredProcedure;
 import javax.enterprise.context.ApplicationScoped;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -57,9 +60,11 @@ public class CloneInvoiceHook extends CloneRecordHook {
         objCloneInvoice.setSalesTransaction(objInvoice.isSalesTransaction());
         objCloneInvoice.setSalesOrder(null);
         objCloneInvoice.setDocumentNo(null);
-        objCloneInvoice.setAccountingDate(new Date());
-        objCloneInvoice.setInvoiceDate(new Date());
-        objCloneInvoice.setCreationDate(new Date());
+
+        Date today = DateUtils.truncate(new Date(), Calendar.DATE);
+        objCloneInvoice.setAccountingDate(today);
+        objCloneInvoice.setInvoiceDate(today);
+
         objCloneInvoice.setCreatedBy(currentUser);
         objCloneInvoice.setUpdatedBy(currentUser);
         objCloneInvoice.setCreationDate(new Date());
