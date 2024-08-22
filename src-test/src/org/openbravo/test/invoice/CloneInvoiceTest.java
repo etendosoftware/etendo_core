@@ -37,6 +37,7 @@ import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
+import org.openbravo.test.base.Issue;
 
 /**
  * This class is used to test the invoice cloning process in the system.
@@ -103,11 +104,12 @@ public class CloneInvoiceTest extends WeldBaseTest {
    * If any exception occurs during the process, it logs the error message and sets the exception flag to true.
    * Finally, it asserts that no exception occurred during the process.
    *
-   * @throws Exception
+   * @throws AssertionError
    *     If there is an error during the test.
    */
   @Test
-  public void testRunCloneInvoice() {
+  @Issue("#345")
+  public void testRunCloneInvoice() throws AssertionError {
     // Given
     boolean exception = false;
     String errorMessage = "";
@@ -146,7 +148,6 @@ public class CloneInvoiceTest extends WeldBaseTest {
    * @return boolean Returns true if the date is not truncated to the day, false otherwise.
    */
   private boolean isNotTruncateDate(Date dateToCheck) {
-    //Issues #345
     return !DateUtils.isSameInstant(dateToCheck, DateUtils.truncate(dateToCheck, Calendar.DATE));
   }
 
@@ -229,8 +230,9 @@ public class CloneInvoiceTest extends WeldBaseTest {
     if (existAssociation == null) {
       TestUtility.associatePaymentMethod(testAccount, testPaymentMethod);
     }
-    this.financialAccountId = testAccount.getId();
-
+    if (testAccount != null) {
+      this.financialAccountId = testAccount.getId();
+    }
     Invoice invoice = TestUtility.createInvoice(OBContext.getOBContext().getCurrentClient(),
         OBContext.getOBContext().getCurrentOrganization(), new Date(), new Date(), new Date(),
         testDocumentType, testBusinessPartner, location, testPriceList, testCurrency,
@@ -263,7 +265,6 @@ public class CloneInvoiceTest extends WeldBaseTest {
 
   /**
    * This method is used to reactivate an Invoice in the system.
-   * <p>
    * It first sets the document status of the invoice to "CO" (Complete),
    * the document action to "RE" (Reactivate), and the posted status to "N" (No).
    * Then it flushes the changes to the database.
@@ -271,17 +272,16 @@ public class CloneInvoiceTest extends WeldBaseTest {
    *
    * @param invoice
    *     The Invoice object to be reactivated.
-   * @return boolean Returns true if the invoice is processed successfully, false otherwise.
    * @throws OBException
    *     If there is an error during the reactivation of the Invoice.
    */
-  private boolean reactivateInvoice(Invoice invoice) {
+  private void reactivateInvoice(Invoice invoice) {
     try {
       invoice.setDocumentStatus("CO");
       invoice.setDocumentAction("RE");
       invoice.setPosted("N");
       OBDal.getInstance().flush();
-      return TestUtility.processInvoice(invoice);
+      TestUtility.processInvoice(invoice);
     } catch (Exception e) {
       throw new OBException(e);
     }
@@ -330,8 +330,8 @@ public class CloneInvoiceTest extends WeldBaseTest {
   /**
    * This method is used to delete the payment configuration.
    * It first retrieves the payment method and financial account using their respective IDs.
-   * If the financial account exists, it retrieves the associated payment method.
-   * If the associated payment method exists, it is removed.
+   * If the financial account exists, it retrieves the associated payment method in financial account.
+   * If the associated payment method in financial account exists, it is removed.
    * The financial account is then removed.
    * All changes are flushed to the database and the transaction is committed.
    * If any exception occurs during the process, it is caught and rethrown as an OBException.
