@@ -98,7 +98,7 @@ paths:
                 $ref: "#/components/schemas/LogResp"
         401:
           description: No auth.
-  /sws/com.smf.securewebservices.obRest/{modelName}:
+  /sws/com.smf.securewebservices.obRest/{_entityName}:
     get:
       summary: List records
       security:
@@ -132,10 +132,10 @@ paths:
         - name: distinct
           in: query
           required: false
-          description: Only filters by entities. Returns the specified entity from the model.
+          description: Specifies that only unique values will be returned of the described entity.
           schema:
             type: string
-            example: Organization     
+            example: organization
         - name: identifiers
           in: query
           required: false
@@ -229,7 +229,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /sws/com.smf.securewebservices.obRest/{modelName}/{recordID}:
+  /sws/com.smf.securewebservices.obRest/{_entityName}/{recordID}:
     get:
       summary: Get a record by ID
       security:
