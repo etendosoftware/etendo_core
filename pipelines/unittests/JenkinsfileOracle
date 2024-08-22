@@ -22,9 +22,8 @@ pipeline {
         LANG                = 'en_US.UTF-8'
         EMAIL_ADDRESS       = credentials('email_builds')
 
-        URL_REPO            = 'https://github.com/etendosoftware/etendo_core'
-        COMMIT_AUTHOR_NAME  = sh(returnStdout: true, script: "git log -1 --pretty=format:'%an'").trim()
-        COMMIT_AUTHOR_EMAIL = sh(returnStdout: true, script: "git log -1 --pretty=format:'%ae'").trim()
+        REPO_URL            = 'https://github.com/etendosoftware/etendo_core'
+        REPO_NAME           = 'etendo_core'
 
         SUCCESS             = "SUCCESS"
         FAILED              = "FAILED"
@@ -34,6 +33,13 @@ pipeline {
         JAVA_HOME           = "/usr/lib/jvm/java-11-openjdk-amd64"
         TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.86/bin/apache-tomcat-9.0.86.tar.gz"
         ORCL_VERSION        = "19c"
+
+        CONTEXT_BUILD       = "Unit Tests with Oracle Database"
+        ACCESS_TOKEN        = credentials('access_token_github')
+
+        COMMIT_INPROGRESS_STATUS = "pending"
+        COMMIT_SUCCESS_STATUS    = "success"
+        COMMIT_FAILED_STATUS     = "failure"
     }
 
     agent {
@@ -105,15 +111,11 @@ spec:
 
     stages {
         stage('Build Environment') {
-            when {
-                expression { 
-                    env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
-                }
-            }
             steps {
                 container('compiler') {
                     script {
                         try {
+                            sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Starting Build Environment" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
                             sh """
                             curl -O https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
                             tar xfz oracle-sqlcli-V1022102-01.tar.gz 2> /dev/null
@@ -149,8 +151,9 @@ spec:
                             env.CATALINA_HOME = "${WORKSPACE}/${TOMCAT_FOLDER}"
                             env.CATALINA_BASE = "${WORKSPACE}/${TOMCAT_FOLDER}"
 
-                            sh "git clone --branch $BRANCH_NAME $URL_REPO"
-                            dir('etendo_core') {
+                            sh "git clone ${REPO_URL} ${REPO_NAME}"
+                            dir(REPO_NAME) {
+                                sh "git checkout ${GIT_COMMIT}"
                                 sh """
                                 echo "context.name=${CONTEXT_NAME}\n
                                 bbdd.rdbms=ORACLE\n
@@ -168,7 +171,7 @@ spec:
                                 githubUser=${GITHUB_USER}\n
                                 githubToken=${GITHUB_TOKEN}\n
                                 allow.root=true\n
-                                org.gradle.jvmargs=-Xmx3g -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > gradle.properties
+                                org.gradle.jvmargs=-Dfile.encoding=UTF-8" > gradle.properties
                                 """
 
                                 sh """
@@ -200,20 +203,16 @@ spec:
 // ------------------------------ WEB SERVICE TEST ------------------------------------------
         stage ('Web Service Test Suite'){
             when {
-                allOf {
-                    expression {
-                        env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
-                    }
-                    expression {
-                        env.STATUSBUILD == "1"
-                    }
+                expression {
+                    env.STATUSBUILD == "1"
                 }
             }
             steps {
                 container('compiler') {
                     script {
-                        dir('etendo_core') {
+                        dir(REPO_NAME) {
                             try {
+                                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
                                 sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
                                 publishHTML([
                                     allowMissing: true,
@@ -250,23 +249,15 @@ spec:
 //___________________________________________________________________________________________
 // ------------------------------- STANDALONE TEST ------------------------------------------
         stage ('Standalone Test Suite'){
-            options {
-                timeout(time: 2, unit: 'HOURS')
-            }
             when {
-                allOf {
-                    expression {
-                        env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
-                    }
-                    expression {
-                        env.STATUSBUILD == "1"
-                    }
+                expression {
+                    env.STATUSBUILD == "1"
                 }
             }
             steps {
                 container('compiler') {
                     script {
-                        dir('etendo_core') {
+                        dir(REPO_NAME) {
                             try {
                                 sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
                                 publishHTML([
@@ -303,19 +294,14 @@ spec:
 // ----------------------------------- SPOCK TEST -------------------------------------------
         stage ('Spock Test') {
             when {
-                allOf {
-                    expression {
-                        env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main'
-                    }
-                    expression {
-                        env.STATUSBUILD == "1"
-                    }
+                expression {
+                    env.STATUSBUILD == "1"
                 }
             }
             steps {
                 container('compiler') {
                     script {
-                        dir('etendo_core') {
+                        dir(REPO_NAME) {
                             try {
                                 sh './gradlew test --tests "com.etendoerp.*" --info'
                                 publishHTML([
@@ -358,16 +344,19 @@ spec:
                     sh "git config --global --add safe.directory ${rootDir2}"
                     def infoCommit = load "${rootDir2}/pipelines/unittests/utils/infoCommit.groovy"
                     def stackConfig = load "${rootDir2}/pipelines/unittests/utils/stackConfig.groovy"
-                    env.COMMIT_INFO = infoCommit.generateCommitInfo(env.URL_REPO)
+                    env.COMMIT_INFO = infoCommit.generateCommitInfo(env.REPO_URL)
                     env.STACK_INFO = stackConfig.generateStackMessage()
 
-                    if (env.BRANCH_NAME == 'develop' || env.BRANCH_NAME == 'main') {
-                        dir('etendo_core') {
-                            sh "./gradlew --stop"
-                        }
-                        sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
+                    dir(REPO_NAME) {
+                        sh "./gradlew --stop"
                     }
+                    sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
                 }
+            }
+        }
+        success {
+            script {
+                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_SUCCESS_STATUS "Successful Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
             }
         }
         fixed {
@@ -401,6 +390,9 @@ spec:
             """
         }
         unstable {
+            script {
+                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Failed Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+            }
             mail to: EMAIL_ADDRESS,
             subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
             mimeType: "text/html",
@@ -431,6 +423,9 @@ spec:
             """
         }
         failure {
+            script {
+                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Build Failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+            }
             mail to: EMAIL_ADDRESS,
             subject: "🚫 ERROR IN ${currentBuild.fullDisplayName}",
             mimeType: "text/html",

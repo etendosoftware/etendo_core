@@ -1711,7 +1711,10 @@ OB.APRM.AddPayment.onProcess = function(
   if (
     document !== null &&
     document !== '' &&
-    actualPayment.compareTo(BigDecimal.prototype.ZERO) === 0 &&
+    (
+        actualPayment.compareTo(BigDecimal.prototype.ZERO) === 0 ||
+        totalOustandingAmount.compareTo(BigDecimal.prototype.ZERO) === 0
+    ) &&
     view.parentWindow &&
     view.parentWindow.windowId &&
     !overpaymentAction
