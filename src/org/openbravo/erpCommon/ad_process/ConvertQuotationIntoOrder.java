@@ -47,6 +47,8 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBErrorBuilder;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
+import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.businesspartner.Location;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderDiscount;
@@ -72,9 +74,15 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
 
     try {
       Order salesOrder = convertQuotationIntoSalesOrder(recalculatePrices, quotationId);
-      OBError msg = OBErrorBuilder.buildMessage(null, "success",
-          "@SalesOrderDocumentno@ " + salesOrder.getDocumentNo() + " @beenCreated@");
-      bundle.setResult(msg);
+      if (checkBusinessPartnerInvoiceAddress(salesOrder)) {
+        OBError msg = OBErrorBuilder.buildMessage(null, "success",
+            "@SalesOrderDocumentno@ " + salesOrder.getDocumentNo() + " @beenCreated@");
+        bundle.setResult(msg);
+      } else {
+        OBError msg = OBErrorBuilder.buildMessage(null, "warning",
+            "@SalesOrderDocumentno@ " + salesOrder.getDocumentNo() + " @beenCreated@" + ", " + "@NoInvoiceAddressForOrders@");
+        bundle.setResult(msg);
+      }
       bundle.getParams().put("SalesOrderId", salesOrder.getId());
       return;
     } catch (OBException e) {
@@ -360,6 +368,18 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
     }
     newSalesOrderLine.setLineNetAmount(
         newSalesOrderLine.getUnitPrice().multiply(newSalesOrderLine.getOrderedQuantity()));
+  }
+
+  /**
+   * Checks if the given Order has a invoice address associated with its Business Partner.
+   *
+   * @param quotation
+   *     the order containing the Business Partner to check
+   * @return true if the Business Partner has at least one location marked as a billing address, false otherwise
+   */
+  private boolean checkBusinessPartnerInvoiceAddress(Order quotation) {
+    BusinessPartner businessPartner = quotation.getBusinessPartner();
+    return businessPartner.getBusinessPartnerLocationList().stream().anyMatch(Location::isInvoiceToAddress);
   }
 
   /**

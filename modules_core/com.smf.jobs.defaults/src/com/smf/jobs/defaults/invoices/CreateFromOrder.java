@@ -8,9 +8,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.application.process.ResponseActionsBuilder;
+import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_forms.GenerateInvoicesHook;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -19,6 +22,8 @@ import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonUtils;
+import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.businesspartner.Location;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -52,6 +57,10 @@ public class CreateFromOrder extends Action {
                 .refreshGridParameter(ORDER_GRID_PARAM)
         );
         return result;
+      }
+
+      if (!checkBusinessPartnerInvoiceAddress(parameters)) {
+        throw new OBException(OBMessageUtils.messageBD("NoInvoicingAddress"));
       }
 
       var input = getInputContents(getInputClass());
@@ -108,14 +117,44 @@ public class CreateFromOrder extends Action {
       OBDal.getInstance().rollbackAndClose();
     }
 
-    result.setResponseActionsBuilder(
-        getResponseBuilder()
-            .retryExecution()
-            .refreshGridParameter(ORDER_GRID_PARAM)
-            .showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS, result.getMessage())
-    );
+    ResponseActionsBuilder.MessageType messageType;
+    if (result.getType() == Result.Type.ERROR) {
+      messageType = ResponseActionsBuilder.MessageType.ERROR;
+    } else {
+      messageType = ResponseActionsBuilder.MessageType.SUCCESS;
+    }
 
     return result;
+  }
+
+  /**
+   * Checks if the BusinessPartner associated with an order specified in the given parameters has an invoice address.
+   *
+   * @param parameters
+   *     A JSONObject containing order details, including an order ID.
+   * @return true if the BusinessPartner associated with the order has an invoice address; false otherwise.
+   * @throws JSONException
+   *     If there is an error parsing the JSON data.
+   */
+  private boolean checkBusinessPartnerInvoiceAddress(JSONObject parameters) throws JSONException {
+    String orderId = parameters.getJSONObject(ORDER_GRID_PARAM).getJSONArray("_selection").getJSONObject(0).getString(
+        "id");
+    Order order = OBDal.getInstance().get(Order.class, orderId);
+    if (order == null) {
+      throw new OBException(OBMessageUtils.messageBD("OrderNotFound"));
+    }
+    return hasInvoiceAddress(order.getBusinessPartner());
+  }
+
+  /**
+   * Checks if the specified BusinessPartner has an invoice address.
+   *
+   * @param businessPartner
+   *     The BusinessPartner to check.
+   * @return true if the business partner has an invoice address; false otherwise.
+   */
+  private boolean hasInvoiceAddress(BusinessPartner businessPartner) {
+    return businessPartner.getBusinessPartnerLocationList().stream().anyMatch(Location::isInvoiceToAddress);
   }
 
   private void initSelection(List<String> selection) {
