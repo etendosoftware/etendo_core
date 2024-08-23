@@ -124,6 +124,13 @@ public class CreateFromOrder extends Action {
       messageType = ResponseActionsBuilder.MessageType.SUCCESS;
     }
 
+    result.setResponseActionsBuilder(
+        getResponseBuilder()
+            .retryExecution()
+            .refreshGridParameter(ORDER_GRID_PARAM)
+            .showMsgInProcessView(messageType, result.getMessage())
+    );
+
     return result;
   }
 

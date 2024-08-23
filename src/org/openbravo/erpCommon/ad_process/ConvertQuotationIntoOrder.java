@@ -80,7 +80,7 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
         bundle.setResult(msg);
       } else {
         OBError msg = OBErrorBuilder.buildMessage(null, "warning",
-            "@SalesOrderDocumentno@ " + salesOrder.getDocumentNo() + " @beenCreated@" + ", " + "@NoInvoiceAddressForOrders@");
+            "@SalesOrderDocumentno@ " + salesOrder.getDocumentNo() + " @beenCreated@" + ", " + "@OrderCreatedNoInvoiceAddress@");
         bundle.setResult(msg);
       }
       bundle.getParams().put("SalesOrderId", salesOrder.getId());
