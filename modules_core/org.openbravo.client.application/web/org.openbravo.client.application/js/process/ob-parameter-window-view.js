@@ -102,35 +102,41 @@ isc.OBParameterWindowView.addProperties({
       i;
 
     function actionClick() {
+      var _button = this;
       view.setAllButtonEnabled(false);
       view.messageBar.hide();
       if (view.theForm) {
         view.theForm.errorMessage = '';
       }
-      if (view.validate()) {
-        view.doProcess(this._buttonValue);
-      } else {
-        // If the messageBar is visible, it means that it has been set due to a custom validation inside view.validate()
-        // so we don't want to overwrite it with the generic OBUIAPP_ErrorInFields message
-        if (!view.messageBar.isVisible()) {
-          if (view.theForm.errorMessage) {
-            view.messageBar.setMessage(
-              isc.OBMessageBar.TYPE_ERROR,
-              null,
-              OB.I18N.getLabel('OBUIAPP_FillMandatoryFields') +
-                ' ' +
-                view.theForm.errorMessage
-            );
-          } else {
-            view.messageBar.setMessage(
-              isc.OBMessageBar.TYPE_ERROR,
-              null,
-              OB.I18N.getLabel('OBUIAPP_ErrorInFields')
-            );
-          }
-        }
+      var isValid = view.validate();
+      if (!isValid) {
         view.setAllButtonEnabled(view.allRequiredParametersSet());
       }
+      setTimeout(function() {
+        if(isValid && _button.disabled !== true) {
+          view.doProcess(_button._buttonValue);
+        } else {
+          // If the messageBar is visible, it means that it has been set due to a custom validation inside view.validate()
+          // so we don't want to overwrite it with the generic OBUIAPP_ErrorInFields message
+          if (!view.messageBar.isVisible()) {
+            if (view.theForm.errorMessage) {
+              view.messageBar.setMessage(
+                isc.OBMessageBar.TYPE_ERROR,
+                null,
+                OB.I18N.getLabel('OBUIAPP_FillMandatoryFields') +
+                  ' ' +
+                  view.theForm.errorMessage
+              );
+            } else {
+              view.messageBar.setMessage(
+                isc.OBMessageBar.TYPE_ERROR,
+                null,
+                OB.I18N.getLabel('OBUIAPP_ErrorInFields')
+              );
+            }
+          }
+        }
+      }, 300);
     }
 
     if (this.popup) {
