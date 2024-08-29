@@ -50,6 +50,7 @@ import org.openbravo.test.conversionratedoc.ConversionRateDocUniqueTestSuite;
 import org.openbravo.test.copyLinesFromOrders.CopyLinesFromOrdersTest;
 import org.openbravo.test.costing.TestCosting;
 import org.openbravo.test.createlinesfrom.CreateLinesFromTest;
+import org.openbravo.test.createlinesfrom.data.CreateLinesFromTestData;
 import org.openbravo.test.dal.AdminContextTest;
 import org.openbravo.test.dal.ComputedColumnsTest;
 import org.openbravo.test.dal.DalComplexQueryRequisitionTest;
@@ -369,7 +370,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     PostedNoDocConfigTest.class,
 
     // Reverse Payment Test
-    ReversePaymentTest.class
+    ReversePaymentTest.class,
+
+    // Create invoice from order Test
+    CreateLinesFromTestData.class
 
 })
 public class StandaloneTestSuite {
