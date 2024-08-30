@@ -53,9 +53,10 @@ public class CreateInvoiceFromOrderTest extends WeldBaseTest {
     super.setUp();
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
         TestConstants.Orgs.ESP_NORTE);
-    VariablesSecureApp vsa = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
-        OBContext.getOBContext().getCurrentClient().getId(), OBContext.getOBContext().getCurrentOrganization().getId(),
-        OBContext.getOBContext().getRole().getId());
+    OBContext currentContext = OBContext.getOBContext();
+    VariablesSecureApp vsa = new VariablesSecureApp(currentContext.getUser().getId(),
+        currentContext.getCurrentClient().getId(), currentContext.getCurrentOrganization().getId(),
+        currentContext.getRole().getId());
     RequestContext.get().setVariableSecureApp(vsa);
   }
 
@@ -175,9 +176,8 @@ public class CreateInvoiceFromOrderTest extends WeldBaseTest {
   private OrderLine createTestOrderLine(Order quotation) {
     ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class,
         CreateInvoiceFromOrderTestUtils.PRODUCT_PRICE);
-    return createOrderLine(quotation, productPrice.getProduct(), Long.valueOf("10"), new Date(), new Date(),
-        new BigDecimal(10), CreateInvoiceFromOrderTestUtils.TAX_ID, productPrice.getStandardPrice(),
-        productPrice.getListPrice());
+    return createOrderLine(quotation, productPrice, Long.valueOf("10"), new Date(), new Date(), new BigDecimal(10),
+        CreateInvoiceFromOrderTestUtils.TAX_ID);
   }
 
 }

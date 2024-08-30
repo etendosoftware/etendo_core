@@ -25,6 +25,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
+import org.openbravo.model.pricing.pricelist.ProductPrice;
 
 public class CreateInvoiceFromOrderTestUtils {
 
@@ -36,6 +37,10 @@ public class CreateInvoiceFromOrderTestUtils {
   public static final String WAREHOUSE_ID = "B2D40D8A5D644DD89E329DC297309055"; // Warehouse: España Región Norte
   public static final String PAYMENT_METHOD_ID = "1ECC7ADB9EA2442FA4E4DA566AFD806D"; // Payment Method: Cash
   public static final String PRICELIST = "AEE66281A08F42B6BC509B8A80A33C29"; // Price List: Tarifa de ventas
+
+  private CreateInvoiceFromOrderTestUtils() {
+
+  }
 
   /**
    * Creates an order with the specified attributes.
@@ -100,12 +105,12 @@ public class CreateInvoiceFromOrderTestUtils {
   }
 
   /**
-   * Creates an order line for a given order with specified details.
+   * Creates an order line for a given order with specified details from the provided product price.
    *
    * @param order
    *     The order to which the line will be added.
-   * @param product
-   *     The product for the order line.
+   * @param productPrice
+   *     The product price containing product, standard price, and list price details.
    * @param lineNo
    *     The line number for the order line.
    * @param orderDate
@@ -116,16 +121,16 @@ public class CreateInvoiceFromOrderTestUtils {
    *     The quantity ordered.
    * @param taxId
    *     The ID of the tax rate to apply.
-   * @param unitPrice
-   *     The unit price of the product.
-   * @param listPrice
-   *     The list price of the product.
    * @return The created order line.
    */
-  static OrderLine createOrderLine(Order order, Product product, Long lineNo, Date orderDate,
-      Date scheduledDeliveryDate, BigDecimal orderedQty, String taxId, BigDecimal unitPrice, BigDecimal listPrice) {
+  static OrderLine createOrderLine(Order order, ProductPrice productPrice, Long lineNo, Date orderDate,
+      Date scheduledDeliveryDate, BigDecimal orderedQty, String taxId) {
     OrderLine line = OBProvider.getInstance().get(OrderLine.class);
     TaxRate tax = OBDal.getInstance().get(TaxRate.class, taxId);
+    Product product = productPrice.getProduct();
+    BigDecimal unitPrice = productPrice.getStandardPrice();
+    BigDecimal listPrice = productPrice.getListPrice();
+
     line.setClient(order.getClient());
     line.setOrganization(order.getOrganization());
     line.setSalesOrder(order);
