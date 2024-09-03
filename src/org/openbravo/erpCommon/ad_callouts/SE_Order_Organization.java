@@ -58,10 +58,17 @@ public class SE_Order_Organization extends SimpleCallout {
         FieldProvider[] td = null;
 
         final String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
+        final String strBPartnerId = info.getStringParameter("inpcBpartnerId",
+                IsIDFilter.instance);
+        final String strBPartnerLocationId = info.getStringParameter(
+                "inpcBpartnerLocationId", IsIDFilter.instance);
+
+        info.addResult("inpiscashvat",
+                CashVATUtil.isCashVAT(strinpissotrx, strOrgId, strBPartnerId,
+                        strBPartnerLocationId));
 
         OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
         orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId)));
-        orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ACTIVE, true));
         orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
 
         List<String> warehouseIds = new ArrayList<>();
@@ -82,7 +89,6 @@ public class SE_Order_Organization extends SimpleCallout {
 
             if (warehouseIds.isEmpty()) {
                 info.addResult(WAREHOUSEID, "");
-                return;
             }
 
             if (td != null && td.length > 0) {
@@ -117,7 +123,5 @@ public class SE_Order_Organization extends SimpleCallout {
                 }
             }
         }
-
     }
-
 }
