@@ -8,12 +8,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.application.process.ResponseActionsBuilder;
-import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_forms.GenerateInvoicesHook;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -36,6 +35,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CreateFromOrder extends Action {
+  public static final String MISSING_ATTRIBUTE = "MissingAttribute";
   Logger log = LogManager.getLogger();
 
   private static final String ORDER_GRID_PARAM = "orderGrid";
@@ -135,22 +135,61 @@ public class CreateFromOrder extends Action {
   }
 
   /**
-   * Checks if the BusinessPartner associated with an order specified in the given parameters has an invoice address.
+   * Checks if the BusinessPartner associated with the order specified in the given parameters has an invoice address.
    *
    * @param parameters
-   *     A JSONObject containing order details, including an order ID.
-   * @return true if the BusinessPartner associated with the order has an invoice address; false otherwise.
+   *     A JSONObject containing the order details, which must include the order ID under a specific key.
+   * @return true if the BusinessPartner associated with the order has a valid invoice address; false if no such address is found.
    * @throws JSONException
    *     If there is an error parsing the JSON data.
+   * @throws OBException
+   *     If the order cannot be found using the provided order ID.
    */
   private boolean checkBusinessPartnerInvoiceAddress(JSONObject parameters) throws JSONException {
-    String orderId = parameters.getJSONObject(ORDER_GRID_PARAM).getJSONArray("_selection").getJSONObject(0).getString(
-        "id");
+    String orderId = getOrderIdFromParameters(parameters);
     Order order = OBDal.getInstance().get(Order.class, orderId);
     if (order == null) {
       throw new OBException(OBMessageUtils.messageBD("OrderNotFound"));
     }
     return hasInvoiceAddress(order.getBusinessPartner());
+  }
+
+  /**
+   * Safely retrieves the order ID from the provided JSON parameters.
+   * <p>
+   * This method checks for the presence of the necessary attributes within the JSON structure,
+   * ensuring that the order ID is retrieved from the first selected item.
+   * If any required fields are missing or null, an OBException is thrown with a descriptive message.
+   *
+   * @param parameters
+   *     The JSON object containing the parameters, which must include the order grid information.
+   * @return The order ID as a string from the first selection.
+   * @throws JSONException
+   *     If any JSON processing errors occur.
+   * @throws OBException
+   *     If a required attribute is missing, null, or the selection array is empty.
+   */
+  private String getOrderIdFromParameters(JSONObject parameters) throws JSONException {
+    if (parameters == null || !parameters.has(ORDER_GRID_PARAM)) {
+      throw new OBException(OBMessageUtils.getI18NMessage(MISSING_ATTRIBUTE, new String[]{ ORDER_GRID_PARAM }));
+    }
+
+    JSONObject orderGrid = parameters.getJSONObject(ORDER_GRID_PARAM);
+    if (orderGrid == null || !orderGrid.has("_selection")) {
+      throw new OBException(OBMessageUtils.getI18NMessage(MISSING_ATTRIBUTE, new String[]{ "_selection" }));
+    }
+
+    JSONArray selectionArray = orderGrid.getJSONArray("_selection");
+    if (selectionArray == null || selectionArray.length() == 0) {
+      throw new OBException(OBMessageUtils.getI18NMessage(MISSING_ATTRIBUTE, new String[]{ "_selection" }));
+    }
+
+    JSONObject firstSelection = selectionArray.getJSONObject(0);
+    if (firstSelection == null || !firstSelection.has("id")) {
+      throw new OBException(OBMessageUtils.getI18NMessage(MISSING_ATTRIBUTE, new String[]{ "id" }));
+    }
+
+    return firstSelection.getString("id");
   }
 
   /**
