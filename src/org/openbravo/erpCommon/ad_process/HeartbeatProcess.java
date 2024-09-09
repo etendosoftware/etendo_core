@@ -91,6 +91,7 @@ public class HeartbeatProcess implements Process {
   private ConnectionProvider connection;
   private ProcessLogger logger;
   private Channel channel;
+  private String logHeartbeatID;
 
   @Override
   public void execute(ProcessBundle bundle) throws Exception {
@@ -196,9 +197,9 @@ public class HeartbeatProcess implements Process {
    */
   private void processHeartbeat(String beatType) throws ServletException, IOException, JSONException {
     SystemInfo.load(connection);
-    String jsonInputString = setInfo().toString();
-    String response = sendInfo(jsonInputString);
     logSystemInfo(beatType);
+    String jsonInputString = setInfo(logHeartbeatID).toString();
+    String response = sendInfo(jsonInputString);
     updateHeartbeatStatus(beatType);
     if (!(StringUtils.equals(DEFERRING_BEAT, beatType) || StringUtils.equals(DECLINING_BEAT, beatType))) {
       parseResponse(response);
@@ -213,7 +214,7 @@ public class HeartbeatProcess implements Process {
    *     The type of heartbeat that was processed.
    */
   private void finalizeProcess(String beatType) {
-    if (StringUtils.equals(SCHEDULED_BEAT, beatType)) {
+    if (StringUtils.equals(SCHEDULED_BEAT, beatType) || Channel.DIRECT == channel) {
       try {
         OBContext.setAdminMode();
         OBDal.getInstance().commitAndClose();
@@ -349,6 +350,7 @@ public class HeartbeatProcess implements Process {
             parseLongSafely(systemInfo, SystemInfo.Item.REJECTED_LOGINS_DUE_CONC_USERS));
       }
       OBDal.getInstance().save(hbLog);
+      logHeartbeatID = hbLog.getId();
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -626,7 +628,7 @@ public class HeartbeatProcess implements Process {
    * @throws JSONException
    *     if there is an error creating the JSON objects.
    */
-  private static JSONArray setInfo() throws JSONException {
+  private static JSONArray setInfo(String logHeartbeatID) throws JSONException {
     JSONArray heartbeatArray = new JSONArray();
     JSONObject heartbeatObj = new JSONObject();
     Properties systemInfo = SystemInfo.getSystemInfo();
@@ -663,6 +665,7 @@ public class HeartbeatProcess implements Process {
       heartbeatObj.put("totalLoginsLastMonth",
           systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MONTH.getLabel()));
       heartbeatObj.put("status", ActivationKey.getInstance().getSubscriptionStatus().getStatusCode());
+      heartbeatObj.put("hbLogId", logHeartbeatID);
       heartbeatArray.put(heartbeatObj);
     } catch (Exception e) {
       log.error(e.getMessage());
