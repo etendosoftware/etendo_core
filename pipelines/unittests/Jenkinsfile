@@ -23,8 +23,8 @@ pipeline {
 
     URL_REPO            = 'https://github.com/etendosoftware/etendo_core'
     URL_REPO_GIT        = 'git@github.com:etendosoftware/etendo_core.git'
-    COMMIT_AUTHOR_NAME  = sh(returnStdout: true, script: "git log -1 --pretty=format:'%an'").trim()
-    COMMIT_AUTHOR_EMAIL = sh(returnStdout: true, script: "git log -1 --pretty=format:'%ae'").trim()
+
+    REPO_NAME           = 'etendo_core'
 
     SUCCESS             = "SUCCESS"
     FAILED              = "FAILED"
@@ -34,6 +34,12 @@ pipeline {
     JAVA_HOME           = "/usr/lib/jvm/java-11-openjdk-amd64"
     TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.86/bin/apache-tomcat-9.0.86.tar.gz"
     POSTGRES_VERSION    = "14"
+
+    CONTEXT_BUILD       = "Unit Tests with Postgres Database"
+
+    COMMIT_INPROGRESS_STATUS = "pending"
+    COMMIT_SUCCESS_STATUS    = "success"
+    COMMIT_FAILED_STATUS     = "failure"
   }
 
   agent {
@@ -120,7 +126,7 @@ spec:
           script {
             try {
               sh 'printenv'
-              sh './pipelines/unittests/build-update.sh etendo_core pending "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+              sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
 
               echo "---------------- Stack Configuration ----------------"
               def rootDir = pwd()
@@ -139,10 +145,11 @@ spec:
               echo "__________________________________________________"
 
               withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
-                sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone --branch $BRANCH_NAME $URL_REPO_GIT"
+                sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${URL_REPO_GIT} ${REPO_NAME}"
               }
-              dir('etendo_core') {
+              dir(REPO_NAME) {
                 echo "---------------- Getting Commit Information ----------------"
+                sh "git checkout ${GIT_COMMIT}"
                 def infoCommit = load "${rootDir}/pipelines/unittests/utils/infoCommit.groovy"
                 env.COMMIT_INFO = infoCommit.generateCommitInfo(env.URL_REPO)
 
@@ -185,14 +192,6 @@ spec:
           }
         }
       }
-      post {
-          success {
-            sh './pipelines/unittests/build-update.sh etendo_core pending "Build successful" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
-          }
-          failure {
-            sh './pipelines/unittests/build-update.sh etendo_core failure "Build failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
-          }
-      }
     }
 //___________________________________________________________________________________________
 // ------------------------------ WEB SERVICE TEST ------------------------------------------
@@ -203,10 +202,10 @@ spec:
         }
       }
       steps {
-        sh './pipelines/unittests/build-update.sh etendo_core pending "Run test suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
         container('compiler') {
           script {
-            dir('etendo_core') {
+            dir(REPO_NAME) {
               try {
                 sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info'
                 publishHTML([
@@ -252,7 +251,7 @@ spec:
       steps {
         container('compiler') {
           script {
-            dir('etendo_core') {
+            dir(REPO_NAME) {
               try {
                 sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
                 publishHTML([
@@ -296,7 +295,7 @@ spec:
       steps {
         container('compiler') {
           script {
-            dir('etendo_core') {
+            dir(REPO_NAME) {
               try {
                 sh './gradlew test --tests "com.etendoerp.*" --info'
                 publishHTML([
@@ -341,10 +340,10 @@ spec:
         }
       }
       steps {
-        sh './pipelines/unittests/build-update.sh etendo_core pending "Deploying snapshot" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Deploying Snapshot" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
         container('compiler') {
           script {
-            dir('etendo_core') {
+            dir(REPO_NAME) {
               withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
                 withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                     sh """
@@ -361,29 +360,14 @@ spec:
           }
         }
       }
-      post {
-        success {
-          sh './pipelines/unittests/build-update.sh etendo_core pending "Snapshot deployed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
-        }
-        failure {
-          sh './pipelines/unittests/build-update.sh etendo_core pending "Snapshot deploy failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
-        }
-      }
     }
   }
   post {
-    always {
-      script {
-        if (env.STATUSBUILD == "1") {
-          if (env.STATUSTEST == "1") {
-            sh './pipelines/unittests/build-update.sh etendo_core success "Successful Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+    success {
+        script {
+            sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_SUCCESS_STATUS "Successful Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
             echo "Successful Test"
-          } else if (env.STATUSTEST == "0") {
-            sh './pipelines/unittests/build-update.sh etendo_core failure "Failed Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
-            echo "Failed Test"
-          }
         }
-      }
     }
     fixed {
       mail to: EMAIL_ADDRESS,
@@ -417,7 +401,8 @@ spec:
     }
     unstable {
       script {
-        sh './pipelines/unittests/build-update.sh etendo_core failure "Failed Tests" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL'
+        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Failed Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+        echo "Failed Test"
       }
       mail to: EMAIL_ADDRESS,
       subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
@@ -449,6 +434,9 @@ spec:
       """
     }
     failure {
+      script {
+        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Build Failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+      }
       mail to: EMAIL_ADDRESS,
       subject: "⛔ ERROR - ${currentBuild.fullDisplayName}",
       mimeType: "text/html",
