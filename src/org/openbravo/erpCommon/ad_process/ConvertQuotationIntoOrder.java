@@ -142,10 +142,12 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
       throw new OBException(message);
     }
 
-    Location invoiceAdress = getInvoiceAddressForBusinessPartner(quotation.getBusinessPartner());
+    if (newSalesOrder.getInvoiceAddress() == null) {
+      Location invoiceAdress = getInvoiceAddressForBusinessPartner(quotation.getBusinessPartner());
+      newSalesOrder.setInvoiceAddress(invoiceAdress);
+    }
 
     // Set values of the Sales Order Header
-    newSalesOrder.setInvoiceAddress(invoiceAdress);
     newSalesOrder.setDocumentType(docType);
     newSalesOrder.setTransactionDocument(docType);
     newSalesOrder.setProcessed(false);

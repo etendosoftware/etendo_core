@@ -2,8 +2,8 @@ package org.openbravo.test.createInvoiceFromOrder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.openbravo.test.createInvoiceFromOrder.CreateInvoiceFromOrderTestUtils.createOrder;
-import static org.openbravo.test.createInvoiceFromOrder.CreateInvoiceFromOrderTestUtils.createOrderLine;
+import static org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTestUtils.createOrder;
+import static org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTestUtils.createOrderLine;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -34,7 +34,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.test.base.Issue;
 import org.openbravo.test.base.TestConstants;
 
-public class CreateInvoiceFromOrderTest extends WeldBaseTest {
+public class CreateOrderFromQuotationTest extends WeldBaseTest {
 
   @Override
   @Before
@@ -113,11 +113,11 @@ public class CreateInvoiceFromOrderTest extends WeldBaseTest {
    * @return The created quotation.
    */
   private Order createTestQuotation() {
-    PriceList priceList = OBDal.getInstance().get(PriceList.class, CreateInvoiceFromOrderTestUtils.PRICELIST);
-    PaymentTerm paymtTerm = OBDal.getInstance().get(PaymentTerm.class, CreateInvoiceFromOrderTestUtils.PAYMENT_TERM);
-    Warehouse ware = OBDal.getInstance().get(Warehouse.class, CreateInvoiceFromOrderTestUtils.WAREHOUSE_ID);
+    PriceList priceList = OBDal.getInstance().get(PriceList.class, CreateOrderFromQuotationTestUtils.PRICELIST);
+    PaymentTerm paymtTerm = OBDal.getInstance().get(PaymentTerm.class, CreateOrderFromQuotationTestUtils.PAYMENT_TERM);
+    Warehouse ware = OBDal.getInstance().get(Warehouse.class, CreateOrderFromQuotationTestUtils.WAREHOUSE_ID);
     Currency eur = OBDal.getInstance().get(Currency.class, EURO_ID);
-    DocumentType docType = OBDal.getInstance().get(DocumentType.class, CreateInvoiceFromOrderTestUtils.DOCTYPE_ID);
+    DocumentType docType = OBDal.getInstance().get(DocumentType.class, CreateOrderFromQuotationTestUtils.DOCTYPE_ID);
 
     return createOrder(priceList, paymtTerm, ware, eur, docType, "Test Document - 0001", "DR", "CO", new Date());
   }
@@ -131,9 +131,9 @@ public class CreateInvoiceFromOrderTest extends WeldBaseTest {
    */
   private OrderLine createTestOrderLine(Order quotation) {
     ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class,
-        CreateInvoiceFromOrderTestUtils.PRODUCT_PRICE);
+        CreateOrderFromQuotationTestUtils.PRODUCT_PRICE);
     return createOrderLine(quotation, productPrice, Long.valueOf("10"), new Date(), new Date(), new BigDecimal(10),
-        CreateInvoiceFromOrderTestUtils.TAX_ID);
+        CreateOrderFromQuotationTestUtils.TAX_ID);
   }
 
 }

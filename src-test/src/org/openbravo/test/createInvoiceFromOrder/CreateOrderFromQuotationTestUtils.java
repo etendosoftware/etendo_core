@@ -27,7 +27,7 @@ import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
 
-public class CreateInvoiceFromOrderTestUtils {
+public class CreateOrderFromQuotationTestUtils {
 
   public static final String PAYMENT_TERM = "66BA1164A7394344BB9CD1A6ECEED05D"; // Payment Term: 30 days
   public static final String PRODUCT_PRICE = "4028E6C72959682B01295B03CEE40245"; // Product Price
@@ -38,7 +38,7 @@ public class CreateInvoiceFromOrderTestUtils {
   public static final String PAYMENT_METHOD_ID = "1ECC7ADB9EA2442FA4E4DA566AFD806D"; // Payment Method: Cash
   public static final String PRICELIST = "AEE66281A08F42B6BC509B8A80A33C29"; // Price List: Tarifa de ventas
 
-  private CreateInvoiceFromOrderTestUtils() {
+  private CreateOrderFromQuotationTestUtils() {
 
   }
 
