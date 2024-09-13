@@ -23,7 +23,7 @@ import javax.servlet.ServletException;
 import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.client.kernel.RequestContext;
@@ -33,43 +33,60 @@ import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.ui.Field;
-import org.openbravo.model.ad.ui.Tab;
+import org.openbravo.model.common.enterprise.OrgWarehouse;
+import org.openbravo.model.common.enterprise.Organization;
+import org.openbravo.model.common.enterprise.Warehouse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SE_InOut_Organization extends SimpleCallout {
+    private static final String WAREHOUSEID = "inpmWarehouseId";
 
     @Override
     protected void execute(CalloutInfo info) throws ServletException {
         String strIsSOTrx = Utility.getContext(this, info.vars, "isSOTrx", info.getWindowId());
-        String strMWarehouseId = info.vars.getStringParameter("inpmWarehouseId");
+        String strMWarehouseId = info.vars.getStringParameter(WAREHOUSEID);
+        String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
         String strInOut = info.getStringParameter("M_InOut_ID", IsIDFilter.instance);
         boolean updateWarehouse = true;
         FieldProvider[] td = null;
-        try {
-            ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID",
-                    "197", strIsSOTrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "",
-                    Utility.getReferenceableOrg(info.vars, info.vars.getStringParameter("inpadOrgId")),
-                    Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
-            Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
-            td = comboTableData.select(false);
-            comboTableData = null;
-        } catch (Exception ex) {
-            throw new ServletException(ex);
+
+        /* Warehouse */
+        OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
+        orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId)));
+        orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
+
+        List<String> warehouseIds = new ArrayList<>();
+        for (Object obj : orgWarehouseCriteria.list()) {
+            Warehouse warehouse = (Warehouse) obj;
+            warehouseIds.add(warehouse.getId());
         }
 
-        if (td != null && td.length > 0) {
-            for (int i = 0; i < td.length; i++) {
-                if (td[i].getField("id").equals(strMWarehouseId)) {
-                    updateWarehouse = false;
-                    break;
-                }
-            }
-            if (updateWarehouse) {
-                info.addResult("inpmWarehouseId", td[0].getField("id"));
-            }
+        if (warehouseIds.isEmpty()) {
+            info.addResult(WAREHOUSEID, "");
         } else {
-            info.addResult("inpmWarehouseId", "");
+            try {
+                ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID", "197", strIsSOTrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, strOrgId), Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
+                Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
+                td = comboTableData.select(false);
+
+                if (td != null && td.length > 0) {
+                    for (int i = 0; i < td.length; i++) {
+                        if (td[i].getField("id").equals(strMWarehouseId) && warehouseIds.contains(strMWarehouseId)) {
+                            updateWarehouse = false;
+                            break;
+                        }
+                    }
+                    if (updateWarehouse) {
+                        info.addResult(WAREHOUSEID, td[0].getField("id"));
+                    }
+                } else {
+                    info.addResult(WAREHOUSEID, "");
+                }
+            } catch (Exception ex) {
+                throw new ServletException(ex);
+            }
         }
 
         // Check Document No. again.

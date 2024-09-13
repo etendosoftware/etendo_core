@@ -19,11 +19,16 @@
 package org.openbravo.erpCommon.ad_callouts;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
+import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.businessUtility.BpartnerMiscData;
@@ -31,6 +36,9 @@ import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.enterprise.OrgWarehouse;
+import org.openbravo.model.common.enterprise.Organization;
+import org.openbravo.model.common.enterprise.Warehouse;
 
 public class SE_Order_BPartner extends SimpleCallout {
 
@@ -52,6 +60,7 @@ public class SE_Order_BPartner extends SimpleCallout {
     String strDeliveryRule = "";
     String strDocTypeTarget = info.vars.getStringParameter("inpcDoctypetargetId");
     String docSubTypeSO = "";
+    String strMWarehouseId = info.vars.getStringParameter("inpmWarehouseId");
 
     BpartnerMiscData[] data = BpartnerMiscData.select(this, strBPartner);
     if (data != null && data.length > 0) {
@@ -121,43 +130,51 @@ public class SE_Order_BPartner extends SimpleCallout {
     }
 
     // Warehouses
+    OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
+    orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId)));
+    orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
+
+    List<String> warehouseIds = new ArrayList<>();
+    for (Object obj : orgWarehouseCriteria.list()) {
+      Warehouse warehouse = (Warehouse) obj;
+      warehouseIds.add(warehouse.getId());
+    }
 
     FieldProvider[] td = null;
-    try {
-      ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID",
-          "197", strIsSOTrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "",
-          Utility.getReferenceableOrg(info.vars, info.vars.getStringParameter("inpadOrgId")),
-          Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
-      Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
-      td = comboTableData.select(false);
-      comboTableData = null;
-    } catch (Exception ex) {
-      throw new ServletException(ex);
-    }
-
-    if (td != null && td.length > 0) {
-      info.addSelect("inpmWarehouseId");
-      String strMwarehouse = strIsSOTrx.equals("N")
-          ? SEOrderBPartnerData.mWarehouse(this, strBPartner)
-          : SEOrderBPartnerData.mWarehouseOnhand(this, strOrgId);
-
-      if (strMwarehouse.equals("")) {
-        strMwarehouse = info.vars.getWarehouse();
+    if (warehouseIds.isEmpty()) {
+      info.addResult(strMWarehouseId, "");
+    } else {
+      try {
+        ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID", "197", strIsSOTrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, info.vars.getStringParameter("inpadOrgId")), Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
+        Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
+        td = comboTableData.select(false);
+        comboTableData = null;
+      } catch (Exception ex) {
+        throw new ServletException(ex);
       }
 
-      for (int i = 0; i < td.length; i++) {
-        // If user's default warehouse [Login Warehouse] is present in the warehouse list, set it as
-        // selected
-        if (td[i].getField("id").equals(info.vars.getWarehouse())) {
+      if (td != null && td.length > 0) {
+        info.addSelect("inpmWarehouseId");
+        String strMwarehouse = strIsSOTrx.equals("N") ? SEOrderBPartnerData.mWarehouse(this, strBPartner) : SEOrderBPartnerData.mWarehouseOnhand(this, strOrgId);
+
+        if (strMwarehouse.equals("")) {
           strMwarehouse = info.vars.getWarehouse();
         }
-        info.addSelectResult(td[i].getField("id"), td[i].getField("name"),
-            td[i].getField("id").equalsIgnoreCase(strMwarehouse));
+
+        for (int i = 0; i < td.length; i++) {
+          // If user's default warehouse [Login Warehouse] is present in the warehouse list, set it as
+          // selected
+          if (td[i].getField("id").equals(info.vars.getWarehouse()) && warehouseIds.contains(strMWarehouseId)) {
+            strMwarehouse = info.vars.getWarehouse();
+          }
+          info.addSelectResult(td[i].getField("id"), td[i].getField("name"), td[i].getField("id").equalsIgnoreCase(strMwarehouse));
+        }
+        info.endSelect();
+      } else {
+        info.addResult("inpmWarehouseId", "");
       }
-      info.endSelect();
-    } else {
-      info.addResult("inpmWarehouseId", "");
     }
+
     // Sales Representative
 
     FieldProvider[] tld = null;

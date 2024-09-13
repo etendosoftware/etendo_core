@@ -79,7 +79,7 @@ public class SE_Order_Organization extends SimpleCallout {
 
         if (warehouseIds.isEmpty()) {
             info.addResult(WAREHOUSEID, "");
-        }else {
+        } else {
             try {
                 ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE",
                         "M_Warehouse_ID", "197",
