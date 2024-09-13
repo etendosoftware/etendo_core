@@ -58,7 +58,8 @@ public class SE_InOut_Organization extends SimpleCallout {
         orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
 
         List<String> warehouseIds = new ArrayList<>();
-        for (Object obj : orgWarehouseCriteria.list()) {
+        List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();
+        for (Object obj : warehouseList) {
             Warehouse warehouse = (Warehouse) obj;
             warehouseIds.add(warehouse.getId());
         }
@@ -67,7 +68,7 @@ public class SE_InOut_Organization extends SimpleCallout {
             info.addResult(WAREHOUSEID, "");
         } else {
             try {
-                ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID", "197", strIsSOTrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, strOrgId), Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
+                ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID", "197", StringUtils.equals(strIsSOTrx, "Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, strOrgId), Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
                 Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
                 td = comboTableData.select(false);
 

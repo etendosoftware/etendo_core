@@ -41,7 +41,8 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 
 public class SE_Order_BPartner extends SimpleCallout {
-
+  private static final String WAREHOUSEID = "inpmWarehouseId";
+  private static final String USER_CLIENT_PARAM = "#User_Client";
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
 
@@ -60,7 +61,6 @@ public class SE_Order_BPartner extends SimpleCallout {
     String strDeliveryRule = "";
     String strDocTypeTarget = info.vars.getStringParameter("inpcDoctypetargetId");
     String docSubTypeSO = "";
-    String strMWarehouseId = info.vars.getStringParameter("inpmWarehouseId");
 
     BpartnerMiscData[] data = BpartnerMiscData.select(this, strBPartner);
     if (data != null && data.length > 0) {
@@ -135,17 +135,18 @@ public class SE_Order_BPartner extends SimpleCallout {
     orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
 
     List<String> warehouseIds = new ArrayList<>();
-    for (Object obj : orgWarehouseCriteria.list()) {
+    List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();
+    for (Object obj : warehouseList) {
       Warehouse warehouse = (Warehouse) obj;
       warehouseIds.add(warehouse.getId());
     }
 
     FieldProvider[] td = null;
     if (warehouseIds.isEmpty()) {
-      info.addResult(strMWarehouseId, "");
+      info.addResult(WAREHOUSEID, "");
     } else {
       try {
-        ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID", "197", strIsSOTrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, info.vars.getStringParameter("inpadOrgId")), Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
+        ComboTableData comboTableData = new ComboTableData(info.vars, this, "18", "M_Warehouse_ID", "197", StringUtils.equals(strIsSOTrx, "Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, info.vars.getStringParameter("inpadOrgId")), Utility.getContext(this, info.vars, USER_CLIENT_PARAM, info.getWindowId()), 0);
         Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
         td = comboTableData.select(false);
         comboTableData = null;
@@ -154,9 +155,8 @@ public class SE_Order_BPartner extends SimpleCallout {
       }
 
       if (td != null && td.length > 0) {
-        info.addSelect("inpmWarehouseId");
-        String strMwarehouse = strIsSOTrx.equals("N") ? SEOrderBPartnerData.mWarehouse(this, strBPartner) : SEOrderBPartnerData.mWarehouseOnhand(this, strOrgId);
-
+        info.addSelect(WAREHOUSEID);
+        String strMwarehouse = StringUtils.equals(strIsSOTrx, "N") ? SEOrderBPartnerData.mWarehouse(this, strBPartner) : SEOrderBPartnerData.mWarehouseOnhand(this, strOrgId);
         if (strMwarehouse.equals("")) {
           strMwarehouse = info.vars.getWarehouse();
         }
@@ -164,14 +164,14 @@ public class SE_Order_BPartner extends SimpleCallout {
         for (int i = 0; i < td.length; i++) {
           // If user's default warehouse [Login Warehouse] is present in the warehouse list, set it as
           // selected
-          if (td[i].getField("id").equals(info.vars.getWarehouse()) && warehouseIds.contains(strMWarehouseId)) {
+          if (td[i].getField("id").equals(info.vars.getWarehouse()) && warehouseIds.contains(WAREHOUSEID)) {
             strMwarehouse = info.vars.getWarehouse();
           }
           info.addSelectResult(td[i].getField("id"), td[i].getField("name"), td[i].getField("id").equalsIgnoreCase(strMwarehouse));
         }
         info.endSelect();
       } else {
-        info.addResult("inpmWarehouseId", "");
+        info.addResult(WAREHOUSEID, "");
       }
     }
 
@@ -182,7 +182,7 @@ public class SE_Order_BPartner extends SimpleCallout {
       ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE", "",
           "AD_User SalesRep", "",
           Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-          Utility.getContext(this, info.vars, "#User_Client", "SEOrderBPartner"), 0);
+          Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
       Utility.fillSQLParameters(this, info.vars, null, comboTableData, "SEOrderBPartner", "");
       tld = comboTableData.select(false);
       comboTableData = null;
@@ -212,11 +212,11 @@ public class SE_Order_BPartner extends SimpleCallout {
         comboTableData = new ComboTableData(info.vars, this, "LIST", "", "C_Order InvoiceRule",
             "Values for Invoice Rules for POS Sales orders",
             Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-            Utility.getContext(this, info.vars, "#User_Client", "SEOrderBPartner"), 0);
+            Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
       } else {
         comboTableData = new ComboTableData(info.vars, this, "LIST", "", "C_Order InvoiceRule", "",
             Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-            Utility.getContext(this, info.vars, "#User_Client", "SEOrderBPartner"), 0);
+            Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
       }
       Utility.fillSQLParameters(this, info.vars, null, comboTableData, "SEOrderBPartner", "");
       l = comboTableData.select(false);
@@ -280,7 +280,7 @@ public class SE_Order_BPartner extends SimpleCallout {
       ComboTableData comboTableData = new ComboTableData(info.vars, this, "LIST", "",
           "C_Order DeliveryRule", "",
           Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-          Utility.getContext(this, info.vars, "#User_Client", "SEOrderBPartner"), 0);
+          Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
       Utility.fillSQLParameters(this, info.vars, null, comboTableData, "SEOrderBPartner", "");
       l = comboTableData.select(false);
       comboTableData = null;
@@ -314,7 +314,7 @@ public class SE_Order_BPartner extends SimpleCallout {
       ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLEDIR", "AD_User_ID",
           "", "AD_User C_BPartner User/Contacts",
           Utility.getContext(this, info.vars, "#AccessibleOrgTree", info.getWindowId()),
-          Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
+          Utility.getContext(this, info.vars, USER_CLIENT_PARAM, info.getWindowId()), 0);
       Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
       tdv = comboTableData.select(false);
       comboTableData = null;

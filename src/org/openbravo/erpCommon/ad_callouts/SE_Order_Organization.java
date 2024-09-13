@@ -72,7 +72,8 @@ public class SE_Order_Organization extends SimpleCallout {
         orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
 
         List<String> warehouseIds = new ArrayList<>();
-        for (Object obj : orgWarehouseCriteria.list()) {
+        List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();
+        for (Object obj : warehouseList) {
             Warehouse warehouse = (Warehouse) obj;
             warehouseIds.add(warehouse.getId());
         }
@@ -83,7 +84,7 @@ public class SE_Order_Organization extends SimpleCallout {
             try {
                 ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE",
                         "M_Warehouse_ID", "197",
-                        strinpissotrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "",
+                        StringUtils.equals(strinpissotrx, "Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "",
                         Utility.getReferenceableOrg(info.vars, strOrgId),
                         Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()),
                         0);
@@ -93,7 +94,7 @@ public class SE_Order_Organization extends SimpleCallout {
 
                 if (td != null && td.length > 0) {
                     for (int i = 0; i < td.length; i++) {
-                        if (td[i].getField("id").equals(strMWarehouseId) && warehouseIds.contains(strMWarehouseId)) {
+                        if (StringUtils.equals(td[i].getField("id"), strMWarehouseId) && warehouseIds.contains(strMWarehouseId)) {
                             updateWarehouse = false;
                             break;
                         }
