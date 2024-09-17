@@ -24,9 +24,9 @@
 ic.salesOrder.id,
 o.name as adorgname,
 ic.documentType as cdoctypename,
-ic.documentNo,
+ic.documentNo as documentNo,
 bp.name as cbpartnername,
-ic.orderDate,
+ic.orderDate as orderDate,
 case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end as amountlines,
 case 
     when ic.term = 'N' 
@@ -36,7 +36,7 @@ case
     else 
         case when @linesIncludeTaxes@ = 'Y' then ic.notinvoicedlinesgross else ic.notinvoicedlines end
 end as notinvoicedlines,
-ic.term AS TermName,
+ic.term as TermName,
 case 
     when ic.term = 'N' 
         then 0.0 
@@ -55,14 +55,14 @@ case
         then 0.0 
     else ic.pendinglines 
 end as pendinglines,
-ic.orderedQuantity,
-ic.deliveredQuantity,
-((case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end)-(case when @linesIncludeTaxes@ = 'Y' then ic.notinvoicedlinesgross else ic.notinvoicedlines end)) AS linesinvoiced,
+ic.orderedQuantity as orderedQuantity,
+ic.deliveredQuantity as deliveredQuantity,
+((case when @linesIncludeTaxes@ = 'Y' then ic.amountlinesgross else ic.amountlines end)-(case when @linesIncludeTaxes@ = 'Y' then ic.notinvoicedlinesgross else ic.notinvoicedlines end)) as linesinvoiced,
 ic.amountlinesgross as totalgross,
-ic.creationDate,
-ic.createdBy,
-ic.updated,
-ic.updatedBy
+ic.creationDate as creationDate,
+ic.createdBy as createdBy,
+ic.updated as updated,
+ic.updatedBy as updatedBy
 from
 InvoiceCandidateV ic
 join ic.salesOrder ord
