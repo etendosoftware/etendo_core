@@ -107,7 +107,20 @@ public class PrintControllerHookTest extends WeldBaseTest {
 
   public static final String COMMAND_ARCHIVE = "ARCHIVE";
   public static final String COMMAND_PRINT = "PRINT";
+  public static final String TEST_INVOICE_ID = "65C78E1C0CF0464C83CC4D0BE8EB6D94";
   private static final List<String> PARAMS = Arrays.asList(COMMAND_PRINT, COMMAND_ARCHIVE);
+  /**
+   * A rule that facilitates parameterized testing for CDI (Contexts and Dependency Injection)
+   * by providing a set of parameters for each test case. This field is an instance of
+   * {@link ParameterCdiTestRule} initialized with a list of command types, specifically
+   * {@code COMMAND_PRINT} and {@code COMMAND_ARCHIVE}.
+   * <p>
+   * This parameterized rule allows the testing of different command execution paths,
+   * such as printing and archiving, within the context of the test methods.
+   * The associated test methods can utilize the injected parameters to verify
+   * the behavior of the print process and ensure that pre- and post-processing hooks
+   * are executed correctly.
+   */
   @Rule
   public ParameterCdiTestRule<String> parameterCdiTestRule = new ParameterCdiTestRule<>(PARAMS);
   MockedStatic<WeldUtils> weldUtilsMock;
@@ -186,7 +199,7 @@ public class PrintControllerHookTest extends WeldBaseTest {
     servletContextMock.setAttribute("openbravoConfig", configParametersMock);
   }
 
-  private void setupConfigParams(String contextPath) throws Exception {
+  private void setupConfigParams(String contextPath) throws NoSuchFieldException, IllegalAccessException {
     setInaccessibleField(configParametersMock, "strFTPDirectory", contextPath + "/attachments");
     setInaccessibleField(configParametersMock, "strBaseDesignPath", "src-loc");
     setInaccessibleField(configParametersMock, "strDefaultDesignPath", "design");
@@ -225,7 +238,7 @@ public class PrintControllerHookTest extends WeldBaseTest {
     printMethod.setAccessible(true);
     printMethod.invoke(printControllerMock, request, responseMock, vars,
         DocumentType.SALESINVOICE, "PRINTINVOICES",
-        "65C78E1C0CF0464C83CC4D0BE8EB6D94");
+        TEST_INVOICE_ID);
   }
 
   private VariablesSecureApp setVarsForTest(String commandType) throws Exception {
@@ -234,8 +247,8 @@ public class PrintControllerHookTest extends WeldBaseTest {
         TestConstants.Roles.FB_GRP_ADMIN);
     RequestContext.get().setVariableSecureApp(vars);
     HashMap<String, Report> reportsHashMap = new HashMap<>();
-    reportsHashMap.put("65C78E1C0CF0464C83CC4D0BE8EB6D94",
-        new Report(DocumentType.SALESINVOICE, "65C78E1C0CF0464C83CC4D0BE8EB6D94", "en_US",
+    reportsHashMap.put(TEST_INVOICE_ID,
+        new Report(DocumentType.SALESINVOICE, TEST_INVOICE_ID, "en_US",
             "3421180B470A49BC8C072E8287BC9342", false, Report.OutputTypeEnum.ARCHIVE));
     vars.setSessionValue("#AD_ReportDecimalSeparator", ".");
     vars.setSessionValue("#AD_ReportGroupingSeparator", ",");
@@ -248,7 +261,8 @@ public class PrintControllerHookTest extends WeldBaseTest {
     return vars;
   }
 
-  private void setInaccessibleField(Object target, String fieldName, Object value) throws Exception {
+  private void setInaccessibleField(Object target, String fieldName,
+      Object value) throws NoSuchFieldException, IllegalAccessException {
     Field field = getField(target.getClass(), fieldName);
     field.setAccessible(true);
     field.set(target, value);
