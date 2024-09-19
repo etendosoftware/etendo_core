@@ -285,10 +285,10 @@ public class SecureWebServicesUtils {
 		SWSConfig config = SWSConfig.getInstance();
 		Algorithm algorithm;
 
-		if ("RS256".equals(algorithmUsed)) {
+		if (StringUtils.equals("RS256", algorithmUsed)) {
 			final RSAPublicKey publicKey = getRSAPublicKey(config);
 			algorithm = Algorithm.RSA256(publicKey);
-		} else if ("HS256".equals(algorithmUsed)) {
+		} else if (StringUtils.equals("HS256", algorithmUsed)) {
 			algorithm = Algorithm.HMAC256(config.getPrivateKey());
 		} else {
 			throw new IllegalArgumentException(OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm" + algorithmUsed));
@@ -357,8 +357,8 @@ public class SecureWebServicesUtils {
 	 *                   or issues with key generation or token signing.
 	 */
 	public static String generateToken(User user, Role role, Organization org, Warehouse warehouse) throws Exception {
-		OBContext.setAdminMode(true);
 		try {
+			OBContext.setAdminMode(true);
 			SWSConfig config = SWSConfig.getInstance();
 
 			Role selectedRole = null;
@@ -416,7 +416,7 @@ public class SecureWebServicesUtils {
 		// if warehouse is valid, select
 		if (warehouse != null)
 			for (Warehouse wh : warehouseList) {
-				if (wh.getId().equals(warehouse.getId())) {
+				if (StringUtils.equals(wh.getId(), warehouse.getId())) {
 					selectedWarehouse = warehouse;
 					break;
 				}
@@ -456,14 +456,14 @@ public class SecureWebServicesUtils {
 		// if organization is valid, select
 		if (org != null)
 			for (RoleOrganization roleOrg : roleOrgList) {
-				if (roleOrg.getOrganization().getId().equals(org.getId())) {
+				if (StringUtils.equals(roleOrg.getOrganization().getId(), org.getId())) {
 					selectedOrg = org;
 					break;
 				}
 			}
 		// if not valid select default org for the selected role
 		if (selectedOrg == null) {
-			if (defaultRole != null && defaultRole.getId().equals(selectedRole.getId()) && defaultOrg != null) {
+			if (defaultRole != null && StringUtils.equals(defaultRole.getId(), selectedRole.getId()) && defaultOrg != null) {
 				selectedOrg = defaultOrg;
 			} else if (!roleOrgList.isEmpty()) {
 				selectedOrg = roleOrgList.get(0).getOrganization();
@@ -493,7 +493,7 @@ public class SecureWebServicesUtils {
 		Role selectedRole;
 		if (role != null) {
 			selectedRole = userRoleList.stream()
-					.filter(userRole -> userRole.getRole().getId().equals(role.getId()))
+					.filter(userRole -> StringUtils.equals(userRole.getRole().getId(), role.getId()))
 					.findFirst()
 					.map(UserRoles::getRole)
 					.orElseThrow(() -> new Exception("The user has no roles"));
@@ -551,7 +551,7 @@ public class SecureWebServicesUtils {
 				.withIssuer("sws")
 				.withAudience("sws")
 				.withClaim("user", user.getId())
-				.withClaim("client", user.getClient().getId())
+				.withClaim("client", selectedRole.getClient().getId())
 				.withClaim("role", selectedRole.getId())
 				.withClaim("organization", selectedOrg.getId())
 				.withClaim("warehouse", selectedWarehouse.getId())
