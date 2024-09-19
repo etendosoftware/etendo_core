@@ -390,7 +390,7 @@ public class SecureJsonDataService implements JsonDataService {
       // this is the main entity of a 'contains' (used in FK drop down lists), it will create also
       // info for subentity
 
-      if ("true".equals(parameters.get(JsonConstants.SHOW_FK_DROPDOWN_UNFILTERED_PARAMETER))) {
+      if (StringUtils.equals("true", parameters.get(JsonConstants.SHOW_FK_DROPDOWN_UNFILTERED_PARAMETER))) {
         // Do not filter out the rows of the referenced tables if
         // they are not referenced from the referencing tables
         // Showing the records unfiltered improves the performance if the referenced table has just
@@ -435,7 +435,7 @@ public class SecureJsonDataService implements JsonDataService {
         removeWhereParameter(parameters);
       } else {
 
-        final String distinctPropertyPath = parameters.get(JsonConstants.DISTINCT_PARAMETER);
+        final String distinctPropertyPath = StringUtils.lowerCase(parameters.get(JsonConstants.DISTINCT_PARAMETER));
         final Property distinctProperty = DalUtil.getPropertyFromPath(
             ModelProvider.getInstance().getEntity(entityName), distinctPropertyPath);
         final Entity distinctEntity = distinctProperty.getTargetEntity();
