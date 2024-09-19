@@ -7,10 +7,10 @@ isc.SMFSWSGenerateKeyButton.addProperties({
         try {
             let form = this.canvasItem.form;
             let algorithmField = form.getFieldFromFieldName('algorithm');
-            let selectedAlgorithm = algorithmField.getValue();
-
-            if (selectedAlgorithm === 'RS256') {
-                // Generate secret keys for RSA
+            let selectedAlgorithm = algorithmField?.getValue();
+			// Generate RSA keys by default if no algorithm is selected.
+            if (selectedAlgorithm === 'RS256' || !selectedAlgorithm) {
+				// Generate secret keys for RSA
                 const keyPair = await window.crypto.subtle.generateKey(
                     {
                         name: "RSASSA-PKCS1-v1_5",
