@@ -11,7 +11,6 @@ import javax.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.openbravo.base.exception.OBException;
 
 import com.google.common.collect.HashBasedTable;
 
@@ -101,27 +100,31 @@ public class PrintControllerHookManager {
    *     if there is an error processing the JSON parameters
    */
   private static void handleHookError(JSONObject jsonParams, boolean isPreProcess, Exception e,
-      PrintControllerHook hook) throws JSONException {
-    JSONObject resultsObj = jsonParams.optJSONObject(RESULTS);
-    if (resultsObj == null) {
-      resultsObj = new JSONObject();
+      PrintControllerHook hook) throws PrintControllerHookException {
+    try {
+      JSONObject resultsObj = jsonParams.optJSONObject(RESULTS);
+      if (resultsObj == null) {
+        resultsObj = new JSONObject();
+        jsonParams.put(RESULTS, resultsObj);
+      }
+
+      if (jsonParams.optBoolean(CANCELLATION, false)) {
+        throw new PrintControllerHookException(e.getMessage());
+      }
+
+      resultsObj.put(FAILURES, true);
+      HashBasedTable<String, Boolean, String> messageInfo;
+      if (resultsObj.has(MESSAGE)) {
+        messageInfo = (HashBasedTable<String, Boolean, String>) resultsObj.get(MESSAGE);
+      } else {
+        messageInfo = HashBasedTable.create();
+      }
+      messageInfo.put(hook.getClass().getSimpleName(), isPreProcess, e.getMessage());
+      resultsObj.put(MESSAGE, messageInfo);
       jsonParams.put(RESULTS, resultsObj);
+    } catch (JSONException jsonE) {
+      throw new PrintControllerHookException(e.getMessage());
     }
-
-    if (jsonParams.optBoolean(CANCELLATION, false)) {
-      throw new OBException(e.getMessage());
-    }
-
-    resultsObj.put(FAILURES, true);
-    HashBasedTable<String, Boolean, String> messageInfo;
-    if (resultsObj.has(MESSAGE)) {
-      messageInfo = (HashBasedTable<String, Boolean, String>) resultsObj.get(MESSAGE);
-    } else {
-      messageInfo = HashBasedTable.create();
-    }
-    messageInfo.put(hook.getClass().getSimpleName(), isPreProcess, e.getMessage());
-    resultsObj.put(MESSAGE, messageInfo);
-    jsonParams.put(RESULTS, resultsObj);
   }
 
   /**
@@ -135,7 +138,7 @@ public class PrintControllerHookManager {
    * @throws JSONException
    *     if there is an error processing the JSON parameters
    */
-  public void executeHooks(JSONObject jsonParams, String methodName) throws JSONException {
+  public void executeHooks(JSONObject jsonParams, String methodName) throws PrintControllerHookException {
     List<PrintControllerHook> hookList = sortHooksByPriority(hooks);
     for (PrintControllerHook hook : hookList) {
       if (StringUtils.equals(methodName, PREPROCESS)) {
@@ -170,5 +173,11 @@ public class PrintControllerHookManager {
    */
   public String getPostProcess() {
     return POSTPROCESS;
+  }
+
+  public static class PrintControllerHookException extends Exception {
+    public PrintControllerHookException(String errorMessage) {
+      super(errorMessage);
+    }
   }
 }

@@ -81,14 +81,7 @@ import org.openbravo.xmlEngine.XmlEngine;
  *
  * <ul>
  *   <li>{@link #setUp()} - Initializes the test environment and mocks necessary components.</li>
- *   <li>{@link #setupContextAndVars()} - Sets up the Openbravo context and secure variables.</li>
- *   <li>{@link #setupPrintControllerMock(ConnectionProvider, ServletContextMock)} - Configures the print controller mock.</li>
- *   <li>{@link #setupConfigParams(String)} - Sets up configuration parameters for testing.</li>
  *   <li>{@link #testPrintingExecutesHooks()} - Tests that pre and post process methods from all hooks are executed.</li>
- *   <li>{@link #invokePrintMethod(HttpServletRequest, VariablesSecureApp)} - Invokes the print method on the print controller.</li>
- *   <li>{@link #setVarsForTest(String)} - Sets secure variables for the test based on the command type.</li>
- *   <li>{@link #setInaccessibleField(Object, String, Object)} - Sets a private field on the given object.</li>
- *   <li>{@link #getField(Class, String)} - Retrieves a field from the class or its superclasses.</li>
  *   <li>{@link #tearDown()} - Cleans up after each test, closing any mocks.</li>
  * </ul>
  *
