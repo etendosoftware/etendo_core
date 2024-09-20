@@ -43,6 +43,8 @@ import org.openbravo.model.common.enterprise.Warehouse;
 public class SE_Order_BPartner extends SimpleCallout {
   private static final String WAREHOUSEID = "inpmWarehouseId";
   private static final String USER_CLIENT_PARAM = "#User_Client";
+  private static final String SE_ORDER_B_PARTNER = "SEOrderBPartner";
+
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
 
@@ -181,9 +183,9 @@ public class SE_Order_BPartner extends SimpleCallout {
     try {
       ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE", "",
           "AD_User SalesRep", "",
-          Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-          Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
-      Utility.fillSQLParameters(this, info.vars, null, comboTableData, "SEOrderBPartner", "");
+          Utility.getContext(this, info.vars, "#AccessibleOrgTree", SE_ORDER_B_PARTNER),
+          Utility.getContext(this, info.vars, USER_CLIENT_PARAM, SE_ORDER_B_PARTNER), 0);
+      Utility.fillSQLParameters(this, info.vars, null, comboTableData, SE_ORDER_B_PARTNER, "");
       tld = comboTableData.select(false);
       comboTableData = null;
     } catch (Exception ex) {
@@ -211,14 +213,14 @@ public class SE_Order_BPartner extends SimpleCallout {
       if ("WR".equals(docSubTypeSO)) {
         comboTableData = new ComboTableData(info.vars, this, "LIST", "", "C_Order InvoiceRule",
             "Values for Invoice Rules for POS Sales orders",
-            Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-            Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
+            Utility.getContext(this, info.vars, "#AccessibleOrgTree", SE_ORDER_B_PARTNER),
+            Utility.getContext(this, info.vars, USER_CLIENT_PARAM, SE_ORDER_B_PARTNER), 0);
       } else {
         comboTableData = new ComboTableData(info.vars, this, "LIST", "", "C_Order InvoiceRule", "",
-            Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-            Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
+            Utility.getContext(this, info.vars, "#AccessibleOrgTree", SE_ORDER_B_PARTNER),
+            Utility.getContext(this, info.vars, USER_CLIENT_PARAM, SE_ORDER_B_PARTNER), 0);
       }
-      Utility.fillSQLParameters(this, info.vars, null, comboTableData, "SEOrderBPartner", "");
+      Utility.fillSQLParameters(this, info.vars, null, comboTableData, SE_ORDER_B_PARTNER, "");
       l = comboTableData.select(false);
       comboTableData = null;
     } catch (Exception ex) {
@@ -279,9 +281,9 @@ public class SE_Order_BPartner extends SimpleCallout {
     try {
       ComboTableData comboTableData = new ComboTableData(info.vars, this, "LIST", "",
           "C_Order DeliveryRule", "",
-          Utility.getContext(this, info.vars, "#AccessibleOrgTree", "SEOrderBPartner"),
-          Utility.getContext(this, info.vars, USER_CLIENT_PARAM, "SEOrderBPartner"), 0);
-      Utility.fillSQLParameters(this, info.vars, null, comboTableData, "SEOrderBPartner", "");
+          Utility.getContext(this, info.vars, "#AccessibleOrgTree", SE_ORDER_B_PARTNER),
+          Utility.getContext(this, info.vars, USER_CLIENT_PARAM, SE_ORDER_B_PARTNER), 0);
+      Utility.fillSQLParameters(this, info.vars, null, comboTableData, SE_ORDER_B_PARTNER, "");
       l = comboTableData.select(false);
       comboTableData = null;
     } catch (Exception ex) {
