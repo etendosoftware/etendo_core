@@ -54,7 +54,6 @@ public class SE_Order_Organization extends SimpleCallout {
     protected void execute(CalloutInfo info) throws ServletException {
         final String strinpissotrx = info.getStringParameter("inpissotrx", filterYesNo);
         String strMWarehouseId = info.vars.getStringParameter(WAREHOUSEID);
-        boolean updateWarehouse = true;
         FieldProvider[] td = null;
 
         final String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
@@ -82,28 +81,25 @@ public class SE_Order_Organization extends SimpleCallout {
             info.addResult(WAREHOUSEID, "");
         } else {
             try {
-                ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE",
-                        "M_Warehouse_ID", "197",
-                        StringUtils.equals(strinpissotrx, "Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "",
-                        Utility.getReferenceableOrg(info.vars, strOrgId),
-                        Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()),
-                        0);
-                Utility.fillSQLParameters(this, info.vars, null, comboTableData,
-                        info.getWindowId(), "");
+                ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE", "M_Warehouse_ID", "197", StringUtils.equals(strinpissotrx, "Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, strOrgId), Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
+                Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
                 td = comboTableData.select(false);
+
+                boolean validWarehouseFound = warehouseIds.contains(strMWarehouseId);
 
                 if (td != null && td.length > 0) {
                     for (int i = 0; i < td.length; i++) {
                         if (StringUtils.equals(td[i].getField("id"), strMWarehouseId) && warehouseIds.contains(strMWarehouseId)) {
-                            updateWarehouse = false;
+                            validWarehouseFound = true;
                             break;
                         }
                     }
-                    if (updateWarehouse) {
-                        info.addResult(WAREHOUSEID, td[0].getField("id"));
-                    }
+                }
+
+                if (validWarehouseFound) {
+                    info.addResult(WAREHOUSEID, strMWarehouseId);
                 } else {
-                    info.addResult(WAREHOUSEID, "");
+                    info.addResult(WAREHOUSEID, warehouseIds.get(0));
                 }
             } catch (Exception ex) {
                 throw new ServletException(ex);

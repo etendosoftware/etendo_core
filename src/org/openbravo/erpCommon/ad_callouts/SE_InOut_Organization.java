@@ -49,7 +49,6 @@ public class SE_InOut_Organization extends SimpleCallout {
         String strMWarehouseId = info.vars.getStringParameter(WAREHOUSEID);
         String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
         String strInOut = info.getStringParameter("M_InOut_ID", IsIDFilter.instance);
-        boolean updateWarehouse = true;
         FieldProvider[] td = null;
 
         /* Warehouse */
@@ -72,18 +71,20 @@ public class SE_InOut_Organization extends SimpleCallout {
                 Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
                 td = comboTableData.select(false);
 
+                boolean validWarehouseFound = warehouseIds.contains(strMWarehouseId);
+
                 if (td != null && td.length > 0) {
                     for (int i = 0; i < td.length; i++) {
-                        if (td[i].getField("id").equals(strMWarehouseId) && warehouseIds.contains(strMWarehouseId)) {
-                            updateWarehouse = false;
+                        if (StringUtils.equals(td[i].getField("id"), strMWarehouseId) && warehouseIds.contains(strMWarehouseId)) {
+                            validWarehouseFound = true;
                             break;
                         }
                     }
-                    if (updateWarehouse) {
-                        info.addResult(WAREHOUSEID, td[0].getField("id"));
-                    }
+                }
+                if (validWarehouseFound) {
+                    info.addResult(WAREHOUSEID, strMWarehouseId);
                 } else {
-                    info.addResult(WAREHOUSEID, "");
+                    info.addResult(WAREHOUSEID, warehouseIds.get(0));
                 }
             } catch (Exception ex) {
                 throw new ServletException(ex);
