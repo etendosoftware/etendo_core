@@ -89,6 +89,7 @@ public class ReportValuationStock extends BaseReportActionHandler {
       parameters.put(PARAM_FORMAT, jsonContent.getString(ApplicationConstants.BUTTON_VALUE));
 
     } catch (Exception e) {
+      throw new OBException(e);
     }
   }
 
