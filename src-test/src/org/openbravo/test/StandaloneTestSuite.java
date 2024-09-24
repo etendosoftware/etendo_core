@@ -118,6 +118,7 @@ import org.openbravo.test.security.WritableReadableOrganizationClientTest;
 import org.openbravo.test.services.ServicesTest;
 import org.openbravo.test.services.ServicesTest2;
 import org.openbravo.test.services.ServicesTest3;
+import org.openbravo.test.stockValuationReport.ReportValuationStockTest;
 import org.openbravo.test.system.CryptoUtilities;
 import org.openbravo.test.system.ErrorTextParserIntegrationTest;
 import org.openbravo.test.system.ErrorTextParserTest;
@@ -369,7 +370,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     PostedNoDocConfigTest.class,
 
     // Reverse Payment Test
-    ReversePaymentTest.class
+    ReversePaymentTest.class,
+
+    // Report Valuation Stock Test
+    ReportValuationStockTest.class
 
 })
 public class StandaloneTestSuite {
