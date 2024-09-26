@@ -49,6 +49,7 @@ import org.openbravo.test.centralbroker.CentralBrokerTest;
 import org.openbravo.test.conversionratedoc.ConversionRateDocUniqueTestSuite;
 import org.openbravo.test.copyLinesFromOrders.CopyLinesFromOrdersTest;
 import org.openbravo.test.costing.TestCosting;
+import org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTest;
 import org.openbravo.test.createlinesfrom.CreateLinesFromTest;
 import org.openbravo.test.dal.AdminContextTest;
 import org.openbravo.test.dal.ComputedColumnsTest;
@@ -373,7 +374,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ReversePaymentTest.class,
 
     // Report Valuation Stock Test
-    ReportValuationStockTest.class
+    ReportValuationStockTest.class,
+      
+    // Create Order From Quotation Test
+    CreateOrderFromQuotationTest.class
 
 })
 public class StandaloneTestSuite {
