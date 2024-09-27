@@ -129,6 +129,12 @@ public class BaseSecureWebServiceServlet extends HttpServlet {
 				SessionInfo.setProcessType("WS");
 				SessionInfo.setProcessId("DAL");
 				try {
+					OBContext.setAdminMode();
+					SecureWebServicesUtils.fillSessionVariables(request);
+				} finally {
+					OBContext.restorePreviousMode();
+				}
+				try {
 					doService(request, response);
 				} finally {
 					final boolean sessionCreated = !sessionExists && null != request.getSession(false);
