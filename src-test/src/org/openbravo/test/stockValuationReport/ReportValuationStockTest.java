@@ -5,6 +5,8 @@ import static org.openbravo.test.stockValuationReport.ReportValuationStockTestUt
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 
@@ -59,9 +61,12 @@ public class ReportValuationStockTest extends OBBaseTest {
     warehouse = ReportValuationStockTestUtil.createTestWarehouse("Test Warehouse", FB_US_WEST_COAST_ORG_ID);
     Organization org = ReportValuationStockTestUtil.getOrganization(FB_US_WEST_COAST_ORG_ID);
     ReportValuationStockTestUtil.assignWarehouseToOrganization(warehouse, org);
+    Date currentDate = new Date();
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    String date = formatter.format(currentDate);
 
     Exception exception = assertThrows(InvocationTargetException.class, () -> {
-      invokeMethod(org.getId(), warehouse.getId());
+      invokeMethod(org.getId(), warehouse.getId(), date, OBBaseTest.DOLLAR_ID);
     });
 
     String actualMessage = ((InvocationTargetException) exception).getTargetException().getMessage();
@@ -70,13 +75,16 @@ public class ReportValuationStockTest extends OBBaseTest {
 
   /**
    * Invokes the private method {@code addAdditionalParameters} from the {@link ReportValuationStock} class
-   * using reflection. This method dynamically calls {@code addAdditionalParameters} with the given organization ID
-   * and warehouse ID.
+   * using reflection. This method dynamically calls {@code addAdditionalParameters} with the given parameters.
    *
    * @param orgId
    *     the ID of the organization
    * @param warehouseId
    *     the ID of the warehouse
+   * @param date
+   *     the date for the report in the format "yyyy-MM-dd"
+   * @param currencyId
+   *     the ID of the currency to be used in the report
    * @throws NoSuchMethodException
    *     if the {@code addAdditionalParameters} method cannot be found
    * @throws InvocationTargetException
@@ -86,13 +94,13 @@ public class ReportValuationStockTest extends OBBaseTest {
    * @throws JSONException
    *     if an error occurs while building the JSON object
    */
-  private void invokeMethod(String orgId,
-      String warehouseId) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, JSONException {
+  private void invokeMethod(String orgId, String warehouseId, String date,
+      String currencyId) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, JSONException {
     Method method = ReportValuationStock.class.getDeclaredMethod("addAdditionalParameters", ReportDefinition.class,
         JSONObject.class, Map.class);
     method.setAccessible(true);
     ReportValuationStock rvs = new ReportValuationStock();
-    JSONObject jsonContent = buildJsonObject(orgId, warehouseId);
+    JSONObject jsonContent = buildJsonObject(orgId, warehouseId, date, currencyId);
     method.invoke(rvs, null, jsonContent, null);
   }
 }

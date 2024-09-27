@@ -1,5 +1,7 @@
 package org.openbravo.test.stockValuationReport;
 
+import static org.openbravo.test.base.OBBaseTest.*;
+
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -10,6 +12,7 @@ import org.openbravo.model.common.enterprise.OrgWarehouse;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.common.geography.Location;
+import org.openbravo.test.base.OBBaseTest;
 
 public class ReportValuationStockTestUtil {
 
@@ -17,7 +20,7 @@ public class ReportValuationStockTestUtil {
   public static final String LOCATION = "03125C49897943BC9215F894EB74059A";
 
   private ReportValuationStockTestUtil(){
-
+    throw new UnsupportedOperationException("This class should not be instantiated");
   }
 
   /**
@@ -111,11 +114,16 @@ public class ReportValuationStockTestUtil {
    *     the ID of the organization
    * @param warehouseId
    *     the ID of the warehouse
+   * @param date
+   *     the date for the report in the format "yyyy-MM-dd"
+   * @param currencyId
+   *     the ID of the currency to be used in the report
    * @return a {@link JSONObject} containing the parameters for the stock valuation report
    * @throws JSONException
    *     if an error occurs while constructing the JSON object
    */
-  public static JSONObject buildJsonObject(String orgId, String warehouseId) throws JSONException {
+  public static JSONObject buildJsonObject(String orgId, String warehouseId, String date,
+      String currencyId) throws JSONException {
     JSONObject jsonObject = new JSONObject();
 
     jsonObject.put("_buttonValue", "HTML");
@@ -123,11 +131,10 @@ public class ReportValuationStockTestUtil {
     JSONObject params = new JSONObject();
     params.put("AD_Org_ID", orgId);
     params.put("M_Warehouse_ID", warehouseId);
-    params.put("Date", "2024-09-24");
+    params.put("Date", date);
     params.put("WarehouseConsolidation", false);
     params.put("M_Product_Category_ID", JSONObject.NULL);
-    params.put("C_Currency_ID", "100");
-
+    params.put("C_Currency_ID", currencyId);
     jsonObject.put("_params", params);
 
     return jsonObject;
