@@ -10,6 +10,8 @@ import org.openbravo.dal.service.OBDal;
 public class SWSConfig implements OBSingleton {
     private static SWSConfig instance = null;
     private String privateKey = null;
+    private String publicKey = null;
+    private String algorithm = null;
     private Long expirationTime = null;
 
     public void refresh(){
@@ -27,6 +29,8 @@ public class SWSConfig implements OBSingleton {
 
             if (config != null) {
                 privateKey = config.getPrivateKey();
+                publicKey = config.getPublicKey();
+                algorithm = config.getAlgorithm();
                 expirationTime = config.getExpirationTime();
             }
         } finally {
@@ -49,4 +53,7 @@ public class SWSConfig implements OBSingleton {
         return privateKey;
     }
 
+    public String getPublicKey() { return publicKey; }
+
+    public String getAlgorithm() { return algorithm; }
 }
