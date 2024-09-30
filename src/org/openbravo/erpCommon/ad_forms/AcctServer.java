@@ -1310,7 +1310,7 @@ public abstract class AcctServer {
     AcctServerData[] data = AcctServerData.selectAcctProcess(conn, as.m_C_AcctSchema_ID);
     for (AcctServerData datum : data) {
       String strClassname = datum.classname;
-      if (!StringUtils.isNotEmpty(strClassname)) {
+      if (StringUtils.isNotEmpty(strClassname)) {
         try {
           AcctProcessTemplate newTemplate = (AcctProcessTemplate) Class.forName(strClassname)
               .getDeclaredConstructor()

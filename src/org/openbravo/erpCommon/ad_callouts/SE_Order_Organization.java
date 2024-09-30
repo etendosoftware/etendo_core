@@ -25,6 +25,7 @@ import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.MatchMode;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.RequestFilter;
@@ -38,7 +39,11 @@ import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.Tab;
+import org.openbravo.model.common.enterprise.OrgWarehouse;
+import org.openbravo.model.common.enterprise.Organization;
+import org.openbravo.model.common.enterprise.Warehouse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SE_Order_Organization extends SimpleCallout {
@@ -49,7 +54,6 @@ public class SE_Order_Organization extends SimpleCallout {
     protected void execute(CalloutInfo info) throws ServletException {
         final String strinpissotrx = info.getStringParameter("inpissotrx", filterYesNo);
         String strMWarehouseId = info.vars.getStringParameter(WAREHOUSEID);
-        boolean updateWarehouse = true;
         FieldProvider[] td = null;
 
         final String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
@@ -62,33 +66,44 @@ public class SE_Order_Organization extends SimpleCallout {
                 CashVATUtil.isCashVAT(strinpissotrx, strOrgId, strBPartnerId,
                         strBPartnerLocationId));
 
-        try {
-            ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE",
-                    "M_Warehouse_ID", "197",
-                    strinpissotrx.equals("Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "",
-                    Utility.getReferenceableOrg(info.vars,
-                            info.vars.getStringParameter("inpadOrgId")),
-                    Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()),
-                    0);
-            Utility.fillSQLParameters(this, info.vars, null, comboTableData,
-                    info.getWindowId(), "");
-            td = comboTableData.select(false);
-        } catch (Exception ex) {
-            throw new ServletException(ex);
+        OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
+        orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId)));
+        orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
+
+        List<String> warehouseIds = new ArrayList<>();
+        List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();
+        for (Object obj : warehouseList) {
+            Warehouse warehouse = (Warehouse) obj;
+            warehouseIds.add(warehouse.getId());
         }
 
-        if (td != null && td.length > 0) {
-            for (int i = 0; i < td.length; i++) {
-                if (td[i].getField("id").equals(strMWarehouseId)) {
-                    updateWarehouse = false;
-                    break;
-                }
-            }
-            if (updateWarehouse) {
-                info.addResult(WAREHOUSEID, td[0].getField("id"));
-            }
-        } else {
+        if (warehouseIds.isEmpty()) {
             info.addResult(WAREHOUSEID, "");
+        } else {
+            try {
+                ComboTableData comboTableData = new ComboTableData(info.vars, this, "TABLE", "M_Warehouse_ID", "197", StringUtils.equals(strinpissotrx, "Y") ? "C4053C0CD3DC420A9924F24FC1F860A0" : "", Utility.getReferenceableOrg(info.vars, strOrgId), Utility.getContext(this, info.vars, "#User_Client", info.getWindowId()), 0);
+                Utility.fillSQLParameters(this, info.vars, null, comboTableData, info.getWindowId(), "");
+                td = comboTableData.select(false);
+
+                boolean validWarehouseFound = warehouseIds.contains(strMWarehouseId);
+
+                if (td != null && td.length > 0) {
+                    for (int i = 0; i < td.length; i++) {
+                        if (StringUtils.equals(td[i].getField("id"), strMWarehouseId) && warehouseIds.contains(strMWarehouseId)) {
+                            validWarehouseFound = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (validWarehouseFound) {
+                    info.addResult(WAREHOUSEID, strMWarehouseId);
+                } else {
+                    info.addResult(WAREHOUSEID, warehouseIds.get(0));
+                }
+            } catch (Exception ex) {
+                throw new ServletException(ex);
+            }
         }
 
         /* Document No */
@@ -106,7 +121,5 @@ public class SE_Order_Organization extends SimpleCallout {
                 }
             }
         }
-
     }
-
 }
