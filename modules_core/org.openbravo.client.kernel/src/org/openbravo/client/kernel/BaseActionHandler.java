@@ -21,6 +21,7 @@ package org.openbravo.client.kernel;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -91,27 +92,27 @@ public abstract class BaseActionHandler implements ActionHandler {
   }
 
   /**
-   * Utility function used by execute() that lets us extend the part where the request contents are
-   * extracted from the request payload.
+   * Extracts the content from the HttpServletRequest as a String.
+   * This method reads the request's input stream and returns its content.
+   * It uses UTF-8 encoding to read the data.
    *
-   * @param request
-   *          The request
-   * @param requestParameters
-   *          The map of parameters extracted from the request
-   * @return The request content as an String
-   *
-   * @throws IOException
-   *           when there is an error reading the request InputStream
+   * @param request the HttpServletRequest from which to extract the content.
+   * @param requestParameters a map of request parameters, which may be used for further processing (unused in this method).
+   * @return a String containing the content of the request, or null if the request content is empty.
+   * @throws IOException if an input or output exception occurs during reading the request content.
    */
   protected String extractRequestContent(HttpServletRequest request,
       Map<String, Object> requestParameters) throws IOException {
     final StringBuilder sb = new StringBuilder();
-    String line;
-    final BufferedReader reader = new BufferedReader(
-        new InputStreamReader(request.getInputStream(), "UTF-8"));
-    while ((line = reader.readLine()) != null) {
-      sb.append(line).append("\n");
+
+    try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        sb.append(line).append("\n");
+      }
     }
+
     return (sb.length() > 0 ? sb.toString() : null);
   }
 

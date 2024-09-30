@@ -38,11 +38,18 @@ isc.OBProcessFileUpload.addProperties({
       .setDisabled(disabled);
   },
   fileSizeIsAboveMax: function(fileItem) {
-    const maxFileSize = OB.PropertyStore.get(
-      'OBUIAPP_ProcessFileUploadMaxSize'
-    );
+    const maxFileSizeStr = OB.PropertyStore.get('OBUIAPP_ProcessFileUploadMaxSize');
+    const BYTES_IN_A_MEGABYTE = 1024 * 1024;
+    const maxFileSize = Number(maxFileSizeStr);
+    if (isNaN(maxFileSize) || maxFileSize < 0) {
+      return false;
+    }
+    if (fileItem && typeof fileItem.size === 'number') {
+      const fileSizeMB = fileItem.size / BYTES_IN_A_MEGABYTE;
+      return fileSizeMB > maxFileSize;
+    }
 
-    return maxFileSize && fileItem && fileItem.size / 1000000 > maxFileSize;
+    return false;
   },
   validators: [
     {

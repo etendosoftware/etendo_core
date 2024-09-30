@@ -20,6 +20,7 @@ package org.openbravo.client.application.event;
 
 import javax.enterprise.event.Observes;
 
+import org.apache.commons.lang.StringUtils;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -38,30 +39,55 @@ public class FileUploadColumnEventHandler extends EntityPersistenceEventObserver
   private static final String FILE_UPLOAD_REFERENCE_ID = "715C53D4FEA74B28B74F14AE65BC5C16";
   private static Entity[] entities = { ModelProvider.getInstance().getEntity(Column.ENTITY_NAME) };
 
+  /**
+   * Method to get the array of observed entities.
+   *
+   * @return the array of observed entities
+   */
   @Override
   protected Entity[] getObservedEntities() {
     return entities;
   }
 
+  /**
+   * Method to handle updating of a new entity.
+   *
+   * @param event
+   *     the EntityNewEvent being observed
+   */
   public void onUpdate(@Observes EntityUpdateEvent event) {
     if (!isValidEvent(event)) {
       return;
     }
-    this.checkReferenceIsNotFileUpload(event);
+
+    checkReferenceIsNotFileUpload(event);
   }
 
+  /**
+   * Method to handle saving of a new entity.
+   *
+   * @param event
+   *     the EntityNewEvent being observed
+   */
   public void onSave(@Observes EntityNewEvent event) {
     if (!isValidEvent(event)) {
       return;
     }
 
-    this.checkReferenceIsNotFileUpload(event);
+    checkReferenceIsNotFileUpload(event);
   }
 
+  /**
+   * Method to check if the reference in the EntityPersistenceEvent is a file upload reference.
+   * If it is, an exception is thrown.
+   *
+   * @param event
+   *     the EntityPersistenceEvent to check
+   */
   private void checkReferenceIsNotFileUpload(EntityPersistenceEvent event) {
     Column instanceColumn = (Column) event.getTargetInstance();
 
-    if (instanceColumn.getReference().getId().equals(FILE_UPLOAD_REFERENCE_ID)) {
+    if (StringUtils.equals(instanceColumn.getReference().getId(), FILE_UPLOAD_REFERENCE_ID)) {
       throw new OBException(OBMessageUtils.getI18NMessage("OBUIAPP_CannotAddFileUploadReference"));
     }
   }
