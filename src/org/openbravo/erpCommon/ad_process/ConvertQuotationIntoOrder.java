@@ -23,12 +23,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -47,6 +49,8 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBErrorBuilder;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
+import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.businesspartner.Location;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderDiscount;
@@ -136,6 +140,11 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
       OBDal.getInstance().rollbackAndClose();
       String message = OBMessageUtils.messageBD("@NoOrderDocType@");
       throw new OBException(message);
+    }
+
+    if (newSalesOrder.getInvoiceAddress() == null) {
+      Location invoiceAdress = getInvoiceAddressForBusinessPartner(quotation.getBusinessPartner());
+      newSalesOrder.setInvoiceAddress(invoiceAdress);
     }
 
     // Set values of the Sales Order Header
@@ -300,6 +309,23 @@ public class ConvertQuotationIntoOrder extends DalBaseProcess {
     OBDal.getInstance().refresh(quotation);
 
     return newSalesOrder;
+  }
+
+  /**
+   * Retrieves the first invoice address for a given Business Partner, ordered alphabetically by the name.
+   * If no invoice address is found, an exception is thrown.
+   *
+   * @param businessPartner The Business Partner whose invoice address is being retrieved.
+   * @return The first {@link Location} that is marked as an invoice address, ordered by the name.
+   * @throws OBException If the Business Partner does not have any invoice address.
+   */
+  private Location getInvoiceAddressForBusinessPartner(BusinessPartner businessPartner) {
+    List<Location> locations = businessPartner.getBusinessPartnerLocationList().stream().filter(
+        Location::isInvoiceToAddress).sorted(Comparator.comparing(Location::getName)).collect(Collectors.toList());
+    if (locations.isEmpty()) {
+      throw new OBException(OBMessageUtils.messageBD("BusinessPartnerNoInvoicingAddress"));
+    }
+    return locations.get(0);
   }
 
   /**
