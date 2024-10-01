@@ -11,7 +11,7 @@
  * under the License.
  * The Original Code is Openbravo ERP.
  * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2010-2016 Openbravo SLU
+ * All portions are Copyright (C) 2010-2022 Openbravo SLU
  * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -637,6 +637,15 @@ isc.OBImageSelector.addProperties({
  =======================================================================*/
 
 isc.OBPickEditGridItem.addProperties({
+  cellStyle: 'OBFormField',
+  titleStyle: 'OBFormFieldLabel'
+});
+
+/* =====================================================================
+ * OBFormItem - Process File Upload
+ =======================================================================*/
+
+isc.OBProcessFileUpload.addProperties({
   cellStyle: 'OBFormField',
   titleStyle: 'OBFormFieldLabel'
 });

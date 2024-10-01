@@ -232,6 +232,8 @@ BEGIN
         AND COALESCE(l.m_locator_id, '-1') = COALESCE(v_locatorid, l.m_locator_id, '-1')
         AND COALESCE(w.m_warehouse_id, '-1') = COALESCE(v_warehouseid, w.m_warehouse_id, '-1')
         AND ow.ad_org_id = v_orgid
+        AND w.isactive='Y'
+        AND ow.isactive='Y'
         AND COALESCE(ms.quantity, 0)>0
         AND COALESCE(v_avail, invs.available) = invs.available
         AND COALESCE(v_nett, invs.nettable) = invs.nettable
@@ -273,6 +275,8 @@ BEGIN
         AND l.m_locator_id = COALESCE(v_locatorid, l.m_locator_id)
         AND w.m_warehouse_id = COALESCE(v_warehouseid, w.m_warehouse_id)
         AND ow.ad_org_id = v_orgid
+        AND w.isactive='Y'
+        AND ow.isactive='Y'
         AND COALESCE(t.qtyonhand, 0)>0
         AND t.qtyonhand - (CASE WHEN rs.m_reservation_id IS NOT NULL THEN t.allocatedqty ELSE t.reservedqty END)  > 0
         AND w.m_warehouse_id = COALESCE(r.m_warehouse_id, w.m_warehouse_id)

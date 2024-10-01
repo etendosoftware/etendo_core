@@ -148,11 +148,11 @@ public class AgingDao {
         if (agingBalanceData.containsKey(strBusinessPartnerId)) {
           // if the business partner has been inserted already
           agingBalanceData.get(strBusinessPartnerId).addAmount(psdAmt, intScope);
-          agingBalanceData.get(strBusinessPartnerId).addDoubtfulDebt(psddd);
         } else { // if there is the first time the Business Partner is inserted
           agingBalanceData.put(strBusinessPartnerId,
               new AgingData(strBusinessPartnerId, strBpName, psdAmt, intScope));
         }
+        agingBalanceData.get(strBusinessPartnerId).addDoubtfulDebt(psddd);
 
         i++;
         if (i % 100 == 0) {
