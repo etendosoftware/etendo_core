@@ -631,6 +631,7 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
                   openPSD.setWriteoffAmount(BigDecimal.ZERO);
                   openPSD.setAmount(psd.getAmount().add(psd.getWriteoffAmount()));
 
+                  openPSD.setInvoicePaid(false);
                   openPSD.setCanceled(false);
                   OBDal.getInstance().save(openPSD);
                 }
