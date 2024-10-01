@@ -11,10 +11,47 @@ import javax.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.openbravo.base.exception.OBException;
 
 import com.google.common.collect.HashBasedTable;
 
+/**
+ * Manages the execution of print controller hooks. The {@link PrintControllerHookManager}
+ * class is responsible for sorting and executing hooks that implement the {@link PrintControllerHook}
+ * interface, allowing for pre-processing and post-processing logic to be applied during
+ * the print workflow.
+ *
+ * <p>
+ * This class utilizes dependency injection to obtain instances of hooks and provides methods
+ * to execute them in a prioritized order. It also handles errors encountered during hook
+ * execution, allowing for graceful error reporting and management.
+ * </p>
+ *
+ * <p>
+ * The following constants are defined for use within the class:
+ * </p>
+ * <ul>
+ *   <li>{@link #RESULTS} - Key for storing results in JSON parameters.</li>
+ *   <li>{@link #FAILURES} - Key for indicating failures in JSON parameters.</li>
+ *   <li>{@link #PREPROCESS} - String representing the preProcess method name.</li>
+ *   <li>{@link #POSTPROCESS} - String representing the postProcess method name.</li>
+ *   <li>{@link #MESSAGE} - Key for storing error messages in JSON parameters.</li>
+ *   <li>{@link #CANCELLATION} - Key for indicating cancellation in JSON parameters.</li>
+ * </ul>
+ *
+ * <p>
+ * The class provides the following methods:
+ * </p>
+ * <ul>
+ *   <li>{@link #sortHooksByPriority(Instance)} - Sorts a list of hooks by their priority.</li>
+ *   <li>{@link #executeHooks(JSONObject, String)} - Executes the hooks based on the specified method name.</li>
+ *   <li>{@link #getPreProcess()} - Returns the name of the preProcess method.</li>
+ *   <li>{@link #getPostProcess()} - Returns the name of the postProcess method.</li>
+ * </ul>
+ *
+ * @see PrintControllerHook
+ * @see JSONObject
+ * @see JSONException
+ */
 public class PrintControllerHookManager {
   public static final String RESULTS = "results";
   public static final String FAILURES = "failures";
@@ -63,27 +100,31 @@ public class PrintControllerHookManager {
    *     if there is an error processing the JSON parameters
    */
   private static void handleHookError(JSONObject jsonParams, boolean isPreProcess, Exception e,
-      PrintControllerHook hook) throws JSONException {
-    JSONObject resultsObj = jsonParams.optJSONObject(RESULTS);
-    if (resultsObj == null) {
-      resultsObj = new JSONObject();
+      PrintControllerHook hook) throws PrintControllerHookException {
+    try {
+      JSONObject resultsObj = jsonParams.optJSONObject(RESULTS);
+      if (resultsObj == null) {
+        resultsObj = new JSONObject();
+        jsonParams.put(RESULTS, resultsObj);
+      }
+
+      if (jsonParams.optBoolean(CANCELLATION, false)) {
+        throw new PrintControllerHookException(e.getMessage());
+      }
+
+      resultsObj.put(FAILURES, true);
+      HashBasedTable<String, Boolean, String> messageInfo;
+      if (resultsObj.has(MESSAGE)) {
+        messageInfo = (HashBasedTable<String, Boolean, String>) resultsObj.get(MESSAGE);
+      } else {
+        messageInfo = HashBasedTable.create();
+      }
+      messageInfo.put(hook.getClass().getSimpleName(), isPreProcess, e.getMessage());
+      resultsObj.put(MESSAGE, messageInfo);
       jsonParams.put(RESULTS, resultsObj);
+    } catch (JSONException jsonE) {
+      throw new PrintControllerHookException(e.getMessage());
     }
-
-    if (jsonParams.optBoolean(CANCELLATION, false)) {
-      throw new OBException(e.getMessage());
-    }
-
-    resultsObj.put(FAILURES, true);
-    HashBasedTable<String, Boolean, String> messageInfo;
-    if (resultsObj.has(MESSAGE)) {
-      messageInfo = (HashBasedTable<String, Boolean, String>) resultsObj.get(MESSAGE);
-    } else {
-      messageInfo = HashBasedTable.create();
-    }
-    messageInfo.put(hook.getClass().getSimpleName(), isPreProcess, e.getMessage());
-    resultsObj.put(MESSAGE, messageInfo);
-    jsonParams.put(RESULTS, resultsObj);
   }
 
   /**
@@ -97,7 +138,7 @@ public class PrintControllerHookManager {
    * @throws JSONException
    *     if there is an error processing the JSON parameters
    */
-  public void executeHooks(JSONObject jsonParams, String methodName) throws JSONException {
+  public void executeHooks(JSONObject jsonParams, String methodName) throws PrintControllerHookException {
     List<PrintControllerHook> hookList = sortHooksByPriority(hooks);
     for (PrintControllerHook hook : hookList) {
       if (StringUtils.equals(methodName, PREPROCESS)) {
@@ -132,5 +173,11 @@ public class PrintControllerHookManager {
    */
   public String getPostProcess() {
     return POSTPROCESS;
+  }
+
+  public static class PrintControllerHookException extends Exception {
+    public PrintControllerHookException(String errorMessage) {
+      super(errorMessage);
+    }
   }
 }
