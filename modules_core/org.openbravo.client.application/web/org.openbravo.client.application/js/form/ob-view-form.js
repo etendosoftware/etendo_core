@@ -279,7 +279,6 @@ OB.ViewFormProperties = {
     // showing focused style in multiple fields
     if (this.getFocusItem()) {
       this.getFocusItem().hasFocus = false;
-      this.getFocusItem().elementBlur();
     }
     this.setFocusItem(null);
 
