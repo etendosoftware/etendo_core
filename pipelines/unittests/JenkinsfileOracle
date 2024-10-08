@@ -171,7 +171,8 @@ spec:
                                 githubUser=${GITHUB_USER}\n
                                 githubToken=${GITHUB_TOKEN}\n
                                 allow.root=true\n
-                                org.gradle.jvmargs=-Dfile.encoding=UTF-8" > gradle.properties
+                                org.gradle.jvmargs=-Dfile.encoding=UTF-8\n
+                                org.gradle.daemon=false" > gradle.properties
                                 """
 
                                 sh """
