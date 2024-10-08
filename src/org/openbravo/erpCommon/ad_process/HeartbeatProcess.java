@@ -712,8 +712,8 @@ public class HeartbeatProcess implements Process {
    * @param status the new status to set
    */
   private void updateHeartbeatLogStatus(String status) {
-    OBContext.setAdminMode();
     try {
+      OBContext.setAdminMode(true);
       HeartbeatLog hbLog = OBDal.getInstance().get(HeartbeatLog.class, logHeartbeatID);
       if (hbLog != null) {
         hbLog.setStatus(status);
