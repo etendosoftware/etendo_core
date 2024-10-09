@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
@@ -69,15 +71,55 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
     return BigDecimal.ZERO.toPlainString();
   }
 
+  /**
+   * Converts a given string representation of a BigDecimal into a safe format for processing.
+   *
+   * The method performs the following transformations:
+   * - If the input string is in scientific notation, it is returned unchanged. The detection is
+   *   performed using a precompiled regular expression pattern.
+   * - Any characters that are not digits, commas, or periods are removed from the string.
+   * - The method detects and handles European and Anglo-Saxon number formats using precompiled
+   *   patterns:
+   *     - European format (e.g., "1.234,56") is converted to "1234.56" by removing the thousands
+   *       separator (period) and replacing the decimal separator (comma) with a period.
+   *     - Anglo-Saxon format (e.g., "1,234.56") is converted to "1234.56" by removing the commas
+   *       used as thousands separators.
+   * - If no specific format is detected, the method defaults to replacing any remaining commas
+   *   with periods.
+   *
+   * @param bigdecimalString The string representing a BigDecimal, which may include commas, periods,
+   *                         or scientific notation (e.g., "1.214859023E7" or "12,148,590.23").
+   * @return A properly formatted string that can be parsed as a BigDecimal, where commas are either
+   *         removed (if used as thousands separators) or converted to periods (if used as decimal separators).
+   */
   private String convertToSafeDecimalString(String bigdecimalString) {
     String localBigdecimalString = bigdecimalString;
+    Pattern scientificNotationPattern = Pattern.compile("^[+-]?\\d+(\\.\\d+)?[eE][+-]?\\d+$");
+    Matcher matcher = scientificNotationPattern.matcher(bigdecimalString);
+
+    // If the string is in scientific notation, we return it directly
+    if (matcher.matches()) {
+      return localBigdecimalString;
+    }
+
+    // Any character that is not a digit, comma, or period is removed.
     localBigdecimalString = localBigdecimalString.replaceAll("[^\\d,\\.]++", "");
-    if (localBigdecimalString.matches(".+\\.\\d+,\\d+$")) {
+
+    // European format check
+    Pattern europeanFormatPattern = Pattern.compile(".+\\.\\d+,\\d+$");
+    matcher = europeanFormatPattern.matcher(localBigdecimalString);
+    if (matcher.matches()) {
       return localBigdecimalString.replaceAll("\\.", "").replaceAll(",", ".");
     }
-    if (localBigdecimalString.matches(".+,\\d+\\.\\d+$")) {
+
+    // Anglo-Saxon format check
+    Pattern angloSaxonFormatPattern = Pattern.compile(".+,\\d+\\.\\d+$");
+    matcher = angloSaxonFormatPattern.matcher(localBigdecimalString);
+    if (matcher.matches()) {
       return localBigdecimalString.replaceAll(",", "");
     }
+
+    // Basic conversion, all commas are replaced by periods
     return localBigdecimalString.replaceAll(",", ".");
   }
 
