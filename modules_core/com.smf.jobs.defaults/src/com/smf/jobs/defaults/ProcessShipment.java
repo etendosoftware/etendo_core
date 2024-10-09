@@ -4,6 +4,7 @@ import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,10 +14,12 @@ import org.openbravo.advpaymentmngt.ProcessShipmentUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.service.db.DalConnectionProvider;
 
 import java.text.ParseException;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -37,8 +40,8 @@ public class ProcessShipment extends Action {
     try {
       var input = getInputContents(getInputClass());
       var documentAction = parameters.getString("DocAction");
-      var processMessages = new StringBuilder();
       int errors = 0;
+      int success = 0;
 
       result.setType(Result.Type.SUCCESS);
 
@@ -47,33 +50,18 @@ public class ProcessShipment extends Action {
 
       for (ShipmentInOut shipmentInOut : input) {
         var message = processShipment(shipmentInOut, documentAction);
-        if (message.getType().equals("Error")) {
+        if (StringUtils.equalsIgnoreCase("error", message.getType())) {
           errors++;
         }
-        if (message.getMessage().isBlank()) {
-          processMessages.append(shipmentInOut.getDocumentNo()).append(": ").append(message.getTitle()).append("\n");
-        } else {
-          processMessages.append(shipmentInOut.getDocumentNo()).append(": ").append(message.getMessage()).append("\n");
+        if (StringUtils.equalsIgnoreCase("success", message.getType())) {
+          success++;
         }
+        result.setMessage(
+            message.getTitle().isEmpty() ? message.getMessage() : message.getTitle().concat(
+                ": ").concat(message.getMessage()));
       }
 
-      if (errors == input.size()) {
-        result.setType(Result.Type.ERROR);
-      } else if (errors > 0) {
-        result.setType(Result.Type.WARNING);
-      }
-
-      if (input.size() > 1) {
-        // Show the message in a pop up when more than one shipment was selected, for better readability.
-        var jsonMessage = new JSONObject();
-        jsonMessage.put("message", processMessages.toString().replaceAll("\n", "<br>"));
-        result.setResponseActionsBuilder(getResponseBuilder().addCustomResponseAction("smartclientSay", jsonMessage));
-      }
-
-      result.setMessage(processMessages.toString());
-      result.setOutput(getInput());
-
-
+      massiveMessageHandler(result, input, errors, success);
     } catch (JSONException | ParseException e) {
       log.error(e.getMessage(), e);
       result.setType(Result.Type.ERROR);
@@ -81,6 +69,20 @@ public class ProcessShipment extends Action {
     }
 
     return result;
+  }
+
+  private void massiveMessageHandler(ActionResult result, List<ShipmentInOut> inputs, int errors, int success) {
+    if (inputs.size() > 1) {
+      if (success == inputs.size()) {
+        result.setType(Result.Type.SUCCESS);
+      } else if (errors == inputs.size()) {
+        result.setType(Result.Type.ERROR);
+      } else {
+        result.setType(Result.Type.WARNING);
+      }
+      result.setMessage(String.format(OBMessageUtils.messageBD("DJOBS_PostUnpostMessage"), success, errors));
+      result.setOutput(getInput());
+    }
   }
 
   private OBError processShipment(ShipmentInOut shipmentInOut, String docAction) throws ParseException {
