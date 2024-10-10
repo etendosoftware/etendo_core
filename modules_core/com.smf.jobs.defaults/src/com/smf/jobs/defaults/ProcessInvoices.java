@@ -1,13 +1,14 @@
 package com.smf.jobs.defaults;
 
-import static com.smf.jobs.defaults.Utils.ProcessUtils.massiveMessageHandler;
-
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Data;
 import com.smf.jobs.Result;
 import com.smf.jobs.Action;
+import com.smf.jobs.defaults.Utils.ProcessUtils;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -46,8 +47,8 @@ public class ProcessInvoices extends Action {
             var documentAction = parameters.getString("DocAction");
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
-            int errors = 0;
-            int success = 0;
+            var errors = new MutableInt(0);
+            var success = new MutableInt(0);
 
             result.setType(Result.Type.SUCCESS);
 
@@ -56,18 +57,10 @@ public class ProcessInvoices extends Action {
 
             for (Invoice invoice : input) {
                 var message = processInvoice(invoice, documentAction, voidDate, voidAcctDate);
-                if (StringUtils.equalsIgnoreCase("error", message.getType())) {
-                    errors++;
-                }
-                if (StringUtils.equalsIgnoreCase("success", message.getType())) {
-                    success++;
-                }
-                result.setMessage(
-                    message.getTitle().isEmpty() ? message.getMessage() : message.getTitle().concat(
-                        ": ").concat(message.getMessage()));
+                ProcessUtils.updateResult(result, message, errors, success);
             }
 
-            massiveMessageHandler(result, input, errors, success, getInput());
+            ProcessUtils.massiveMessageHandler(result, input, errors, success, getInput());
         } catch (JSONException | ParseException e) {
             log.error(e.getMessage(), e);
             result.setType(Result.Type.ERROR);
