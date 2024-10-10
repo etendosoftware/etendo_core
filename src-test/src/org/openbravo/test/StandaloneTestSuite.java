@@ -99,7 +99,7 @@ import org.openbravo.test.modularity.TableNameTest;
 import org.openbravo.test.preference.PreferenceTest;
 import org.openbravo.test.pricelist.PriceListTest;
 import org.openbravo.test.process.order.OrderProcessTest;
-import org.openbravo.test.process.shipment.ShipmentProcessTest;
+import org.openbravo.test.process.utils.ProcessUtilsTest;
 import org.openbravo.test.productStatus.ProductStatusTest;
 import org.openbravo.test.referencedinventory.ReferencedInventoryTestSuite;
 import org.openbravo.test.reporting.AllJrxmlCompilation;
@@ -380,8 +380,8 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // Create Order From Quotation Test
     CreateOrderFromQuotationTest.class,
 
-    // Shipment process Test
-    ShipmentProcessTest.class
+    // Utils process Test
+    ProcessUtilsTest.class
 
 })
 public class StandaloneTestSuite {
