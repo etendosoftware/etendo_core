@@ -1,4 +1,4 @@
-package org.openbravo.test.process.shipment;
+package org.openbravo.test.process.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -22,7 +22,7 @@ import com.smf.jobs.Data;
 import com.smf.jobs.Result;
 import com.smf.jobs.defaults.Utils.ProcessUtils;
 
-public class ShipmentProcessTest extends OBBaseTest {
+public class ProcessUtilsTest extends OBBaseTest {
 
   public static final String DJOBS_POST_UNPOST_MESSAGE = "DJOBS_PostUnpostMessage";
 
