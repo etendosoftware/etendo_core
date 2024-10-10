@@ -71,7 +71,7 @@ public class ProcessShipment extends Action {
     return result;
   }
 
-  private void massiveMessageHandler(ActionResult result, List<ShipmentInOut> inputs, int errors, int success) {
+  public void massiveMessageHandler(ActionResult result, List<ShipmentInOut> inputs, int errors, int success) {
     if (inputs.size() > 1) {
       if (success == inputs.size()) {
         result.setType(Result.Type.SUCCESS);
