@@ -1,5 +1,7 @@
 package com.smf.jobs.defaults;
 
+import static com.smf.jobs.defaults.Utils.ProcessUtils.massiveMessageHandler;
+
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Data;
 import com.smf.jobs.Result;
@@ -44,8 +46,8 @@ public class ProcessInvoices extends Action {
             var documentAction = parameters.getString("DocAction");
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
-            var processMessages = new StringBuilder();
             int errors = 0;
+            int success = 0;
 
             result.setType(Result.Type.SUCCESS);
 
@@ -54,33 +56,18 @@ public class ProcessInvoices extends Action {
 
             for (Invoice invoice : input) {
                 var message = processInvoice(invoice, documentAction, voidDate, voidAcctDate);
-                if (message.getType().equals("Error")) {
+                if (StringUtils.equalsIgnoreCase("error", message.getType())) {
                     errors++;
                 }
-                if (message.getMessage().isBlank()) {
-                    processMessages.append(invoice.getDocumentNo()).append(": ").append(message.getTitle()).append("\n");
-                } else {
-                    processMessages.append(invoice.getDocumentNo()).append(": ").append(message.getMessage()).append("\n");
+                if (StringUtils.equalsIgnoreCase("success", message.getType())) {
+                    success++;
                 }
+                result.setMessage(
+                    message.getTitle().isEmpty() ? message.getMessage() : message.getTitle().concat(
+                        ": ").concat(message.getMessage()));
             }
 
-            if (errors == input.size()) {
-                result.setType(Result.Type.ERROR);
-            } else if (errors > 0) {
-                result.setType(Result.Type.WARNING);
-            }
-
-            if (input.size() > 1) {
-                // Show the message in a pop up when more than one invoice was selected, for better readability.
-                var jsonMessage = new JSONObject();
-                jsonMessage.put("message", processMessages.toString().replaceAll("\n","<br>"));
-                result.setResponseActionsBuilder(getResponseBuilder().addCustomResponseAction("smartclientSay", jsonMessage));
-            }
-
-            result.setMessage(processMessages.toString());
-            result.setOutput(getInput());
-
-
+            massiveMessageHandler(result, input, errors, success, getInput());
         } catch (JSONException | ParseException e) {
             log.error(e.getMessage(), e);
             result.setType(Result.Type.ERROR);

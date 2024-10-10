@@ -1,5 +1,7 @@
 package com.smf.jobs.defaults;
 
+import static com.smf.jobs.defaults.Utils.ProcessUtils.massiveMessageHandler;
+
 import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
@@ -14,12 +16,10 @@ import org.openbravo.advpaymentmngt.ProcessShipmentUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.erpCommon.utility.OBError;
-import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.service.db.DalConnectionProvider;
 
 import java.text.ParseException;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -61,7 +61,7 @@ public class ProcessShipment extends Action {
                 ": ").concat(message.getMessage()));
       }
 
-      massiveMessageHandler(result, input, errors, success);
+      massiveMessageHandler(result, input, errors, success, getInput());
     } catch (JSONException | ParseException e) {
       log.error(e.getMessage(), e);
       result.setType(Result.Type.ERROR);
@@ -69,20 +69,6 @@ public class ProcessShipment extends Action {
     }
 
     return result;
-  }
-
-  public void massiveMessageHandler(ActionResult result, List<ShipmentInOut> inputs, int errors, int success) {
-    if (inputs.size() > 1) {
-      if (success == inputs.size()) {
-        result.setType(Result.Type.SUCCESS);
-      } else if (errors == inputs.size()) {
-        result.setType(Result.Type.ERROR);
-      } else {
-        result.setType(Result.Type.WARNING);
-      }
-      result.setMessage(String.format(OBMessageUtils.messageBD("DJOBS_PostUnpostMessage"), success, errors));
-      result.setOutput(getInput());
-    }
   }
 
   private OBError processShipment(ShipmentInOut shipmentInOut, String docAction) throws ParseException {
