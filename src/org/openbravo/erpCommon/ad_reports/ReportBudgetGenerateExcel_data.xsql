@@ -72,20 +72,7 @@
 		  CASE WHEN B.C_ACTIVITY_ID IS NULL THEN ' '       ELSE AD_COLUMN_IDENTIFIER('C_ACTIVITY', TO_CHAR(B.C_ACTIVITY_ID), TO_CHAR(?)) END AS ACTIVITY,    
 		  CASE WHEN B.C_PROJECT_ID IS NULL THEN ' '       ELSE AD_COLUMN_IDENTIFIER('C_PROJECT', TO_CHAR(B.C_PROJECT_ID), TO_CHAR(?)) END AS PROJECT,    
 		  CASE WHEN B.AD_ORG_ID IS NULL THEN ' '       ELSE AD_COLUMN_IDENTIFIER('AD_ORG', TO_CHAR(B.AD_ORG_ID), TO_CHAR(?)) END AS TRXORG,    
-		  CASE WHEN C_PERIOD_ID IS NULL THEN ' '       ELSE AD_COLUMN_IDENTIFIER('AD_MONTH', (        
-		    SELECT TO_CHAR(AD_MONTH_ID)         
-		    FROM AD_MONTH WHERE TO_NUMBER(VALUE) = (          
-		      SELECT PERIODNO           
-		      FROM C_PERIOD           
-		      WHERE C_PERIOD.C_PERIOD_ID=B.C_PERIOD_ID)        ), TO_CHAR(?)      
-		    )  || ' ' ||
-            AD_COLUMN_IDENTIFIER('C_YEAR', (        
-            SELECT TO_CHAR(C_YEAR_ID)         
-            FROM C_YEAR WHERE C_YEAR_ID = (          
-              SELECT C_YEAR_ID           
-              FROM C_PERIOD           
-              WHERE C_PERIOD.C_PERIOD_ID=B.C_PERIOD_ID)        ), TO_CHAR(?)      
-            ) END AS MONTH,    
+		  CASE WHEN C_PERIOD_ID IS NULL THEN ' '       ELSE AD_COLUMN_IDENTIFIER('C_PERIOD', TO_CHAR(B.C_PERIOD_ID), TO_CHAR(?)) END AS MONTH,
 		  C_BUDGET.EXPORTACTUAL,
 		  CASE WHEN C_BUDGET.EXPORTACTUAL = 'Y' THEN        
 		  B.ACTUALAMT ELSE -1 END  AS ACTUAL,         
@@ -95,7 +82,6 @@
 		WHERE   B.C_BUDGET_ID = C_BUDGET.C_BUDGET_ID                  
 		  AND B.C_BUDGET_ID = ?
      ]]></Sql>
-     <Parameter name="adLanguage"/>
      <Parameter name="adLanguage"/>
      <Parameter name="adLanguage"/>
      <Parameter name="adLanguage"/>
