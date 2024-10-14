@@ -1,6 +1,5 @@
 package com.smf.jobs.defaults;
 
-
 import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
