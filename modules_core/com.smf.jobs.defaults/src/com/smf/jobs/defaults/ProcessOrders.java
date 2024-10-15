@@ -2,39 +2,25 @@ package com.smf.jobs.defaults;
 
 import java.text.ParseException;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 import com.smf.jobs.Action;
+import com.smf.jobs.defaults.Utils.ProcessUtils;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.openbravo.advpaymentmngt.ProcessInvoiceHook;
-import org.openbravo.advpaymentmngt.ProcessInvoiceUtil;
-import org.openbravo.advpaymentmngt.ProcessOrderHook;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
-import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
-import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.OBDal;
-import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
-import org.openbravo.erpCommon.utility.OBMessageUtils;
-import org.openbravo.model.ad.process.ProcessInstance;
-import org.openbravo.model.ad.ui.Process;
 import org.openbravo.model.common.order.Order;
-import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DalConnectionProvider;
-import org.openbravo.service.db.DbUtility;
-import org.openbravo.service.json.JsonUtils;
 
 /**
  * Action for processing orders.
@@ -51,8 +37,8 @@ public class ProcessOrders extends Action {
   @Override
   protected ActionResult action(JSONObject parameters, MutableBoolean isStopped) {
     var result = new ActionResult();
-    var processMessages = new StringBuilder();
-    int errors = 0;
+    var errors = new MutableInt(0);
+    var success = new MutableInt(0);
 
     result.setType(Result.Type.SUCCESS);
 
@@ -65,31 +51,10 @@ public class ProcessOrders extends Action {
 
       for (Order order : input) {
         var message = processOrder(order, documentAction);
-        if (StringUtils.equals("Error", message.getType())) {
-          errors++;
-        }
-        if (StringUtils.isBlank(message.getMessage())) {
-          processMessages.append(order.getDocumentNo()).append(": ").append(message.getTitle()).append("\n");
-        } else {
-          processMessages.append(order.getDocumentNo()).append(": ").append(message.getMessage()).append("\n");
-        }
+        ProcessUtils.updateResult(result, message, errors, success);
       }
 
-      if (errors == input.size()) {
-        result.setType(Result.Type.ERROR);
-      } else if (errors > 0) {
-        result.setType(Result.Type.WARNING);
-      }
-
-      if (input.size() > 1) {
-        // Show the message in a pop up when more than one invoice was selected, for better readability.
-        var jsonMessage = new JSONObject();
-        jsonMessage.put("message", processMessages.toString().replaceAll("\n", "<br>"));
-        result.setResponseActionsBuilder(getResponseBuilder().addCustomResponseAction("smartclientSay", jsonMessage));
-      }
-
-      result.setMessage(processMessages.toString());
-      result.setOutput(getInput());
+      ProcessUtils.massiveMessageHandler(result, input, errors, success, getInput());
     } catch (JSONException | ParseException e) {
       log.error(e.getMessage(), e);
       result.setType(Result.Type.ERROR);
