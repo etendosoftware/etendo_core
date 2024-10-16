@@ -135,8 +135,8 @@ public class PrintControllerHookManager {
    *     the JSON parameters to be processed by the hooks
    * @param methodName
    *     the name of the method to be executed (preProcess or postProcess)
-   * @throws JSONException
-   *     if there is an error processing the JSON parameters
+   * @throws PrintControllerHookException
+   *     if there is an error at any moment executing the hooks
    */
   public void executeHooks(JSONObject jsonParams, String methodName) throws PrintControllerHookException {
     List<PrintControllerHook> hookList = sortHooksByPriority(hooks);
@@ -175,6 +175,31 @@ public class PrintControllerHookManager {
     return POSTPROCESS;
   }
 
+  /**
+   * Exception class to handle errors specific to the execution of print controller hooks.
+   * This exception is thrown when an error occurs during the execution of hooks in the
+   * {@link PrintControllerHookManager} class, particularly during the pre-processing or
+   * post-processing phases.
+   *
+   * <p>
+   * The {@link PrintControllerHookException} class extends the standard {@link Exception}
+   * class, allowing it to be thrown and caught like any other exception in Java. It provides
+   * a constructor that accepts a custom error message, which can be used to convey specific
+   * information about the error that occurred.
+   * </p>
+   *
+   * <p>
+   * This exception is typically used to signal issues such as:
+   * </p>
+   * <ul>
+   *   <li>Errors encountered during the execution of a hook's methods.</li>
+   *   <li>Invalid or unexpected results produced by hooks.</li>
+   *   <li>General failures in the hook execution workflow.</li>
+   * </ul>
+   *
+   * @see PrintControllerHookManager
+   * @see PrintControllerHook
+   */
   public static class PrintControllerHookException extends Exception {
     public PrintControllerHookException(String errorMessage) {
       super(errorMessage);
