@@ -39,6 +39,7 @@ v_amount C_ORDERLINE.Line_Gross_Amount%TYPE;
 TYPE RECORD IS REF CURSOR;
 CUR_Tax RECORD;
 CUR_Line RECORD;
+v_internal_precision CONSTANT INTEGER := 3;
 
 BEGIN --BODY
 
@@ -48,16 +49,18 @@ BEGIN --BODY
 
     -- Round
     UPDATE C_ORDERLINETAX
-    SET TaxBaseAmt = round(TaxBaseAmt, p_precision)
+    SET TaxBaseAmt = round(TaxBaseAmt, v_internal_precision)
     WHERE C_Order_ID = p_order_id;
 
     UPDATE C_ORDERTAX
-    SET TaxBaseAmt = round(TaxBaseAmt, p_precision)
+    SET TaxBaseAmt = round(TaxBaseAmt, v_internal_precision)
     WHERE C_Order_ID = p_order_id;
 
     -- Adjust
     FOR CUR_Tax IN (
-      SELECT ot.C_Tax_ID, COALESCE((MIN(ot.DocTaxBaseAmt) + MIN(ot.DocTaxAmt)) - (SUM(olt.LineTaxBaseAmt) + SUM(olt.LineTaxAmt)), 0) as TaxAdjustment, COALESCE(MIN(ot.DocTaxBaseAmt) - SUM(olt.LineTaxBaseAmt), 0) as LineAdjustment
+      SELECT ot.C_Tax_ID, 
+	  	ROUND(COALESCE((MIN(ot.DocTaxBaseAmt) + MIN(ot.DocTaxAmt)) - (SUM(olt.LineTaxBaseAmt) + SUM(olt.LineTaxAmt)), 0), v_internal_precision) as TaxAdjustment, 
+		ROUND(COALESCE(MIN(ot.DocTaxBaseAmt) - SUM(olt.LineTaxBaseAmt), 0), v_internal_precision) as LineAdjustment
       FROM (
         SELECT c_tax_get_root(ot.c_tax_id) as C_Tax_ID, CASE WHEN MIN(ot.TaxBaseAmt) > 0 THEN MIN(ot.TaxBaseAmt) ELSE MAX(ot.TaxBaseAmt) END as DocTaxBaseAmt, SUM(ot.TaxAmt) as DocTaxAmt, MIN(ot.Line) as Line
         FROM C_OrderTax ot
@@ -78,8 +81,8 @@ BEGIN --BODY
       ) olt
       ON olt.C_Tax_ID = ot.C_Tax_ID
       GROUP BY ot.C_Tax_ID, ot.Line
-      HAVING COALESCE(MIN(ot.DocTaxBaseAmt), 0) <> COALESCE(SUM(olt.LineTaxBaseAmt), 0)
-      OR COALESCE(MIN(ot.DocTaxBaseAmt) + MIN(ot.DocTaxAmt), 0) <> COALESCE(SUM(olt.LineTaxBaseAmt) + SUM(olt.LineTaxAmt), 0)
+      HAVING ROUND(COALESCE(MIN(ot.DocTaxBaseAmt), 0), v_internal_precision) <> ROUND(COALESCE(SUM(olt.LineTaxBaseAmt), 0), v_internal_precision)
+      OR ROUND(COALESCE(MIN(ot.DocTaxBaseAmt) + MIN(ot.DocTaxAmt), 0), v_internal_precision) <> ROUND(COALESCE(SUM(olt.LineTaxBaseAmt) + SUM(olt.LineTaxAmt), 0), v_internal_precision)
       ORDER BY ot.Line
     )
     LOOP
@@ -96,11 +99,11 @@ BEGIN --BODY
         )
         LOOP
           UPDATE C_ORDERTAX
-          SET TaxAmt = TaxAmt - CUR_Tax.TaxAdjustment
+          SET TaxAmt = ROUND(TaxAmt - CUR_Tax.TaxAdjustment, p_precision)
           WHERE C_OrderTax_ID = CUR_Line.C_OrderTax_ID;
 
           UPDATE C_ORDERTAX ot
-          SET TaxBaseAmt = TaxBaseAmt - CUR_Tax.TaxAdjustment
+          SET TaxBaseAmt = ROUND(TaxBaseAmt - CUR_Tax.TaxAdjustment, p_precision)
           WHERE ot.C_Order_ID = p_order_id
           AND c_tax_get_root(ot.C_Tax_ID) = CUR_Tax.C_Tax_ID
           AND EXISTS (
