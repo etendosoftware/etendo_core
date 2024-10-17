@@ -1350,7 +1350,7 @@ where @additional_filters@
 <!--F42A1DD1B941461EB3B9AD07A534D91E-->  <NAME><![CDATA[On hand warehouse]]></NAME>
 <!--F42A1DD1B941461EB3B9AD07A534D91E-->  <AD_REFERENCE_ID><![CDATA[263693E51C7847BF90C897ADB830E2BB]]></AD_REFERENCE_ID>
 <!--F42A1DD1B941461EB3B9AD07A534D91E-->  <AD_TABLE_ID><![CDATA[190]]></AD_TABLE_ID>
-<!--F42A1DD1B941461EB3B9AD07A534D91E-->  <FILTER_EXPRESSION><![CDATA["( (" + OB.isSalesTransaction() + " = true and w.id in (select ow.warehouse.id from OrganizationWarehouse ow where ow.warehouse.id = w.id and ow.organization.id = \'" + OB.getParameters().get('inpadOrgId') + "\' )) or ((" + OB.isSalesTransaction() + " = false or \'"+OB.getWindowId()+"\' in (\'123271B9AD60469BAE8A924841456B63\'))))"]]></FILTER_EXPRESSION>
+<!--F42A1DD1B941461EB3B9AD07A534D91E-->  <FILTER_EXPRESSION><![CDATA["( (" + OB.isSalesTransaction() + " = true and w.id in (select ow.warehouse.id from OrganizationWarehouse ow where ow.warehouse.id = w.id and ow.active='Y' and ow.organization.id = \'" + OB.getParameters().get('inpadOrgId') + "\' )) or ((" + OB.isSalesTransaction() + " = false or \'"+OB.getWindowId()+"\' in (\'123271B9AD60469BAE8A924841456B63\'))))"]]></FILTER_EXPRESSION>
 <!--F42A1DD1B941461EB3B9AD07A534D91E-->  <OBCLKER_TEMPLATE_ID><![CDATA[9314DE8599AD44E7BFC4CC50699042AB]]></OBCLKER_TEMPLATE_ID>
 <!--F42A1DD1B941461EB3B9AD07A534D91E-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--F42A1DD1B941461EB3B9AD07A534D91E-->  <VALUEFIELD_ID><![CDATA[13CA3020FEB644D9AA51B4797181BB29]]></VALUEFIELD_ID>

@@ -198,7 +198,7 @@ public class AddPaymentActionHandler extends Action {
   }
 
   private void callPaymentProcess(ActionResult actionResult, JSONObject content,
-      String paymentId, boolean isWebService) throws JSONException {
+      String paymentId, boolean isWebService) throws Exception {
     // process payments
     JSONObject resultProcess = oldProcessPaymentHandler(getRequestParameters(), content, paymentId, isWebService);
     JSONObject resultMessage = resultProcess.has(MESSAGE) ? resultProcess.getJSONObject(MESSAGE) : new JSONObject();
@@ -228,12 +228,12 @@ public class AddPaymentActionHandler extends Action {
   }
 
   protected JSONObject oldProcessPaymentHandler(Map<String, Object> parameters, JSONObject content, String paymentId,
-      boolean isWebService) {
+      boolean isWebService) throws Exception {
     JSONObject jsonResponse = new JSONObject();
-    OBContext.setAdminMode(true);
     boolean openedFromMenu = false;
     String comingFrom = null;
     try {
+      OBContext.setAdminMode(true);
       if (isWebService) {
         FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, paymentId);
         if (payment.isProcessed()) {
@@ -328,17 +328,8 @@ public class AddPaymentActionHandler extends Action {
           // Load existing lines to be deleted.
           pdToRemove = OBDao.getIDListFromOBObject(payment.getFINPaymentDetailList());
         } else {
-          try {
             payment = createNewPayment(jsonParams, isReceipt, org, businessPartner, paymentDate,
                 currency, exchangeRate, convertedAmount, strActualPayment);
-          } catch (OBException e) {
-            JSONObject errorMessage = new JSONObject();
-            errorMessage.put(SEVERITY, ERROR);
-            errorMessage.put(TEXT, e.getMessage());
-            jsonResponse.put(RETRY_EXECUTION, openedFromMenu);
-            jsonResponse.put(MESSAGE, errorMessage);
-            return jsonResponse;
-          }
         }
         payment.setAmount(new BigDecimal(strActualPayment));
         FIN_AddPayment.setFinancialTransactionAmountAndRate(vars, payment, exchangeRate,
@@ -383,21 +374,6 @@ public class AddPaymentActionHandler extends Action {
         if(resultPost != null) {
           return resultPost;
         }
-      }
-    } catch (Exception e) {
-      log.error("Exception handling the new payment", e);
-
-      try {
-        jsonResponse = new JSONObject();
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        JSONObject errorMessage = new JSONObject();
-        errorMessage.put(SEVERITY, ERROR);
-        errorMessage.put(TEXT, message);
-        jsonResponse.put(RETRY_EXECUTION, openedFromMenu);
-        jsonResponse.put(MESSAGE, errorMessage);
-
-      } catch (Exception ignore) {
       }
     } finally {
       OBContext.restorePreviousMode();
@@ -468,13 +444,17 @@ public class AddPaymentActionHandler extends Action {
       strPaymentDocumentNo = FIN_Utility.getDocumentNo(documentType, FIN_PAYMENT);
     }
 
-    OBContext.setAdminMode(false);
     try {
+      OBContext.setAdminMode(false);
       FIN_Payment payment = (new AdvPaymentMngtDao()).getNewPayment(isReceipt, org, documentType,
           strPaymentDocumentNo, bPartner, paymentMethod, finAccount, strPaymentAmount, paymentDate,
           strReferenceNo, currency, conversionRate, convertedAmt);
       OBDal.getInstance().getConnection(true).commit();
       return payment;
+    } catch (Exception e) {
+      final Throwable ex = DbUtility.getUnderlyingSQLException(e.getCause() != null ? e.getCause() : e);
+      final String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
+      throw new OBException(message);
     } finally {
       OBContext.restorePreviousMode();
     }

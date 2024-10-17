@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
+import org.openbravo.advpaymentmngt.process.FIN_PaymentProcess;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.provider.OBConfigFileProvider;
 import org.openbravo.base.provider.OBProvider;
@@ -44,6 +45,8 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.ConnectionProviderImpl;
+import org.openbravo.erpCommon.utility.OBDateUtils;
+import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.exception.PoolNotFoundException;
 import org.openbravo.model.ad.process.ProcessInstance;
 import org.openbravo.model.ad.system.Client;
@@ -71,6 +74,7 @@ import org.openbravo.model.financialmgmt.payment.PaymentExecutionProcess;
 import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
+import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallProcess;
 import org.openbravo.test.base.OBBaseTest;
 
@@ -398,6 +402,87 @@ public class TestUtility extends OBBaseTest {
     return invoice;
   }
 
+  /**
+   * This method is used to create a new Invoice in the system.
+   *
+   * @param client The Client object representing the client for which the invoice is being created.
+   * @param organization The Organization object representing the organization for which the invoice is being created.
+   * @param invoiceDate The Date object representing the date of the invoice.
+   * @param accountingDate The Date object representing the accounting date of the invoice.
+   * @param taxDate The Date object representing the tax date of the invoice.
+   * @param documentType The DocumentType object representing the type of the document for the invoice.
+   * @param businessPartner The BusinessPartner object representing the business partner for the invoice.
+   * @param location The Location object representing the location for the invoice.
+   * @param priceList The PriceList object representing the price list for the invoice.
+   * @param currency The Currency object representing the currency for the invoice.
+   * @param paymentMethod The FIN_PaymentMethod object representing the payment method for the invoice.
+   * @param paymentTerm The PaymentTerm object representing the payment term for the invoice.
+   * @param product The Product object representing the product for the invoice.
+   * @param uom The UOM object representing the unit of measure for the invoice.
+   * @param invoicedQuantity The BigDecimal object representing the invoiced quantity for the invoice.
+   * @param netUnitPrice The BigDecimal object representing the net unit price for the invoice.
+   * @param netListPrice The BigDecimal object representing the net list price for the invoice.
+   * @param priceLimit The BigDecimal object representing the price limit for the invoice.
+   * @param taxRate The TaxRate object representing the tax rate for the invoice.
+   * @param lineNetAmount The BigDecimal object representing the line net amount for the invoice.
+   * @param isSalesInvoice The boolean value representing whether the invoice is a sales invoice or not.
+   * @return Invoice The created Invoice object.
+   */
+  public static Invoice createInvoice(Client client, Organization organization, Date invoiceDate,
+      Date accountingDate, Date taxDate, DocumentType documentType, BusinessPartner businessPartner,
+      org.openbravo.model.common.businesspartner.Location location, PriceList priceList,
+      Currency currency, FIN_PaymentMethod paymentMethod, PaymentTerm paymentTerm, Product product,
+      UOM uom, BigDecimal invoicedQuantity, BigDecimal netUnitPrice, BigDecimal netListPrice,
+      BigDecimal priceLimit, TaxRate taxRate, BigDecimal lineNetAmount, boolean isSalesInvoice) {
+    // Create header
+    Invoice invoice = OBProvider.getInstance().get(Invoice.class);
+    invoice.setOrganization(organization);
+    invoice.setTransactionDocument(documentType);
+    invoice.setBusinessPartner(businessPartner);
+    invoice.setPaymentTerms(paymentTerm);
+    invoice.setSalesTransaction(isSalesInvoice);
+    invoice.setPartnerAddress(location);
+    invoice.setClient(client);
+    invoice.setDocumentType(documentType);
+    invoice.setInvoiceDate(invoiceDate);
+    invoice.setAccountingDate(accountingDate);
+    invoice.setTaxDate(taxDate);
+    invoice.setCurrency(currency);
+    invoice.setPriceList(priceList);
+    invoice.setPaymentMethod(paymentMethod);
+
+    OBDal.getInstance().save(invoice);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().refresh(invoice);
+
+    // Create one line
+    InvoiceLine invoiceLine = OBProvider.getInstance().get(InvoiceLine.class);
+
+    invoiceLine.setOrganization(organization);
+    invoiceLine.setProduct(product);
+    invoiceLine.setLineNo(10L);
+    invoiceLine.setUOM(uom);
+    invoiceLine.setTax(taxRate);
+    invoiceLine.setGrossUnitPrice(netListPrice);
+    invoiceLine.setGrossListPrice(netListPrice);
+    invoiceLine.setStandardPrice(netListPrice);
+    invoiceLine.setBaseGrossUnitPrice(netListPrice);
+    invoiceLine.setGrossAmount(netListPrice);
+
+    invoiceLine.setInvoicedQuantity(invoicedQuantity);
+    invoiceLine.setUnitPrice(netUnitPrice);
+    invoiceLine.setListPrice(netListPrice);
+    invoiceLine.setPriceLimit(priceLimit);
+    invoiceLine.setLineNetAmount(lineNetAmount);
+
+    invoiceLine.setInvoice(invoice);
+
+    OBDal.getInstance().save(invoiceLine);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().refresh(invoiceLine);
+    return invoice;
+  }
+
   public static boolean processInvoice(Invoice invoice) throws Exception {
     OBContext.setAdminMode();
     Process process = null;
@@ -490,6 +575,52 @@ public class TestUtility extends OBBaseTest {
       OBContext.restorePreviousMode();
     }
     return refundPayment;
+  }
+
+  /**
+   * This method is used to create a reverse payment in the system.
+   *
+   * @param payment The FIN_Payment object representing the payment to be reversed.
+   * @return FIN_Payment The created reverse payment object.
+   * @throws Exception If there is an error during the creation of the reverse payment.
+   */
+  public static FIN_Payment createReversePayment(FIN_Payment payment)
+      throws Exception {
+    FIN_Payment reversePayment = null;
+    try {
+      OBContext.setAdminMode();
+      VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
+          OBContext.getOBContext().getCurrentClient().getId(),
+          OBContext.getOBContext().getCurrentOrganization().getId(),
+          OBContext.getOBContext().getRole().getId());
+
+      ProcessBundle pb = new ProcessBundle("29D17F515727436DBCE32BC6CA28382B", vars).init(getConnectionProviderMy());
+      HashMap<String, Object> parameters = new HashMap<>();
+      parameters.put("action", "RV");
+      parameters.put("paymentdate", OBDateUtils.formatDate(payment.getPaymentDate()));
+      parameters.put("Fin_Payment_ID", payment.getId());
+      parameters.put("comingFrom", null);
+      parameters.put("selectedCreditLineIds", null);
+      pb.setParams(parameters);
+      new FIN_PaymentProcess().execute(pb);
+      OBError myMessage = (OBError) pb.getResult();
+      if (myMessage != null) {
+        OBDal.getInstance().refresh(payment);
+        reversePayment = payment.getReversedPayment();
+        // Log success message
+        log.info("Reverse payment created successfully for payment ID: " + payment.getId());
+      } else {
+        // Log error message
+        log.error("Failed to create reverse payment for payment ID: " + payment.getId());
+      }
+    } catch (Exception e) {
+      // Log exception
+      log.error("Exception occurred while creating reverse payment for payment ID: " + payment.getId(), e);
+      throw e;
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+    return reversePayment;
   }
 
   public static void processPaymentProposal(FIN_PaymentProposal paymentProposal,
