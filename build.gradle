@@ -35,9 +35,9 @@ dependencies {
 
 }
 
-final String CURRENT_VERSION = "24.2.6"
-final String NEXT_RELEASE = "24.3.0"
-final String NEXT_HOTFIX = "24.2.7"
+final String CURRENT_VERSION = "24.3.1"
+final String NEXT_RELEASE = "24.4.0"
+final String NEXT_HOTFIX = "24.3.2"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")

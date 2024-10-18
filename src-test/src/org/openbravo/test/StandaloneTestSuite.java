@@ -49,6 +49,7 @@ import org.openbravo.test.centralbroker.CentralBrokerTest;
 import org.openbravo.test.conversionratedoc.ConversionRateDocUniqueTestSuite;
 import org.openbravo.test.copyLinesFromOrders.CopyLinesFromOrdersTest;
 import org.openbravo.test.costing.TestCosting;
+import org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTest;
 import org.openbravo.test.createlinesfrom.CreateLinesFromTest;
 import org.openbravo.test.dal.AdminContextTest;
 import org.openbravo.test.dal.ComputedColumnsTest;
@@ -118,6 +119,7 @@ import org.openbravo.test.security.WritableReadableOrganizationClientTest;
 import org.openbravo.test.services.ServicesTest;
 import org.openbravo.test.services.ServicesTest2;
 import org.openbravo.test.services.ServicesTest3;
+import org.openbravo.test.stockValuationReport.ReportValuationStockTest;
 import org.openbravo.test.system.CryptoUtilities;
 import org.openbravo.test.system.ErrorTextParserIntegrationTest;
 import org.openbravo.test.system.ErrorTextParserTest;
@@ -369,7 +371,13 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     PostedNoDocConfigTest.class,
 
     // Reverse Payment Test
-    ReversePaymentTest.class
+    ReversePaymentTest.class,
+
+    // Report Valuation Stock Test
+    ReportValuationStockTest.class,
+      
+    // Create Order From Quotation Test
+    CreateOrderFromQuotationTest.class
 
 })
 public class StandaloneTestSuite {
