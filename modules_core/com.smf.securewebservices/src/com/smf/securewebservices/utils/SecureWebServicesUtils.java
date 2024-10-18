@@ -2,8 +2,12 @@ package com.smf.securewebservices.utils;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.BatchUpdateException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -12,7 +16,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smf.securewebservices.SWSConfig;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -20,6 +29,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.ConfigParameters;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.LoginUtils;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.structure.BaseOBObject;
@@ -29,6 +39,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
@@ -38,13 +49,18 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.OrganizationTree;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.service.db.DalConnectionProvider;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.PublicKey;
+import java.security.PrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.X509EncodedKeySpec;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.smf.securewebservices.data.SMFSWSConfig;
 
 /**
  * @author androettop
@@ -53,6 +69,8 @@ public class SecureWebServicesUtils {
 	private static final Logger log = LogManager.getLogger(SecureWebServicesUtils.class);
 
 	static final long ONE_MINUTE_IN_MILLIS = 60000;
+	private static final String BEGIN_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----";
+	private static final String END_PUBLIC_KEY = "-----END PUBLIC KEY-----";
 
 
 	public static List<Organization> getChildrenOrganizations(Organization org) {
@@ -242,12 +260,74 @@ public class SecureWebServicesUtils {
 		return OBContext.getOBContext();
 	}
 
+	/**
+	 * Decodes and verifies a JWT token using the appropriate algorithm.
+	 * This method extracts the token header, determines the signing algorithm (either RS256 or HS256),
+	 * and verifies the token using the configured public key for RS256 or the private key for HS256.
+	 *
+	 * @param token The JWT token to be decoded and verified.
+	 * @return The decoded {@link DecodedJWT} object containing the claims from the token.
+	 * @throws IllegalArgumentException If the token is malformed, uses an unsupported signing algorithm, or the token is invalid.
+	 * @throws Exception If there is an issue retrieving the public or private key, or any other underlying exception.
+	 */
 	public static DecodedJWT decodeToken(String token) throws Exception {
+		String[] tokenParts = token.split("\\.");
+		if (tokenParts.length < 2) {
+			throw new IllegalArgumentException(OBMessageUtils.messageBD("SMFSWS_InvalidToken"));
+		}
+
+		String headerJson = new String(Base64.getUrlDecoder().decode(tokenParts[0]));
+
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode header = mapper.readTree(headerJson);
+		String algorithmUsed = header.get("alg").asText();
+
 		SWSConfig config = SWSConfig.getInstance();
-		Algorithm algorithm = Algorithm.HMAC256(config.getPrivateKey());
-		JWTVerifier verifier = JWT.require(algorithm).withIssuer("sws").build();
-		DecodedJWT jwt = verifier.verify(token);
-		return jwt;
+		Algorithm algorithm;
+
+		if (StringUtils.equals("RS256", algorithmUsed)) {
+			final RSAPublicKey publicKey = getRSAPublicKey(config);
+			algorithm = Algorithm.RSA256(publicKey);
+		} else if (StringUtils.equals("HS256", algorithmUsed)) {
+			algorithm = Algorithm.HMAC256(config.getPrivateKey());
+		} else {
+			throw new IllegalArgumentException(OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm" + algorithmUsed));
+		}
+
+		JWTVerifier verifier = JWT.require(algorithm)
+				.withIssuer("sws")
+				.build();
+
+		return verifier.verify(token);
+	}
+
+	/**
+	 * Retrieves the RSA public key from the SWSConfig configuration.
+	 * This method decodes the public key in PEM format, removes the header and footer,
+	 * and then converts it to an {@link RSAPublicKey} object using the RSA algorithm.
+	 *
+	 * @param config The configuration object that contains the public key in PEM format.
+	 * @return The {@link RSAPublicKey} to be used for verifying JWT tokens or other cryptographic operations.
+	 * @throws NoSuchAlgorithmException If the RSA algorithm is not available in the environment.
+	 * @throws InvalidKeySpecException If the public key specification is invalid.
+	 * @throws IllegalStateException If the public key is not configured or is blank.
+	 */
+	private static RSAPublicKey getRSAPublicKey(
+			SWSConfig config) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		if (StringUtils.isBlank(config.getPublicKey())) {
+			throw new IllegalStateException(OBMessageUtils.messageBD("SMFSWS_PublicKeyNotConfigured"));
+		}
+
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+		String publicKeyPEM = config.getPublicKey()
+				.replace(BEGIN_PUBLIC_KEY, "")
+				.replace(END_PUBLIC_KEY, "")
+				.replaceAll("\\s+", "");
+
+		byte[] publicBytes = Base64.getDecoder().decode(publicKeyPEM);
+		X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicBytes);
+		return (RSAPublicKey) keyFactory.generatePublic(publicKeySpec);
 	}
 
 	public static String generateToken(User user) throws Exception {
@@ -262,92 +342,47 @@ public class SecureWebServicesUtils {
 		return generateToken(user, role, org, null);
 	}
 
+	/**
+	 * Generates a JSON Web Token (JWT) for a given user with specified role, organization, and warehouse details.
+	 * This method dynamically selects the token signing algorithm based on the configuration setting.
+	 * It supports both RSA and HMAC algorithms for signing the token. It also handles role, organization,
+	 * and warehouse selection based on the input parameters or defaults when specific entities are not defined.
+	 *
+	 * @param user The {@link User} object representing the user for whom the token is being generated.
+	 * @param role The {@link Role} to be associated with the user. If null, the user's default or first role is used.
+	 * @param org The {@link Organization} to be associated with the user. If null, the user's default or first organization is used.
+	 * @param warehouse The {@link Warehouse} to be associated with the organization. If null, the organization's default or first warehouse is used.
+	 * @return A signed JWT as a {@link String}.
+	 * @throws Exception If there are any issues during token generation, such as missing roles, organizations, or warehouse information,
+	 *                   or issues with key generation or token signing.
+	 */
 	public static String generateToken(User user, Role role, Organization org, Warehouse warehouse) throws Exception {
-		OBContext.setAdminMode(true);
 		try {
+			OBContext.setAdminMode(true);
 			SWSConfig config = SWSConfig.getInstance();
 
 			Role selectedRole = null;
 			Organization selectedOrg = null;
 			Warehouse selectedWarehouse = null;
-
 			List<UserRoles> userRoleList = user.getADUserRolesList();
 			Role defaultWsRole = user.getSmfswsDefaultWsRole();
 			Role defaultRole = user.getDefaultRole();
 			Organization defaultOrg = user.getDefaultOrganization();
 			Warehouse defaultWarehouse = user.getDefaultWarehouse();
 
-			if (role != null)
-				for (UserRoles userRole : userRoleList) {
-					if (userRole.getRole().getId().equals(role.getId())) {
-						selectedRole = role;
-						break;
-					}
-				}
+			selectedRole = getRole(role, userRoleList, defaultWsRole, defaultRole);
+			selectedOrg = getOrganization(org, selectedRole, selectedOrg, defaultRole, defaultOrg);
+			selectedWarehouse = getWarehouse(warehouse, selectedOrg, selectedWarehouse, defaultWarehouse);
 
-			// if user has
-			if (selectedRole == null) {
-				if (defaultWsRole != null) {
-					selectedRole = defaultWsRole;
-				} else if (defaultRole != null) {
-					selectedRole = defaultRole;
-				} else if (userRoleList.size() > 0) {
-					selectedRole = userRoleList.get(0).getRole();
-				} else {
-					log.error("SWS - The selected user (\"" + user.getId() + "\") has no roles");
-					throw new Exception(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_UserHasNoRole",
-							OBContext.getOBContext().getLanguage().getLanguage()));
-				}
-			}
-			List<RoleOrganization> roleOrgList = selectedRole.getADRoleOrganizationList();
-			// if organization is valid, select
-			if (org != null)
-				for (RoleOrganization roleOrg : roleOrgList) {
-					if (roleOrg.getOrganization().getId().equals(org.getId())) {
-						selectedOrg = org;
-						break;
-					}
-				}
-			// if not valid select default org for the selected role
-			if (selectedOrg == null) {
-				if (defaultRole != null && defaultRole.getId().equals(selectedRole.getId()) && defaultOrg != null) {
-					selectedOrg = defaultOrg;
-				} else if (roleOrgList.size() > 0) {
-					selectedOrg = roleOrgList.get(0).getOrganization();
-				} else {
-					log.error("SWS - The selected role (\"" + selectedRole.getId() + "\") has no organization");
-					throw new Exception(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_RoleHasNoOrg",
-							OBContext.getOBContext().getLanguage().getLanguage()));
-				}
+			Algorithm algorithm;
+			if (StringUtils.equals("RS256", config.getAlgorithm())) {
+				final PrivateKey privateKey = getPrivateKey(config);
+				algorithm = Algorithm.RSA256((RSAPrivateKey) privateKey);
+			} else {
+				algorithm = Algorithm.HMAC256(config.getPrivateKey());
 			}
 
-			List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg);
-			// if warehouse is valid, select
-			if (warehouse != null)
-				for (Warehouse wh : warehouseList) {
-					if (wh.getId().equals(warehouse.getId())) {
-						selectedWarehouse = warehouse;
-						break;
-					}
-				}
-			// if not valid select default warehouse for the selected org
-			if (selectedWarehouse == null) {
-				if (defaultWarehouse != null) {
-					selectedWarehouse = defaultWarehouse;
-				} else if (warehouseList.size() > 0) {
-					selectedWarehouse = warehouseList.get(0);
-				} else {
-					log.error("SWS - The selected organization (\"" + selectedOrg.getId() + "\") has no warehouses");
-					throw new Exception(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_OrgHasNoRole",
-							OBContext.getOBContext().getLanguage().getLanguage()));
-				}
-			}
-
-			Algorithm algorithm = Algorithm.HMAC256(config.getPrivateKey());
-			Builder jwtBuilder = JWT.create().withIssuer("sws").withAudience("sws").withClaim("user", user.getId())
-					.withClaim("role", selectedRole.getId()).withClaim("organization", selectedOrg.getId())
-					.withClaim("warehouse", selectedWarehouse.getId())
-					.withClaim("client", selectedRole.getClient().getId()).withIssuedAt(new Date());
+			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse);
 
 			if (config.getExpirationTime() > 0) {
 				Calendar date = Calendar.getInstance();
@@ -362,4 +397,164 @@ public class SecureWebServicesUtils {
 		}
 	}
 
+	/**
+	 * Determines the appropriate warehouse for a user based on the provided organization and defaults.
+	 * The method attempts to select the warehouse specified in the input. If the provided warehouse
+	 * is invalid or null, it selects the default warehouse for the organization. If no default warehouse
+	 * is available, it selects the first warehouse available for the organization.
+	 *
+	 * @param warehouse The provided {@link Warehouse} to be validated.
+	 * @param selectedOrg The {@link Organization} associated with the warehouse.
+	 * @param selectedWarehouse The warehouse selected during processing, initially null.
+	 * @param defaultWarehouse The default {@link Warehouse} to be used if the provided warehouse is not valid.
+	 * @return The selected {@link Warehouse}.
+	 * @throws OBException If the organization has no available warehouses.
+	 */
+	private static Warehouse getWarehouse(Warehouse warehouse, Organization selectedOrg, Warehouse selectedWarehouse,
+			Warehouse defaultWarehouse) {
+		List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg);
+		// if warehouse is valid, select
+		if (warehouse != null)
+			for (Warehouse wh : warehouseList) {
+				if (StringUtils.equals(wh.getId(), warehouse.getId())) {
+					selectedWarehouse = warehouse;
+					break;
+				}
+			}
+		// if not valid select default warehouse for the selected org
+		if (selectedWarehouse == null) {
+			if (defaultWarehouse != null) {
+				selectedWarehouse = defaultWarehouse;
+			} else if (!warehouseList.isEmpty()) {
+				selectedWarehouse = warehouseList.get(0);
+			} else {
+				log.error(String.format("SWS - The selected organization (\"%s\") has no warehouses", selectedOrg.getId()));
+				throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_OrgHasNoRole",
+						OBContext.getOBContext().getLanguage().getLanguage()));
+			}
+		}
+		return selectedWarehouse;
+	}
+
+	/**
+	 * Determines the appropriate organization for a user based on the provided role and defaults.
+	 * The method attempts to select the organization specified in the input. If the provided organization
+	 * is invalid or null, it selects the default organization for the role. If no default organization
+	 * is available, it selects the first available organization for the role.
+	 *
+	 * @param org The provided {@link Organization} to be validated.
+	 * @param selectedRole The {@link Role} associated with the organization.
+	 * @param selectedOrg The organization selected during processing, initially null.
+	 * @param defaultRole The default {@link Role} to use if the provided role is not valid.
+	 * @param defaultOrg The default {@link Organization} to use if the provided organization is not valid.
+	 * @return The selected {@link Organization}.
+	 * @throws Exception If no valid organization can be determined.
+	 */
+	private static Organization getOrganization(Organization org, Role selectedRole, Organization selectedOrg,
+			Role defaultRole, Organization defaultOrg) throws OBException {
+		List<RoleOrganization> roleOrgList = selectedRole.getADRoleOrganizationList();
+		// if organization is valid, select
+		if (org != null)
+			for (RoleOrganization roleOrg : roleOrgList) {
+				if (StringUtils.equals(roleOrg.getOrganization().getId(), org.getId())) {
+					selectedOrg = org;
+					break;
+				}
+			}
+		// if not valid select default org for the selected role
+		if (selectedOrg == null) {
+			if (defaultRole != null && StringUtils.equals(defaultRole.getId(), selectedRole.getId()) && defaultOrg != null) {
+				selectedOrg = defaultOrg;
+			} else if (!roleOrgList.isEmpty()) {
+				selectedOrg = roleOrgList.get(0).getOrganization();
+			} else {
+				log.error(String.format("SWS - The selected role (\"" + selectedRole.getId() + "\") has no organization"));
+				throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_RoleHasNoOrg",
+						OBContext.getOBContext().getLanguage().getLanguage()));
+			}
+		}
+		return selectedOrg;
+	}
+
+	/**
+	 * Determines the appropriate role for a user based on the provided role and defaults.
+	 * The method attempts to select the role specified in the input. If the provided role is invalid or
+	 * null, it selects the user's default or first available role.
+	 *
+	 * @param role The provided {@link Role} to be validated.
+	 * @param userRoleList The list of {@link UserRoles} associated with the user.
+	 * @param defaultWsRole The default web service role to be used if the provided role is not valid.
+	 * @param defaultRole The default {@link Role} to be used if the provided role is not valid.
+	 * @return The selected {@link Role}.
+	 * @throws Exception If no valid role can be determined for the user.
+	 */
+	private static Role getRole(Role role, List<UserRoles> userRoleList, Role defaultWsRole,
+			Role defaultRole) throws Exception {
+		Role selectedRole;
+		if (role != null) {
+			selectedRole = userRoleList.stream()
+					.filter(userRole -> StringUtils.equals(userRole.getRole().getId(), role.getId()))
+					.findFirst()
+					.map(UserRoles::getRole)
+					.orElseThrow(() -> new Exception("The user has no roles"));
+		} else {
+			if (defaultWsRole != null) {
+				selectedRole = defaultWsRole;
+			} else if (defaultRole != null) {
+				selectedRole = defaultRole;
+			} else if (!userRoleList.isEmpty()) {
+				selectedRole = userRoleList.get(0).getRole();
+			} else {
+				throw new OBException("User has no roles defined");
+			}
+		}
+		return selectedRole;
+	}
+
+	/**
+	 * Retrieves the private key from the SWSConfig configuration.
+	 * This method decodes the private key in PEM format, removes the header and footer,
+	 * and then converts it to a {@link PrivateKey} object using the RSA algorithm.
+	 *
+	 * @param config The configuration that contains the private key in PEM format.
+	 * @return The {@link PrivateKey} used for signing.
+	 * @throws NoSuchAlgorithmException If the RSA algorithm is not available in the environment.
+	 * @throws InvalidKeySpecException If the private key specification is invalid.
+	 */
+	private static PrivateKey getPrivateKey(SWSConfig config) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+
+		String privateKeyPEM = config.getPrivateKey()
+				.replace("-----BEGIN PRIVATE KEY-----", "")
+				.replace("-----END PRIVATE KEY-----", "")
+				.replaceAll("\\s+", "");
+
+		byte[] privateBytes = Base64.getDecoder().decode(privateKeyPEM);
+		PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateBytes);
+		return keyFactory.generatePrivate(privateKeySpec);
+	}
+
+	/**
+	 * Creates a JWT builder with the standard claims for a user, role, organization, and warehouse.
+	 * This method constructs a JWT with the provided information, such as the user ID, role, organization,
+	 * and warehouse, and sets the issuer and audience to "sws".
+	 *
+	 * @param user The user for whom the token is being generated.
+	 * @param selectedRole The role assigned to the user.
+	 * @param selectedOrg The organization associated with the user.
+	 * @param selectedWarehouse The warehouse associated with the organization.
+	 * @return A {@link Builder} for the JWT with pre-set claims.
+	 */
+	private static Builder getJwtBuilder(User user, Role selectedRole, Organization selectedOrg,
+			Warehouse selectedWarehouse) {
+		return JWT.create()
+				.withIssuer("sws")
+				.withAudience("sws")
+				.withClaim("user", user.getId())
+				.withClaim("client", selectedRole.getClient().getId())
+				.withClaim("role", selectedRole.getId())
+				.withClaim("organization", selectedOrg.getId())
+				.withClaim("warehouse", selectedWarehouse.getId())
+				.withIssuedAt(new Date());
+	}
 }
