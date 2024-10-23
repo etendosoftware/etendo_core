@@ -117,6 +117,17 @@ jacoco {
     toolVersion = "0.8.10"
 }
 
+task jacocoRootReport(type: JacocoReport) {
+    executionData fileTree(dir: "$buildDir/jacoco", include: "*.exec")
+    sourceDirectories.setFrom(fileTree(dir: 'src, modules_core', include: '**/*.java'))
+    classDirectories.setFrom(fileTree(dir: "$buildDir/classes", include: '**/*.class'))
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
 jacocoTestReport {
     executionData fileTree(dir: "$buildDir/jacoco", include: "**/*.exec")
     reports {
@@ -134,7 +145,7 @@ task exportProjectVersion doLast {
 /**
  * Configuration for running static code analysis with SonarQube and generating code quality reports.
  */
-sonarqube {
+sonar {
     properties {
         property "sonar.host.url", "$sonarHostUrl"
         property "sonar.login", "$sonarToken"
@@ -145,15 +156,13 @@ sonarqube {
         property "sonar.sources", "$sonarSources"
         property "sonar.tests", "src-test/src"
         property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.coverage.jacoco.xmlReportPaths", "$buildDir"+"/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "$buildDir"+"/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
         property "sonar.projectVersion", "$sonarVersion"
         property "sonar.branch.name", "$sonarBranchName"
         property "sonar.scm.disabled", "true"
         property "sonar.exclusions", "src-gen"
     }
 }
-
-tasks['sonarqube'].dependsOn jacocoTestReport
 
 task upgradeCoreVersion {
     final String RELEASE = 'release'
