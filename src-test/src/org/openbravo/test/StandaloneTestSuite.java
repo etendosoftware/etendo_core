@@ -32,6 +32,7 @@ import org.openbravo.client.application.test.ADCSTest;
 import org.openbravo.client.application.test.DisplayLogicAtServerLevelTest;
 import org.openbravo.client.application.test.DynamicExpressionParserTest;
 import org.openbravo.client.application.test.MenuTest;
+import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
@@ -333,6 +334,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // db
     SqlCallableStatement.class, //
     PoolHasNoConnectionsDetection.class, //
+    ProcessTest.class,
 
     // grid configuration
     ViewGenerationWithDifferentConfigLevelTest.class, //
