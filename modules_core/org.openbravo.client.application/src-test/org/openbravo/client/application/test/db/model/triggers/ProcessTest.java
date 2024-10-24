@@ -21,8 +21,7 @@ package org.openbravo.client.application.test.db.model.triggers;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,16 +37,24 @@ import org.openbravo.service.db.DbUtility;
 import org.openbravo.test.base.Issue;
 import org.openbravo.test.base.OBBaseTest;
 
-public class OBUIAPP_ProcessTest extends OBBaseTest {
+/**
+ * Test class for testing the OBUIAPP_Process functionality.
+ */
+public class ProcessTest extends OBBaseTest {
 
-  private static Logger log = LogManager.getLogger();
   private static final String USER_INTERFACE_APP_MOD = "9BA0836A3CD74EE4AB48753A47211BCC";
-  private static String OBUIAPP_PROCESS_ID = "EBC24A55293F4E4BAF56EF8DFA43D578"; // RegisterModule Process Definition
-  private static String MESSAGE_MODULE_NOT_IN_DEVELOPMENT = "20532";
-  private static String MESSAGE_INSERT_OR_DELETE_MODULE_NOT_IN_DEVELOPMENT = "20533";
-  private static String MESSAGE_MOVE_TO_MODULE_NOT_IN_DEVELOPMENT = "ChangeNotInDevModule";
-  private static String ERROR_MESSAGE = "Modifications in a module marked as development are not allowed.";
-
+  private static final String OBUIAPP_PROCESS_ID = "EBC24A55293F4E4BAF56EF8DFA43D578"; // RegisterModule Process Definition
+  private static final String MESSAGE_MODULE_NOT_IN_DEVELOPMENT = "20532";
+  private static final String MESSAGE_INSERT_OR_DELETE_MODULE_NOT_IN_DEVELOPMENT = "20533";
+  private static final String MESSAGE_MOVE_TO_MODULE_NOT_IN_DEVELOPMENT = "ChangeNotInDevModule";
+  private static final String ERROR_MESSAGE = "Modifications in a module marked as development are not allowed.";
+  private static final String RDBMS_ORACLE = "ORACLE";
+  private String rdbms = null;
+  /**
+   * Sets up the test context before each test.
+   *
+   * @throws Exception if an error occurs during setup
+   */
   @Before
   public void setUpRP() throws Exception {
     super.setUp();
@@ -62,8 +69,12 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
     vsa.setSessionValue("#FormatOutput|generalQtyEdition", "#0.######");
     vsa.setSessionValue("#GroupSeparator|generalQtyEdition", ",");
     vsa.setSessionValue("#DecimalSeparator|generalQtyEdition", ".");
+    rdbms = getConnectionProvider().getRDBMS();
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_1() {
@@ -78,13 +89,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the search key of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_2() {
@@ -99,13 +113,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the name of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_3() {
@@ -120,13 +137,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the description of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_4() {
@@ -141,13 +161,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the help comment of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_5() {
@@ -162,13 +185,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the data access level of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_6() {
@@ -183,13 +209,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the Java class name of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_7() {
@@ -204,13 +233,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the background flag of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_8() {
@@ -225,13 +257,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the UI pattern of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_9() {
@@ -246,13 +281,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the multi-record flag of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_10() {
@@ -267,13 +305,17 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the requires explicit access permission flag of the process
+   * and expects an error indicating that modifications are not allowed because the module
+   * is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_11() {
@@ -288,13 +330,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the client-side validation of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_12() {
@@ -309,13 +354,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the grid legacy flag of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_13() {
@@ -330,13 +378,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the load function of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_14() {
@@ -351,13 +402,17 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the "can add records to a selector" flag of the process
+   * and expects an error indicating that modifications are not allowed because the module
+   * is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_15() {
@@ -372,13 +427,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the refresh function of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_16() {
@@ -393,13 +451,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for updating the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the SMFMU scan flag of the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testUpdateOBUIAPP_Process_17() {
@@ -414,13 +475,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for replacing the module of the OBUIAPP_Process when the module is not in development.
+   * This test attempts to set the module of the process to the core module and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testReplaceModuleOBUIAPP_Process() {
@@ -436,13 +500,16 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_MOVE_TO_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_MOVE_TO_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
   }
 
+  /**
+   * Test case for deleting the OBUIAPP_Process when the module is not in development.
+   * This test attempts to delete the process and expects an error
+   * indicating that modifications are not allowed because the module is not in development.
+   */
   @Test
   @Issue("#291")
   public void testDeleteProcessOBUIAPP_Process() {
@@ -456,10 +523,18 @@ public class OBUIAPP_ProcessTest extends OBBaseTest {
         OBDal.getInstance().flush();
         Assert.fail(ERROR_MESSAGE);
       } catch (Exception e) {
-        Throwable ex = DbUtility.getUnderlyingSQLException(e);
-        String message = OBMessageUtils.translateError(ex.getMessage()).getMessage();
-        assertEquals(MESSAGE_INSERT_OR_DELETE_MODULE_NOT_IN_DEVELOPMENT, message);
+        checkTriggerException(e, MESSAGE_INSERT_OR_DELETE_MODULE_NOT_IN_DEVELOPMENT);
       }
     }
+  }
+
+  private void checkTriggerException(Exception exception, String expectedMessage) {
+    Throwable ex = DbUtility.getUnderlyingSQLException(exception);
+    String bdMessage = OBMessageUtils.translateError(ex.getMessage()).getMessage();
+    if (StringUtils.equalsIgnoreCase(RDBMS_ORACLE, rdbms)) {
+      expectedMessage =  OBMessageUtils.messageBD(expectedMessage);
+    }
+    assertEquals(expectedMessage, bdMessage);
+    OBDal.getInstance().rollbackAndClose();
   }
 }
