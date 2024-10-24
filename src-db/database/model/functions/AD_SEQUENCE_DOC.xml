@@ -44,7 +44,22 @@
   v_Prefix VARCHAR2(30) ;
   v_Suffix VARCHAR2(30) ;
 BEGIN
-  RAISE_APPLICATION_ERROR(-20000, '@DeprecatedAPI@' || p_SequenceName) ;
+  IF p_Update_Next='Y' THEN
+    UPDATE AD_Sequence
+      SET CurrentNext=CurrentNext + IncrementNo, Updated=now()
+    WHERE Name=p_SequenceName
+    AND ad_client_id=p_ad_client_id;
+  END IF;
+
+  SELECT CurrentNext - (CASE WHEN p_Update_Next='Y' THEN IncrementNo ELSE 0 END), Prefix, Suffix
+  INTO v_NextNo, v_Prefix, v_Suffix
+  FROM AD_Sequence
+  WHERE Name=p_SequenceName  AND IsActive='Y'  AND IsTableID='N'  AND IsAutoSequence='Y'  AND AD_Client_ID=p_AD_Client_ID;
+
+  p_DocumentNo:=COALESCE(v_Prefix, '') || v_NextNo || COALESCE(v_Suffix, '') ;
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+  RAISE_APPLICATION_ERROR(-20000, '@DocumentSequenceNotFound@' || p_SequenceName) ;
 END AD_SEQUENCE_DOC
 ]]></body>
     </function>
