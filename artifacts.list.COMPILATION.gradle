@@ -64,7 +64,7 @@ List<String> _dependenciesListCOMPILATION = [
   'commons-dbcp:commons-dbcp:1.4', 
   'org.glassfish.jaxb:txw2:2.3.1', 
   'net.sourceforge.jexcelapi:jxl:2.6.10', 
-  'net.bytebuddy:byte-buddy:1.9.10', 
+  'net.bytebuddy:byte-buddy:1.15.3',
   'oro:oro:2.0.8', 
   'com.etendoerp:wstx-asl:3.0.2', 
   'commons-betwixt:commons-betwixt:0.8', 
