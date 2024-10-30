@@ -102,7 +102,7 @@ public class OBPropertiesProvider {
 
 
   private void loadEnvProperties() {
-    log.debug("Loading environment variables into Openbravo properties");
+    log.debug("Loading enviroment variables into obProperties from Properties Provider");
 
     Map<String, String> envVariables = System.getenv();
 
