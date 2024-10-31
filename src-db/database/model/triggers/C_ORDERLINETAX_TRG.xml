@@ -105,7 +105,7 @@ BEGIN
       ELSE
         UPDATE C_ORDERTAX
         SET TAXAMT = CASE WHEN v_DocTaxAmount='D' THEN ROUND(ROUND(TAXBASEAMT + v_Increment_Base, v_Prec) * v_Rate/100, v_Prec) ELSE (TAXAMT + v_Increment_Amount) END,
-        TAXBASEAMT = TAXBASEAMT + v_Increment_Base
+        TAXBASEAMT = ROUND(TAXBASEAMT + v_Increment_Base, v_Prec)
         WHERE C_OrderTax_ID = v_C_OrderTax_ID;
       END IF;
     ELSE
@@ -121,7 +121,7 @@ BEGIN
       VALUES (
       GET_UUID(), :NEW.C_Order_ID, :NEW.C_TAX_ID, :NEW.AD_CLIENT_ID, :NEW.AD_ORG_ID,
       'Y', now(), :NEW.UPDATEDBY, now(),
-      :NEW.UPDATEDBY, :NEW.TAXBASEAMT, :NEW.TAXAMT, v_LineNo);
+      :NEW.UPDATEDBY, ROUND(:NEW.TAXBASEAMT, v_Prec), :NEW.TAXAMT, v_LineNo);
     END IF;
   ELSE
     SELECT PROCESSED,
