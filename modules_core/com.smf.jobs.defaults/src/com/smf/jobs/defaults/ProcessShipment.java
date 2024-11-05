@@ -41,6 +41,7 @@ public class ProcessShipment extends Action {
       var documentAction = parameters.getString("DocAction");
       var errors = new MutableInt(0);
       var success = new MutableInt(0);
+      OBError message = new OBError();
 
       result.setType(Result.Type.SUCCESS);
 
@@ -48,11 +49,11 @@ public class ProcessShipment extends Action {
       log.debug(parameters.toString());
 
       for (ShipmentInOut shipmentInOut : input) {
-        var message = processShipment(shipmentInOut, documentAction);
-        ProcessUtils.updateResult(result, message, errors, success);
+        message = processShipment(shipmentInOut, documentAction);
+        ProcessUtils.updateResult(message, errors, success);
       }
 
-      ProcessUtils.massiveMessageHandler(result, input, errors, success, getInput());
+      ProcessUtils.massiveMessageHandler(result, message, input, errors, success, getInput());
     } catch (JSONException | ParseException e) {
       log.error(e.getMessage(), e);
       result.setType(Result.Type.ERROR);

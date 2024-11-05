@@ -49,18 +49,18 @@ public class ProcessInvoices extends Action {
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
             var errors = new MutableInt(0);
             var success = new MutableInt(0);
-
+            OBError message = new OBError();
             result.setType(Result.Type.SUCCESS);
 
             log.debug("Process Invoice Action Parameters:");
             log.debug(parameters.toString());
 
             for (Invoice invoice : input) {
-                var message = processInvoice(invoice, documentAction, voidDate, voidAcctDate);
-                ProcessUtils.updateResult(result, message, errors, success);
+                message = processInvoice(invoice, documentAction, voidDate, voidAcctDate);
+                ProcessUtils.updateResult(message, errors, success);
             }
 
-            ProcessUtils.massiveMessageHandler(result, input, errors, success, getInput());
+            ProcessUtils.massiveMessageHandler(result, message, input, errors, success, getInput());
         } catch (JSONException | ParseException e) {
             log.error(e.getMessage(), e);
             result.setType(Result.Type.ERROR);
