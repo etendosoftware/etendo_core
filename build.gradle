@@ -33,11 +33,13 @@ jandex {
 dependencies {
     jandex 'org.jboss:jandex:2.0.5.Final'
 
+    // Mockito extension for JUnit 5
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.2.0'
 }
 
-final String CURRENT_VERSION = "24.3.1"
+final String CURRENT_VERSION = "24.3.2"
 final String NEXT_RELEASE = "24.4.0"
-final String NEXT_HOTFIX = "24.3.2"
+final String NEXT_HOTFIX = "24.3.3"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
@@ -117,6 +119,17 @@ jacoco {
     toolVersion = "0.8.10"
 }
 
+task jacocoRootReport(type: JacocoReport) {
+    executionData fileTree(dir: "$buildDir/jacoco", include: "*.exec")
+    sourceDirectories.setFrom(fileTree(dir: 'src, modules_core', include: '**/*.java'))
+    classDirectories.setFrom(fileTree(dir: "$buildDir/classes", include: '**/*.class'))
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
 jacocoTestReport {
     executionData fileTree(dir: "$buildDir/jacoco", include: "**/*.exec")
     reports {
@@ -134,7 +147,7 @@ task exportProjectVersion doLast {
 /**
  * Configuration for running static code analysis with SonarQube and generating code quality reports.
  */
-sonarqube {
+sonar {
     properties {
         property "sonar.host.url", "$sonarHostUrl"
         property "sonar.login", "$sonarToken"
@@ -145,15 +158,13 @@ sonarqube {
         property "sonar.sources", "$sonarSources"
         property "sonar.tests", "src-test/src"
         property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.coverage.jacoco.xmlReportPaths", "$buildDir"+"/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.coverage.jacoco.xmlReportPaths", "$buildDir"+"/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
         property "sonar.projectVersion", "$sonarVersion"
         property "sonar.branch.name", "$sonarBranchName"
         property "sonar.scm.disabled", "true"
         property "sonar.exclusions", "src-gen"
     }
 }
-
-tasks['sonarqube'].dependsOn jacocoTestReport
 
 task upgradeCoreVersion {
     final String RELEASE = 'release'
