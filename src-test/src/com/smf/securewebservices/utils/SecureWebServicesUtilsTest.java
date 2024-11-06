@@ -8,19 +8,19 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 
 import org.junit.Before;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.test.base.TestConstants;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
-import org.openbravo.test.base.TestConstants;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -28,7 +28,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 import com.smf.securewebservices.SWSConfig;
 
-class SecureWebServicesUtilsTest extends WeldBaseTest {
+public class SecureWebServicesUtilsTest extends WeldBaseTest {
 
   SWSConfig configMock = Mockito.mock(SWSConfig.class);
 
@@ -42,27 +42,28 @@ class SecureWebServicesUtilsTest extends WeldBaseTest {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    // Initialize the OBContext with a valid session
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
-        TestConstants.Clients.FB_GRP, TestConstants.Orgs.ESP);
+        TestConstants.Clients.FB_GRP, TestConstants.Orgs.ESP_NORTE);
+    VariablesSecureApp vsa = new VariablesSecureApp(
+            OBContext.getOBContext().getUser().getId(),
+            OBContext.getOBContext().getCurrentClient().getId(),
+            OBContext.getOBContext().getCurrentOrganization().getId(),
+            OBContext.getOBContext().getRole().getId()
+    );
+
     VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
-        OBContext.getOBContext().getCurrentClient().getId(),
-        OBContext.getOBContext().getCurrentOrganization().getId());
+            OBContext.getOBContext().getCurrentClient().getId(),
+            OBContext.getOBContext().getCurrentOrganization().getId());
     RequestContext.get().setVariableSecureApp(vars);
   }
 
   @Test
-  void testGenerateTokenWithHS256Algorithm() throws Exception {
+  public void testGenerateTokenWithHS256Algorithm() throws Exception {
     User user = new User();
     Role role = new Role();
     Organization org = new Organization();
     Warehouse warehouse = new Warehouse();
-
-    OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
-        TestConstants.Clients.FB_GRP, TestConstants.Orgs.ESP);
-    VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
-        OBContext.getOBContext().getCurrentClient().getId(),
-        OBContext.getOBContext().getCurrentOrganization().getId());
-    RequestContext.get().setVariableSecureApp(vars);
 
     try (MockedStatic<SWSConfig> mockedConfig = Mockito.mockStatic(SWSConfig.class)) {
       mockedConfig.when(SWSConfig::getInstance).thenReturn(configMock);
@@ -84,7 +85,7 @@ class SecureWebServicesUtilsTest extends WeldBaseTest {
   }
 
   @Test
-  void testGenerateTokenWithES256Algorithm() throws Exception {
+  public void testGenerateTokenWithES256Algorithm() throws Exception {
     User user = new User();
     Role role = new Role();
     Organization org = new Organization();
@@ -112,7 +113,7 @@ class SecureWebServicesUtilsTest extends WeldBaseTest {
   }
 
   @Test
-  void testDecodeTokenWithES256Algorithm() throws Exception {
+  public void testDecodeTokenWithES256Algorithm() throws Exception {
     try (MockedStatic<SWSConfig> mockedConfig = Mockito.mockStatic(SWSConfig.class)) {
       mockedConfig.when(SWSConfig::getInstance).thenReturn(configMock);
       String token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.MEYCIQDKz5V+Oq8Qwp/AvpxT8Kv6nY1sIFfmC6sLYdCHdQIGKQIhAKngT4VLyPo1R9FeUt9TxxAzWY3zDuWr8zitjwX/gHVl";
@@ -131,7 +132,7 @@ class SecureWebServicesUtilsTest extends WeldBaseTest {
   }
 
   @Test
-  void testDecodeTokenWithHS256Algorithm() throws Exception {
+  public void testDecodeTokenWithHS256Algorithm() throws Exception {
     try (MockedStatic<SWSConfig> mockedConfig = Mockito.mockStatic(SWSConfig.class)) {
       mockedConfig.when(SWSConfig::getInstance).thenReturn(configMock);
       String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.nVfIiXhjhMAbHMqSGe6xALyB9gF-zNvuBhXKTa4pXiU";
@@ -150,7 +151,7 @@ class SecureWebServicesUtilsTest extends WeldBaseTest {
   }
 
   @Test
-  void testDecodeTokenThrowsExceptionWithInvalidToken() {
+  public void testDecodeTokenThrowsExceptionWithInvalidToken() {
     String invalidToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ";
 
     assertThrows(IllegalArgumentException.class, () -> {
@@ -159,7 +160,7 @@ class SecureWebServicesUtilsTest extends WeldBaseTest {
   }
 
   @Test
-  void testDecodeTokenThrowsExceptionWithUnsupportedAlgorithm() {
+  public void testDecodeTokenThrowsExceptionWithUnsupportedAlgorithm() {
     String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.MEYCIQDKz5V+Oq8Qwp/AvpxT8Kv6nY1sIFfmC6sLYdCHdQIGKQIhAKngT4VLyPo1R9FeUt9TxxAzWY3zDuWr8zitjwX/gHVl";
 
     assertThrows(IllegalArgumentException.class, () -> {

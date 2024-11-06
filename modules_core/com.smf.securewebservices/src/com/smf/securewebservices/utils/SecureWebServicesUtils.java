@@ -1,6 +1,7 @@
 package com.smf.securewebservices.utils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -18,6 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smf.securewebservices.SWSConfig;
@@ -168,14 +170,13 @@ public class SecureWebServicesUtils {
 		if (inv1 == null || inv2 == null) {
 			return false;
 		}
-		for (int i = 0; i < properties.length; i++) {
-			String field = properties[i];
-			Object value1 = inv1.get(field);
-			Object value2 = inv2.get(field);
-			if ((value1 != null && !value1.equals(value2)) || (value2 != null && !value2.equals(value1))) {
-				return false;
-			}
-		}
+    for (String field : properties) {
+      Object value1 = inv1.get(field);
+      Object value2 = inv2.get(field);
+      if ((value1 != null && !value1.equals(value2)) || (value2 != null && !value2.equals(value1))) {
+        return false;
+      }
+    }
 		return true;
 	}
 
@@ -281,32 +282,21 @@ public class SecureWebServicesUtils {
 	 *
 	 * @param token The JWT token to be decoded and verified.
 	 * @return The decoded {@link DecodedJWT} object containing the claims from the token.
-	 * @throws Exception If there is an issue retrieving the public or private key, or any other underlying exception.
+	 * @throws JsonProcessingException If there is an issue parsing the JSON header.
+	 * @throws JSONException If there is an issue parsing the public key JSON object.
+	 * @throws UnsupportedEncodingException If there is an issue decoding the public key.
+	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
+	 * @throws InvalidKeySpecException If the public key specification is invalid.
 	 */
-	public static DecodedJWT decodeToken(String token) throws Exception {
+	public static DecodedJWT decodeToken(String token)
+			throws JsonProcessingException, JSONException, UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeySpecException {
 		String[] tokenParts = token.split("\\.");
 		if (tokenParts.length < 2) {
 			throw new IllegalArgumentException(OBMessageUtils.messageBD("SMFSWS_InvalidToken"));
 		}
-
-		String headerJson = new String(Base64.getUrlDecoder().decode(tokenParts[0]));
-
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode header = mapper.readTree(headerJson);
-		String algorithmUsed = header.get("alg").asText();
-
+		final String algorithmUsed = getAlgorithmUsed(tokenParts);
 		SWSConfig config = SWSConfig.getInstance();
-		Algorithm algorithm;
-
-		if (StringUtils.equals(ES256_ALGORITHM, algorithmUsed)) {
-			final ECPublicKey publicKey = getECPublicKey(config);
-			algorithm = Algorithm.ECDSA256(publicKey);
-		} else if (StringUtils.equals(HS256_ALGORITHM, algorithmUsed)) {
-			algorithm = Algorithm.HMAC256(config.getPrivateKey());
-		} else {
-			String errorMessage = String.format(OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm"), algorithmUsed);
-			throw new IllegalArgumentException(errorMessage);
-		}
+		Algorithm algorithm = getDecoderAlgorithm(config, algorithmUsed);
 		JWTVerifier verifier = JWT.require(algorithm)
 				.withIssuer("sws")
 				.build();
@@ -314,26 +304,74 @@ public class SecureWebServicesUtils {
 	}
 
 	/**
+	 * Extracts the algorithm used to sign the JWT token from the token header.
+	 * This method decodes the token header and retrieves the "alg" claim to determine the algorithm used.
+	 *
+	 * @param tokenParts The array of token parts, split by the period character.
+	 * @return The algorithm used to sign the token.
+	 * @throws JsonProcessingException If there is an issue parsing the JSON header.
+	 */
+	private static String getAlgorithmUsed(String[] tokenParts) throws JsonProcessingException {
+		String headerJson = new String(Base64.getUrlDecoder().decode(tokenParts[0]));
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode header = mapper.readTree(headerJson);
+		return header.get("alg").asText();
+	}
+
+	/**
+	 * Determines the appropriate algorithm to use for decoding the JWT token.
+	 * This method retrieves the public or private key from the SWSConfig configuration and selects the
+	 * appropriate algorithm based on the configuration setting. It supports both ES256 and HS256 algorithms.
+	 *
+	 * @param config The SWSConfig instance containing the public or private key configuration.
+	 * @param algorithmUsed The algorithm used to sign the token.
+	 * @return The {@link Algorithm} to be used for decoding the token.
+	 * @throws JSONException If there is an issue parsing the public key JSON object.
+	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
+	 * @throws InvalidKeySpecException If the public key specification is invalid.
+	 * @throws UnsupportedEncodingException If there is an issue decoding the public key.
+	 */
+	private static Algorithm getDecoderAlgorithm(SWSConfig config,
+			String algorithmUsed) throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+		String publicKeyContent = config.getPrivateKey();
+		boolean isNewVersion = StringUtils.startsWith(publicKeyContent, "{") && StringUtils.endsWith(publicKeyContent, "}");
+		if (isNewVersion) {
+			JSONObject keys = new JSONObject(publicKeyContent);
+			publicKeyContent = keys.getJSONObject(PUBLIC_KEY).getString(PUBLIC_KEY);
+		}
+
+		Algorithm algorithm;
+		if (isNewVersion && StringUtils.equals(ES256_ALGORITHM, algorithmUsed)) {
+			final ECPublicKey publicKey = getECPublicKey(publicKeyContent);
+			algorithm = Algorithm.ECDSA256(publicKey);
+		} else if (!isNewVersion || StringUtils.equals(HS256_ALGORITHM, algorithmUsed)) {
+			algorithm = Algorithm.HMAC256(publicKeyContent);
+		} else {
+			String errorMessage = String.format(OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm"), algorithmUsed);
+			throw new IllegalArgumentException(errorMessage);
+		}
+		return algorithm;
+	}
+
+	/**
 	 * Retrieves the ES256 public key from the SWSConfig configuration.
 	 * This method decodes the public key in PEM format, removes the header and footer,
 	 * and then converts it to an {@link ECPublicKey} object using the ES256 algorithm.
 	 *
-	 * @param config The configuration object that contains the public key in PEM format.
+	 * @param publicKey The string that contains the public key in PEM format.
 	 * @return The {@link ECPublicKey} to be used for verifying JWT tokens or other cryptographic operations.
 	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
 	 * @throws InvalidKeySpecException If the public key specification is invalid.
 	 * @throws IllegalStateException If the public key is not configured or is blank.
 	 */
-	private static ECPublicKey getECPublicKey(SWSConfig config) throws NoSuchAlgorithmException,
-      InvalidKeySpecException, JSONException {
-		JSONObject keys = new JSONObject(config.getPrivateKey());
-		if (StringUtils.isBlank(keys.getString(PUBLIC_KEY))) {
+	static ECPublicKey getECPublicKey(String publicKey) throws NoSuchAlgorithmException,
+			InvalidKeySpecException {
+		if (StringUtils.isBlank(publicKey)) {
 			throw new IllegalStateException(OBMessageUtils.messageBD("SMFSWS_PublicKeyNotConfigured"));
 		}
 		KeyFactory keyFactory = KeyFactory.getInstance(EC);
 
-		String publicKeyPEM = keys.getString(PUBLIC_KEY)
-				.replace(BEGIN_PUBLIC_KEY, "")
+		String publicKeyPEM = publicKey.replace(BEGIN_PUBLIC_KEY, "")
 				.replace(END_PUBLIC_KEY, "")
 				.replaceAll("\\s+", "");
 
@@ -342,14 +380,49 @@ public class SecureWebServicesUtils {
 		return (ECPublicKey) keyFactory.generatePublic(publicKeySpec);
 	}
 
+	/**
+	 * Generates a JSON Web Token (JWT) for a given user with default role, organization, and warehouse details.
+	 * This method dynamically selects the token signing algorithm based on the configuration setting.
+	 * It supports both ECDSA and HMAC algorithms for signing the token.
+	 *
+	 * @param user The {@link User} object representing the user for whom the token is being generated.
+	 * @return A signed JWT as a {@link String}.
+	 * @throws Exception If there are any issues during token generation, such as missing roles, organizations, or warehouse information,
+	 *                   or issues with key generation or token signing.
+	 */
 	public static String generateToken(User user) throws Exception {
 		return generateToken(user, null, null, null);
 	}
 
+	/**
+	 * Generates a JSON Web Token (JWT) for a given user with specified role and default organization and warehouse details.
+	 * This method dynamically selects the token signing algorithm based on the configuration setting.
+	 * It supports both ECDSA and HMAC algorithms for signing the token. It also handles role selection based on the input parameter
+	 * or defaults when a specific role is not defined.
+	 *
+	 * @param user The {@link User} object representing the user for whom the token is being generated.
+	 * @param role The {@link Role} to be associated with the user. If null, the user's default or first role is used.
+	 * @return A signed JWT as a {@link String}.
+	 * @throws Exception If there are any issues during token generation, such as missing roles, organizations, or warehouse information,
+	 *                   or issues with key generation or token signing.
+	 */
 	public static String generateToken(User user, Role role) throws Exception {
 		return generateToken(user, role, null, null);
 	}
 
+	/**
+	 * Generates a JSON Web Token (JWT) for a given user with specified role and organization details.
+	 * This method dynamically selects the token signing algorithm based on the configuration setting.
+	 * It supports both ECDSA and HMAC algorithms for signing the token. It also handles role and organization selection
+	 * based on the input parameters or defaults when specific entities are not defined.
+	 *
+	 * @param user The {@link User} object representing the user for whom the token is being generated.
+	 * @param role The {@link Role} to be associated with the user. If null, the user's default or first role is used.
+	 * @param org The {@link Organization} to be associated with the user. If null, the user's default or first organization is used.
+	 * @return A signed JWT as a {@link String}.
+	 * @throws Exception If there are any issues during token generation, such as missing roles, organizations, or warehouse information,
+	 *                   or issues with key generation or token signing.
+	 */
 	public static String generateToken(User user, Role role, Organization org) throws Exception {
 		return generateToken(user, role, org, null);
 	}
@@ -357,7 +430,7 @@ public class SecureWebServicesUtils {
 	/**
 	 * Generates a JSON Web Token (JWT) for a given user with specified role, organization, and warehouse details.
 	 * This method dynamically selects the token signing algorithm based on the configuration setting.
-	 * It supports both RSA and HMAC algorithms for signing the token. It also handles role, organization,
+	 * It supports both ECDSA and HMAC algorithms for signing the token. It also handles role, organization,
 	 * and warehouse selection based on the input parameters or defaults when specific entities are not defined.
 	 *
 	 * @param user The {@link User} object representing the user for whom the token is being generated.
@@ -374,7 +447,6 @@ public class SecureWebServicesUtils {
 			SWSConfig config = SWSConfig.getInstance();
 
 			Role selectedRole = null;
-			Organization selectedOrg = null;
 			Warehouse selectedWarehouse = null;
 			List<UserRoles> userRoleList = user.getADUserRolesList();
 			Role defaultWsRole = user.getSmfswsDefaultWsRole();
@@ -383,17 +455,10 @@ public class SecureWebServicesUtils {
 			Warehouse defaultWarehouse = user.getDefaultWarehouse();
 
 			selectedRole = getRole(role, userRoleList, defaultWsRole, defaultRole);
-			selectedOrg = getOrganization(org, selectedRole, selectedOrg, defaultRole, defaultOrg);
+			Organization selectedOrg = getOrganization(org, selectedRole, defaultRole, defaultOrg);
 			selectedWarehouse = getWarehouse(warehouse, selectedOrg, selectedWarehouse, defaultWarehouse);
 
-			Algorithm algorithm;
-			JSONObject keys = new JSONObject(config.getPrivateKey());
-			if (StringUtils.equals(ES256_ALGORITHM, getPreferenceValue("SMFSWS_EncryptionAlgorithm"))) {
-				final PrivateKey privateKey = getECPrivateKey(keys.getString(PRIVATE_KEY));
-				algorithm = Algorithm.ECDSA256((ECPrivateKey) privateKey);
-			} else {
-				algorithm = Algorithm.HMAC256(keys.getString(PRIVATE_KEY));
-			}
+			final Algorithm algorithm = getEncoderAlgorithm(config);
 
 			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse);
 
@@ -408,6 +473,35 @@ public class SecureWebServicesUtils {
 		} finally {
 			OBContext.restorePreviousMode();
 		}
+	}
+
+	/**
+	 * Determines the appropriate algorithm to use for encoding the JWT token.
+	 * This method retrieves the private key from the SWSConfig configuration and selects the
+	 * appropriate algorithm based on the configuration setting. It supports both ES256 and HS256 algorithms.
+	 *
+	 * @param config The SWSConfig instance containing the private key configuration.
+	 * @return The {@link Algorithm} to be used for encoding the token.
+	 * @throws JSONException If there is an issue parsing the private key JSON object.
+	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
+	 * @throws InvalidKeySpecException If the private key specification is invalid.
+	 * @throws UnsupportedEncodingException If there is an issue decoding the private key.
+	 */
+	private static Algorithm getEncoderAlgorithm(SWSConfig config)
+			throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+		Algorithm algorithm;
+
+		String privateKeyContent = config.getPrivateKey();
+		boolean isNewVersion = StringUtils.startsWith(privateKeyContent, "{") && StringUtils.endsWith(privateKeyContent, "}");
+		if (isNewVersion && StringUtils.equals(ES256_ALGORITHM, getPreferenceValue("SMFSWS_EncryptionAlgorithm"))) {
+			JSONObject keys = new JSONObject(privateKeyContent);
+			privateKeyContent = keys.getString(PRIVATE_KEY);
+			final PrivateKey privateKey = getECPrivateKey(privateKeyContent);
+			algorithm = Algorithm.ECDSA256((ECPrivateKey) privateKey);
+		} else {
+			algorithm = Algorithm.HMAC256(privateKeyContent);
+		}
+		return algorithm;
 	}
 
 	/**
@@ -441,7 +535,8 @@ public class SecureWebServicesUtils {
 			} else if (!warehouseList.isEmpty()) {
 				selectedWarehouse = warehouseList.get(0);
 			} else {
-				log.error(String.format("SWS - The selected organization (\"%s\") has no warehouses", selectedOrg.getId()));
+				String errorMessage = String.format("SWS - The selected organization (\"%s\") has no warehouses", selectedOrg.getId());
+				log.error(errorMessage);
 				throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_OrgHasNoRole",
 						OBContext.getOBContext().getLanguage().getLanguage()));
 			}
@@ -457,14 +552,14 @@ public class SecureWebServicesUtils {
 	 *
 	 * @param org The provided {@link Organization} to be validated.
 	 * @param selectedRole The {@link Role} associated with the organization.
-	 * @param selectedOrg The organization selected during processing, initially null.
 	 * @param defaultRole The default {@link Role} to use if the provided role is not valid.
 	 * @param defaultOrg The default {@link Organization} to use if the provided organization is not valid.
 	 * @return The selected {@link Organization}.
 	 * @throws OBException If the role has no associated organizations.
    */
-	private static Organization getOrganization(Organization org, Role selectedRole, Organization selectedOrg,
+	private static Organization getOrganization(Organization org, Role selectedRole,
 			Role defaultRole, Organization defaultOrg) throws OBException {
+		Organization selectedOrg = null;
 		List<RoleOrganization> roleOrgList = selectedRole.getADRoleOrganizationList();
 		// if organization is valid, select
 		if (org != null)
@@ -481,7 +576,8 @@ public class SecureWebServicesUtils {
 			} else if (!roleOrgList.isEmpty()) {
 				selectedOrg = roleOrgList.get(0).getOrganization();
 			} else {
-				log.error(String.format("SWS - The selected role (\"" + selectedRole.getId() + "\") has no organization"));
+				String errorMessage = String.format("SWS - The selected role (\"%s\") has no organization", selectedRole.getId());
+				log.error(errorMessage);
 				throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_RoleHasNoOrg",
 						OBContext.getOBContext().getLanguage().getLanguage()));
 			}
@@ -534,7 +630,7 @@ public class SecureWebServicesUtils {
 	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
 	 * @throws InvalidKeySpecException If the private key specification is invalid.
 	 */
-	private static PrivateKey getECPrivateKey(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+	static PrivateKey getECPrivateKey(String privateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
 		KeyFactory keyFactory = KeyFactory.getInstance(EC);
 
 		String replacedKey = privateKey.replace(BEGIN_PRIVATE_KEY, "")

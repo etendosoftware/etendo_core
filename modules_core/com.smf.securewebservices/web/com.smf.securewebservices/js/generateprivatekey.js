@@ -41,7 +41,7 @@ isc.SMFSWSGenerateKeyButton.addProperties({
 
                 const secretKey = await window.crypto.subtle.exportKey("raw", key);
                 const secretKeyPem = arrayBufferToPem(secretKey, "SECRET KEY");
-                updateKeyFields(form, secretKeyPem, ''); // Only update the private key field
+                updateKeyField(form, secretKeyPem, '');
             }
         } catch (error) {
             console.error("Error generating keys:", error);
