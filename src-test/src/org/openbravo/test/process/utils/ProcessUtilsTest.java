@@ -27,6 +27,8 @@ import com.smf.jobs.defaults.Utils.ProcessUtils;
 public class ProcessUtilsTest extends OBBaseTest {
 
   public static final String DJOBS_POST_UNPOST_MESSAGE = "DJOBS_PostUnpostMessage";
+  public static final String ERROR = "error";
+  public static final String SUCCESS = "success";
 
   @Override
   @Before
@@ -54,8 +56,10 @@ public class ProcessUtilsTest extends OBBaseTest {
     Data originalInput = mock(Data.class);
     var errors = new MutableInt(0);
     var success = new MutableInt(2);
+    OBError message = new OBError();
+    message.setType(SUCCESS);
 
-    ProcessUtils.massiveMessageHandler(result, inputs, errors, success, originalInput);
+    ProcessUtils.massiveMessageHandler(result, message, inputs, errors, success, originalInput);
 
     assertEquals(Result.Type.SUCCESS, result.getType());
     assertEquals(String.format(OBMessageUtils.messageBD(DJOBS_POST_UNPOST_MESSAGE), success, errors),
@@ -69,8 +73,10 @@ public class ProcessUtilsTest extends OBBaseTest {
     Data originalInput = mock(Data.class);
     var errors = new MutableInt(2);
     var success = new MutableInt(0);
+    OBError message = new OBError();
+    message.setType(ERROR);
 
-    ProcessUtils.massiveMessageHandler(result, inputs, errors, success, originalInput);
+    ProcessUtils.massiveMessageHandler(result, message, inputs, errors, success, originalInput);
 
     assertEquals(Result.Type.ERROR, result.getType());
     assertEquals(String.format(OBMessageUtils.messageBD(DJOBS_POST_UNPOST_MESSAGE), success, errors),
@@ -84,8 +90,10 @@ public class ProcessUtilsTest extends OBBaseTest {
     Data originalInput = mock(Data.class);
     var errors = new MutableInt(1);
     var success = new MutableInt(1);
+    OBError message = new OBError();
+    message.setType("warning");
 
-    ProcessUtils.massiveMessageHandler(result, inputs, errors, success, originalInput);
+    ProcessUtils.massiveMessageHandler(result, message, inputs, errors, success, originalInput);
 
     assertEquals(Result.Type.WARNING, result.getType());
     assertEquals(String.format(OBMessageUtils.messageBD(DJOBS_POST_UNPOST_MESSAGE), success, errors),
@@ -93,34 +101,59 @@ public class ProcessUtilsTest extends OBBaseTest {
   }
 
   @Test
+  public void testMassiveMessageHandler_SingleInputError() {
+    ActionResult result = new ActionResult();
+    List<ShipmentInOut> inputs = List.of(mock(ShipmentInOut.class));
+    Data originalInput = mock(Data.class);
+    OBError message = new OBError();
+    message.setType(ERROR);
+    message.setMessage("Error Message");
+
+    ProcessUtils.massiveMessageHandler(result, message, inputs, new MutableInt(0), new MutableInt(0), originalInput);
+
+    assertEquals(Result.Type.ERROR, result.getType());
+    assertEquals("Error Message", result.getMessage());
+  }
+
+  @Test
+  public void testMassiveMessageHandler_SingleInputSuccess() {
+    ActionResult result = new ActionResult();
+    List<ShipmentInOut> inputs = List.of(mock(ShipmentInOut.class));
+    Data originalInput = mock(Data.class);
+    OBError message = new OBError();
+    message.setType(SUCCESS);
+    message.setMessage("Success Message");
+
+    ProcessUtils.massiveMessageHandler(result, message, inputs, new MutableInt(0), new MutableInt(0), originalInput);
+
+    assertEquals(Result.Type.SUCCESS, result.getType());
+    assertEquals("Success Message", result.getMessage());
+  }
+
+  @Test
   public void testUpdateResult_ErrorMessage() {
-    testUpdateResultHelper("Error", "Error Title", "Error Message", 1, 0, "Error Title: Error Message");
+    MutableInt errors = new MutableInt(0);
+    MutableInt success = new MutableInt(0);
+    OBError message = new OBError();
+    message.setType(ERROR);
+
+    ProcessUtils.updateResult(message, errors, success);
+
+    assertEquals(1, errors.intValue());
+    assertEquals(0, success.intValue());
   }
 
   @Test
   public void testUpdateResult_SuccessMessage() {
-    testUpdateResultHelper("Success", "", "Success Message", 0, 1, "Success Message");
-  }
-
-  @Test
-  public void testUpdateResult_OtherTypeMessage() {
-    testUpdateResultHelper("Warning", "Warning Title", "Warning Message", 0, 0, "Warning Title: Warning Message");
-  }
-
-  private void testUpdateResultHelper(String type, String title, String message, int expectedErrors, int expectedSuccess, String expectedResultMessage) {
-    ActionResult result = new ActionResult();
-    OBError obMessage = new OBError();
-    obMessage.setType(type);
-    obMessage.setTitle(title);
-    obMessage.setMessage(message);
     MutableInt errors = new MutableInt(0);
     MutableInt success = new MutableInt(0);
+    OBError message = new OBError();
+    message.setType(SUCCESS);
 
-    ProcessUtils.updateResult(result, obMessage, errors, success);
+    ProcessUtils.updateResult(message, errors, success);
 
-    assertEquals(expectedErrors, errors.intValue());
-    assertEquals(expectedSuccess, success.intValue());
-    assertEquals(expectedResultMessage, result.getMessage());
+    assertEquals(0, errors.intValue());
+    assertEquals(1, success.intValue());
   }
 
 }

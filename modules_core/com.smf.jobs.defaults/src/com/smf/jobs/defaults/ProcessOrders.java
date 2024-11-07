@@ -39,6 +39,7 @@ public class ProcessOrders extends Action {
     var result = new ActionResult();
     var errors = new MutableInt(0);
     var success = new MutableInt(0);
+    OBError message = new OBError();
 
     result.setType(Result.Type.SUCCESS);
 
@@ -50,11 +51,11 @@ public class ProcessOrders extends Action {
       log.debug(parameters.toString());
 
       for (Order order : input) {
-        var message = processOrder(order, documentAction);
-        ProcessUtils.updateResult(result, message, errors, success);
+        message = processOrder(order, documentAction);
+        ProcessUtils.updateResult(message, errors, success);
       }
 
-      ProcessUtils.massiveMessageHandler(result, input, errors, success, getInput());
+      ProcessUtils.massiveMessageHandler(result, message, input, errors, success, getInput());
     } catch (JSONException | ParseException e) {
       log.error(e.getMessage(), e);
       result.setType(Result.Type.ERROR);
