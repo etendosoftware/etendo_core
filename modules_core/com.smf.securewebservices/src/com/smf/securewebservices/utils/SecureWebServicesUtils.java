@@ -41,14 +41,15 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
+import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.access.UserRoles;
-import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.OrganizationTree;
 import org.openbravo.model.common.enterprise.Warehouse;
@@ -337,7 +338,7 @@ public class SecureWebServicesUtils {
 		boolean isNewVersion = StringUtils.startsWith(publicKeyContent, "{") && StringUtils.endsWith(publicKeyContent, "}");
 		if (isNewVersion) {
 			JSONObject keys = new JSONObject(publicKeyContent);
-			publicKeyContent = keys.getJSONObject(PUBLIC_KEY).getString(PUBLIC_KEY);
+			publicKeyContent = StringUtils.equals(ES256_ALGORITHM, algorithmUsed) ? keys.getString(PUBLIC_KEY) : keys.getString(PRIVATE_KEY);
 		}
 
 		Algorithm algorithm;
@@ -364,7 +365,7 @@ public class SecureWebServicesUtils {
 	 * @throws InvalidKeySpecException If the public key specification is invalid.
 	 * @throws IllegalStateException If the public key is not configured or is blank.
 	 */
-	static ECPublicKey getECPublicKey(String publicKey) throws NoSuchAlgorithmException,
+	public static ECPublicKey getECPublicKey(String publicKey) throws NoSuchAlgorithmException,
 			InvalidKeySpecException {
 		if (StringUtils.isBlank(publicKey)) {
 			throw new IllegalStateException(OBMessageUtils.messageBD("SMFSWS_PublicKeyNotConfigured"));
@@ -488,14 +489,21 @@ public class SecureWebServicesUtils {
 	 * @throws UnsupportedEncodingException If there is an issue decoding the private key.
 	 */
 	private static Algorithm getEncoderAlgorithm(SWSConfig config)
-			throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+      throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException, PropertyException {
 		Algorithm algorithm;
 
 		String privateKeyContent = config.getPrivateKey();
 		boolean isNewVersion = StringUtils.startsWith(privateKeyContent, "{") && StringUtils.endsWith(privateKeyContent, "}");
-		if (isNewVersion && StringUtils.equals(ES256_ALGORITHM, getPreferenceValue("SMFSWS_EncryptionAlgorithm"))) {
+		if (isNewVersion) {
 			JSONObject keys = new JSONObject(privateKeyContent);
 			privateKeyContent = keys.getString(PRIVATE_KEY);
+		}
+
+		String value = Preferences.getPreferenceValue("SMFSWS_EncryptionAlgorithm", true,
+				OBContext.getOBContext().getCurrentClient(),
+				OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(), OBContext.getOBContext().getRole(),
+				null);
+		if (isNewVersion && StringUtils.equals(ES256_ALGORITHM, value)) {
 			final PrivateKey privateKey = getECPrivateKey(privateKeyContent);
 			algorithm = Algorithm.ECDSA256((ECPrivateKey) privateKey);
 		} else {
@@ -664,20 +672,5 @@ public class SecureWebServicesUtils {
 				.withClaim("organization", selectedOrg.getId())
 				.withClaim("warehouse", selectedWarehouse.getId())
 				.withIssuedAt(new Date());
-	}
-
-	/**
-	 * This method is used to get the preference value.
-	 * It first gets the Preference instance by the preference value.
-	 *
-	 * @param prefValue a String containing the preference value
-	 * @return a String containing the preference value
-	 */
-	public static String getPreferenceValue(String prefValue) {
-		Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
-				.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, prefValue))
-				.setMaxResults(1)
-				.uniqueResult();
-		return pref != null ? pref.getSearchKey() : null;
 	}
 }

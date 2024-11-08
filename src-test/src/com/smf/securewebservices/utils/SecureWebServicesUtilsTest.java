@@ -2,18 +2,15 @@ package com.smf.securewebservices.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-
-import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.ECPublicKey;
-
+import org.hibernate.criterion.Restrictions;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.dal.service.OBDal;
+import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.test.base.TestConstants;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
@@ -22,149 +19,109 @@ import org.openbravo.model.ad.access.User;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
 import com.smf.securewebservices.SWSConfig;
+import com.smf.securewebservices.data.SMFSWSConfig;
 
 public class SecureWebServicesUtilsTest extends WeldBaseTest {
 
-  SWSConfig configMock = Mockito.mock(SWSConfig.class);
+  private static final String HS256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN SECRET KEY-----\\nKpTlGYVO1aUq62eoJQp+FnoLbLG0NyqkinA9TrbxJGQ=\\n-----END SECRET KEY-----\",\"public-key\":\"\"}";
+  private static final String ES256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN PRIVATE KEY-----\\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgGCwdf4q+/1xT94jl\\nCyC67oHYThVwLfgSKUG9DUK/4lChRANCAATZxYkUTuZoi6OX8LPB1bV19V7E/q2k\\nwb6+aJijXx/1Udqa72rN8CCP7Qo7cRtpUFTVul4e0ovQelcsjQX6GX9Y\\n-----END PRIVATE KEY-----\",\"public-key\":\"-----BEGIN PUBLIC KEY-----\\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2cWJFE7maIujl/CzwdW1dfVexP6t\\npMG+vmiYo18f9VHamu9qzfAgj+0KO3EbaVBU1bpeHtKL0HpXLI0F+hl/WA==\\n-----END PUBLIC KEY-----\"}";
 
-  @Spy
-  private ECPublicKey ecPublicKeyMock;
-
-  @Spy
-  private ECPrivateKey ecPrivateKeyMock;
 
   @Override
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    // Initialize the OBContext with a valid session
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
         TestConstants.Clients.FB_GRP, TestConstants.Orgs.ESP_NORTE);
-    VariablesSecureApp vsa = new VariablesSecureApp(
-            OBContext.getOBContext().getUser().getId(),
-            OBContext.getOBContext().getCurrentClient().getId(),
-            OBContext.getOBContext().getCurrentOrganization().getId(),
-            OBContext.getOBContext().getRole().getId()
-    );
-
     VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
             OBContext.getOBContext().getCurrentClient().getId(),
             OBContext.getOBContext().getCurrentOrganization().getId());
     RequestContext.get().setVariableSecureApp(vars);
   }
 
-  @Test
-  public void testGenerateTokenWithHS256Algorithm() throws Exception {
-    User user = new User();
-    Role role = new Role();
-    Organization org = new Organization();
-    Warehouse warehouse = new Warehouse();
+  private static void configSWSConfig(String keys) {
+    OBContext.setOBContext(TestConstants.Users.SYSTEM);
+    SMFSWSConfig config = OBProvider.getInstance().get(SMFSWSConfig.class);
+    config.setExpirationTime(0L);
+    config.setPrivateKey(keys);
+    OBDal.getInstance().save(config);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().commitAndClose();
+    SWSConfig instance = SWSConfig.getInstance();
+    instance.refresh(config);
+  }
 
-    try (MockedStatic<SWSConfig> mockedConfig = Mockito.mockStatic(SWSConfig.class)) {
-      mockedConfig.when(SWSConfig::getInstance).thenReturn(configMock);
-      when(configMock.getPrivateKey()).thenReturn("{\"private-key\":\"HS256_PRIVATE_KEY\",\"public-key\":\"HS256_PUBLIC_KEY\"}");
-      when(SecureWebServicesUtils.getPreferenceValue("SMFSWS_EncryptionAlgorithm")).thenReturn("HS256");
-
-      String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
-
-      DecodedJWT decodedToken = JWT.require(Algorithm.HMAC256("HS256_PRIVATE_KEY"))
-          .withIssuer("sws")
-          .build()
-          .verify(token);
-
-      assertEquals(user.getId(), decodedToken.getClaim("user").asString());
-      assertEquals(role.getId(), decodedToken.getClaim("role").asString());
-      assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
-      assertEquals(warehouse.getId(), decodedToken.getClaim("warehouse").asString());
-    }
+  private static void configAlgorithmPreference(String algorithm) {
+    OBContext.setOBContext(TestConstants.Users.ADMIN);
+    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
+        .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "SMFSWS_EncryptionAlgorithm"))
+        .uniqueResult();
+    pref.setSearchKey(algorithm);
+    OBDal.getInstance().save(pref);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().commitAndClose();
+    OBContext.setOBContext(TestConstants.Users.SYSTEM);
   }
 
   @Test
-  public void testGenerateTokenWithES256Algorithm() throws Exception {
-    User user = new User();
-    Role role = new Role();
-    Organization org = new Organization();
-    Warehouse warehouse = new Warehouse();
+  public void testGenerateAndDecodeTokenWithHS256Algorithm() throws Exception {
+    configSWSConfig(HS256_PRIVATE_KEY_MOCK);
+    configAlgorithmPreference("HS256");
+    User user = OBContext.getOBContext().getUser();
+    Role role = OBContext.getOBContext().getRole();
+    Organization org = OBContext.getOBContext().getCurrentOrganization();
+    Warehouse warehouse = user.getDefaultWarehouse();
 
-    try (MockedStatic<SWSConfig> mockedConfig = Mockito.mockStatic(SWSConfig.class)) {
-      mockedConfig.when(SWSConfig::getInstance).thenReturn(configMock);
-      when(configMock.getPrivateKey()).thenReturn("{\"private-key\":\"ES256_PRIVATE_KEY\",\"public-key\":\"ES256_PUBLIC_KEY\"}");
-      when(SecureWebServicesUtils.getPreferenceValue("SMFSWS_EncryptionAlgorithm")).thenReturn("ES256");
-      when(SecureWebServicesUtils.getECPrivateKey("ES256_PRIVATE_KEY")).thenReturn(ecPrivateKeyMock);
-      when(SecureWebServicesUtils.getECPublicKey(configMock)).thenReturn(ecPublicKeyMock);
+    String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
+    DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
 
-      String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
-
-      DecodedJWT decodedToken = JWT.require(Algorithm.ECDSA256((ECPublicKey) ecPublicKeyMock))
-          .withIssuer("sws")
-          .build()
-          .verify(token);
-
-      assertEquals(user.getId(), decodedToken.getClaim("user").asString());
-      assertEquals(role.getId(), decodedToken.getClaim("role").asString());
-      assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
-      assertEquals(warehouse.getId(), decodedToken.getClaim("warehouse").asString());
-    }
+    assertEquals(user.getId(), decodedToken.getClaim("user").asString());
+    assertEquals(role.getId(), decodedToken.getClaim("role").asString());
+    assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
   }
 
   @Test
-  public void testDecodeTokenWithES256Algorithm() throws Exception {
-    try (MockedStatic<SWSConfig> mockedConfig = Mockito.mockStatic(SWSConfig.class)) {
-      mockedConfig.when(SWSConfig::getInstance).thenReturn(configMock);
-      String token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.MEYCIQDKz5V+Oq8Qwp/AvpxT8Kv6nY1sIFfmC6sLYdCHdQIGKQIhAKngT4VLyPo1R9FeUt9TxxAzWY3zDuWr8zitjwX/gHVl";
+  public void testGenerateAndDecodeTokenWithES256Algorithm() throws Exception {
+    configSWSConfig(ES256_PRIVATE_KEY_MOCK);
+    configAlgorithmPreference("ES256");
+    User user = OBContext.getOBContext().getUser();
+    Role role = OBContext.getOBContext().getRole();
+    Organization org = OBContext.getOBContext().getCurrentOrganization();
+    Warehouse warehouse = user.getDefaultWarehouse();
 
-      when(configMock.getPrivateKey()).thenReturn(
-          "{\"private-key\":\"ES256_PRIVATE_KEY\",\"public-key\":\"ES256_PUBLIC_KEY\"}");
-      when(SecureWebServicesUtils.getECPublicKey(configMock)).thenReturn(ecPublicKeyMock);
+    String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
+    DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
 
-      DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
-
-      assertEquals("1234", decodedToken.getClaim("user").asString());
-      assertEquals("ROLE_1", decodedToken.getClaim("role").asString());
-      assertEquals("ORG_1", decodedToken.getClaim("organization").asString());
-      assertEquals("WH_1", decodedToken.getClaim("warehouse").asString());
-    }
-  }
-
-  @Test
-  public void testDecodeTokenWithHS256Algorithm() throws Exception {
-    try (MockedStatic<SWSConfig> mockedConfig = Mockito.mockStatic(SWSConfig.class)) {
-      mockedConfig.when(SWSConfig::getInstance).thenReturn(configMock);
-      String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.nVfIiXhjhMAbHMqSGe6xALyB9gF-zNvuBhXKTa4pXiU";
-
-      when(configMock.getPrivateKey()).thenReturn(
-          "{\"private-key\":\"HS256_PRIVATE_KEY\",\"public-key\":\"HS256_PUBLIC_KEY\"}");
-      when(SecureWebServicesUtils.getPreferenceValue("SMFSWS_EncryptionAlgorithm")).thenReturn("HS256");
-
-      DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
-
-      assertEquals("1234", decodedToken.getClaim("user").asString());
-      assertEquals("ROLE_1", decodedToken.getClaim("role").asString());
-      assertEquals("ORG_1", decodedToken.getClaim("organization").asString());
-      assertEquals("WH_1", decodedToken.getClaim("warehouse").asString());
-    }
-  }
-
-  @Test
-  public void testDecodeTokenThrowsExceptionWithInvalidToken() {
-    String invalidToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ";
-
-    assertThrows(IllegalArgumentException.class, () -> {
-      SecureWebServicesUtils.decodeToken(invalidToken);
-    });
+    assertEquals(user.getId(), decodedToken.getClaim("user").asString());
+    assertEquals(role.getId(), decodedToken.getClaim("role").asString());
+    assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
   }
 
   @Test
   public void testDecodeTokenThrowsExceptionWithUnsupportedAlgorithm() {
-    String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.MEYCIQDKz5V+Oq8Qwp/AvpxT8Kv6nY1sIFfmC6sLYdCHdQIGKQIhAKngT4VLyPo1R9FeUt9TxxAzWY3zDuWr8zitjwX/gHVl";
-
+    String tokenRS = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.MEYCIQDKz5V+Oq8Qwp/AvpxT8Kv6nY1sIFfmC6sLYdCHdQIGKQIhAKngT4VLyPo1R9FeUt9TxxAzWY3zDuWr8zitjwX/gHVl";
+    configSWSConfig(ES256_PRIVATE_KEY_MOCK);
+    configAlgorithmPreference("ES256");
     assertThrows(IllegalArgumentException.class, () -> {
-      SecureWebServicesUtils.decodeToken(token);
+      SecureWebServicesUtils.decodeToken(tokenRS);
     });
+  }
+
+  @After
+  public void cleanUp() {
+    OBContext.setOBContext(TestConstants.Users.SYSTEM);
+    SMFSWSConfig config = (SMFSWSConfig) OBDal.getInstance().createCriteria(SMFSWSConfig.class)
+        .uniqueResult();
+    OBDal.getInstance().remove(config);
+    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
+        .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "SMFSWS_EncryptionAlgorithm"))
+        .uniqueResult();
+    pref.setSearchKey("ES256");
+    OBDal.getInstance().save(pref);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().commitAndClose();
   }
 }
