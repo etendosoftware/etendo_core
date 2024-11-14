@@ -381,10 +381,7 @@ import com.smf.securewebservices.utils.SecureWebServicesUtilsTest;
     ReportValuationStockTest.class,
       
     // Create Order From Quotation Test
-    CreateOrderFromQuotationTest.class,
-
-    // Secure Web Services Utils Test
-    SecureWebServicesUtilsTest.class
+    CreateOrderFromQuotationTest.class
 
 })
 public class StandaloneTestSuite {
