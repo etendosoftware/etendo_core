@@ -148,8 +148,6 @@ import org.openbravo.test.xml.EntityXMLIssues;
 import org.openbravo.test.xml.UniqueConstraintImportTest;
 import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
-import com.smf.securewebservices.utils.SecureWebServicesUtilsTest;
-
 /**
  * This test class is called from the ant task run.all.tests by the CI server. It contains all the
  * test cases which are runnable and valid and do not require Tomcat to be running.

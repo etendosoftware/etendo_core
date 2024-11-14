@@ -26,6 +26,9 @@ dependencies {
     antClasspath('org.apache.ant:ant-junit:1.9.2') { transitive = false }
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
 
+    // Mockito extension for JUnit 5
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.2.0'
+
 }
 ant.taskdef(name: 'junit', classname: 'org.apache.tools.ant.taskdefs.optional.junit.JUnitTask',
         classpath: configurations.antClasspath.asPath)

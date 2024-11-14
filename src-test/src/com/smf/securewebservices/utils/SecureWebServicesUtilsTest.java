@@ -24,7 +24,11 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 import com.smf.securewebservices.SWSConfig;
 import com.smf.securewebservices.data.SMFSWSConfig;
+import spock.util.mop.Use;
 
+/**
+ * Test class for SecureWebServicesUtils.
+ */
 public class SecureWebServicesUtilsTest extends WeldBaseTest {
 
   private static final String HS256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN SECRET KEY-----\\nKpTlGYVO1aUq62eoJQp+FnoLbLG0NyqkinA9TrbxJGQ=\\n-----END SECRET KEY-----\",\"public-key\":\"\"}";
@@ -34,6 +38,11 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
   private static final String ENCRYPTION_ALGORITHM_HS256 = "HS256";
   private static final String ENCRYPTION_ALGORITHM_ES256 = "ES256";
 
+  /**
+   * Sets up the test environment.
+   *
+   * @throws Exception if an error occurs during setup
+   */
   @Override
   @Before
   public void setUp() throws Exception {
@@ -69,10 +78,6 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
   private static void configAlgorithmPreference(String algorithm) {
     Preference pref = OBProvider.getInstance().get(Preference.class);
     pref.setProperty(ENCRYPTION_ALGORITHM_PREFERENCE);
-    pref.setSearchKey(algorithm);
-    pref.setSelected(true);
-    OBDal.getInstance().save(pref);
-    OBDal.getInstance().flush();
     pref.setSearchKey(algorithm);
     pref.setSelected(true);
     OBDal.getInstance().save(pref);
@@ -130,15 +135,16 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     String tokenRS = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.MEYCIQDKz5V+Oq8Qwp/AvpxT8Kv6nY1sIFfmC6sLYdCHdQIGKQIhAKngT4VLyPo1R9FeUt9TxxAzWY3zDuWr8zitjwX/gHVl";
     configSWSConfig(ES256_PRIVATE_KEY_MOCK);
     configAlgorithmPreference(ENCRYPTION_ALGORITHM_ES256);
-    assertThrows(IllegalArgumentException.class, () -> {
-      SecureWebServicesUtils.decodeToken(tokenRS);
-    });
+    assertThrows(IllegalArgumentException.class, () -> SecureWebServicesUtils.decodeToken(tokenRS));
   }
 
+  /**
+   * Cleans up the test environment.
+   */
   @After
   public void cleanUp() {
-    OBContext.setAdminMode();
     try {
+      OBContext.setAdminMode();
       OBCriteria<SMFSWSConfig> criteria = OBDal.getInstance().createCriteria(SMFSWSConfig.class);
       criteria.setMaxResults(1);
       SMFSWSConfig config = (SMFSWSConfig) criteria.uniqueResult();

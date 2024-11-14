@@ -80,6 +80,7 @@ public class SecureWebServicesUtils {
 	private static final String PUBLIC_KEY = "public-key";
 	private static final String EC = "EC";
 	private static final String HS256_ALGORITHM = "HS256";
+    	private static final String MESSAGE_SMFSWS_USER_HAS_NO_ROLE = "SMFSWS_UserHasNoRole";
 
 	/**
 	 * Constructor for SecureWebServicesUtils.
@@ -90,6 +91,12 @@ public class SecureWebServicesUtils {
 		throw new IllegalStateException("Utility class");
 	}
 
+	/**
+	 * Retrieves the list of child organizations for a given organization.
+	 *
+	 * @param org The parent organization for which to retrieve the child organizations.
+	 * @return A list of child organizations associated with the given parent organization.
+	 */
 	public static List<Organization> getChildrenOrganizations(Organization org) {
 		List<Organization> organizations = new ArrayList<>();
 		OBContext.setAdminMode();
@@ -108,6 +115,12 @@ public class SecureWebServicesUtils {
 		return organizations;
 	}
 
+	/**
+	 * Retrieves the list of warehouses associated with a given organization and its child organizations.
+	 *
+	 * @param org The organization for which to retrieve the associated warehouses.
+	 * @return A list of warehouses associated with the given organization and its child organizations.
+	 */
 	public static List<Warehouse> getOrganizationWarehouses(Organization org) {
 		List<Organization> childrenOrg = getChildrenOrganizations(org);
 		List<Warehouse> warehouses = null;
@@ -126,10 +139,18 @@ public class SecureWebServicesUtils {
 		return warehouses;
 	}
 
+	/**
+	 * Retrieves the list of warehouses associated with a given organization.
+	 *
+	 * @param org The organization for which to retrieve the associated warehouses.
+	 * @return A JSONArray containing the warehouses associated with the given organization.
+	 *         Each warehouse is represented as a JSONObject with its ID and name.
+	 */
 	public static JSONArray getOrgWarehouses(Organization org) {
 		OBContext.setAdminMode(true);
 		JSONArray result = new JSONArray();
 		try {
+			// Retrieve the list of warehouses associated with the given organization
 			List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(org);
 			for (Warehouse warehouse : warehouseList) {
 				JSONObject wh = new JSONObject();
@@ -145,15 +166,24 @@ public class SecureWebServicesUtils {
 		return result;
 	}
 
+	/**
+	 * Retrieves the organizations associated with a given role and optionally includes their warehouses.
+	 *
+	 * @param role The role for which to retrieve the associated organizations.
+	 * @param showWarehouses A boolean flag indicating whether to include the warehouses for each organization.
+	 * @return A JSONArray containing the organizations associated with the given role. Each organization is represented as a JSONObject with its ID, name, and optionally its warehouses.
+	 */
 	public static JSONArray getRoleOrgs(Role role, boolean showWarehouses) {
 		OBContext.setAdminMode(true);
 		JSONArray result = new JSONArray();
 		try {
+			// Retrieve the list of organizations associated with the given role
 			List<RoleOrganization> roleOrgList = role.getADRoleOrganizationList();
 			for (RoleOrganization roleOrg : roleOrgList) {
 				JSONObject org = new JSONObject();
 				org.put("id", roleOrg.getOrganization().getId());
 				org.put("name", roleOrg.getOrganization().getName());
+				// If showWarehouses is true, include the list of warehouses for each organization
 				if (showWarehouses) {
 					org.put("warehouseList", getOrgWarehouses(roleOrg.getOrganization()));
 				}
@@ -181,18 +211,49 @@ public class SecureWebServicesUtils {
 		return true;
 	}
 
+	/**
+	 * Creates a JSON response object with the given data.
+	 *
+	 * @param data The data to be included in the response.
+	 * @return A JSONObject containing the response data.
+	 * @throws JSONException If there is an error creating the JSON object.
+	 */
 	public static JSONObject createWSResponse(JSONArray data) throws JSONException {
 		return createWSResponse(null, data);
 	}
 
+	/**
+	 * Creates a JSON response object with the given status.
+	 *
+	 * @param status The status to be included in the response.
+	 * @return A JSONObject containing the response status.
+	 * @throws JSONException If there is an error creating the JSON object.
+	 */
 	public static JSONObject createWSResponse(OBError status) throws JSONException {
 		return createWSResponse(status, null);
 	}
 
+	/**
+	 * Creates a JSON response object with the given status and data.
+	 *
+	 * @param status The status to be included in the response.
+	 * @param data The data to be included in the response.
+	 * @return A JSONObject containing the response status and data.
+	 * @throws JSONException If there is an error creating the JSON object.
+	 */
 	public static JSONObject createWSResponse(OBError status, JSONArray data) throws JSONException {
-		return createWSResponse(status, null, null);
+		return createWSResponse(status, data, null);
 	}
 
+	/**
+	 * Creates a JSON response object with the given status, data, and total rows.
+	 *
+	 * @param status The status to be included in the response.
+	 * @param data The data to be included in the response.
+	 * @param totalRows The total number of rows to be included in the response. If null, the length of the data array is used.
+	 * @return A JSONObject containing the response status, data, and total rows.
+	 * @throws JSONException If there is an error creating the JSON object.
+	 */
 	public static JSONObject createWSResponse(OBError status, JSONArray data, Integer totalRows) throws JSONException {
 		JSONObject result = new JSONObject();
 		// OBError part
@@ -209,6 +270,13 @@ public class SecureWebServicesUtils {
 		return result;
 	}
 
+	/**
+	 * Writes a JSON response to the HttpServletResponse.
+	 *
+	 * @param response The HttpServletResponse to which the JSON response will be written.
+	 * @param json The JSONObject containing the response data.
+	 * @throws IOException If an input or output exception occurs.
+	 */
 	public static void writeJsonResponse(HttpServletResponse response, JSONObject json) throws IOException {
 		response.setContentType("application/json;charset=UTF-8");
 		response.setHeader("Content-Type", "application/json;charset=UTF-8");
@@ -217,6 +285,14 @@ public class SecureWebServicesUtils {
 		w.close();
 	}
 
+	/**
+	 * Retrieves the exception message from a Throwable.
+	 * If the cause of the Throwable is a BatchUpdateException and it has a next exception,
+	 * the message from the next exception is returned. Otherwise, the message from the Throwable is returned.
+	 *
+	 * @param t The Throwable from which to retrieve the exception message.
+	 * @return The exception message as a String.
+	 */
 	public static String getExceptionMessage(Throwable t) {
 		if (t.getCause() instanceof BatchUpdateException
 				&& ((BatchUpdateException) t.getCause()).getNextException() != null) {
@@ -226,6 +302,14 @@ public class SecureWebServicesUtils {
 		return t.getMessage();
 	}
 
+	/**
+	 * Retrieves the root cause of a given Throwable.
+	 * This method recursively traverses the cause chain of the Throwable
+	 * until it finds the root cause (the Throwable with no cause).
+	 *
+	 * @param t The Throwable for which to retrieve the root cause.
+	 * @return The root cause of the given Throwable.
+	 */
 	public static Throwable getRootCause(Throwable t){
 		if (t.getCause() == null) {
 			return t;
@@ -248,6 +332,15 @@ public class SecureWebServicesUtils {
 		}
 	}
 
+	/**
+	 * Retrieves the roles and associated organizations for a given user.
+	 *
+	 * @param user The user for whom to retrieve the roles and organizations.
+	 * @param showOrgs A boolean flag indicating whether to include the organizations for each role.
+	 * @param showWarehouses A boolean flag indicating whether to include the warehouses for each organization.
+	 * @return A JSONArray containing the roles and associated organizations for the given user.
+	 *         Each role is represented as a JSONObject with its ID, name, and optionally its organizations and warehouses.
+	 */
 	public static JSONArray getUserRolesAndOrg(User user, boolean showOrgs, boolean showWarehouses) {
 		OBContext.setAdminMode(true);
 		JSONArray result = new JSONArray();
@@ -489,7 +582,7 @@ public class SecureWebServicesUtils {
 	 * @throws UnsupportedEncodingException If there is an issue decoding the private key.
 	 */
 	private static Algorithm getEncoderAlgorithm(SWSConfig config)
-      throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException, PropertyException {
+            throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException, PropertyException {
 		Algorithm algorithm;
 
 		String privateKeyContent = config.getPrivateKey();
@@ -553,18 +646,18 @@ public class SecureWebServicesUtils {
 	}
 
 	/**
-	 * Determines the appropriate organization for a user based on the provided role and defaults.
-	 * The method attempts to select the organization specified in the input. If the provided organization
-	 * is invalid or null, it selects the default organization for the role. If no default organization
-	 * is available, it selects the first available organization for the role.
-	 *
-	 * @param org The provided {@link Organization} to be validated.
-	 * @param selectedRole The {@link Role} associated with the organization.
-	 * @param defaultRole The default {@link Role} to use if the provided role is not valid.
-	 * @param defaultOrg The default {@link Organization} to use if the provided organization is not valid.
-	 * @return The selected {@link Organization}.
-	 * @throws OBException If the role has no associated organizations.
-   */
+	* Determines the appropriate organization for a user based on the provided role and defaults.
+	* The method attempts to select the organization specified in the input. If the provided organization
+	* is invalid or null, it selects the default organization for the role. If no default organization
+	* is available, it selects the first available organization for the role.
+	*
+	* @param org The provided {@link Organization} to be validated.
+	* @param selectedRole The {@link Role} associated with the organization.
+	* @param defaultRole The default {@link Role} to use if the provided role is not valid.
+	* @param defaultOrg The default {@link Organization} to use if the provided organization is not valid.
+	* @return The selected {@link Organization}.
+	* @throws OBException If the role has no associated organizations.
+	*/
 	private static Organization getOrganization(Organization org, Role selectedRole,
 			Role defaultRole, Organization defaultOrg) throws OBException {
 		Organization selectedOrg = null;
@@ -613,7 +706,7 @@ public class SecureWebServicesUtils {
 					.filter(userRole -> StringUtils.equals(userRole.getRole().getId(), role.getId()))
 					.findFirst()
 					.map(UserRoles::getRole)
-					.orElseThrow(() -> new Exception("The user has no roles"));
+					.orElseThrow(() -> new Exception(OBMessageUtils.messageBD(MESSAGE_SMFSWS_USER_HAS_NO_ROLE)));
 		} else {
 			if (defaultWsRole != null) {
 				selectedRole = defaultWsRole;
@@ -622,7 +715,7 @@ public class SecureWebServicesUtils {
 			} else if (!userRoleList.isEmpty()) {
 				selectedRole = userRoleList.get(0).getRole();
 			} else {
-				throw new OBException("User has no roles defined");
+				throw new OBException(OBMessageUtils.messageBD(MESSAGE_SMFSWS_USER_HAS_NO_ROLE));
 			}
 		}
 		return selectedRole;
