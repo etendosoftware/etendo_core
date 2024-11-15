@@ -32,7 +32,6 @@ jandex {
  */
 dependencies {
     jandex 'org.jboss:jandex:2.0.5.Final'
-
 }
 
 final String CURRENT_VERSION = "24.3.3"
