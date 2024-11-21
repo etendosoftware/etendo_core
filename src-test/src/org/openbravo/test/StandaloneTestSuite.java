@@ -32,6 +32,7 @@ import org.openbravo.client.application.test.ADCSTest;
 import org.openbravo.client.application.test.DisplayLogicAtServerLevelTest;
 import org.openbravo.client.application.test.DynamicExpressionParserTest;
 import org.openbravo.client.application.test.MenuTest;
+import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
@@ -99,6 +100,7 @@ import org.openbravo.test.modularity.TableNameTest;
 import org.openbravo.test.preference.PreferenceTest;
 import org.openbravo.test.pricelist.PriceListTest;
 import org.openbravo.test.process.order.OrderProcessTest;
+import org.openbravo.test.process.utils.ProcessUtilsTest;
 import org.openbravo.test.productStatus.ProductStatusTest;
 import org.openbravo.test.referencedinventory.ReferencedInventoryTestSuite;
 import org.openbravo.test.reporting.AllJrxmlCompilation;
@@ -333,6 +335,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // db
     SqlCallableStatement.class, //
     PoolHasNoConnectionsDetection.class, //
+    ProcessTest.class,
 
     // grid configuration
     ViewGenerationWithDifferentConfigLevelTest.class, //
@@ -377,7 +380,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ReportValuationStockTest.class,
       
     // Create Order From Quotation Test
-    CreateOrderFromQuotationTest.class
+    CreateOrderFromQuotationTest.class,
+
+    // Utils process Test
+    ProcessUtilsTest.class
 
 })
 public class StandaloneTestSuite {
