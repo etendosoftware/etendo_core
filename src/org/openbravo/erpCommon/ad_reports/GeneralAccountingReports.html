@@ -428,9 +428,12 @@ function onResizeDo(){
 
                 <tr>
                   <td class="TitleCell"> <span class="LabelText">General Ledger</span></td>
-                  <td class="Combo_ContentCell" colspan="2"> <select name="inpcAcctSchemaId" id="inpcAcctSchemaId" class="ComboKey Combo_TwoCells_width" onchange="refreshComboReports(); logChanges(this); return true;">
-                    <option value=""></option><div id="reportC_ACCTSCHEMA_ID"></div>
-                  </select></td>
+                  <td class="Combo_ContentCell" colspan="2">
+                    <select name="inpcAcctSchemaId" id="inpcAcctSchemaId" class="ComboKey Combo_TwoCells_width" onchange="refreshComboReports(); logChanges(this); return true;">
+                      <option value=""/>
+                      <div id="reportC_ACCTSCHEMA_ID"/>
+                    </select>
+                  </td>
                   <td class="ContentCell"></td>
                   <td class="TitleCell"><span class="LabelText">Show only accounts with value</span></td>
                   <td class="Radio_Check_ContentCell"><input name="inpConImporte" type="checkbox" id="fieldConImporte" value="Y"></input></td>
@@ -438,9 +441,12 @@ function onResizeDo(){
 
                 <tr>
                   <td class="TitleCell"><span class="LabelText">Accounting Report</span></td>
-                  <td class="Combo_ContentCell" colspan="2"> <select name="inpcElementvalueId" id="inpcElementvalueId" class="ComboKey Combo_TwoCells_width" onchange="displayLogic(); refreshComboOrgs(); logChanges(this); return true;">
-                    <option value=""></option><div id="reportC_ElementValue_ID"></div>
-                  </select></td>
+                  <td class="Combo_ContentCell" colspan="2">
+                    <select name="inpcElementvalueId" id="inpcElementvalueId" class="ComboKey Combo_TwoCells_width" onchange="displayLogic(); refreshComboOrgs(); logChanges(this); return true;">
+                      <option value=""/>
+                      <div id="reportC_ElementValue_ID"/>
+                    </select>
+                  </td>
                   <td class="ContentCell"></td>
                   <td class="TitleCell"><span class="LabelText">Show Account codes</span></td>
                   <td class="Radio_Check_ContentCell"><input name="inpConCodigo" type="checkbox" id="fieldConCodigo" value="Y"/></td>
@@ -448,17 +454,23 @@ function onResizeDo(){
 
                 <tr>
                   <td class="TitleCell"><span class="LabelText">Organization</span></td>
-                  <td class="Combo_ContentCell" colspan="2"> <select name="inpOrganizacion" id="inpOrganizacion" class="ComboKey Combo_TwoCells_width" onchange="refreshComboYears(); logChanges(this); return true;">
-                      <option value=""></option><div id="reportC_Org_ID"></div>
-                    </select></td>
+                  <td class="Combo_ContentCell" colspan="2">
+                    <select name="inpOrganizacion" id="inpOrganizacion" class="ComboKey Combo_TwoCells_width" onchange="refreshComboYears(); logChanges(this); return true;">
+                      <option value=""/>
+                      <div id="reportC_Org_ID"/>
+                    </select>
+                  </td>
                   <td class="ContentCell"></td>
                   <td class="TitleCell"><span class="LabelText">Show Landscape mode</span></td>
                   <td class="Radio_Check_ContentCell"><input name="inpLandscape" type="checkbox" id="fieldLandscape" value="Y"/></td>
                 </tr>
                 <td class="TitleCell"><span class="LabelText">Account Level</span></td>
-                  <td class="Combo_ContentCell"> <select name="inpLevel" id="inpLevel" class="ComboKey Combo_OneCell_width" onchange="logChanges(this);return true;">
-                    <option value=""></option><div id="reportLevel"></div>
-                  </select></td>
+                  <td class="Combo_ContentCell">
+                    <select name="inpLevel" id="inpLevel" class="ComboKey Combo_OneCell_width" onchange="logChanges(this);return true;">
+                      <option value=""/>
+                      <div id="reportLevel"/>
+                    </select>
+                  </td>
                   <td class="ContentCell"></td>
                 <tr>
                 
@@ -482,9 +494,11 @@ function onResizeDo(){
                 </tr>
                 <tr>
                   <td class="TitleCell"><span class="LabelText">Year</span></td>
-                  <td class="Combo_ContentCell"> <SELECT name="inpAgno" id="paramAgno" class="ComboKey Combo_OneCell_width" onchange="displayLogic(); return true;">
-                      <OPTION value=""></OPTION>
-                    </SELECT></TD>
+                  <td class="Combo_ContentCell">
+                    <select name="inpAgno" id="paramAgno" class="ComboKey Combo_OneCell_width" onchange="displayLogic(); return true;">
+                      <option value=""/>
+                    </select>
+                  </td>
                   <td class="TitleCell" id="tdFromDateLabel"><SPAN class="LabelText">From Date</SPAN></td>
                   <TD class="TextBox_btn_ContentCell" id="tdFromDate">
                     <table border="0" cellspacing="0" cellpadding="0" summary=""  style="padding-top: 0px;">
@@ -559,9 +573,11 @@ function onResizeDo(){
 
                 <tr id="trReferenceDetails">
                 <td class="TitleCell"><span class="LabelText">Reference Year</span></td>
-                  <td class="Combo_ContentCell"> <SELECT name="inpAgnoRef" id="paramAgnoRef" class="ComboKey Combo_OneCell_width" onchange="displayLogic(); return true;">
-                      <OPTION value=""></OPTION>
-                    </SELECT></TD>
+                  <td class="Combo_ContentCell">
+                    <select name="inpAgnoRef" id="paramAgnoRef" class="ComboKey Combo_OneCell_width" onchange="displayLogic(); return true;">
+                      <option value=""/>
+                    </select>
+                  </td>
                   <td class="TitleCell" id="tdFromRefDateLabel"><SPAN class="LabelText">From Reference Date</SPAN></td>
                   <TD class="TextBox_btn_ContentCell" id="tdFromRefDate">
                     <table border="0" cellspacing="0" cellpadding="0" summary=""  style="padding-top: 0px;">
