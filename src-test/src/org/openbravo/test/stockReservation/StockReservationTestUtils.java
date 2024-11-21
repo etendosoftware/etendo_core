@@ -1,8 +1,6 @@
-/**
- * Utility class for creating inventory counts and sales orders for testing
- * automated warehouse reservation functionality.
- */
 package org.openbravo.test.stockReservation;
+
+import static org.openbravo.test.costing.utils.TestCostingConstants.EURO_ID;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -32,6 +30,10 @@ import org.openbravo.model.materialmgmt.transaction.InventoryCountLine;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
 
+/**
+ * Utility class for creating inventory counts and sales orders for testing
+ * automated warehouse reservation functionality.
+ */
 public class StockReservationTestUtils {
 
   // Constant identifiers for common test entities
@@ -58,13 +60,18 @@ public class StockReservationTestUtils {
   /**
    * Creates an inventory count with specified attributes.
    *
-   * @param name        the name of the inventory count
-   * @param productPrice the product price object for the inventory
-   * @param storageBin  the locator where the inventory is stored
-   * @param warehouse   the warehouse associated with the inventory count
+   * @param name
+   *     the name of the inventory count
+   * @param productPrice
+   *     the product price object for the inventory
+   * @param storageBin
+   *     the locator where the inventory is stored
+   * @param warehouse
+   *     the warehouse associated with the inventory count
    * @return the created InventoryCount object
    */
-  static InventoryCount createInventoryCount(String name, ProductPrice productPrice, Locator storageBin, Warehouse warehouse) {
+  public static InventoryCount createInventoryCount(String name, ProductPrice productPrice, Locator storageBin,
+      Warehouse warehouse) {
     InventoryCount inventoryCount = OBProvider.getInstance().get(InventoryCount.class);
     Client client = OBContext.getOBContext().getCurrentClient();
     Organization org = OBContext.getOBContext().getCurrentOrganization();
@@ -110,22 +117,22 @@ public class StockReservationTestUtils {
   /**
    * Creates a sales order with specified attributes.
    *
-   * @param priceList   the price list for the order
-   * @param paymentTerm the payment term for the order
-   * @param docType     the document type of the order
-   * @param docNo       the document number of the order
-   * @param docStatus   the document status of the order
-   * @param docAction   the document action for the order
-   * @param currency    the currency of the order
-   * @param productPrice the product price associated with the order line
-   * @param orderedQty  the quantity ordered for the product
-   * @param taxId       the tax rate identifier for the order line
-   * @param reservation the reservation flag for the order line
+   * @param docNo
+   *     the document number of the order
+   * @param docStatus
+   *     the document status of the order
+   * @param docAction
+   *     the document action for the order
+   * @param orderedQty
+   *     the quantity ordered for the product
+   * @param taxId
+   *     the tax rate identifier for the order line
+   * @param reservation
+   *     the reservation flag for the order line
    * @return the created Order object
    */
-  static Order createOrder(PriceList priceList, PaymentTerm paymentTerm, DocumentType docType, String docNo,
-      String docStatus, String docAction, Currency currency, ProductPrice productPrice, BigDecimal orderedQty,
-      String taxId, String reservation) {
+  public static Order createOrder(String docNo, String docStatus, String docAction, BigDecimal orderedQty, String taxId,
+      String reservation) {
 
     Order order = OBProvider.getInstance().get(Order.class);
     Client client = OBContext.getOBContext().getCurrentClient();
@@ -133,7 +140,12 @@ public class StockReservationTestUtils {
     BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, BPARTNER_ID);
     FIN_PaymentMethod testPaymentMethod = OBDal.getInstance().get(FIN_PaymentMethod.class, PAYMENT_METHOD_ID);
     Location location = OBDal.getInstance().get(Location.class, LOCATION_ID);
-    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RN_ID);
+    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, WAREHOUSE_RN_ID);
+    PriceList priceList = OBDal.getInstance().get(PriceList.class, PRICELIST);
+    PaymentTerm paymentTerm = OBDal.getInstance().get(PaymentTerm.class, PAYMENT_TERM);
+    Currency currency = OBDal.getInstance().get(Currency.class, EURO_ID);
+    DocumentType docType = OBDal.getInstance().get(DocumentType.class, DOCTYPE_ID);
+    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, PRODUCT_PRICE);
 
     // Set order attributes
     order.setClient(client);

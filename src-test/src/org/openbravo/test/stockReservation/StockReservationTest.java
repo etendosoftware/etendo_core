@@ -1,8 +1,3 @@
-/**
- * Test class for automated warehouse reservation in Openbravo.
- * This class validates the creation and processing of inventory counts,
- * sales orders, and automatic reservations across single or multiple warehouses.
- */
 package org.openbravo.test.stockReservation;
 
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createInventoryCount;
@@ -28,27 +23,29 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.InventoryCountProcess;
 import org.openbravo.model.ad.process.ProcessInstance;
 import org.openbravo.model.ad.ui.Process;
-import org.openbravo.model.common.currency.Currency;
-import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Locator;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.common.order.Order;
-import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.materialmgmt.onhandquantity.Reservation;
 import org.openbravo.model.materialmgmt.onhandquantity.ReservationStock;
 import org.openbravo.model.materialmgmt.transaction.InventoryCount;
-import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.test.base.TestConstants;
 
+/**
+ * Test class for automated warehouse reservation.
+ * This class validates the creation and processing of inventory counts,
+ * sales orders, and automatic reservations across single or multiple warehouses.
+ */
 public class StockReservationTest extends WeldBaseTest {
 
   /**
    * Sets up the test environment, initializing the OBContext and VariablesSecureApp.
    *
-   * @throws Exception if an error occurs during setup
+   * @throws Exception
+   *     if an error occurs during setup
    */
   @Override
   @Before
@@ -66,13 +63,15 @@ public class StockReservationTest extends WeldBaseTest {
   /**
    * Processes a given sales order by calling the corresponding Openbravo process.
    *
-   * @param salesOrder the sales order to be processed
-   * @throws OBException if the process fails
+   * @param salesOrder
+   *     the sales order to be processed
+   * @throws OBException
+   *     if the process fails
    */
   private void processOrder(final Order salesOrder) {
-    OBContext.setAdminMode(true);
     org.openbravo.model.ad.ui.Process process = null;
     try {
+      OBContext.setAdminMode(true);
       process = OBDal.getInstance().get(Process.class, "104");
     } finally {
       OBContext.restorePreviousMode();
@@ -96,8 +95,8 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @Test
   public void AutomaticReservationOneWarehouse() {
-    InventoryCount W1 = createInventoryCountRN();
-    new InventoryCountProcess().processInventory(W1, false, true);
+    InventoryCount WarehouseRn = createInventoryCountRN();
+    new InventoryCountProcess().processInventory(WarehouseRn, false, true);
 
     Order salesOrder = createOrderOneWarehouse();
     processOrder(salesOrder);
@@ -110,11 +109,11 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @Test
   public void AutomaticReservationMoreThanOneWarehouse() {
-    InventoryCount W1 = createInventoryCountRN();
-    new InventoryCountProcess().processInventory(W1, false, true);
+    InventoryCount WarehouseRn = createInventoryCountRN();
+    new InventoryCountProcess().processInventory(WarehouseRn, false, true);
 
-    InventoryCount W2 = createInventoryCountRS();
-    new InventoryCountProcess().processInventory(W2, false, true);
+    InventoryCount WarehouseRs = createInventoryCountRS();
+    new InventoryCountProcess().processInventory(WarehouseRs, false, true);
 
     Order salesOrder = createOrderMoreThanOneWarehouse();
     processOrder(salesOrder);
@@ -126,25 +125,23 @@ public class StockReservationTest extends WeldBaseTest {
   /**
    * Verifies reservation details for a specific storage bin and expected quantity.
    *
-   * @param salesOrder the sales order linked to the reservation
-   * @param binSearchKey the search key of the storage bin
-   * @param expectedQuantity the expected reserved quantity
+   * @param salesOrder
+   *     the sales order linked to the reservation
+   * @param binSearchKey
+   *     the search key of the storage bin
+   * @param expectedQuantity
+   *     the expected reserved quantity
    */
   private void verifyReservationDetails(Order salesOrder, String binSearchKey, BigDecimal expectedQuantity) {
     Reservation reservation = findReservationForOrder(salesOrder);
     List<ReservationStock> reservationStocks = findReservationStocksForReservation(reservation);
 
-    boolean foundMatchingBin = reservationStocks.stream()
-        .anyMatch(stock ->
-            binSearchKey.equals(stock.getStorageBin().getSearchKey()) &&
-                stock.getQuantity().compareTo(expectedQuantity) == 0
-        );
+    boolean foundMatchingBin = reservationStocks.stream().anyMatch(
+        stock -> binSearchKey.equals(stock.getStorageBin().getSearchKey()) && stock.getQuantity().compareTo(
+            expectedQuantity) == 0);
 
-    assertTrue(
-        String.format("A StorageBin with searchKey '%s' and quantity '%s' was not found.",
-            binSearchKey, expectedQuantity),
-        foundMatchingBin
-    );
+    assertTrue(String.format("A StorageBin with searchKey '%s' and quantity '%s' was not found.", binSearchKey,
+        expectedQuantity), foundMatchingBin);
   }
 
   /**
@@ -161,44 +158,33 @@ public class StockReservationTest extends WeldBaseTest {
    * @return the created sales order
    */
   private Order createOrderOneWarehouse() {
-    PriceList priceList = OBDal.getInstance().get(PriceList.class, StockReservationTestUtils.PRICELIST);
-    PaymentTerm paymentTerm = OBDal.getInstance().get(PaymentTerm.class,
-        StockReservationTestUtils.PAYMENT_TERM);
-    DocumentType docType = OBDal.getInstance().get(DocumentType.class,
-        StockReservationTestUtils.DOCTYPE_ID);
-    Currency euro = OBDal.getInstance().get(Currency.class, EURO_ID);
-    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class,
-        StockReservationTestUtils.PRODUCT_PRICE);
-
-    return createOrder(priceList, paymentTerm, docType, "One Warehouse", "DR", "CO", euro, productPrice,
-        new BigDecimal(1000), StockReservationTestUtils.TAX_ID, "CRP");
+    return createOrder("One Warehouse", "DR", "CO", new BigDecimal(1000), StockReservationTestUtils.TAX_ID, "CRP");
   }
 
   /**
    * Finds the reservation associated with a specific sales order.
    *
-   * @param salesOrder the sales order for which the reservation is to be found
+   * @param salesOrder
+   *     the sales order for which the reservation is to be found
    * @return the reservation associated with the sales order, or {@code null} if none exists
    */
   private Reservation findReservationForOrder(Order salesOrder) {
     OBCriteria<Reservation> reservationCriteria = OBDal.getInstance().createCriteria(Reservation.class);
     reservationCriteria.add(
-        Restrictions.eq(Reservation.PROPERTY_SALESORDERLINE + ".id", salesOrder.getOrderLineList().get(0).getId())
-    );
+        Restrictions.eq(Reservation.PROPERTY_SALESORDERLINE + ".id", salesOrder.getOrderLineList().get(0).getId()));
     return (Reservation) reservationCriteria.setMaxResults(1).uniqueResult();
   }
 
   /**
    * Retrieves the list of reservation stock entries for a given reservation.
    *
-   * @param reservation the reservation for which stock entries are to be retrieved
+   * @param reservation
+   *     the reservation for which stock entries are to be retrieved
    * @return a list of {@link ReservationStock} entries associated with the reservation
    */
   private List<ReservationStock> findReservationStocksForReservation(Reservation reservation) {
     OBCriteria<ReservationStock> reservationStockCriteria = OBDal.getInstance().createCriteria(ReservationStock.class);
-    reservationStockCriteria.add(
-        Restrictions.eq(ReservationStock.PROPERTY_RESERVATION + ".id", reservation.getId())
-    );
+    reservationStockCriteria.add(Restrictions.eq(ReservationStock.PROPERTY_RESERVATION + ".id", reservation.getId()));
     return reservationStockCriteria.list();
   }
 
@@ -208,17 +194,8 @@ public class StockReservationTest extends WeldBaseTest {
    * @return the created sales order
    */
   private Order createOrderMoreThanOneWarehouse() {
-    PriceList priceList = OBDal.getInstance().get(PriceList.class, StockReservationTestUtils.PRICELIST);
-    PaymentTerm paymentTerm = OBDal.getInstance().get(PaymentTerm.class,
-        StockReservationTestUtils.PAYMENT_TERM);
-    DocumentType docType = OBDal.getInstance().get(DocumentType.class,
-        StockReservationTestUtils.DOCTYPE_ID);
-    Currency euro = OBDal.getInstance().get(Currency.class, EURO_ID);
-    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class,
-        StockReservationTestUtils.PRODUCT_PRICE);
-
-    return createOrder(priceList, paymentTerm, docType, "More than One Warehouse", "DR", "CO", euro, productPrice,
-        new BigDecimal(2000), StockReservationTestUtils.TAX_ID, "CRP");
+    return createOrder("More than One Warehouse", "DR", "CO", new BigDecimal(2000), StockReservationTestUtils.TAX_ID,
+        "CRP");
   }
 
   /**
@@ -228,10 +205,8 @@ public class StockReservationTest extends WeldBaseTest {
    */
   private InventoryCount createInventoryCountRN() {
     Locator storageBin = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RN_ID);
-    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class,
-        StockReservationTestUtils.PRODUCT_PRICE);
-    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class,
-        StockReservationTestUtils.WAREHOUSE_RN_ID);
+    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, StockReservationTestUtils.PRODUCT_PRICE);
+    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RN_ID);
 
     return createInventoryCount("Warehouse Rn-0-0-0", productPrice, storageBin, warehouse);
   }
@@ -243,10 +218,8 @@ public class StockReservationTest extends WeldBaseTest {
    */
   private InventoryCount createInventoryCountRS() {
     Locator storageBin = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RS_ID);
-    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class,
-        StockReservationTestUtils.PRODUCT_PRICE);
-    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class,
-        StockReservationTestUtils.WAREHOUSE_RS_ID);
+    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, StockReservationTestUtils.PRODUCT_PRICE);
+    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RS_ID);
 
     return createInventoryCount("Warehouse Rs-0-0-0", productPrice, storageBin, warehouse);
   }
