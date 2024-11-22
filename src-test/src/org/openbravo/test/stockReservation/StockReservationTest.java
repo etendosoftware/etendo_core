@@ -95,8 +95,8 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @Test
   public void AutomaticReservationOneWarehouse() {
-    InventoryCount WarehouseRn = createInventoryCountRN();
-    new InventoryCountProcess().processInventory(WarehouseRn, false, true);
+    InventoryCount warehouseRn = createInventoryCountRN();
+    new InventoryCountProcess().processInventory(warehouseRn, false, true);
 
     Order salesOrder = createOrderOneWarehouse();
     processOrder(salesOrder);
@@ -109,11 +109,11 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @Test
   public void AutomaticReservationMoreThanOneWarehouse() {
-    InventoryCount WarehouseRn = createInventoryCountRN();
-    new InventoryCountProcess().processInventory(WarehouseRn, false, true);
+    InventoryCount warehouseRn = createInventoryCountRN();
+    new InventoryCountProcess().processInventory(warehouseRn, false, true);
 
-    InventoryCount WarehouseRs = createInventoryCountRS();
-    new InventoryCountProcess().processInventory(WarehouseRs, false, true);
+    InventoryCount warehouseRs = createInventoryCountRS();
+    new InventoryCountProcess().processInventory(warehouseRs, false, true);
 
     Order salesOrder = createOrderMoreThanOneWarehouse();
     processOrder(salesOrder);
