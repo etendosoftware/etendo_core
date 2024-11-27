@@ -1,8 +1,6 @@
 package com.smf.securewebservices.utils;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
@@ -17,7 +15,6 @@ import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,14 +32,12 @@ import org.openbravo.base.ConfigParameters;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.LoginUtils;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.KernelServlet;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.Preferences;
-import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.erpCommon.utility.Utility;
@@ -63,6 +58,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.JWTCreator.Builder;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+
 
 /**
  * @author androettop
@@ -197,94 +193,6 @@ public class SecureWebServicesUtils {
 		return result;
 	}
 
-	public static Boolean areOBObjectEquals(BaseOBObject inv1, BaseOBObject inv2, String[] properties) {
-		if (inv1 == null || inv2 == null) {
-			return false;
-		}
-    for (String field : properties) {
-      Object value1 = inv1.get(field);
-      Object value2 = inv2.get(field);
-      if ((value1 != null && !value1.equals(value2)) || (value2 != null && !value2.equals(value1))) {
-        return false;
-      }
-    }
-		return true;
-	}
-
-	/**
-	 * Creates a JSON response object with the given data.
-	 *
-	 * @param data The data to be included in the response.
-	 * @return A JSONObject containing the response data.
-	 * @throws JSONException If there is an error creating the JSON object.
-	 */
-	public static JSONObject createWSResponse(JSONArray data) throws JSONException {
-		return createWSResponse(null, data);
-	}
-
-	/**
-	 * Creates a JSON response object with the given status.
-	 *
-	 * @param status The status to be included in the response.
-	 * @return A JSONObject containing the response status.
-	 * @throws JSONException If there is an error creating the JSON object.
-	 */
-	public static JSONObject createWSResponse(OBError status) throws JSONException {
-		return createWSResponse(status, null);
-	}
-
-	/**
-	 * Creates a JSON response object with the given status and data.
-	 *
-	 * @param status The status to be included in the response.
-	 * @param data The data to be included in the response.
-	 * @return A JSONObject containing the response status and data.
-	 * @throws JSONException If there is an error creating the JSON object.
-	 */
-	public static JSONObject createWSResponse(OBError status, JSONArray data) throws JSONException {
-		return createWSResponse(status, data, null);
-	}
-
-	/**
-	 * Creates a JSON response object with the given status, data, and total rows.
-	 *
-	 * @param status The status to be included in the response.
-	 * @param data The data to be included in the response.
-	 * @param totalRows The total number of rows to be included in the response. If null, the length of the data array is used.
-	 * @return A JSONObject containing the response status, data, and total rows.
-	 * @throws JSONException If there is an error creating the JSON object.
-	 */
-	public static JSONObject createWSResponse(OBError status, JSONArray data, Integer totalRows) throws JSONException {
-		JSONObject result = new JSONObject();
-		// OBError part
-		if (status != null) {
-			result.put("status", status.getType());
-			result.put("title", status.getTitle());
-			result.put("message", status.getMessage());
-		}
-		// Data part
-		if (data != null) {
-			result.put("totalRows", totalRows == null ? data.length() : totalRows);
-			result.put("data", data);
-		}
-		return result;
-	}
-
-	/**
-	 * Writes a JSON response to the HttpServletResponse.
-	 *
-	 * @param response The HttpServletResponse to which the JSON response will be written.
-	 * @param json The JSONObject containing the response data.
-	 * @throws IOException If an input or output exception occurs.
-	 */
-	public static void writeJsonResponse(HttpServletResponse response, JSONObject json) throws IOException {
-		response.setContentType("application/json;charset=UTF-8");
-		response.setHeader("Content-Type", "application/json;charset=UTF-8");
-		final Writer w = response.getWriter();
-		w.write(json.toString());
-		w.close();
-	}
-
 	/**
 	 * Retrieves the exception message from a Throwable.
 	 * If the cause of the Throwable is a BatchUpdateException and it has a next exception,
@@ -383,7 +291,7 @@ public class SecureWebServicesUtils {
 	 * @throws InvalidKeySpecException If the public key specification is invalid.
 	 */
 	public static DecodedJWT decodeToken(String token)
-			throws JsonProcessingException, JSONException, UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeySpecException {
+      throws JsonProcessingException, JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
 		String[] tokenParts = token.split("\\.");
 		if (tokenParts.length < 2) {
 			throw new IllegalArgumentException(OBMessageUtils.messageBD("SMFSWS_InvalidToken"));
@@ -547,22 +455,20 @@ public class SecureWebServicesUtils {
 			Role defaultRole = user.getDefaultRole();
 			Organization defaultOrg = user.getDefaultOrganization();
 			Warehouse defaultWarehouse = user.getDefaultWarehouse();
-
 			selectedRole = getRole(role, userRoleList, defaultWsRole, defaultRole);
 			Organization selectedOrg = getOrganization(org, selectedRole, defaultRole, defaultOrg);
 			selectedWarehouse = getWarehouse(warehouse, selectedOrg, selectedWarehouse, defaultWarehouse);
 
-			final Algorithm algorithm = getEncoderAlgorithm(config);
-
+			String privateKey = cleanPrivateKey(config);
+			Algorithm algorithm = getEncoderAlgorithm(privateKey);
 			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse);
 
 			if (config.getExpirationTime() > 0) {
 				Calendar date = Calendar.getInstance();
 				long t = date.getTimeInMillis();
 				Date expirationDate = new Date(t + (config.getExpirationTime() * ONE_MINUTE_IN_MILLIS));
-				jwtBuilder = jwtBuilder.withExpiresAt(expirationDate);
+				jwtBuilder.withExpiresAt(expirationDate);
 			}
-
 			return jwtBuilder.sign(algorithm);
 		} finally {
 			OBContext.restorePreviousMode();
@@ -570,33 +476,49 @@ public class SecureWebServicesUtils {
 	}
 
 	/**
-	 * Determines the appropriate algorithm to use for encoding the JWT token.
-	 * This method retrieves the private key from the SWSConfig configuration and selects the
-	 * appropriate algorithm based on the configuration setting. It supports both ES256 and HS256 algorithms.
+	 * Cleans the private key content by removing unnecessary headers, footers, and whitespace.
+	 * This method checks if the private key content is in a new version format (JSON object),
+	 * extracts the private key from the JSON object if necessary, and then removes the
+	 * "BEGIN PRIVATE KEY" and "BEGIN PUBLIC KEY" headers, as well as any whitespace.
 	 *
 	 * @param config The SWSConfig instance containing the private key configuration.
-	 * @return The {@link Algorithm} to be used for encoding the token.
+	 * @return The cleaned private key content as a String.
 	 * @throws JSONException If there is an issue parsing the private key JSON object.
-	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
-	 * @throws InvalidKeySpecException If the private key specification is invalid.
-	 * @throws UnsupportedEncodingException If there is an issue decoding the private key.
 	 */
-	private static Algorithm getEncoderAlgorithm(SWSConfig config)
-            throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException, PropertyException {
-		Algorithm algorithm;
-
+	private static String cleanPrivateKey(SWSConfig config) throws JSONException {
 		String privateKeyContent = config.getPrivateKey();
 		boolean isNewVersion = StringUtils.startsWith(privateKeyContent, "{") && StringUtils.endsWith(privateKeyContent, "}");
 		if (isNewVersion) {
 			JSONObject keys = new JSONObject(privateKeyContent);
 			privateKeyContent = keys.getString(PRIVATE_KEY);
 		}
+		return privateKeyContent
+				.replace(BEGIN_PRIVATE_KEY, "")
+				.replace(END_PRIVATE_KEY, "")
+				.replaceAll("\\s", "");
+	}
+
+	/**
+	 * Determines the appropriate algorithm to use for encoding the JWT token.
+	 * This method retrieves the private key from the SWSConfig configuration and selects the
+	 * appropriate algorithm based on the configuration setting. It supports both ES256 and HS256 algorithms.
+	 *
+	 * @param privateKeyContent The private key content to be used for encoding the token.
+	 * @return The {@link Algorithm} to be used for encoding the token.
+	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
+	 * @throws InvalidKeySpecException If the private key specification is invalid.
+	 * @throws UnsupportedEncodingException If there is an issue decoding the private key.
+	 * @throws PropertyException If there is an issue retrieving the encryption algorithm from the preferences.
+	 */
+	private static Algorithm getEncoderAlgorithm(String privateKeyContent)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException, PropertyException {
+		Algorithm algorithm;
 
 		String value = Preferences.getPreferenceValue("SMFSWS_EncryptionAlgorithm", true,
 				OBContext.getOBContext().getCurrentClient(),
 				OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(), OBContext.getOBContext().getRole(),
 				null);
-		if (isNewVersion && StringUtils.equals(ES256_ALGORITHM, value)) {
+		if (StringUtils.equals(ES256_ALGORITHM, value)) {
 			final PrivateKey privateKey = getECPrivateKey(privateKeyContent);
 			algorithm = Algorithm.ECDSA256((ECPrivateKey) privateKey);
 		} else {
@@ -759,10 +681,10 @@ public class SecureWebServicesUtils {
 		return JWT.create()
 				.withIssuer("sws")
 				.withAudience("sws")
-				.withClaim("user", user.getId())
-				.withClaim("client", selectedRole.getClient().getId())
-				.withClaim("role", selectedRole.getId())
-				.withClaim("organization", selectedOrg.getId())
+				.withClaim("ad_user_id", user.getId())
+				.withClaim("ad_client_id", selectedRole.getClient().getId())
+				.withClaim("ad_role_id", selectedRole.getId())
+				.withClaim("ad_org_id", selectedOrg.getId())
 				.withClaim("warehouse", selectedWarehouse.getId())
 				.withIssuedAt(new Date());
 	}
