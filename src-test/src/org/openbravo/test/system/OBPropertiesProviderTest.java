@@ -23,8 +23,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
@@ -176,4 +180,52 @@ public class OBPropertiesProviderTest extends OBBaseTest {
     assertNotNull("FormatXML document should be null if no file is found",
         propertiesProvider.getFormatXMLDocument());
   }
+
+  /**
+   * Test loading environment variables into properties.
+   * <p>
+   * This test verifies that environment variables are correctly loaded into properties.
+   * It mocks the environment variables and checks if they are correctly set in the properties.
+   */
+  @Test
+  public void test_env_vars_loaded_into_properties() {
+    // Arrange
+    OBPropertiesProvider provider = spy(OBPropertiesProvider.getInstance());
+    Properties properties = new Properties();
+    properties.setProperty("existing_key", "original_value");
+    provider.setProperties(properties);
+    Map<String, String> mockEnvVars = new HashMap<>();
+    mockEnvVars.put("existing_key", "new_value");
+    mockEnvVars.put("new_key", "env_value");
+    doReturn(mockEnvVars).when(provider).getEnvVariables();
+
+    // Act
+    provider.loadEnvProperties();
+
+    // Assert
+    Properties resultProps = provider.getOpenbravoProperties();
+    assertEquals("new_value", resultProps.getProperty("existing_key"));
+    assertEquals("original_value", resultProps.getProperty("DUP_existing_key"));
+    assertEquals("env_value", resultProps.getProperty("new_key"));
+  }
+
+  /**
+   * Test handling of environment variables with null keys.
+   * <p>
+   * This test verifies that the method throws a NullPointerException when an environment variable with a null key is encountered.
+   */
+  @Test(expected = NullPointerException.class)
+  public void test_env_vars_with_null_key() {
+    // Arrange
+    OBPropertiesProvider provider = spy(OBPropertiesProvider.getInstance());
+    Properties properties = new Properties();
+    provider.setProperties(properties);
+    Map<String, String> mockEnvVars = new HashMap<>();
+    mockEnvVars.put(null, "some_value");
+    doReturn(mockEnvVars).when(provider).getEnvVariables();
+    // Act & Assert
+    provider.loadEnvProperties();
+  }
 }
+
+

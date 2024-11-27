@@ -100,11 +100,16 @@ public class OBPropertiesProvider {
     }
   }
 
-
-  private void loadEnvProperties() {
+  /**
+   * Loads environment variables into the Openbravo properties.
+   * <p>
+   * This method retrieves all environment variables and adds them to the Openbravo properties.
+   * If a property with the same key already exists, it is renamed with a "DUP_" prefix.
+   */
+  public void loadEnvProperties() {
     log.debug("Loading enviroment variables into obProperties from Properties Provider");
 
-    Map<String, String> envVariables = System.getenv();
+    Map<String, String> envVariables = getEnvVariables();
 
     for (Map.Entry<String, String> envEntry : envVariables.entrySet()) {
       String envKey = envEntry.getKey();
@@ -117,6 +122,17 @@ public class OBPropertiesProvider {
 
       obProperties.setProperty(envKey, envValue);
     }
+  }
+
+  /**
+   * Retrieves the environment variables.
+   * <p>
+   * This method returns a map of all environment variables available in the system.
+   *
+   * @return A map containing the environment variables.
+   */
+  public Map<String, String> getEnvVariables() {
+    return System.getenv();
   }
 
   public void setProperties(InputStream is) {
