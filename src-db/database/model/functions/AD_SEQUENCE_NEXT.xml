@@ -30,14 +30,14 @@
   * Specifically, this derivative work is based upon the following Compiere
   * file and version.
   *************************************************************************
-  * $Id: AD_Sequence_Next.sql,v 1.5 2003/08/06 06:51:27 jjanke Exp $
+  * $Id: AD_Sequence_Next.sql.sql,v 1.5 2003/08/06 06:51:27 jjanke Exp $
   ***
   * Title: Get the next sequence number of TableName
   * This procedure is mantained only for backwards compatibility purposes:
   * use instead get_uuid() function
   ************************************************************************/
 BEGIN
-  RAISE_APPLICATION_ERROR(-20000, '@DeprecatedAPI@' || p_SequenceName) ;
+   p_NextNo := get_uuid();
 END AD_SEQUENCE_NEXT
 ]]></body>
     </function>
