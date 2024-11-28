@@ -67,6 +67,8 @@ public class SecureWebServicesUtils {
 	private static final Logger log = LogManager.getLogger(SecureWebServicesUtils.class);
 
 	static final long ONE_MINUTE_IN_MILLIS = 60000;
+	private static final String BEGIN_SECRET_KEY = "-----BEGIN SECRET KEY-----";
+	private static final String END_SECRET_KEY = "-----END SECRET KEY-----";
 	private static final String BEGIN_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----";
 	private static final String END_PUBLIC_KEY = "-----END PUBLIC KEY-----";
 	private static final String BEGIN_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----";
@@ -347,6 +349,9 @@ public class SecureWebServicesUtils {
 			final ECPublicKey publicKey = getECPublicKey(publicKeyContent);
 			algorithm = Algorithm.ECDSA256(publicKey);
 		} else if (!isNewVersion || StringUtils.equals(HS256_ALGORITHM, algorithmUsed)) {
+			publicKeyContent = publicKeyContent.replace(BEGIN_SECRET_KEY, "")
+					.replace(END_SECRET_KEY, "")
+					.replace("\n", "");
 			algorithm = Algorithm.HMAC256(publicKeyContent);
 		} else {
 			String errorMessage = String.format(OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm"), algorithmUsed);
@@ -375,7 +380,7 @@ public class SecureWebServicesUtils {
 
 		String publicKeyPEM = publicKey.replace(BEGIN_PUBLIC_KEY, "")
 				.replace(END_PUBLIC_KEY, "")
-				.replaceAll("\\s+", "");
+				.replace("\n", "");
 
 		byte[] publicBytes = Base64.getDecoder().decode(publicKeyPEM);
 		X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicBytes);
@@ -459,8 +464,13 @@ public class SecureWebServicesUtils {
 			Organization selectedOrg = getOrganization(org, selectedRole, defaultRole, defaultOrg);
 			selectedWarehouse = getWarehouse(warehouse, selectedOrg, selectedWarehouse, defaultWarehouse);
 
-			String privateKey = cleanPrivateKey(config);
-			Algorithm algorithm = getEncoderAlgorithm(privateKey);
+			String algorithmUsed = Preferences.getPreferenceValue("SMFSWS_EncryptionAlgorithm", true,
+					OBContext.getOBContext().getCurrentClient(),
+					OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(), OBContext.getOBContext().getRole(),
+					null);
+
+			String privateKey = cleanPrivateKey(config, algorithmUsed);
+			Algorithm algorithm = getEncoderAlgorithm(privateKey, algorithmUsed);
 			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse);
 
 			if (config.getExpirationTime() > 0) {
@@ -485,17 +495,21 @@ public class SecureWebServicesUtils {
 	 * @return The cleaned private key content as a String.
 	 * @throws JSONException If there is an issue parsing the private key JSON object.
 	 */
-	private static String cleanPrivateKey(SWSConfig config) throws JSONException {
+	private static String cleanPrivateKey(SWSConfig config, String algorithmUsed) throws JSONException {
 		String privateKeyContent = config.getPrivateKey();
 		boolean isNewVersion = StringUtils.startsWith(privateKeyContent, "{") && StringUtils.endsWith(privateKeyContent, "}");
 		if (isNewVersion) {
 			JSONObject keys = new JSONObject(privateKeyContent);
 			privateKeyContent = keys.getString(PRIVATE_KEY);
 		}
-		return privateKeyContent
-				.replace(BEGIN_PRIVATE_KEY, "")
-				.replace(END_PRIVATE_KEY, "")
-				.replaceAll("\\s", "");
+		privateKeyContent = StringUtils.equals(HS256_ALGORITHM, algorithmUsed) ?
+				privateKeyContent.replace(BEGIN_SECRET_KEY, "")
+				.replace(END_SECRET_KEY, "")
+				.replace("\n", "") :
+				privateKeyContent.replace(BEGIN_PRIVATE_KEY, "")
+						.replace(END_PRIVATE_KEY, "")
+						.replace("\n", "");
+		return privateKeyContent;
 	}
 
 	/**
@@ -504,21 +518,17 @@ public class SecureWebServicesUtils {
 	 * appropriate algorithm based on the configuration setting. It supports both ES256 and HS256 algorithms.
 	 *
 	 * @param privateKeyContent The private key content to be used for encoding the token.
+	 * @param algorithmUsed The algorithm used to sign the token.
 	 * @return The {@link Algorithm} to be used for encoding the token.
 	 * @throws NoSuchAlgorithmException If the ES256 algorithm is not available in the environment.
 	 * @throws InvalidKeySpecException If the private key specification is invalid.
 	 * @throws UnsupportedEncodingException If there is an issue decoding the private key.
-	 * @throws PropertyException If there is an issue retrieving the encryption algorithm from the preferences.
 	 */
-	private static Algorithm getEncoderAlgorithm(String privateKeyContent)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException, PropertyException {
+	private static Algorithm getEncoderAlgorithm(String privateKeyContent, String algorithmUsed)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
 		Algorithm algorithm;
 
-		String value = Preferences.getPreferenceValue("SMFSWS_EncryptionAlgorithm", true,
-				OBContext.getOBContext().getCurrentClient(),
-				OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(), OBContext.getOBContext().getRole(),
-				null);
-		if (StringUtils.equals(ES256_ALGORITHM, value)) {
+		if (StringUtils.equals(ES256_ALGORITHM, algorithmUsed)) {
 			final PrivateKey privateKey = getECPrivateKey(privateKeyContent);
 			algorithm = Algorithm.ECDSA256((ECPrivateKey) privateKey);
 		} else {
@@ -658,7 +668,7 @@ public class SecureWebServicesUtils {
 
 		String replacedKey = privateKey.replace(BEGIN_PRIVATE_KEY, "")
 				.replace(END_PRIVATE_KEY, "")
-				.replaceAll("\\s+", "");
+				.replace("\n", "");
 
 		byte[] privateBytes = Base64.getDecoder().decode(replacedKey);
 		PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateBytes);
