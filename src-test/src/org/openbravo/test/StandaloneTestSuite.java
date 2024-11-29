@@ -129,6 +129,7 @@ import org.openbravo.test.system.ImportEntryBuilderTest;
 import org.openbravo.test.system.ImportEntrySizeTest;
 import org.openbravo.test.system.Issue29934Test;
 import org.openbravo.test.system.JSONSerialization;
+import org.openbravo.test.system.OBPropertiesProviderTest;
 import org.openbravo.test.system.Sessions;
 import org.openbravo.test.system.SystemServiceTest;
 import org.openbravo.test.system.SystemValidatorTest;
@@ -277,6 +278,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     OBContextTest.class, //
     JSONSerialization.class, //
     PasswordHashing.class, //
+    OBPropertiesProviderTest.class, //
 
     // xml
     EntityXMLImportTestBusinessObject.class, //
