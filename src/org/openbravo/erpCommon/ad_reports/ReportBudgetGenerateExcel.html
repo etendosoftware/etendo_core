@@ -470,16 +470,21 @@ function validate() {
                         </tr> 
                         <tr>
                           <td class="TitleCell"> <span class="LabelText">General Ledger</span></td>
-                          <td class="Combo_ContentCell" colspan="2"> <select name="inpcAcctSchemaId" id="inpcAcctSchemaId" class="ComboKey Combo_TwoCells_width" onchange="refreshAccountingReports(); logChanges(this); return true;">
-                             <option value=""> <div id="reportC_ACCTSCHEMA_ID"></div></option>
+                          <td class="Combo_ContentCell" colspan="2">
+                            <select name="inpcAcctSchemaId" id="inpcAcctSchemaId" class="ComboKey Combo_TwoCells_width" onchange="refreshAccountingReports(); logChanges(this); return true;">
+                              <option value=""/>
+                              <div id="reportC_ACCTSCHEMA_ID"/>
                             </select>
                           </td>
 
               			  <td class="TitleCell"> <span class="LabelText">Account Element</span></td>
               			  <td class="Combo_ContentCell" colspan="2">
-              			  	<select  name="paramAccountSelect" id="paramAccountSelect" class="ComboKey Combo_TwoCells_width">
-              			    <option value=""></option><div id="paramAccount"></div>
-              			  </select></td><td></td>
+                            <select  name="paramAccountSelect" id="paramAccountSelect" class="ComboKey Combo_TwoCells_width">
+                              <option value=""/>
+                              <div id="paramAccount"/>
+                            </select>
+                          </td>
+                      <td></td>
                         </tr>
                         <tr>
                           <td colspan="6">
