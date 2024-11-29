@@ -222,10 +222,12 @@ isc.OBPickAndExecuteGrid.addProperties({
         dsRequest.originalData &&
         !me.isCriteriaWithIdField(dsRequest.originalData.criteria)
       ) {
+        const originalData = JSON.parse(JSON.stringify(dsRequest.originalData));
         isc.addProperties(
           dsRequest.originalData,
           me.addSelectedIDsToCriteria()
         );
+        me.checkAndAdjustParameterConsistency(dsRequest, originalData);
       }
       dsRequest.params[OB.Constants.IS_PICK_AND_EDIT] = true;
       if (!me.firstRecordWillHaveValue()) {
@@ -271,6 +273,45 @@ isc.OBPickAndExecuteGrid.addProperties({
         this.contentView.view.processId,
       this
     );
+  },
+
+  /**
+   * Ensures consistency between the criteria in the request and the original data.
+   * Checks for missing items and adds them to the request criteria.
+   *
+   * @param {Object} request - The request object containing originalData.
+   * @param {Object} originalData - The reference data object to compare against.
+   */
+  checkAndAdjustParameterConsistency: function(request, originalData) {
+    // Function to find missing elements between two arrays
+    const findMissingElements = (arrayA, arrayB) =>
+        arrayB.filter(itemB =>
+            !arrayA.some(itemA => JSON.stringify(itemA) === JSON.stringify(itemB))
+        );
+
+    // Function to add content from one array to another without mutating the original
+    const addArrayContent = (targetArray, sourceArray) => {
+        sourceArray.forEach(item => targetArray.push(item));
+        return targetArray;
+    };
+
+    // Function to remove the first element with a specific property and value
+    const removeFirstByProperty = (array, property, value) => {
+        const index = array.findIndex(item => item[property] === value);
+        if (index !== -1) array.splice(index, 1);
+        return array;
+    };
+
+    if (request.originalData && request.originalData.criteria) {
+        const criteria = request.originalData.criteria;
+        // Find missing elements, add them, and adjust the criteria
+        const differences = findMissingElements(criteria, originalData.criteria);
+
+        if (differences.length > 0) {
+            addArrayContent(criteria, differences);
+            removeFirstByProperty(criteria, '_constructor', 'AdvancedCriteria');
+        }
+    }
   },
 
   draw: function() {
