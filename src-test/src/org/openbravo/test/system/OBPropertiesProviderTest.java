@@ -45,6 +45,7 @@ import org.openbravo.test.base.OBBaseTest;
  * @author mtaal
  */
 public class OBPropertiesProviderTest extends OBBaseTest {
+  public static final String EXISTING_KEY = "existing_key";
   private OBPropertiesProvider propertiesProvider;
 
   /**
@@ -192,10 +193,10 @@ public class OBPropertiesProviderTest extends OBBaseTest {
     // Arrange
     OBPropertiesProvider provider = spy(OBPropertiesProvider.getInstance());
     Properties properties = new Properties();
-    properties.setProperty("existing_key", "original_value");
+    properties.setProperty(EXISTING_KEY, "original_value");
     provider.setProperties(properties);
     Map<String, String> mockEnvVars = new HashMap<>();
-    mockEnvVars.put("existing_key", "new_value");
+    mockEnvVars.put(EXISTING_KEY, "new_value");
     mockEnvVars.put("new_key", "env_value");
     doReturn(mockEnvVars).when(provider).getEnvVariables();
 
@@ -204,7 +205,7 @@ public class OBPropertiesProviderTest extends OBBaseTest {
 
     // Assert
     Properties resultProps = provider.getOpenbravoProperties();
-    assertEquals("new_value", resultProps.getProperty("existing_key"));
+    assertEquals("new_value", resultProps.getProperty(EXISTING_KEY));
     assertEquals("original_value", resultProps.getProperty("DUP_existing_key"));
     assertEquals("env_value", resultProps.getProperty("new_key"));
   }
