@@ -181,7 +181,8 @@ spec:
 
                 echo "--------------- Configure gradle.properties ---------------"
                 sh """
-                echo -e "context.name=${CONTEXT_NAME}\n
+                echo "\n
+                context.name=${CONTEXT_NAME}\n
                 bbdd.sid=${BBDD_SID}\n
                 bbdd.port=${BBDD_PORT}\n
                 bbdd.systemUser=${BBDD_SYSTEMUSER}\n

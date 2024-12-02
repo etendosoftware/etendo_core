@@ -155,7 +155,8 @@ spec:
                             dir(REPO_NAME) {
                                 sh "git checkout ${GIT_COMMIT}"
                                 sh """
-                                echo "context.name=${CONTEXT_NAME}\n
+                                echo "\n
+                                context.name=${CONTEXT_NAME}\n
                                 bbdd.rdbms=ORACLE\n
                                 bbdd.driver=oracle.jdbc.driver.OracleDriver\n
                                 bbdd.url=jdbc:oracle:thin:@db19c-oracle-db.oracle:1521:orclcdb?oracle.net.disableOob=true\n
