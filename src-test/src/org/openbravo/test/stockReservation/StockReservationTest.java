@@ -1,13 +1,16 @@
 package org.openbravo.test.stockReservation;
 
+import static org.openbravo.test.stockReservation.StockReservationTestUtils.LOCATOR_RN_ID;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createInventoryCount;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createOrder;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,8 +98,8 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @Test
   public void AutomaticReservationOneWarehouse() {
-    InventoryCount WarehouseRn = createInventoryCountRN();
-    new InventoryCountProcess().processInventory(WarehouseRn, false, true);
+    InventoryCount warehouseRn = createInventoryCountRN();
+    new InventoryCountProcess().processInventory(warehouseRn, false, true);
 
     Order salesOrder = createOrderOneWarehouse();
     processOrder(salesOrder);
@@ -109,11 +112,11 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @Test
   public void AutomaticReservationMoreThanOneWarehouse() {
-    InventoryCount WarehouseRn = createInventoryCountRN();
-    new InventoryCountProcess().processInventory(WarehouseRn, false, true);
+    InventoryCount warehouseRn = createInventoryCountRN();
+    new InventoryCountProcess().processInventory(warehouseRn, false, true);
 
-    InventoryCount WarehouseRs = createInventoryCountRS();
-    new InventoryCountProcess().processInventory(WarehouseRs, false, true);
+    InventoryCount warehouseRs = createInventoryCountRS();
+    new InventoryCountProcess().processInventory(warehouseRs, false, true);
 
     Order salesOrder = createOrderMoreThanOneWarehouse();
     processOrder(salesOrder);
@@ -183,8 +186,14 @@ public class StockReservationTest extends WeldBaseTest {
    * @return a list of {@link ReservationStock} entries associated with the reservation
    */
   private List<ReservationStock> findReservationStocksForReservation(Reservation reservation) {
+    if (reservation == null) {
+      return new ArrayList<>();
+    }
+
     OBCriteria<ReservationStock> reservationStockCriteria = OBDal.getInstance().createCriteria(ReservationStock.class);
-    reservationStockCriteria.add(Restrictions.eq(ReservationStock.PROPERTY_RESERVATION + ".id", reservation.getId()));
+    reservationStockCriteria.add(Restrictions.eq(ReservationStock.PROPERTY_RESERVATION, reservation));
+    reservationStockCriteria.setMaxResults(100);
+
     return reservationStockCriteria.list();
   }
 

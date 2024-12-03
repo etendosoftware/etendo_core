@@ -41,14 +41,14 @@ public class StockReservationTestUtils {
   public static final String WAREHOUSE_RS_ID = "5848641D712545C7AE0FE9634A163648"; // Warehouse: España Región Sur
   public static final String LOCATOR_RN_ID = "54EB861A446D464EAA433477A1D867A6"; // Locator: Rn-0-0-0
   public static final String LOCATOR_RS_ID = "2594CC2B85F645E791C44F741DBE6A54"; // Locator: Rs-0-0-0
-  public static final String BPARTNER_ID = "A6750F0D15334FB890C254369AC750A8"; // Business Partner: Alimentos y Supermercados, S.A
+  public static final String BPARTNER_ID = "9E6850C866BD4921AD0EB7F7796CE2C7"; // Business Partner: Hoteles Buenas Noches, S.A.
   public static final String PAYMENT_METHOD_ID = "A97CFD2AFC234B59BB0A72189BD8FC2A"; // Payment Method: Transferencia
   public static final String PRICELIST = "AEE66281A08F42B6BC509B8A80A33C29"; // Price List: Tarifa de ventas
   public static final String DOCTYPE_ID = "466AF4B0136A4A3F9F84129711DA8BD3"; // Document Type: Standard Order
   public static final String PAYMENT_TERM = "66BA1164A7394344BB9CD1A6ECEED05D"; // Payment Term: 30 days
   public static final String PRODUCT_PRICE = "65AFE199A49747E48AAE418D611FCAFD"; // Product Price: Zumo de Pera 0,5L
   public static final String TAX_ID = "696801EA1AAF46A4AF56E367B40459AE"; // Tax: Entregas IVA 21%
-  public static final String LOCATION_ID = "6518D3040ED54008A1FC0C09ED140D66"; // Location: La Coruña, C\Pescadores, 87
+  public static final String LOCATION_ID = "BFE1FB707BA84A6D8AF61A785F3CE1C1"; // Location: Valencia, Av. de las Fuentes, 56
 
   /**
    * Private constructor to prevent instantiation of the utility class.
