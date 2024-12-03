@@ -351,7 +351,7 @@ public class SecureWebServicesUtils {
 		} else if (!isNewVersion || StringUtils.equals(HS256_ALGORITHM, algorithmUsed)) {
 			publicKeyContent = publicKeyContent.replace(BEGIN_SECRET_KEY, "")
 					.replace(END_SECRET_KEY, "")
-					.replace("\n", "");
+					.replace("\\s", "");
 			algorithm = Algorithm.HMAC256(publicKeyContent);
 		} else {
 			String errorMessage = String.format(OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm"), algorithmUsed);
@@ -380,7 +380,7 @@ public class SecureWebServicesUtils {
 
 		String publicKeyPEM = publicKey.replace(BEGIN_PUBLIC_KEY, "")
 				.replace(END_PUBLIC_KEY, "")
-				.replace("\n", "");
+				.replace("\\s", "");
 
 		byte[] publicBytes = Base64.getDecoder().decode(publicKeyPEM);
 		X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicBytes);
@@ -505,10 +505,10 @@ public class SecureWebServicesUtils {
 		privateKeyContent = StringUtils.equals(HS256_ALGORITHM, algorithmUsed) ?
 				privateKeyContent.replace(BEGIN_SECRET_KEY, "")
 				.replace(END_SECRET_KEY, "")
-				.replace("\n", "") :
+				.replace("\\s", "") :
 				privateKeyContent.replace(BEGIN_PRIVATE_KEY, "")
 						.replace(END_PRIVATE_KEY, "")
-						.replace("\n", "");
+						.replace("\\s", "");
 		return privateKeyContent;
 	}
 
@@ -668,7 +668,7 @@ public class SecureWebServicesUtils {
 
 		String replacedKey = privateKey.replace(BEGIN_PRIVATE_KEY, "")
 				.replace(END_PRIVATE_KEY, "")
-				.replace("\n", "");
+				.replace("\\s", "");
 
 		byte[] privateBytes = Base64.getDecoder().decode(replacedKey);
 		PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateBytes);
