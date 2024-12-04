@@ -31,8 +31,8 @@ import spock.util.mop.Use;
  */
 public class SecureWebServicesUtilsTest extends WeldBaseTest {
 
-  private static final String HS256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN SECRET KEY-----\\nKpTlGYVO1aUq62eoJQp+FnoLbLG0NyqkinA9TrbxJGQ=\\n-----END SECRET KEY-----\",\"public-key\":\"\"}";
-  private static final String ES256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN PRIVATE KEY-----\\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgGCwdf4q+/1xT94jl\\nCyC67oHYThVwLfgSKUG9DUK/4lChRANCAATZxYkUTuZoi6OX8LPB1bV19V7E/q2k\\nwb6+aJijXx/1Udqa72rN8CCP7Qo7cRtpUFTVul4e0ovQelcsjQX6GX9Y\\n-----END PRIVATE KEY-----\",\"public-key\":\"-----BEGIN PUBLIC KEY-----\\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2cWJFE7maIujl/CzwdW1dfVexP6t\\npMG+vmiYo18f9VHamu9qzfAgj+0KO3EbaVBU1bpeHtKL0HpXLI0F+hl/WA==\\n-----END PUBLIC KEY-----\"}";
+  private static final String HS256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN SECRET KEY-----uKOQOkfQPEmFs7CKQhT9UJNQ5DHEZmnBxU/2f5x06YE=-----END SECRET KEY-----\",\"public-key\":\"\"}";
+  private static final String ES256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN PRIVATE KEY-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgs6Wr9OstUyGI3WIdXUGrx4/DA87e3dst93f7p5NVGSmhRANCAASgaQjofAzCf93v4qs+Z9ou5g74gP/B9Uxn8inJ8/0rShFdV7/60B8EeZxPiiTTe1zvkl9V/5IRkQkXIJrmY4UI-----END PRIVATE KEY-----\",\"public-key\":\"-----BEGIN PUBLIC KEY-----MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoGkI6HwMwn/d7+KrPmfaLuYO+ID/wfVMZ/IpyfP9K0oRXVe/+tAfBHmcT4ok03tc75JfVf+SEZEJFyCa5mOFCA==-----END PUBLIC KEY-----\"}";
 
   private static final String ENCRYPTION_ALGORITHM_PREFERENCE = "SMFSWS_EncryptionAlgorithm";
   private static final String ENCRYPTION_ALGORITHM_HS256 = "HS256";
