@@ -101,9 +101,9 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
     DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
 
-    assertEquals(user.getId(), decodedToken.getClaim("ad_user_id").asString());
-    assertEquals(role.getId(), decodedToken.getClaim("ad_role_id").asString());
-    assertEquals(org.getId(), decodedToken.getClaim("ad_org_id").asString());
+    assertEquals(user.getId(), decodedToken.getClaim("user").asString());
+    assertEquals(role.getId(), decodedToken.getClaim("role").asString());
+    assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
   }
 
   /**
@@ -121,9 +121,9 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
     DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
 
-    assertEquals(user.getId(), decodedToken.getClaim("ad_user_id").asString());
-    assertEquals(role.getId(), decodedToken.getClaim("ad_role_id").asString());
-    assertEquals(org.getId(), decodedToken.getClaim("ad_org_id").asString());
+    assertEquals(user.getId(), decodedToken.getClaim("user").asString());
+    assertEquals(role.getId(), decodedToken.getClaim("role").asString());
+    assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
   }
 
   /**
