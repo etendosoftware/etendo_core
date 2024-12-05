@@ -11,21 +11,33 @@
  * under the License.
  * The Original Code is Openbravo ERP.
  * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2010-2020 Openbravo SLU
+ * All portions are Copyright (C) 2010-2022 Openbravo SLU
  * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 package org.openbravo.client.application.process;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.Check;
 import org.openbravo.client.application.Parameter;
 import org.openbravo.client.application.ParameterUtils;
@@ -47,7 +59,7 @@ import org.openbravo.model.ad.ui.Window;
 import org.openbravo.service.db.DbUtility;
 
 /**
- * 
+ *
  * @author iperdomo
  */
 public abstract class BaseProcessActionHandler extends BaseActionHandler {
@@ -55,7 +67,14 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 
   private static final String GRID_REFERENCE_ID = "FF80818132D8F0F30132D9BC395D0038";
+  private static final String FILE_UPLOAD_REF_ID = "715C53D4FEA74B28B74F14AE65BC5C16";
+  protected static final String PARAM_VALUES = "paramValues";
+  protected static final String PARAM_FILE_CONTENT = "content";
+  protected static final String PARAM_FILE_NAME = "fileName";
+  protected static final String PARAM_FILE_SIZE = "size";
   public static final String REFRESH_PARENT = "refreshParent";
+  public static final long BYTES_IN_A_MEGABYTE = 1024L * 1024L;
+  private static final String MAXIMUM_ALLOWED_FILE_SIZE = "10";
 
   @Override
   protected final JSONObject execute(Map<String, Object> parameters, String content) {
@@ -96,6 +115,31 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
                 ParameterUtils.getParameterFixedValue(fixRequestMap(parameters, context), param));
           } else {
             parameters.put(param.getDBColumnName(), param.getFixedValue());
+          }
+        }
+        // Check file size if process has file upload parameters
+        if (StringUtils.equals(param.getReference().getId(), FILE_UPLOAD_REF_ID)) {
+          String paramName = param.getName();
+          if (parameters.containsKey(paramName) && parameters.get(paramName) instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> fileParams = (Map<String, Object>) parameters.get(paramName);
+
+            if (!isFileSizeWithinLimit(fileParams)) {
+              log.error("File validation error in process " + processDefinition + ": File "
+                  + fileParams.get(PARAM_FILE_NAME) + " in parameter " + paramName
+                  + " is larger that our size limit");
+              JSONObject errorResponse = new JSONObject();
+
+              JSONObject err = new JSONObject();
+              err.put("severity", "error");
+              err.put("text",
+                  OBMessageUtils.getI18NMessage("OBUIAPP_ProcessFileMaxSizeExceeded",
+                      new String[]{ (String) fileParams.get(PARAM_FILE_NAME),
+                          getMaximumUploadedFileSize() }));
+              errorResponse.put("message", err);
+
+              return errorResponse;
+            }
           }
         }
       }
@@ -169,10 +213,124 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     }
   }
 
+  /**
+   * Updates the result JSONObject by setting the REFRESH_PARENT property.
+   * If the property is not present or is set to true, the method ensures
+   * that the REFRESH_PARENT flag is true, meaning the parent needs to be refreshed.
+   *
+   * @param result the JSONObject containing the process results.
+   * @return the updated JSONObject with the REFRESH_PARENT flag set.
+   * @throws JSONException if there is an error manipulating the JSON object.
+   */
   private JSONObject doRefreshParent(JSONObject result) throws JSONException {
     boolean deRefresh = !result.has(REFRESH_PARENT) || result.getBoolean(REFRESH_PARENT);
     result.put(REFRESH_PARENT, deRefresh);
     return result;
+  }
+
+  /**
+   * Checks if the file size is within the limit specified by the maximum uploaded file size.
+   *
+   * @param fileParam a map containing the file size information
+   * @return true if the file size is within the limit, false otherwise
+   */
+  private boolean isFileSizeWithinLimit(Map<String, Object> fileParam) {
+    String maximumFileSize = getMaximumUploadedFileSize();
+
+    if (maximumFileSize != null) {
+      long fileSizeBytes = (long) fileParam.get(PARAM_FILE_SIZE);
+      long maximumFileSizeMB = NumberUtils.toLong(maximumFileSize, -1);
+      if (maximumFileSizeMB != -1) {
+        return fileSizeBytes <= maximumFileSizeMB * BYTES_IN_A_MEGABYTE;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Retrieves the maximum allowed file upload size from system preferences.
+   * The preference key used is "OBUIAPP_ProcessFileUploadMaxSize". If the preference is not
+   * set or available, the method assumes there is no file size limit and returns null.
+   *
+   * @return the maximum file upload size in megabytes as a String, or null if no limit is set.
+   */
+  private String getMaximumUploadedFileSize() {
+    try {
+      return Preferences.getPreferenceValue("OBUIAPP_ProcessFileUploadMaxSize", true, null, null,
+          null, null, (String) null);
+    } catch (Exception e) {
+      //Returns the maximum allowed file size.
+      return MAXIMUM_ALLOWED_FILE_SIZE;
+    }
+  }
+
+  /**
+   * Overrides the base implementation to support extracting the parameters from a multipart request
+   */
+  @Override
+  protected Map<String, Object> extractParametersFromRequest(HttpServletRequest request) {
+    boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+    if (isMultipart) {
+      return parseMultipartParameters(request);
+    } else {
+      return super.extractParametersFromRequest(request);
+    }
+  }
+
+  /**
+   * Overrides the base implementation to support extracting the content object in a multipart
+   * request, that is stored in the PARAM_VALUES parameter
+   */
+  @Override
+  protected String extractRequestContent(HttpServletRequest request,
+      Map<String, Object> requestParameters) throws IOException {
+    boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+    if (isMultipart) {
+      return (String) requestParameters.get(PARAM_VALUES);
+    } else {
+      return super.extractRequestContent(request, requestParameters);
+    }
+
+  }
+
+  /**
+   * Extract the multipart parameters from the request and returns it as a Map<String, Object>. File
+   * is also included as an InputStream
+   *
+   * @param request
+   *          Current request
+   */
+  private Map<String, Object> parseMultipartParameters(HttpServletRequest request) {
+    Map<String, Object> parameters = new HashMap<>();
+    String fileName;
+    try {
+      FileItemFactory factory = new DiskFileItemFactory();
+      ServletFileUpload upload = new ServletFileUpload(factory);
+      List<FileItem> items = upload.parseRequest(request);
+
+      for (FileItem item : items) {
+        if (item.isFormField()) {
+          String value = item.getString("UTF-8");
+          parameters.put(item.getFieldName(), value);
+          log.debug("Added parameter {} with value: {}", item.getFieldName(), value);
+        } else {
+          fileName = item.getName();
+          if (StringUtils.isNotBlank(fileName)) {
+            Map<String, Object> fileInfo = Map.of(
+                PARAM_FILE_CONTENT, item.getInputStream(),
+                PARAM_FILE_NAME, fileName,
+                PARAM_FILE_SIZE, item.getSize()
+            );
+            parameters.put(item.getFieldName(), fileInfo);
+            log.debug("Added parameter {} file {}", item.getFieldName(), fileName);
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new OBException(OBMessageUtils.getI18NMessage("OBUIAPP_ErrorWhileParsingMultipartParameters"), e);
+    }
+
+    return parameters;
   }
 
   /**
@@ -187,7 +345,7 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
    * <p>
    * Inherited from window access in case it is invoked from a window button and none of the
    * previous conditions is satisfied.
-   * 
+   *
    */
   public static boolean hasAccess(Process processDefinition, Map<String, Object> parameters) {
     // Check Process Definition Access Level
@@ -236,7 +394,7 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
   /**
    * The request map is &lt;String, Object&gt; because includes the HTTP request and HTTP session,
    * is not required to handle process parameters
-   * 
+   *
    * @deprecated use {@link BaseProcessActionHandler#fixRequestMap(Map, JSONObject)}
    */
   @Deprecated
