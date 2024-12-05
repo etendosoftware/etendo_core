@@ -2,11 +2,11 @@
 openapi: "3.0.0"
 info:
   version: 1.0.0
-  title: Secure webservices
+  title: Secure Web Services
   description: |
     ## Introduction
 
-    This module allows calling any standard Etendo web service in the same way as calling the "/ws" endpoint, but using token authentication.
+    This module allows calling any standard Etendo web services in the same way as calling the `/ws` endpoint, but using token authentication.
 
     This authentication method also allows defining the context for the calls by choosing the role and/or organization when requesting a token. It is also possible to renew a token to refresh the expiration date or change the role/organization.
 
@@ -16,10 +16,12 @@ info:
 
     It is necessary to configure the encryption key and the expiration time for the authentication
     tokens in the Client window with the System Administrator role.
-
-    If the expiration time is equal to "0" the tokens do not expire.
-
-    It is highly recommended to generate a random key with the "Generate key" button.
+    
+    If the expiration time is equal to "0" the tokens do not expire.It is highly recommended to generate a random key with the `Generate key` button.
+    
+    > **ℹ️ Note:**  
+    > The default encryption algorithm used for token generation is `ES256`.  
+    > If you wish to change it, configure a new preference with the property `Encryption Algorithm` and set its value to `HS256`.
     
     ![screenshot](img/screen01.png "SWS Config")
 servers:
@@ -98,7 +100,7 @@ paths:
                 $ref: "#/components/schemas/LogResp"
         401:
           description: No auth.
-  /sws/com.smf.securewebservices.obRest/{modelName}:
+  /sws/com.smf.securewebservices.obRest/{_entityName}:
     get:
       summary: List records
       security:
@@ -132,10 +134,10 @@ paths:
         - name: distinct
           in: query
           required: false
-          description: Only filters by entities. Returns the specified entity from the model.
+          description: Specifies that only unique values will be returned of the described entity.
           schema:
             type: string
-            example: Organization     
+            example: organization
         - name: identifiers
           in: query
           required: false
@@ -229,7 +231,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /sws/com.smf.securewebservices.obRest/{modelName}/{recordID}:
+  /sws/com.smf.securewebservices.obRest/{_entityName}/{recordID}:
     get:
       summary: Get a record by ID
       security:
