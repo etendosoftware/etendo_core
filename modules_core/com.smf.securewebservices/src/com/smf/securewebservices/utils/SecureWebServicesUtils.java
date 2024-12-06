@@ -691,10 +691,10 @@ public class SecureWebServicesUtils {
 		return JWT.create()
 				.withIssuer("sws")
 				.withAudience("sws")
-				.withClaim("ad_user_id", user.getId())
-				.withClaim("ad_client_id", selectedRole.getClient().getId())
-				.withClaim("ad_role_id", selectedRole.getId())
-				.withClaim("ad_org_id", selectedOrg.getId())
+				.withClaim("user", user.getId())
+				.withClaim("client", selectedRole.getClient().getId())
+				.withClaim("role", selectedRole.getId())
+				.withClaim("organization", selectedOrg.getId())
 				.withClaim("warehouse", selectedWarehouse.getId())
 				.withIssuedAt(new Date());
 	}
