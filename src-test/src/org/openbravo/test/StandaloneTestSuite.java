@@ -37,6 +37,7 @@ import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
+import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.financial.FinancialUtilsTest;
 import org.openbravo.scheduling.ProcessSchedulingTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
@@ -385,8 +386,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     CreateOrderFromQuotationTest.class,
 
     // Utils process Test
-    ProcessUtilsTest.class
+    ProcessUtilsTest.class,
 
+    // Toolbar print hook Test
+    PrintControllerHookTest.class
 })
 public class StandaloneTestSuite {
 }
