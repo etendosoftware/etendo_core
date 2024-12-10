@@ -1,16 +1,15 @@
 package org.openbravo.test.stockReservation;
 
-import static org.openbravo.test.stockReservation.StockReservationTestUtils.LOCATOR_RN_ID;
+import static org.junit.Assert.assertFalse;
+import static org.openbravo.test.stockReservation.StockReservationTestUtils.StockReservationPreference;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createInventoryCount;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createOrder;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.query.Query;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,6 +60,7 @@ public class StockReservationTest extends WeldBaseTest {
         currentContext.getCurrentClient().getId(), currentContext.getCurrentOrganization().getId(),
         currentContext.getRole().getId());
     RequestContext.get().setVariableSecureApp(vsa);
+    StockReservationPreference();
   }
 
   /**
@@ -104,7 +104,7 @@ public class StockReservationTest extends WeldBaseTest {
     Order salesOrder = createOrderOneWarehouse();
     processOrder(salesOrder);
 
-    verifyReservationDetails(salesOrder, "Rn-0-0-0", BigDecimal.valueOf(1000));
+    verifyAutomaticReservationDetails(salesOrder, "Rn-0-0-0", BigDecimal.valueOf(1000));
   }
 
   /**
@@ -121,8 +121,19 @@ public class StockReservationTest extends WeldBaseTest {
     Order salesOrder = createOrderMoreThanOneWarehouse();
     processOrder(salesOrder);
 
-    verifyReservationDetails(salesOrder, "Rn-0-0-0", BigDecimal.valueOf(1000));
-    verifyReservationDetails(salesOrder, "RS-0-0-0", BigDecimal.valueOf(1000));
+    verifyAutomaticReservationDetails(salesOrder, "Rn-0-0-0", BigDecimal.valueOf(1000));
+    verifyAutomaticReservationDetails(salesOrder, "RS-0-0-0", BigDecimal.valueOf(1000));
+  }
+
+  @Test
+  public void ManualReservationTest() {
+    InventoryCount warehouseRn = createInventoryCountRN();
+    new InventoryCountProcess().processInventory(warehouseRn, false, true);
+
+    Order salesOrder = createOrderManualReservation();
+    processOrder(salesOrder);
+
+    verifyManualReservationDetails(salesOrder, "Rn-0-0-0", BigDecimal.valueOf(1000));
   }
 
   /**
@@ -135,7 +146,7 @@ public class StockReservationTest extends WeldBaseTest {
    * @param expectedQuantity
    *     the expected reserved quantity
    */
-  private void verifyReservationDetails(Order salesOrder, String binSearchKey, BigDecimal expectedQuantity) {
+  private void verifyAutomaticReservationDetails(Order salesOrder, String binSearchKey, BigDecimal expectedQuantity) {
     Reservation reservation = findReservationForOrder(salesOrder);
     List<ReservationStock> reservationStocks = findReservationStocksForReservation(reservation);
 
@@ -145,6 +156,19 @@ public class StockReservationTest extends WeldBaseTest {
 
     assertTrue(String.format("A StorageBin with searchKey '%s' and quantity '%s' was not found.", binSearchKey,
         expectedQuantity), foundMatchingBin);
+  }
+
+  private void verifyManualReservationDetails(Order salesOrder, String binSearchKey, BigDecimal expectedQuantity) {
+    Reservation reservation = findReservationForOrder(salesOrder);
+    List<ReservationStock> reservationStocks = findReservationStocksForReservation(reservation);
+
+    boolean foundMatchingBin = reservationStocks.stream().anyMatch(
+        stock -> binSearchKey.equals(stock.getStorageBin().getSearchKey()) && stock.getQuantity().compareTo(
+            expectedQuantity) == 0);
+
+    assertFalse(
+        String.format("A StorageBin with searchKey '%s' and quantity '%s' was found.", binSearchKey, expectedQuantity),
+        foundMatchingBin);
   }
 
   /**
@@ -186,14 +210,8 @@ public class StockReservationTest extends WeldBaseTest {
    * @return a list of {@link ReservationStock} entries associated with the reservation
    */
   private List<ReservationStock> findReservationStocksForReservation(Reservation reservation) {
-    if (reservation == null) {
-      return new ArrayList<>();
-    }
-
     OBCriteria<ReservationStock> reservationStockCriteria = OBDal.getInstance().createCriteria(ReservationStock.class);
-    reservationStockCriteria.add(Restrictions.eq(ReservationStock.PROPERTY_RESERVATION, reservation));
-    reservationStockCriteria.setMaxResults(100);
-
+    reservationStockCriteria.add(Restrictions.eq(ReservationStock.PROPERTY_RESERVATION + ".id", reservation.getId()));
     return reservationStockCriteria.list();
   }
 
@@ -207,17 +225,38 @@ public class StockReservationTest extends WeldBaseTest {
         "CRP");
   }
 
+  private Order createOrderManualReservation() {
+    return createOrder("Manual Reservation", "DR", "CO", new BigDecimal(1000), StockReservationTestUtils.TAX_ID, "CR");
+  }
+
+  /**
+   * Creates an inventory count for a specified warehouse and storage bin.
+   *
+   * @param warehouseId
+   *     the ID of the warehouse
+   * @param locatorId
+   *     the ID of the storage bin
+   * @param name
+   *     the name of the inventory count
+   * @return the created inventory count
+   */
+  private InventoryCount createInventoryCountGeneric(String warehouseId, String locatorId, String name) {
+    Locator storageBin = OBDal.getInstance().get(Locator.class, locatorId);
+    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, StockReservationTestUtils.PRODUCT_PRICE);
+    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, warehouseId);
+
+    return createInventoryCount(name, productPrice, storageBin, warehouse);
+  }
+
+
   /**
    * Creates an inventory count for the "RN" warehouse.
    *
    * @return the created inventory count
    */
   private InventoryCount createInventoryCountRN() {
-    Locator storageBin = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RN_ID);
-    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, StockReservationTestUtils.PRODUCT_PRICE);
-    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RN_ID);
-
-    return createInventoryCount("Warehouse Rn-0-0-0", productPrice, storageBin, warehouse);
+    return createInventoryCountGeneric(StockReservationTestUtils.WAREHOUSE_RN_ID,
+        StockReservationTestUtils.LOCATOR_RN_ID, "Warehouse Rn-0-0-0");
   }
 
   /**
@@ -226,10 +265,7 @@ public class StockReservationTest extends WeldBaseTest {
    * @return the created inventory count
    */
   private InventoryCount createInventoryCountRS() {
-    Locator storageBin = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RS_ID);
-    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, StockReservationTestUtils.PRODUCT_PRICE);
-    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RS_ID);
-
-    return createInventoryCount("Warehouse Rs-0-0-0", productPrice, storageBin, warehouse);
+    return createInventoryCountGeneric(StockReservationTestUtils.WAREHOUSE_RS_ID,
+        StockReservationTestUtils.LOCATOR_RS_ID, "Warehouse Rs-0-0-0");
   }
 }

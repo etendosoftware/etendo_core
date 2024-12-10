@@ -10,6 +10,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.Location;
@@ -198,5 +199,30 @@ public class StockReservationTestUtils {
     OBDal.getInstance().refresh(order);
 
     return order;
+  }
+
+  /**
+   * Creates a Preference object for Stock Reservation.
+   *
+   * @return the created Preference object
+   */
+  public static Preference StockReservationPreference() {
+
+    Preference preference = OBProvider.getInstance().get(Preference.class);
+    Client client = OBContext.getOBContext().getCurrentClient();
+    Organization org = OBContext.getOBContext().getCurrentOrganization();
+
+    // Set preference attributes
+    preference.setClient(client);
+    preference.setOrganization(org);
+    preference.setActive(true);
+    preference.setPropertyList(true);
+    preference.setProperty("StockReservations");
+    preference.setSearchKey("Y");
+
+    OBDal.getInstance().save(preference);
+    OBDal.getInstance().flush();
+
+    return preference;
   }
 }
