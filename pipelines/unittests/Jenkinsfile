@@ -441,8 +441,8 @@ spec:
         }
       }
       steps {
-        script {
-          container('compiler') {
+        container('compiler') {
+          script {
             try {
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running SonarQube Analysis\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
               echo "--------------- Running SonarQube ---------------"
@@ -482,23 +482,31 @@ spec:
         }
       }
       steps {
-        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Deploying Snapshot\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         container('compiler') {
           script {
-            echo "--------------- Running Deploy Snapshot ---------------"
-            dir(REPO_NAME) {
-              withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
-                withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh """
-                    git config user.name "${GIT_USERNAME}"
-                    git config user.email "${GIT_USERNAME}"
-                    """
-                    sh "echo version.ts=\$(date +\"%s\") > version.properties"
-                    sh "./gradlew publishCoreJar --info"
-                    sh "git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\""
-                    sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git push ${GIT_URL} \"v\$(grep version.ts version.properties|cut -c 11-)\""
+            try {
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Deploying Snapshot\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+              echo "--------------- Running Deploy Snapshot ---------------"
+              dir(REPO_NAME) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
+                  withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                      sh """
+                      git config user.name "${GIT_USERNAME}"
+                      git config user.email "${GIT_USERNAME}"
+                      """
+                      sh "echo version.ts=\$(date +\"%s\") > version.properties"
+                      sh "./gradlew publishCoreJar --info"
+                      sh "git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\""
+                      sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git push ${GIT_URL} \"v\$(grep version.ts version.properties|cut -c 11-)\""
+                  }
                 }
               }
+            } catch (Exception e) {
+              env.ERROR_MESSAGE = "Deploy Snapshot Failed"
+              echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+              echo "Exception occurred: " + e.toString()
+              currentBuild.result = FAILED
+              error(env.ERROR_MESSAGE)
             }
           }
         }
