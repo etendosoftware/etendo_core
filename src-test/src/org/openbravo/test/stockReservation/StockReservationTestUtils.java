@@ -68,7 +68,6 @@ public class StockReservationTestUtils {
   public static final BigDecimal STOCK_DEFAULT = new BigDecimal(141640);
   public static final BigDecimal ZERO = new BigDecimal(0);
 
-
   /**
    * Private constructor to prevent instantiation of the utility class.
    */
@@ -83,17 +82,19 @@ public class StockReservationTestUtils {
    *     the name of the inventory count
    * @param bigDecimal
    *     the quantity to be counted for the inventory line
-   * @param storageBin
+   * @param storageBinId
    *     the storage bin where the inventory count takes place
-   * @param warehouse
+   * @param warehouseId
    *     the warehouse associated with the inventory count
    * @return the created {@link InventoryCount} object with header and lines set
    */
-  public static InventoryCount createInventoryCount(String name, BigDecimal bigDecimal, Locator storageBin,
-      Warehouse warehouse) {
+  public static InventoryCount createInventoryCount(String name, BigDecimal bigDecimal, String storageBinId,
+      String warehouseId) {
     InventoryCount inventoryCount = OBProvider.getInstance().get(InventoryCount.class);
     Client client = OBContext.getOBContext().getCurrentClient();
     Organization org = OBContext.getOBContext().getCurrentOrganization();
+    Locator storageBin = OBDal.getInstance().get(Locator.class, storageBinId);
+    Warehouse warehouse = OBDal.getInstance().get(Warehouse.class, warehouseId);
     ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, StockReservationTestUtils.PRODUCT_PRICE);
 
     // Set header attributes

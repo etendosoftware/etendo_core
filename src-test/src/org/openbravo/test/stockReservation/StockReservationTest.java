@@ -1,6 +1,5 @@
 package org.openbravo.test.stockReservation;
 
-import static org.openbravo.base.secureApp.LoginUtils.log4j;
 import static org.openbravo.materialmgmt.ReservationUtils.processReserve;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createInventoryCount;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.stockReservationPreference;
@@ -10,6 +9,7 @@ import java.math.BigDecimal;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;
 import org.junit.Assert;
@@ -24,8 +24,6 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.materialmgmt.InventoryCountProcess;
 import org.openbravo.model.ad.domain.Preference;
-import org.openbravo.model.common.enterprise.Locator;
-import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.materialmgmt.onhandquantity.Reservation;
 import org.openbravo.model.materialmgmt.transaction.InventoryCount;
@@ -63,8 +61,150 @@ public class StockReservationTest extends WeldBaseTest {
   }
 
   /**
-   * Processes a sales order by invoking the order processing utility.
+   * Tests the automatic reservation functionality for a single warehouse.
    *
+   * This test ensures that:
+   * - An inventory count is created and processed for a specific locator and warehouse.
+   * - A sales order is completed, triggering an automatic reservation.
+   * - The reservation details are validated to match the expected quantity in the single warehouse.
+   *
+   * Cleanup operations reprocess inventory levels and remove test data to reset the system state.
+   *
+   * @throws Exception
+   *     if any error occurs during the test execution.
+   */
+  @Test
+  public void AutomaticReservationOneWarehouse() {
+    Reservation reservation = null;
+    Order salesOrder = null;
+
+    InventoryCount warehouseRn = null;
+
+    try {
+      warehouseRn = createInventoryCount(StockReservationTestUtils.LOCATOR_RN, StockReservationTestUtils._1000,
+          StockReservationTestUtils.LOCATOR_RN_ID, StockReservationTestUtils.WAREHOUSE_RN_ID);
+      new InventoryCountProcess().processInventory(warehouseRn, false, true);
+
+      salesOrder = createOrder("OW - 001", StockReservationTestUtils.DRAFT, StockReservationTestUtils.COMPLETED,
+          StockReservationTestUtils._1000, StockReservationTestUtils.TAX_ID,
+          StockReservationTestUtils.AUTOMATIC_RESERVATION);
+
+      processOrder(salesOrder, StockReservationTestUtils.COMPLETED);
+      reservation = StockReservationTestUtils.findReservationForOrder(salesOrder);
+
+      StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN,
+          BigDecimal.valueOf(1000));
+    } catch (Exception e) {
+      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
+    } finally {
+      cleanUpData(reservation, salesOrder, null, null);
+    }
+  }
+
+  /**
+   * Tests the automatic reservation functionality across multiple warehouses.
+   *
+   * This test ensures that:
+   * - Inventory counts are created and processed for two different locators and warehouses.
+   * - A sales order is completed, triggering an automatic reservation.
+   * - The reservation details are validated to match the expected distribution across the warehouses.
+   *
+   * Cleanup operations reprocess inventory levels and remove test data to reset the system state.
+   *
+   * @throws Exception
+   *     if any error occurs during the test execution.
+   */
+  @Test
+  public void AutomaticReservationMoreThanOneWarehouse() {
+    Reservation reservation = null;
+    Order salesOrder = null;
+
+    InventoryCount warehouseRn = null;
+    InventoryCount warehouseRs = null;
+
+    try {
+      warehouseRn = createInventoryCount(StockReservationTestUtils.LOCATOR_RN, StockReservationTestUtils._1000,
+          StockReservationTestUtils.LOCATOR_RN_ID, StockReservationTestUtils.WAREHOUSE_RN_ID);
+      new InventoryCountProcess().processInventory(warehouseRn, false, true);
+
+      warehouseRs = createInventoryCount(StockReservationTestUtils.LOCATOR_RS, StockReservationTestUtils._1000,
+          StockReservationTestUtils.LOCATOR_RS_ID, StockReservationTestUtils.WAREHOUSE_RS_ID);
+      new InventoryCountProcess().processInventory(warehouseRs, false, true);
+
+      salesOrder = createOrder("MOW - 001", StockReservationTestUtils.DRAFT, StockReservationTestUtils.COMPLETED,
+          new BigDecimal(2000), StockReservationTestUtils.TAX_ID, StockReservationTestUtils.AUTOMATIC_RESERVATION);
+
+      processOrder(salesOrder, StockReservationTestUtils.COMPLETED);
+      reservation = StockReservationTestUtils.findReservationForOrder(salesOrder);
+
+      StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN,
+          BigDecimal.valueOf(1000));
+      StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RS,
+          BigDecimal.valueOf(1000));
+    } catch (Exception e) {
+      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
+    } finally {
+      cleanUpData(reservation, salesOrder, warehouseRn, warehouseRs);
+    }
+  }
+
+  /**
+   * Verifies the manual reservation functionality in the stock reservation system.
+   *
+   * This test ensures that:
+   * - An inventory count is created and processed for a specified locator and warehouse.
+   * - A sales order with a manual reservation type is completed.
+   * - The reservation details are validated against expected values.
+   *
+   * Cleanup operations remove the created reservation and sales order, and reset inventory levels.
+   *
+   * @throws Exception
+   *     if any error occurs during the test execution.
+   */
+  @Test
+  public void ManualReservationTest() {
+    Reservation reservation = null;
+    Order salesOrder = null;
+
+    InventoryCount warehouseRn = null;
+
+    try {
+      warehouseRn = createInventoryCount(StockReservationTestUtils.LOCATOR_RN, StockReservationTestUtils._1000,
+          StockReservationTestUtils.LOCATOR_RN_ID, StockReservationTestUtils.WAREHOUSE_RN_ID);
+      new InventoryCountProcess().processInventory(warehouseRn, false, true);
+
+      salesOrder = createOrder("MR - 001", StockReservationTestUtils.DRAFT, StockReservationTestUtils.COMPLETED,
+          StockReservationTestUtils._1000, StockReservationTestUtils.TAX_ID,
+          StockReservationTestUtils.MANUAL_RESERVATION);
+
+      processOrder(salesOrder, StockReservationTestUtils.COMPLETED);
+      reservation = StockReservationTestUtils.findReservationForOrder(salesOrder);
+
+      StockReservationTestUtils.verifyManualReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN,
+          BigDecimal.valueOf(1000));
+    } catch (Exception e) {
+      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
+    } finally {
+      cleanUpData(reservation, salesOrder, null, null);
+    }
+  }
+
+  /**
+   * Cleans up the test environment by rolling back the transaction and closing the session.
+   */
+  @After
+  public void cleanUp() {
+    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).add(
+        Restrictions.eq(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY)).add(
+        Restrictions.eq(Preference.PROPERTY_SELECTED, true)).uniqueResult();
+    OBDal.getInstance().remove(pref);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().commitAndClose();
+    OBDal.getInstance().rollbackAndClose();
+  }
+
+  /**
+   * Processes a sales order by invoking the order processing utility.
    * This method executes a specific document action on the provided order
    * using the {@link ProcessOrderUtil} class. It ensures that the action is
    * processed within the context of the current session.
@@ -82,188 +222,48 @@ public class StockReservationTest extends WeldBaseTest {
   }
 
   /**
-   * Tests the automatic reservation functionality for a single warehouse.
+   * Cleans up data related to reservations, sales orders, and inventory counts by deactivating or removing
+   * them from the system.
    *
-   * This test ensures that:
-   * - An inventory count is created and processed for a specific locator and warehouse.
-   * - A sales order is completed, triggering an automatic reservation.
-   * - The reservation details are validated to match the expected quantity in the single warehouse.
-   *
-   * Cleanup operations reprocess inventory levels and remove test data to reset the system state.
-   *
-   * @throws Exception if any error occurs during the test execution.
+   * @param reservation
+   *     the Reservation object to clean up; if its status is "COMPLETED", it will be reactivated before removal
+   * @param salesOrder
+   *     the Order object to clean up; it will be reactivated before removal
+   * @param inventoryCountRn
+   *     the InventoryCount object for warehouse "RN" to clean up; it will be reset to default stock levels if not null
+   * @param inventoryCountRs
+   *     the InventoryCount object for warehouse "RS" to clean up; it will be reset to default stock levels if not null
    */
-  @Test
-  public void AutomaticReservationOneWarehouse() {
-    Reservation reservation = null;
-    Order salesOrder = null;
+  private void cleanUpData(Reservation reservation, Order salesOrder, InventoryCount inventoryCountRn,
+      InventoryCount inventoryCountRs) {
 
-    Locator storageBinRn = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RN_ID);
-    Warehouse warehouseRnId = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RN_ID);
-
-    try {
-      InventoryCount warehouseRn = createInventoryCount(StockReservationTestUtils.LOCATOR_RN,
-          StockReservationTestUtils._1000, storageBinRn, warehouseRnId);
-      new InventoryCountProcess().processInventory(warehouseRn, false, true);
-
-      salesOrder = createOrder("OW - 001", StockReservationTestUtils.DRAFT, StockReservationTestUtils.COMPLETED,
-          StockReservationTestUtils._1000, StockReservationTestUtils.TAX_ID,
-          StockReservationTestUtils.AUTOMATIC_RESERVATION);
-
-      processOrder(salesOrder, StockReservationTestUtils.COMPLETED);
-      reservation = StockReservationTestUtils.findReservationForOrder(salesOrder);
-
-      StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN, BigDecimal.valueOf(1000));
-    } catch (Exception e) {
-      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
-    } finally {
-      if (reservation != null) {
+    if (reservation != null) {
+      if (StringUtils.equals(reservation.getRESStatus(), StockReservationTestUtils.COMPLETED)) {
         processReserve(reservation, StockReservationTestUtils.REACTIVATE);
-        OBDal.getInstance().remove(reservation);
       }
-      if (salesOrder != null) {
-        processOrder(salesOrder, StockReservationTestUtils.REACTIVATE);
-        OBDal.getInstance().remove(salesOrder);
-      }
-
-      InventoryCount warehouseRnDefault = createInventoryCount(StockReservationTestUtils.LOCATOR_RN,
-          StockReservationTestUtils.STOCK_DEFAULT, storageBinRn, warehouseRnId);
-      new InventoryCountProcess().processInventory(warehouseRnDefault, false, true);
-
-      OBDal.getInstance().flush();
-      OBDal.getInstance().commitAndClose();
+      OBDal.getInstance().remove(reservation);
     }
-  }
 
-  /**
-   * Tests the automatic reservation functionality across multiple warehouses.
-   *
-   * This test ensures that:
-   * - Inventory counts are created and processed for two different locators and warehouses.
-   * - A sales order is completed, triggering an automatic reservation.
-   * - The reservation details are validated to match the expected distribution across the warehouses.
-   *
-   * Cleanup operations reprocess inventory levels and remove test data to reset the system state.
-   *
-   * @throws Exception if any error occurs during the test execution.
-   */
-  @Test
-  public void AutomaticReservationMoreThanOneWarehouse() {
-    Reservation reservation = null;
-    Order salesOrder = null;
+    if (salesOrder != null) {
+      processOrder(salesOrder, StockReservationTestUtils.REACTIVATE);
+      OBDal.getInstance().remove(salesOrder);
+    }
 
-    Locator storageBinRn = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RN_ID);
-    Warehouse warehouseRnId = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RN_ID);
-
-    Locator storageBinRs = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RS_ID);
-    Warehouse warehouseRsId = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RS_ID);
-
-    try {
-      InventoryCount warehouseRn = createInventoryCount(StockReservationTestUtils.LOCATOR_RN,
-          StockReservationTestUtils._1000, storageBinRn, warehouseRnId);
-      new InventoryCountProcess().processInventory(warehouseRn, false, true);
-
-      InventoryCount warehouseRs = createInventoryCount(StockReservationTestUtils.LOCATOR_RS,
-          StockReservationTestUtils._1000, storageBinRs, warehouseRsId);
-      new InventoryCountProcess().processInventory(warehouseRs, false, true);
-
-      salesOrder = createOrder("MOW - 001", StockReservationTestUtils.DRAFT, StockReservationTestUtils.COMPLETED,
-          new BigDecimal(2000), StockReservationTestUtils.TAX_ID, StockReservationTestUtils.AUTOMATIC_RESERVATION);
-
-      processOrder(salesOrder, StockReservationTestUtils.COMPLETED);
-      reservation = StockReservationTestUtils.findReservationForOrder(salesOrder);
-
-      StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN, BigDecimal.valueOf(1000));
-      StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RS, BigDecimal.valueOf(1000));
-    } catch (Exception e) {
-      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
-    } finally {
-      if (reservation != null) {
-        processReserve(reservation, StockReservationTestUtils.REACTIVATE);
-        OBDal.getInstance().remove(reservation);
-      }
-      if (salesOrder != null) {
-        processOrder(salesOrder, StockReservationTestUtils.REACTIVATE);
-        OBDal.getInstance().remove(salesOrder);
-      }
-
+    if (inventoryCountRn != null) {
       InventoryCount warehouseRnDefault = createInventoryCount(StockReservationTestUtils.LOCATOR_RN,
-          StockReservationTestUtils.STOCK_DEFAULT, storageBinRn, warehouseRnId);
+          StockReservationTestUtils.STOCK_DEFAULT, StockReservationTestUtils.LOCATOR_RN_ID,
+          StockReservationTestUtils.WAREHOUSE_RN_ID);
       new InventoryCountProcess().processInventory(warehouseRnDefault, false, true);
+    }
 
+    if (inventoryCountRs != null) {
       InventoryCount warehouseRsDefault = createInventoryCount(StockReservationTestUtils.LOCATOR_RS,
-          StockReservationTestUtils.ZERO, storageBinRs, warehouseRsId);
+          StockReservationTestUtils.ZERO, StockReservationTestUtils.LOCATOR_RS_ID,
+          StockReservationTestUtils.WAREHOUSE_RS_ID);
       new InventoryCountProcess().processInventory(warehouseRsDefault, false, true);
-
-      OBDal.getInstance().flush();
-      OBDal.getInstance().commitAndClose();
     }
-  }
 
-  /**
-   * Verifies the manual reservation functionality in the stock reservation system.
-   *
-   * This test ensures that:
-   * - An inventory count is created and processed for a specified locator and warehouse.
-   * - A sales order with a manual reservation type is completed.
-   * - The reservation details are validated against expected values.
-   *
-   * Cleanup operations remove the created reservation and sales order, and reset inventory levels.
-   *
-   * @throws Exception if any error occurs during the test execution.
-   */
-  @Test
-  public void ManualReservationTest() {
-    Reservation reservation = null;
-    Order salesOrder = null;
-
-    Locator storageBinRn = OBDal.getInstance().get(Locator.class, StockReservationTestUtils.LOCATOR_RN_ID);
-    Warehouse warehouseRnId = OBDal.getInstance().get(Warehouse.class, StockReservationTestUtils.WAREHOUSE_RN_ID);
-
-    try{
-      InventoryCount warehouseRn = createInventoryCount(StockReservationTestUtils.LOCATOR_RN,
-          StockReservationTestUtils._1000, storageBinRn, warehouseRnId);
-      new InventoryCountProcess().processInventory(warehouseRn, false, true);
-
-      salesOrder = createOrder("MR - 001", StockReservationTestUtils.DRAFT, StockReservationTestUtils.COMPLETED,
-          StockReservationTestUtils._1000, StockReservationTestUtils.TAX_ID,
-          StockReservationTestUtils.MANUAL_RESERVATION);
-
-      processOrder(salesOrder, StockReservationTestUtils.COMPLETED);
-      reservation = StockReservationTestUtils.findReservationForOrder(salesOrder);
-
-      StockReservationTestUtils.verifyManualReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN, BigDecimal.valueOf(1000));
-    } catch (Exception e){
-      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
-    } finally {
-      if (reservation != null) {
-        OBDal.getInstance().remove(reservation);
-      }
-      if (salesOrder != null) {
-        processOrder(salesOrder, StockReservationTestUtils.REACTIVATE);
-        OBDal.getInstance().remove(salesOrder);
-      }
-
-      InventoryCount warehouseRnDefault = createInventoryCount(StockReservationTestUtils.LOCATOR_RN,
-          StockReservationTestUtils.STOCK_DEFAULT, storageBinRn, warehouseRnId);
-      new InventoryCountProcess().processInventory(warehouseRnDefault, false, true);
-
-      OBDal.getInstance().flush();
-      OBDal.getInstance().commitAndClose();
-    }
-  }
-
-  /**
-   * Cleans up the test environment by rolling back the transaction and closing the session.
-   */
-  @After
-  public void cleanUp() {
-    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).add(
-        Restrictions.eq(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY)).add(
-        Restrictions.eq(Preference.PROPERTY_SELECTED, true)).uniqueResult();
-    OBDal.getInstance().remove(pref);
     OBDal.getInstance().flush();
     OBDal.getInstance().commitAndClose();
-    OBDal.getInstance().rollbackAndClose();
   }
 }
