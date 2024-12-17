@@ -1,9 +1,12 @@
 package org.openbravo.test.stockReservation;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.openbravo.test.costing.utils.TestCostingConstants.EURO_ID;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.provider.OBProvider;
@@ -25,6 +28,8 @@ import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
+import org.openbravo.model.materialmgmt.onhandquantity.Reservation;
+import org.openbravo.model.materialmgmt.onhandquantity.ReservationStock;
 import org.openbravo.model.materialmgmt.onhandquantity.StorageDetail;
 import org.openbravo.model.materialmgmt.transaction.InventoryCount;
 import org.openbravo.model.materialmgmt.transaction.InventoryCountLine;
@@ -41,7 +46,9 @@ public class StockReservationTestUtils {
   public static final String WAREHOUSE_RN_ID = "B2D40D8A5D644DD89E329DC297309055"; // Warehouse: España Región Norte
   public static final String WAREHOUSE_RS_ID = "5848641D712545C7AE0FE9634A163648"; // Warehouse: España Región Sur
   public static final String LOCATOR_RN_ID = "54EB861A446D464EAA433477A1D867A6"; // Locator: Rn-0-0-0
+  public static final String LOCATOR_RN = "Rn-0-0-0";
   public static final String LOCATOR_RS_ID = "2594CC2B85F645E791C44F741DBE6A54"; // Locator: Rs-0-0-0
+  public static final String LOCATOR_RS = "RS-0-0-0";
   public static final String BPARTNER_ID = "9E6850C866BD4921AD0EB7F7796CE2C7"; // Business Partner: Hoteles Buenas Noches, S.A.
   public static final String PAYMENT_METHOD_ID = "A97CFD2AFC234B59BB0A72189BD8FC2A"; // Payment Method: Transferencia
   public static final String PRICELIST = "AEE66281A08F42B6BC509B8A80A33C29"; // Price List: Tarifa de ventas
@@ -50,6 +57,16 @@ public class StockReservationTestUtils {
   public static final String PRODUCT_PRICE = "65AFE199A49747E48AAE418D611FCAFD"; // Product Price: Zumo de Pera 0,5L
   public static final String TAX_ID = "696801EA1AAF46A4AF56E367B40459AE"; // Tax: Entregas IVA 21%
   public static final String LOCATION_ID = "BFE1FB707BA84A6D8AF61A785F3CE1C1"; // Location: Valencia, Av. de las Fuentes, 56
+  public static final String DRAFT = "DR";
+  public static final String COMPLETED = "CO";
+  public static final String REACTIVATE = "RE";
+  public static final String AUTOMATIC_RESERVATION = "CRP";
+  public static final String MANUAL_RESERVATION = "CR";
+  public static final String PREFERENCE_PROPERTY = "StockReservations";
+  public static final BigDecimal _1000 = new BigDecimal(1000);
+  public static final BigDecimal STOCK_DEFAULT = new BigDecimal(141640);
+  public static final BigDecimal ZERO = new BigDecimal(0);
+
 
   /**
    * Private constructor to prevent instantiation of the utility class.
@@ -59,23 +76,24 @@ public class StockReservationTestUtils {
   }
 
   /**
-   * Creates an inventory count with specified attributes.
+   * Creates an inventory count with a specified header and corresponding lines.
    *
    * @param name
    *     the name of the inventory count
-   * @param productPrice
-   *     the product price object for the inventory
+   * @param bigDecimal
+   *     the quantity to be counted for the inventory line
    * @param storageBin
-   *     the locator where the inventory is stored
+   *     the storage bin where the inventory count takes place
    * @param warehouse
    *     the warehouse associated with the inventory count
-   * @return the created InventoryCount object
+   * @return the created {@link InventoryCount} object with header and lines set
    */
-  public static InventoryCount createInventoryCount(String name, ProductPrice productPrice, Locator storageBin,
+  public static InventoryCount createInventoryCount(String name, BigDecimal bigDecimal, Locator storageBin,
       Warehouse warehouse) {
     InventoryCount inventoryCount = OBProvider.getInstance().get(InventoryCount.class);
     Client client = OBContext.getOBContext().getCurrentClient();
     Organization org = OBContext.getOBContext().getCurrentOrganization();
+    ProductPrice productPrice = OBDal.getInstance().get(ProductPrice.class, StockReservationTestUtils.PRODUCT_PRICE);
 
     // Set header attributes
     inventoryCount.setClient(client);
@@ -90,23 +108,22 @@ public class StockReservationTestUtils {
 
     // Set lines attributes
     InventoryCountLine inventoryCountLine = OBProvider.getInstance().get(InventoryCountLine.class);
-    Product product = productPrice.getProduct();
 
     inventoryCountLine.setClient(inventoryCount.getClient());
     inventoryCountLine.setOrganization(inventoryCount.getOrganization());
     inventoryCountLine.setPhysInventory(inventoryCount);
     inventoryCountLine.setLineNo(10L);
-    inventoryCountLine.setProduct(product);
+    inventoryCountLine.setProduct(productPrice.getProduct());
 
     OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance().createCriteria(StorageDetail.class);
-    storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, product));
+    storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, productPrice.getProduct()));
     storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_STORAGEBIN, storageBin));
     StorageDetail storageDetail = (StorageDetail) storageDetailCriteria.setMaxResults(1).uniqueResult();
 
     inventoryCountLine.setStorageBin(storageBin);
-    inventoryCountLine.setUOM(product.getUOM());
+    inventoryCountLine.setUOM(productPrice.getProduct().getUOM());
     inventoryCountLine.setBookQuantity(storageDetail.getQuantityOnHand());
-    inventoryCountLine.setQuantityCount(new BigDecimal(1000));
+    inventoryCountLine.setQuantityCount(bigDecimal);
 
     OBDal.getInstance().save(inventoryCountLine);
     OBDal.getInstance().flush();
@@ -206,7 +223,7 @@ public class StockReservationTestUtils {
    *
    * @return the created Preference object
    */
-  public static Preference StockReservationPreference() {
+  public static Preference stockReservationPreference() {
 
     Preference preference = OBProvider.getInstance().get(Preference.class);
     Client client = OBContext.getOBContext().getCurrentClient();
@@ -217,12 +234,75 @@ public class StockReservationTestUtils {
     preference.setOrganization(org);
     preference.setActive(true);
     preference.setPropertyList(true);
+    preference.setSelected(true);
     preference.setProperty("StockReservations");
     preference.setSearchKey("Y");
 
     OBDal.getInstance().save(preference);
     OBDal.getInstance().flush();
+    OBDal.getInstance().commitAndClose();
 
     return preference;
+  }
+
+  /**
+   * Verifies reservation details for a specific storage bin and expected quantity.
+   *
+   * @param binSearchKey
+   *     the search key of the storage bin
+   * @param expectedQuantity
+   *     the expected reserved quantity
+   */
+  public static void verifyAutomaticReservationDetails(Reservation reservation, String binSearchKey,
+      BigDecimal expectedQuantity) {
+    List<ReservationStock> reservationStocks = findReservationStocksForReservation(reservation);
+
+    boolean foundMatchingBin = reservationStocks.stream().anyMatch(
+        stock -> binSearchKey.equals(stock.getStorageBin().getSearchKey()) && stock.getQuantity().compareTo(
+            expectedQuantity) == 0);
+
+    assertTrue(String.format("A StorageBin with searchKey '%s' and quantity '%s' was not found.", binSearchKey,
+        expectedQuantity), foundMatchingBin);
+  }
+
+  public static void verifyManualReservationDetails(Reservation reservation, String binSearchKey,
+      BigDecimal expectedQuantity) {
+    List<ReservationStock> reservationStocks = findReservationStocksForReservation(reservation);
+
+    boolean foundMatchingBin = reservationStocks.stream().anyMatch(
+        stock -> binSearchKey.equals(stock.getStorageBin().getSearchKey()) && stock.getQuantity().compareTo(
+            expectedQuantity) == 0);
+
+    assertFalse(
+        String.format("A StorageBin with searchKey '%s' and quantity '%s' was found.", binSearchKey, expectedQuantity),
+        foundMatchingBin);
+  }
+
+  /**
+   * Finds the reservation associated with a specific sales order.
+   *
+   * @param salesOrder
+   *     the sales order for which the reservation is to be found
+   * @return the reservation associated with the sales order, or {@code null} if none exists
+   */
+  public static Reservation findReservationForOrder(Order salesOrder) {
+    OBDal.getInstance().refresh(salesOrder);
+    OBCriteria<Reservation> reservationCriteria = OBDal.getInstance().createCriteria(Reservation.class);
+    reservationCriteria.add(
+        Restrictions.eq(Reservation.PROPERTY_SALESORDERLINE + ".id", salesOrder.getOrderLineList().get(0).getId()));
+    return (Reservation) reservationCriteria.setMaxResults(1).uniqueResult();
+  }
+
+  /**
+   * Retrieves the list of reservation stock entries for a given reservation.
+   *
+   * @param reservation
+   *     the reservation for which stock entries are to be retrieved
+   * @return a list of {@link ReservationStock} entries associated with the reservation
+   */
+  public static List<ReservationStock> findReservationStocksForReservation(Reservation reservation) {
+    OBCriteria<ReservationStock> reservationStockCriteria = OBDal.getInstance().createCriteria(ReservationStock.class);
+    reservationStockCriteria.add(Restrictions.eq(ReservationStock.PROPERTY_RESERVATION + ".id", reservation.getId()));
+    return reservationStockCriteria.list();
   }
 }
