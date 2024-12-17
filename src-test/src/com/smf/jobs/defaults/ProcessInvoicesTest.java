@@ -38,6 +38,7 @@ import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonUtils;
 
+import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 import com.smf.jobs.Data;
@@ -47,11 +48,14 @@ import com.smf.jobs.Data;
  * This class contains tests to validate the behavior of processing invoices
  * in various scenarios, such as handling void dates, verifying successful
  * processing, and ensuring proper pre-run setup.
- *
  * It uses JUnit and Mockito for testing and mocking dependencies.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessInvoicesTest {
+
+  public static final String SUCCESS = "Success";
+  public static final String SHOULD_RETURN_SUCCESS_TYPE = "Should return success type";
+
 
   @Spy
   @InjectMocks
@@ -79,6 +83,8 @@ public class ProcessInvoicesTest {
   private Data mockData;
 
   private Method processInvoiceMethod;
+  private Method getInputContentsMethod;
+
 
   /**
    * Sets up the test environment, including retrieving the private method
@@ -96,6 +102,13 @@ public class ProcessInvoicesTest {
         String.class
     );
     processInvoiceMethod.setAccessible(true);
+
+    // Add reflection setup for getInputContents
+    getInputContentsMethod = Action.class.getDeclaredMethod(
+        "getInputContents",
+        Class.class
+    );
+    getInputContentsMethod.setAccessible(true);
   }
 
   /**
@@ -110,7 +123,7 @@ public class ProcessInvoicesTest {
     String invoiceId = "test-invoice-id";
     String docAction = "CO";
     OBError expectedResult = new OBError();
-    expectedResult.setType("Success");
+    expectedResult.setType(SUCCESS);
     expectedResult.setMessage("Invoice processed successfully");
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -135,7 +148,7 @@ public class ProcessInvoicesTest {
           null
       );
 
-      assertEquals("Should return success type", "Success", result.getType());
+      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
       assertEquals("Should return correct message", "Invoice processed successfully", result.getMessage());
     }
   }
@@ -155,7 +168,7 @@ public class ProcessInvoicesTest {
     String voidAcctDate = "2024-01-15";
 
     OBError expectedResult = new OBError();
-    expectedResult.setType("Success");
+    expectedResult.setType(SUCCESS);
 
     SimpleDateFormat jsonDateFormat = JsonUtils.createDateFormat();
     Date testDate = jsonDateFormat.parse(voidDate);
@@ -183,96 +196,7 @@ public class ProcessInvoicesTest {
           voidAcctDate
       );
 
-      assertEquals("Should return success type", "Success", result.getType());
-    }
-  }
-
-  /**
-   * Tests the action method to ensure it correctly handles processing invoices
-   * when the processing result is successful.
-   *
-   * @throws Exception if the action execution fails.
-   */
-  @Test
-  public void testActionWithSuccessfulProcessing() throws Exception {
-    JSONObject parameters = new JSONObject();
-    parameters.put("DocAction", "CO");
-    MutableBoolean isStopped = new MutableBoolean(false);
-
-    List<Invoice> mockInvoices = List.of(mockInvoice);
-    OBError successResult = new OBError();
-    successResult.setType("Success");
-
-    doReturn(mockInvoices).when(processInvoices).getInputContents(any());
-
-    try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
-      requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
-      when(mockRequestContext.getVariablesSecureApp()).thenReturn(mockVars);
-      when(mockWeldUtils.getInstance(ProcessInvoiceUtil.class)).thenReturn(mockProcessInvoiceUtil);
-      when(mockInvoice.getId()).thenReturn("testId");
-      when(mockProcessInvoiceUtil.process(
-          anyString(),
-          anyString(),
-          anyString(),
-          anyString(),
-          any(VariablesSecureApp.class),
-          any(DalConnectionProvider.class)
-      )).thenReturn(successResult);
-
-      ActionResult result = processInvoices.action(parameters, isStopped);
-
-      assertEquals("Should return success type", Result.Type.SUCCESS, result.getType());
-    }
-  }
-
-  /**
-   * Tests the preRun method to verify that invoices with the "process now"
-   * flag are properly locked, updated, and saved before processing.
-   *
-   * @throws Exception if the preRun setup or execution fails.
-   */
-  @Test
-  public void testPreRunWithLockedInvoice() throws Exception {
-    JSONObject jsonContent = new JSONObject();
-    JSONObject params = new JSONObject();
-    params.put("DocAction", "CO");
-    jsonContent.put("_params", params);
-
-    List<Invoice> mockInvoices = List.of(mockInvoice);
-    OBError successResult = new OBError();
-    successResult.setType("Success");
-
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
-
-      obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
-      doNothing().when(mockOBDal).save(any());
-      doNothing().when(mockOBDal).flush();
-
-      doReturn(mockInvoices).when(processInvoices).getInputContents(any());
-      doReturn(mockData).when(processInvoices).getInput();
-
-      when(mockInvoice.isProcessNow()).thenReturn(true);
-      when(mockInvoice.getId()).thenReturn("testId");
-
-      requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
-      when(mockRequestContext.getVariablesSecureApp()).thenReturn(mockVars);
-      when(mockWeldUtils.getInstance(ProcessInvoiceUtil.class)).thenReturn(mockProcessInvoiceUtil);
-      when(mockProcessInvoiceUtil.process(
-          anyString(),
-          eq("XL"),
-          anyString(),
-          anyString(),
-          any(VariablesSecureApp.class),
-          any(DalConnectionProvider.class)
-      )).thenReturn(successResult);
-
-      Data result = processInvoices.preRun(jsonContent);
-
-      assertNotNull("Result should not be null", result);
-      verify(mockInvoice, times(1)).setAPRMProcessinvoice("--");
-      verify(mockOBDal, times(1)).save(mockInvoice);
-      verify(mockOBDal, times(1)).flush();
+      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
     }
   }
 
@@ -294,5 +218,101 @@ public class ProcessInvoicesTest {
   @Test
   public void testGetInputClass() {
     assertEquals("Should return Invoice.class", Invoice.class, processInvoices.getInputClass());
+  }
+
+   /**
+   * Tests the action method to ensure it correctly handles processing invoices
+   * when the processing result is successful.
+   *
+   * @throws Exception if the action execution fails.
+   */
+  @Test
+  public void testActionWithSuccessfulProcessing() throws Exception {
+    JSONObject parameters = new JSONObject();
+    parameters.put("DocAction", "CO");
+    MutableBoolean isStopped = new MutableBoolean(false);
+
+    List<Invoice> mockInvoices = List.of(mockInvoice);
+    OBError successResult = new OBError();
+    successResult.setType(SUCCESS);
+
+    // Instead of using doReturn().when(), use reflection
+    when(getInputContentsMethod.invoke(processInvoices, Invoice.class))
+        .thenReturn(mockInvoices);
+
+    try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
+      requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
+      when(mockRequestContext.getVariablesSecureApp()).thenReturn(mockVars);
+      when(mockWeldUtils.getInstance(ProcessInvoiceUtil.class))
+          .thenReturn(mockProcessInvoiceUtil);
+      when(mockInvoice.getId()).thenReturn("testId");
+      when(mockProcessInvoiceUtil.process(
+          anyString(),
+          anyString(),
+          anyString(),
+          anyString(),
+          any(VariablesSecureApp.class),
+          any(DalConnectionProvider.class)
+      )).thenReturn(successResult);
+
+      ActionResult result = processInvoices.action(parameters, isStopped);
+
+      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
+    }
+  }
+
+  /**
+   * Tests the preRun method to verify that invoices with the "process now"
+   * flag are properly locked, updated, and saved before processing.
+   *
+   * @throws Exception if the preRun setup or execution fails.
+   */
+  @Test
+  public void testPreRunWithLockedInvoice() throws Exception {
+    JSONObject jsonContent = new JSONObject();
+    JSONObject params = new JSONObject();
+    params.put("DocAction", "CO");
+    jsonContent.put("_params", params);
+
+    List<Invoice> mockInvoices = List.of(mockInvoice);
+    OBError successResult = new OBError();
+    successResult.setType(SUCCESS);
+
+    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
+         MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
+
+      obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
+      doNothing().when(mockOBDal).save(any());
+      doNothing().when(mockOBDal).flush();
+
+      // Use reflection for getInputContents
+      when(getInputContentsMethod.invoke(processInvoices, Invoice.class))
+          .thenReturn(mockInvoices);
+      doReturn(mockData).when(processInvoices).getInput();
+
+      // Rest of the test remains the same
+      when(mockInvoice.isProcessNow()).thenReturn(true);
+      when(mockInvoice.getId()).thenReturn("testId");
+
+      requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
+      when(mockRequestContext.getVariablesSecureApp()).thenReturn(mockVars);
+      when(mockWeldUtils.getInstance(ProcessInvoiceUtil.class))
+          .thenReturn(mockProcessInvoiceUtil);
+      when(mockProcessInvoiceUtil.process(
+          anyString(),
+          eq("XL"),
+          anyString(),
+          anyString(),
+          any(VariablesSecureApp.class),
+          any(DalConnectionProvider.class)
+      )).thenReturn(successResult);
+
+      Data result = processInvoices.preRun(jsonContent);
+
+      assertNotNull("Result should not be null", result);
+      verify(mockInvoice, times(1)).setAPRMProcessinvoice("--");
+      verify(mockOBDal, times(1)).save(mockInvoice);
+      verify(mockOBDal, times(1)).flush();
+    }
   }
 }

@@ -29,12 +29,19 @@ public class ReportValuationStockSummaryTest {
 
   private Method getSummaryProductCategoriesMethod;
 
+  private static final String ERROR_RESULT_NULL = "Result should not be null";
+  private static final String CATEGORY_NAME = "categoryName";
+  private static final String TEST_CATEGORY = "TestCategory";
+  private static final String TOTAL_COST = "totalCost";
+  private static final String TEST_COST_VALUE = "100.00";
+  private static final String ERROR_ONE_CATEGORY = "Should contain one category";
+
+
   /**
    * Sets up the test environment by initializing reflective access to the method under test.
    *
    * @throws Exception if the method cannot be accessed.
    */
-
   @Before
   public void setUp() throws Exception {
     getSummaryProductCategoriesMethod = ReportValuationStock.class.getDeclaredMethod(
@@ -76,7 +83,7 @@ public class ReportValuationStockSummaryTest {
         (Object) data
     );
 
-    assertNotNull("Result should not be null", result);
+    assertNotNull(ERROR_RESULT_NULL, result);
     assertEquals("Empty data should return empty result", 0, result.length);
   }
 
@@ -92,8 +99,8 @@ public class ReportValuationStockSummaryTest {
   @Test
   public void testGetSummaryProductCategoriesWithSingleCategory() throws Exception {
     ReportValuationStockData singleData = new ReportValuationStockData();
-    setFieldValue(singleData, "categoryName", "TestCategory");
-    setFieldValue(singleData, "totalCost", "100.00");
+    setFieldValue(singleData, CATEGORY_NAME, TEST_CATEGORY);
+    setFieldValue(singleData, TOTAL_COST, TEST_COST_VALUE);
 
     ReportValuationStockData[] data = new ReportValuationStockData[] { singleData };
 
@@ -102,11 +109,11 @@ public class ReportValuationStockSummaryTest {
         (Object) data
     );
 
-    assertNotNull("Result should not be null", result);
-    assertEquals("Should contain one category", 1, result.length);
-    assertEquals("Should have correct category name", "TestCategory",
+    assertNotNull(ERROR_RESULT_NULL, result);
+    assertEquals(ERROR_ONE_CATEGORY, 1, result.length);
+    assertEquals("Should have correct category name", TEST_CATEGORY,
         result[0].getField("category"));
-    assertEquals("Should have correct cost", "100.00",
+    assertEquals("Should have correct cost", TEST_COST_VALUE,
         result[0].getField("cost"));
   }
 
@@ -122,12 +129,12 @@ public class ReportValuationStockSummaryTest {
   @Test
   public void testGetSummaryProductCategoriesWithMultipleEntriesSameCategory() throws Exception {
     ReportValuationStockData data1 = new ReportValuationStockData();
-    setFieldValue(data1, "categoryName", "TestCategory");
-    setFieldValue(data1, "totalCost", "100.00");
+    setFieldValue(data1, CATEGORY_NAME, TEST_CATEGORY);
+    setFieldValue(data1, TOTAL_COST, TEST_COST_VALUE);
 
     ReportValuationStockData data2 = new ReportValuationStockData();
-    setFieldValue(data2, "categoryName", "TestCategory");
-    setFieldValue(data2, "totalCost", "50.00");
+    setFieldValue(data2, CATEGORY_NAME, TEST_CATEGORY);
+    setFieldValue(data2, TOTAL_COST, "50.00");
 
     ReportValuationStockData[] data = new ReportValuationStockData[] { data1, data2 };
 
@@ -136,9 +143,9 @@ public class ReportValuationStockSummaryTest {
         (Object) data
     );
 
-    assertNotNull("Result should not be null", result);
-    assertEquals("Should contain one category", 1, result.length);
-    assertEquals("Category name should match", "TestCategory",
+    assertNotNull(ERROR_RESULT_NULL, result);
+    assertEquals(ERROR_ONE_CATEGORY, 1, result.length);
+    assertEquals("Category name should match", TEST_CATEGORY,
         result[0].getField("category"));
     assertEquals("Total cost should be summed correctly", "150.00",
         result[0].getField("cost"));
@@ -156,8 +163,8 @@ public class ReportValuationStockSummaryTest {
   @Test
   public void testGetSummaryProductCategoriesWithNullCosts() throws Exception {
     ReportValuationStockData nullCostData = new ReportValuationStockData();
-    setFieldValue(nullCostData, "categoryName", "TestCategory");
-    setFieldValue(nullCostData, "totalCost", null);
+    setFieldValue(nullCostData, CATEGORY_NAME, TEST_CATEGORY);
+    setFieldValue(nullCostData, TOTAL_COST, null);
 
     ReportValuationStockData[] data = new ReportValuationStockData[] { nullCostData };
 
@@ -166,8 +173,8 @@ public class ReportValuationStockSummaryTest {
         (Object) data
     );
 
-    assertNotNull("Result should not be null", result);
-    assertEquals("Should contain one category", 1, result.length);
+    assertNotNull(ERROR_RESULT_NULL, result);
+    assertEquals(ERROR_ONE_CATEGORY, 1, result.length);
     assertEquals("Cost should be zero for null values", "0",
         result[0].getField("cost"));
   }

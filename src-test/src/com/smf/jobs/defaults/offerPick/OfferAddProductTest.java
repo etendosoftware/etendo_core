@@ -5,10 +5,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Session;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -117,7 +119,7 @@ public class OfferAddProductTest {
    */
   @Test
   public void testGetJSONName() {
-    assert "Confprodprocess".equals(offerAddProduct.getJSONName());
+    Assert.assertEquals("Confprodprocess", StringUtils.defaultString(offerAddProduct.getJSONName()));
   }
 
   /**

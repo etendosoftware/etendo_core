@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
@@ -93,13 +94,13 @@ public class JobsComponentProviderTest {
 
     for (Object resource : globalResources) {
       String resourceString = resource.toString();
-      if (resourceString.contains("processRecords.js")) {
+      if (StringUtils.contains(resourceString, "processRecords.js")) {
         hasProcessRecordsJs = true;
       }
-      if (resourceString.contains("ob-clone-record.js")) {
+      if (StringUtils.contains(resourceString, "ob-clone-record.js")) {
         hasCloneRecordJs = true;
       }
-      if (resourceString.contains("createFromOrders.js")) {
+      if (StringUtils.contains(resourceString, "createFromOrders.js")) {
         hasCreateFromOrdersJs = true;
       }
     }

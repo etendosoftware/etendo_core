@@ -16,6 +16,7 @@ import java.util.Set;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,6 +71,8 @@ public class ReportValuationStockBuildDataTest {
   private static final String TEST_CATEGORY_ID = "testCategoryId";
   private static final String TEST_CURRENCY_ID = "testCurrencyId";
   private static final String TEST_CLIENT_ID = "testClientId";
+  private static final String WAREHOUSE_NOT_IN_LE = "WarehouseNotInLE";
+
 
   /**
    * Sets up the initial state required for the tests. Prepare mocks and retrieves
@@ -127,9 +130,9 @@ public class ReportValuationStockBuildDataTest {
       when(mockOsp.getLegalEntity(any(Organization.class))).thenReturn(null);
 
       OBError mockError = mock(OBError.class);
-      when(mockError.getMessage()).thenReturn("WarehouseNotInLE");
+      when(mockError.getMessage()).thenReturn(WAREHOUSE_NOT_IN_LE);
       obMessageUtilsMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn("WarehouseNotInLE");
+          .thenReturn(WAREHOUSE_NOT_IN_LE);
       obMessageUtilsMock.when(() -> OBMessageUtils.translateError(anyString()))
           .thenReturn(mockError);
 
@@ -148,7 +151,7 @@ public class ReportValuationStockBuildDataTest {
       } catch (Exception e) {
         assertTrue("Expected ServletException", e.getCause() instanceof ServletException);
         assertTrue("Expected correct error message",
-            e.getCause().getMessage().contains("WarehouseNotInLE"));
+            StringUtils.contains(e.getCause().getMessage(), WAREHOUSE_NOT_IN_LE));
       }
     }
   }

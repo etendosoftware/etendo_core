@@ -3,7 +3,11 @@ package com.smf.jobs.defaults.offerPick;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -22,8 +26,18 @@ import org.openbravo.model.common.plm.ProductCategory;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 import org.hibernate.Session;
 
+/**
+ * Unit tests for the {@link OfferAddProductCategory} class.
+ *
+ * <p>These tests validate the behavior of the {@code doPickAndExecute} method,
+ * ensuring that product categories are correctly handled and associated with a
+ * {@link PriceAdjustment} instance in both single and multiple category scenarios.
+ */
 @ExtendWith(MockitoExtension.class)
 public class OfferAddProductCategoryTest {
+
+  private static final String TEST_ID = "testId" ;
+
 
   @Mock
   private OBDal obDal;
@@ -42,6 +56,12 @@ public class OfferAddProductCategoryTest {
 
   private OfferAddProductCategory offerAddProductCategory;
 
+  /**
+   * Initializes the test environment before each test.
+   *
+   * <p>Configures the {@code OfferAddProductCategory} instance and defines default behavior for
+   * the mocked objects, such as {@code PriceAdjustment}.
+   */
   @BeforeEach
   public void setup() {
     offerAddProductCategory = new OfferAddProductCategory();
@@ -49,22 +69,29 @@ public class OfferAddProductCategoryTest {
     when(priceAdjustment.getOrganization()).thenReturn(organization);
   }
 
+  /**
+   * Tests the {@code doPickAndExecute} method with a single product category.
+   *
+   * <p>Validates that the method retrieves, sets, and saves a single product category
+   * and its associated {@link PriceAdjustment}, ensuring the proper calls to mock objects.
+   *
+   * @throws JSONException if there is an error creating the JSON input.
+   */
   @Test
   public void testDoPickAndExecuteSingleProductCategory() throws JSONException {
     try (MockedStatic<OBDal> mockedOBDal = mockStatic(OBDal.class);
          MockedStatic<OBProvider> mockedOBProvider = mockStatic(OBProvider.class)) {
 
-      // Arrange
       mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.getSession()).thenReturn(session);
 
       JSONArray selectedLines = new JSONArray();
       JSONObject productCatJson = new JSONObject();
-      productCatJson.put("id", "testId");
+      productCatJson.put("id", TEST_ID);
       selectedLines.put(productCatJson);
 
       ProductCategory productCategory = mock(ProductCategory.class);
-      when(obDal.getProxy(eq(ProductCategory.ENTITY_NAME), eq("testId"))).thenReturn(productCategory);
+      when(obDal.getProxy(eq(ProductCategory.ENTITY_NAME), eq(TEST_ID))).thenReturn(productCategory);
 
       OBProvider obProvider = mock(OBProvider.class);
       org.openbravo.model.pricing.priceadjustment.ProductCategory mockProductCategory =
@@ -74,10 +101,8 @@ public class OfferAddProductCategoryTest {
       when(obProvider.get(org.openbravo.model.pricing.priceadjustment.ProductCategory.class))
           .thenReturn(mockProductCategory);
 
-      // Act
       offerAddProductCategory.doPickAndExecute(priceAdjustment, selectedLines);
 
-      // Assert
       verify(mockProductCategory).setActive(true);
       verify(mockProductCategory).setClient(client);
       verify(mockProductCategory).setOrganization(organization);
@@ -87,19 +112,26 @@ public class OfferAddProductCategoryTest {
     }
   }
 
+  /**
+   * Tests the {@code doPickAndExecute} method with multiple product categories.
+   *
+   * <p>Validates that the method efficiently processes and saves multiple product categories,
+   * flushes the session at regular intervals, and clears it to optimize performance.
+   *
+   * @throws JSONException if there is an error creating the JSON input.
+   */
   @Test
   public void testDoPickAndExecuteMultipleProductCategories() throws JSONException {
     try (MockedStatic<OBDal> mockedOBDal = mockStatic(OBDal.class);
          MockedStatic<OBProvider> mockedOBProvider = mockStatic(OBProvider.class)) {
 
-      // Arrange
       mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.getSession()).thenReturn(session);
 
       JSONArray selectedLines = new JSONArray();
       for (int i = 0; i < 150; i++) {
         JSONObject productCatJson = new JSONObject();
-        productCatJson.put("id", "testId" + i);
+        productCatJson.put("id", TEST_ID + i);
         selectedLines.put(productCatJson);
       }
 
@@ -114,10 +146,8 @@ public class OfferAddProductCategoryTest {
       when(obProvider.get(org.openbravo.model.pricing.priceadjustment.ProductCategory.class))
           .thenReturn(mockProductCategory);
 
-      // Act
       offerAddProductCategory.doPickAndExecute(priceAdjustment, selectedLines);
 
-      // Assert
       verify(obDal, times(150)).save(any());
       verify(obDal, times(2)).flush();
       verify(session, times(2)).clear();

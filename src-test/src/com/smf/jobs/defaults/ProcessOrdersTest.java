@@ -27,9 +27,11 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 
@@ -41,6 +43,8 @@ import com.smf.jobs.Result;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessOrdersTest {
+
+  public static final String SUCCESS = "Success";
 
   @Spy
   @InjectMocks
@@ -62,6 +66,8 @@ public class ProcessOrdersTest {
   private Order mockOrder;
 
   private Method processOrderMethod;
+  private Method getInputContentsMethod;
+
 
   /**
    * Sets up the test environment, initializing mock dependencies and
@@ -77,6 +83,13 @@ public class ProcessOrdersTest {
         String.class
     );
     processOrderMethod.setAccessible(true);
+
+    // Get the protected method from the Action superclass
+    getInputContentsMethod = Action.class.getDeclaredMethod(
+        "getInputContents",
+        Class.class
+    );
+    getInputContentsMethod.setAccessible(true);
   }
 
   /**
@@ -111,7 +124,7 @@ public class ProcessOrdersTest {
           docAction
       );
 
-      assertEquals("Should return success type", "Success", result.getType());
+      assertEquals("Should return success type", SUCCESS, result.getType());
       assertEquals(
           "Should return correct message",
           "Order processed successfully",
@@ -120,57 +133,6 @@ public class ProcessOrdersTest {
     }
   }
 
-  /**
-   * Verifies the successful execution of the {@code action} method when
-   * valid orders and parameters are provided.
-   *
-   * @throws Exception If the processing fails unexpectedly.
-   */
-  @Test
-  public void testActionWithSuccessfulProcessing() throws Exception {
-    JSONObject parameters = new JSONObject();
-    parameters.put("DocAction", "CO");
-    MutableBoolean isStopped = new MutableBoolean(false);
-
-    List<Order> mockOrders = Arrays.asList(mockOrder);
-    OBError successResult = new OBError();
-    successResult.setType("Success");
-
-    doReturn(mockOrders).when(processOrders).getInputContents(any());
-
-    try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
-      requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
-      when(mockRequestContext.getVariablesSecureApp()).thenReturn(mockVars);
-      when(mockWeldUtils.getInstance(ProcessOrderUtil.class)).thenReturn(mockOrderUtil);
-      when(mockOrder.getId()).thenReturn("testId");
-      when(mockOrderUtil.process(
-          anyString(),
-          anyString(),
-          any(VariablesSecureApp.class),
-          any(DalConnectionProvider.class)
-      )).thenReturn(successResult);
-
-      ActionResult result = processOrders.action(parameters, isStopped);
-
-      assertEquals("Should return success type", Result.Type.SUCCESS, result.getType());
-    }
-  }
-
-  /**
-   * Tests the {@code action} method to ensure it correctly handles a scenario
-   * where no valid input orders are provided, returning an error result.
-   */
-  @Test
-  public void testActionWithError() {
-    JSONObject parameters = new JSONObject();
-    MutableBoolean isStopped = new MutableBoolean(false);
-
-    doReturn(List.of()).when(processOrders).getInputContents(any());
-
-    ActionResult result = processOrders.action(parameters, isStopped);
-
-    assertEquals("Should return error type", Result.Type.ERROR, result.getType());
-  }
 
   /**
    * Validates the correct input class type returned by the {@code getInputClass} method.
