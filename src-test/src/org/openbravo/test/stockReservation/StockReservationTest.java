@@ -1,5 +1,6 @@
 package org.openbravo.test.stockReservation;
 
+import static org.openbravo.base.secureApp.LoginUtils.log4j;
 import static org.openbravo.materialmgmt.ReservationUtils.processReserve;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createInventoryCount;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.stockReservationPreference;
@@ -114,8 +115,7 @@ public class StockReservationTest extends WeldBaseTest {
 
       StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN, BigDecimal.valueOf(1000));
     } catch (Exception e) {
-      e.printStackTrace();
-      Assert.fail("An unexpected exception occurred: " + e.getMessage());
+      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
     } finally {
       if (reservation != null) {
         processReserve(reservation, StockReservationTestUtils.REACTIVATE);
@@ -176,8 +176,7 @@ public class StockReservationTest extends WeldBaseTest {
       StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN, BigDecimal.valueOf(1000));
       StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RS, BigDecimal.valueOf(1000));
     } catch (Exception e) {
-      e.printStackTrace();
-      Assert.fail("An unexpected exception occurred: " + e.getMessage());
+      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
     } finally {
       if (reservation != null) {
         processReserve(reservation, StockReservationTestUtils.REACTIVATE);
@@ -235,8 +234,7 @@ public class StockReservationTest extends WeldBaseTest {
 
       StockReservationTestUtils.verifyManualReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN, BigDecimal.valueOf(1000));
     } catch (Exception e){
-      e.printStackTrace();
-      Assert.fail("An unexpected exception occurred: " + e.getMessage());
+      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
     } finally {
       if (reservation != null) {
         OBDal.getInstance().remove(reservation);

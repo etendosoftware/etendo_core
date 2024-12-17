@@ -63,6 +63,7 @@ public class StockReservationTestUtils {
   public static final String AUTOMATIC_RESERVATION = "CRP";
   public static final String MANUAL_RESERVATION = "CR";
   public static final String PREFERENCE_PROPERTY = "StockReservations";
+  public static final String ERROR = "An unexpected exception occurred: ";
   public static final BigDecimal _1000 = new BigDecimal(1000);
   public static final BigDecimal STOCK_DEFAULT = new BigDecimal(141640);
   public static final BigDecimal ZERO = new BigDecimal(0);
@@ -235,7 +236,7 @@ public class StockReservationTestUtils {
     preference.setActive(true);
     preference.setPropertyList(true);
     preference.setSelected(true);
-    preference.setProperty("StockReservations");
+    preference.setProperty(PREFERENCE_PROPERTY);
     preference.setSearchKey("Y");
 
     OBDal.getInstance().save(preference);
@@ -246,12 +247,16 @@ public class StockReservationTestUtils {
   }
 
   /**
-   * Verifies reservation details for a specific storage bin and expected quantity.
+   * Verifies that the reservation contains a stock entry with the specified storage bin and quantity.
    *
+   * @param reservation
+   *     the Reservation object to check for matching stock
    * @param binSearchKey
-   *     the search key of the storage bin
+   *     the search key of the storage bin to be verified
    * @param expectedQuantity
-   *     the expected reserved quantity
+   *     the expected quantity of the stock in the reservation
+   * @throws AssertionError
+   *     if no matching stock entry with the given storage bin and expected quantity is found
    */
   public static void verifyAutomaticReservationDetails(Reservation reservation, String binSearchKey,
       BigDecimal expectedQuantity) {
@@ -265,6 +270,18 @@ public class StockReservationTestUtils {
         expectedQuantity), foundMatchingBin);
   }
 
+  /**
+   * Verifies that the reservation does not contain a stock entry with the specified storage bin and quantity.
+   *
+   * @param reservation
+   *     the Reservation object to check for matching stock
+   * @param binSearchKey
+   *     the search key of the storage bin to be verified
+   * @param expectedQuantity
+   *     the expected quantity of the stock in the reservation
+   * @throws AssertionError
+   *     if a matching stock entry with the given storage bin and expected quantity is found
+   */
   public static void verifyManualReservationDetails(Reservation reservation, String binSearchKey,
       BigDecimal expectedQuantity) {
     List<ReservationStock> reservationStocks = findReservationStocksForReservation(reservation);
