@@ -37,6 +37,7 @@ import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
+import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.financial.FinancialUtilsTest;
 import org.openbravo.scheduling.ProcessSchedulingTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
@@ -130,6 +131,7 @@ import org.openbravo.test.system.ImportEntryBuilderTest;
 import org.openbravo.test.system.ImportEntrySizeTest;
 import org.openbravo.test.system.Issue29934Test;
 import org.openbravo.test.system.JSONSerialization;
+import org.openbravo.test.system.OBPropertiesProviderTest;
 import org.openbravo.test.system.Sessions;
 import org.openbravo.test.system.SystemServiceTest;
 import org.openbravo.test.system.SystemValidatorTest;
@@ -278,6 +280,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     OBContextTest.class, //
     JSONSerialization.class, //
     PasswordHashing.class, //
+    OBPropertiesProviderTest.class, //
 
     // xml
     EntityXMLImportTestBusinessObject.class, //
@@ -387,8 +390,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     StockReservationTest.class,
 
     // Utils process Test
-    ProcessUtilsTest.class
+    ProcessUtilsTest.class,
 
+    // Toolbar print hook Test
+    PrintControllerHookTest.class
 })
 public class StandaloneTestSuite {
 }

@@ -13,7 +13,10 @@
  */
 package org.openbravo.erpCommon.utility.reporting.printing;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,7 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
+import java.util.Objects;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -42,14 +43,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.lang.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.session.OBPropertiesProvider;
+import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.application.report.ReportingUtils.ExportType;
+import org.openbravo.common.hooks.PrintControllerHookManager;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -57,12 +60,9 @@ import org.openbravo.email.EmailUtils;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.BasicUtility;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.PropertyException;
-import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.erpCommon.utility.Utility;
-import org.openbravo.erpCommon.utility.poc.EmailInfo;
-import org.openbravo.erpCommon.utility.poc.EmailManager;
-import org.openbravo.erpCommon.utility.poc.EmailType;
 import org.openbravo.erpCommon.utility.reporting.DocumentType;
 import org.openbravo.erpCommon.utility.reporting.Report;
 import org.openbravo.erpCommon.utility.reporting.Report.OutputTypeEnum;
@@ -71,7 +71,6 @@ import org.openbravo.erpCommon.utility.reporting.ReportingException;
 import org.openbravo.erpCommon.utility.reporting.TemplateData;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo.EmailDefinition;
-import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -80,18 +79,31 @@ import org.openbravo.model.common.enterprise.EmailTemplate;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.xmlEngine.XmlDocument;
 
+import com.google.common.collect.HashBasedTable;
+
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 
 @SuppressWarnings("serial")
 public class PrintController extends HttpSecureAppServlet {
+  private static final String DOCUMENT_ID = "documentId";
+  private static final String DOCUMENT_TYPE = "documentType";
+  private static final String REPORT_INPUT_STREAM = "reportInputStream";
+  private static final String REPORT_OUTPUT_STREAM = "reportOutputStream";
+  public static final String ERROR_PRINTING_DOCUMENT_KEY = "Error_Printing_Document";
+  public static final String LIST_ITEM_TAG = "<li>";
+  public static final String CLOSE_LIST_ITEM_TAG = "</li>";
   private final Map<String, TemplateData[]> differentDocTypes = new HashMap<String, TemplateData[]>();
   private boolean multiReports = false;
   private boolean archivedReports = false;
+  private final MutableBoolean printingErrorOccurred = new MutableBoolean(false);
   private static final String PRINT_PATH = "print.html";
   private static final String PRINT_OPTIONS_PATH = "printoptions.html";
   private static final String SEND_PATH = "send.html";
+  private static JSONObject hookParams;
+  private static PrintControllerHookManager hookManager;
+  private final MutableBoolean hooking = new MutableBoolean(false);
 
   @Override
   public void init(ServletConfig config) {
@@ -172,13 +184,22 @@ public class PrintController extends HttpSecureAppServlet {
 
   }
 
+  private static void initializeHooksAndParams() throws JSONException {
+    hookManager = WeldUtils.getInstanceFromStaticBeanManager(PrintControllerHookManager.class);
+    hookParams = new JSONObject();
+    JSONObject results = new JSONObject();
+    results.put(PrintControllerHookManager.FAILURES, false);
+    results.put(PrintControllerHookManager.MESSAGE, HashBasedTable.create());
+    hookParams.put(PrintControllerHookManager.RESULTS, results);
+    hookParams.put(PrintControllerHookManager.CANCELLATION, false);
+  }
+
   @SuppressWarnings("unchecked")
   protected void post(HttpServletRequest request, HttpServletResponse response,
       VariablesSecureApp vars, DocumentType documentType, String sessionValuePrefix,
       String strDocumentId) throws IOException, ServletException {
     String localStrDocumentId = strDocumentId;
     try {
-
       String fullDocumentIdentifier = localStrDocumentId + documentType.getTableName();
 
       // reports is set in session: defining it as a Serializable HashMap
@@ -211,7 +232,8 @@ public class PrintController extends HttpSecureAppServlet {
       final ReportManager reportManager = new ReportManager(globalParameters.strFTPDirectory,
           strReplaceWithFull, globalParameters.strBaseDesignPath,
           globalParameters.strDefaultDesignPath, globalParameters.prefix, multiReports);
-
+      initializeHooksAndParams();
+      hooking.setValue(true); // Indicates that hooks will be run
       if (vars.commandIn("PRINT")) {
         archivedReports = false;
         // Order documents by Document No.
@@ -230,6 +252,8 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int i = 0; i < documentIds.length; i++) {
           String documentId = documentIds[i];
+          setPreHookParams(documentType, hookParams, documentId);
+          executePreProcessHooks(hookManager, hookParams);
           report = buildReport(response, vars, documentId, reportManager, documentType,
               Report.OutputTypeEnum.PRINT);
           try {
@@ -264,6 +288,8 @@ public class PrintController extends HttpSecureAppServlet {
         final Collection<Report> savedReports = new ArrayList<Report>();
         for (int index = 0; index < documentIds.length; index++) {
           String documentId = documentIds[index];
+          setPreHookParams(documentType, hookParams, documentId);
+          executePreProcessHooks(hookManager, hookParams);
           report = buildReport(response, vars, documentId, reportManager, documentType,
               OutputTypeEnum.ARCHIVE);
           buildReport(response, vars, documentId, reports, reportManager);
@@ -494,74 +520,209 @@ public class PrintController extends HttpSecureAppServlet {
       log4j.error("Error captured: ", e);
       bdErrorGeneralPopUp(request, response, "Error",
           Utility.translateError(this, vars, vars.getLanguage(), e.getMessage()).getMessage());
+    } finally {
+      hooking.setValue(false);
+      printingErrorOccurred.setValue(false);
+    }
+  }
+
+  /**
+   * Sets the parameters for postProcess hooks in the given JSON parameters.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @param documentId
+   *     the ID of the document being processed
+   * @param reportInputStream
+   * @param reportOutputStream
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   * @throws IOException
+   *     if there is an error retrieving the report file path
+   */
+  private static void setPostHookParams(DocumentType documentType, JSONObject jsonParams, String documentId,
+      InputStream reportInputStream, OutputStream reportOutputStream) throws PrintControllerHookManager.PrintControllerHookException {
+    try {
+      jsonParams.put(DOCUMENT_ID, documentId);
+      jsonParams.put(DOCUMENT_TYPE, documentType);
+      jsonParams.put(REPORT_INPUT_STREAM, reportInputStream);
+      jsonParams.put(REPORT_OUTPUT_STREAM, reportOutputStream);
+    } catch (JSONException e) {
+      throw new PrintControllerHookManager.PrintControllerHookException(e.getMessage());
+    }
+  }
+
+  /**
+   * Sets the parameters for preProcess hooks in the given JSON parameters.
+   *
+   * @param documentType
+   *     the type of document being processed
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @param documentId
+   *     the ID of the document being processed
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   */
+  private static void setPreHookParams(DocumentType documentType, JSONObject jsonParams,
+      String documentId) throws JSONException {
+    jsonParams.put(DOCUMENT_ID, documentId);
+    jsonParams.put(DOCUMENT_TYPE, documentType);
+  }
+
+  /**
+   * Executes the preProcess hooks for the given document type and handles any errors encountered during execution.
+   *
+   * @param hookManager
+   *     the manager responsible for handling hooks
+   * @param jsonParams
+   *     the JSON parameters being processed
+   * @throws JSONException
+   *     if there is an error processing the JSON parameters
+   * @throws OBException
+   *     if an error occurs during the execution of hooks
+   */
+  private static void executePreProcessHooks(PrintControllerHookManager hookManager,
+      JSONObject jsonParams) throws JSONException {
+    try {
+      hookManager.executeHooks(jsonParams, hookManager.getPreProcess());
+    } catch (PrintControllerHookManager.PrintControllerHookException e) {
+      throw new OBException(String.format(OBMessageUtils.messageBD(ERROR_PRINTING_DOCUMENT_KEY),
+          LIST_ITEM_TAG + e.getMessage() + CLOSE_LIST_ITEM_TAG));
     }
   }
 
   public void printReports(HttpServletResponse response, Collection<JasperPrint> jrPrintReports,
       Collection<Report> reports, boolean directPrint) {
-    ServletOutputStream os = null;
+
+    ByteArrayOutputStream tempOutputStream = new ByteArrayOutputStream();
     String filename = "";
     Map<Object, Object> parameters = new HashMap<Object, Object>();
     try {
-      os = response.getOutputStream();
       response.setContentType("application/pdf");
+      ServletOutputStream os = response.getOutputStream();
 
       if (!multiReports && !archivedReports) {
-        for (Report report : reports) {
-          filename = report.getFilename();
-        }
+        filename = getFilenameForReports(reports, filename);
         if (!directPrint) {
-          response.setHeader("Content-disposition", "attachment" + "; filename=" + filename);
-          for (JasperPrint jasperPrint : jrPrintReports) {
-            ReportingUtils.saveReport(jasperPrint, ExportType.PDF, parameters, os);
-          }
+          handleIndirectPrint(response, jrPrintReports, reports, filename, parameters, tempOutputStream);
         } else {
-          response.setContentType("text/html");
-          File file = Files
-              .createTempFile(Paths.get(globalParameters.strFTPDirectory), filename + "-", ".pdf")
-              .toFile();
-          for (JasperPrint jasperPrint : jrPrintReports) {
-            ReportingUtils.saveReport(jasperPrint, ExportType.PDF, parameters, file);
-          }
-          doDirectPrint(os, file.getName());
+          handleDirectPrint(response, jrPrintReports, reports, filename, tempOutputStream, os);
         }
       } else {
-        concatReport(reports.toArray(new Report[] {}), jrPrintReports, response, directPrint);
+        concatReport(reports.toArray(new Report[]{ }), jrPrintReports, response, directPrint);
       }
-      for (Report report : reports) {
-        switch (report.getDocumentType()) {
-          case SALESORDER:
-            PrintControllerData.updateOrderDatePrinted(this, report.getDocumentId());
-          default:
-            break;
-        }
-      }
+      updateOrderDatePrintedForSalesOrders(reports);
     } catch (IOException e) {
       log4j.error(e.getMessage());
-    } catch (JRException e) {
+      printingErrorOccurred.setValue(true);
+    } catch (JRException | ServletException e) {
       e.printStackTrace();
-    } catch (Exception e) {
-      e.printStackTrace();
+      printingErrorOccurred.setValue(true);
+    } catch (PrintControllerHookManager.PrintControllerHookException e) {
+      printingErrorOccurred.setValue(true);
+      throw new OBException(String.format(OBMessageUtils.messageBD(ERROR_PRINTING_DOCUMENT_KEY),
+          LIST_ITEM_TAG + e.getMessage() + CLOSE_LIST_ITEM_TAG));
+    } finally {
+      finalizePrintResponse(response, reports, tempOutputStream);
+    }
+  }
+
+  private void finalizePrintResponse(HttpServletResponse response, Collection<Report> reports,
+      ByteArrayOutputStream tempOutputStream) {
+    try {
+      if (printingErrorOccurred.booleanValue()) {
+        // Clear the output stream
+        response.reset();
+      } else {
+        // Write the buffered PDF content to the actual output stream
+        response.setContentType("application/pdf");
+        ServletOutputStream os = response.getOutputStream();
+        tempOutputStream.writeTo(os);
+        os.flush();
+      }
+    } catch (IOException e) {
+      log4j.error(e.getMessage(), e);
     } finally {
       try {
-        os.close();
-        response.flushBuffer();
-      } catch (IOException e) {
-        log4j.error(e.getMessage(), e);
-      } finally {
-        try {
-          for (Report report : reports) {
-            // Delete temporal reports generated for the returned report in case they have been
-            // attached also
-            File file = new File(report.getTargetLocation());
-            if (file.exists() && !file.isDirectory()) {
-              file.delete();
-            }
+        for (Report report : reports) {
+          // Delete temporal reports generated for the returned report in case they have been
+          // attached also
+          File file = new File(report.getTargetLocation());
+          if (file.exists() && !file.isDirectory()) {
+            file.delete();
           }
-        } catch (IOException e) {
-          log4j.error("Error deleting temporal reports", e);
         }
+      } catch (IOException e) {
+        log4j.error("Error deleting temporal reports", e);
       }
+    }
+  }
+
+  private void updateOrderDatePrintedForSalesOrders(Collection<Report> reports) throws ServletException {
+    for (Report report : reports) {
+      if (Objects.requireNonNull(report.getDocumentType()) == DocumentType.SALESORDER) {
+        PrintControllerData.updateOrderDatePrinted(this, report.getDocumentId());
+      }
+    }
+  }
+
+  private void handleDirectPrint(HttpServletResponse response, Collection<JasperPrint> jrPrintReports,
+      Collection<Report> reports, String filename, ByteArrayOutputStream tempOutputStream,
+      ServletOutputStream os) throws IOException, PrintControllerHookManager.PrintControllerHookException, JRException {
+    response.setContentType("text/html");
+    File file = Files
+        .createTempFile(Paths.get(globalParameters.strFTPDirectory), filename + "-", ".pdf")
+        .toFile();
+    manageDirectPrintOnlyHooks(jrPrintReports, reports, filename, file, tempOutputStream, os);
+  }
+
+  private void handleIndirectPrint(HttpServletResponse response, Collection<JasperPrint> jrPrintReports,
+      Collection<Report> reports, String filename, Map<Object, Object> parameters,
+      ByteArrayOutputStream tempOutputStream) throws JRException, IOException, PrintControllerHookManager.PrintControllerHookException {
+    response.setHeader("Content-disposition", "attachment" + "; filename=" + filename);
+
+    // Generate the report in a temporary output stream
+    for (JasperPrint jasperPrint : jrPrintReports) {
+      ReportingUtils.saveReport(jasperPrint, ExportType.PDF, parameters, tempOutputStream);
+    }
+
+    managePrintOnlyHooking(reports, tempOutputStream);
+  }
+
+  private static String getFilenameForReports(Collection<Report> reports, String filename) {
+    for (Report report : reports) {
+      filename = report.getFilename();
+    }
+    return filename;
+  }
+
+  private void manageDirectPrintOnlyHooks(Collection<JasperPrint> jrPrintReports, Collection<Report> reports, String filename, File file,
+      ByteArrayOutputStream tempOutputStream,
+      ServletOutputStream os) throws IOException, PrintControllerHookManager.PrintControllerHookException, JRException {
+    if (hooking.booleanValue()) {
+      hookedDirectPrint(filename, file, reports.iterator().next(), tempOutputStream, os);
+    } else {
+      for (JasperPrint jasperPrint : jrPrintReports) {
+        ReportingUtils.saveReport(jasperPrint, ExportType.PDF, new HashMap<>(), tempOutputStream);
+      }
+      tempOutputStream.writeTo(os);
+      doDirectPrint(os, file.getName());
+    }
+  }
+
+  private void managePrintOnlyHooking(Collection<Report> reports,
+      ByteArrayOutputStream tempOutputStream) throws IOException, PrintControllerHookManager.PrintControllerHookException {
+    if (hooking.booleanValue()) {
+      // Convert the output stream into an input stream to modify it in hooks
+      try (ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(tempOutputStream.toByteArray())) {
+        Report report = reports.iterator().next();
+        setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream,
+            tempOutputStream);
+      }
+      hookManager.executeHooks(hookParams, hookManager.getPostProcess());
     }
   }
 
@@ -576,15 +737,30 @@ public class PrintController extends HttpSecureAppServlet {
 
   public void printReports(HttpServletResponse response, Collection<JasperPrint> jrPrintReports,
       Collection<Report> reports) {
+    JSONObject jsonParams = new JSONObject();
+    try {
+      JSONObject results = new JSONObject();
+      results.put(PrintControllerHookManager.FAILURES, false);
+      results.put(PrintControllerHookManager.MESSAGE, HashBasedTable.create());
+      jsonParams.put(PrintControllerHookManager.RESULTS, results);
+      jsonParams.put(PrintControllerHookManager.CANCELLATION, false);
+      Report report = reports.iterator().next();
+      setPreHookParams(report.getDocumentType(), jsonParams, report.getDocumentId());
+    } catch (JSONException e) {
+      throw new OBException(e);
+    }
+
     printReports(response, jrPrintReports, reports, false);
   }
 
   private void concatReport(Report[] reports, Collection<JasperPrint> jrPrintReports,
       HttpServletResponse response, boolean directPrint) {
+    ByteArrayOutputStream tempOutputStream = new ByteArrayOutputStream();
+    String filename = "";
+    boolean createBookmarks = true;
+    SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
+
     try {
-      String filename = "";
-      boolean createBookmarks = true;
-      SimplePdfExporterConfiguration configuration = new SimplePdfExporterConfiguration();
       if (reports.length == 1) {
         filename = reports[0].getFilename();
         createBookmarks = false;
@@ -598,8 +774,20 @@ public class PrintController extends HttpSecureAppServlet {
       }
       if (!directPrint) {
         response.setHeader("Content-disposition", "attachment" + "; filename=" + filename);
+
+        // Concatenate reports in a temporary OutputStream
         ReportingUtils.concatPDFReport(new ArrayList<>(jrPrintReports), createBookmarks,
-            response.getOutputStream(), configuration);
+            tempOutputStream, configuration);
+        // Modify the concatenated report with hooks
+        ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(tempOutputStream.toByteArray());
+        ServletOutputStream os = response.getOutputStream();
+        // Call hooks
+        if (hooking.booleanValue()) {
+          Report report = reports[0];
+          setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream, os);
+
+          hookManager.executeHooks(hookParams, hookManager.getPostProcess());
+        }
       } else {
         response.setContentType("text/html");
         Path path = Files.createTempFile(Paths.get(globalParameters.strFTPDirectory),
@@ -608,11 +796,46 @@ public class PrintController extends HttpSecureAppServlet {
           ReportingUtils.concatPDFReport(new ArrayList<>(jrPrintReports), createBookmarks,
               outputStream, configuration);
         }
-        doDirectPrint(response.getOutputStream(), path.toFile().getName());
+
+        if (hooking.booleanValue()) {
+          hookedDirectPrint(filename, path.toFile(), reports[0], tempOutputStream, response.getOutputStream());
+        } else {
+          doDirectPrint(response.getOutputStream(), path.toFile().getName());
+        }
       }
+    } catch (PrintControllerHookManager.PrintControllerHookException e) {
+      printingErrorOccurred.setValue(true);
+      throw new OBException(String.format(OBMessageUtils.messageBD(ERROR_PRINTING_DOCUMENT_KEY),
+          LIST_ITEM_TAG + e.getMessage() + CLOSE_LIST_ITEM_TAG));
     } catch (Exception e) {
       log4j.error(e);
     }
+  }
+
+  private void hookedDirectPrint(String filename, File path, Report reports, ByteArrayOutputStream tempResponse,
+      ServletOutputStream response) throws IOException, PrintControllerHookManager.PrintControllerHookException {
+    // Edit the temp file in hooks and write the result to another file
+    File hookedFile = Files.createTempFile(Paths.get(globalParameters.strFTPDirectory), filename + "-hooked-",
+        ".pdf").toFile();
+    try (FileInputStream fileInputStream = new FileInputStream(path);
+         FileOutputStream hookedFileOutputStream = new FileOutputStream(hookedFile)) {
+
+      // Call hooks
+      setPostHookParams(reports.getDocumentType(), hookParams, reports.getDocumentId(), fileInputStream,
+          hookedFileOutputStream);
+    }
+
+    try {
+      hookManager.executeHooks(hookParams, hookManager.getPostProcess());
+    } catch (PrintControllerHookManager.PrintControllerHookException e) {
+      throw new OBException(String.format(OBMessageUtils.messageBD(ERROR_PRINTING_DOCUMENT_KEY),
+          LIST_ITEM_TAG + e.getMessage() + CLOSE_LIST_ITEM_TAG));
+    }
+
+    // Delete the original file
+    Files.delete(path.toPath());
+    tempResponse.writeTo(response);
+    doDirectPrint(response, hookedFile.getName());
   }
 
   public Report buildReport(HttpServletResponse response, VariablesSecureApp vars,
@@ -679,7 +902,7 @@ public class PrintController extends HttpSecureAppServlet {
         // Delete the original file generated for the attachment because the upload process has
         // already copied it on the proper location
         if (attachedFile != null && attachedFile.exists()) {
-          attachedFile.delete();
+          Files.delete(attachedFile.toPath());
         }
       }
     } else {
@@ -1238,7 +1461,7 @@ public class PrintController extends HttpSecureAppServlet {
   }
 
   /**
-   * 
+   *
    * @param documentIds
    * @return returns a comma separated and quoted string of documents id's. useful to sql querys
    */
@@ -1258,7 +1481,7 @@ public class PrintController extends HttpSecureAppServlet {
 
   /**
    * Returns an array of document's ID ordered by Document No ASC
-   * 
+   *
    * @param documentType
    * @param documentIds
    *          array of document's ID without order

@@ -19,7 +19,7 @@
 * Contributions are Copyright (C) 2001-2008 Openbravo S.L.U.
 ******************************************************************************/
 BEGIN
-  RAISE_APPLICATION_ERROR(-20000, '@DeprecatedAPI@' || p_SequenceName) ;
+  RETURN get_uuid();
 END AD_SEQUENCE_NEXTNO
 ]]></body>
     </function>

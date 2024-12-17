@@ -285,22 +285,25 @@ var arrWarehouse=null;
             <td class="TitleCell"><span class="LabelText">Organization</span></td>      
               <td class="Combo_ContentCell" colspan="2"> 
                 <select name="inpadOrgId"  id="inpadOrgId" class="ComboKey Combo_TwoCells_width" onchange="refreshWarehouses();setDefaultCurrency();logChanges(this);return true;" required="true">
-                  <option value=""> <div id="reportAD_Org_ID"></div></option>
+                  <option value=""/>
+                  <div id="reportAD_Org_ID"/>
                 </select>
               </td>
               <td class="TitleCell"><span class="LabelText">Currency</span></td>
-                  <td class="Combo_ContentCell">
-                    <select name="inpCurrencyId" id="inpCurrencyId" class="ComboKey Combo_OneCell_width" required="true">
-                    <option value=""><div id="reportC_Currency_ID"></div></option>
-                    </select>
+              <td class="Combo_ContentCell">
+                <select name="inpCurrencyId" id="inpCurrencyId" class="ComboKey Combo_OneCell_width" required="true">
+                  <option value=""/>
+                  <div id="reportC_Currency_ID"/>
+                </select>
               </td>
             </tr>
             <tr>                          
             <td class="TitleCell"> <span class="LabelText">Warehouse</span></td>
-             <td class="Combo_ContentCell" colspan="2">
-                 <select name="inpmWarehouseId" id="inpmWarehouseId" class="Combo Combo_TwoCells_width" onchange="logChanges(this);return true;">
-                  <option value=""> <div id="reportM_Warehouse_ID"></div></option>
-                </select>
+            <td class="Combo_ContentCell" colspan="2">
+              <select name="inpmWarehouseId" id="inpmWarehouseId" class="Combo Combo_TwoCells_width" onchange="logChanges(this);return true;">
+                <option value=""/>
+                <div id="reportM_Warehouse_ID"/>
+              </select>
             </td>
             </tr>
             <tr>
