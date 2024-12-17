@@ -254,7 +254,7 @@ spec:
               try {
                 echo "--------------- Running WebserviceTestSuite ---------------"
                 sh "./gradlew test --tests org.openbravo.test.WebserviceTestSuite --info"
-                sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
+                sh "mv build/jacoco/test.exec build/jacoco/test0.exec"
                 echo "--------------- WebserviceTestSuite Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
@@ -276,6 +276,47 @@ spec:
               }
               sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
               sh "./gradlew --stop"
+            }
+          }
+        }
+      }
+    }
+// __________________________________________________________________________________________
+// ------------------------------ com.smf.* TESTS ------------------------------------------
+    stage ('Core Test Suite') { // MARK: CoreTestSuite Test Suite
+      when {
+        expression {
+          env.STATUSBUILD == "1"
+        }
+      }
+      steps {
+        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+        container('compiler') {
+          script {
+            dir(REPO_NAME) {
+              try {
+                echo "--------------- Running CoreTestSuite ---------------"
+                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
+                sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
+                echo "--------------- CoreTestSuite Successful ---------------"
+                currentBuild.result = SUCCESS
+              } catch (Exception e) {
+                echo "--------------- CoreTestSuite Failed ---------------"
+                echo 'Exception occurred: ' + e.toString()
+                currentBuild.result = UNSTABLE
+                unstable('CoreTestSuite Failed')
+                env.STATUSTEST = "0"
+              } finally {
+                publishHTML([
+                  allowMissing: false,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/reports/tests/test',
+                  reportFiles: '*.html',
+                  reportName: 'com.smf.* TESTS REPORT',
+                  reportTitles: ''
+                ])
+              }
             }
           }
         }

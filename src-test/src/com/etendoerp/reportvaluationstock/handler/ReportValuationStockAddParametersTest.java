@@ -35,9 +35,17 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 
+/**
+ * Unit test class for {@link ReportValuationStock#addAdditionalParameters}.
+ * It validates the correct behavior when additional parameters are added
+ * to the report generation process.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class ReportValuationStockAddParametersTest {
 
+  /**
+   * Rule to handle expected exceptions during test execution.
+   */
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
@@ -69,6 +77,11 @@ public class ReportValuationStockAddParametersTest {
   private static final String TEST_CURRENCY_ID = "testCurrencyId";
   private static final String TEST_DATE = "2024-01-01";
 
+  /**
+   * Set up the test environment, including mocks and static contexts.
+   *
+   * @throws ServletException if an error occurs during setup
+   */
   @Before
   public void setUp() throws ServletException {
     reportValuationStock = spy(new ReportValuationStock());
@@ -102,6 +115,9 @@ public class ReportValuationStockAddParametersTest {
     );
   }
 
+  /**
+   * Clean up static mocks after each test case execution.
+   */
   @After
   public void tearDown() {
     if (mockedRequestContext != null) {
@@ -118,6 +134,12 @@ public class ReportValuationStockAddParametersTest {
     }
   }
 
+  /**
+   * Tests that additional parameters are added correctly to the report process
+   * when valid input JSON content is provided.
+   *
+   * @throws Exception if an unexpected error occurs during the test
+   */
   @Test
   public void testAddAdditionalParametersValidInput() throws Exception {
     Map<String, Object> parameters = new HashMap<>();
@@ -141,6 +163,4 @@ public class ReportValuationStockAddParametersTest {
     assertNotNull("Parameters should not be null", parameters);
     assertEquals("PDF", parameters.get("OUTPUT_FORMAT"));
   }
-
-
 }

@@ -36,6 +36,8 @@ import net.sf.jasperreports.engine.JRDataSource;
 @RunWith(MockitoJUnitRunner.class)
 public class ReportValuationStockGetReportTest {
 
+  private static final String PROCESS_TIME = "processTime";
+
   @Mock
   private VariablesSecureApp vars;
 
@@ -61,6 +63,15 @@ public class ReportValuationStockGetReportTest {
   private static final String TEST_ORG = "TEST_ORG";
   private static final String TEST_CLIENT = "TEST_CLIENT";
   private static final String TEST_LANGUAGE = "en_US";
+
+  private static final String DATE_NEXT = "dateNext";
+  private static final String MAX_AGG_DATE = "maxAggDate";
+  private static final String DATE_FORMAT = "dateFormat";
+  private static final String ORG_IDS = "orgIds";
+  private static final String ERROR_RESULT_NULL = "Result should not be null";
+  private static final String ERROR_DATA_LENGTH = "Should return expected data length";
+  private static final String ERROR_EXPECTED_DATA = "Should return expected data";
+
 
   /**
    * Sets up the test environment by initializing the required objects
@@ -104,14 +115,14 @@ public class ReportValuationStockGetReportTest {
 
       ReportValuationStockData[] result = (ReportValuationStockData[]) getReportValuationStockDataMethod.invoke(
           reportValuationStock,
-          vars, TEST_DATE, TEST_CATEGORY, TEST_CURRENCY, false, "processTime",
+          vars, TEST_DATE, TEST_CATEGORY, TEST_CURRENCY, false, PROCESS_TIME,
           "N", "STA", TEST_WAREHOUSE, readOnlyCP, filterOrg, TEST_ORG,
-          "orgIds", TEST_ORG, TEST_CLIENT, "dateNext", "maxAggDate", "dateFormat"
+          ORG_IDS, TEST_ORG, TEST_CLIENT, DATE_NEXT, MAX_AGG_DATE, DATE_FORMAT
       );
 
-      assertNotNull("Result should not be null", result);
-      assertEquals("Should return expected data length", expectedData.length, result.length);
-      assertEquals("Should return expected data", expectedData[0], result[0]);
+      assertNotNull(ERROR_RESULT_NULL, result);
+      assertEquals(ERROR_DATA_LENGTH, expectedData.length, result.length);
+      assertEquals(ERROR_EXPECTED_DATA, expectedData[0], result[0]);
     }
   }
 
@@ -134,14 +145,14 @@ public class ReportValuationStockGetReportTest {
 
       ReportValuationStockData[] result = (ReportValuationStockData[]) getReportValuationStockDataMethod.invoke(
           reportValuationStock,
-          vars, TEST_DATE, TEST_CATEGORY, TEST_CURRENCY, true, "processTime",
+          vars, TEST_DATE, TEST_CATEGORY, TEST_CURRENCY, true, PROCESS_TIME,
           "N", null, TEST_WAREHOUSE, readOnlyCP, filterOrg, TEST_ORG,
-          "orgIds", TEST_ORG, TEST_CLIENT, "dateNext", "maxAggDate", "dateFormat"
+          ORG_IDS, TEST_ORG, TEST_CLIENT, DATE_NEXT, MAX_AGG_DATE, DATE_FORMAT
       );
 
-      assertNotNull("Result should not be null", result);
-      assertEquals("Should return expected data length", expectedData.length, result.length);
-      assertEquals("Should return expected data", expectedData[0], result[0]);
+      assertNotNull(ERROR_RESULT_NULL, result);
+      assertEquals(ERROR_DATA_LENGTH, expectedData.length, result.length);
+      assertEquals(ERROR_EXPECTED_DATA, expectedData[0], result[0]);
     }
   }
 
@@ -164,14 +175,14 @@ public class ReportValuationStockGetReportTest {
 
       ReportValuationStockData[] result = (ReportValuationStockData[]) getReportValuationStockDataMethod.invoke(
           reportValuationStock,
-          vars, TEST_DATE, TEST_CATEGORY, TEST_CURRENCY, false, "processTime",
+          vars, TEST_DATE, TEST_CATEGORY, TEST_CURRENCY, false, PROCESS_TIME,
           "N", null, TEST_WAREHOUSE, readOnlyCP, filterOrg, TEST_ORG,
-          "orgIds", TEST_ORG, TEST_CLIENT, "dateNext", "maxAggDate", "dateFormat"
+          ORG_IDS, TEST_ORG, TEST_CLIENT, DATE_NEXT, MAX_AGG_DATE, DATE_FORMAT
       );
 
-      assertNotNull("Result should not be null", result);
-      assertEquals("Should return expected data length", expectedData.length, result.length);
-      assertEquals("Should return expected data", expectedData[0], result[0]);
+      assertNotNull(ERROR_RESULT_NULL, result);
+      assertEquals(ERROR_DATA_LENGTH, expectedData.length, result.length);
+      assertEquals(ERROR_EXPECTED_DATA, expectedData[0], result[0]);
     }
   }
 

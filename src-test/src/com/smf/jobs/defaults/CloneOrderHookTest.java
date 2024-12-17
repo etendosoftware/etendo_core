@@ -45,6 +45,13 @@ import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.PriceListVersion;
 import org.openbravo.service.db.CallStoredProcedure;
 
+/**
+ * Test class for {@link CloneOrderHook}.
+ * <p>
+ * This class performs unit tests for the {@link CloneOrderHook} class methods,
+ * ensuring the functionality of order cloning processes.
+ * </p>
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class CloneOrderHookTest {
 
@@ -88,6 +95,11 @@ public class CloneOrderHookTest {
   private MockedStatic<CallStoredProcedure> mockedCallStoredProcedure;
   private Method cloneOrderMethod;
 
+  /**
+   * Sets up the test environment by initializing mocks and reflection method.
+   *
+   * @throws Exception if the reflection setup fails.
+   */
   @Before
   public void setUp() throws Exception {
     cloneOrderMethod = CloneOrderHook.class.getDeclaredMethod(
@@ -109,59 +121,53 @@ public class CloneOrderHookTest {
     when(obDal.getSession()).thenReturn(session);
   }
 
+  /**
+   * Tests the {@code cloneOrder} method to verify proper order cloning.
+   *
+   * @throws Exception if the reflection invocation fails.
+   */
   @Test
   public void testCloneOrder() throws Exception {
-    // Setup organization
-    Organization organization = mock(Organization.class);
+    mock(Organization.class);
 
-    // Setup order lines
     List<OrderLine> originalOrderLines = new ArrayList<>();
     originalOrderLines.add(originalOrderLine);
     when(originalOrder.getOrderLineList()).thenReturn(originalOrderLines);
     when(clonedOrder.getOrderLineList()).thenReturn(new ArrayList<>());
 
-    // Setup basic order configuration
     when(originalOrder.getPriceList()).thenReturn(priceList);
     when(originalOrder.getClient()).thenReturn(client);
     when(originalOrder.isSalesTransaction()).thenReturn(true);
     when(priceList.getId()).thenReturn("testPriceListId");
     when(client.getId()).thenReturn("testClientId");
 
-    // Setup order line details
     when(originalOrderLine.getProduct()).thenReturn(product);
     when(product.getId()).thenReturn("testProductId");
     when(originalOrderLine.getId()).thenReturn("testOrderLineId");
     when(originalOrderLine.getOrderlineServiceRelationList()).thenReturn(new ArrayList<>());
 
-    // Mock DalUtil copy
     OrderLine clonedOrderLine = mock(OrderLine.class);
     mockedDalUtil.when(() -> DalUtil.copy(any(OrderLine.class), eq(false)))
         .thenReturn(clonedOrderLine);
 
-    // Mock price list version query
     OBQuery<PriceListVersion> mockQuery = mock(OBQuery.class);
     when(obDal.createQuery(eq(PriceListVersion.class), anyString())).thenReturn(mockQuery);
     when(mockQuery.setNamedParameter(anyString(), any())).thenReturn(mockQuery);
     when(mockQuery.list()).thenReturn(new ArrayList<>());
 
-    // Mock stored procedure call
     CallStoredProcedure mockStoredProcedure = mock(CallStoredProcedure.class);
     when(mockStoredProcedure.call(anyString(), any(), any())).thenReturn(BigDecimal.ONE);
     mockedCallStoredProcedure.when(CallStoredProcedure::getInstance).thenReturn(mockStoredProcedure);
 
-    // Mock CloneOrderHookCaller
     CloneOrderHookCaller mockCaller = mock(CloneOrderHookCaller.class);
     mockedWeldUtils.when(() -> WeldUtils.getInstanceFromStaticBeanManager(CloneOrderHookCaller.class))
         .thenReturn(mockCaller);
     doNothing().when(mockCaller).executeHook(any(Order.class));
 
-    // Execute test
     Order result = (Order) cloneOrderMethod.invoke(cloneOrderHook, currentUser, originalOrder, clonedOrder);
 
-    // Verify results
     assertNotNull("Cloned order should not be null", result);
 
-    // Verify the basic order properties
     verify(clonedOrder).setDocumentAction("CO");
     verify(clonedOrder).setDocumentStatus("DR");
     verify(clonedOrder).setPosted("N");
@@ -174,18 +180,22 @@ public class CloneOrderHookTest {
     verify(clonedOrder).setGrandTotalAmount(BigDecimal.ZERO);
     verify(clonedOrder).setSummedLineAmount(BigDecimal.ZERO);
 
-    // Verify DAL operations
     verify(obDal).save(clonedOrder);
     verify(obDal).flush();
     verify(obDal).refresh(clonedOrder);
 
-    // Verify order line operations
     verify(clonedOrderLine).setSalesOrder(clonedOrder);
     verify(clonedOrderLine).setReservedQuantity(BigDecimal.ZERO);
     verify(clonedOrderLine).setDeliveredQuantity(BigDecimal.ZERO);
     verify(clonedOrderLine).setInvoicedQuantity(BigDecimal.ZERO);
   }
 
+  /**
+   * Tests the {@code getLineNetAmt} method to ensure it retrieves the correct line amount.
+   * <p>
+   * It verifies that the query is executed correctly and returns the expected result.
+   * </p>
+   */
   @Test
   public void testGetLineNetAmt() {
     String testOrderId = "test-order-id";
@@ -205,39 +215,49 @@ public class CloneOrderHookTest {
     verify(mockQuery).setParameter("orderId", testOrderId);
   }
 
+  /**
+   * Tests the {@code shouldCopyChildren} method.
+   * <p>
+   * Ensures that the method always returns {@code false}.
+   * </p>
+   */
   @Test
   public void testShouldCopyChildren() {
     boolean result = cloneOrderHook.shouldCopyChildren(true);
     assertEquals("Should always return false regardless of input", false, result);
   }
 
+  /**
+   * Tests the {@code preCopy} method.
+   * <p>
+   * Verifies that the original record is returned without modification.
+   * </p>
+   */
   @Test
   public void testPreCopy() {
     BaseOBObject result = cloneOrderHook.preCopy(originalOrder);
     assertEquals("Should return original record without modification", originalOrder, result);
   }
 
+  /**
+   * Cleans up the test environment and closes static mocks.
+   */
   @After
   public void tearDown() {
     if (mockedOBDal != null) {
       mockedOBDal.close();
-      System.out.println("mockedOBDal cerrado correctamente.");
     }
     if (mockedOBContext != null) {
       mockedOBContext.close();
-      System.out.println("mockedOBContext cerrado correctamente.");
     }
     if (mockedWeldUtils != null) {
       mockedWeldUtils.close();
-      System.out.println("mockedWeldUtils cerrado correctamente.");
     }
     if (mockedDalUtil != null) {
       mockedDalUtil.close();
-      System.out.println("mockedDalUtil cerrado correctamente.");
     }
     if (mockedCallStoredProcedure != null) {
       mockedCallStoredProcedure.close();
-      System.out.println("mockedCallStoredProcedure cerrado correctamente.");
     }
   }
 

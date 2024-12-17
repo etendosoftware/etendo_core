@@ -36,6 +36,10 @@ import org.openbravo.service.db.DalConnectionProvider;
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessOrdersDefaultsTest {
 
+  public static final String RESULT_SHOULD_NOT_BE_NULL = "Result should not be null";
+  public static final String ACTIONS = "actions";
+
+
   @InjectMocks
   private ProcessOrdersDefaults processOrdersDefaults;
 
@@ -58,8 +62,10 @@ public class ProcessOrdersDefaultsTest {
   }
 
   /**
-   * Sets up the test environment before each test case.
-   * Initializes common mocks and variables required across tests.
+   * Tests the execution of the process with a single document status ("DR").
+   * Mocks necessary components and verifies that the result contains the expected actions.
+   *
+   * @throws Exception If an error occurs during test execution.
    */
   @Test
   public void testExecuteWithSingleDocumentStatus() throws Exception {
@@ -93,9 +99,9 @@ public class ProcessOrdersDefaultsTest {
 
       JSONObject result = processOrdersDefaults.execute(parameters, content);
 
-      assertNotNull("Result should not be null", result);
-      assertTrue("Result should contain actions", result.has("actions"));
-      JSONArray actions = result.getJSONArray("actions");
+      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+      assertTrue("Result should contain actions", result.has(ACTIONS));
+      JSONArray actions = result.getJSONArray(ACTIONS);
       assertEquals("Should have one action", 1, actions.length());
       assertEquals("Should have correct action", "CO", actions.getString(0));
     }
@@ -154,9 +160,9 @@ public class ProcessOrdersDefaultsTest {
 
       JSONObject result = processOrdersDefaults.execute(parameters, content);
 
-      assertNotNull("Result should not be null", result);
-      assertTrue("Result should contain actions", result.has("actions"));
-      JSONArray actions = result.getJSONArray("actions");
+      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+      assertTrue("Result should contain actions", result.has(ACTIONS));
+      JSONArray actions = result.getJSONArray(ACTIONS);
       assertEquals("Should have two actions", 2, actions.length());
       assertEquals("First action should be CO", "CO", actions.getString(0));
       assertEquals("Second action should be CL", "CL", actions.getString(1));
@@ -193,7 +199,7 @@ public class ProcessOrdersDefaultsTest {
           mockConnectionProvider
       );
 
-      assertNotNull("Result should not be null", result);
+      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
       assertEquals("Should have one action", 1, result.size());
       assertEquals("Should have correct action", "CO", result.get(0));
     }

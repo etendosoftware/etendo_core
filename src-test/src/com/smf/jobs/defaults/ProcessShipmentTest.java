@@ -53,6 +53,15 @@ import com.smf.jobs.Result;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ProcessShipmentTest {
 
+  public static final String SUCCESS = "Success";
+  public static final String TEST_MESSAGE = "Test message";
+  public static final String SHIPMENT_PROCESSED_SUCCESSFULLY = "Shipment processed successfully";
+  public static final String RESULT_SHOULD_NOT_BE_NULL = "Result should not be null";
+  public static final String SHOULD_RETURN_SUCCESS_TYPE = "Should return success type";
+  public static final String DOC_ACTION = "DocAction";
+
+
+
   /**
    * A testable subclass of {@code ProcessShipment} that exposes methods for testing.
    */
@@ -91,6 +100,7 @@ public class ProcessShipmentTest {
   private Data mockData;
 
   private Method processShipmentMethod;
+  private Method getInputContentsMethod;
 
   /**
    * Initializes test dependencies and configurations, such as static mocks
@@ -106,11 +116,18 @@ public class ProcessShipmentTest {
     );
     processShipmentMethod.setAccessible(true);
 
+    // Add reflection setup for getInputContents
+    getInputContentsMethod = com.smf.jobs.Action.class.getDeclaredMethod(
+        "getInputContents",
+        Class.class
+    );
+    getInputContentsMethod.setAccessible(true);
+
     try (MockedStatic<OBMessageUtils> messageMock = mockStatic(OBMessageUtils.class)) {
       messageMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn("Test message");
+          .thenReturn(TEST_MESSAGE);
       messageMock.when(() -> OBMessageUtils.parseTranslation(anyString(), any()))
-          .thenReturn("Test message");
+          .thenReturn(TEST_MESSAGE);
     }
 
   }
@@ -125,8 +142,8 @@ public class ProcessShipmentTest {
     String shipmentId = "test-shipment-id";
     String docAction = "CO";
     OBError expectedResult = new OBError();
-    expectedResult.setType("Success");
-    expectedResult.setMessage("Shipment processed successfully");
+    expectedResult.setType(SUCCESS);
+    expectedResult.setMessage(SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
       requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
@@ -146,11 +163,11 @@ public class ProcessShipmentTest {
           docAction
       );
 
-      assertNotNull("Result should not be null", result);
-      assertEquals("Should return success type", "Success", result.getType());
+      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
       assertEquals(
           "Should return correct message",
-          "Shipment processed successfully",
+          SHIPMENT_PROCESSED_SUCCESSFULLY,
           result.getMessage()
       );
     }
@@ -164,13 +181,13 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithSuccessfulProcessing() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put("DocAction", "CO");
+    parameters.put(DOC_ACTION, "CO");
     MutableBoolean isStopped = new MutableBoolean(false);
 
     List<ShipmentInOut> mockShipments = List.of(mockShipment);
     OBError successResult = new OBError();
-    successResult.setType("Success");
-    successResult.setMessage("Shipment processed successfully");
+    successResult.setType(SUCCESS);
+    successResult.setMessage(SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
       requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
@@ -184,13 +201,15 @@ public class ProcessShipmentTest {
           any(DalConnectionProvider.class)
       )).thenReturn(successResult);
 
-      doReturn(mockShipments).when(processShipment).getInputContents(any());
+      // Use reflection instead of doReturn
+      when(getInputContentsMethod.invoke(processShipment, ShipmentInOut.class))
+          .thenReturn(mockShipments);
       doReturn(mockData).when(processShipment).getInput();
 
       ActionResult result = processShipment.action(parameters, isStopped);
 
-      assertNotNull("Result should not be null", result);
-      assertEquals("Should return success type", Result.Type.SUCCESS, result.getType());
+      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
       verify(mockProcessShipmentUtil, times(1)).process(
           anyString(),
           anyString(),
@@ -203,15 +222,17 @@ public class ProcessShipmentTest {
   /**
    * Tests the {@code action} method to ensure it handles errors appropriately
    * when an unexpected condition occurs during shipment processing.
+   * @throws Exception If processing fails.
    */
   @Test
-  public void testActionWithError() {
+  public void testActionWithError() throws Exception {
     JSONObject parameters = new JSONObject();
     MutableBoolean isStopped = new MutableBoolean(false);
 
     List<ShipmentInOut> mockShipments = List.of(mockShipment);
 
-    doReturn(mockShipments).when(processShipment).getInputContents(any());
+    when(getInputContentsMethod.invoke(processShipment, ShipmentInOut.class))
+        .thenReturn(mockShipments);
 
     ActionResult result = processShipment.action(parameters, isStopped);
 
@@ -226,16 +247,18 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithEmptyInput() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put("DocAction", "CO");
+    parameters.put(DOC_ACTION, "CO");
     MutableBoolean isStopped = new MutableBoolean(false);
 
     List<ShipmentInOut> emptyShipments = Collections.emptyList();
-    doReturn(emptyShipments).when(processShipment).getInputContents(any());
+
+    when(getInputContentsMethod.invoke(processShipment, ShipmentInOut.class))
+        .thenReturn(emptyShipments);
     doReturn(mockData).when(processShipment).getInput();
 
     ActionResult result = processShipment.action(parameters, isStopped);
 
-    assertNotNull("Result should not be null", result);
+    assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
     assertEquals("Should return success type for empty input", Result.Type.SUCCESS, result.getType());
   }
 
@@ -251,8 +274,8 @@ public class ProcessShipmentTest {
     String shipmentId = "test-shipment-id";
     String docAction = "CO";
     OBError expectedResult = new OBError();
-    expectedResult.setType("Success");
-    expectedResult.setMessage("Shipment processed successfully");
+    expectedResult.setType(SUCCESS);
+    expectedResult.setMessage(SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
       requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
@@ -272,8 +295,8 @@ public class ProcessShipmentTest {
           docAction
       );
 
-      assertNotNull("Result should not be null", result);
-      assertEquals("Should return success type", "Success", result.getType());
+      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
     }
   }
 
@@ -305,7 +328,7 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithInvalidDocAction() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put("DocAction", "INVALID_ACTION");
+    parameters.put(DOC_ACTION, "INVALID_ACTION");
     MutableBoolean isStopped = new MutableBoolean(false);
 
     List<ShipmentInOut> mockShipments = List.of(mockShipment);
@@ -328,9 +351,11 @@ public class ProcessShipmentTest {
       )).thenReturn(errorResult);
 
       messageMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn("Test message");
+          .thenReturn(TEST_MESSAGE);
 
-      doReturn(mockShipments).when(processShipment).getInputContents(any());
+      // Replace doReturn with reflection-based mocking
+      when(getInputContentsMethod.invoke(processShipment, ShipmentInOut.class))
+          .thenReturn(mockShipments);
       doReturn(mockData).when(processShipment).getInput();
 
       ActionResult result = processShipment.action(parameters, isStopped);
@@ -347,7 +372,7 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithMultipleShipments() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put("DocAction", "CO");
+    parameters.put(DOC_ACTION, "CO");
     MutableBoolean isStopped = new MutableBoolean(false);
 
     ShipmentInOut mockShipment2 = mock(ShipmentInOut.class);
@@ -355,7 +380,7 @@ public class ProcessShipmentTest {
     List<ShipmentInOut> multipleShipments = Arrays.asList(mockShipment, mockShipment2, mockShipment3);
 
     OBError successResult = new OBError();
-    successResult.setType("Success");
+    successResult.setType(SUCCESS);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class);
          MockedStatic<OBMessageUtils> messageMock = mockStatic(OBMessageUtils.class)) {
@@ -376,15 +401,17 @@ public class ProcessShipmentTest {
       )).thenReturn(successResult);
 
       messageMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn("Test message");
+          .thenReturn(TEST_MESSAGE);
 
-      doReturn(multipleShipments).when(processShipment).getInputContents(any());
+      // Replace doReturn with reflection-based mocking
+      when(getInputContentsMethod.invoke(processShipment, ShipmentInOut.class))
+          .thenReturn(multipleShipments);
       doReturn(mockData).when(processShipment).getInput();
 
       ActionResult result = processShipment.action(parameters, isStopped);
 
-      assertNotNull("Result should not be null", result);
-      assertEquals("Should return success type", Result.Type.SUCCESS, result.getType());
+      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
       verify(mockProcessShipmentUtil, times(3)).process(
           anyString(),
           anyString(),
@@ -401,6 +428,4 @@ public class ProcessShipmentTest {
   public void testGetInputClass() {
     assertEquals("Should return ShipmentInOut.class", ShipmentInOut.class, processShipment.getInputClass());
   }
-
-
 }
