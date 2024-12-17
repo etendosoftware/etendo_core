@@ -239,7 +239,7 @@ spec:
       }
     }
 // __________________________________________________________________________________________
-// ------------------------------ WEB SERVICE TEST ------------------------------------------
+// ------------------------------ WEB SERVICES TESTS ----------------------------------------
     stage ('Web Service Test Suite') { // MARK: Web Service Test Suite
       when {
         expression {
@@ -261,21 +261,26 @@ spec:
                 echo "--------------- WebserviceTestSuite Failed ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('WebserviceTestSuite Failed')
+                unstable('WebservicesTestSuite Failed')
                 env.STATUSTEST = "0"
               } finally {
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'WEBSERVICES TESTS REPORT',
-                  reportTitles: ''
-                ])
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'WEBSERVICES TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                 echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
+                }
+                sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
+                sh "./gradlew --stop"
               }
-              sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
-              sh "./gradlew --stop"
             }
           }
         }
@@ -290,7 +295,6 @@ spec:
         }
       }
       steps {
-        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         container('compiler') {
           script {
             dir(REPO_NAME) {
@@ -307,15 +311,21 @@ spec:
                 unstable('CoreTestSuite Failed')
                 env.STATUSTEST = "0"
               } finally {
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'com.smf.* TESTS REPORT',
-                  reportTitles: ''
-                ])
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'com.smf.* TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of com.smf.* tests does not exist. Skipping HTML report publishing."
+                }
+
               }
             }
           }
@@ -323,7 +333,7 @@ spec:
       }
     }
 // __________________________________________________________________________________________
-// ------------------------------- STANDALONE TEST ------------------------------------------
+// ------------------------------- STANDALONE TESTS -----------------------------------------
     stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
       when {
         expression {
@@ -347,15 +357,20 @@ spec:
                 unstable('StandaloneTestSuite Failed')
                 env.STATUSTEST = "0"
               } finally {
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'STANDALONE TESTS REPORT',
-                  reportTitles: ''
-                ])
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'STANDALONE TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of Standalone tests does not exist. Skipping HTML report publishing."
+                }
               }
             }
           }
@@ -363,8 +378,8 @@ spec:
       }
     }
 // __________________________________________________________________________________________
-// ----------------------------------- SPOCK TEST -------------------------------------------
-    stage ('Spock Test') { // MARK: Spock Test
+// ----------------------------------- com.etendoerp.* TESTS --------------------------------
+    stage ('Spock Test') { // MARK: com.etendoerp.* Test
       when {
         expression {
           env.STATUSBUILD == "1"
@@ -388,15 +403,35 @@ spec:
                 unstable('Spock Test failed!')
                 env.STATUSTEST = "0"
               } finally {
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/spock-reports/',
-                  reportFiles: '*.html',
-                  reportName: 'SPOCK TESTS REPORT',
-                  reportTitles: ''
-                ])
+                if (fileExists('build/spock-reports/')) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/spock-reports/',
+                    reportFiles: '*.html',
+                    reportName: 'com.etendoerp.* SPOCK TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/spock-reports"
+                } else {
+                  echo "Spock report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
+                }
+
+                if (fileExists('build/reports/tests/test/')) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'com.etendoerp.* TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of com.etendoerp.* does not exist. Skipping HTML report publishing."
+                }
               }
             }
           }
