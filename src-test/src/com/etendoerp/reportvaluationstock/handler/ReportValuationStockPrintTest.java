@@ -45,16 +45,7 @@ public class ReportValuationStockPrintTest {
   private CostingAlgorithm costingAlgorithm;
 
   private Method printReportMethod;
-  private static final String TEST_DATE = "2024-01-01";
-  private static final String TEST_COST_TYPE = "AVA";
-  private static final String TEST_ALGORITHM_NAME = "Average Algorithm";
-  private static final String TEST_TRANSLATED_HEADER = "Translated Cost Header";
-  private static final String TEST_TRANSLATED_VALUATION = "Translated Valuation Header";
-  private static final String NUMBER_FORMAT = "#,##0.00";
-  private static final String ERROR_PARAMETERS_NULL = "Parameters should not be null";
-  private static final String NUMBER_FORMAT_KEY = "NUMBERFORMAT";
-  private static final String ERROR_DECIMAL_FORMAT = "Should have correct decimal format";
-  private static final String COST_FORMAT_KEY = "COSTFORMAT";
+
 
 
   /**
@@ -78,10 +69,10 @@ public class ReportValuationStockPrintTest {
 
     when(vars.getSessionValue("#AD_ReportDecimalSeparator")).thenReturn(".");
     when(vars.getSessionValue("#AD_ReportGroupingSeparator")).thenReturn(",");
-    when(vars.getSessionValue("#AD_ReportNumberFormat")).thenReturn(NUMBER_FORMAT);
+    when(vars.getSessionValue("#AD_ReportNumberFormat")).thenReturn(TestUtils.NUMBER_FORMAT);
     when(vars.getJavaDateFormat()).thenReturn("yyyy-MM-dd");
 
-    when(costingAlgorithm.getName()).thenReturn(TEST_ALGORITHM_NAME);
+    when(costingAlgorithm.getName()).thenReturn(TestUtils.TEST_ALGORITHM_NAME);
   }
 
   /**
@@ -98,7 +89,7 @@ public class ReportValuationStockPrintTest {
   public void testPrintReportWithCostingAlgorithm() throws Exception {
     ReportValuationStockData[] testData = new ReportValuationStockData[0];
     Map<String, Object> parameters = new HashMap<>();
-    DecimalFormat mockFormat = new DecimalFormat(NUMBER_FORMAT);
+    DecimalFormat mockFormat = new DecimalFormat(TestUtils.NUMBER_FORMAT);
 
     try (MockedStatic<OBMessageUtils> obMessageUtilsMock = mockStatic(OBMessageUtils.class);
          MockedStatic<Utility> utilityMock = mockStatic(Utility.class)) {
@@ -108,34 +99,34 @@ public class ReportValuationStockPrintTest {
       obMessageUtilsMock.when(() -> OBMessageUtils.messageBD("ValuedStockReport_ValuationHeader"))
           .thenReturn("Valuation Header @algorithm@");
       obMessageUtilsMock.when(() -> OBMessageUtils.parseTranslation(anyString(), any()))
-          .thenReturn(TEST_TRANSLATED_HEADER)
-          .thenReturn(TEST_TRANSLATED_VALUATION);
+          .thenReturn(TestUtils.TEST_TRANSLATED_HEADER)
+          .thenReturn(TestUtils.TEST_TRANSLATED_VALUATION);
 
       utilityMock.when(() -> Utility.getFormat(any(), anyString())).thenReturn(mockFormat);
 
       printReportMethod.invoke(
           reportValuationStock,
           vars,
-          TEST_DATE,
+          TestUtils.TEST_DATE,
           testData,
-          TEST_COST_TYPE,
+          TestUtils.TEST_COST_TYPE,
           costingAlgorithm,
           parameters
       );
 
-      assertNotNull(ERROR_PARAMETERS_NULL, parameters);
+      assertNotNull(TestUtils.ERROR_PARAMETERS_NULL, parameters);
       assertEquals("Should have correct cost header",
-          TEST_TRANSLATED_HEADER, parameters.get("ALG_COST"));
+          TestUtils.TEST_TRANSLATED_HEADER, parameters.get("ALG_COST"));
       assertEquals("Should have correct valuation header",
-          TEST_TRANSLATED_VALUATION, parameters.get("SUM_ALG_COST"));
+          TestUtils.TEST_TRANSLATED_VALUATION, parameters.get("SUM_ALG_COST"));
       assertEquals("Should have correct title",
           "Valued Stock Report", parameters.get("TITLE"));
       assertEquals("Should have correct date",
-          TEST_DATE, parameters.get("DATE"));
+          TestUtils.TEST_DATE, parameters.get("DATE"));
       assertNotNull("Should have number format",
-          parameters.get(NUMBER_FORMAT_KEY));
-      assertEquals(ERROR_DECIMAL_FORMAT,
-          mockFormat, parameters.get(COST_FORMAT_KEY));
+          parameters.get(TestUtils.NUMBER_FORMAT_KEY));
+      assertEquals(TestUtils.ERROR_DECIMAL_FORMAT,
+          mockFormat, parameters.get(TestUtils.COST_FORMAT_KEY));
     }
   }
 
@@ -153,7 +144,7 @@ public class ReportValuationStockPrintTest {
   public void testPrintReportWithoutCostingAlgorithm() throws Exception {
     ReportValuationStockData[] testData = new ReportValuationStockData[0];
     Map<String, Object> parameters = new HashMap<>();
-    DecimalFormat mockFormat = new DecimalFormat(NUMBER_FORMAT);
+    DecimalFormat mockFormat = new DecimalFormat(TestUtils.NUMBER_FORMAT);
 
     try (MockedStatic<Utility> utilityMock = mockStatic(Utility.class)) {
       utilityMock.when(() -> Utility.getFormat(any(), anyString())).thenReturn(mockFormat);
@@ -161,14 +152,14 @@ public class ReportValuationStockPrintTest {
       printReportMethod.invoke(
           reportValuationStock,
           vars,
-          TEST_DATE,
+          TestUtils.TEST_DATE,
           testData,
           null,
           null,
           parameters
       );
 
-      assertNotNull(ERROR_PARAMETERS_NULL, parameters);
+      assertNotNull(TestUtils.ERROR_PARAMETERS_NULL, parameters);
       assertEquals("Should have empty cost header",
           "", parameters.get("ALG_COST"));
       assertEquals("Should have empty valuation header",
@@ -176,11 +167,11 @@ public class ReportValuationStockPrintTest {
       assertEquals("Should have correct title",
           "Valued Stock Report", parameters.get("TITLE"));
       assertEquals("Should have correct date",
-          TEST_DATE, parameters.get("DATE"));
+          TestUtils.TEST_DATE, parameters.get("DATE"));
       assertNotNull("Should have number format",
-          parameters.get(NUMBER_FORMAT_KEY));
-      assertEquals(ERROR_DECIMAL_FORMAT,
-          mockFormat, parameters.get(COST_FORMAT_KEY));
+          parameters.get(TestUtils.NUMBER_FORMAT_KEY));
+      assertEquals(TestUtils.ERROR_DECIMAL_FORMAT,
+          mockFormat, parameters.get(TestUtils.COST_FORMAT_KEY));
     }
   }
 
@@ -198,11 +189,11 @@ public class ReportValuationStockPrintTest {
   public void testPrintReportWithCustomFormats() throws Exception {
     ReportValuationStockData[] testData = new ReportValuationStockData[0];
     Map<String, Object> parameters = new HashMap<>();
-    DecimalFormat mockFormat = new DecimalFormat("#,##0.000");
+    DecimalFormat mockFormat = new DecimalFormat(TestUtils.NUMBER_FORMAT);
 
     when(vars.getSessionValue("#AD_ReportDecimalSeparator")).thenReturn(",");
     when(vars.getSessionValue("#AD_ReportGroupingSeparator")).thenReturn(".");
-    when(vars.getSessionValue("#AD_ReportNumberFormat")).thenReturn("#,##0.000");
+    when(vars.getSessionValue("#AD_ReportNumberFormat")).thenReturn(TestUtils.NUMBER_FORMAT);
 
     try (MockedStatic<Utility> utilityMock = mockStatic(Utility.class)) {
       utilityMock.when(() -> Utility.getFormat(any(), anyString())).thenReturn(mockFormat);
@@ -210,18 +201,18 @@ public class ReportValuationStockPrintTest {
       printReportMethod.invoke(
           reportValuationStock,
           vars,
-          TEST_DATE,
+          TestUtils.TEST_DATE,
           testData,
-          TEST_COST_TYPE,
+          TestUtils.TEST_COST_TYPE,
           null,
           parameters
       );
 
-      assertNotNull(ERROR_PARAMETERS_NULL, parameters);
+      assertNotNull(TestUtils.ERROR_PARAMETERS_NULL, parameters);
       assertNotNull("Should have number format with custom separators",
-          parameters.get(NUMBER_FORMAT_KEY));
-      assertEquals(ERROR_DECIMAL_FORMAT,
-          mockFormat, parameters.get(COST_FORMAT_KEY));
+          parameters.get(TestUtils.NUMBER_FORMAT_KEY));
+      assertEquals(TestUtils.ERROR_DECIMAL_FORMAT,
+          mockFormat, parameters.get(TestUtils.COST_FORMAT_KEY));
     }
   }
 }

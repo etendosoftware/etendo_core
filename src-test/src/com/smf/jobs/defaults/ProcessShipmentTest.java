@@ -53,15 +53,6 @@ import com.smf.jobs.Result;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ProcessShipmentTest {
 
-  public static final String SUCCESS = "Success";
-  public static final String TEST_MESSAGE = "Test message";
-  public static final String SHIPMENT_PROCESSED_SUCCESSFULLY = "Shipment processed successfully";
-  public static final String RESULT_SHOULD_NOT_BE_NULL = "Result should not be null";
-  public static final String SHOULD_RETURN_SUCCESS_TYPE = "Should return success type";
-  public static final String DOC_ACTION = "DocAction";
-
-
-
   /**
    * A testable subclass of {@code ProcessShipment} that exposes methods for testing.
    */
@@ -125,9 +116,9 @@ public class ProcessShipmentTest {
 
     try (MockedStatic<OBMessageUtils> messageMock = mockStatic(OBMessageUtils.class)) {
       messageMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn(TEST_MESSAGE);
+          .thenReturn(Utility.TEST_MESSAGE);
       messageMock.when(() -> OBMessageUtils.parseTranslation(anyString(), any()))
-          .thenReturn(TEST_MESSAGE);
+          .thenReturn(Utility.TEST_MESSAGE);
     }
 
   }
@@ -140,10 +131,10 @@ public class ProcessShipmentTest {
   @Test
   public void testProcessShipmentPrivateMethod() throws Exception {
     String shipmentId = "test-shipment-id";
-    String docAction = "CO";
+    String docAction = Utility.COMPLETE;
     OBError expectedResult = new OBError();
-    expectedResult.setType(SUCCESS);
-    expectedResult.setMessage(SHIPMENT_PROCESSED_SUCCESSFULLY);
+    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setMessage(Utility.SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
       requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
@@ -163,11 +154,11 @@ public class ProcessShipmentTest {
           docAction
       );
 
-      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
-      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
+      assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
       assertEquals(
           "Should return correct message",
-          SHIPMENT_PROCESSED_SUCCESSFULLY,
+          Utility.SHIPMENT_PROCESSED_SUCCESSFULLY,
           result.getMessage()
       );
     }
@@ -181,13 +172,13 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithSuccessfulProcessing() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put(DOC_ACTION, "CO");
+    parameters.put(Utility.DOC_ACTION, Utility.COMPLETE);
     MutableBoolean isStopped = new MutableBoolean(false);
 
     List<ShipmentInOut> mockShipments = List.of(mockShipment);
     OBError successResult = new OBError();
-    successResult.setType(SUCCESS);
-    successResult.setMessage(SHIPMENT_PROCESSED_SUCCESSFULLY);
+    successResult.setType(Utility.SUCCESS);
+    successResult.setMessage(Utility.SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
       requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
@@ -208,8 +199,8 @@ public class ProcessShipmentTest {
 
       ActionResult result = processShipment.action(parameters, isStopped);
 
-      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
-      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
+      assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
       verify(mockProcessShipmentUtil, times(1)).process(
           anyString(),
           anyString(),
@@ -247,7 +238,7 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithEmptyInput() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put(DOC_ACTION, "CO");
+    parameters.put(Utility.DOC_ACTION, Utility.COMPLETE);
     MutableBoolean isStopped = new MutableBoolean(false);
 
     List<ShipmentInOut> emptyShipments = Collections.emptyList();
@@ -258,7 +249,7 @@ public class ProcessShipmentTest {
 
     ActionResult result = processShipment.action(parameters, isStopped);
 
-    assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+    assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
     assertEquals("Should return success type for empty input", Result.Type.SUCCESS, result.getType());
   }
 
@@ -272,10 +263,10 @@ public class ProcessShipmentTest {
   @Test
   public void testProcessShipment() throws Exception {
     String shipmentId = "test-shipment-id";
-    String docAction = "CO";
+    String docAction = Utility.COMPLETE;
     OBError expectedResult = new OBError();
-    expectedResult.setType(SUCCESS);
-    expectedResult.setMessage(SHIPMENT_PROCESSED_SUCCESSFULLY);
+    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setMessage(Utility.SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
       requestContextMock.when(RequestContext::get).thenReturn(mockRequestContext);
@@ -295,8 +286,8 @@ public class ProcessShipmentTest {
           docAction
       );
 
-      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
-      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
+      assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
     }
   }
 
@@ -312,7 +303,7 @@ public class ProcessShipmentTest {
       when(mockRequestContext.getVariablesSecureApp()).thenReturn(mockVars);
 
       try {
-        processShipmentMethod.invoke(processShipment, null, "CO");
+        processShipmentMethod.invoke(processShipment, null, Utility.COMPLETE);
         fail("Should throw NullPointerException");
       } catch (InvocationTargetException e) {
         assertTrue(e.getCause() instanceof NullPointerException);
@@ -328,7 +319,7 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithInvalidDocAction() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put(DOC_ACTION, "INVALID_ACTION");
+    parameters.put(Utility.DOC_ACTION, "INVALID_ACTION");
     MutableBoolean isStopped = new MutableBoolean(false);
 
     List<ShipmentInOut> mockShipments = List.of(mockShipment);
@@ -351,7 +342,7 @@ public class ProcessShipmentTest {
       )).thenReturn(errorResult);
 
       messageMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn(TEST_MESSAGE);
+          .thenReturn(Utility.TEST_MESSAGE);
 
       // Replace doReturn with reflection-based mocking
       when(getInputContentsMethod.invoke(processShipment, ShipmentInOut.class))
@@ -372,7 +363,7 @@ public class ProcessShipmentTest {
   @Test
   public void testActionWithMultipleShipments() throws Exception {
     JSONObject parameters = new JSONObject();
-    parameters.put(DOC_ACTION, "CO");
+    parameters.put(Utility.DOC_ACTION, Utility.COMPLETE);
     MutableBoolean isStopped = new MutableBoolean(false);
 
     ShipmentInOut mockShipment2 = mock(ShipmentInOut.class);
@@ -380,7 +371,7 @@ public class ProcessShipmentTest {
     List<ShipmentInOut> multipleShipments = Arrays.asList(mockShipment, mockShipment2, mockShipment3);
 
     OBError successResult = new OBError();
-    successResult.setType(SUCCESS);
+    successResult.setType(Utility.SUCCESS);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class);
          MockedStatic<OBMessageUtils> messageMock = mockStatic(OBMessageUtils.class)) {
@@ -401,7 +392,7 @@ public class ProcessShipmentTest {
       )).thenReturn(successResult);
 
       messageMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn(TEST_MESSAGE);
+          .thenReturn(Utility.TEST_MESSAGE);
 
       // Replace doReturn with reflection-based mocking
       when(getInputContentsMethod.invoke(processShipment, ShipmentInOut.class))
@@ -410,8 +401,8 @@ public class ProcessShipmentTest {
 
       ActionResult result = processShipment.action(parameters, isStopped);
 
-      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
-      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
+      assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
       verify(mockProcessShipmentUtil, times(3)).process(
           anyString(),
           anyString(),

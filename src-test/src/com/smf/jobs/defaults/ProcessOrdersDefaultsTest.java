@@ -36,9 +36,6 @@ import org.openbravo.service.db.DalConnectionProvider;
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessOrdersDefaultsTest {
 
-  public static final String RESULT_SHOULD_NOT_BE_NULL = "Result should not be null";
-  public static final String ACTIONS = "actions";
-
 
   @InjectMocks
   private ProcessOrdersDefaults processOrdersDefaults;
@@ -71,13 +68,13 @@ public class ProcessOrdersDefaultsTest {
   public void testExecuteWithSingleDocumentStatus() throws Exception {
     Map<String, Object> parameters = new HashMap<>();
     String content = new JSONObject()
-        .put("documentStatuses", new JSONArray().put("DR"))
+        .put("documentStatuses", new JSONArray().put(Utility.DRAFT_STATUS))
         .put("isProcessing", "N")
         .put("tabId", "123")
         .toString();
 
     FieldProvider mockFieldProvider = mock(FieldProvider.class);
-    when(mockFieldProvider.getField("ID")).thenReturn("CO");
+    when(mockFieldProvider.getField("ID")).thenReturn(Utility.COMPLETE);
     FieldProvider[] mockFields = new FieldProvider[]{mockFieldProvider};
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class);
@@ -91,7 +88,7 @@ public class ProcessOrdersDefaultsTest {
           any(),
           anyString(),
           eq(ProcessOrdersDefaults.ORDER_DOCUMENT_ACTION_REFERENCE_ID),
-          eq("DR"),
+          eq(Utility.DRAFT_STATUS),
           eq("N"),
           eq(ProcessOrdersDefaults.AD_TABLE_ID),
           eq("123")
@@ -99,11 +96,11 @@ public class ProcessOrdersDefaultsTest {
 
       JSONObject result = processOrdersDefaults.execute(parameters, content);
 
-      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
-      assertTrue("Result should contain actions", result.has(ACTIONS));
-      JSONArray actions = result.getJSONArray(ACTIONS);
+      assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
+      assertTrue("Result should contain actions", result.has(Utility.ACTIONS));
+      JSONArray actions = result.getJSONArray(Utility.ACTIONS);
       assertEquals("Should have one action", 1, actions.length());
-      assertEquals("Should have correct action", "CO", actions.getString(0));
+      assertEquals("Should have correct action", Utility.COMPLETE, actions.getString(0));
     }
   }
 
@@ -117,14 +114,14 @@ public class ProcessOrdersDefaultsTest {
   public void testExecuteWithMultipleDocumentStatuses() throws Exception {
     Map<String, Object> parameters = new HashMap<>();
     String content = new JSONObject()
-        .put("documentStatuses", new JSONArray().put("DR").put("CO"))
+        .put("documentStatuses", new JSONArray().put(Utility.DRAFT_STATUS).put(Utility.COMPLETE))
         .put("isProcessing", "N")
         .put("tabId", "123")
         .toString();
 
     FieldProvider mockFieldProvider1 = mock(FieldProvider.class);
     FieldProvider mockFieldProvider2 = mock(FieldProvider.class);
-    when(mockFieldProvider1.getField("ID")).thenReturn("CO");
+    when(mockFieldProvider1.getField("ID")).thenReturn(Utility.COMPLETE);
     when(mockFieldProvider2.getField("ID")).thenReturn("CL");
 
     FieldProvider[] mockFields1 = new FieldProvider[]{mockFieldProvider1};
@@ -141,7 +138,7 @@ public class ProcessOrdersDefaultsTest {
           any(),
           anyString(),
           eq(ProcessOrdersDefaults.ORDER_DOCUMENT_ACTION_REFERENCE_ID),
-          eq("DR"),
+          eq(Utility.DRAFT_STATUS),
           eq("N"),
           eq(ProcessOrdersDefaults.AD_TABLE_ID),
           eq("123")
@@ -152,7 +149,7 @@ public class ProcessOrdersDefaultsTest {
           any(),
           anyString(),
           eq(ProcessOrdersDefaults.ORDER_DOCUMENT_ACTION_REFERENCE_ID),
-          eq("CO"),
+          eq(Utility.COMPLETE),
           eq("N"),
           eq(ProcessOrdersDefaults.AD_TABLE_ID),
           eq("123")
@@ -160,11 +157,11 @@ public class ProcessOrdersDefaultsTest {
 
       JSONObject result = processOrdersDefaults.execute(parameters, content);
 
-      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
-      assertTrue("Result should contain actions", result.has(ACTIONS));
-      JSONArray actions = result.getJSONArray(ACTIONS);
+      assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
+      assertTrue("Result should contain actions", result.has(Utility.ACTIONS));
+      JSONArray actions = result.getJSONArray(Utility.ACTIONS);
       assertEquals("Should have two actions", 2, actions.length());
-      assertEquals("First action should be CO", "CO", actions.getString(0));
+      assertEquals("First action should be CO", Utility.COMPLETE, actions.getString(0));
       assertEquals("Second action should be CL", "CL", actions.getString(1));
     }
   }
@@ -176,7 +173,7 @@ public class ProcessOrdersDefaultsTest {
   @Test
   public void testGetDocumentActionList() {
     FieldProvider mockFieldProvider = mock(FieldProvider.class);
-    when(mockFieldProvider.getField("ID")).thenReturn("CO");
+    when(mockFieldProvider.getField("ID")).thenReturn(Utility.COMPLETE);
     FieldProvider[] mockFields = new FieldProvider[]{mockFieldProvider};
 
     try (MockedStatic<ActionButtonUtility> actionButtonUtilityMock = mockStatic(ActionButtonUtility.class)) {
@@ -192,16 +189,16 @@ public class ProcessOrdersDefaultsTest {
       )).thenReturn(mockFields);
 
       List<String> result = ProcessOrdersDefaults.getDocumentActionList(
-          "DR",
+          Utility.DRAFT_STATUS,
           "N",
           "123",
           mockVars,
           mockConnectionProvider
       );
 
-      assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
+      assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
       assertEquals("Should have one action", 1, result.size());
-      assertEquals("Should have correct action", "CO", result.get(0));
+      assertEquals("Should have correct action", Utility.COMPLETE, result.get(0));
     }
   }
 }

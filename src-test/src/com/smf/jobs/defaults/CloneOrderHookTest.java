@@ -168,8 +168,8 @@ public class CloneOrderHookTest {
 
     assertNotNull("Cloned order should not be null", result);
 
-    verify(clonedOrder).setDocumentAction("CO");
-    verify(clonedOrder).setDocumentStatus("DR");
+    verify(clonedOrder).setDocumentAction(Utility.COMPLETE);
+    verify(clonedOrder).setDocumentStatus(Utility.DRAFT_STATUS);
     verify(clonedOrder).setPosted("N");
     verify(clonedOrder).setProcessed(false);
     verify(clonedOrder).setDelivered(false);

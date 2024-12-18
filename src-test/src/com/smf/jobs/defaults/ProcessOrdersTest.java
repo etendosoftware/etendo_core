@@ -34,7 +34,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessOrdersTest {
 
-  public static final String SUCCESS = "Success";
+
 
   @Spy
   @InjectMocks
@@ -83,9 +83,9 @@ public class ProcessOrdersTest {
   @Test
   public void testProcessOrder() throws Exception {
     String orderId = "test-order-id";
-    String docAction = "CO";
+    String docAction = Utility.COMPLETE;
     OBError expectedResult = new OBError();
-    expectedResult.setType(SUCCESS);
+    expectedResult.setType(Utility.SUCCESS);
     expectedResult.setMessage("Order processed successfully");
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -106,7 +106,7 @@ public class ProcessOrdersTest {
           docAction
       );
 
-      assertEquals("Should return success type", SUCCESS, result.getType());
+      assertEquals("Should return success type", Utility.SUCCESS, result.getType());
       assertEquals(
           "Should return correct message",
           "Order processed successfully",

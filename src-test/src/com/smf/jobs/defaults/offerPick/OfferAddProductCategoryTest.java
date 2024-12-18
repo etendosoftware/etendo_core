@@ -26,6 +26,8 @@ import org.openbravo.model.common.plm.ProductCategory;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 import org.hibernate.Session;
 
+import com.smf.jobs.defaults.Utility;
+
 /**
  * Unit tests for the {@link OfferAddProductCategory} class.
  *
@@ -35,8 +37,6 @@ import org.hibernate.Session;
  */
 @ExtendWith(MockitoExtension.class)
 public class OfferAddProductCategoryTest {
-
-  private static final String TEST_ID = "testId" ;
 
 
   @Mock
@@ -87,11 +87,11 @@ public class OfferAddProductCategoryTest {
 
       JSONArray selectedLines = new JSONArray();
       JSONObject productCatJson = new JSONObject();
-      productCatJson.put("id", TEST_ID);
+      productCatJson.put("id", Utility.TEST_ID);
       selectedLines.put(productCatJson);
 
       ProductCategory productCategory = mock(ProductCategory.class);
-      when(obDal.getProxy(eq(ProductCategory.ENTITY_NAME), eq(TEST_ID))).thenReturn(productCategory);
+      when(obDal.getProxy(eq(ProductCategory.ENTITY_NAME), eq(Utility.TEST_ID))).thenReturn(productCategory);
 
       OBProvider obProvider = mock(OBProvider.class);
       org.openbravo.model.pricing.priceadjustment.ProductCategory mockProductCategory =
@@ -131,7 +131,7 @@ public class OfferAddProductCategoryTest {
       JSONArray selectedLines = new JSONArray();
       for (int i = 0; i < 150; i++) {
         JSONObject productCatJson = new JSONObject();
-        productCatJson.put("id", TEST_ID + i);
+        productCatJson.put("id", Utility.TEST_ID + i);
         selectedLines.put(productCatJson);
       }
 

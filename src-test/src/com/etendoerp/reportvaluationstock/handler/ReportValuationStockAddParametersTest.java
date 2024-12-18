@@ -71,11 +71,7 @@ public class ReportValuationStockAddParametersTest {
 
   private ReportValuationStock reportValuationStock;
 
-  private static final String TEST_ORG_ID = "testOrgId";
-  private static final String TEST_WAREHOUSE_ID = "testWarehouseId";
-  private static final String TEST_CATEGORY_ID = "testCategoryId";
-  private static final String TEST_CURRENCY_ID = "testCurrencyId";
-  private static final String TEST_DATE = "2024-01-01";
+
 
   /**
    * Set up the test environment, including mocks and static contexts.
@@ -146,12 +142,12 @@ public class ReportValuationStockAddParametersTest {
     JSONObject jsonContent = new JSONObject();
     JSONObject params = new JSONObject();
 
-    params.put("AD_Org_ID", TEST_ORG_ID);
-    params.put("M_Warehouse_ID", TEST_WAREHOUSE_ID);
+    params.put("AD_Org_ID", TestUtils.TEST_ORG_ID);
+    params.put("M_Warehouse_ID", TestUtils.TEST_WAREHOUSE_ID);
     params.put("WarehouseConsolidation", true);
-    params.put("M_Product_Category_ID", TEST_CATEGORY_ID);
-    params.put("C_Currency_ID", TEST_CURRENCY_ID);
-    params.put("Date", TEST_DATE);
+    params.put("M_Product_Category_ID", TestUtils.TEST_CATEGORY_ID);
+    params.put("C_Currency_ID", TestUtils.TEST_CURRENCY_ID);
+    params.put("Date", TestUtils.TEST_DATE);
 
     jsonContent.put("_params", params);
     jsonContent.put(ApplicationConstants.BUTTON_VALUE, "PDF");

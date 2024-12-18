@@ -15,6 +15,7 @@ import org.openbravo.model.common.order.Order;
 
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
+import com.smf.jobs.defaults.Utility;
 
 /**
  * Unit tests for the {@link CreateFromOrder} class.
@@ -60,8 +61,8 @@ public class CreateFromOrderTest {
 
     ActionResult result = createFromOrder.action(parameters, isStopped);
 
-    assertNotNull("Result should not be null", result);
-    assertEquals("Should return success type", Result.Type.SUCCESS, result.getType());
+    assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
+    assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
   }
 
   /**

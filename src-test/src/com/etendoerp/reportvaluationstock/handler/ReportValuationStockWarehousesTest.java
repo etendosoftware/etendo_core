@@ -37,11 +37,6 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class ReportValuationStockWarehousesTest {
 
-  private static final String CLIENT_ID = "testClient";
-  private static final String ORG_ID = "testOrg";
-  private static final String WAREHOUSE_ID_1 = "warehouse1";
-  private static final String WAREHOUSE_ID_2 = "warehouse2";
-
   @InjectMocks
   private ReportValuationStock reportValuationStock;
 
@@ -85,22 +80,22 @@ public class ReportValuationStockWarehousesTest {
   @Test
   public void testGetWarehousesWithResults() throws Exception {
     List<String> expectedOrgIds = Arrays.asList("org1", "org2");
-    List<String> expectedWarehouseIds = Arrays.asList(WAREHOUSE_ID_1, WAREHOUSE_ID_2);
+    List<String> expectedWarehouseIds = Arrays.asList(TestUtils.WAREHOUSE_ID_1, TestUtils.WAREHOUSE_ID_2);
 
     try (MockedStatic<OBContext> obContextMock = mockStatic(OBContext.class);
          MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
 
       obContextMock.when(OBContext::getOBContext).thenReturn(mockOBContext);
-      when(mockOBContext.getOrganizationStructureProvider(CLIENT_ID))
+      when(mockOBContext.getOrganizationStructureProvider(TestUtils.CLIENT_ID))
           .thenReturn(mockOsp);
-      when(mockOsp.getNaturalTree(ORG_ID))
+      when(mockOsp.getNaturalTree(TestUtils.ORG_ID))
           .thenReturn(Set.copyOf(expectedOrgIds));
 
       obDalMock.when(OBDal::getReadOnlyInstance).thenReturn(mockOBDal);
       when(mockOBDal.getSession()).thenReturn(mockSession);
       when(mockSession.createQuery(anyString(), eq(String.class)))
           .thenReturn(mockQuery);
-      when(mockQuery.setParameterList((String) eq("orgIds"), (Collection) any()))
+      when(mockQuery.setParameterList((String) eq(TestUtils.ORG_IDS), (Collection) any()))
           .thenReturn(mockQuery);
       when(mockQuery.setParameter(eq("clientId"), any()))
           .thenReturn(mockQuery);
@@ -110,8 +105,8 @@ public class ReportValuationStockWarehousesTest {
       @SuppressWarnings("unchecked")
       List<String> result = (List<String>) getWarehousesMethod.invoke(
           reportValuationStock,
-          CLIENT_ID,
-          ORG_ID
+          TestUtils.CLIENT_ID,
+          TestUtils.ORG_ID
       );
 
       assertEquals("Should return correct number of warehouses",
@@ -135,16 +130,16 @@ public class ReportValuationStockWarehousesTest {
          MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
 
       obContextMock.when(OBContext::getOBContext).thenReturn(mockOBContext);
-      when(mockOBContext.getOrganizationStructureProvider(CLIENT_ID))
+      when(mockOBContext.getOrganizationStructureProvider(TestUtils.CLIENT_ID))
           .thenReturn(mockOsp);
-      when(mockOsp.getNaturalTree(ORG_ID))
+      when(mockOsp.getNaturalTree(TestUtils.ORG_ID))
           .thenReturn(Set.copyOf(expectedOrgIds));
 
       obDalMock.when(OBDal::getReadOnlyInstance).thenReturn(mockOBDal);
       when(mockOBDal.getSession()).thenReturn(mockSession);
       when(mockSession.createQuery(anyString(), eq(String.class)))
           .thenReturn(mockQuery);
-      when(mockQuery.setParameterList((String) eq("orgIds"), (Collection) any()))
+      when(mockQuery.setParameterList((String) eq(TestUtils.ORG_IDS), (Collection) any()))
           .thenReturn(mockQuery);
       when(mockQuery.setParameter(eq("clientId"), any()))
           .thenReturn(mockQuery);
@@ -154,8 +149,8 @@ public class ReportValuationStockWarehousesTest {
       @SuppressWarnings("unchecked")
       List<String> result = (List<String>) getWarehousesMethod.invoke(
           reportValuationStock,
-          CLIENT_ID,
-          ORG_ID
+          TestUtils.CLIENT_ID,
+          TestUtils.ORG_ID
       );
 
       assertTrue("Should return empty list when no warehouses found",
