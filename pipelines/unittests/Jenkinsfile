@@ -379,7 +379,7 @@ spec:
     }
 // __________________________________________________________________________________________
 // ----------------------------------- com.etendoerp.* TESTS --------------------------------
-    stage ('Spock Test') { // MARK: com.etendoerp.* Test
+    stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Test
       when {
         expression {
           env.STATUSBUILD == "1"
@@ -390,17 +390,17 @@ spec:
           script {
             dir(REPO_NAME) {
               try {
-                echo "--------------- Running Spock Test ---------------"
+                echo "--------------- Running com.etendoerp.* Tests ---------------"
                 sh "./gradlew test --tests \"com.etendoerp.*\" --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test3.exec"
                 sh "./gradlew --stop"
-                echo "--------------- Spock Test Successful ---------------"
+                echo "--------------- com.etendoerp.* Tests Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo "--------------- Spock Test Failed ---------------"
+                echo "--------------- com.etendoerp.* Tests Failed ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('Spock Test failed!')
+                unstable('com.etendoerp.* Tests failed!')
                 env.STATUSTEST = "0"
               } finally {
                 if (fileExists('build/spock-reports/')) {
@@ -430,7 +430,7 @@ spec:
                   ])
                   sh "rm -rf build/reports/tests/test"
                 } else {
-                  echo "Report directory of com.etendoerp.* does not exist. Skipping HTML report publishing."
+                  echo "Report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
                 }
               }
             }
