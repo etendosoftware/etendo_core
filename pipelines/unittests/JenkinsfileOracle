@@ -248,6 +248,44 @@ spec:
                 }
             }
         }
+// __________________________________________________________________________________________
+// ------------------------------ com.smf.* TESTS ------------------------------------------
+        stage ('Core Test Suite') { // MARK: com.smf.* Test Suite
+            when {
+                expression {
+                    env.STATUSBUILD == "1"
+                }
+            }
+            steps {
+                container('compiler') {
+                    script {
+                        dir(REPO_NAME) {
+                            try {
+                                echo "--------------- Running CoreTestSuite ---------------"
+                                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
+                                echo "--------------- CoreTestSuite Successful ---------------"
+                            } catch (Exception e) {
+                                echo "--------------- CoreTestSuite Failed ---------------"
+                                echo 'Exception occurred: ' + e.toString()
+                                currentBuild.result = UNSTABLE
+                                unstable('CoreTestSuite Failed')
+                                env.STATUSTEST = "0"
+                            } finally {
+                                publishHTML([
+                                    allowMissing: true,
+                                    alwaysLinkToLastBuild: false,
+                                    keepAll: true,
+                                    reportDir: 'build/reports/tests/test',
+                                    reportFiles: '*.html',
+                                    reportName: 'com.smf.* TESTS REPORT',
+                                    reportTitles: ''
+                                ])
+                            }
+                        }
+                    }
+                }
+            }
+        }
 //___________________________________________________________________________________________
 // ------------------------------- STANDALONE TEST ------------------------------------------
         stage ('Standalone Test Suite'){
