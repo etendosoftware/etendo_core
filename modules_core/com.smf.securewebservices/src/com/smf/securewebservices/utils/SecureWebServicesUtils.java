@@ -337,25 +337,25 @@ public class SecureWebServicesUtils {
 	 */
 	private static Algorithm getDecoderAlgorithm(SWSConfig config,
 			String algorithmUsed) throws JSONException, NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
-		String publicKeyContent = config.getPrivateKey();
-		boolean isNewVersion = StringUtils.startsWith(publicKeyContent, "{") && StringUtils.endsWith(publicKeyContent, "}");
-		if (isNewVersion) {
-			JSONObject keys = new JSONObject(publicKeyContent);
-			publicKeyContent = StringUtils.equals(ES256_ALGORITHM, algorithmUsed) ? keys.getString(PUBLIC_KEY) : keys.getString(PRIVATE_KEY);
-		}
-
+		String privateKey = config.getPrivateKey();
 		Algorithm algorithm;
-		if (isNewVersion && StringUtils.equals(ES256_ALGORITHM, algorithmUsed)) {
-			final ECPublicKey publicKey = getECPublicKey(publicKeyContent);
-			algorithm = Algorithm.ECDSA256(publicKey);
-		} else if (!isNewVersion || StringUtils.equals(HS256_ALGORITHM, algorithmUsed)) {
-			publicKeyContent = publicKeyContent.replace(BEGIN_SECRET_KEY, "")
-					.replace(END_SECRET_KEY, "")
-					.replace("\\s", "");
-			algorithm = Algorithm.HMAC256(publicKeyContent);
+		if (isNewVersionPrivKey(privateKey)) {
+			JSONObject keys = new JSONObject(privateKey);
+			if (StringUtils.equals(ES256_ALGORITHM, algorithmUsed)) {
+				String publicKeyContent = keys.getString(PUBLIC_KEY);
+				ECPublicKey publicKey = getECPublicKey(publicKeyContent);
+				algorithm = Algorithm.ECDSA256(publicKey);
+			} else if (StringUtils.equals(HS256_ALGORITHM, algorithmUsed)) {
+				String privKey = cleanPrivateKey(config);
+				algorithm = Algorithm.HMAC256(privKey);
+			} else {
+				String errorMessage = String.format(
+						OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm"), algorithmUsed);
+				throw new IllegalArgumentException(errorMessage);
+			}
 		} else {
-			String errorMessage = String.format(OBMessageUtils.messageBD("SMFSWS_UnsupportedSigningAlgorithm"), algorithmUsed);
-			throw new IllegalArgumentException(errorMessage);
+			// Legacy private key format. Use HS256 algorithm.
+			algorithm = Algorithm.HMAC256(privateKey);
 		}
 		return algorithm;
 	}
@@ -435,6 +435,16 @@ public class SecureWebServicesUtils {
 	}
 
 	/**
+	 * Detects if the private key content is in the new version format (JSON object).
+	 *
+	 * @param privateKey The private key content to be checked.
+   * @return true if the private key content is in the new version format (JSON object), false otherwise.
+	 */
+	public static boolean isNewVersionPrivKey(String privateKey) {
+		return StringUtils.startsWith(privateKey, "{") && StringUtils.endsWith(privateKey, "}");
+	}
+
+	/**
 	 * Generates a JSON Web Token (JWT) for a given user with specified role, organization, and warehouse details.
 	 * This method dynamically selects the token signing algorithm based on the configuration setting.
 	 * It supports both ECDSA and HMAC algorithms for signing the token. It also handles role, organization,
@@ -453,24 +463,29 @@ public class SecureWebServicesUtils {
 			OBContext.setAdminMode(true);
 			SWSConfig config = SWSConfig.getInstance();
 
-			Role selectedRole = null;
 			Warehouse selectedWarehouse = null;
 			List<UserRoles> userRoleList = user.getADUserRolesList();
 			Role defaultWsRole = user.getSmfswsDefaultWsRole();
 			Role defaultRole = user.getDefaultRole();
 			Organization defaultOrg = user.getDefaultOrganization();
 			Warehouse defaultWarehouse = user.getDefaultWarehouse();
-			selectedRole = getRole(role, userRoleList, defaultWsRole, defaultRole);
+			Role selectedRole = getRole(role, userRoleList, defaultWsRole, defaultRole);
 			Organization selectedOrg = getOrganization(org, selectedRole, defaultRole, defaultOrg);
-			selectedWarehouse = getWarehouse(warehouse, selectedOrg, selectedWarehouse, defaultWarehouse);
+			selectedWarehouse = getWarehouse(warehouse, selectedOrg, defaultWarehouse);
 
-			String algorithmUsed = Preferences.getPreferenceValue("SMFSWS_EncryptionAlgorithm", true,
-					OBContext.getOBContext().getCurrentClient(),
-					OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(), OBContext.getOBContext().getRole(),
-					null);
-
-			String privateKey = cleanPrivateKey(config, algorithmUsed);
-			Algorithm algorithm = getEncoderAlgorithm(privateKey, algorithmUsed);
+			String privateKey = config.getPrivateKey();
+			Algorithm algorithm;
+			if(isNewVersionPrivKey(privateKey)) {
+				String algorithmUsed = Preferences.getPreferenceValue("SMFSWS_EncryptionAlgorithm", true,
+						OBContext.getOBContext().getCurrentClient(),
+						OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(), OBContext.getOBContext().getRole(),
+						null);
+				privateKey = cleanPrivateKey(config);
+				algorithm = getEncoderAlgorithm(privateKey, algorithmUsed);
+			} else {
+				// Legacy private key format. Use HS256 algorithm.
+				algorithm = getEncoderAlgorithm(privateKey, HS256_ALGORITHM);
+			}
 			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse);
 
 			if (config.getExpirationTime() > 0) {
@@ -495,20 +510,20 @@ public class SecureWebServicesUtils {
 	 * @return The cleaned private key content as a String.
 	 * @throws JSONException If there is an issue parsing the private key JSON object.
 	 */
-	private static String cleanPrivateKey(SWSConfig config, String algorithmUsed) throws JSONException {
+	private static String cleanPrivateKey(SWSConfig config)
+			throws JSONException {
 		String privateKeyContent = config.getPrivateKey();
-		boolean isNewVersion = StringUtils.startsWith(privateKeyContent, "{") && StringUtils.endsWith(privateKeyContent, "}");
-		if (isNewVersion) {
-			JSONObject keys = new JSONObject(privateKeyContent);
-			privateKeyContent = keys.getString(PRIVATE_KEY);
+		JSONObject keys = new JSONObject(privateKeyContent);
+		privateKeyContent = keys.getString(PRIVATE_KEY);
+		if (StringUtils.startsWith(BEGIN_SECRET_KEY, privateKeyContent)) {
+			privateKeyContent = privateKeyContent.replace(BEGIN_SECRET_KEY, "")
+					.replace(END_SECRET_KEY, "")
+					.replace("\\s", "");
+		} else {
+			privateKeyContent = privateKeyContent.replace(BEGIN_PRIVATE_KEY, "")
+					.replace(END_PRIVATE_KEY, "")
+					.replace("\\s", "");
 		}
-		privateKeyContent = StringUtils.equals(HS256_ALGORITHM, algorithmUsed) ?
-				privateKeyContent.replace(BEGIN_SECRET_KEY, "")
-				.replace(END_SECRET_KEY, "")
-				.replace("\\s", "") :
-				privateKeyContent.replace(BEGIN_PRIVATE_KEY, "")
-						.replace(END_PRIVATE_KEY, "")
-						.replace("\\s", "");
 		return privateKeyContent;
 	}
 
@@ -525,7 +540,8 @@ public class SecureWebServicesUtils {
 	 * @throws UnsupportedEncodingException If there is an issue decoding the private key.
 	 */
 	private static Algorithm getEncoderAlgorithm(String privateKeyContent, String algorithmUsed)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+      throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException,
+      JSONException {
 		Algorithm algorithm;
 
 		if (StringUtils.equals(ES256_ALGORITHM, algorithmUsed)) {
@@ -545,13 +561,13 @@ public class SecureWebServicesUtils {
 	 *
 	 * @param warehouse The provided {@link Warehouse} to be validated.
 	 * @param selectedOrg The {@link Organization} associated with the warehouse.
-	 * @param selectedWarehouse The warehouse selected during processing, initially null.
 	 * @param defaultWarehouse The default {@link Warehouse} to be used if the provided warehouse is not valid.
 	 * @return The selected {@link Warehouse}.
 	 * @throws OBException If the organization has no available warehouses.
 	 */
-	private static Warehouse getWarehouse(Warehouse warehouse, Organization selectedOrg, Warehouse selectedWarehouse,
+	private static Warehouse getWarehouse(Warehouse warehouse, Organization selectedOrg,
 			Warehouse defaultWarehouse) {
+		Warehouse selectedWarehouse = null;
 		List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg);
 		// if warehouse is valid, select
 		if (warehouse != null)

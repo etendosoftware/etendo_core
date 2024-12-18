@@ -33,10 +33,14 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
 
   private static final String HS256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN SECRET KEY-----uKOQOkfQPEmFs7CKQhT9UJNQ5DHEZmnBxU/2f5x06YE=-----END SECRET KEY-----\",\"public-key\":\"\"}";
   private static final String ES256_PRIVATE_KEY_MOCK = "{\"private-key\":\"-----BEGIN PRIVATE KEY-----MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgs6Wr9OstUyGI3WIdXUGrx4/DA87e3dst93f7p5NVGSmhRANCAASgaQjofAzCf93v4qs+Z9ou5g74gP/B9Uxn8inJ8/0rShFdV7/60B8EeZxPiiTTe1zvkl9V/5IRkQkXIJrmY4UI-----END PRIVATE KEY-----\",\"public-key\":\"-----BEGIN PUBLIC KEY-----MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoGkI6HwMwn/d7+KrPmfaLuYO+ID/wfVMZ/IpyfP9K0oRXVe/+tAfBHmcT4ok03tc75JfVf+SEZEJFyCa5mOFCA==-----END PUBLIC KEY-----\"}";
+  private static final String HS256_PRIVATE_KEY_MOCK_LEGACY = "*z8iR8Aujg{G-$lPz]+H7U.pv21|P1H=vGRnL[K+7_07@Bq\"~A},AlS^;}60dOq-";
 
   private static final String ENCRYPTION_ALGORITHM_PREFERENCE = "SMFSWS_EncryptionAlgorithm";
   private static final String ENCRYPTION_ALGORITHM_HS256 = "HS256";
   private static final String ENCRYPTION_ALGORITHM_ES256 = "ES256";
+  public static final String ORGANIZATION = "organization";
+  public static final String USER = "user";
+  public static final String ROLE = "role";
 
   /**
    * Sets up the test environment.
@@ -101,9 +105,9 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
     DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
 
-    assertEquals(user.getId(), decodedToken.getClaim("user").asString());
-    assertEquals(role.getId(), decodedToken.getClaim("role").asString());
-    assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
+    assertEquals(user.getId(), decodedToken.getClaim(USER).asString());
+    assertEquals(role.getId(), decodedToken.getClaim(ROLE).asString());
+    assertEquals(org.getId(), decodedToken.getClaim(ORGANIZATION).asString());
   }
 
   /**
@@ -121,9 +125,9 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
     DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
 
-    assertEquals(user.getId(), decodedToken.getClaim("user").asString());
-    assertEquals(role.getId(), decodedToken.getClaim("role").asString());
-    assertEquals(org.getId(), decodedToken.getClaim("organization").asString());
+    assertEquals(user.getId(), decodedToken.getClaim(USER).asString());
+    assertEquals(role.getId(), decodedToken.getClaim(ROLE).asString());
+    assertEquals(org.getId(), decodedToken.getClaim(ORGANIZATION).asString());
   }
 
   /**
@@ -139,6 +143,50 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
   }
 
   /**
+   * Test the generation and decoding of a token with the ES256 algorithm throws an exception when
+   * the token is invalid.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testLegacyPrivKeyES256() throws Exception {
+    configSWSConfig(HS256_PRIVATE_KEY_MOCK_LEGACY);
+    configAlgorithmPreference(ENCRYPTION_ALGORITHM_ES256);
+    User user = OBContext.getOBContext().getUser();
+    Role role = OBContext.getOBContext().getRole();
+    Organization org = OBContext.getOBContext().getCurrentOrganization();
+    Warehouse warehouse = user.getDefaultWarehouse();
+
+    String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
+    DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
+
+    assertEquals(user.getId(), decodedToken.getClaim(USER).asString());
+    assertEquals(role.getId(), decodedToken.getClaim(ROLE).asString());
+    assertEquals(org.getId(), decodedToken.getClaim(ORGANIZATION).asString());
+  }
+
+  /**
+   * Test the generation and decoding of a token with the HS256 algorithm.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void testLegacyPrivKeyHS256() throws Exception {
+    configSWSConfig(HS256_PRIVATE_KEY_MOCK_LEGACY);
+    configAlgorithmPreference(ENCRYPTION_ALGORITHM_HS256);
+    User user = OBContext.getOBContext().getUser();
+    Role role = OBContext.getOBContext().getRole();
+    Organization org = OBContext.getOBContext().getCurrentOrganization();
+    Warehouse warehouse = user.getDefaultWarehouse();
+
+    String token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
+    DecodedJWT decodedToken = SecureWebServicesUtils.decodeToken(token);
+
+    assertEquals(user.getId(), decodedToken.getClaim(USER).asString());
+    assertEquals(role.getId(), decodedToken.getClaim(ROLE).asString());
+    assertEquals(org.getId(), decodedToken.getClaim(ORGANIZATION).asString());
+  }
+  /**
    * Cleans up the test environment.
    */
   @After
@@ -153,7 +201,9 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
       Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
           .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE)).add(Restrictions.eq(Preference.PROPERTY_SELECTED, true))
           .uniqueResult();
-      OBDal.getInstance().remove(pref);
+      if(pref != null) {
+        OBDal.getInstance().remove(pref);
+      }
 
       OBDal.getInstance().flush();
       OBDal.getInstance().commitAndClose();
