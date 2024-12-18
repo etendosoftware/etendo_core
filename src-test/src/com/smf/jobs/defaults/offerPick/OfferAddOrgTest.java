@@ -28,6 +28,8 @@ import org.openbravo.model.pricing.priceadjustment.OrganizationFilter;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 import org.hibernate.Session;
 
+import com.smf.jobs.defaults.Utility;
+
 /**
  * Test class for the {@link OfferAddOrg} functionality.
  * This class contains unit tests to verify the behavior of the OfferAddOrg class,
@@ -44,8 +46,6 @@ import org.hibernate.Session;
  */
 @ExtendWith(MockitoExtension.class)
 public class OfferAddOrgTest {
-
-  private static final String TEST_ID = "testId" ;
 
 
   @Mock
@@ -97,10 +97,10 @@ public class OfferAddOrgTest {
 
       JSONArray selectedLines = new JSONArray();
       JSONObject orgJson = new JSONObject();
-      orgJson.put("id", TEST_ID);
+      orgJson.put("id", Utility.TEST_ID);
       selectedLines.put(orgJson);
 
-      when(obDal.getProxy(eq(Organization.ENTITY_NAME), eq(TEST_ID))).thenReturn(organization);
+      when(obDal.getProxy(eq(Organization.ENTITY_NAME), eq(Utility.TEST_ID))).thenReturn(organization);
 
       OBProvider obProvider = mock(OBProvider.class);
       OrganizationFilter mockOrgFilter = mock(OrganizationFilter.class);
@@ -141,7 +141,7 @@ public class OfferAddOrgTest {
       JSONArray selectedLines = new JSONArray();
       for (int i = 0; i < 150; i++) {
         JSONObject orgJson = new JSONObject();
-        orgJson.put("id", TEST_ID + i);
+        orgJson.put("id", Utility.TEST_ID + i);
         selectedLines.put(orgJson);
       }
 

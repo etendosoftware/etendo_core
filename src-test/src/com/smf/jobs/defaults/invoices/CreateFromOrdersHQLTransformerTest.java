@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.smf.jobs.defaults.Utility;
+
 /**
  * Unit test class for {@link CreateFromOrdersHQLTransformer}.
  * This class contains test cases to verify the behavior of the HQL query transformer
@@ -27,11 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
  */
 @ExtendWith(MockitoExtension.class)
 public class CreateFromOrdersHQLTransformerTest {
-
-  public static final String QUERY_ORDERS_WITHOUT_TAX = "SELECT * FROM Orders WHERE includeTax = 'N'";
-  public static final String LINES_INCLUDE_TAXES = "linesIncludeTaxes";
-  public static final String TRUE = "true";
-
 
   private CreateFromOrdersHQLTransformer transformer;
   private String baseHqlQuery;
@@ -55,7 +52,7 @@ public class CreateFromOrdersHQLTransformerTest {
   @Test
   void testTransformHqlQueryWhenLinesIncludeTaxesIsTrue() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put(LINES_INCLUDE_TAXES, TRUE);
+    requestParameters.put(Utility.LINES_INCLUDE_TAXES, Utility.TRUE);
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
@@ -71,12 +68,12 @@ public class CreateFromOrdersHQLTransformerTest {
   @Test
   void testTransformHqlQueryWhenLinesIncludeTaxesIsFalse() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put(LINES_INCLUDE_TAXES, "false");
+    requestParameters.put(Utility.LINES_INCLUDE_TAXES, "false");
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
 
-    Assertions.assertEquals(QUERY_ORDERS_WITHOUT_TAX, result);
+    Assertions.assertEquals(Utility.QUERY_ORDERS_WITHOUT_TAX, result);
   }
 
   /**
@@ -91,7 +88,7 @@ public class CreateFromOrdersHQLTransformerTest {
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
 
-    Assertions.assertEquals(QUERY_ORDERS_WITHOUT_TAX, result);
+    Assertions.assertEquals(Utility.QUERY_ORDERS_WITHOUT_TAX, result);
   }
 
   /**
@@ -104,7 +101,7 @@ public class CreateFromOrdersHQLTransformerTest {
     String queryWithMultipleReplacements =
         "SELECT * FROM Orders WHERE includeTax = @linesIncludeTaxes@ AND otherField = @linesIncludeTaxes@";
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put(LINES_INCLUDE_TAXES, TRUE);
+    requestParameters.put(Utility.LINES_INCLUDE_TAXES, Utility.TRUE);
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     String result = transformer.transformHqlQuery(queryWithMultipleReplacements, requestParameters, queryNamedParameters);
@@ -120,12 +117,12 @@ public class CreateFromOrdersHQLTransformerTest {
   @Test
   void testTransformHqlQueryWithInvalidBooleanValue() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put(LINES_INCLUDE_TAXES, "invalid_boolean");
+    requestParameters.put(Utility.LINES_INCLUDE_TAXES, "invalid_boolean");
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
 
-    Assertions.assertEquals(QUERY_ORDERS_WITHOUT_TAX, result);
+    Assertions.assertEquals(Utility.QUERY_ORDERS_WITHOUT_TAX, result);
   }
 
   /**
@@ -135,7 +132,7 @@ public class CreateFromOrdersHQLTransformerTest {
   @Test
   void testTransformHqlQueryWithEmptyQuery() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put(LINES_INCLUDE_TAXES, TRUE);
+    requestParameters.put(Utility.LINES_INCLUDE_TAXES, Utility.TRUE);
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     String result = transformer.transformHqlQuery("", requestParameters, queryNamedParameters);
@@ -151,7 +148,7 @@ public class CreateFromOrdersHQLTransformerTest {
   @Test
   void testTransformHqlQueryWithNullQuery() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put(LINES_INCLUDE_TAXES, TRUE);
+    requestParameters.put(Utility.LINES_INCLUDE_TAXES, Utility.TRUE);
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     assertThrows(NullPointerException.class, () ->

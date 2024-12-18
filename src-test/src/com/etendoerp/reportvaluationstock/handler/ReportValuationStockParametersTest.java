@@ -34,8 +34,6 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 @RunWith(MockitoJUnitRunner.class)
 public class ReportValuationStockParametersTest {
 
-  private static final String TEST_ORG_ID = "testOrgId";
-
 
   @Mock
   private ReportDefinition mockProcess;
@@ -109,7 +107,7 @@ public class ReportValuationStockParametersTest {
     JSONObject jsonContent = new JSONObject();
     JSONObject params = new JSONObject();
 
-    params.put("AD_Org_ID", TEST_ORG_ID);
+    params.put("AD_Org_ID", TestUtils.TEST_ORG_ID);
     params.put("Date", "invalid-date");
     jsonContent.put("_params", params);
 

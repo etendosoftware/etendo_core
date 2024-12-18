@@ -53,9 +53,6 @@ import com.smf.jobs.Data;
 @RunWith(MockitoJUnitRunner.class)
 public class ProcessInvoicesTest {
 
-  public static final String SUCCESS = "Success";
-  public static final String SHOULD_RETURN_SUCCESS_TYPE = "Should return success type";
-
 
   @Spy
   @InjectMocks
@@ -123,7 +120,7 @@ public class ProcessInvoicesTest {
     String invoiceId = "test-invoice-id";
     String docAction = "CO";
     OBError expectedResult = new OBError();
-    expectedResult.setType(SUCCESS);
+    expectedResult.setType(Utility.SUCCESS);
     expectedResult.setMessage("Invoice processed successfully");
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -148,7 +145,7 @@ public class ProcessInvoicesTest {
           null
       );
 
-      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
       assertEquals("Should return correct message", "Invoice processed successfully", result.getMessage());
     }
   }
@@ -168,7 +165,7 @@ public class ProcessInvoicesTest {
     String voidAcctDate = "2024-01-15";
 
     OBError expectedResult = new OBError();
-    expectedResult.setType(SUCCESS);
+    expectedResult.setType(Utility.SUCCESS);
 
     SimpleDateFormat jsonDateFormat = JsonUtils.createDateFormat();
     Date testDate = jsonDateFormat.parse(voidDate);
@@ -196,7 +193,7 @@ public class ProcessInvoicesTest {
           voidAcctDate
       );
 
-      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
     }
   }
 
@@ -234,7 +231,7 @@ public class ProcessInvoicesTest {
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
     OBError successResult = new OBError();
-    successResult.setType(SUCCESS);
+    successResult.setType(Utility.SUCCESS);
 
     // Instead of using doReturn().when(), use reflection
     when(getInputContentsMethod.invoke(processInvoices, Invoice.class))
@@ -257,7 +254,7 @@ public class ProcessInvoicesTest {
 
       ActionResult result = processInvoices.action(parameters, isStopped);
 
-      assertEquals(SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Result.Type.SUCCESS, result.getType());
     }
   }
 
@@ -276,7 +273,7 @@ public class ProcessInvoicesTest {
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
     OBError successResult = new OBError();
-    successResult.setType(SUCCESS);
+    successResult.setType(Utility.SUCCESS);
 
     try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
          MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {

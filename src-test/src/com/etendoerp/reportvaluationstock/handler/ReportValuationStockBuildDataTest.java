@@ -65,13 +65,7 @@ public class ReportValuationStockBuildDataTest {
   private OrganizationStructureProvider mockOsp;
 
   private Method buildDataMethod;
-  private static final String TEST_DATE = "2024-01-01";
-  private static final String TEST_ORG_ID = "testOrgId";
-  private static final String TEST_WAREHOUSE_ID = "testWarehouseId";
-  private static final String TEST_CATEGORY_ID = "testCategoryId";
-  private static final String TEST_CURRENCY_ID = "testCurrencyId";
-  private static final String TEST_CLIENT_ID = "testClientId";
-  private static final String WAREHOUSE_NOT_IN_LE = "WarehouseNotInLE";
+
 
 
   /**
@@ -95,10 +89,10 @@ public class ReportValuationStockBuildDataTest {
     );
     buildDataMethod.setAccessible(true);
 
-    when(mockClient.getId()).thenReturn(TEST_CLIENT_ID);
+    when(mockClient.getId()).thenReturn(TestUtils.TEST_CLIENT_ID);
 
     Set<String> orgTree = new HashSet<>();
-    orgTree.add(TEST_ORG_ID);
+    orgTree.add(TestUtils.TEST_ORG_ID);
   }
 
   /**
@@ -130,9 +124,9 @@ public class ReportValuationStockBuildDataTest {
       when(mockOsp.getLegalEntity(any(Organization.class))).thenReturn(null);
 
       OBError mockError = mock(OBError.class);
-      when(mockError.getMessage()).thenReturn(WAREHOUSE_NOT_IN_LE);
+      when(mockError.getMessage()).thenReturn(TestUtils.WAREHOUSE_NOT_IN_LE);
       obMessageUtilsMock.when(() -> OBMessageUtils.messageBD(anyString()))
-          .thenReturn(WAREHOUSE_NOT_IN_LE);
+          .thenReturn(TestUtils.WAREHOUSE_NOT_IN_LE);
       obMessageUtilsMock.when(() -> OBMessageUtils.translateError(anyString()))
           .thenReturn(mockError);
 
@@ -140,18 +134,18 @@ public class ReportValuationStockBuildDataTest {
         buildDataMethod.invoke(
             reportValuationStock,
             vars,
-            TEST_DATE,
-            TEST_ORG_ID,
-            TEST_WAREHOUSE_ID,
-            TEST_CATEGORY_ID,
-            TEST_CURRENCY_ID,
+            TestUtils.TEST_DATE,
+            TestUtils.TEST_ORG_ID,
+            TestUtils.TEST_WAREHOUSE_ID,
+            TestUtils.TEST_CATEGORY_ID,
+            TestUtils.TEST_CURRENCY_ID,
             false,
             parameters
         );
       } catch (Exception e) {
         assertTrue("Expected ServletException", e.getCause() instanceof ServletException);
         assertTrue("Expected correct error message",
-            StringUtils.contains(e.getCause().getMessage(), WAREHOUSE_NOT_IN_LE));
+            StringUtils.contains(e.getCause().getMessage(), TestUtils.WAREHOUSE_NOT_IN_LE));
       }
     }
   }

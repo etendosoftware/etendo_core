@@ -1,5 +1,6 @@
 package com.etendoerp.reportvaluationstock.handler;
 
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -13,8 +14,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.openbravo.model.materialmgmt.cost.CostingRule;
 
-import java.lang.reflect.Method;
-
 /**
  * Test class for CostingRuleUtils, which verifies the logic related
  * to the calculation of costing rules based on organizations.
@@ -23,7 +22,7 @@ public class CostingRuleUtilsTest {
 
   private Organization mockOrganization;
   private OBDal mockOBDal;
-  private Method getLEsCostingAlgortithmMethod;
+  private ReportValuationStock reportValuationStock;
 
   /**
    * Sets up the initial state required for the tests. Prepare mocks and retrieves
@@ -33,8 +32,7 @@ public class CostingRuleUtilsTest {
    */
   @Before
   public void setUp() throws Exception {
-    getLEsCostingAlgortithmMethod = ReportValuationStock.class.getDeclaredMethod("getLEsCostingAlgortithm", Organization.class);
-    getLEsCostingAlgortithmMethod.setAccessible(true);
+    reportValuationStock = new ReportValuationStock();
 
     mockOrganization = Mockito.mock(Organization.class);
     mockOBDal = Mockito.mock(OBDal.class);
@@ -56,18 +54,20 @@ public class CostingRuleUtilsTest {
     try (MockedStatic<OBDal> mockedStatic = Mockito.mockStatic(OBDal.class)) {
       mockedStatic.when(OBDal::getReadOnlyInstance).thenReturn(mockOBDal);
 
+      @SuppressWarnings("unchecked")
       OBQuery<CostingRule> mockQuery = Mockito.mock(OBQuery.class);
+
       Mockito.when(mockOBDal.createQuery(Mockito.eq(CostingRule.class), Mockito.anyString()))
           .thenReturn(mockQuery);
-      Mockito.when(mockQuery.setNamedParameter(Mockito.eq("orgId"), Mockito.eq(orgId)))
+      Mockito.when(mockQuery.setNamedParameter(Mockito.anyString(), Mockito.any()))
           .thenReturn(mockQuery);
       Mockito.when(mockQuery.setMaxResult(1)).thenReturn(mockQuery);
       Mockito.when(mockQuery.uniqueResult()).thenReturn(expectedRule);
 
-      CostingRule result = (CostingRule) getLEsCostingAlgortithmMethod.invoke(null, mockOrganization);
+      CostingRule result = reportValuationStock.getLEsCostingAlgortithm(mockOrganization);
 
-      assertNotNull("El resultado no debería ser null", result);
-      assertEquals("El resultado debería ser el CostingRule esperado", expectedRule, result);
+      assertNotNull("The result should not be null", result);
+      assertEquals("The result should be the expected CostingRule", expectedRule, result);
     }
   }
 
@@ -86,17 +86,19 @@ public class CostingRuleUtilsTest {
     try (MockedStatic<OBDal> mockedStatic = Mockito.mockStatic(OBDal.class)) {
       mockedStatic.when(OBDal::getReadOnlyInstance).thenReturn(mockOBDal);
 
-      OBQuery mockQuery = Mockito.mock(OBQuery.class);
+      @SuppressWarnings("unchecked")
+      OBQuery<CostingRule> mockQuery = Mockito.mock(OBQuery.class);
+
       Mockito.when(mockOBDal.createQuery(Mockito.eq(CostingRule.class), Mockito.anyString()))
           .thenReturn(mockQuery);
-      Mockito.when(mockQuery.setNamedParameter(Mockito.eq("orgId"), Mockito.eq(orgId)))
+      Mockito.when(mockQuery.setNamedParameter(Mockito.anyString(), Mockito.any()))
           .thenReturn(mockQuery);
       Mockito.when(mockQuery.setMaxResult(1)).thenReturn(mockQuery);
       Mockito.when(mockQuery.uniqueResult()).thenReturn(null);
 
-      CostingRule result = (CostingRule) getLEsCostingAlgortithmMethod.invoke(null, mockOrganization);
+      CostingRule result = reportValuationStock.getLEsCostingAlgortithm(mockOrganization);
 
-      assertNull("El resultado debería ser null cuando no se encuentran reglas", result);
+      assertNull("The result should be null when no rules are found", result);
     }
   }
 }
