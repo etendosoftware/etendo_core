@@ -155,7 +155,8 @@ spec:
                             dir(REPO_NAME) {
                                 sh "git checkout ${GIT_COMMIT}"
                                 sh """
-                                echo "context.name=${CONTEXT_NAME}\n
+                                echo "\n
+                                context.name=${CONTEXT_NAME}\n
                                 bbdd.rdbms=ORACLE\n
                                 bbdd.driver=oracle.jdbc.driver.OracleDriver\n
                                 bbdd.url=jdbc:oracle:thin:@db19c-oracle-db.oracle:1521:orclcdb?oracle.net.disableOob=true\n
@@ -187,7 +188,7 @@ spec:
                             sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
                             sh "sleep 1m"
                             echo 'Build of Etendo Core Finished'
-                            env.STATUSTEST = "1" //flag to indicate if any test failed
+                            env.STATUSTEST = "1" // flag to indicate if any test failed
                             env.STATUSBUILD = "1"
                         } catch (Exception e) {
                             echo 'Build of Etendo Core FAILED'
@@ -201,7 +202,7 @@ spec:
             }
         }
 //___________________________________________________________________________________________
-// ------------------------------ WEB SERVICE TEST ------------------------------------------
+// ------------------------------ WEB SERVICES TESTS ----------------------------------------
         stage ('Web Service Test Suite'){
             when {
                 expression {
@@ -215,41 +216,38 @@ spec:
                             try {
                                 sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
                                 sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
-                                publishHTML([
-                                    allowMissing: true,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'WEB SERVICES TESTS REPORT',
-                                    reportTitles: ''
-                                ])
                             } catch (Exception e) {
-                                echo '....TEST WEBSERVICE FAILED....'
+                                echo '....WEB SERVICES TESTS FAILED....'
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Web Service Test Failed')
+                                unstable('Web Service Tests Failed')
                                 env.STATUSTEST = "0"
-                                publishHTML([
-                                    allowMissing: false,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'WEBSERVICES TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                            } finally {
+                                if (fileExists('build/reports/tests/test/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'WEBSERVICES TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
+                                }
+                                sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
+                                sh './gradlew --stop'
                             }
                         }
                     }
-                    sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
-                    sh './gradlew --stop'
                 }
             }
         }
-//___________________________________________________________________________________________
-// ------------------------------- STANDALONE TEST ------------------------------------------
-        stage ('Standalone Test Suite'){
+// __________________________________________________________________________________________
+// ------------------------------ com.smf.* TESTS ------------------------------------------
+        stage ('Core Test Suite') { // MARK: com.smf.* Test Suite
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -260,31 +258,30 @@ spec:
                     script {
                         dir(REPO_NAME) {
                             try {
-                                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
-                                publishHTML([
-                                    allowMissing: true,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'STANDALONE TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                                echo "--------------- Running CoreTestSuite ---------------"
+                                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
+                                echo "--------------- CoreTestSuite Successful ---------------"
                             } catch (Exception e) {
-                                echo '....TEST STANDALONE FAILED....'
+                                echo "--------------- CoreTestSuite Failed ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Standalone Test Failed!')
+                                unstable('CoreTestSuite Failed')
                                 env.STATUSTEST = "0"
-                                publishHTML([
-                                    allowMissing: false,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'STANDALONE TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                            } finally {
+                                if (fileExists("build/reports/tests/test/")) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'com.smf.* TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of com.smf.* tests does not exist. Skipping HTML report publishing."
+                                }
                             }
                         }
                     }
@@ -292,8 +289,49 @@ spec:
             }
         }
 //___________________________________________________________________________________________
-// ----------------------------------- SPOCK TEST -------------------------------------------
-        stage ('Spock Test') {
+// ------------------------------- STANDALONE TESTS -----------------------------------------
+        stage ('Standalone Test Suite') {
+            when {
+                expression {
+                    env.STATUSBUILD == "1"
+                }
+            }
+            steps {
+                container('compiler') {
+                    script {
+                        dir(REPO_NAME) {
+                            try {
+                                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info'
+                            } catch (Exception e) {
+                                echo '....STANDALONE TESTS FAILED....'
+                                echo 'Exception occurred: ' + e.toString()
+                                currentBuild.result = UNSTABLE
+                                unstable('Standalone Tests Failed!')
+                                env.STATUSTEST = "0"
+                            }  finally {
+                                if (fileExists('build/reports/tests/test/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'STANDALONE TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of Standalone tests does not exist. Skipping HTML report publishing."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+//___________________________________________________________________________________________
+// ----------------------------------- com.etendoerp.* TESTS -------------------------------------------
+        stage ('com.etendoerp.* Tests') {
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -305,30 +343,43 @@ spec:
                         dir(REPO_NAME) {
                             try {
                                 sh './gradlew test --tests "com.etendoerp.*" --info'
-                                publishHTML([
-                                    allowMissing: true,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/spock-reports/',
-                                    reportFiles: '*.html',
-                                    reportName: 'SPOCK TESTS REPORT',
-                                    reportTitles: ''
-                                ])
                             } catch (Exception e) {
-                                echo '....TEST SPOCK FAILED....'
+                                echo '....com.etendoerp.* TESTS FAILED....'
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Spock Test failed!')
+                                unstable('com.etendoerp.* Tests failed!')
                                 env.STATUSTEST = "0"
-                                publishHTML([
-                                    allowMissing: false,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/spock-reports/',
-                                    reportFiles: '*.html',
-                                    reportName: 'SPOCK TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                            }  finally {
+                                if (fileExists('build/spock-reports/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/spock-reports/',
+                                        reportFiles: '*.html',
+                                        reportName: 'com.etendoerp.* SPOCK TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/spock-reports"
+                                } else {
+                                    echo "Spock report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
+                                }
+
+                                if (fileExists('build/reports/tests/test/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'com.etendoerp.* TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of com.etendoerp.* does not exist. Skipping HTML report publishing."
+                                }
+
                             }
                         }
                     }

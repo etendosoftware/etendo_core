@@ -181,7 +181,8 @@ spec:
 
                 echo "--------------- Configure gradle.properties ---------------"
                 sh """
-                echo -e "context.name=${CONTEXT_NAME}\n
+                echo "\n
+                context.name=${CONTEXT_NAME}\n
                 bbdd.sid=${BBDD_SID}\n
                 bbdd.port=${BBDD_PORT}\n
                 bbdd.systemUser=${BBDD_SYSTEMUSER}\n
@@ -238,7 +239,7 @@ spec:
       }
     }
 // __________________________________________________________________________________________
-// ------------------------------ WEB SERVICE TEST ------------------------------------------
+// ------------------------------ WEB SERVICES TESTS ----------------------------------------
     stage ('Web Service Test Suite') { // MARK: Web Service Test Suite
       when {
         expression {
@@ -253,35 +254,86 @@ spec:
               try {
                 echo "--------------- Running WebserviceTestSuite ---------------"
                 sh "./gradlew test --tests org.openbravo.test.WebserviceTestSuite --info"
-                sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
+                sh "mv build/jacoco/test.exec build/jacoco/test0.exec"
                 echo "--------------- WebserviceTestSuite Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
                 echo "--------------- WebserviceTestSuite Failed ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('WebserviceTestSuite Failed')
+                unstable('WebservicesTestSuite Failed')
                 env.STATUSTEST = "0"
               } finally {
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'WEBSERVICES TESTS REPORT',
-                  reportTitles: ''
-                ])
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'WEBSERVICES TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                 echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
+                }
+                sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
+                sh "./gradlew --stop"
               }
-              sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
-              sh "./gradlew --stop"
             }
           }
         }
       }
     }
 // __________________________________________________________________________________________
-// ------------------------------- STANDALONE TEST ------------------------------------------
+// ------------------------------ com.smf.* TESTS ------------------------------------------
+    stage ('Core Test Suite') { // MARK: CoreTestSuite Test Suite
+      when {
+        expression {
+          env.STATUSBUILD == "1"
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            dir(REPO_NAME) {
+              try {
+                echo "--------------- Running CoreTestSuite ---------------"
+                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
+                sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
+                echo "--------------- CoreTestSuite Successful ---------------"
+                currentBuild.result = SUCCESS
+              } catch (Exception e) {
+                echo "--------------- CoreTestSuite Failed ---------------"
+                echo 'Exception occurred: ' + e.toString()
+                currentBuild.result = UNSTABLE
+                unstable('CoreTestSuite Failed')
+                env.STATUSTEST = "0"
+              } finally {
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'com.smf.* TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of com.smf.* tests does not exist. Skipping HTML report publishing."
+                }
+
+              }
+            }
+          }
+        }
+      }
+    }
+// __________________________________________________________________________________________
+// ------------------------------- STANDALONE TESTS -----------------------------------------
     stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
       when {
         expression {
@@ -305,15 +357,20 @@ spec:
                 unstable('StandaloneTestSuite Failed')
                 env.STATUSTEST = "0"
               } finally {
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'STANDALONE TESTS REPORT',
-                  reportTitles: ''
-                ])
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'STANDALONE TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of Standalone tests does not exist. Skipping HTML report publishing."
+                }
               }
             }
           }
@@ -321,8 +378,8 @@ spec:
       }
     }
 // __________________________________________________________________________________________
-// ----------------------------------- SPOCK TEST -------------------------------------------
-    stage ('Spock Test') { // MARK: Spock Test
+// ----------------------------------- com.etendoerp.* TESTS --------------------------------
+    stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Test
       when {
         expression {
           env.STATUSBUILD == "1"
@@ -333,28 +390,48 @@ spec:
           script {
             dir(REPO_NAME) {
               try {
-                echo "--------------- Running Spock Test ---------------"
+                echo "--------------- Running com.etendoerp.* Tests ---------------"
                 sh "./gradlew test --tests \"com.etendoerp.*\" --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test3.exec"
                 sh "./gradlew --stop"
-                echo "--------------- Spock Test Successful ---------------"
+                echo "--------------- com.etendoerp.* Tests Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo "--------------- Spock Test Failed ---------------"
+                echo "--------------- com.etendoerp.* Tests Failed ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('Spock Test failed!')
+                unstable('com.etendoerp.* Tests failed!')
                 env.STATUSTEST = "0"
               } finally {
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/spock-reports/',
-                  reportFiles: '*.html',
-                  reportName: 'SPOCK TESTS REPORT',
-                  reportTitles: ''
-                ])
+                if (fileExists('build/spock-reports/')) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/spock-reports/',
+                    reportFiles: '*.html',
+                    reportName: 'com.etendoerp.* SPOCK TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/spock-reports"
+                } else {
+                  echo "Spock report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
+                }
+
+                if (fileExists('build/reports/tests/test/')) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'com.etendoerp.* TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
+                }
               }
             }
           }
@@ -399,8 +476,8 @@ spec:
         }
       }
       steps {
-        script {
-          container('compiler') {
+        container('compiler') {
+          script {
             try {
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running SonarQube Analysis\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
               echo "--------------- Running SonarQube ---------------"
@@ -440,23 +517,31 @@ spec:
         }
       }
       steps {
-        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Deploying Snapshot\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         container('compiler') {
           script {
-            echo "--------------- Running Deploy Snapshot ---------------"
-            dir(REPO_NAME) {
-              withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
-                withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh """
-                    git config user.name "${GIT_USERNAME}"
-                    git config user.email "${GIT_USERNAME}"
-                    """
-                    sh "echo version.ts=\$(date +\"%s\") > version.properties"
-                    sh "./gradlew publishCoreJar --info"
-                    sh "git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\""
-                    sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git push ${GIT_URL} \"v\$(grep version.ts version.properties|cut -c 11-)\""
+            try {
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Deploying Snapshot\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+              echo "--------------- Running Deploy Snapshot ---------------"
+              dir(REPO_NAME) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
+                  withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                      sh """
+                      git config user.name "${GIT_USERNAME}"
+                      git config user.email "${GIT_USERNAME}"
+                      """
+                      sh "echo version.ts=\$(date +\"%s\") > version.properties"
+                      sh "./gradlew publishCoreJar --info"
+                      sh "git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\""
+                      sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git push ${GIT_URL} \"v\$(grep version.ts version.properties|cut -c 11-)\""
+                  }
                 }
               }
+            } catch (Exception e) {
+              env.ERROR_MESSAGE = "Deploy Snapshot Failed"
+              echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+              echo "Exception occurred: " + e.toString()
+              currentBuild.result = FAILED
+              error(env.ERROR_MESSAGE)
             }
           }
         }
