@@ -21,6 +21,7 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang.StringUtils;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.cost.LCDistributionAlgorithm;
 import org.openbravo.model.materialmgmt.cost.LandedCostType;
@@ -34,12 +35,10 @@ public class SL_LandedCost_Cost_Type extends SimpleCallout {
 
     String landedCostTypeId = info.getStringParameter(LANDED_COST_TYPE, null);
 
-    if (landedCostTypeId != null && !landedCostTypeId.isEmpty()) {
+    if (StringUtils.isNotEmpty(landedCostTypeId)) {
       LandedCostType landedCostType = OBDal.getInstance().get(LandedCostType.class, landedCostTypeId);
-
-      if (landedCostType != null && landedCostType.getLandedCostDistributionAlgorithm() != null) {
+      if (landedCostType != null) {
         LCDistributionAlgorithm distributionAlgorithm = landedCostType.getLandedCostDistributionAlgorithm();
-
         if (distributionAlgorithm != null) {
           info.addResult(DISTRIBUTION_ALGORITHM, distributionAlgorithm.getId());
         }
