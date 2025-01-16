@@ -21,9 +21,30 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import javax.servlet.ServletException;
 
+import org.openbravo.dal.service.OBDal;
+import org.openbravo.model.materialmgmt.cost.LCDistributionAlgorithm;
+import org.openbravo.model.materialmgmt.cost.LandedCostType;
+
 public class SL_LandedCost_Cost_Type extends SimpleCallout {
+  private static final String LANDED_COST_TYPE = "inpmLcTypeId";
+  private static final String DISTRIBUTION_ALGORITHM = "inpmLcDistributionAlgId";
+
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
+
+    String landedCostTypeId = info.getStringParameter(LANDED_COST_TYPE, null);
+
+    if (landedCostTypeId != null && !landedCostTypeId.isEmpty()) {
+      LandedCostType landedCostType = OBDal.getInstance().get(LandedCostType.class, landedCostTypeId);
+
+      if (landedCostType != null && landedCostType.getLandedCostDistributionAlgorithm() != null) {
+        LCDistributionAlgorithm distributionAlgorithm = landedCostType.getLandedCostDistributionAlgorithm();
+
+        if (distributionAlgorithm != null) {
+          info.addResult(DISTRIBUTION_ALGORITHM, distributionAlgorithm.getId());
+        }
+      }
+    }
     // When Landed Cost Type changes, empty the Invoice Line so the selector can recalculate again
     // the Invoice Lines that must be displayed
     info.addResult("inpcInvoicelineId", "");

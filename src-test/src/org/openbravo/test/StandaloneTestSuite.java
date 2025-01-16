@@ -36,6 +36,7 @@ import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
+import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.financial.FinancialUtilsTest;
@@ -393,7 +394,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ProcessUtilsTest.class,
 
     // Toolbar print hook Test
-    PrintControllerHookTest.class
+    PrintControllerHookTest.class,
+
+    // Landed Cost Type Test
+    LandedCostTypeTest.class
 })
 public class StandaloneTestSuite {
 }
