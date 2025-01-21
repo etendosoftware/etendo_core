@@ -3,6 +3,7 @@ package com.smf.test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import com.smf.jobs.TestActionHookCall;
 import com.smf.jobs.defaults.CloneOrderHookTest;
 import com.smf.jobs.defaults.ProcessInvoicesTest;
 import com.smf.jobs.defaults.ProcessOrdersDefaultsTest;
@@ -41,6 +42,8 @@ import com.smf.jobs.defaults.provider.JobsComponentProviderTest;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    // SMF Jobs
+    TestActionHookCall.class,
 
     // SMF Jobs defaults
     CreateFromOrdersHQLTransformerTest.class,
