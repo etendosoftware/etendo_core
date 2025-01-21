@@ -39,6 +39,7 @@ import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
+import org.openbravo.event.LandedCostDuplicateReceiptValidatorTest;
 import org.openbravo.financial.FinancialUtilsTest;
 import org.openbravo.scheduling.ProcessSchedulingTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
@@ -397,7 +398,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     PrintControllerHookTest.class,
 
     // Landed Cost Type Test
-    LandedCostTypeTest.class
+    LandedCostTypeTest.class,
+
+    // Landed Cost Receipt Test
+    LandedCostDuplicateReceiptValidatorTest.class
 })
 public class StandaloneTestSuite {
 }
