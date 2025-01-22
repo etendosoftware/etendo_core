@@ -48,6 +48,9 @@
   v_status M_Internal_Consumption.status%TYPE;
   v_name M_Internal_Consumption.name%TYPE;
   v_productname m_product.name%TYPE;
+  v_isacctle AD_OrgType.IsAcctLegalEntity%TYPE;
+  v_org_bule_id AD_Org.AD_Org_ID%TYPE;
+  v_available_period NUMBER:=0;
 BEGIN
   --  Update AD_PInstance
   IF (pinstance_id IS NOT NULL) THEN
@@ -134,6 +137,31 @@ BEGIN --BODY
     /**
     * Complete action: Create records on m_transaction and update status
     */
+
+    -- Check the period control is opened (only if it is legal entity with accounting)
+    -- Gets the BU or LE of the document
+    SELECT AD_GET_DOC_LE_BU('M_INTERNAL_CONSUMPTION', Record_ID, 'M_INTERNAL_CONSUMPTION_ID', 'LE')
+    INTO v_org_bule_id
+    FROM DUAL;
+      
+    SELECT AD_OrgType.IsAcctLegalEntity
+    INTO v_isacctle
+    FROM AD_OrgType, AD_Org
+    WHERE AD_Org.AD_OrgType_ID = AD_OrgType.AD_OrgType_ID
+    AND AD_Org.AD_Org_ID=v_org_bule_id;
+      
+    IF (v_isacctle='Y') THEN    
+      SELECT C_CHK_OPEN_PERIOD(v_Org_ID, v_MoveDate, NULL, NULL) 
+      INTO v_available_period
+      FROM DUAL;
+
+      IF (v_available_period<>1) THEN
+        IF (v_action <> 'RC') THEN
+           RAISE_APPLICATION_ERROR(-20000, '@PeriodNotAvailable@');
+        END IF;
+      END IF;
+    END IF;  
+
     DECLARE
       Cur_MoveLine RECORD;
     BEGIN
