@@ -201,9 +201,10 @@ public class ManageReservationActionHandler extends BaseProcessActionHandler {
         reservation.setMaterialMgmtReservationStockList(resStocks);
       }
 
-      final Boolean isAllocated = selectedLine.getString("allocated").equals(null) ? false
-          : selectedLine.getBoolean("allocated");
-      resStock.setAllocated(isAllocated == true);
+      if (resStock != null) {
+        final Boolean isAllocated = selectedLine.has("allocated") && !selectedLine.isNull(
+            "allocated") && selectedLine.getBoolean("allocated");
+        resStock.setAllocated(isAllocated);
 
       final BigDecimal qty = new BigDecimal(selectedLine.getString("quantity"));
       resStock.setQuantity(qty);
@@ -211,6 +212,7 @@ public class ManageReservationActionHandler extends BaseProcessActionHandler {
       OBDal.getInstance().save(resStock);
       OBDal.getInstance().save(reservation);
       OBDal.getInstance().flush();
+      }
     }
 
     removeNonSelectedLines(idList, reservation);
