@@ -51,6 +51,7 @@ import org.openbravo.service.db.DbUtility;
  */
 public class ManageReservationActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
+  private static final String STR_ALLOCATED = "allocated";
   private static final String strOrderLineTableId = "260";
   private static final String strReservationsTableId = "77264B07BB0E4FA483A07FB40C2E0FE0";
   private static final String strResStockTableId = "7BDAC914CA60418795E453BC0E8C89DC";
@@ -202,8 +203,8 @@ public class ManageReservationActionHandler extends BaseProcessActionHandler {
       }
 
       if (resStock != null) {
-        final Boolean isAllocated = selectedLine.has("allocated") && !selectedLine.isNull(
-            "allocated") && selectedLine.getBoolean("allocated");
+        final Boolean isAllocated = selectedLine.has(STR_ALLOCATED) && !selectedLine.isNull(
+            STR_ALLOCATED) && selectedLine.getBoolean(STR_ALLOCATED);
         resStock.setAllocated(isAllocated);
 
       final BigDecimal qty = new BigDecimal(selectedLine.getString("quantity"));
