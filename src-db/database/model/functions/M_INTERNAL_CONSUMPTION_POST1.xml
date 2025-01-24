@@ -151,9 +151,16 @@ BEGIN --BODY
     AND AD_Org.AD_Org_ID=v_org_bule_id;
       
     IF (v_isacctle='Y') THEN    
-      SELECT C_CHK_OPEN_PERIOD(v_Org_ID, v_MoveDate, NULL, NULL) 
+      SELECT COUNT(C_Period_ID)
       INTO v_available_period
-      FROM DUAL;
+      FROM C_Period
+      WHERE v_MoveDate>=STARTDATE AND v_MoveDate<ENDDATE+1
+	    AND EXISTS (SELECT 1
+                FROM C_PeriodControl
+                WHERE C_PeriodControl.C_Period_ID=C_Period.C_Period_ID
+                AND AD_Org_ID=AD_ORG_GETPERIODCONTROLALLOW(v_Org_ID)
+                AND PeriodStatus='O'
+                );
 
       IF (v_available_period<>1) THEN
         IF (v_action <> 'RC') THEN
