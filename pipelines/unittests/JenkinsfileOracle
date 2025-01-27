@@ -8,10 +8,10 @@ pipeline {
     environment {
         // gradle.properties variables
         CONTEXT_NAME        = 'etendo'
-        BBDD_SID            = 'ORCLCDB'
+        BBDD_SID            = 'orclsid'
         BBDD_PORT           = '1521'
         BBDD_SYSTEMUSER     = 'sys AS SYSDBA'
-        BBDD_SYSTEMPASS     = 'rEUC0GRpxA'
+        BBDD_SYSTEMPASS     = 'oraclepassword'
         BBDD_USER           = 'C##TAD'
         BBDD_PASSWORD       = 'tad'
         NEXUS_USER          = credentials('nexus-admin-user')
@@ -105,7 +105,9 @@ spec:
       image: etendo/oracle:19.3.0-ee
       env:
         - name: ORACLE_PWD
-          value: rEUC0GRpxA
+          value: oraclepassword
+        - name ORACLE_SID
+          value: orclsid
       ports:
         - name: oracle
           containerPort: 1521
