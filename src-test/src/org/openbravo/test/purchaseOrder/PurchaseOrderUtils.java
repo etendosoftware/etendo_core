@@ -33,6 +33,11 @@ import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.test.stockReservation.StockReservationTestUtils;
 
+/**
+ * Utility class for managing purchase orders, goods receipts, and invoices.
+ * Contains constants for common entities and methods to create and process documents.
+ * This class cannot be instantiated.
+ */
 public class PurchaseOrderUtils {
 
   // Constant identifiers for common test entities

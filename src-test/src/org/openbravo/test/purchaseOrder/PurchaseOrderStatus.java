@@ -37,16 +37,20 @@ import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.test.base.TestConstants;
 
+/**
+ * Test class for verifying purchase order status updates during order processing.
+ * Extends {@link WeldBaseTest} and uses dependency injection for utility access.
+ */
 public class PurchaseOrderStatus extends WeldBaseTest {
 
   @Inject
   private WeldUtils weldUtils;
 
   /**
-   * Sets up the test environment, initializing the OBContext and VariablesSecureApp.
+   * Initializes OBContext and secure app variables before each test.
    *
    * @throws Exception
-   *     if an error occurs during setup
+   *     if setup fails
    */
   @Override
   @Before
@@ -245,8 +249,8 @@ public class PurchaseOrderStatus extends WeldBaseTest {
       OBDal.getInstance().commitAndClose();
 
     } catch (Exception e) {
-      e.printStackTrace();
       OBDal.getInstance().rollbackAndClose();
+      Assert.fail(e.getMessage());
     }
   }
 
@@ -284,8 +288,8 @@ public class PurchaseOrderStatus extends WeldBaseTest {
       OBDal.getInstance().commitAndClose();
 
     } catch (Exception e) {
-      e.printStackTrace();
       OBDal.getInstance().rollbackAndClose();
+      Assert.fail(e.getMessage());
     }
   }
 
@@ -336,8 +340,8 @@ public class PurchaseOrderStatus extends WeldBaseTest {
       OBDal.getInstance().commitAndClose();
 
     } catch (Exception e) {
-      e.printStackTrace();
       OBDal.getInstance().rollbackAndClose();
+      Assert.fail(e.getMessage());
     } finally {
       if (TriggerHandler.getInstance().isDisabled()) {
         TriggerHandler.getInstance().enable();
