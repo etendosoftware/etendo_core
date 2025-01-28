@@ -788,40 +788,78 @@
                   v_DateDelivered:=Cur_InOut.MovementDate;
                 END IF;
               END IF;
-              
+
               -- stocked product
-              IF(Cur_InOutLine.M_Product_ID IS NOT NULL AND v_IsStocked=1) THEN
+              IF (Cur_InOutLine.M_Product_ID IS NOT NULL AND v_IsStocked=1) THEN
                 -- Update OrderLine (if C-, Qty is negative)
-                SELECT DOCSTATUS into v_DocStatus
+                SELECT DOCSTATUS, ISSOTRX INTO v_DocStatus, v_IsSOTrx
                 FROM C_ORDER
-                WHERE C_ORDER_ID = (SELECT C_ORDER_ID
+                WHERE C_ORDER_ID = (SELECT C_ORDER_ID 
                                     FROM C_ORDERLINE 
-                                    WHERE C_ORDERLINE_ID=Cur_InOutLine.C_OrderLine_ID);
-                IF (v_DocStatus = 'DR') THEN
-                  UPDATE C_ORDERLINE
-                    SET QtyDelivered=QtyDelivered + v_QtySO,
-                    DATEDELIVERED=(CASE WHEN (QtyDelivered + v_QtySO) > 0 THEN v_DateDelivered ELSE NULL END),
-                    Updated=now(),
-                    UpdatedBy=v_User
-                  WHERE C_OrderLine_ID=Cur_InOutLine.C_OrderLine_ID;
-                ELSE 
-                  UPDATE C_ORDERLINE
-                    SET QtyReserved=QtyReserved - v_QtyPO - v_QtySO,
-                    DATEDELIVERED=(CASE WHEN (QtyReserved - v_QtyPO - v_QtySO) > 0 THEN v_DateDelivered ELSE NULL END),
-                    QtyDelivered=QtyDelivered + v_QtySO,
-                    Updated=now(),
-                    UpdatedBy=v_User
-                   WHERE C_OrderLine_ID=Cur_InOutLine.C_OrderLine_ID;
+                                    WHERE C_ORDERLINE_ID = Cur_InOutLine.C_OrderLine_ID);
+                IF (v_IsSOTrx = 'Y') THEN
+                  IF (v_DocStatus = 'DR') THEN
+                    UPDATE C_ORDERLINE
+                      SET QtyDelivered = QtyDelivered + v_QtySO,
+                      DATEDELIVERED = (CASE WHEN (QtyDelivered + v_QtySO) > 0 THEN v_DateDelivered ELSE NULL END),
+                      Updated = now(),
+                      UpdatedBy = v_User
+                    WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
+                  ELSE 
+                    UPDATE C_ORDERLINE
+                      SET QtyReserved = QtyReserved - v_QtyPO - v_QtySO,
+                      DATEDELIVERED = (CASE WHEN (QtyReserved - v_QtyPO - v_QtySO) > 0 THEN v_DateDelivered ELSE NULL END),
+                      QtyDelivered = QtyDelivered + v_QtySO,
+                      Updated = now(),
+                      UpdatedBy = v_User
+                    WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
+                  END IF;
+                ELSE
+                  IF (v_DocStatus = 'DR') THEN
+                    UPDATE C_ORDERLINE
+                      SET QtyDelivered = QtyDelivered + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered))),
+                      QtyReserved = QtyReserved + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyReserved))),
+                      DATEDELIVERED = (CASE WHEN (ABS(QtyDelivered) + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered)))) > 0 
+                                      THEN v_DateDelivered ELSE NULL END),
+                      Updated = now(),
+                      UpdatedBy = v_User
+                    WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
+                  ELSE 
+                    UPDATE C_ORDERLINE
+                      SET QtyDelivered = QtyDelivered + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered))),
+                      QtyReserved = QtyReserved + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyReserved))),
+                      DATEDELIVERED = (CASE WHEN (ABS(QtyDelivered) + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered)))) > 0 
+                                      THEN v_DateDelivered ELSE NULL END),
+                      Updated = now(),
+                      UpdatedBy = v_User
+                    WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
+                  END IF;
                 END IF;
-                -- Products not stocked
+              -- Products not stocked
               ELSE
                 -- Update OrderLine (if C-, Qty is negative)
-                UPDATE C_ORDERLINE
-                  SET QtyDelivered=QtyDelivered + v_QtySO,
-                  DATEDELIVERED=(CASE WHEN (QtyDelivered + v_QtySO) > 0 THEN v_DateDelivered ELSE NULL END),
-                  Updated=now(),
-                  UpdatedBy=v_User
-                WHERE C_OrderLine_ID=Cur_InOutLine.C_OrderLine_ID;
+                SELECT ISSOTRX INTO v_IsSOTrx
+                FROM C_ORDER
+                WHERE C_ORDER_ID = (SELECT C_ORDER_ID 
+                                    FROM C_ORDERLINE 
+                                    WHERE C_ORDERLINE_ID = Cur_InOutLine.C_OrderLine_ID);
+                IF (v_IsSOTrx = 'Y') THEN
+                  UPDATE C_ORDERLINE
+                    SET QtyDelivered = QtyDelivered + v_QtySO,
+                    DATEDELIVERED = (CASE WHEN (QtyDelivered + v_QtySO) > 0 THEN v_DateDelivered ELSE NULL END),
+                    Updated = now(),
+                    UpdatedBy = v_User
+                  WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
+                ELSE
+                  UPDATE C_ORDERLINE
+                    SET QtyDelivered = QtyDelivered + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered))),
+                    QtyReserved = QtyReserved + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyReserved))),
+                    DATEDELIVERED = (CASE WHEN (ABS(QtyDelivered) + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered)))) > 0 
+                                    THEN v_DateDelivered ELSE NULL END),
+                    Updated = now(),
+                    UpdatedBy = v_User
+                  WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
+                END IF;
               END IF;
             END IF;
             IF(Cur_InOutLine.M_Product_ID IS NOT NULL AND v_IsStocked=1) THEN
