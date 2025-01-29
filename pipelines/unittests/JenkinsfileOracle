@@ -106,7 +106,7 @@ spec:
       env:
         - name: ORACLE_PWD
           value: oraclepassword
-        - name ORACLE_SID
+        - name: ORACLE_SID
           value: orclsid
       ports:
         - name: oracle
