@@ -75,7 +75,7 @@ public class PrereservationTest {
    *     if parsing the JSON requests fails
    */
   @Test
-  public void testManagePrereservedStockLines_NewReservationStock() throws JSONException {
+  public void managePrereservedStockLinesTest() throws JSONException {
     JSONObject jsonRequest = new JSONObject();
     JSONObject params = new JSONObject();
     JSONObject grid = new JSONObject();
