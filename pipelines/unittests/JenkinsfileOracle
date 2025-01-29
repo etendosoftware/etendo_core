@@ -2,16 +2,15 @@ pipeline {
 
     options {
         disableConcurrentBuilds()
-        lock(resource: 'pipeline-lock-for-oracle')
     }
 
     environment {
         // gradle.properties variables
         CONTEXT_NAME        = 'etendo'
-        BBDD_SID            = 'orclcdb'
-        BBDD_PORT           = '5432'
+        BBDD_SID            = 'orclsid'
+        BBDD_PORT           = '1521'
         BBDD_SYSTEMUSER     = 'sys AS SYSDBA'
-        BBDD_SYSTEMPASS     = 'rEUC0GRpxA'
+        BBDD_SYSTEMPASS     = 'oraclepassword'
         BBDD_USER           = 'C##TAD'
         BBDD_PASSWORD       = 'tad'
         NEXUS_USER          = credentials('nexus-admin-user')
@@ -55,6 +54,8 @@ metadata:
   labels:
     app.kubernetes.io/name: jenkins-node-unittests-orcl
 spec:
+  imagePullSecrets:
+    - name: docker-auth-config-secret
   volumes:
     - name: rsa-keys
       configMap:
@@ -99,6 +100,24 @@ spec:
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
+    - name: oracle
+      image: etendo/oracle:19.3.0-ee
+      env:
+        - name: ORACLE_PWD
+          value: oraclepassword
+        - name: ORACLE_SID
+          value: orclsid
+      ports:
+        - name: oracle
+          containerPort: 1521
+          protocol: TCP
+        - name: oracle-em
+          containerPort: 5500
+          protocol: TCP
+      resources:
+        limits:
+          cpu: 2000m
+          memory: 6000Mi
   restartPolicy: Always
   terminationGracePeriodSeconds: 30
   dnsPolicy: ClusterFirst
@@ -110,32 +129,18 @@ spec:
     }
 
     stages {
-        stage('Build Environment') {
+        stage('Build Oracle DB (temporary stage) ') {
+            steps {
+                echo "--------------- Building Oracle DB ---------------"
+                sh "sleep 25m"
+            }
+        }
+        stage('Build Environment') { // MARK: Build Environment
             steps {
                 container('compiler') {
                     script {
                         try {
                             sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Starting Build Environment" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-                            sh """
-                            curl -O https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
-                            tar xfz oracle-sqlcli-V1022102-01.tar.gz 2> /dev/null
-                            chmod a+x sqlcl/bin/sql
-                            """
-                            sh """
-                            echo "BEGIN
-                              FOR r IN (select sid,serial# from v\\\$session where username='${BBDD_USER}')
-                              LOOP
-                                  EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' || r.serial# || ''' immediate';
-                              END LOOP;
-                            END;
-                            /
-
-                            DROP USER ${BBDD_USER} CASCADE;
-                            commit;
-
-                            exit; " > kill.sql
-                            """
-                            sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
 
                             sh 'printenv'
                             echo 'Building Etendo Core'
@@ -159,7 +164,7 @@ spec:
                                 context.name=${CONTEXT_NAME}\n
                                 bbdd.rdbms=ORACLE\n
                                 bbdd.driver=oracle.jdbc.driver.OracleDriver\n
-                                bbdd.url=jdbc:oracle:thin:@db19c-oracle-db.oracle:1521:orclcdb?oracle.net.disableOob=true\n
+                                bbdd.url=jdbc:oracle:thin:@localhost:${BBDD_PORT}:${BBDD_SID}?oracle.net.disableOob=true\n
                                 bbdd.sid=${BBDD_SID}\n
                                 bbdd.systemUser=${BBDD_SYSTEMUSER}\n
                                 bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
@@ -203,7 +208,7 @@ spec:
         }
 //___________________________________________________________________________________________
 // ------------------------------ WEB SERVICES TESTS ----------------------------------------
-        stage ('Web Service Test Suite'){
+        stage ('Web Service Test Suite'){ // MARK: Web Service Test Suite
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -290,7 +295,7 @@ spec:
         }
 //___________________________________________________________________________________________
 // ------------------------------- STANDALONE TESTS -----------------------------------------
-        stage ('Standalone Test Suite') {
+        stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -331,7 +336,7 @@ spec:
         }
 //___________________________________________________________________________________________
 // ----------------------------------- com.etendoerp.* TESTS -------------------------------------------
-        stage ('com.etendoerp.* Tests') {
+        stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Tests
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -387,7 +392,7 @@ spec:
             }
         }
     }
-    post {
+    post { // MARK: Post
         always {
             container('compiler') {
                 script {
@@ -398,11 +403,6 @@ spec:
                     def stackConfig = load "${rootDir2}/pipelines/unittests/utils/stackConfig.groovy"
                     env.COMMIT_INFO = infoCommit.generateCommitInfo(env.REPO_URL)
                     env.STACK_INFO = stackConfig.generateStackMessage()
-
-                    dir(REPO_NAME) {
-                        sh "./gradlew --stop"
-                    }
-                    sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
                 }
             }
         }
