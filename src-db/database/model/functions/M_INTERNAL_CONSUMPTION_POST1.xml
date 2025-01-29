@@ -223,6 +223,38 @@ BEGIN --BODY
       IF (v_status <> 'CO') THEN
         RAISE_APPLICATION_ERROR(-20000, '@ActionNotSupported@');
       END IF;
+
+      -- Check the period control is opened (only if it is legal entity with accounting)
+      -- Gets the BU or LE of the document
+      SELECT AD_GET_DOC_LE_BU('M_INTERNAL_CONSUMPTION', Record_ID, 'M_INTERNAL_CONSUMPTION_ID', 'LE')
+      INTO v_org_bule_id
+      FROM DUAL;
+        
+      SELECT AD_OrgType.IsAcctLegalEntity
+      INTO v_isacctle
+      FROM AD_OrgType, AD_Org
+      WHERE AD_Org.AD_OrgType_ID = AD_OrgType.AD_OrgType_ID
+      AND AD_Org.AD_Org_ID=v_org_bule_id;
+        
+      IF (v_isacctle='Y') THEN    
+        SELECT COUNT(C_Period_ID)
+        INTO v_available_period
+        FROM C_Period
+        WHERE v_MoveDate>=STARTDATE AND v_MoveDate<ENDDATE+1
+        AND EXISTS (SELECT 1
+                  FROM C_PeriodControl
+                  WHERE C_PeriodControl.C_Period_ID=C_Period.C_Period_ID
+                  AND AD_Org_ID=AD_ORG_GETPERIODCONTROLALLOW(v_Org_ID)
+                  AND PeriodStatus='O'
+                  );
+
+        IF (v_available_period<>1) THEN
+          IF (v_action <> 'RC') THEN
+            RAISE_APPLICATION_ERROR(-20000, '@PeriodNotAvailable@');
+          END IF;
+        END IF;
+      END IF;
+
       v_voidintconsumption_id := get_uuid();
       -- Create void internal consumption.
       INSERT INTO m_internal_consumption (
