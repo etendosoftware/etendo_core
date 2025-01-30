@@ -15,8 +15,7 @@ isc.DirectTabLink.addProperties({
 
     // Call the asynchronous function from the subclass
     this.getTabAndRecordId(record, function(result) {
-      var tabId = result.tabId;
-      var recordId = result.recordId;
+       var { tabId, recordId } = result;
 
       if (!value || !tabId || !recordId) {
         this.setContents("");
@@ -24,10 +23,11 @@ isc.DirectTabLink.addProperties({
       }
 
       // Create the inline function for onclick
-      var linkHTML =
-        "<a href='#' style='color:blue; text-decoration:underline;' " +
-        "onclick='OB.Utilities.openDirectTab(\"" + tabId + "\", \"" + recordId + "\"); return false;'>" +
-        value + "</a>";
+      var linkHTML = `
+        <a href='#' style='color:blue; text-decoration:underline;'
+          onclick='OB.Utilities.openDirectTab("${tabId}", "${recordId}"); return false;'>
+          ${value}
+        </a>`;
 
       this.setContents(linkHTML);
 
