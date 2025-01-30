@@ -2,7 +2,6 @@ pipeline {
 
     options {
         disableConcurrentBuilds()
-        lock(resource: 'pipeline-lock-for-oracle')
     }
 
     environment {
