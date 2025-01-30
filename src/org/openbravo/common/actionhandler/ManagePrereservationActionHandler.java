@@ -96,7 +96,7 @@ public class ManagePrereservationActionHandler extends BaseProcessActionHandler 
     return jsonRequest;
   }
 
-  private void managePrereservedStockLines(JSONObject jsonRequest, OrderLine pol,
+  public void managePrereservedStockLines(JSONObject jsonRequest, OrderLine pol,
       List<String> idList) throws JSONException {
     JSONArray selectedLines = jsonRequest.getJSONObject("_params")
         .getJSONObject("grid")
@@ -130,6 +130,7 @@ public class ManagePrereservationActionHandler extends BaseProcessActionHandler 
         resStock.setOrganization(reservation.getOrganization());
         resStock.setSalesOrderLine(pol);
         resStock.setReleased(BigDecimal.ZERO);
+        reservation.setRESStatus("CO");
 
         List<ReservationStock> resStocks = pol.getMaterialMgmtReservationStockList();
         resStocks.add(resStock);
