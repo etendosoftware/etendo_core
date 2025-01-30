@@ -196,6 +196,20 @@ OB.APRM.AddPayment.onLoad = function(view) {
     form.addField(orgParam);
     form.addField(bankStatementLineAmount);
   }
+
+  const ADD_PAYMENT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
+  const windowId = view.windowId;
+
+  if (windowId === ADD_PAYMENT_WINDOW_ID && !view.hasExecutedCreditLogic) {
+    let affectedParams = [];
+    affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
+    OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
+        form,
+        view,
+        affectedParams
+    );
+    view.hasExecutedCreditLogic = true;
+  }
 };
 
 OB.APRM.AddPayment.addNewGLItem = function(grid) {
@@ -1427,7 +1441,7 @@ OB.APRM.AddPayment.receivedFromOnChange = function(item, view, form, grid) {
     receivedFrom = form.getItem('received_from').getValue(),
     isSOTrx = form.getItem('issotrx').getValue(),
     financialAccount = form.getItem('fin_financial_account_id').getValue(),
-    ordinvgrid = form.getItem('order_invoice').canvas.viewGrid,
+    ordinvgrid = form.getItem('order_invoice') ? form.getItem('order_invoice').canvas.viewGrid : null,
     paymentMethodItem = form.getItem('fin_paymentmethod_id'),
     newCriteria = {};
   affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
@@ -1462,14 +1476,16 @@ OB.APRM.AddPayment.receivedFromOnChange = function(item, view, form, grid) {
       {},
       callback
     );
-    newCriteria = ordinvgrid.addSelectedIDsToCriteria(
-      ordinvgrid.getCriteria(),
-      true
-    );
-    newCriteria.criteria = newCriteria.criteria || [];
-    // add dummy criterion to force fetch
-    newCriteria.criteria.push(isc.OBRestDataSource.getDummyCriterion());
-    ordinvgrid.invalidateCache();
+    if (ordinvgrid && ordinvgrid.getCriteria()) {
+      newCriteria = ordinvgrid.addSelectedIDsToCriteria(
+        ordinvgrid.getCriteria(),
+        true
+      );
+      newCriteria.criteria = newCriteria.criteria || [];
+      // add dummy criterion to force fetch
+      newCriteria.criteria.push(isc.OBRestDataSource.getDummyCriterion());
+      ordinvgrid.invalidateCache();
+    }
 
     form.redraw();
   }
@@ -1541,6 +1557,19 @@ OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic = function(
     thisform.redraw();
     if (thisview) {
       thisview.handleButtonsStatus();
+    }
+
+    const ADD_PAYMENT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
+    const windowId = view.windowId;
+
+    if (windowId === ADD_PAYMENT_WINDOW_ID) {
+     let affectedParams = [];
+     affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
+     OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
+         form,
+         view,
+         affectedParams
+     );
     }
   };
 
