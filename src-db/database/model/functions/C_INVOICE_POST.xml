@@ -1087,20 +1087,18 @@ IF (NOT FINISH_PROCESS) THEN
   UPDATE C_INVOICELINE
   SET UPDATED = now()
   WHERE C_INVOICE_ID = v_Record_ID;
+  
   -- Set qtyinvoiced in m_inoutline
-  UPDATE m_inoutline 
-  SET qtyinvoiced = COALESCE(qtyinvoiced, 0) + (
-      SELECT COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)
+  UPDATE m_inoutline mi
+  SET qtyinvoiced = COALESCE(mi.qtyinvoiced, 0) + COALESCE(inv.total_qtyinvoiced, 0)
+  FROM (
+      SELECT inv.m_inoutline_id, SUM(ABS(inv.qtyinvoiced)) AS total_qtyinvoiced
       FROM c_invoiceline inv
-      WHERE inv.m_inoutline_id = m_inoutline.m_inoutline_id
-        AND inv.c_invoice_id = v_Record_ID
-  )
-  WHERE m_inout_id = (
-      SELECT DISTINCT l.m_inout_id
-      FROM c_invoiceline il
-      JOIN m_inoutline l ON il.m_inoutline_id = l.m_inoutline_id
-      WHERE il.c_invoice_id = v_Record_ID
-  );
+      WHERE inv.c_invoice_id = v_Record_ID
+      GROUP BY inv.m_inoutline_id
+  ) inv
+  WHERE mi.m_inoutline_id = inv.m_inoutline_id;
+
   IF (NOT FINISH_PROCESS AND NOT END_PROCESSING) THEN
     /**************************************************************************
      * Actions allowed: COmplete, APprove
