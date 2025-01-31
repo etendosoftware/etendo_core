@@ -506,14 +506,23 @@ IF (NOT FINISH_PROCESS) THEN
   /**
     *Update Invoice Net Unit Price to Product purchasing Plan Table
     */
-    IF(v_isSoTrx ='N') THEN
-      FOR Cur_InvoiceNetLine IN (SELECT * FROM C_INVOICELINE WHERE C_Invoice_Id =  v_Record_ID)
-      LOOP
-          UPDATE M_PRODUCT_PO SET PriceLastInv=Cur_InvoiceNetLine.PriceActual 
-          Where C_BPARTNER_ID = v_BPartner_ID AND M_PRODUCT_ID = Cur_InvoiceNetLine.M_PRODUCT_ID
-          AND Ad_Isorgincluded(Cur_InvoiceNetLine.AD_ORG_ID,AD_ORG_ID, Cur_InvoiceNetLine.AD_Client_ID) <> -1;
-      END LOOP;
-    END IF;
+    IF (v_IsSOTrx = 'N') THEN
+	  FOR Cur_InvoiceNetLine IN (SELECT * FROM C_INVOICELINE WHERE C_Invoice_Id =  v_Record_ID)
+	  LOOP
+	    UPDATE M_PRODUCT_PO 
+		SET PriceLastInv = Cur_InvoiceNetLine.PriceActual 
+		WHERE C_BPARTNER_ID = v_BPartner_ID 
+		AND M_PRODUCT_ID = Cur_InvoiceNetLine.M_PRODUCT_ID
+		AND Ad_Isorgincluded(Cur_InvoiceNetLine.AD_ORG_ID, AD_ORG_ID, Cur_InvoiceNetLine.AD_Client_ID) <> -1;
+	
+		UPDATE C_ORDERLINE
+		SET QtyInvoiced = COALESCE(QtyInvoiced, 0) + COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0),
+			DateInvoiced = COALESCE(v_DateInvoiced, now()),
+			Updated = now(),
+			UpdatedBy = v_UpdatedBy
+		WHERE C_OrderLine_ID = Cur_InvoiceNetLine.C_OrderLine_ID;
+	  END LOOP;
+	END IF;
     /**
      * Void if Document not processed
      */
