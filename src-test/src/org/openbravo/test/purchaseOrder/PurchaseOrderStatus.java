@@ -105,6 +105,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
       OBDal.getInstance().commitAndClose();
       OBDal.getInstance().refresh(purchaseOrder);
+      OBDal.getInstance().refresh(goodsReceipt);
 
       for (OrderLine orderLine : purchaseOrder.getOrderLineList()) {
         assertEquals(BigDecimal.TEN, orderLine.getOrderedQuantity());
@@ -113,6 +114,12 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
       assertEquals(Long.valueOf(100), purchaseOrder.getDeliveryStatusPurchase());
       assertEquals(Long.valueOf(100), purchaseOrder.getInvoiceStatus());
+
+      for (ShipmentInOutLine receiptLine : goodsReceipt.getMaterialMgmtShipmentInOutLineList()) {
+        assertEquals(BigDecimal.TEN, receiptLine.getInvoiceQuantity());
+      }
+
+      assertEquals(Long.valueOf(100), goodsReceipt.getInvoiceStatus());
 
     } catch (Exception e) {
       Assert.fail(e.getMessage());
