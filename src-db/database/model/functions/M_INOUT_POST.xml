@@ -871,6 +871,19 @@
             END IF;
           END LOOP; -- For all InOut Lines
 
+	-- Set Invoiced Quantity in qtyinvoiced.
+	UPDATE m_inoutline mi
+	SET qtyinvoiced = COALESCE(qtyinvoiced, 0) + (
+		SELECT COALESCE(SUM(mov.MovementQty), 0)
+		FROM m_inoutline mov
+		WHERE mov.m_inoutline_id = mi.m_inoutline_id
+	)
+	WHERE EXISTS (
+		SELECT 1 
+		FROM m_inoutline mov
+		WHERE mov.m_inoutline_id = mi.m_inoutline_id
+	);
+		 
          -- Update the C_Order.IsDelivered flag only for Sales or RTV flows
          -- This should be extended for other flows too in the future
          IF (v_isSoTrx='Y' OR (v_isSoTrx='N' AND v_isreturndoctype='Y')) THEN
