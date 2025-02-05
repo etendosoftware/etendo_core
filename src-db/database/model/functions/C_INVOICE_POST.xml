@@ -1099,7 +1099,7 @@ IF (NOT FINISH_PROCESS) THEN
   
   -- Set qtyinvoiced in m_inoutline
   UPDATE m_inoutline 
-  SET qtyinvoiced = (
+  SET qtyinvoiced = COALESCE(qtyinvoiced, 0) + (
       SELECT COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)
       FROM c_invoiceline inv
       WHERE inv.m_inoutline_id = m_inoutline.m_inoutline_id
