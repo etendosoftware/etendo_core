@@ -31,9 +31,9 @@ pipeline {
     UNSTABLE            = "UNSTABLE"
 
     // Stack
-    JAVA_HOME           = "/usr/lib/jvm/java-11-openjdk-amd64"
-    TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.86/bin/apache-tomcat-9.0.86.tar.gz"
-    POSTGRES_VERSION    = "14"
+    JAVA_HOME           = "/usr/lib/jvm/jdk-17.0.13"
+    TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz"
+    POSTGRES_VERSION    = "16"
 
     CONTEXT_BUILD       = "Unit Tests with Postgres Database"
 
@@ -72,7 +72,7 @@ spec:
         type: ''
   containers:
     - name: compiler
-      image: etendo/compiler_jenkins:1.0.6
+      image: etendo/compiler_jenkins:1.0.7-jdk.17.0.13
       ports:
         - name: ssh
           containerPort: 22
@@ -106,7 +106,7 @@ spec:
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
     - name: postgres
-      image: postgres:14
+      image: postgres:16
       workingDir: /home/jenkins
       env:
         - name: POSTGRES_PASSWORD

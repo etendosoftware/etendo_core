@@ -29,8 +29,8 @@ pipeline {
         UNSTABLE            = "UNSTABLE"
 
         // Stack
-        JAVA_HOME           = "/usr/lib/jvm/java-11-openjdk-amd64"
-        TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.86/bin/apache-tomcat-9.0.86.tar.gz"
+        JAVA_HOME           = "/usr/lib/jvm/jdk-17.0.13"
+        TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz"
         ORCL_VERSION        = "19c"
 
         CONTEXT_BUILD       = "Unit Tests with Oracle Database"
@@ -67,7 +67,7 @@ spec:
         type: ''
   containers:
     - name: compiler
-      image: etendo/compiler_jenkins:1.0.6
+      image: etendo/compiler_jenkins:1.0.7-jdk.17.0.13
       ports:
         - name: ssh
           containerPort: 22
