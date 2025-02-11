@@ -109,6 +109,15 @@
       v_Org_ID
     FROM M_Movement
     WHERE M_Movement_ID=v_Record_ID  FOR UPDATE;
+
+	  SELECT COUNT(*) INTO v_Count
+    FROM M_MovementLine
+    WHERE M_Movement_ID = v_Record_ID;
+
+    IF v_Count = 0 THEN
+      RAISE_APPLICATION_ERROR(-20000, '@NoLinesForMovement@');
+    END IF;
+
     IF(v_IsProcessing='Y') THEN
       RAISE_APPLICATION_ERROR(-20000, '@OtherProcessActive@') ;
     END IF;
