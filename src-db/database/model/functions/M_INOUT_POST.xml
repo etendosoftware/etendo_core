@@ -871,19 +871,13 @@
             END IF;
           END LOOP; -- For all InOut Lines
 
-	-- Set the quantity invoiced in qtyinvoiced if an order was not created
+	-- Set the quantity invoiced in qtyinvoiced if created from an invoice
 	UPDATE m_inoutline mi
-	SET qtyinvoiced = COALESCE(qtyinvoiced, 0) + (
-		SELECT COALESCE(SUM(mov.MovementQty), 0)
-		FROM m_inoutline mov
-		WHERE mov.m_inoutline_id = mi.m_inoutline_id
-	)
+	SET qtyinvoiced = mi.movementqty
 	WHERE EXISTS (
-		SELECT 1 
-		FROM m_inoutline mov
-		JOIN m_inout mo ON mov.m_inout_id = mo.m_inout_id
-		WHERE mov.m_inoutline_id = mi.m_inoutline_id
-			AND mo.c_order_id IS NULL
+	    SELECT 1
+	    FROM c_invoiceline inv
+	    WHERE inv.m_inoutline_id = mi.m_inoutline_id
 	);
 		 
          -- Update the C_Order.IsDelivered flag only for Sales or RTV flows
