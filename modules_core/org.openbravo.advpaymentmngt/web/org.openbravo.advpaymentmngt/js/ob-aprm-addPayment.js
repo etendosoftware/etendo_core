@@ -1427,7 +1427,7 @@ OB.APRM.AddPayment.receivedFromOnChange = function(item, view, form, grid) {
     receivedFrom = form.getItem('received_from').getValue(),
     isSOTrx = form.getItem('issotrx').getValue(),
     financialAccount = form.getItem('fin_financial_account_id').getValue(),
-    ordinvgrid = form.getItem('order_invoice').canvas.viewGrid,
+    ordinvgrid = form.getItem('order_invoice') ? form.getItem('order_invoice').canvas.viewGrid : null,
     paymentMethodItem = form.getItem('fin_paymentmethod_id'),
     newCriteria = {};
   affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
@@ -1462,17 +1462,27 @@ OB.APRM.AddPayment.receivedFromOnChange = function(item, view, form, grid) {
       {},
       callback
     );
-    newCriteria = ordinvgrid.addSelectedIDsToCriteria(
-      ordinvgrid.getCriteria(),
-      true
-    );
-    newCriteria.criteria = newCriteria.criteria || [];
-    // add dummy criterion to force fetch
-    newCriteria.criteria.push(isc.OBRestDataSource.getDummyCriterion());
-    ordinvgrid.invalidateCache();
+    if (ordinvgrid && ordinvgrid.getCriteria()) {
+      newCriteria = ordinvgrid.addSelectedIDsToCriteria(
+        ordinvgrid.getCriteria(),
+        true
+      );
+      newCriteria.criteria = newCriteria.criteria || [];
+      // add dummy criterion to force fetch
+      newCriteria.criteria.push(isc.OBRestDataSource.getDummyCriterion());
+      ordinvgrid.invalidateCache();
+    }
 
     form.redraw();
   }
+};
+
+OB.APRM.AddPayment.onLoad = function(view) {
+  var form = view.theForm;
+  if (form && form.getItem('received_from') && form.getItem('received_from').getValue()) {
+    OB.APRM.AddPayment.receivedFromOnChange(form.getItem('received_from'), view, form, null);
+  }
+  form.redraw();
 };
 
 OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic = function(
