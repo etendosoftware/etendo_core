@@ -110,7 +110,7 @@
     FROM M_Movement
     WHERE M_Movement_ID=v_Record_ID  FOR UPDATE;
 
-	  SELECT COUNT(*) INTO v_Count
+    SELECT COUNT(*) INTO v_Count
     FROM M_MovementLine
     WHERE M_Movement_ID = v_Record_ID;
 
