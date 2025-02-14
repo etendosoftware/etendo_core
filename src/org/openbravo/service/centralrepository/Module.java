@@ -218,6 +218,9 @@ public class Module {
     this.name = name;
   }
 
+  public String getDay() {
+    return day;
+  }
   public String getPackageName() {
     return packageName;
   }
