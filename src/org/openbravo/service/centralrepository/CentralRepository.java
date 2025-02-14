@@ -93,11 +93,6 @@ public class CentralRepository {
     return executeRequest(service, Collections.emptyList(), payload);
   }
 
-  /** @see #executeRequest(Service, List, JSONObject) */
-  public static JSONObject executeRequest(Service service, List<String> path) {
-    return executeRequest(service, path, null);
-  }
-
   /**
    * Performs a request to Central Repository for a given {@link Service} returning its response as
    * a {@link JSONObject}.
