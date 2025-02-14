@@ -6,7 +6,7 @@ plugins {
     id 'idea'
     id 'groovy'
     id 'jacoco'
-    id 'com.etendoerp.gradleplugin' version '1.5.1'
+    id 'com.etendoerp.gradleplugin' version '2.0.0-SNAPSHOT'
     id 'org.kordamp.gradle.jandex' version '0.11.0'
 }
 compileJava.options.encoding = "UTF-8"
@@ -228,8 +228,8 @@ task upgradeCoreVersion {
  */
 task assembleArtifact(type: Zip) {
     System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
-    archiveName artifactID + "-" + project.version + '.zip'
-    destinationDir file("$buildDir/libs/")
+    archiveFileName.set(artifactID + "-" + project.version + '.zip')
+    destinationDirectory.set(file("$buildDir/libs/"))
     include(whiteSyncCoreList)
     from "."
     into "."
@@ -327,8 +327,7 @@ task configPublishJAR(){
                 username = "$nexusUser"
                 password = "$nexusPassword"
             }
-        }
-        else {
+        } else {
             publishing.repositories.maven.url = PROD_URL
             publishing.repositories.maven.credentials {
                 username = "$githubUser"
@@ -353,6 +352,6 @@ idea {
 
 task call_sass(type: Exec) {}
 
-task deploySkin (dependsOn: ["cssCompile", "deploy.skin"]) doLast {
+task deploySkin(dependsOn: ["cssCompile", "deploy.skin"]) doLast {
 
 }
