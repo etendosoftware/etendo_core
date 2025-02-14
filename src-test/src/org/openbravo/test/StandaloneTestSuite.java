@@ -89,6 +89,8 @@ import org.openbravo.test.inventoryStatus.InventoryStatusTest;
 import org.openbravo.test.invoice.CloneInvoiceTest;
 import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromShipmentTest;
 import org.openbravo.test.materialMgmt.iscompletelyinvoicedshipment.IsCompletelyInvoicedShipment;
+import org.openbravo.test.materialMgmt.linevalidation.GoodMovementTest;
+import org.openbravo.test.materialMgmt.linevalidation.InventoryCountProcessTest;
 import org.openbravo.test.model.ClassLoaderTest;
 import org.openbravo.test.model.DBModifiedTest;
 import org.openbravo.test.model.OneToManyTest;
@@ -403,6 +405,12 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Landed Cost Receipt Test
     LandedCostDuplicateReceiptValidatorTest.class,
+
+    // Physical Inventory Test
+    InventoryCountProcessTest.class,
+
+    // Good Movement Test
+    GoodMovementTest.class,
 
     // Purchase Order Status
     PurchaseOrderStatus.class
