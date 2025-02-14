@@ -32,7 +32,7 @@ isc.OBPAttributeSearchItem.addProperties({
       index = 0,
       values;
     var form = this.form,
-      view = form.view;
+      view = form.view ? form.view : this.view;
     if (this.isFocusable()) {
       this.focusInItem();
     }
@@ -44,9 +44,9 @@ isc.OBPAttributeSearchItem.addProperties({
     }
     values = view.getContextInfo(false, true, true, true);
     parameters[index++] = 'WindowID';
-    parameters[index++] = view.standardWindow.windowId;
+    parameters[index++] = view.standardWindow?.windowId ? view.standardWindow.windowId : view.windowId;
     parameters[index++] = 'inpwindowId';
-    parameters[index++] = view.standardWindow.windowId;
+    parameters[index++] = view.standardWindow?.windowId ? view.standardWindow.windowId : view.windowId;
     parameters[index++] = 'inpProduct';
     parameters[index++] = values.inpmProductId;
     if (values.inpmAttributesetId) {
