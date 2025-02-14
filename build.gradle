@@ -228,8 +228,8 @@ task upgradeCoreVersion {
  */
 task assembleArtifact(type: Zip) {
     System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
-    archiveName artifactID + "-" + project.version + '.zip'
-    destinationDir file("$buildDir/libs/")
+    archiveFileName.set(artifactID + "-" + project.version + '.zip')
+    destinationDirectory.set(file("$buildDir/libs/"))
     include(whiteSyncCoreList)
     from "."
     into "."
@@ -327,8 +327,7 @@ task configPublishJAR(){
                 username = "$nexusUser"
                 password = "$nexusPassword"
             }
-        }
-        else {
+        } else {
             publishing.repositories.maven.url = PROD_URL
             publishing.repositories.maven.credentials {
                 username = "$githubUser"
@@ -353,6 +352,6 @@ idea {
 
 task call_sass(type: Exec) {}
 
-task deploySkin (dependsOn: ["cssCompile", "deploy.skin"]) doLast {
+task deploySkin(dependsOn: ["cssCompile", "deploy.skin"]) doLast {
 
 }
