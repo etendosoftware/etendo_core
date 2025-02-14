@@ -70,7 +70,7 @@ List<String> _dependenciesListCOMPILATION = [
   'commons-betwixt:commons-betwixt:0.8', 
   'org.apache.tomcat:tomcat-jdbc:9.0.37', 
   'org.apache.tomcat:tomcat-juli:9.0.37', 
-  'com.auth0:java-jwt:3.1.0', 
+  'com.auth0:java-jwt:5.1.0', 
   'cz.jirutka.rsql:rsql-parser:2.1.0', 
   'org.apache.httpcomponents:httpmime:4.5.5', 
   'org.apache.httpcomponents:httpclient:4.5.5', 
