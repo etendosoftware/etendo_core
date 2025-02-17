@@ -34,6 +34,7 @@ import org.junit.Test;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
+import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -51,13 +52,12 @@ import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
-import org.openbravo.test.base.OBBaseTest;
 
 /**
  * The PaymentTest_03 class used to test the payment document generation and reactivation with
  * write-off option.
  */
-public class PaymentTest_05 extends OBBaseTest {
+public class PaymentTest_05 extends WeldBaseTest {
 
   private static final Logger log = LogManager.getLogger();
 
@@ -91,7 +91,6 @@ public class PaymentTest_05 extends OBBaseTest {
   public void testRunPayment_05() {
     String fruitBio = "EB3110511DAB445382CDB316DCDA407C"; // Fruit & Bio is Life, Inc.
     String happyDrinks = "C4C5C87CB62548B3B44B93FF3075FB87"; // Happy Drinks, Inc.
-    String currencyId = EURO_ID;
     Invoice inv1;
     Invoice inv2;
     AdvPaymentMngtDao dao = new AdvPaymentMngtDao();
@@ -108,7 +107,7 @@ public class PaymentTest_05 extends OBBaseTest {
           OBContext.getOBContext().getCurrentClient(),
           OBContext.getOBContext().getCurrentOrganization(),
           OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId),
-          OBDal.getInstance().get(Currency.class, currencyId),
+          OBDal.getInstance().get(Currency.class, EURO_ID),
           OBDal.getInstance().get(FIN_PaymentMethod.class, paymentMethodId));
 
       List<FIN_PaymentScheduleDetail> scheduleDetails1 = dao
@@ -150,7 +149,6 @@ public class PaymentTest_05 extends OBBaseTest {
     // DATA SETUP
     String priceListId = "C3EA1FF8AAD8452B96AB766B8B2133A6"; // Happy Drinks Price List
     String paymentTermId = "66BA1164A7394344BB9CD1A6ECEED05D"; // 30 days
-    String currencyId = EURO_ID;
     String productId = "34560A057833457D962F7A573F76F5BB"; // Ale Beer
     String taxId = "3CCDACCCF02C4D209174159A8AF43127"; // NY Sales Tax
     String docTypeId = "4F914856B90A4F25B4ABA83C5A0C25FE"; // AP Invoice
@@ -166,7 +164,7 @@ public class PaymentTest_05 extends OBBaseTest {
     Location location = TestUtility.getOneInstance(Location.class,
         new Value(Location.PROPERTY_BUSINESSPARTNER, testBusinessPartner));
     PaymentTerm testPaymentTerm = OBDal.getInstance().get(PaymentTerm.class, paymentTermId);
-    Currency testCurrency = OBDal.getInstance().get(Currency.class, currencyId);
+    Currency testCurrency = OBDal.getInstance().get(Currency.class, EURO_ID);
     Product testProduct = OBDal.getInstance().get(Product.class, productId);
     UOM uom = TestUtility.getOneInstance(UOM.class,
         new Value(UOM.PROPERTY_NAME, testProduct.getUOM().getName()));
