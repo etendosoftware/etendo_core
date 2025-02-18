@@ -50,7 +50,7 @@ BEGIN
                                   JOIN C_INVOICELINE C ON C.C_INVOICELINE_ID = B.C_INVOICELINE_ID
                                    WHERE C.C_INVOICE_ID=A.C_INVOICE_ID AND B.C_TAX_ID=A.C_TAX_ID);
   END IF;
-
-END C_INVOICE_UPDATE_TAXES]]></body>
+END C_INVOICE_UPDATE_TAXES
+]]></body>
     </function>
   </database>

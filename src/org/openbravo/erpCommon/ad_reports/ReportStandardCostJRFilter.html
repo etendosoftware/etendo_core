@@ -258,13 +258,19 @@ function onloadFunctions(){
                 </tr>
 		<tr>
                   <td class="TitleCell"><span class="LabelText">Plan</span></td>
-                  <td class="Combo_ContentCell" colspan="2"> <select name="inpmaProcessPlanId" id="reportMA_PROCESSPLAN" class="Combo Combo_TwoCells_width" onchange="refreshComboReports(); logChanges(this); return true;">
-                      <option value=""> <div id="sectionDetail"></div></option>
-                    </select></td>
+                  <td class="Combo_ContentCell" colspan="2">
+                    <select name="inpmaProcessPlanId" id="reportMA_PROCESSPLAN" class="Combo Combo_TwoCells_width" onchange="refreshComboReports(); logChanges(this); return true;">
+                      <option value=""/>
+                      <div id="sectionDetail"/>
+                    </select>
+                  </td>
                   <td class="TitleCell"><span class="LabelText">Version</span></td>
-                  <td class="Combo_ContentCell" colspan="2"> <select name="reportMA_PROCESSVERSIONPLAN" id="reportMA_PROCESSVERSIONPLAN" class="Combo Combo_TwoCells_width">
-                      <option value=""> <div id="sectionDetail"></div></option>
-                    </select></td>
+                  <td class="Combo_ContentCell" colspan="2">
+                    <select name="reportMA_PROCESSVERSIONPLAN" id="reportMA_PROCESSVERSIONPLAN" class="Combo Combo_TwoCells_width">
+                      <option value=""/>
+                      <div id="sectionDetail"/>
+                    </select>
+                  </td>
                 </tr>
                 <tr>
                   <td class="TitleCell"><span class="LabelText">Date</span></td>
@@ -288,11 +294,12 @@ function onloadFunctions(){
                     </table>
                  </td>
                  <TD class="TitleCell" ><SPAN class="LabelText">Currency</SPAN></TD>
- 				 <TD class="Combo_ContentCell" colspan="2">
-   					<SELECT name="inpCurrencyId" id="inpCurrencyId" class="ComboKey Combo_OneCell_width" required="true">
-     				<OPTION value=""><DIV id="reportC_Currency_ID"></DIV></OPTION>
-   					</SELECT>
-				 </TD>
+                  <td class="Combo_ContentCell" colspan="2">
+                    <select name="inpCurrencyId" id="inpCurrencyId" class="ComboKey Combo_OneCell_width" required="true">
+                      <option value=""/>
+                      <div id="reportC_Currency_ID"/>
+                    </select>
+                  </td>
                   <tr>
                     <td colspan="6">
                       <table class="FieldGroup" cellspacing="0" cellpadding="0" border="0">

@@ -19,6 +19,7 @@
 
 package org.openbravo.test;
 
+import com.smf.securewebservices.utils.SecureWebServicesUtilsTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.openbravo.test.datasource.DataSourceSecurity;
@@ -110,7 +111,8 @@ import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
     ETagGeneration.class, //
     TestSelectorDefaultFilterActionHandler.class, //
     SummaryFieldRequestTest.class, //
-    CSRFAttackTest.class //
+    CSRFAttackTest.class, //
+    SecureWebServicesUtilsTest.class // Secure Web Services Utils Test
 })
 public class WebserviceTestSuite {
 }

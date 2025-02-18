@@ -22,9 +22,11 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -243,6 +245,84 @@ public class CancelAndReplaceUtils {
       newDocNo.append(documentNo + HYPHENONE);
     }
     return newDocNo.toString();
+  }
+
+  /**
+   * Gets the next document number for the order which cancels the given order.
+   *
+   * @param oldOrder
+   *          The order which is being cancelled.
+   * @return The new document number for the order which cancels the old order.
+   */
+  public static String getNextCancelDocNo(final Order oldOrder) {
+    // Get the root order of the order which is being cancelled
+    final Order rootOrder = getRootOrder(oldOrder);
+    // Count the number of descendants of the root order
+    final int descendantCount = countDescendants(rootOrder);
+    // Return the new document number by appending the descendant count to the root order's document
+    // number
+    return rootOrder.getDocumentNo() + HYPHEN + (descendantCount + 1);
+  }
+
+  /**
+   * Finds the root order in the replacement hierarchy of the given order.
+   * 
+   * @param order
+   *          The order to find the root order for.
+   * @return The root order in the replacement hierarchy of the given order.
+   */
+  private static Order getRootOrder(Order order) {
+    // Start at the given order
+    Order current = order;
+    // Keep going up the replacement hierarchy until we find the root order
+    while (current.getReplacedorder() != null) {
+      // Move up to the parent order
+      current = current.getReplacedorder();
+    }
+    // Return the root order
+    return current;
+  }
+
+  /**
+   * Recursively counts the number of descendants of the given order in the replacement hierarchy.
+   * 
+   * @param root
+   *          The root order to start counting from.
+   * @return The number of descendants of the given order.
+   */
+  private static int countDescendants(Order root) {
+    int count = 0;
+    // Use a queue to do a breadth-first search of the replacement hierarchy
+    Queue<Order> queue = new LinkedList<>();
+    queue.add(root);
+
+    while (!queue.isEmpty()) {
+      final Order current = queue.poll();
+      // Find all the children of the current order
+      final List<Order> children = findChildOrders(current);
+      for (Order child : children) {
+        // Count the child
+        count++;
+        // Add the child to the queue to continue the search
+        queue.add(child);
+      }
+    }
+
+    return count;
+  }
+
+  /**
+   * Finds the list of child orders that replace the specified parent order.
+   *
+   * @param parentOrder
+   *          The order for which to find the child orders that replace it.
+   * @return A list of orders that replace the given parent order.
+   */
+  private static List<Order> findChildOrders(Order parentOrder) {
+    final OBCriteria<Order> criteria = OBDal.getInstance().createCriteria(Order.class);
+    criteria.add(Restrictions.eq(Order.PROPERTY_REPLACEDORDER, parentOrder));
+
+    return criteria.list();
   }
 
   /**

@@ -56,10 +56,10 @@
       <index name="MA_MACHINESTATION_WKST_IDX" unique="false">
         <index-column name="MA_WORKSTATION_ID"/>
       </index>
-      <check name="MA_MACHINESTATI_ISACTIVE_CHECK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
-      <unique name="ma_machinestation_machine_un">
+      <unique name="MA_MACHINESTATION_MACHINE_UN">
         <unique-column name="MA_WORKSTATION_ID"/>
         <unique-column name="MA_MACHINE_ID"/>
       </unique>
+      <check name="MA_MACHINESTATI_ISACTIVE_CHECK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
     </table>
   </database>
