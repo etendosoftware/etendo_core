@@ -50,7 +50,7 @@ BEGIN
                                   JOIN C_ORDERLINE C ON C.C_ORDERLINE_ID = B.C_ORDERLINE_ID
                                    WHERE C.C_ORDER_ID=A.C_ORDER_ID AND B.C_TAX_ID=A.C_TAX_ID);
   END IF;
-
-END C_ORDER_UPDATE_TAXES]]></body>
+END C_ORDER_UPDATE_TAXES
+]]></body>
     </function>
   </database>

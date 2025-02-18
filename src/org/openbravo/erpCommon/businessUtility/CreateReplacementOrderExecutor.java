@@ -98,7 +98,7 @@ class CreateReplacementOrderExecutor extends CancelAndReplaceUtils {
     newOrder.setSummedLineAmount(BigDecimal.ZERO);
     newOrder.setOrderDate(new Date());
     newOrder.setReplacedorder(oldOrder);
-    newOrder.setDocumentNo(getNextCancelDocNo(documentNo));
+    newOrder.setDocumentNo(getNextCancelDocNo(oldOrder));
     OBDal.getInstance().save(newOrder);
 
     // Create new Order lines
