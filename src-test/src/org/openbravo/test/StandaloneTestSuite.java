@@ -32,10 +32,14 @@ import org.openbravo.client.application.test.ADCSTest;
 import org.openbravo.client.application.test.DisplayLogicAtServerLevelTest;
 import org.openbravo.client.application.test.DynamicExpressionParserTest;
 import org.openbravo.client.application.test.MenuTest;
+import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
+import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
+import org.openbravo.erpReports.PrintControllerHookTest;
+import org.openbravo.event.LandedCostDuplicateReceiptValidatorTest;
 import org.openbravo.financial.FinancialUtilsTest;
 import org.openbravo.scheduling.ProcessSchedulingTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
@@ -85,6 +89,8 @@ import org.openbravo.test.inventoryStatus.InventoryStatusTest;
 import org.openbravo.test.invoice.CloneInvoiceTest;
 import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromShipmentTest;
 import org.openbravo.test.materialMgmt.iscompletelyinvoicedshipment.IsCompletelyInvoicedShipment;
+import org.openbravo.test.materialMgmt.linevalidation.GoodMovementTest;
+import org.openbravo.test.materialMgmt.linevalidation.InventoryCountProcessTest;
 import org.openbravo.test.model.ClassLoaderTest;
 import org.openbravo.test.model.DBModifiedTest;
 import org.openbravo.test.model.OneToManyTest;
@@ -99,7 +105,9 @@ import org.openbravo.test.modularity.TableNameTest;
 import org.openbravo.test.preference.PreferenceTest;
 import org.openbravo.test.pricelist.PriceListTest;
 import org.openbravo.test.process.order.OrderProcessTest;
+import org.openbravo.test.process.utils.ProcessUtilsTest;
 import org.openbravo.test.productStatus.ProductStatusTest;
+import org.openbravo.test.purchaseOrder.PurchaseOrderStatus;
 import org.openbravo.test.referencedinventory.ReferencedInventoryTestSuite;
 import org.openbravo.test.reporting.AllJrxmlCompilation;
 import org.openbravo.test.reporting.CompiledReportsCacheTest;
@@ -119,6 +127,7 @@ import org.openbravo.test.security.WritableReadableOrganizationClientTest;
 import org.openbravo.test.services.ServicesTest;
 import org.openbravo.test.services.ServicesTest2;
 import org.openbravo.test.services.ServicesTest3;
+import org.openbravo.test.stockReservation.StockReservationTest;
 import org.openbravo.test.stockValuationReport.ReportValuationStockTest;
 import org.openbravo.test.system.CryptoUtilities;
 import org.openbravo.test.system.ErrorTextParserIntegrationTest;
@@ -127,6 +136,7 @@ import org.openbravo.test.system.ImportEntryBuilderTest;
 import org.openbravo.test.system.ImportEntrySizeTest;
 import org.openbravo.test.system.Issue29934Test;
 import org.openbravo.test.system.JSONSerialization;
+import org.openbravo.test.system.OBPropertiesProviderTest;
 import org.openbravo.test.system.Sessions;
 import org.openbravo.test.system.SystemServiceTest;
 import org.openbravo.test.system.SystemValidatorTest;
@@ -275,6 +285,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     OBContextTest.class, //
     JSONSerialization.class, //
     PasswordHashing.class, //
+    OBPropertiesProviderTest.class, //
 
     // xml
     EntityXMLImportTestBusinessObject.class, //
@@ -333,6 +344,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // db
     SqlCallableStatement.class, //
     PoolHasNoConnectionsDetection.class, //
+    ProcessTest.class,
 
     // grid configuration
     ViewGenerationWithDifferentConfigLevelTest.class, //
@@ -377,8 +389,31 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ReportValuationStockTest.class,
       
     // Create Order From Quotation Test
-    CreateOrderFromQuotationTest.class
+    CreateOrderFromQuotationTest.class,
 
+    // Create Order and Physical Inventory From Stock Reservation Test
+    StockReservationTest.class,
+
+    // Utils process Test
+    ProcessUtilsTest.class,
+
+    // Toolbar print hook Test
+    PrintControllerHookTest.class,
+
+    // Landed Cost Type Test
+    LandedCostTypeTest.class,
+
+    // Landed Cost Receipt Test
+    LandedCostDuplicateReceiptValidatorTest.class,
+
+    // Physical Inventory Test
+    InventoryCountProcessTest.class,
+
+    // Good Movement Test
+    GoodMovementTest.class,
+
+    // Purchase Order Status
+    PurchaseOrderStatus.class
 })
 public class StandaloneTestSuite {
 }
