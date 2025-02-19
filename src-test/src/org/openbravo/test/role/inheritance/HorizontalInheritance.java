@@ -57,7 +57,7 @@ public class HorizontalInheritance extends WeldBaseTest {
       "Credit Line Limit", "Description", "URL");
   private final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants",
       "Journal Entries Report", "Print orders process", "Set as Ready");
-  private final List<String> FORMS = Arrays.asList("About", "Heartbeat", "Instance Activation", "Logout",
+  private final List<String> FORMS = Arrays.asList("About", "Alert Management", "Instance Activation", "Logout",
       "Menu");
   private final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect",
       "Motion Chart", "Planet", "Twitter");
