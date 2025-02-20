@@ -1,4 +1,4 @@
-package org.openbravo.test.cancelPromotions;
+package org.openbravo.test.cancelpromotions;
 
 import static org.junit.Assert.assertEquals;
 import static org.openbravo.test.costing.utils.TestCostingUtils.reactivateInvoice;
@@ -24,6 +24,9 @@ import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.test.base.TestConstants;
 
+/**
+ * Contains tests for the cancel promotions functionality.
+ */
 public class CancelPromotionsTest extends WeldBaseTest {
 
   /**

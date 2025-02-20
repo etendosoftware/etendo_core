@@ -1,4 +1,4 @@
-package org.openbravo.test.cancelPromotions;
+package org.openbravo.test.cancelpromotions;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -24,6 +24,10 @@ import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.test.costing.utils.TestCostingConstants;
 import org.openbravo.test.stockReservation.StockReservationTestUtils;
 
+/**
+ * Utility class to create invoices with a specified option to cancel promotion and price
+ * adjustments.
+ */
 public class CancelPromotionsUtils {
 
   public static final String DOCTYPE_ID = "7FCD49652E104E6BB06C3A0D787412E3"; // Transaction Document: AR Invoice
@@ -35,7 +39,8 @@ public class CancelPromotionsUtils {
   /**
    * Private constructor to prevent instantiation of the utility class.
    */
-  private CancelPromotionsUtils() {
+  private CancelPromotionsUtils(){
+
   }
 
   /**
