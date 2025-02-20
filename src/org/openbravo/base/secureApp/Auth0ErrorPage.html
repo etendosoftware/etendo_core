@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Etendo - No User Linked</title>
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #fff;
+          color: #333;
+        }
+
+        .container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          text-align: center;
+          padding: 1rem;
+        }
+
+        .logo {
+          width: 200px;
+          margin-bottom: 2rem;
+        }
+
+        h1 {
+          font-size: 2rem;
+          margin-bottom: 1rem;
+          color: #333;
+        }
+
+        p {
+          font-size: 1rem;
+          margin-bottom: 2rem;
+          color: #555;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background-color: #202452;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        .btn-primary:hover {
+          opacity: 80%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img alt="Etendo Logo" class="logo" src="data:image/png;base64,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" />
+
+    <h1>No User linked</h1>
+    <p>You need to log in with an ERP user and then, link the SSO account</p>
+
+    <button class="btn-primary" onclick="auth0Logout()">
+        Go back to Login
+    </button>
+</div>
+
+<script>
+    function auth0Logout() {
+        var auth0Domain = 'dev-fut-test.us.auth0.com';
+        var clientId = 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU';
+        var logoutRedirectUri = 'http://localhost:8080/google';
+
+        var logoutUrl = `https://${auth0Domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
+
+        window.location.href = logoutUrl;
+    }
+</script>
+
+</body>
+</html>

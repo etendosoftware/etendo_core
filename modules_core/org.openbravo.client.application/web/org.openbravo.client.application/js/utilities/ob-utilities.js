@@ -787,6 +787,8 @@ OB.Utilities.logout = function(confirmed) {
     tabsLength = tabs.length,
     appFrame;
 
+  logoutFromAuth0Popup();
+
   // Push the logout process to the 'end' of the queue
   q.push({
     func: OB.RemoteCallManager.call,
@@ -823,6 +825,16 @@ OB.Utilities.logout = function(confirmed) {
   }
   OB.Utilities.processLogoutQueue();
 };
+
+function logoutFromAuth0Popup() {
+    var auth0Domain = 'dev-fut-test.us.auth0.com';
+    var clientId = 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU';
+    var logoutRedirectUri = 'http://localhost:8080/google';
+
+    var logoutUrl = `https://${auth0Domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
+
+    window.location.href = logoutUrl;
+}
 
 // ** {{{ OB.Utilities.getYesNoDisplayValue }}} **
 // Returns the Yes label if the passed value is true, the No label if false.

@@ -18,8 +18,13 @@
  */
 package org.openbravo.erpCommon.security;
 
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -31,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.query.Query;
 import org.openbravo.base.HttpBaseServlet;
+import org.openbravo.base.secureApp.LoginHandler;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -114,6 +120,8 @@ public class Login extends HttpBaseServlet {
         printPageLogin(vars, response, strTheme, cacheMsg, validBrowserMsg, orHigherMsg,
             recBrowserMsgTitle, recBrowserMsgText, identificationFailureTitle,
             emptyUsernameOrPasswordText, errorSamePassword, errorDifferentPasswordInFields);
+      } catch (NoSuchAlgorithmException e) {
+        log4j.error("Error in login page", e);
       } finally {
         vars.clearSession(false);
         OBContext.restorePreviousMode();
@@ -125,7 +133,7 @@ public class Login extends HttpBaseServlet {
       String strTheme, String cacheMsg, String validBrowserMsg, String orHigherMsg,
       String recBrowserMsgTitle, String recBrowserMsgText, String identificationFailureTitle,
       String emptyUsernameOrPasswordText, String errorSamePassword,
-      String errorDifferentPasswordInFields) throws IOException {
+      String errorDifferentPasswordInFields) throws IOException, NoSuchAlgorithmException {
 
     boolean showITLogo = false;
     boolean showCompanyLogo = false;
@@ -259,13 +267,44 @@ public class Login extends HttpBaseServlet {
           link += cSignInProvider.getLoginPageSignInHTMLCode();
         }
       }
+
+      String auth0Button = "<style>"
+          + ".auth0-login-button {"
+          + "  display: inline-block;"
+          + "  background-color: #202452;"
+          + "  color: white;"
+          + "  padding: 10px 20px;"
+          + "  font-size: 16px;"
+          + "  border-radius: 5px;"
+          + "  cursor: pointer;"
+          + "  text-decoration: none;"
+          + "  margin-top: 10px;"
+          + "}"
+          + ".auth0-login-button:hover { opacity: 80%; }"
+          + "</style>"
+          + "<script src=\"https://cdn.auth0.com/js/auth0/9.18/auth0.min.js\"></script>"
+          + "<script>"
+          + "function loginWithAuth0() {"
+          + "  var webAuth = new auth0.WebAuth({"
+          + "    domain: 'dev-fut-test.us.auth0.com',"
+          + "    clientID: 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU',"
+          + "    redirectUri: 'http://localhost:8080/google/secureApp/LoginHandler.html',"
+          + "    responseType: 'code',"
+          + "    scope: 'openid profile email'"
+          + "  });"
+          + "  webAuth.authorize();"
+          + "}"
+          + "</script>"
+          + "<a href=\"#\" class=\"auth0-login-button\" onclick=\"loginWithAuth0()\">Sign in with SSO account</a>";
+
+      link += "<br>" + auth0Button;
       xmlDocument.setParameter("sign-in", link);
     }
 
     OBError error = (OBError) vars.getSessionObject("LoginErrorMsg");
     if (error != null) {
       vars.removeSessionValue("LoginErrorMsg");
-      xmlDocument.setParameter("errorMsgStyle", ""); // clear style
+      xmlDocument.setParameter("errorMsgStyle", "");
       xmlDocument.setParameter("errorMsgTitle", error.getTitle());
       xmlDocument.setParameter("errorMsgContent", error.getMessage());
     }
@@ -274,6 +313,18 @@ public class Login extends HttpBaseServlet {
     PrintWriter out = response.getWriter();
     out.println(xmlDocument.print());
     out.close();
+  }
+
+  public static String generateCodeVerifier() {
+    byte[] randomBytes = new byte[32];
+    new SecureRandom().nextBytes(randomBytes);
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+  }
+
+  public static String generateCodeChallenge(String codeVerifier) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
   }
 
   private void insertMessageInPage(XmlDocument document, String parameterName, String message) {

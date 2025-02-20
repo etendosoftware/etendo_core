@@ -11,8 +11,17 @@
  */
 package org.openbravo.base.secureApp;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +44,7 @@ import org.openbravo.authentication.ChangePasswordException;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.HttpBaseServlet;
 import org.openbravo.base.secureApp.LoginUtils.RoleDefaults;
+import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.application.CachedPreference;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -49,6 +59,7 @@ import org.openbravo.erpCommon.utility.PropertyConflictException;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Session;
+import org.openbravo.model.ad.access.TokenUser;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.access.UserRoles;
 import org.openbravo.model.ad.module.Module;
@@ -74,6 +85,11 @@ import org.openbravo.service.password.PasswordStrengthChecker;
 public class LoginHandler extends HttpBaseServlet {
   private static final long serialVersionUID = 1L;
   public static final String SUCCESS_SESSION_STANDARD = "S";
+  private static final String AUTH0_DOMAIN = "dev-fut-test.us.auth0.com";
+  private static final String AUTH0_CLIENT_ID = "zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
+  private static final String AUTH0_CLIENT_SECRET = "EAlNG8TK063hfFWmQHRdn94F7qzle04GQ7q3O067_lTMzcKAG4tPQ6P476hxdRAV";
+  private static final String AUTH0_CALLBACK_URL = "http://localhost:8080/google";
+  private static final String ERROR = "Error";
 
   @Inject
   private ServerControllerHandler serverController;
@@ -116,6 +132,17 @@ public class LoginHandler extends HttpBaseServlet {
 
     if (isPasswordResetFlow) {
       user = vars.getSessionValue("#AD_User_ID");
+    } else if (!StringUtils.isBlank(req.getParameter("code")) && !StringUtils.isBlank(req.getParameter("state"))) {
+      String token = getAuthToken(req);
+      HashMap<String, String> tokenValues = decodeToken(token);
+      User adUser = matchUser(token, tokenValues.get("sub"));
+      if (adUser == null) {
+        res.sendRedirect("/" + OBPropertiesProvider.getInstance().getOpenbravoProperties().get("context.name")
+            + "/secureApp/Auth0ErrorPage.html");
+        return;
+      }
+      req.setAttribute("user-token-sub", tokenValues.get("sub"));
+      user = adUser.getUsername();
     } else {
       user = vars.getStringParameter("user");
     }
@@ -129,7 +156,7 @@ public class LoginHandler extends HttpBaseServlet {
       ConnectionProvider cp = new DalConnectionProvider(false);
       if ("".equals(user)) {
         goToRetry(res, vars, Utility.messageBD(cp, "IDENTIFICATION_FAILURE_TITLE", language),
-            Utility.messageBD(cp, "IDENTIFICATION_FAILURE_MSG", language), "Error",
+            Utility.messageBD(cp, "IDENTIFICATION_FAILURE_MSG", language), ERROR,
             "../security/Login");
       } else {
         try {
@@ -162,17 +189,100 @@ public class LoginHandler extends HttpBaseServlet {
             final String failureTitle = Utility.messageBD(cp, errorMsg.getTitle(), language);
             final String failureMessage = Utility.messageBD(cp, errorMsg.getMessage(), language);
 
-            goToRetry(res, vars, failureMessage, failureTitle, "Error",
+            goToRetry(res, vars, failureMessage, failureTitle, ERROR,
                 "../security/Login_FS.html");
 
           } else {
-            throw new ServletException("Error"); // FIXME
+            throw new ServletException(ERROR); // FIXME
           }
         }
       }
     } finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  private User matchUser(String token, String sub) {
+    OBContext.setAdminMode(true);
+    TokenUser tokenUser = (TokenUser) OBDal.getInstance().createCriteria(TokenUser.class)
+        .add(Restrictions.eq(TokenUser.PROPERTY_SUB, sub))
+        .setFilterOnReadableClients(false)
+        .setFilterOnReadableOrganization(false)
+        .setMaxResults(1).uniqueResult();
+    if (tokenUser != null) {
+      tokenUser.setToken(token);
+    } else {
+      return null;
+    }
+    return tokenUser.getUser();
+  }
+
+  private HashMap<String, String> decodeToken(String token) {
+
+    HashMap<String, String> tokenValues = new HashMap<>();
+    DecodedJWT decodedJWT = JWT.decode(token);
+
+    tokenValues.put("given_name", decodedJWT.getClaim("given_name").asString());
+    tokenValues.put("family_name", decodedJWT.getClaim("family_name").asString());
+    tokenValues.put("email", decodedJWT.getClaim("email").asString());
+    tokenValues.put("sid", decodedJWT.getClaim("sid").asString());
+    tokenValues.put("sub", decodedJWT.getClaim("sub").asString()); // Identificador único del usuario
+    return tokenValues;
+  }
+
+  private String getAuthToken(HttpServletRequest request) {
+    String code = request.getParameter("code");
+    String token = "";
+    String tokenEndpoint = "https://" + AUTH0_DOMAIN + "/oauth/token";
+    try {
+      URL url = new URL(tokenEndpoint);
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setRequestMethod("POST");
+      con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+      con.setDoOutput(true);
+
+      String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
+      boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
+
+      // Construcción de parámetros según PKCE o client_secret
+      String params;
+      if (isPKCE) {
+        params = String.format(
+            "grant_type=authorization_code&client_id=%s&code=%s&redirect_uri=%s&code_verifier=%s",
+            URLEncoder.encode(AUTH0_CLIENT_ID, StandardCharsets.UTF_8),
+            URLEncoder.encode(code, StandardCharsets.UTF_8),
+            URLEncoder.encode(AUTH0_CALLBACK_URL, StandardCharsets.UTF_8),
+            URLEncoder.encode(codeVerifier, StandardCharsets.UTF_8)
+        );
+      } else {
+        params = String.format(
+            "grant_type=authorization_code&client_id=%s&client_secret=%s&code=%s&redirect_uri=%s",
+            URLEncoder.encode(AUTH0_CLIENT_ID, StandardCharsets.UTF_8),
+            URLEncoder.encode(AUTH0_CLIENT_SECRET, StandardCharsets.UTF_8), // Solo si no usas PKCE
+            URLEncoder.encode(code, StandardCharsets.UTF_8),
+            URLEncoder.encode(AUTH0_CALLBACK_URL, StandardCharsets.UTF_8)
+        );
+      }
+
+      try (OutputStream os = con.getOutputStream()) {
+        byte[] input = params.getBytes(StandardCharsets.UTF_8);
+        os.write(input, 0, input.length);
+      }
+
+      int status = con.getResponseCode();
+      if (status == 200) {
+        try (InputStream in = con.getInputStream()) {
+          String responseBody = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+          JSONObject jsonResponse = new JSONObject(responseBody);
+          token = jsonResponse.getString("id_token");
+        }
+      } else {
+        token = null;
+      }
+    } catch (JSONException | IOException e) {
+      log4j.error(e);
+    }
+    return token;
   }
 
   /**
@@ -198,8 +308,7 @@ public class LoginHandler extends HttpBaseServlet {
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-    throw new UnsupportedOperationException("GET method is not allowed by LoginHandler");
+      doPost(request, response);
   }
 
   protected void setCORSHeaders(HttpServletRequest request, HttpServletResponse response)
@@ -241,7 +350,7 @@ public class LoginHandler extends HttpBaseServlet {
         msgType = "Warning";
         action = "../security/Menu.html";
       } else {
-        msgType = "Error";
+        msgType = ERROR;
         action = "../security/Login_FS.html";
       }
 
@@ -309,7 +418,7 @@ public class LoginHandler extends HttpBaseServlet {
           msg = Utility.messageBD(cp, "OPS_EXPIRED_GOLDEN", vars.getLanguage());
           title = Utility.messageBD(cp, "OPS_EXPIRED_GOLDEN_TITLE", vars.getLanguage());
           updateDBSession(sessionId, false, "IOBPS");
-          goToRetry(res, vars, msg, title, "Error", "../security/Login_FS.html");
+          goToRetry(res, vars, msg, title, ERROR, "../security/Login_FS.html");
           return;
         case POS_TERMINALS_EXCEEDED:
           msg = Utility.messageBD(cp, "OPS_POS_TERMINALS_EXCEEDED", vars.getLanguage());
@@ -333,7 +442,7 @@ public class LoginHandler extends HttpBaseServlet {
         String msg = Utility.messageBD(cp, "NON_RESTRICTED_ROLE", vars.getLanguage());
         String title = Utility.messageBD(cp, "NON_RESTRICTED_ROLE_TITLE", vars.getLanguage());
         updateDBSession(sessionId, false, "RESTR");
-        goToRetry(res, vars, msg, title, "Error", action);
+        goToRetry(res, vars, msg, title, ERROR, action);
         return;
       }
       // Build checks
@@ -403,7 +512,7 @@ public class LoginHandler extends HttpBaseServlet {
         if (error != null) {
           String msg = Utility.messageBD(cp, error.getMessage(), vars.getLanguage());
           String title = Utility.messageBD(cp, error.getTitle(), vars.getLanguage());
-          final String urlToRedirect = StringUtils.equals("Error",
+          final String urlToRedirect = StringUtils.equals(ERROR,
               error.getType()) ? "../security/Login_FS.htm" : "../security/Menu.html";
           goToRetry(res, vars, msg, title, error.getType(), urlToRedirect);
           return;
@@ -419,7 +528,7 @@ public class LoginHandler extends HttpBaseServlet {
             .replace("%0", e.getDefaultField());
         String msg = Utility.messageBD(cp, "InvalidDefaultLoginMsg", vars.getLanguage())
             .replace("%0", e.getDefaultField());
-        goToRetry(res, vars, msg, title, "Error", "../security/Menu.html");
+        goToRetry(res, vars, msg, title, ERROR, "../security/Menu.html");
         return;
       }
 
@@ -545,7 +654,7 @@ public class LoginHandler extends HttpBaseServlet {
 
     // Show the message in the login window, return a JSON object with the info to print the message
     try {
-      boolean loginHasError = "Error".equals(msgType);
+      boolean loginHasError = ERROR.equals(msgType);
       JSONObject jsonMsg = new JSONObject();
       jsonMsg.put("showMessage", true);
       jsonMsg.put("target", loginHasError ? null : target);
@@ -581,7 +690,7 @@ public class LoginHandler extends HttpBaseServlet {
       JSONObject jsonMsg = new JSONObject();
       jsonMsg.put("showMessage", true);
       jsonMsg.put("target", action);
-      jsonMsg.put("messageType", "Error");
+      jsonMsg.put("messageType", ERROR);
       jsonMsg.put("messageTitle", title);
       jsonMsg.put("messageText", msg);
       jsonMsg.put("resetPassword", true);
@@ -645,7 +754,7 @@ public class LoginHandler extends HttpBaseServlet {
   private void throwChangePasswordException(String titleKey, String messageKey, String language)
       throws ChangePasswordException {
     OBError errorMsg = new OBError();
-    errorMsg.setType("Error");
+    errorMsg.setType(ERROR);
     errorMsg.setTitle(Utility.messageBD(myPool, titleKey, language));
     errorMsg.setMessage(Utility.messageBD(myPool, messageKey, language));
     throw new ChangePasswordException(errorMsg.getMessage(), errorMsg);

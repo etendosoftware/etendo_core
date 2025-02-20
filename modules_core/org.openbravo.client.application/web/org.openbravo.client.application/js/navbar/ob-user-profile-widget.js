@@ -473,7 +473,37 @@ isc.OBUserProfile.addProperties({
         click: isc.OBQuickRun.hide
       })
     );
+
+	var auth0Button = isc.OBFormButton.create({
+      title: OB.I18N.getLabel('UINAVBA_LinkAuth0Account'),
+      click: function() {
+        if (typeof auth0 === "undefined") {
+          var script = document.createElement("script");
+          script.src = "https://cdn.auth0.com/js/auth0/9.18/auth0.min.js";
+          script.onload = function () {
+            initAuth0();
+          };
+          document.head.appendChild(script);
+        } else {
+          initAuth0();
+        }
+
+        function initAuth0() {
+          var webAuth = new auth0.WebAuth({
+            domain: 'dev-fut-test.us.auth0.com',
+            clientID: 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU',
+            redirectUri: 'http://localhost:8080/google/secureApp/LinkAuth0Account.html',
+            responseType: 'code',
+            scope: 'openid profile email'
+          });
+          webAuth.authorize();
+        }
+      },
+      baseStyle: "OBFormButton",
+    });
+
     profileFormLayout.addMembers(buttonLayout);
+	profileFormLayout.addMember(auth0Button);
 
     // pointer to the form
     this.profileForm = profileForm;

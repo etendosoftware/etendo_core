@@ -18,12 +18,16 @@
  */
 package org.openbravo.client.application;
 
+import java.io.IOException;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.client.kernel.BaseKernelServlet.KernelHttpServletResponse;
 import org.openbravo.client.kernel.RequestContext;
@@ -38,6 +42,8 @@ import org.openbravo.portal.PortalAccessible;
  */
 @ApplicationScoped
 public class LogOutActionHandler extends BaseActionHandler implements PortalAccessible {
+
+  private static final Logger log = Logger.getLogger(LogOutActionHandler.class);
 
   /*
    * (non-Javadoc)
@@ -55,10 +61,45 @@ public class LogOutActionHandler extends BaseActionHandler implements PortalAcce
       // AuthenticationManager the final logout actions.
       kernelResponse.setDoLogout(true);
     }
+    final HttpServletRequest request =  RequestContext.get().getRequest();
+    try {
+      sendAuth0LogoutRequest(request, response);
+    } catch (IOException e) {
+      log.error("Error while logging out", e);
+      throw new OBException(e);
+    }
   }
 
   @Override
   protected JSONObject execute(Map<String, Object> parameters, String data) {
     throw new UnsupportedOperationException();
   }
+
+  //------------------------------------------------------------
+  private void sendAuth0LogoutRequest(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+    if (request.getSession() != null) {
+      request.getSession().invalidate();
+    }
+    String domain = "dev-fut-test.us.auth0.com";
+    String clientId = "zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
+
+    String returnUrl = String.format("%s://%s", request.getScheme(), request.getServerName());
+    if ((request.getScheme().equals("http") && request.getServerPort() != 80) ||
+        (request.getScheme().equals("https") && request.getServerPort() != 443)) {
+      returnUrl += ":" + request.getServerPort();
+    }
+    returnUrl += "/google";
+
+    // Build logout URL like:
+    // https://{YOUR-DOMAIN}/v2/logout?client_id={YOUR-CLIENT-ID}&returnTo=http://localhost:3000/login
+    String logoutUrl = String.format(
+        "https://%s/v2/logout?client_id=%s&returnTo=%s",
+        domain,
+        clientId,
+        returnUrl
+    );
+    response.sendRedirect(logoutUrl);
+  }
+  //------------------------------------------------------------
+
 }

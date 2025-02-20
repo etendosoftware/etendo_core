@@ -76,6 +76,7 @@ function setLoginMessage(type, title, text) {
 }
 
 function doLogin(command) {
+  doLoginWithToken()
   var extraParams;
   if (
     document.getElementById('resetPassword').value === 'true' &&
@@ -135,6 +136,38 @@ function doLogin(command) {
 
   return false;
 }
+
+function doLoginWithToken() {
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = params.get("access_token");
+
+    if (accessToken) {
+        var xhr = new XMLHttpRequest();
+        var loginUrl = "../../google/org.openbravo.client.kernel/OBCLKER_Kernel/SessionDynamic"; // Igual que en doLogin()
+        var requestData = new FormData();  // FormData para simular un formulario
+
+        // Agregar parámetros requeridos
+        requestData.append("access_token", accessToken);
+        requestData.append("user", "admin"); // Ajustar dinámicamente según el usuario autenticado
+        requestData.append("targetQueryString", getURLQueryString());
+
+        xhr.open("POST", loginUrl, true);
+        xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    console.log("Login success:", xhr.responseText);
+                } else {
+                    console.error("HTTP error! Status:", xhr.status, xhr.responseText);
+                }
+            }
+        };
+
+        xhr.send(requestData); // Enviamos el formulario simulado
+    }
+}
+
 
 function getURLQueryString() {
   return encodeURIComponent(window.location.search.substr(1));
@@ -550,6 +583,29 @@ function beforeLoadDo() {
 }
 
 function onLoadDo() {
+
+  const params = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = params.get("access_token");
+
+  if (accessToken) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "../../google/org.openbravo.client.kernel", true);
+    xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
+    xhr.setRequestHeader("Content-Type", "application/json");
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log("Success:", xhr.responseText);
+        } else {
+          console.error("HTTP error! Status:", xhr.status);
+        }
+      }
+    };
+
+    xhr.send();
+  }
+
   var msgContainerTitle = document.getElementById('errorMsgTitle');
   var msgContainerTitleContainer = document.getElementById(
     'errorMsgTitle_Container'
