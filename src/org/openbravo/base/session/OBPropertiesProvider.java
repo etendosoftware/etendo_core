@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
 
 import com.etendoerp.properties.EtendoPropertiesProvider;
@@ -99,6 +100,41 @@ public class OBPropertiesProvider {
     }
   }
 
+  /**
+   * Loads environment variables into the Openbravo properties.
+   * <p>
+   * This method retrieves all environment variables and adds them to the Openbravo properties.
+   * If a property with the same key already exists, it is renamed with a "DUP_" prefix.
+   */
+  public void loadEnvProperties() {
+    log.debug("Loading enviroment variables into obProperties from Properties Provider");
+
+    Map<String, String> envVariables = getEnvVariables();
+
+    for (Map.Entry<String, String> envEntry : envVariables.entrySet()) {
+      String envKey = envEntry.getKey();
+      String envValue = envEntry.getValue();
+
+      if (obProperties.containsKey(envKey)) {
+        String originalValue = obProperties.getProperty(envKey);
+        obProperties.setProperty("DUP_" + envKey, originalValue);
+      }
+
+      obProperties.setProperty(envKey, envValue);
+    }
+  }
+
+  /**
+   * Retrieves the environment variables.
+   * <p>
+   * This method returns a map of all environment variables available in the system.
+   *
+   * @return A map containing the environment variables.
+   */
+  public Map<String, String> getEnvVariables() {
+    return System.getenv();
+  }
+
   public void setProperties(InputStream is) {
     if (obProperties != null) {
       log.debug("Openbravo properties have already been set, setting them again");
@@ -108,6 +144,7 @@ public class OBPropertiesProvider {
     try {
       obProperties.load(is);
       is.close();
+      loadEnvProperties();
 
       if (OBConfigFileProvider.getInstance() == null
           || OBConfigFileProvider.getInstance().getServletContext() == null) {
@@ -129,6 +166,7 @@ public class OBPropertiesProvider {
     log.debug("Setting openbravo.properties through properties");
     obProperties = new Properties();
     obProperties.putAll(props);
+    loadEnvProperties();
   }
 
   public void setProperties(String fileLocation) {
@@ -138,6 +176,7 @@ public class OBPropertiesProvider {
       final FileInputStream fis = new FileInputStream(fileLocation);
       obProperties.load(fis);
       fis.close();
+      loadEnvProperties();
     } catch (final Exception e) {
       throw new OBException(e);
     }

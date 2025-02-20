@@ -41,7 +41,7 @@
             FROM FACT_ACCT F
             JOIN C_ACCTSCHEMA SC ON (F.C_ACCTSCHEMA_ID = SC.C_ACCTSCHEMA_ID)
             LEFT JOIN GL_JOURNAL GLJ ON (GLJ.GL_JOURNAL_ID = F.RECORD_ID AND F.AD_TABLE_ID = '224')
-            LEFT JOIN c_elementvalue ev ON F.ACCTDESCRIPTION = ev.name
+            LEFT JOIN c_elementvalue ev ON (F.ACCTDESCRIPTION = ev.name and F.ACCTvalue = ev.value and F.AD_CLIENT_ID=ev.AD_CLIENT_ID and F.C_ACCTSCHEMA_ID = ev.c_element_id)
             LEFT JOIN c_elementvalue_trl ev_trl ON ev.c_elementvalue_id = ev_trl.c_elementvalue_id AND ev_trl.ad_language = ? 
             WHERE F.AD_CLIENT_ID IN ('1')
             AND F.AD_ORG_ID IN('1')

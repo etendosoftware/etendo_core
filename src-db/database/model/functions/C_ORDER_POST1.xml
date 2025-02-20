@@ -1435,6 +1435,32 @@
                   FROM m_reservation
                   WHERE c_orderline_id = cur_orderline.c_orderline_id
                 );
+				
+                --C_Order_Post - Stock Reservation Extension Point
+                SELECT count(*) INTO v_count
+                FROM DUAL
+                where exists (select 1 from ad_ep_procedures where ad_extension_points_id = 'A179E12755784A8885653FE33468B11F');
+                IF (v_count=1) THEN
+                  DECLARE
+                    v_ep_instance VARCHAR(32);
+                    v_extension_point_id VARCHAR(32) := 'A179E12755784A8885653FE33468B11F';
+                  BEGIN
+                    v_ep_instance := get_uuid();
+                    AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'OrderLine_ID',
+                      cur_orderline.c_orderline_id, NULL, NULL, NULL, NULL, NULL, NULL);
+                    AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'DocAction',
+                      'Y', NULL, NULL, NULL, NULL, NULL, NULL);
+                    AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'User',
+                      v_user, NULL, NULL, NULL, NULL, NULL, NULL);
+                    AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Warehouse_ID',
+                      v_M_Warehouse_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+                    AD_EXTENSION_POINT_HANDLER(v_ep_instance, v_extension_point_id);
+
+                    DELETE FROM ad_ep_instance_para
+                    WHERE ad_ep_instance_id = v_ep_instance;
+                  END;
+                END IF;			
+				
                 IF (v_aux = 0 AND cur_orderline.create_reservation = 'CRP') THEN
                   M_CREATE_RESERVE_FROM_SOL(cur_orderline.c_orderline_id, 'Y', v_user, v_reservation_id);
                 ELSIF (v_aux = 0 AND cur_orderline.create_reservation = 'CR') THEN
