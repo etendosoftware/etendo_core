@@ -53,7 +53,7 @@ public class AccessPropagation extends WeldBaseTest {
   private final List<String> TABS = Arrays.asList("Bank Account", "Basic Discount");
   private final List<String> FIELDS = Arrays.asList("Business Partner Category", "Commercial Name");
   private final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants");
-  private final List<String> FORMS = Arrays.asList("About", "Menu");
+  private final List<String> forms = Arrays.asList("About", "Menu");
   private final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect");
   private final List<String> VIEWS = Arrays.asList("OBUIAPP_AlertManagement",
       RoleInheritanceTestUtils.DUMMY_VIEW_IMPL_NAME);
@@ -65,7 +65,7 @@ public class AccessPropagation extends WeldBaseTest {
   private final List<String> PREFERENCES = Arrays.asList("AllowAttachment", "AllowDelete");
 
   private final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS, FIELDS,
-      REPORTS, FORMS, WIDGETS, VIEWS, PROCESSES, TABLES, ALERTS, PREFERENCES);
+      REPORTS, forms, WIDGETS, VIEWS, PROCESSES, TABLES, ALERTS, PREFERENCES);
   private static int testCounter = 0;
 
   /** defines the values the parameter will take. */
