@@ -326,7 +326,10 @@ public class ProcessInvoiceUtil {
                             pd.setAmount(fpsd.getAmount());
                             pd.setRefund(false);
                             OBDal.getInstance().save(pd);
-                            
+
+                            // Remove the reference to the order payment schedule
+                            fpsd.setOrderPaymentSchedule(null);
+
                             fpsd.setPaymentDetails(pd);
 
                             pd.getFINPaymentScheduleDetailList().add(fpsd);
