@@ -492,7 +492,7 @@ isc.OBUserProfile.addProperties({
           var webAuth = new auth0.WebAuth({
             domain: 'dev-fut-test.us.auth0.com',
             clientID: 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU',
-            redirectUri: 'http://localhost:8080/google/secureApp/LinkAuth0Account.html',
+            redirectUri: OB.Utilities.getLocationUrlWithoutFragment() + 'secureApp/LinkAuth0Account.html',
             responseType: 'code',
             scope: 'openid profile email'
           });

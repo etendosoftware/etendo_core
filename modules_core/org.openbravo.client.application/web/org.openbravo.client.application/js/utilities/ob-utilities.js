@@ -787,7 +787,7 @@ OB.Utilities.logout = function(confirmed) {
     tabsLength = tabs.length,
     appFrame;
 
-  logoutFromAuth0Popup();
+  logoutFromSSO();
 
   // Push the logout process to the 'end' of the queue
   q.push({
@@ -826,12 +826,14 @@ OB.Utilities.logout = function(confirmed) {
   OB.Utilities.processLogoutQueue();
 };
 
-function logoutFromAuth0Popup() {
-    var auth0Domain = 'dev-fut-test.us.auth0.com';
+function logoutFromSSO() {
+    var ssoDomain = 'dev-fut-test.us.auth0.com';
     var clientId = 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU';
-    var logoutRedirectUri = 'http://localhost:8080/google';
-
-    var logoutUrl = `https://${auth0Domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
+    var logoutRedirectUri = window.location.origin + OB.Application.contextUrl;
+    if (logoutRedirectUri.endsWith('/')) {
+      logoutRedirectUri = logoutRedirectUri.slice(0, -1);
+    }
+    var logoutUrl = `https://${ssoDomain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
 
     window.location.href = logoutUrl;
 }

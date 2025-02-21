@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
+import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.client.kernel.BaseKernelServlet.KernelHttpServletResponse;
 import org.openbravo.client.kernel.RequestContext;
@@ -75,23 +76,20 @@ public class LogOutActionHandler extends BaseActionHandler implements PortalAcce
     throw new UnsupportedOperationException();
   }
 
-  //------------------------------------------------------------
   private void sendAuth0LogoutRequest(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
     if (request.getSession() != null) {
       request.getSession().invalidate();
     }
-    String domain = "dev-fut-test.us.auth0.com";
-    String clientId = "zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
+    String domain = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.domain.url");
+    String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id");
 
     String returnUrl = String.format("%s://%s", request.getScheme(), request.getServerName());
     if ((request.getScheme().equals("http") && request.getServerPort() != 80) ||
         (request.getScheme().equals("https") && request.getServerPort() != 443)) {
       returnUrl += ":" + request.getServerPort();
     }
-    returnUrl += "/google";
+    returnUrl += "/" + OBPropertiesProvider.getInstance().getOpenbravoProperties().get("context.name");
 
-    // Build logout URL like:
-    // https://{YOUR-DOMAIN}/v2/logout?client_id={YOUR-CLIENT-ID}&returnTo=http://localhost:3000/login
     String logoutUrl = String.format(
         "https://%s/v2/logout?client_id=%s&returnTo=%s",
         domain,
@@ -100,6 +98,4 @@ public class LogOutActionHandler extends BaseActionHandler implements PortalAcce
     );
     response.sendRedirect(logoutUrl);
   }
-  //------------------------------------------------------------
-
 }

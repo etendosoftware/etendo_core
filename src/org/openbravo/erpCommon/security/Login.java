@@ -38,6 +38,7 @@ import org.hibernate.query.Query;
 import org.openbravo.base.HttpBaseServlet;
 import org.openbravo.base.secureApp.LoginHandler;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
@@ -268,8 +269,14 @@ public class Login extends HttpBaseServlet {
         }
       }
 
-      String auth0Button = "<style>"
-          + ".auth0-login-button {"
+      String domain = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.domain.url");
+      String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id");
+      String redirectUri = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.callback.url");
+      String soruceURL = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty(
+          "sso.source.url");
+
+      String ssoButton = "<style>"
+          + ".sso-login-button {"
           + "  display: inline-block;"
           + "  background-color: #202452;"
           + "  color: white;"
@@ -280,24 +287,24 @@ public class Login extends HttpBaseServlet {
           + "  text-decoration: none;"
           + "  margin-top: 10px;"
           + "}"
-          + ".auth0-login-button:hover { opacity: 80%; }"
+          + ".sso-login-button:hover { opacity: 80%; }"
           + "</style>"
-          + "<script src=\"https://cdn.auth0.com/js/auth0/9.18/auth0.min.js\"></script>"
+          + "<script src=\"" + soruceURL + "\"></script>"
           + "<script>"
-          + "function loginWithAuth0() {"
-          + "  var webAuth = new auth0.WebAuth({"
-          + "    domain: 'dev-fut-test.us.auth0.com',"
-          + "    clientID: 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU',"
-          + "    redirectUri: 'http://localhost:8080/google/secureApp/LoginHandler.html',"
+          + "function loginWithSSO() {"
+          + "  var webAuth = new auth0.WebAuth({" // TODO: VER COMO SOLUCIONAR ESTE METODO DE AUTH0 HARDCODED
+          + "    domain: '" + domain + "',"
+          + "    clientID: '" + clientId + "',"
+          + "    redirectUri: '" + redirectUri + "',"
           + "    responseType: 'code',"
           + "    scope: 'openid profile email'"
           + "  });"
           + "  webAuth.authorize();"
           + "}"
           + "</script>"
-          + "<a href=\"#\" class=\"auth0-login-button\" onclick=\"loginWithAuth0()\">Sign in with SSO account</a>";
+          + "<a href=\"#\" class=\"sso-login-button\" onclick=\"loginWithSSO()\">Sign in with SSO account</a>";
 
-      link += "<br>" + auth0Button;
+      link += "<br>" + ssoButton;
       xmlDocument.setParameter("sign-in", link);
     }
 
@@ -313,18 +320,6 @@ public class Login extends HttpBaseServlet {
     PrintWriter out = response.getWriter();
     out.println(xmlDocument.print());
     out.close();
-  }
-
-  public static String generateCodeVerifier() {
-    byte[] randomBytes = new byte[32];
-    new SecureRandom().nextBytes(randomBytes);
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-  }
-
-  public static String generateCodeChallenge(String codeVerifier) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-256");
-    byte[] hash = digest.digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
   }
 
   private void insertMessageInPage(XmlDocument document, String parameterName, String message) {

@@ -3,7 +3,6 @@ package org.openbravo.base.secureApp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -29,18 +28,33 @@ import org.openbravo.model.ad.access.TokenUser;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 
+/**
+ * This class handles the linking of Auth0 accounts with the application.
+ */
 public class LinkAuth0Account extends HttpBaseServlet {
-  private static final String AUTH0_DOMAIN = "dev-fut-test.us.auth0.com";
-  private static final String AUTH0_CLIENT_ID = "zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
-  private static final String AUTH0_CLIENT_SECRET = "EAlNG8TK063hfFWmQHRdn94F7qzle04GQ7q3O067_lTMzcKAG4tPQ6P476hxdRAV";
-  private static final String AUTH0_CALLBACK_URL = "http://localhost:8080/google/secureApp/LinkAuth0Account.html";
 
+  /**
+   * Handles GET requests by delegating to the doPost method.
+   *
+   * @param request  the HttpServletRequest object
+   * @param response the HttpServletResponse object
+   * @throws IOException      if an input or output error is detected
+   * @throws ServletException if the request could not be handled
+   */
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
     doPost(request, response);
   }
 
+  /**
+   * Handles POST requests to link Auth0 accounts.
+   *
+   * @param req the HttpServletRequest object
+   * @param res the HttpServletResponse object
+   * @throws IOException      if an input or output error is detected
+   * @throws ServletException if the request could not be handled
+   */
   @Override
   public void doPost(HttpServletRequest req, HttpServletResponse res)
       throws IOException, ServletException {
@@ -50,6 +64,12 @@ public class LinkAuth0Account extends HttpBaseServlet {
     res.sendRedirect("/" + OBPropertiesProvider.getInstance().getOpenbravoProperties().get("context.name"));
   }
 
+  /**
+   * Matches the user based on the provided token and subject.
+   *
+   * @param token the authentication token
+   * @param sub   the subject identifier from the token
+   */
   private void matchUser(String token, String sub) {
     try {
       OBContext.setAdminMode(true);
@@ -77,8 +97,13 @@ public class LinkAuth0Account extends HttpBaseServlet {
     }
   }
 
+  /**
+   * Decodes the provided token and extracts its claims.
+   *
+   * @param token the authentication token
+   * @return a HashMap containing the token claims
+   */
   private HashMap<String, String> decodeToken(String token) {
-
     HashMap<String, String> tokenValues = new HashMap<>();
     DecodedJWT decodedJWT = JWT.decode(token);
 
@@ -90,10 +115,20 @@ public class LinkAuth0Account extends HttpBaseServlet {
     return tokenValues;
   }
 
+  /**
+   * Retrieves the authentication token from the request.
+   *
+   * @param request the HttpServletRequest object
+   * @return the authentication token
+   */
   private String getAuthToken(HttpServletRequest request) {
     String code = request.getParameter("code");
     String token = "";
-    String tokenEndpoint = "https://" + AUTH0_DOMAIN + "/oauth/token";
+    String domain = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.domain.url"); //"dev-fut-test.us.auth0.com";
+    String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id"); //"zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
+    String clientSecret = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.secret");
+    String tokenEndpoint = "https://" + domain + "/oauth/token";
+    String ssoCallbackURL = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.callback.url"); // http://localhost:8080/google/secureApp/LinkAuth0Account.html
     try {
       URL url = new URL(tokenEndpoint);
       HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -104,23 +139,22 @@ public class LinkAuth0Account extends HttpBaseServlet {
       String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
       boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
 
-      // Construcción de parámetros según PKCE o client_secret
       String params;
       if (isPKCE) {
         params = String.format(
             "grant_type=authorization_code&client_id=%s&code=%s&redirect_uri=%s&code_verifier=%s",
-            URLEncoder.encode(AUTH0_CLIENT_ID, StandardCharsets.UTF_8),
+            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
             URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(AUTH0_CALLBACK_URL, StandardCharsets.UTF_8),
+            URLEncoder.encode(ssoCallbackURL, StandardCharsets.UTF_8),
             URLEncoder.encode(codeVerifier, StandardCharsets.UTF_8)
         );
       } else {
         params = String.format(
             "grant_type=authorization_code&client_id=%s&client_secret=%s&code=%s&redirect_uri=%s",
-            URLEncoder.encode(AUTH0_CLIENT_ID, StandardCharsets.UTF_8),
-            URLEncoder.encode(AUTH0_CLIENT_SECRET, StandardCharsets.UTF_8), // Solo si no usas PKCE
+            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
+            URLEncoder.encode(clientSecret, StandardCharsets.UTF_8),
             URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(AUTH0_CALLBACK_URL, StandardCharsets.UTF_8)
+            URLEncoder.encode(ssoCallbackURL, StandardCharsets.UTF_8)
         );
       }
 

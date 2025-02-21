@@ -73,14 +73,18 @@
 </div>
 
 <script>
+    function getQueryParam(param) {
+      var urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    var ssoDomain = getQueryParam("ssoDomain");
+    var clientId = getQueryParam("clientId");
+    var logoutRedirectUri = getQueryParam("logoutRedirectUri");
+
     function auth0Logout() {
-        var auth0Domain = 'dev-fut-test.us.auth0.com';
-        var clientId = 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU';
-        var logoutRedirectUri = 'http://localhost:8080/google';
-
-        var logoutUrl = `https://${auth0Domain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
-
-        window.location.href = logoutUrl;
+      var logoutUrl = `https://${ssoDomain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
+      window.location.href = logoutUrl;
     }
 </script>
 

@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -43,6 +44,7 @@ import org.openbravo.authentication.AuthenticationManager;
 import org.openbravo.authentication.ChangePasswordException;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.HttpBaseServlet;
+import org.openbravo.base.HttpBaseUtils;
 import org.openbravo.base.secureApp.LoginUtils.RoleDefaults;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.application.CachedPreference;
@@ -85,10 +87,9 @@ import org.openbravo.service.password.PasswordStrengthChecker;
 public class LoginHandler extends HttpBaseServlet {
   private static final long serialVersionUID = 1L;
   public static final String SUCCESS_SESSION_STANDARD = "S";
-  private static final String AUTH0_DOMAIN = "dev-fut-test.us.auth0.com";
-  private static final String AUTH0_CLIENT_ID = "zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
-  private static final String AUTH0_CLIENT_SECRET = "EAlNG8TK063hfFWmQHRdn94F7qzle04GQ7q3O067_lTMzcKAG4tPQ6P476hxdRAV";
-  private static final String AUTH0_CALLBACK_URL = "http://localhost:8080/google";
+// "dev-fut-test.us.auth0.com";
+// "zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
+// "EAlNG8TK063hfFWmQHRdn94F7qzle04GQ7q3O067_lTMzcKAG4tPQ6P476hxdRAV";
   private static final String ERROR = "Error";
 
   @Inject
@@ -137,8 +138,16 @@ public class LoginHandler extends HttpBaseServlet {
       HashMap<String, String> tokenValues = decodeToken(token);
       User adUser = matchUser(token, tokenValues.get("sub"));
       if (adUser == null) {
-        res.sendRedirect("/" + OBPropertiesProvider.getInstance().getOpenbravoProperties().get("context.name")
-            + "/secureApp/Auth0ErrorPage.html");
+        final Properties openbravoProperties = OBPropertiesProvider.getInstance().getOpenbravoProperties();
+        String ssoDomain = (String) openbravoProperties.get("sso.domain.url");
+        String clientId = (String) openbravoProperties.get("sso.client.id");
+        String logoutRedirectUri = StringUtils.remove(req.getRequestURL().toString(), req.getServletPath());
+
+        String ssoNoUserLinkURL = "/" + openbravoProperties.get("context.name")
+            + "/secureApp/Auth0ErrorPage.html?ssoDomain=" + URLEncoder.encode(ssoDomain, StandardCharsets.UTF_8)
+            + "&clientId=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
+            + "&logoutRedirectUri=" + URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8);
+        res.sendRedirect(ssoNoUserLinkURL);
         return;
       }
       req.setAttribute("user-token-sub", tokenValues.get("sub"));
@@ -202,6 +211,13 @@ public class LoginHandler extends HttpBaseServlet {
     }
   }
 
+  /**
+   * Matches the user based on the provided token and subject.
+   *
+   * @param token the authentication token
+   * @param sub   the subject identifier from the token
+   * @return the matched User object, or null if no match is found
+   */
   private User matchUser(String token, String sub) {
     OBContext.setAdminMode(true);
     TokenUser tokenUser = (TokenUser) OBDal.getInstance().createCriteria(TokenUser.class)
@@ -217,6 +233,12 @@ public class LoginHandler extends HttpBaseServlet {
     return tokenUser.getUser();
   }
 
+  /**
+   * Decodes the provided token and extracts its claims.
+   *
+   * @param token the authentication token
+   * @return a HashMap containing the token claims
+   */
   private HashMap<String, String> decodeToken(String token) {
 
     HashMap<String, String> tokenValues = new HashMap<>();
@@ -226,14 +248,21 @@ public class LoginHandler extends HttpBaseServlet {
     tokenValues.put("family_name", decodedJWT.getClaim("family_name").asString());
     tokenValues.put("email", decodedJWT.getClaim("email").asString());
     tokenValues.put("sid", decodedJWT.getClaim("sid").asString());
-    tokenValues.put("sub", decodedJWT.getClaim("sub").asString()); // Identificador único del usuario
+    tokenValues.put("sub", decodedJWT.getClaim("sub").asString());
     return tokenValues;
   }
 
+  /**
+   * Retrieves the authentication token from the request.
+   *
+   * @param request the HttpServletRequest object
+   * @return the authentication token, or null if the token could not be retrieved
+   */
   private String getAuthToken(HttpServletRequest request) {
     String code = request.getParameter("code");
     String token = "";
-    String tokenEndpoint = "https://" + AUTH0_DOMAIN + "/oauth/token";
+    String domain = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.domain.url");
+    String tokenEndpoint = "https://" + domain + "/oauth/token";
     try {
       URL url = new URL(tokenEndpoint);
       HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -241,26 +270,29 @@ public class LoginHandler extends HttpBaseServlet {
       con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
       con.setDoOutput(true);
 
+      String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id");
+      String clientSecret = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.secret");
+
       String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
       boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
-
-      // Construcción de parámetros según PKCE o client_secret
+      String strDirection = HttpBaseUtils.getLocalAddress(request);
+      String contextName = (String) OBPropertiesProvider.getInstance().getOpenbravoProperties().get("context.name");
       String params;
       if (isPKCE) {
         params = String.format(
             "grant_type=authorization_code&client_id=%s&code=%s&redirect_uri=%s&code_verifier=%s",
-            URLEncoder.encode(AUTH0_CLIENT_ID, StandardCharsets.UTF_8),
+            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
             URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(AUTH0_CALLBACK_URL, StandardCharsets.UTF_8),
+            URLEncoder.encode(strDirection + "/" + contextName, StandardCharsets.UTF_8),
             URLEncoder.encode(codeVerifier, StandardCharsets.UTF_8)
         );
       } else {
         params = String.format(
             "grant_type=authorization_code&client_id=%s&client_secret=%s&code=%s&redirect_uri=%s",
-            URLEncoder.encode(AUTH0_CLIENT_ID, StandardCharsets.UTF_8),
-            URLEncoder.encode(AUTH0_CLIENT_SECRET, StandardCharsets.UTF_8), // Solo si no usas PKCE
+            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
+            URLEncoder.encode(clientSecret, StandardCharsets.UTF_8),
             URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(AUTH0_CALLBACK_URL, StandardCharsets.UTF_8)
+            URLEncoder.encode(strDirection + "/" + contextName, StandardCharsets.UTF_8)
         );
       }
 
@@ -311,8 +343,7 @@ public class LoginHandler extends HttpBaseServlet {
       doPost(request, response);
   }
 
-  protected void setCORSHeaders(HttpServletRequest request, HttpServletResponse response)
-      throws ServletException, IOException {
+  protected void setCORSHeaders(HttpServletRequest request, HttpServletResponse response) {
 
     String origin = request.getHeader("Origin");
 
