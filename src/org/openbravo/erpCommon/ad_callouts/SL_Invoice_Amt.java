@@ -35,7 +35,7 @@ import org.openbravo.utils.FormatUtilities;
 
 public class SL_Invoice_Amt extends SimpleCallout {
 
-  public static final String PRICE_ACTUAL = "inppriceactual";
+  private static final String PRICE_ACTUAL = "inppriceactual";
 
   @Override
   protected void execute(CalloutInfo info) throws ServletException {

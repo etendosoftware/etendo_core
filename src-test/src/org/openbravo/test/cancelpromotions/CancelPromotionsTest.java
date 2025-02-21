@@ -1,11 +1,8 @@
 package org.openbravo.test.cancelpromotions;
 
 import static org.junit.Assert.assertEquals;
-import static org.openbravo.test.costing.utils.TestCostingUtils.reactivateInvoice;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;
@@ -17,11 +14,8 @@ import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.erpCommon.utility.OBDateUtils;
-import org.openbravo.financial.ResetAccounting;
 import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
-import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.test.base.TestConstants;
 
 /**
@@ -59,14 +53,13 @@ public class CancelPromotionsTest extends WeldBaseTest {
 
     try {
       salesInvoice = CancelPromotionsUtils.createInvoice(true);
-      processInvoice(salesInvoice);
 
       assertEquals(0, BigDecimal.valueOf(24.68).compareTo(salesInvoice.getGrandTotalAmount()));
       assertEquals(0, BigDecimal.valueOf(20.40).compareTo(salesInvoice.getSummedLineAmount()));
     } catch (Exception e) {
       Assert.fail(e.getMessage());
     } finally {
-      reactivateAndDeleteInvoice(salesInvoice);
+      CancelPromotionsUtils.reactivateAndDeleteInvoice(salesInvoice);
     }
   }
 
@@ -80,14 +73,13 @@ public class CancelPromotionsTest extends WeldBaseTest {
 
     try {
       salesInvoice = CancelPromotionsUtils.createInvoice(false);
-      processInvoice(salesInvoice);
 
       assertEquals(0, BigDecimal.valueOf(22.26).compareTo(salesInvoice.getGrandTotalAmount()));
       assertEquals(0, BigDecimal.valueOf(18.40).compareTo(salesInvoice.getSummedLineAmount()));
     } catch (Exception e) {
       Assert.fail(e.getMessage());
     } finally {
-      reactivateAndDeleteInvoice(salesInvoice);
+      CancelPromotionsUtils.reactivateAndDeleteInvoice(salesInvoice);
     }
   }
 
@@ -103,61 +95,5 @@ public class CancelPromotionsTest extends WeldBaseTest {
     OBDal.getInstance().flush();
     OBDal.getInstance().commitAndClose();
     OBDal.getInstance().rollbackAndClose();
-  }
-
-  /**
-   * Reactivates and deletes the given invoice.
-   *
-   * @param salesInvoice
-   *     the invoice to reactivate and delete
-   */
-  private void reactivateAndDeleteInvoice(Invoice salesInvoice) {
-    try {
-      if (salesInvoice == null) {
-        return;
-      }
-
-      salesInvoice = OBDal.getInstance().get(Invoice.class, salesInvoice.getId());
-
-      ResetAccounting.delete(salesInvoice.getClient().getId(), salesInvoice.getOrganization().getId(),
-          salesInvoice.getEntity().getTableId(), salesInvoice.getId(),
-          OBDateUtils.formatDate(salesInvoice.getAccountingDate()), null);
-
-      OBDal.getInstance().refresh(salesInvoice);
-
-      if (salesInvoice.isProcessed()) {
-        reactivateInvoice(salesInvoice);
-      }
-
-      OBDal.getInstance().flush();
-      OBDal.getInstance().commitAndClose();
-
-      salesInvoice = OBDal.getInstance().get(Invoice.class, salesInvoice.getId());
-      OBDal.getInstance().remove(salesInvoice);
-      OBDal.getInstance().flush();
-      OBDal.getInstance().commitAndClose();
-
-    } catch (Exception e) {
-      OBDal.getInstance().rollbackAndClose();
-      Assert.fail(e.getMessage());
-    }
-  }
-
-  /**
-   * Posts the given invoice and returns the posted invoice.
-   *
-   * @param invoice
-   *     the invoice to post
-   * @return the posted invoice
-   */
-  private static Invoice processInvoice(Invoice invoice) {
-    final List<Object> params = new ArrayList<>();
-    params.add(null);
-    params.add(invoice.getId());
-
-    CallStoredProcedure.getInstance().call("C_INVOICE_POST", params, null, true, false);
-
-    OBDal.getInstance().refresh(invoice);
-    return invoice;
   }
 }

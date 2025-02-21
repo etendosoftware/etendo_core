@@ -1,11 +1,18 @@
 package org.openbravo.test.cancelpromotions;
 
-import java.math.BigDecimal;
-import java.util.Date;
+import static org.openbravo.test.costing.utils.TestCostingUtils.reactivateInvoice;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.junit.Assert;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.utility.OBDateUtils;
+import org.openbravo.financial.ResetAccounting;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.Location;
@@ -21,6 +28,7 @@ import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 import org.openbravo.model.pricing.priceadjustment.PromotionType;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
+import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.test.costing.utils.TestCostingConstants;
 import org.openbravo.test.stockReservation.StockReservationTestUtils;
 
@@ -113,7 +121,7 @@ public class CancelPromotionsUtils {
     OBDal.getInstance().flush();
     OBDal.getInstance().refresh(invoiceLine);
 
-    return invoice;
+    return processInvoice(invoice);
   }
 
   /**
@@ -146,5 +154,61 @@ public class CancelPromotionsUtils {
     OBDal.getInstance().commitAndClose();
 
     return pd;
+  }
+
+  /**
+   * Posts the given invoice and returns the posted invoice.
+   *
+   * @param invoice
+   *     the invoice to post
+   * @return the posted invoice
+   */
+  private static Invoice processInvoice(Invoice invoice) {
+    final List<Object> params = new ArrayList<>();
+    params.add(null);
+    params.add(invoice.getId());
+
+    CallStoredProcedure.getInstance().call("C_INVOICE_POST", params, null, true, false);
+
+    OBDal.getInstance().refresh(invoice);
+    return invoice;
+  }
+
+  /**
+   * Reactivates and deletes the given invoice.
+   *
+   * @param salesInvoice
+   *     the invoice to reactivate and delete
+   */
+  public static void reactivateAndDeleteInvoice(Invoice salesInvoice) {
+    try {
+      if (salesInvoice == null) {
+        return;
+      }
+
+      salesInvoice = OBDal.getInstance().get(Invoice.class, salesInvoice.getId());
+
+      ResetAccounting.delete(salesInvoice.getClient().getId(), salesInvoice.getOrganization().getId(),
+          salesInvoice.getEntity().getTableId(), salesInvoice.getId(),
+          OBDateUtils.formatDate(salesInvoice.getAccountingDate()), null);
+
+      OBDal.getInstance().refresh(salesInvoice);
+
+      if (salesInvoice.isProcessed()) {
+        reactivateInvoice(salesInvoice);
+      }
+
+      OBDal.getInstance().flush();
+      OBDal.getInstance().commitAndClose();
+
+      salesInvoice = OBDal.getInstance().get(Invoice.class, salesInvoice.getId());
+      OBDal.getInstance().remove(salesInvoice);
+      OBDal.getInstance().flush();
+      OBDal.getInstance().commitAndClose();
+
+    } catch (Exception e) {
+      OBDal.getInstance().rollbackAndClose();
+      Assert.fail(e.getMessage());
+    }
   }
 }
