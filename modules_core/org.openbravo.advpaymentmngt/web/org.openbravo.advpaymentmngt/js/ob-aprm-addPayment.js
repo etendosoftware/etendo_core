@@ -197,18 +197,18 @@ OB.APRM.AddPayment.onLoad = function(view) {
     form.addField(bankStatementLineAmount);
   }
 
-       const ADD_PAYMENT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
-       const windowId = view.windowId;
+  const ADD_PAYMENT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
+  const windowId = view.windowId;
 
-        if (windowId === ADD_PAYMENT_WINDOW_ID && !view.hasExecutedCreditLogic) {
-          let affectedParams = [];
-          affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
-          OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
-              form,
-              view,
-              affectedParams
-          );
-          view.hasExecutedCreditLogic = true;
+  if (windowId === ADD_PAYMENT_WINDOW_ID && !view.hasExecutedCreditLogic) {
+    let affectedParams = [];
+    affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
+    OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
+        form,
+        view,
+        affectedParams
+    );
+    view.hasExecutedCreditLogic = true;
   }
 };
 
@@ -1441,8 +1441,8 @@ OB.APRM.AddPayment.receivedFromOnChange = function(item, view, form, grid) {
     receivedFrom = form.getItem('received_from').getValue(),
     isSOTrx = form.getItem('issotrx').getValue(),
     financialAccount = form.getItem('fin_financial_account_id').getValue(),
-    ordinvgrid = form.getItem('order_invoice') ? form.getItem('order_invoice').canvas.viewGrid : null,
     paymentMethodItem = form.getItem('fin_paymentmethod_id'),
+    ordinvgrid = form.getItem('order_invoice') ? form.getItem('order_invoice').canvas.viewGrid : null,
     newCriteria = {};
   affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
   OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
@@ -1559,18 +1559,18 @@ OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic = function(
       thisview.handleButtonsStatus();
     }
 
-    const ADD_PAYMENT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
-    const windowId = view.windowId;
+     const ADD_PAYMENT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
+     const windowId = view.windowId;
 
-    if (windowId === ADD_PAYMENT_WINDOW_ID) {
-     let affectedParams = [];
-     affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
-     OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
-         form,
-         view,
-         affectedParams
-     );
-    }
+     if (windowId === ADD_PAYMENT_WINDOW_ID) {
+      let affectedParams = [];
+      affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
+      OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
+          form,
+          view,
+          affectedParams
+      );
+     }
   };
 
   thisview.fireOnPause(
