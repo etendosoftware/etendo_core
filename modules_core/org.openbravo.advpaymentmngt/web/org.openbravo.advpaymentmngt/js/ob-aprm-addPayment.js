@@ -196,6 +196,20 @@ OB.APRM.AddPayment.onLoad = function(view) {
     form.addField(orgParam);
     form.addField(bankStatementLineAmount);
   }
+
+  const ADD_PAYMENT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
+  const windowId = view.windowId;
+
+  if (windowId === ADD_PAYMENT_WINDOW_ID && !view.hasExecutedCreditLogic) {
+    let affectedParams = [];
+    affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
+    OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
+        form,
+        view,
+        affectedParams
+    );
+    view.hasExecutedCreditLogic = true;
+  }
 };
 
 OB.APRM.AddPayment.addNewGLItem = function(grid) {
