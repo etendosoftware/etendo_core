@@ -47,7 +47,6 @@ import org.openbravo.model.ad.access.Role;
  */
 public class VerticalInheritance extends WeldBaseTest {
 
-  private static final List<List<String>> accesses = InheritanceAndPropagationUtil.accesses;
   private static int testCounter = 0;
 
   /** defines the values the parameter will take. */
@@ -89,7 +88,7 @@ public class VerticalInheritance extends WeldBaseTest {
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleCId = roleC.getId();
 
-      List<String> accesses = this.accesses.get(testCounter);
+      List<String> accesses = InheritanceAndPropagationUtil.accesses.get(testCounter);
       // Add window accesses for template roles
       RoleInheritanceTestUtils.addAccess(parameter, roleA, accesses.get(0));
       RoleInheritanceTestUtils.addAccess(parameter, roleB, accesses.get(1));

@@ -47,7 +47,6 @@ import org.openbravo.model.ad.access.Role;
  */
 public class AccessPropagation extends WeldBaseTest {
 
-  private static final List<List<String>> accesses = InheritanceAndPropagationUtil.accesses;
   private static int testCounter = 0;
 
   /** defines the values the parameter will take. */
@@ -87,7 +86,7 @@ public class AccessPropagation extends WeldBaseTest {
       role = OBDal.getInstance().get(Role.class, roleId);
       template = OBDal.getInstance().get(Role.class, templateId);
 
-      List<String> accesses = this.accesses.get(testCounter);
+      List<String> accesses = InheritanceAndPropagationUtil.accesses.get(testCounter);
       // Add accesses
       RoleInheritanceTestUtils.addAccess(parameter, template, accesses.get(0));
       RoleInheritanceTestUtils.addAccess(parameter, role, accesses.get(1));

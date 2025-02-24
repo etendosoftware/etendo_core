@@ -47,7 +47,6 @@ import org.openbravo.model.ad.access.Role;
  */
 public class DeletedAccessPropagation extends WeldBaseTest {
 
-  private static final List<List<String>> accesses = InheritanceAndPropagationUtil.accesses;
   private static int testCounter = 0;
 
   /** defines the values the parameter will take. */
@@ -96,7 +95,7 @@ public class DeletedAccessPropagation extends WeldBaseTest {
           true);
       String template3Id = template3.getId();
 
-      List<String> accesses = this.accesses.get(testCounter);
+      List<String> accesses = InheritanceAndPropagationUtil.accesses.get(testCounter);
       // Add accesses
       RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(0));
       RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(1));
