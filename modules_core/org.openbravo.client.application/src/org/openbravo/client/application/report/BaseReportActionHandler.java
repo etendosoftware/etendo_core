@@ -122,7 +122,7 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
   protected JSONObject doExecute(Map<String, Object> parameters, String content) {
 
     try {
-      JSONObject result = getResponseBuilder().retryExecution().showResultsInProcessView().build();
+      JSONObject result = getResponseBuilder().retryExecution().build();
 
       final JSONObject jsonContent = new JSONObject(content);
       final String action = jsonContent.getString(ApplicationConstants.BUTTON_VALUE);
@@ -133,7 +133,6 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
       log.error("Error generating report id: {}", parameters.get("reportId"), e);
       Throwable uiException = DbUtility.getUnderlyingSQLException(e);
       return getResponseBuilder().retryExecution()
-          .showResultsInProcessView()
           .showMsgInProcessView(MessageType.ERROR,
               OBMessageUtils.translateError(uiException.getMessage()).getMessage())
           .build();
