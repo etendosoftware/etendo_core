@@ -705,7 +705,6 @@ public class HeartbeatProcess implements Process {
   private static void logFormatError(String itemLabel, String systemItemLabel) {
     log.warn("Incorrect format for {} : {}", itemLabel, systemItemLabel);
   }
-
   /**
    * Updates the status of the HeartbeatLog entry identified by `logHeartbeatID`.
    *
