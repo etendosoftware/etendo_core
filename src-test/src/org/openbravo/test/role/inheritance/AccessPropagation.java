@@ -21,7 +21,6 @@ package org.openbravo.test.role.inheritance;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -48,7 +47,7 @@ import org.openbravo.model.ad.access.Role;
  */
 public class AccessPropagation extends WeldBaseTest {
 
-  private final List<List<String>> ACCESSES = InheritanceAndPropagationUtil.accesses;
+  private static final List<List<String>> accesses = InheritanceAndPropagationUtil.accesses;
   private static int testCounter = 0;
 
   /** defines the values the parameter will take. */
@@ -88,7 +87,7 @@ public class AccessPropagation extends WeldBaseTest {
       role = OBDal.getInstance().get(Role.class, roleId);
       template = OBDal.getInstance().get(Role.class, templateId);
 
-      List<String> accesses = ACCESSES.get(testCounter);
+      List<String> accesses = this.accesses.get(testCounter);
       // Add accesses
       RoleInheritanceTestUtils.addAccess(parameter, template, accesses.get(0));
       RoleInheritanceTestUtils.addAccess(parameter, role, accesses.get(1));
