@@ -142,11 +142,12 @@ public class LoginHandler extends HttpBaseServlet {
         String ssoDomain = (String) openbravoProperties.get("sso.domain.url");
         String clientId = (String) openbravoProperties.get("sso.client.id");
         String logoutRedirectUri = StringUtils.remove(req.getRequestURL().toString(), req.getServletPath());
-
+        log4j.info("logoutRedirectUri: " + logoutRedirectUri);
         String ssoNoUserLinkURL = "/" + openbravoProperties.get("context.name")
             + "/secureApp/Auth0ErrorPage.html?ssoDomain=" + URLEncoder.encode(ssoDomain, StandardCharsets.UTF_8)
             + "&clientId=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
             + "&logoutRedirectUri=" + URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8);
+        log4j.info("ssoNoUserLinkURL: " + ssoNoUserLinkURL);
         res.sendRedirect(ssoNoUserLinkURL);
         return;
       }
@@ -277,7 +278,7 @@ public class LoginHandler extends HttpBaseServlet {
 
       String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
       boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
-      String strDirection = HttpBaseUtils.getLocalAddress(request);
+      String strDirection = request.getScheme() + "://" + request.getServerName() + request.getContextPath() + "/secureApp/LoginHandler.html";
       String params;
       if (isPKCE) {
         params = String.format(
@@ -301,14 +302,19 @@ public class LoginHandler extends HttpBaseServlet {
       try (OutputStream os = con.getOutputStream()) {
         byte[] input = params.getBytes(StandardCharsets.UTF_8);
         os.write(input, 0, input.length);
+      } catch (Exception e) {
+        log4j.error(e.getMessage(), e);
       }
 
       int status = con.getResponseCode();
+      log4j.info("Status Code: " + status);
       if (status == 200) {
         try (InputStream in = con.getInputStream()) {
           String responseBody = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+          log4j.info("JSON Response : " + responseBody);
           JSONObject jsonResponse = new JSONObject(responseBody);
           token = jsonResponse.getString("id_token");
+          log4j.info("Token : " + token);
         }
       } else {
         log4j.error(con.getResponseMessage());
