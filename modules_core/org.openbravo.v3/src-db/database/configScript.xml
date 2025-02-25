@@ -1525,10 +1525,6 @@
       <oldValue><![CDATA[Y]]></oldValue>
       <newValue><![CDATA[N]]></newValue>
     </columnDataChange>
-    <columnDataChange tablename="AD_FIELD" columnname="ISDISPLAYED" pkRow="34A18501CC664E9CA1B5F1BC050FB18A">
-      <oldValue><![CDATA[Y]]></oldValue>
-      <newValue><![CDATA[N]]></newValue>
-    </columnDataChange>
     <columnDataChange tablename="AD_FIELD" columnname="ISDISPLAYED" pkRow="3D0F213439C848F2990DC82AB370878A">
       <oldValue><![CDATA[N]]></oldValue>
       <newValue><![CDATA[Y]]></newValue>
