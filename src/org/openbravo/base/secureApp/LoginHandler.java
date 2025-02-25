@@ -277,7 +277,7 @@ public class LoginHandler extends HttpBaseServlet {
 
       String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
       boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
-      String strDirection = HttpBaseUtils.getLocalAddress(request);
+      String strDirection = request.getScheme() + "://" + request.getServerName() + request.getContextPath() + "/secureApp/LoginHandler.html";
       String params;
       if (isPKCE) {
         params = String.format(
@@ -301,14 +301,19 @@ public class LoginHandler extends HttpBaseServlet {
       try (OutputStream os = con.getOutputStream()) {
         byte[] input = params.getBytes(StandardCharsets.UTF_8);
         os.write(input, 0, input.length);
+      } catch (Exception e) {
+        log4j.error(e.getMessage(), e);
       }
 
       int status = con.getResponseCode();
+      log4j.info("Status Code: " + status);
       if (status == 200) {
         try (InputStream in = con.getInputStream()) {
           String responseBody = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+          log4j.info("JSON Response : " + responseBody);
           JSONObject jsonResponse = new JSONObject(responseBody);
           token = jsonResponse.getString("id_token");
+          log4j.info("Token : " + token);
         }
       } else {
         log4j.error(con.getResponseMessage());
