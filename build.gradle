@@ -32,7 +32,6 @@ jandex {
  */
 dependencies {
     jandex 'org.jboss:jandex:2.0.5.Final'
-    implementation('com.auth0:java-jwt:4.4.0')
 }
 
 final String CURRENT_VERSION = "24.4.1"
