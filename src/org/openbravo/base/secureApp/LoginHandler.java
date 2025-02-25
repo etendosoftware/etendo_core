@@ -265,6 +265,7 @@ public class LoginHandler extends HttpBaseServlet {
     String tokenEndpoint = "https://" + domain + "/oauth/token";
     try {
       URL url = new URL(tokenEndpoint);
+      log4j.info("URL: " + url);
       HttpURLConnection con = (HttpURLConnection) url.openConnection();
       con.setRequestMethod("POST");
       con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -272,6 +273,7 @@ public class LoginHandler extends HttpBaseServlet {
 
       String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id");
       String clientSecret = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.secret");
+      log4j.info("clientId: " + clientId + "y clientSecret: " + clientSecret);
 
       String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
       boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
@@ -295,6 +297,7 @@ public class LoginHandler extends HttpBaseServlet {
             URLEncoder.encode(strDirection + "/" + contextName, StandardCharsets.UTF_8)
         );
       }
+      log4j.info("Params: " + params);
 
       try (OutputStream os = con.getOutputStream()) {
         byte[] input = params.getBytes(StandardCharsets.UTF_8);
@@ -309,6 +312,7 @@ public class LoginHandler extends HttpBaseServlet {
           token = jsonResponse.getString("id_token");
         }
       } else {
+        log4j.error(con.getResponseMessage());
         token = null;
       }
     } catch (JSONException | IOException e) {
