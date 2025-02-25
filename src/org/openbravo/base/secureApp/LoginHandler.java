@@ -278,14 +278,13 @@ public class LoginHandler extends HttpBaseServlet {
       String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
       boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
       String strDirection = HttpBaseUtils.getLocalAddress(request);
-      String contextName = (String) OBPropertiesProvider.getInstance().getOpenbravoProperties().get("context.name");
       String params;
       if (isPKCE) {
         params = String.format(
             "grant_type=authorization_code&client_id=%s&code=%s&redirect_uri=%s&code_verifier=%s",
             URLEncoder.encode(clientId, StandardCharsets.UTF_8),
             URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(strDirection + "/" + contextName, StandardCharsets.UTF_8),
+            URLEncoder.encode(strDirection, StandardCharsets.UTF_8),
             URLEncoder.encode(codeVerifier, StandardCharsets.UTF_8)
         );
       } else {
@@ -294,7 +293,7 @@ public class LoginHandler extends HttpBaseServlet {
             URLEncoder.encode(clientId, StandardCharsets.UTF_8),
             URLEncoder.encode(clientSecret, StandardCharsets.UTF_8),
             URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(strDirection + "/" + contextName, StandardCharsets.UTF_8)
+            URLEncoder.encode(strDirection, StandardCharsets.UTF_8)
         );
       }
       log4j.info("Params: " + params);
