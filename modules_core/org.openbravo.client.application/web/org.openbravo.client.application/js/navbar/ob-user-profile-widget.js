@@ -475,7 +475,7 @@ isc.OBUserProfile.addProperties({
     );
 
 	var auth0Button = isc.OBFormButton.create({
-      title: OB.I18N.getLabel('UINAVBA_LinkAuth0Account'),
+      title: OB.I18N.getLabel('UINAVBA_LinkSSOAccount'),
       click: function() {
         if (typeof auth0 === "undefined") {
           var script = document.createElement("script");
