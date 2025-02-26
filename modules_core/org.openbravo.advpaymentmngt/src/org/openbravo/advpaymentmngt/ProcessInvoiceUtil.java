@@ -63,7 +63,7 @@ public class ProcessInvoiceUtil {
      * @param conn {@link ConnectionProvider} Used to connect to the database. Use 'this' when in servlets.
      * @return an {@link OBError} with the message of the resulting operation. It can be a success.
      */
-    public OBError process(String strC_Invoice_ID, String strdocaction, String strVoidInvoiceDate, String strVoidInvoiceAcctDate, VariablesSecureApp vars, ConnectionProvider conn) {
+    public OBError process(String strC_Invoice_ID, String strdocaction, String strVoidInvoiceDate, String strVoidInvoiceAcctDate, String strSupplierReference, VariablesSecureApp vars, ConnectionProvider conn) {
         OBError myMessage = null;
         try {
 
@@ -120,6 +120,7 @@ public class ProcessInvoiceUtil {
                 parameters.put("voidedDocumentDate", OBDateUtils.formatDate(voidDate, "yyyy-MM-dd"));
                 parameters.put("voidedDocumentAcctDate",
                         OBDateUtils.formatDate(voidAcctDate, "yyyy-MM-dd"));
+                parameters.put("supplierReference", strSupplierReference);
 
             }
 

@@ -145,6 +145,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
       final String strdocaction = vars.getStringParameter("inpdocaction");
       final String strVoidInvoiceDate = vars.getStringParameter("inpVoidedDocumentDate");
       final String strVoidInvoiceAcctDate = vars.getStringParameter("inpVoidedDocumentAcctDate");
+      final String strSupplierReference = vars.getStringParameter("inpSupplierReference");
       final String strOrg = vars.getGlobalVariable("inpadOrgId", "ProcessInvoice|Org_ID",
           IsIDFilter.instance);
 
@@ -153,7 +154,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
 
         Invoice invoice = dao.getObject(Invoice.class, strC_Invoice_ID);
 
-        myMessage = weldUtils.getInstance(ProcessInvoiceUtil.class).process(strC_Invoice_ID, strdocaction, strVoidInvoiceDate, strVoidInvoiceAcctDate, vars, this);
+        myMessage = weldUtils.getInstance(ProcessInvoiceUtil.class).process(strC_Invoice_ID, strdocaction, strVoidInvoiceDate, strVoidInvoiceAcctDate, strSupplierReference, vars, this);
         log4j.debug(myMessage.getMessage());
         vars.setMessage(strTabId, myMessage);
 
