@@ -74,7 +74,9 @@
 
 <script>
     function getQueryParam(param) {
+      console.log('Window location search: ' + window.location.search);
       var urlParams = new URLSearchParams(window.location.search);
+      console.log(urlParams);
       return urlParams.get(param);
     }
 
@@ -84,6 +86,7 @@
 
     function auth0Logout() {
       var logoutUrl = `https://${ssoDomain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
+      console.log('Logout URL: ' + logoutUrl);
       window.location.href = logoutUrl;
     }
 </script>

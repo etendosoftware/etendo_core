@@ -139,16 +139,26 @@ public class LoginHandler extends HttpBaseServlet {
       User adUser = matchUser(token, tokenValues.get("sub"));
       if (adUser == null) {
         final Properties openbravoProperties = OBPropertiesProvider.getInstance().getOpenbravoProperties();
-        String ssoDomain = (String) openbravoProperties.get("sso.domain.url");
-        String clientId = (String) openbravoProperties.get("sso.client.id");
-        String logoutRedirectUri = StringUtils.remove(req.getRequestURL().toString(), req.getServletPath());
+        String ssoDomain = ((String) openbravoProperties.get("sso.domain.url")).trim();
+        String clientId = ((String) openbravoProperties.get("sso.client.id")).trim();
+        String logoutRedirectUri = StringUtils.remove(req.getRequestURL().toString(), req.getServletPath()).trim();
+        String contextName = ((String) openbravoProperties.get("context.name")).trim();
+        log4j.info("context.name: " + contextName);
+        log4j.info("sso.domain.url: " + ssoDomain);
+        log4j.info("sso.client.id: " + clientId);
         log4j.info("logoutRedirectUri: " + logoutRedirectUri);
-        String ssoNoUserLinkURL = "/" + openbravoProperties.get("context.name")
-            + "/secureApp/Auth0ErrorPage.html?ssoDomain=" + URLEncoder.encode(ssoDomain, StandardCharsets.UTF_8)
-            + "&clientId=" + URLEncoder.encode(clientId, StandardCharsets.UTF_8)
-            + "&logoutRedirectUri=" + URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8);
-        log4j.info("ssoNoUserLinkURL: " + ssoNoUserLinkURL);
-        res.sendRedirect(ssoNoUserLinkURL);
+        log4j.info("Encoded logoutRedirectUri: " + URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8));
+        String ssoNoUserLinkURL = String.format("/%s/secureApp/Auth0ErrorPage.html?ssoDomain=%s&clientId=%s&logoutRedirectUri=%s",
+            contextName,
+            URLEncoder.encode(ssoDomain, StandardCharsets.UTF_8),
+            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
+            URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8));
+        try {
+          log4j.info("User not found in the system, redirecting to: " + ssoNoUserLinkURL);
+          res.sendRedirect(ssoNoUserLinkURL);
+        } catch (Exception e) {
+          log4j.error("Error redirecting to: " + ssoNoUserLinkURL + " --- " + e.getMessage(), e);
+        }
         return;
       }
       req.setAttribute("user-token-sub", tokenValues.get("sub"));
@@ -266,7 +276,6 @@ public class LoginHandler extends HttpBaseServlet {
     String tokenEndpoint = "https://" + domain + "/oauth/token";
     try {
       URL url = new URL(tokenEndpoint);
-      log4j.info("URL: " + url);
       HttpURLConnection con = (HttpURLConnection) url.openConnection();
       con.setRequestMethod("POST");
       con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -274,7 +283,6 @@ public class LoginHandler extends HttpBaseServlet {
 
       String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id");
       String clientSecret = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.secret");
-      log4j.info("clientId: " + clientId + "y clientSecret: " + clientSecret);
 
       String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
       boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
@@ -297,7 +305,6 @@ public class LoginHandler extends HttpBaseServlet {
             URLEncoder.encode(strDirection, StandardCharsets.UTF_8)
         );
       }
-      log4j.info("Params: " + params);
 
       try (OutputStream os = con.getOutputStream()) {
         byte[] input = params.getBytes(StandardCharsets.UTF_8);
@@ -307,14 +314,11 @@ public class LoginHandler extends HttpBaseServlet {
       }
 
       int status = con.getResponseCode();
-      log4j.info("Status Code: " + status);
       if (status == 200) {
         try (InputStream in = con.getInputStream()) {
           String responseBody = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-          log4j.info("JSON Response : " + responseBody);
           JSONObject jsonResponse = new JSONObject(responseBody);
           token = jsonResponse.getString("id_token");
-          log4j.info("Token : " + token);
         }
       } else {
         log4j.error(con.getResponseMessage());
