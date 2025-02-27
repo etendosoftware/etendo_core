@@ -90,6 +90,7 @@ public class ProcessInvoices extends Action {
                 docAction,
                 strVoidDate,
                 strVoidAcctDate,
+                null,
                 RequestContext.get().getVariablesSecureApp(),
                 new DalConnectionProvider(false)
         );

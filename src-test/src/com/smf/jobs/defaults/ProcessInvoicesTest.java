@@ -133,6 +133,7 @@ public class ProcessInvoicesTest {
           eq(docAction),
           eq(""),
           eq(""),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(expectedResult);
@@ -181,6 +182,7 @@ public class ProcessInvoicesTest {
           eq(docAction),
           eq(formattedDate),
           eq(formattedDate),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(expectedResult);
@@ -248,6 +250,7 @@ public class ProcessInvoicesTest {
           anyString(),
           anyString(),
           anyString(),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(successResult);
@@ -300,6 +303,7 @@ public class ProcessInvoicesTest {
           eq("XL"),
           anyString(),
           anyString(),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(successResult);
