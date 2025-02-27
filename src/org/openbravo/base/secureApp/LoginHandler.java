@@ -48,6 +48,7 @@ import org.openbravo.base.HttpBaseUtils;
 import org.openbravo.base.secureApp.LoginUtils.RoleDefaults;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.application.CachedPreference;
+import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
@@ -148,7 +149,7 @@ public class LoginHandler extends HttpBaseServlet {
         log4j.info("sso.client.id: " + clientId);
         log4j.info("logoutRedirectUri: " + logoutRedirectUri);
         log4j.info("Encoded logoutRedirectUri: " + URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8));
-        String ssoNoUserLinkURL = String.format("/%s/secureApp/Auth0ErrorPage.html?ssoDomain=%s&clientId=%s&logoutRedirectUri=%s",
+        String ssoNoUserLinkURL = String.format("/%s" + ReportingUtils.getBaseDesign() + "/org/openbravo/base/secureApp/Auth0ErrorPage.html?ssoDomain=%s&clientId=%s&logoutRedirectUri=%s",
             contextName,
             URLEncoder.encode(ssoDomain, StandardCharsets.UTF_8),
             URLEncoder.encode(clientId, StandardCharsets.UTF_8),
