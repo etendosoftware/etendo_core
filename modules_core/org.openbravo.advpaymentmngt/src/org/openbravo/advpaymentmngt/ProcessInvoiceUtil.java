@@ -59,6 +59,7 @@ public class ProcessInvoiceUtil {
      * @param strdocaction Document Action
      * @param strVoidInvoiceDate Void date where applicable
      * @param strVoidInvoiceAcctDate Void accounting date where applicable
+     * @param strSupplierReference Supplier reference associated with the invoice, used for tracking purposes.
      * @param vars {@link VariablesSecureApp} Used to obtain current language and by Payment Processes. Use {@link org.openbravo.client.kernel.RequestContext#getVariablesSecureApp()} outside of servlets.
      * @param conn {@link ConnectionProvider} Used to connect to the database. Use 'this' when in servlets.
      * @return an {@link OBError} with the message of the resulting operation. It can be a success.
