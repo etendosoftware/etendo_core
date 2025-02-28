@@ -31,7 +31,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.ValueListFilter;
@@ -288,7 +288,7 @@ public class TestHeartbeat extends HttpSecureAppServlet {
     Window heartBeatConf_win = OBDal.getInstance().get(Window.class, heartBeatConf_win_id);
     if (heartBeatConf_win != null) {
       newTabTitle = heartBeatConf_win.getIdentifier();
-      newTabTitle = StringEscapeUtils.escapeHtml(newTabTitle);
+      newTabTitle = StringEscapeUtils.escapeHtml4(newTabTitle);
     } else {
       newTabTitle = "Heartbeat Configuration";
     }

@@ -35,8 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -193,7 +193,7 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
     final String strcAcctSchemaId = OBLedgerUtils.getOrgLedger(strOrg);
     response.setContentType(CONTENT_TYPE);
     final PrintWriter out = response.getWriter();
-    out.print(StringEscapeUtils.escapeHtml(strcAcctSchemaId));
+    out.print(StringEscapeUtils.escapeHtml4(strcAcctSchemaId));
     out.close();
   }
 

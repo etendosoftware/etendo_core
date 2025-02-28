@@ -23,7 +23,7 @@ import java.math.BigDecimal;
 
 import javax.enterprise.context.Dependent;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.materialmgmt.UOMUtil;

@@ -20,7 +20,7 @@ package org.openbravo.modulescript;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.modulescript.ModuleScript;
 import org.openbravo.modulescript.ModuleScriptExecutionLimits;

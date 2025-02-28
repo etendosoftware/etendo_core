@@ -20,7 +20,7 @@ package org.openbravo.scheduling.trigger;
 
 import static org.quartz.TriggerBuilder.newTrigger;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.SimpleTrigger;
 import org.quartz.TriggerBuilder;

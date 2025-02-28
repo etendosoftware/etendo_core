@@ -7,7 +7,7 @@ import com.smf.securewebservices.utils.WSResult.Status;
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
 import cz.jirutka.rsql.parser.ast.Node;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -282,7 +282,7 @@ public class OBRestUtils {
 			Integer startRow = 0;
 			String strFirstResult = params.get(OBRestConstants.FIRSTRESULT_PARAMETER);
 			if (strFirstResult != null && !strFirstResult.isEmpty()) {
-				startRow = new Integer(strFirstResult);
+				startRow = Integer.parseInt(strFirstResult);
 				startRow = startRow > 0 ? startRow : 0;
 			}
 
@@ -292,7 +292,7 @@ public class OBRestUtils {
 			String strMaxResults = params.get(OBRestConstants.MAXRESULTS_PARAMETER);
 			Integer maxResults = null;
 			if (strMaxResults != null && !strMaxResults.isEmpty()) {
-				maxResults = new Integer(strMaxResults);
+				maxResults = Integer.parseInt(strMaxResults);
 				if (maxResults >= 0) {
 					Integer endRow = startRow + maxResults - 1;
 					parameters.put(JsonConstants.ENDROW_PARAMETER, endRow.toString());

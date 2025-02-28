@@ -32,7 +32,8 @@ import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.inject.Inject;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -764,7 +765,7 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
         // try again without the '@'
         value = parameters.get(contextPropertyName.substring(1, contextPropertyName.length() - 1));
       }
-      replacements.put(contextPropertyName, "'" + StringEscapeUtils.escapeSql(value) + "'");
+      replacements.put(contextPropertyName, "'" + value != null ? StringUtils.replace(value, "'", "''") : null + "'");
     }
     String hqlCopy = hqlTreeWhereClause;
     for (Entry<String, String> entry : replacements.entrySet()) {
@@ -788,7 +789,7 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
       return value;
     }
 
-    return "'" + StringEscapeUtils.escapeSql(value) + "'";
+    return "'" + value != null ? StringUtils.replace(value, "'", "''") : null + "'";
   }
 
   /**

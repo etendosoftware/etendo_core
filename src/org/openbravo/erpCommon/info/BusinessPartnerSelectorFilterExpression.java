@@ -23,7 +23,7 @@ import java.util.Map;
 
 import javax.enterprise.context.Dependent;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.application.FilterExpression;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.enterprise.Organization;
