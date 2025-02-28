@@ -29,9 +29,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
@@ -276,7 +276,7 @@ public class MInOutTraceReports extends HttpSecureAppServlet {
       resultado.append("<td class=\"DataGrid_Body_Cell_Amount\">\n");
       resultado.append(totalPedido.toString())
           .append(" ")
-          .append(StringEscapeUtils.escapeHtml(strUnitPedido));
+          .append(StringEscapeUtils.escapeHtml4(strUnitPedido));
       resultado.append("</td>\n");
     }
     return resultado.toString();
@@ -381,7 +381,7 @@ public class MInOutTraceReports extends HttpSecureAppServlet {
               .append(dataProduction[j].movementdate)
               .append("</td>\n");
           strHtml.append("    <td class=\"DataGrid_Body_Cell\" width=\"100\">")
-              .append(StringEscapeUtils.escapeHtml(dataProduction[j].movementtypeName))
+              .append(StringEscapeUtils.escapeHtml4(dataProduction[j].movementtypeName))
               .append("</td>\n");
           strHtml.append("    <td class=\"DataGrid_Body_Cell\" width=\"100\">")
               .append(dataProduction[j].locatorName)
@@ -389,12 +389,12 @@ public class MInOutTraceReports extends HttpSecureAppServlet {
           strHtml.append("    <td class=\"DataGrid_Body_Cell_Amount\" width=\"90\">")
               .append(dataProduction[j].movementqty)
               .append("&nbsp;")
-              .append(StringEscapeUtils.escapeHtml(dataProduction[j].uomName))
+              .append(StringEscapeUtils.escapeHtml4(dataProduction[j].uomName))
               .append("</td>\n");
           strHtml.append("    <td class=\"DataGrid_Body_Cell\" width=\"90\">")
               .append(dataProduction[j].quantityorder)
               .append("&nbsp;")
-              .append(StringEscapeUtils.escapeHtml(dataProduction[j].productUomName))
+              .append(StringEscapeUtils.escapeHtml4(dataProduction[j].productUomName))
               .append("</td>\n");
           resultado2 = dataProduction[j].productName;
           strHtml.append(
@@ -404,13 +404,13 @@ public class MInOutTraceReports extends HttpSecureAppServlet {
                   + (StringUtils.equals(strIn, "Y") ? "N" : "Y")
                   + "', '_self');return true;\" class=\"LabelLink\">");
           if (StringUtils.isNotEmpty(resultado2)) {
-            strHtml.append(StringEscapeUtils.escapeHtml(resultado2));
+            strHtml.append(StringEscapeUtils.escapeHtml4(resultado2));
           }
           strHtml.append("&nbsp;</a></td>\n");
           resultado2 = dataProduction[j].attributeName;
           strHtml.append("    <td class=\"DataGrid_Body_Cell\" width=\"120\">");
           if (StringUtils.isNotEmpty(resultado2)) {
-            strHtml.append(StringEscapeUtils.escapeHtml(resultado2));
+            strHtml.append(StringEscapeUtils.escapeHtml4(resultado2));
           }
           strHtml.append("&nbsp;</td>\n");
           strHtml.append("</tr></table>");
@@ -581,13 +581,13 @@ public class MInOutTraceReports extends HttpSecureAppServlet {
     resultado.append("    <td class=\"DataGrid_Body_Cell_Amount\" width=\"90\">")
         .append(data.movementqty)
         .append("&nbsp;")
-        .append(StringEscapeUtils.escapeHtml(data.uomName))
+        .append(StringEscapeUtils.escapeHtml4(data.uomName))
         .append("</td>\n");
     if (StringUtils.isNotEmpty(data.quantityorder)) {
       resultado.append("    <td class=\"DataGrid_Body_Cell\" width=\"90\">")
           .append(data.quantityorder)
           .append("&nbsp;")
-          .append(StringEscapeUtils.escapeHtml(data.productUomName))
+          .append(StringEscapeUtils.escapeHtml4(data.productUomName))
           .append("</td>\n");
     }
     if (StringUtils.equalsIgnoreCase(data.movementtype, "W+")) {
@@ -620,7 +620,7 @@ public class MInOutTraceReports extends HttpSecureAppServlet {
 
     resultado.append("    <td class=\"DataGrid_Body_Cell\">");
     if (StringUtils.isNotEmpty(resultado2)) {
-      resultado.append(StringEscapeUtils.escapeHtml(resultado2));
+      resultado.append(StringEscapeUtils.escapeHtml4(resultado2));
     }
     resultado.append("&nbsp;</td>\n");
     resultado.append("</tr></table>");

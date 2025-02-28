@@ -27,8 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBProvider;
@@ -178,7 +178,7 @@ public class ImageInfoBLOB extends HttpSecureAppServlet {
         + "' ,'" + sizeOld[1] + "' ,'" + sizeNew[0] + "' ,'" + sizeNew[1] + "'");
 
     if (StringUtils.isNotEmpty(msg)) {
-      writer.write(", '" + StringEscapeUtils.escapeJavaScript(msg) + "'");
+      writer.write(", '" + StringEscapeUtils.escapeEcmaScript(msg) + "'");
     }
 
     writer.write(");");

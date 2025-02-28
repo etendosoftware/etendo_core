@@ -3,7 +3,7 @@ package com.etendoerp.sequences;
 
 import com.etendoerp.sequences.parameters.SequenceParameterList;
 import com.etendoerp.sequences.transactional.RequiredDimensionException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;

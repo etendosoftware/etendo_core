@@ -28,7 +28,7 @@ import java.util.Optional;
 
 import javax.enterprise.context.Dependent;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.criterion.Restrictions;

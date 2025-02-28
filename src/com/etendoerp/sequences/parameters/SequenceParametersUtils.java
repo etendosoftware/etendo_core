@@ -5,7 +5,7 @@ import com.etendoerp.sequences.SequenceUtils;
 import com.etendoerp.sequences.dimensions.ASequenceDimensionList;
 import com.etendoerp.sequences.dimensions.SequenceDimension;
 import com.etendoerp.sequences.transactional.RequiredDimensionException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.model.domaintype.TableDirDomainType;

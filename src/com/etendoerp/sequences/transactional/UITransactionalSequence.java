@@ -6,7 +6,7 @@ import com.etendoerp.sequences.annotations.SequenceFilter;
 import com.etendoerp.sequences.dimensions.DimensionListRequestParameterFormat;
 import com.etendoerp.sequences.parameters.SequenceParameterList;
 import com.etendoerp.sequences.parameters.SequenceParametersUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
