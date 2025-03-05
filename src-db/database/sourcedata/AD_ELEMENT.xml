@@ -27396,7 +27396,7 @@ The distribution algorithm will be driven by this priority. The pending payments
 <!--667AE26F6635E6A7E040007F01015B98-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--667AE26F6635E6A7E040007F01015B98-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--667AE26F6635E6A7E040007F01015B98-->  <COLUMNNAME><![CDATA[CANCELPRICEAD]]></COLUMNNAME>
-<!--667AE26F6635E6A7E040007F01015B98-->  <NAME><![CDATA[Cancel Discounts Promotions]]></NAME>
+<!--667AE26F6635E6A7E040007F01015B98-->  <NAME><![CDATA[Cancel Discounts and Promotions]]></NAME>
 <!--667AE26F6635E6A7E040007F01015B98-->  <PRINTNAME><![CDATA[Cancel Price Adjustment]]></PRINTNAME>
 <!--667AE26F6635E6A7E040007F01015B98-->  <DESCRIPTION><![CDATA[Used to activate or deactive promotions for each line]]></DESCRIPTION>
 <!--667AE26F6635E6A7E040007F01015B98-->  <HELP><![CDATA[If the user wants not to apply promotions to a specific line, he should use this check to achieve it]]></HELP>
