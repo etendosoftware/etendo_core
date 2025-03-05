@@ -224,7 +224,7 @@ isc.OBPickAndExecuteGrid.addProperties({
       ) {
         isc.addProperties(
           dsRequest.originalData,
-          me.addSelectedIDsToCriteria()
+          me.addSelectedIDsToCriteria(me.getCriteria())
         );
       }
       dsRequest.params[OB.Constants.IS_PICK_AND_EDIT] = true;

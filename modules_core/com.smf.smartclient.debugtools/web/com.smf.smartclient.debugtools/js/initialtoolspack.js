@@ -157,6 +157,59 @@ class InputUtilsPlugin {
     // Prepare contextual menu
     let self = this;
     let classList = [isc.FormItem, isc.OBCheckboxItem];
+    
+    // Helper function to check if debug tools are enabled
+    const areDebugToolsEnabled = () => OB?.DebugToolsManager?.state?.enabled;
+
+    // Are input features enabled
+    const areInputFeaturesEnabled = () => OB?.DebugToolsManager?.state?.inputFeatures;
+
+    // Helper function to check if the Alt key is pressed
+    const isAltKeyPressed = (e) => e.code === 'AltLeft';
+
+    // Helper function to toggle attributes on elements
+    const toggleAttributes = (elements, removeAttr, addAttr, addAttrValue) => {
+      elements.forEach(el => {
+        if (el.hasAttribute(removeAttr)) {
+          el.removeAttribute(removeAttr);
+          el.setAttribute(addAttr, addAttrValue);
+        }
+      });
+    };
+
+    // Helper function to get all disabled elements
+    const getDisabledElements = () => {
+      return document.querySelectorAll(
+        '[class*="OBFormFieldInputDisabled"], [class*="OBFormFieldDateInputRequiredDisabled"], [class*="OBFormFieldSelectInputRequiredDisabled"]'
+      );
+    };
+
+    // Event listener for Alt key down
+    document.addEventListener('keydown', (e) => {
+      try {
+        if (!areDebugToolsEnabled() || !areInputFeaturesEnabled || !isAltKeyPressed(e)) {
+          return;
+        }
+        const disabledElements = getDisabledElements();
+        toggleAttributes(disabledElements, 'disabled', 'readonly', true);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    // Event listener for Alt key up
+    document.addEventListener('keyup', (e) => {
+      try {
+        if (!areDebugToolsEnabled() || !areInputFeaturesEnabled || !isAltKeyPressed(e)) {
+          return;
+        }
+        const disabledElements = getDisabledElements();
+        toggleAttributes(disabledElements, 'readonly', 'disabled', true);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
     classList.forEach(classType => {
       classType.getPrototype().OhandleClick = classType.getPrototype().handleClick;
       classType.getPrototype().handleClick = function () {

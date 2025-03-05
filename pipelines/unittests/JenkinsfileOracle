@@ -2,16 +2,15 @@ pipeline {
 
     options {
         disableConcurrentBuilds()
-        lock(resource: 'pipeline-lock-for-oracle')
     }
 
     environment {
         // gradle.properties variables
         CONTEXT_NAME        = 'etendo'
-        BBDD_SID            = 'orclcdb'
-        BBDD_PORT           = '5432'
+        BBDD_SID            = 'orclsid'
+        BBDD_PORT           = '1521'
         BBDD_SYSTEMUSER     = 'sys AS SYSDBA'
-        BBDD_SYSTEMPASS     = 'rEUC0GRpxA'
+        BBDD_SYSTEMPASS     = 'oraclepassword'
         BBDD_USER           = 'C##TAD'
         BBDD_PASSWORD       = 'tad'
         NEXUS_USER          = credentials('nexus-admin-user')
@@ -55,6 +54,8 @@ metadata:
   labels:
     app.kubernetes.io/name: jenkins-node-unittests-orcl
 spec:
+  imagePullSecrets:
+    - name: docker-auth-config-secret
   volumes:
     - name: rsa-keys
       configMap:
@@ -99,6 +100,24 @@ spec:
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
+    - name: oracle
+      image: etendo/oracle:19.3.0-ee
+      env:
+        - name: ORACLE_PWD
+          value: oraclepassword
+        - name: ORACLE_SID
+          value: orclsid
+      ports:
+        - name: oracle
+          containerPort: 1521
+          protocol: TCP
+        - name: oracle-em
+          containerPort: 5500
+          protocol: TCP
+      resources:
+        limits:
+          cpu: 2000m
+          memory: 6000Mi
   restartPolicy: Always
   terminationGracePeriodSeconds: 30
   dnsPolicy: ClusterFirst
@@ -110,32 +129,18 @@ spec:
     }
 
     stages {
-        stage('Build Environment') {
+        stage('Build Oracle DB (temporary stage) ') {
+            steps {
+                echo "--------------- Building Oracle DB ---------------"
+                sh "sleep 25m"
+            }
+        }
+        stage('Build Environment') { // MARK: Build Environment
             steps {
                 container('compiler') {
                     script {
                         try {
                             sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Starting Build Environment" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-                            sh """
-                            curl -O https://etendo-deploy.fra1.digitaloceanspaces.com/java/oracle-sqlcli-V1022102-01.tar.gz
-                            tar xfz oracle-sqlcli-V1022102-01.tar.gz 2> /dev/null
-                            chmod a+x sqlcl/bin/sql
-                            """
-                            sh """
-                            echo "BEGIN
-                              FOR r IN (select sid,serial# from v\\\$session where username='${BBDD_USER}')
-                              LOOP
-                                  EXECUTE IMMEDIATE 'alter system kill session ''' || r.sid  || ',' || r.serial# || ''' immediate';
-                              END LOOP;
-                            END;
-                            /
-
-                            DROP USER ${BBDD_USER} CASCADE;
-                            commit;
-
-                            exit; " > kill.sql
-                            """
-                            sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
 
                             sh 'printenv'
                             echo 'Building Etendo Core'
@@ -155,10 +160,11 @@ spec:
                             dir(REPO_NAME) {
                                 sh "git checkout ${GIT_COMMIT}"
                                 sh """
-                                echo "context.name=${CONTEXT_NAME}\n
+                                echo "\n
+                                context.name=${CONTEXT_NAME}\n
                                 bbdd.rdbms=ORACLE\n
                                 bbdd.driver=oracle.jdbc.driver.OracleDriver\n
-                                bbdd.url=jdbc:oracle:thin:@db19c-oracle-db.oracle:1521:orclcdb?oracle.net.disableOob=true\n
+                                bbdd.url=jdbc:oracle:thin:@localhost:${BBDD_PORT}:${BBDD_SID}?oracle.net.disableOob=true\n
                                 bbdd.sid=${BBDD_SID}\n
                                 bbdd.systemUser=${BBDD_SYSTEMUSER}\n
                                 bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
@@ -171,7 +177,8 @@ spec:
                                 githubUser=${GITHUB_USER}\n
                                 githubToken=${GITHUB_TOKEN}\n
                                 allow.root=true\n
-                                org.gradle.jvmargs=-Dfile.encoding=UTF-8" > gradle.properties
+                                org.gradle.jvmargs=-Dfile.encoding=UTF-8\n
+                                org.gradle.daemon=false" > gradle.properties
                                 """
 
                                 sh """
@@ -186,7 +193,7 @@ spec:
                             sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
                             sh "sleep 1m"
                             echo 'Build of Etendo Core Finished'
-                            env.STATUSTEST = "1" //flag to indicate if any test failed
+                            env.STATUSTEST = "1" // flag to indicate if any test failed
                             env.STATUSBUILD = "1"
                         } catch (Exception e) {
                             echo 'Build of Etendo Core FAILED'
@@ -200,8 +207,8 @@ spec:
             }
         }
 //___________________________________________________________________________________________
-// ------------------------------ WEB SERVICE TEST ------------------------------------------
-        stage ('Web Service Test Suite'){
+// ------------------------------ WEB SERVICES TESTS ----------------------------------------
+        stage ('Web Service Test Suite'){ // MARK: Web Service Test Suite
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -214,41 +221,38 @@ spec:
                             try {
                                 sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
                                 sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
-                                publishHTML([
-                                    allowMissing: true,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'WEB SERVICES TESTS REPORT',
-                                    reportTitles: ''
-                                ])
                             } catch (Exception e) {
-                                echo '....TEST WEBSERVICE FAILED....'
+                                echo '....WEB SERVICES TESTS FAILED....'
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Web Service Test Failed')
+                                unstable('Web Service Tests Failed')
                                 env.STATUSTEST = "0"
-                                publishHTML([
-                                    allowMissing: false,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'WEBSERVICES TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                            } finally {
+                                if (fileExists('build/reports/tests/test/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'WEBSERVICES TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
+                                }
+                                sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
+                                sh './gradlew --stop'
                             }
                         }
                     }
-                    sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
-                    sh './gradlew --stop'
                 }
             }
         }
-//___________________________________________________________________________________________
-// ------------------------------- STANDALONE TEST ------------------------------------------
-        stage ('Standalone Test Suite'){
+// __________________________________________________________________________________________
+// ------------------------------ com.smf.* TESTS ------------------------------------------
+        stage ('Core Test Suite') { // MARK: com.smf.* Test Suite
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -259,31 +263,30 @@ spec:
                     script {
                         dir(REPO_NAME) {
                             try {
-                                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
-                                publishHTML([
-                                    allowMissing: true,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'STANDALONE TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                                echo "--------------- Running CoreTestSuite ---------------"
+                                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
+                                echo "--------------- CoreTestSuite Successful ---------------"
                             } catch (Exception e) {
-                                echo '....TEST STANDALONE FAILED....'
+                                echo "--------------- CoreTestSuite Failed ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Standalone Test Failed!')
+                                unstable('CoreTestSuite Failed')
                                 env.STATUSTEST = "0"
-                                publishHTML([
-                                    allowMissing: false,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/reports/tests/test',
-                                    reportFiles: '*.html',
-                                    reportName: 'STANDALONE TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                            } finally {
+                                if (fileExists("build/reports/tests/test/")) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'com.smf.* TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of com.smf.* tests does not exist. Skipping HTML report publishing."
+                                }
                             }
                         }
                     }
@@ -291,8 +294,49 @@ spec:
             }
         }
 //___________________________________________________________________________________________
-// ----------------------------------- SPOCK TEST -------------------------------------------
-        stage ('Spock Test') {
+// ------------------------------- STANDALONE TESTS -----------------------------------------
+        stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
+            when {
+                expression {
+                    env.STATUSBUILD == "1"
+                }
+            }
+            steps {
+                container('compiler') {
+                    script {
+                        dir(REPO_NAME) {
+                            try {
+                                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info'
+                            } catch (Exception e) {
+                                echo '....STANDALONE TESTS FAILED....'
+                                echo 'Exception occurred: ' + e.toString()
+                                currentBuild.result = UNSTABLE
+                                unstable('Standalone Tests Failed!')
+                                env.STATUSTEST = "0"
+                            }  finally {
+                                if (fileExists('build/reports/tests/test/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'STANDALONE TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of Standalone tests does not exist. Skipping HTML report publishing."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+//___________________________________________________________________________________________
+// ----------------------------------- com.etendoerp.* TESTS -------------------------------------------
+        stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Tests
             when {
                 expression {
                     env.STATUSBUILD == "1"
@@ -304,30 +348,43 @@ spec:
                         dir(REPO_NAME) {
                             try {
                                 sh './gradlew test --tests "com.etendoerp.*" --info'
-                                publishHTML([
-                                    allowMissing: true,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/spock-reports/',
-                                    reportFiles: '*.html',
-                                    reportName: 'SPOCK TESTS REPORT',
-                                    reportTitles: ''
-                                ])
                             } catch (Exception e) {
-                                echo '....TEST SPOCK FAILED....'
+                                echo '....com.etendoerp.* TESTS FAILED....'
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Spock Test failed!')
+                                unstable('com.etendoerp.* Tests failed!')
                                 env.STATUSTEST = "0"
-                                publishHTML([
-                                    allowMissing: false,
-                                    alwaysLinkToLastBuild: false,
-                                    keepAll: true,
-                                    reportDir: 'build/spock-reports/',
-                                    reportFiles: '*.html',
-                                    reportName: 'SPOCK TESTS REPORT',
-                                    reportTitles: ''
-                                ])
+                            }  finally {
+                                if (fileExists('build/spock-reports/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/spock-reports/',
+                                        reportFiles: '*.html',
+                                        reportName: 'com.etendoerp.* SPOCK TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/spock-reports"
+                                } else {
+                                    echo "Spock report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
+                                }
+
+                                if (fileExists('build/reports/tests/test/')) {
+                                    publishHTML([
+                                        allowMissing: true,
+                                        alwaysLinkToLastBuild: false,
+                                        keepAll: true,
+                                        reportDir: 'build/reports/tests/test',
+                                        reportFiles: '*.html',
+                                        reportName: 'com.etendoerp.* TESTS REPORT',
+                                        reportTitles: ''
+                                    ])
+                                    sh "rm -rf build/reports/tests/test"
+                                } else {
+                                    echo "Report directory of com.etendoerp.* does not exist. Skipping HTML report publishing."
+                                }
+
                             }
                         }
                     }
@@ -335,7 +392,7 @@ spec:
             }
         }
     }
-    post {
+    post { // MARK: Post
         always {
             container('compiler') {
                 script {
@@ -346,11 +403,6 @@ spec:
                     def stackConfig = load "${rootDir2}/pipelines/unittests/utils/stackConfig.groovy"
                     env.COMMIT_INFO = infoCommit.generateCommitInfo(env.REPO_URL)
                     env.STACK_INFO = stackConfig.generateStackMessage()
-
-                    dir(REPO_NAME) {
-                        sh "./gradlew --stop"
-                    }
-                    sh './sqlcl/bin/sql sys/${BBDD_SYSTEMPASS}@db19c-oracle-db.oracle:1521/ORCLCDB AS SYSDBA @kill.sql'
                 }
             }
         }
