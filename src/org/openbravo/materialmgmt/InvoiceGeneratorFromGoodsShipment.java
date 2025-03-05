@@ -409,6 +409,7 @@ public class InvoiceGeneratorFromGoodsShipment {
     newInvoice.setTaxDate(getInvoiceDate());
     newInvoice.setSalesTransaction(true);
     newInvoice.setBusinessPartner(shipment.getBusinessPartner());
+    newInvoice.setUserContact(shipment.getUserContact());
 
     if (shipment.getSalesOrder() != null) {
       // Get Invoice Address from Order

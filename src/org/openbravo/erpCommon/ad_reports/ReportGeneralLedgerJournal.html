@@ -614,10 +614,13 @@ function callback(paramXMLParticular, XMLHttpRequestObj) {
             </tr>
             <tr id=advancedFiltersrow1>
              <td class="TitleCell"><span class="LabelText">Document</span></td>
-              <td class="Combo_ContentCell" colspan="2"> <select  name="inpDocument" id="inpDocument" class="Combo Combo_TwoCells_width" onchange="displayDocumentNo();">
-                  <option value=""> <div id="reportDocument"></div></option>
-                </select></td>
-                 <td class="TitleCell"><span class="LabelText">Initial Page Number</span></td>
+              <td class="Combo_ContentCell" colspan="2">
+                <select  name="inpDocument" id="inpDocument" class="Combo Combo_TwoCells_width" onchange="displayDocumentNo();">
+                  <option value=""/>
+                  <div id="reportDocument"/>
+                </select>
+              </td>
+              <td class="TitleCell"><span class="LabelText">Initial Page Number</span></td>
               <td class="TextBox_ContentCell"> <input dojoType="openbravo:Textbox"  class="dojoValidateValid TextBox_OneCell_width" type="text" name="inpPageNo" id="paramPageNo" size="10" maxlength="10" value=""></input><script>djConfig.searchIds.push("paramPageNo");</script>
               </td>
             </tr>
