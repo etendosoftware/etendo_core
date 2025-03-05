@@ -16,7 +16,7 @@ dependencies {
     testImplementation 'org.spockframework:spock-core'
     testImplementation 'org.spockframework:spock-junit4'
     testImplementation 'junit:junit:4.13.1'
-    testImplementation 'org.mockito:mockito-core:3.2.4'
+    testImplementation 'org.mockito:mockito-core:5.0.0'
     testImplementation( "com.athaydes:spock-reports:2.0-groovy-3.0" ) {
         transitive = false // this avoids affecting your version of Groovy/Spock
     }
@@ -25,6 +25,9 @@ dependencies {
     }
     antClasspath('org.apache.ant:ant-junit:1.9.2') { transitive = false }
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+
+    // Mockito extension for JUnit 5
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.2.0'
 
 }
 ant.taskdef(name: 'junit', classname: 'org.apache.tools.ant.taskdefs.optional.junit.JUnitTask',
@@ -45,7 +48,7 @@ sourceSets{
     }
 }
 
-if(file('modules').exists() && file('modules').isDirectory()){
+if (file('modules').exists() && file('modules').isDirectory()) {
     file('modules').eachDir {
         sourceSets.test.java.srcDirs += it.toString()+"/src-test/src"
         sourceSets.test.resources.srcDirs +=  it.toString()+"/src-test/resources"
@@ -54,11 +57,13 @@ if(file('modules').exists() && file('modules').isDirectory()){
         sourceSets.test.groovy.outputDir = file("src-test/build/classes")
     }
 }
-if(file('modules_core').exists() && file('modules_core').isDirectory()){
+if (file('modules_core').exists() && file('modules_core').isDirectory()) {
     file('modules_core').eachDir {
         sourceSets.test.java.srcDirs += it.toString()+"/src-test"
         sourceSets.test.resources.srcDirs +=  it.toString()+"/src-test/resources"
         sourceSets.test.java.outputDir = file("src-test/build/classes")
+        sourceSets.test.groovy.srcDirs += it.toString()+"/src-test/test/groovy"
+        sourceSets.test.groovy.outputDir = file("src-test/build/classes")
     }
 }
 

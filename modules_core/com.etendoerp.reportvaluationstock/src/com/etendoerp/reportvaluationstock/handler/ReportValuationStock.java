@@ -89,6 +89,7 @@ public class ReportValuationStock extends BaseReportActionHandler {
       parameters.put(PARAM_FORMAT, jsonContent.getString(ApplicationConstants.BUTTON_VALUE));
 
     } catch (Exception e) {
+      throw new OBException(e);
     }
   }
 
@@ -100,7 +101,7 @@ public class ReportValuationStock extends BaseReportActionHandler {
     return (JRFieldProviderDataSource) jrParams.get(PARAM_SUB_REPORT);
   }
 
-  private void buildData(VariablesSecureApp vars, String strDate,
+  protected void buildData(VariablesSecureApp vars, String strDate,
       String strOrganization, String strWarehouse, String strCategoryProduct, String strCurrencyId,
       boolean isWarehouseConsolidation, Map<String, Object> parameters) throws ServletException {
     ReportValuationStockData[] data;

@@ -3,7 +3,7 @@ pipeline {
     disableConcurrentBuilds()
   }
 
-  environment {
+  environment { // MARK: Environment variables
     // gradle.properties variables
     CONTEXT_NAME        = 'etendo'
     BBDD_SID            = 'etendo'
@@ -40,9 +40,15 @@ pipeline {
     COMMIT_INPROGRESS_STATUS = "pending"
     COMMIT_SUCCESS_STATUS    = "success"
     COMMIT_FAILED_STATUS     = "failure"
+
+    SONAR_SERVER    = "https://sonar.etendo.cloud"
+    SONAR_TOKEN     = credentials('sonar-token')
+
+    TRUE            = "TRUE"
+    FALSE           = "FALSE"
   }
 
-  agent {
+  agent { // MARK: Agent
     kubernetes {
       inheritFrom 'jenkins-node-core-unittests'
       defaultContainer 'jnlp'
@@ -75,12 +81,12 @@ spec:
           containerPort: 8000
           protocol: TCP
       resources:
-        limits:
-          cpu: 3072m
-          memory: 5000Mi
         requests:
-          cpu: 3072m
-          memory: 5000Mi
+          cpu: 1072m
+          memory: 4000Mi
+        limits:
+          cpu: 2072m
+          memory: 6000Mi
       volumeMounts:
         - name: rsa-keys
           mountPath: /root/.ssh/
@@ -119,14 +125,19 @@ spec:
     }
   }
 
-  stages {
-    stage('Build Environment') {
+  stages { // MARK: Stages
+    stage ('Build Environment') { // MARK: Build Environment
       steps {
         container('compiler') {
           script {
             try {
-              sh 'printenv'
-              sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Starting build" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+
+              echo "---------------------- Setting up Environment Variables ----------------------"
+              env.EXIST_JACOCO_REPORT = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
+              env.STATUSTEST = "1" // Variable to track the status of the test execution. "1" indicates success, "0" indicates failure.
+              env.STATUSBUILD = "1" // Variable to track the status of the build. "1" indicates success, "0" indicates failure.
+              sh "printenv"
 
               echo "---------------- Stack Configuration ----------------"
               def rootDir = pwd()
@@ -147,14 +158,31 @@ spec:
               withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
                 sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${URL_REPO_GIT} ${REPO_NAME}"
               }
+
+              env.WORKDIR_ETENDO = "${pwd()}"
+
               dir(REPO_NAME) {
                 echo "---------------- Getting Commit Information ----------------"
                 sh "git checkout ${GIT_COMMIT}"
                 def infoCommit = load "${rootDir}/pipelines/unittests/utils/infoCommit.groovy"
                 env.COMMIT_INFO = infoCommit.generateCommitInfo(env.URL_REPO)
 
+                echo "--------------- Getting Sonar projectKey of ${REPO_NAME} ---------------"
+                def propertiesContent = readFile "sonar-project.properties"
+                def lines = propertiesContent.split('\n')
+                def projectKey = ""
+                lines.each { line ->
+                  if (line.startsWith('sonar.projectKey=')) {
+                    projectKey = line.split('=')[1]
+                  }
+                }
+                env.PROJECT_KEY = "${projectKey}"
+
+
+                echo "--------------- Configure gradle.properties ---------------"
                 sh """
-                echo -e "context.name=${CONTEXT_NAME}\n
+                echo "\n
+                context.name=${CONTEXT_NAME}\n
                 bbdd.sid=${BBDD_SID}\n
                 bbdd.port=${BBDD_PORT}\n
                 bbdd.systemUser=${BBDD_SYSTEMUSER}\n
@@ -166,8 +194,24 @@ spec:
                 githubUser=${GITHUB_USER}\n
                 githubToken=${GITHUB_TOKEN}\n
                 allow.root=true\n
-                org.gradle.jvmargs=-Xmx3g -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8" > gradle.properties
+                org.gradle.jvmargs=-Dfile.encoding=UTF-8\n
+                org.gradle.daemon=false
+                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g
+
+                sonarHostUrl=${SONAR_SERVER}
+                sonarToken=${SONAR_TOKEN}
+                sonarProjectBaseDir=${WORKDIR_ETENDO}
+                sonarProjectName=${REPO_NAME}
+                sonarProjectKey=${PROJECT_KEY}
+                sonarBranchName=${GIT_BRANCH}
+                sonarVersion=${GIT_COMMIT}" > gradle.properties
                 """
+
+                def modules_src_dirs = sh(script: "cd modules_core && find . -type d -name 'src' | grep -v 'src-util' | sed 's|./|modules_core/|' | tr '\n' ','", returnStdout: true).trim()
+                sh """
+                echo "sonarSources=${modules_src_dirs}src" >> gradle.properties
+                """
+
                 sh """
                 ./gradlew prepareConfig --info
                 ./gradlew setup --info
@@ -175,118 +219,76 @@ spec:
                 ./gradlew install --info
                 ./gradlew update.database  --info
                 ./gradlew smartbuild --info
+                ./gradlew --stop
                 """
               }
-              sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
+              sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh start"
               sh "sleep 1m"
-              env.STATUSTEST = "1" //flag to indicate if any test failed
-              sh 'echo Build Succesful'
-              env.STATUSBUILD = "1"
+              echo "--------------- Build Environment Successful ---------------"
             } catch (Exception e) {
-              echo 'Build of Etendo Core FAILED'
+              env.ERROR_MESSAGE = "Build Environment Failed"
+              echo "--------------- ${env.ERROR_MESSAGE} ---------------"
               echo "Exception occurred: " + e.toString()
               currentBuild.result = FAILED
-              error('Build Etendo Core FAILED!')
+              error(env.ERROR_MESSAGE)
               env.STATUSBUILD = "0"
+              env.STATUSTEST = "0"
             }
           }
         }
       }
     }
-//___________________________________________________________________________________________
-// ------------------------------ WEB SERVICE TEST ------------------------------------------
-    stage ('Web Service Test Suite'){
+// __________________________________________________________________________________________
+// ------------------------------ WEB SERVICES TESTS ----------------------------------------
+    stage ('Web Service Test Suite') { // MARK: Web Service Test Suite
       when {
         expression {
           env.STATUSBUILD == "1"
         }
       }
       steps {
-        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         container('compiler') {
           script {
             dir(REPO_NAME) {
               try {
-                sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info'
-                publishHTML([
-                  allowMissing: true,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'WEB SERVICES TESTS REPORT',
-                  reportTitles: ''
-                ])
+                echo "--------------- Running WebserviceTestSuite ---------------"
+                sh "./gradlew test --tests org.openbravo.test.WebserviceTestSuite --info"
+                sh "mv build/jacoco/test.exec build/jacoco/test0.exec"
+                echo "--------------- WebserviceTestSuite Successful ---------------"
+                currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo '....TEST WEBSERVICE FAILED....'
+                echo "--------------- WebserviceTestSuite Failed ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('Web Service Test Failed')
+                unstable('WebservicesTestSuite Failed')
                 env.STATUSTEST = "0"
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'WEBSERVICES TESTS REPORT',
-                  reportTitles: ''
-                ])
-              }
-              sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
-              sh './gradlew --stop'
-            }
-          }
-        }
-      }
-    }
-//___________________________________________________________________________________________
-// ------------------------------- STANDALONE TEST ------------------------------------------
-    stage ('Standalone Test Suite'){
-      when {
-        expression {
-          env.STATUSBUILD == "1"
-        }
-      }
-      steps {
-        container('compiler') {
-          script {
-            dir(REPO_NAME) {
-              try {
-                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info '
-                publishHTML([
-                  allowMissing: true,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'STANDALONE TESTS REPORT',
-                  reportTitles: ''
-                ])
-              } catch (Exception e) {
-                echo '....TEST STANDALONE FAILED....'
-                echo 'Exception occurred: ' + e.toString()
-                currentBuild.result = UNSTABLE
-                unstable('Standalone Test Failed!')
-                env.STATUSTEST = "0"
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/reports/tests/test',
-                  reportFiles: '*.html',
-                  reportName: 'STANDALONE TESTS REPORT',
-                  reportTitles: ''
-                ])
+              } finally {
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'WEBSERVICES TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                 echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
+                }
+                sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
+                sh "./gradlew --stop"
               }
             }
           }
         }
       }
     }
-//___________________________________________________________________________________________
-// ----------------------------------- SPOCK TEST -------------------------------------------
-    stage ('Spock Test'){
+// __________________________________________________________________________________________
+// ------------------------------ com.smf.* TESTS ------------------------------------------
+    stage ('Core Test Suite') { // MARK: CoreTestSuite Test Suite
       when {
         expression {
           env.STATUSBUILD == "1"
@@ -297,40 +299,215 @@ spec:
           script {
             dir(REPO_NAME) {
               try {
-                sh './gradlew test --tests "com.etendoerp.*" --info'
-                publishHTML([
-                  allowMissing: true,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/spock-reports/',
-                  reportFiles: '*.html',
-                  reportName: 'SPOCK TESTS REPORT',
-                  reportTitles: ''
-                ])
+                echo "--------------- Running CoreTestSuite ---------------"
+                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
+                sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
+                echo "--------------- CoreTestSuite Successful ---------------"
+                currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo '....TEST SPOCK FAILED....'
+                echo "--------------- CoreTestSuite Failed ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('Spock Test failed!')
+                unstable('CoreTestSuite Failed')
                 env.STATUSTEST = "0"
-                publishHTML([
-                  allowMissing: false,
-                  alwaysLinkToLastBuild: false,
-                  keepAll: true,
-                  reportDir: 'build/spock-reports/',
-                  reportFiles: '*.html',
-                  reportName: 'SPOCK TESTS REPORT',
-                  reportTitles: ''
-                ])
+              } finally {
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'com.smf.* TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of com.smf.* tests does not exist. Skipping HTML report publishing."
+                }
+
               }
             }
           }
         }
       }
     }
-//___________________________________________________________________________________________
+// __________________________________________________________________________________________
+// ------------------------------- STANDALONE TESTS -----------------------------------------
+    stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
+      when {
+        expression {
+          env.STATUSBUILD == "1"
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            dir(REPO_NAME) {
+              try {
+                echo "--------------- Running StandaloneTestSuite ---------------"
+                sh "./gradlew test --tests org.openbravo.test.StandaloneTestSuite --info"
+                sh "mv build/jacoco/test.exec build/jacoco/test2.exec"
+                echo "--------------- StandaloneTestSuite Successful ---------------"
+                currentBuild.result = SUCCESS
+              } catch (Exception e) {
+                echo "--------------- StandaloneTestSuite Failed ---------------"
+                echo 'Exception occurred: ' + e.toString()
+                currentBuild.result = UNSTABLE
+                unstable('StandaloneTestSuite Failed')
+                env.STATUSTEST = "0"
+              } finally {
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'STANDALONE TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of Standalone tests does not exist. Skipping HTML report publishing."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+// __________________________________________________________________________________________
+// ----------------------------------- com.etendoerp.* TESTS --------------------------------
+    stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Test
+      when {
+        expression {
+          env.STATUSBUILD == "1"
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            dir(REPO_NAME) {
+              try {
+                echo "--------------- Running com.etendoerp.* Tests ---------------"
+                sh "./gradlew test --tests \"com.etendoerp.*\" --info"
+                sh "mv build/jacoco/test.exec build/jacoco/test3.exec"
+                sh "./gradlew --stop"
+                echo "--------------- com.etendoerp.* Tests Successful ---------------"
+                currentBuild.result = SUCCESS
+              } catch (Exception e) {
+                echo "--------------- com.etendoerp.* Tests Failed ---------------"
+                echo 'Exception occurred: ' + e.toString()
+                currentBuild.result = UNSTABLE
+                unstable('com.etendoerp.* Tests failed!')
+                env.STATUSTEST = "0"
+              } finally {
+                if (fileExists('build/spock-reports/')) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/spock-reports/',
+                    reportFiles: '*.html',
+                    reportName: 'com.etendoerp.* SPOCK TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/spock-reports"
+                } else {
+                  echo "Spock report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
+                }
+
+                if (fileExists('build/reports/tests/test/')) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'com.etendoerp.* TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of com.etendoerp.* tests does not exist. Skipping HTML report publishing."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+// __________________________________________________________________________________________
+// ----------------------------------- JACOCO REPORT ----------------------------------------
+    stage('Generate Coverage Report') { // MARK: Generate Coverage Report
+      when {
+        expression {
+          env.STATUSTEST == "1"
+        }
+      }
+      steps {
+        container("compiler") {
+          script {
+            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Generating JaCoCo report\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+            echo "---------------------- Run jacocoRootReport ----------------------"
+            sh """
+            su etendo
+            cd ${REPO_NAME}
+            ./gradlew jacocoRootReport --info
+            """
+
+            env.JACOCO_REPORT = "${REPO_NAME}/build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+
+            if (fileExists("${JACOCO_REPORT}")) {
+              echo "---------------------- Jacoco Report Found ----------------------"
+              env.EXIST_JACOCO_REPORT = TRUE
+            }
+          }
+        }
+      }
+    }
+// __________________________________________________________________________________________
+// ----------------------------------- SONARQUBE ANALYSIS -----------------------------------
+    stage('SonarQube Analysis') { // MARK: SonarQube Analysis
+      when {
+        expression {
+          EXIST_JACOCO_REPORT == TRUE
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            try {
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running SonarQube Analysis\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+              echo "--------------- Running SonarQube ---------------"
+              sh """
+              su etendo
+              cd ${REPO_NAME}
+              ./gradlew sonar --stacktrace --info
+              """
+              echo "---------------------- Getting SonarQube Report URL ----------------------"
+              def branchName = URLEncoder.encode(GIT_BRANCH, 'UTF-8')
+              def projectUrl = "${SONAR_SERVER}/dashboard?id=${PROJECT_KEY}&branch=${branchName}"
+              env.PROJECT_URL = "${projectUrl}"
+              echo "Sonar Project URL: ${PROJECT_URL}"
+              echo "--------------- Execution SonarQube Succesful ---------------"
+              currentBuild.result = SUCCESS
+            } catch (Exception e) {
+              env.ERROR_MESSAGE = "Execution SonarQube Failed"
+              echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+              echo "Exception occurred: " + e.toString()
+              currentBuild.result = FAILED
+              error(env.ERROR_MESSAGE)
+            }
+          }
+        }
+      }
+    }
+
+// __________________________________________________________________________________________
 // ----------------------------------- DEPLOY SNAPSHOT --------------------------------------
-    stage('Run Deploy Snapshot') {
+    stage('Run Deploy Snapshot') { // MARK: Run Deploy Snapshot
       when {
         allOf {
           branch 'develop'
@@ -340,33 +517,42 @@ spec:
         }
       }
       steps {
-        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Deploying Snapshot" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
         container('compiler') {
           script {
-            dir(REPO_NAME) {
-              withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
-                withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh """
-                    git config user.name "$GIT_USERNAME"
-                    git config user.email "$GIT_USERNAME"
-                    """
-                    sh 'echo version.ts=\$(date +\"%s\") > version.properties'
-                    sh './gradlew publishCoreJar --info'
-                    sh 'git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\"'
-                    sh 'GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git push $GIT_URL \"v\$(grep version.ts version.properties|cut -c 11-)\"'
+            try {
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Deploying Snapshot\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+              echo "--------------- Running Deploy Snapshot ---------------"
+              dir(REPO_NAME) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
+                  withCredentials([usernamePassword(credentialsId: "etendo_bot_credentials", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                      sh """
+                      git config user.name "${GIT_USERNAME}"
+                      git config user.email "${GIT_USERNAME}"
+                      """
+                      sh "echo version.ts=\$(date +\"%s\") > version.properties"
+                      sh "./gradlew publishCoreJar --info"
+                      sh "git tag \"v\$(grep version.ts version.properties|cut -c 11-)\" -m \"Release SNAPSHOT \$(grep version.tag version.properties|cut -c 13-)\""
+                      sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git push ${GIT_URL} \"v\$(grep version.ts version.properties|cut -c 11-)\""
+                  }
                 }
               }
+            } catch (Exception e) {
+              env.ERROR_MESSAGE = "Deploy Snapshot Failed"
+              echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+              echo "Exception occurred: " + e.toString()
+              currentBuild.result = FAILED
+              error(env.ERROR_MESSAGE)
             }
           }
         }
       }
     }
   }
-  post {
+  post {  // MARK: Post Actions
     success {
         script {
-            sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_SUCCESS_STATUS "Successful Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-            echo "Successful Test"
+            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Successful Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+            echo "--------------- DONE ---------------"
         }
     }
     fixed {
@@ -401,8 +587,8 @@ spec:
     }
     unstable {
       script {
-        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Failed Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-        echo "Failed Test"
+        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"Unstable Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+            echo "--------------- UNSTABLE ---------------"
       }
       mail to: EMAIL_ADDRESS,
       subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
@@ -435,7 +621,8 @@ spec:
     }
     failure {
       script {
-        sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Build Failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+        echo "--------------- FAILURE ---------------"
       }
       mail to: EMAIL_ADDRESS,
       subject: "⛔ ERROR - ${currentBuild.fullDisplayName}",
@@ -458,7 +645,8 @@ spec:
 
             ${env.STACK_INFO}
 
-            <p>The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
+            <p><strong>⇢ Reasons:</strong> <em>${env.ERROR_MESSAGE}</em></p>
+            <p>To more information on the failing run visit: ${env.BUILD_URL}</p>
 
             <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
             <p>__________________________________________________________</p>
