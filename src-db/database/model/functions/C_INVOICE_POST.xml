@@ -506,14 +506,23 @@ IF (NOT FINISH_PROCESS) THEN
   /**
     *Update Invoice Net Unit Price to Product purchasing Plan Table
     */
-    IF(v_isSoTrx ='N') THEN
-      FOR Cur_InvoiceNetLine IN (SELECT * FROM C_INVOICELINE WHERE C_Invoice_Id =  v_Record_ID)
-      LOOP
-          UPDATE M_PRODUCT_PO SET PriceLastInv=Cur_InvoiceNetLine.PriceActual 
-          Where C_BPARTNER_ID = v_BPartner_ID AND M_PRODUCT_ID = Cur_InvoiceNetLine.M_PRODUCT_ID
-          AND Ad_Isorgincluded(Cur_InvoiceNetLine.AD_ORG_ID,AD_ORG_ID, Cur_InvoiceNetLine.AD_Client_ID) <> -1;
-      END LOOP;
-    END IF;
+    IF (v_IsSOTrx = 'N') THEN
+	  FOR Cur_InvoiceNetLine IN (SELECT * FROM C_INVOICELINE WHERE C_Invoice_Id =  v_Record_ID)
+	  LOOP
+	    UPDATE M_PRODUCT_PO 
+		SET PriceLastInv = Cur_InvoiceNetLine.PriceActual 
+		WHERE C_BPARTNER_ID = v_BPartner_ID 
+		AND M_PRODUCT_ID = Cur_InvoiceNetLine.M_PRODUCT_ID
+		AND Ad_Isorgincluded(Cur_InvoiceNetLine.AD_ORG_ID, AD_ORG_ID, Cur_InvoiceNetLine.AD_Client_ID) <> -1;
+	
+		UPDATE C_ORDERLINE
+		SET QtyInvoiced = COALESCE(QtyInvoiced, 0) + COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0),
+			DateInvoiced = COALESCE(v_DateInvoiced, now()),
+			Updated = now(),
+			UpdatedBy = v_UpdatedBy
+		WHERE C_OrderLine_ID = Cur_InvoiceNetLine.C_OrderLine_ID;
+	  END LOOP;
+	END IF;
     /**
      * Void if Document not processed
      */
@@ -587,7 +596,6 @@ IF (NOT FINISH_PROCESS) THEN
       IF (v_Count>0) THEN
         RAISE_APPLICATION_ERROR(-20000, '@NotCorrectOrgLines@') ;
       END IF;
-
 
       SELECT COUNT(*) INTO v_Count
       FROM C_INVOICE C,
@@ -1088,6 +1096,22 @@ IF (NOT FINISH_PROCESS) THEN
   UPDATE C_INVOICELINE
   SET UPDATED = now()
   WHERE C_INVOICE_ID = v_Record_ID;
+  
+  -- Set qtyinvoiced in m_inoutline
+  UPDATE m_inoutline 
+  SET qtyinvoiced = COALESCE(qtyinvoiced, 0) + (
+      SELECT COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)
+      FROM c_invoiceline inv
+      WHERE inv.m_inoutline_id = m_inoutline.m_inoutline_id
+        AND inv.c_invoice_id = v_Record_ID
+  )
+  WHERE EXISTS (
+      SELECT 1 
+      FROM c_invoiceline il
+      WHERE il.m_inoutline_id = m_inoutline.m_inoutline_id
+        AND il.c_invoice_id = v_Record_ID
+  );
+  
   IF (NOT FINISH_PROCESS AND NOT END_PROCESSING) THEN
     /**************************************************************************
      * Actions allowed: COmplete, APprove

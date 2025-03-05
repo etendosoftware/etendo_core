@@ -475,10 +475,8 @@ isc.OBParameterWindowView.addProperties({
 
       // allow to add external parameters
       isc.addProperties(allProperties._params, view.externalParams);
-
       const form = view.theForm;
-      const hasFileItems = view.theForm.getFileItemForm();
-      if (hasFileItems) {
+      if (form && form.getFileItemForm()) {
         const formData = form
           .getItems()
           .filter(item => isc.isA.FileItem(item))

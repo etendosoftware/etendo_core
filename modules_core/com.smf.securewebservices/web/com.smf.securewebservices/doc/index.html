@@ -4,6 +4,7 @@
   <head>
     <meta charset="UTF-8">
     <title>Swagger UI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
     <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
@@ -38,25 +39,27 @@
     <script src="./swagger-ui-bundle.js"> </script>
     <script src="./swagger-ui-standalone-preset.js"> </script>
     <script>
-    window.onload = function() {
-      // Begin Swagger UI call region
-      const ui = SwaggerUIBundle({
-        url: "doc.yaml",
-        dom_id: '#swagger-ui',
-        deepLinking: true,
-        presets: [
-          SwaggerUIBundle.presets.apis,
-          SwaggerUIStandalonePreset
-        ],
-        plugins: [
-          SwaggerUIBundle.plugins.DownloadUrl
-        ],
-        layout: "StandaloneLayout"
-      })
-      // End Swagger UI call region
+      window.onload = function() {
+        const baseUrl = window.location.origin;
+        const pathname = window.location.pathname;
+        const contextPath = pathname.substring(0, pathname.indexOf('/', 1));
+        const apiUrl = `${baseUrl}${contextPath}`;
 
-      window.ui = ui
-    }
-  </script>
+        fetch('doc.yaml')
+          .then(response => response.text())
+          .then(yamlText => {
+            const spec = jsyaml.load(yamlText);
+            spec.servers = [{ url: apiUrl }];
+            SwaggerUIBundle({
+              spec: spec,
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [SwaggerUIBundle.presets.apis],
+              plugins: [SwaggerUIBundle.plugins.DownloadUrl]
+            });
+          })
+          .catch(error => console.error("Error loading Swagger specification:", error));
+      };
+    </script>
   </body>
 </html>

@@ -48,7 +48,37 @@
   v_Prefix VARCHAR2(30) ;
   v_Suffix VARCHAR2(30) ;
 BEGIN
-  RAISE_APPLICATION_ERROR(-20000, '@DeprecatedAPI@' || p_SequenceName) ;
+  -- Is a document Sequence defined and valid
+BEGIN
+  SELECT DocNoSequence_ID
+  INTO v_Sequence_ID
+  FROM C_DocType
+  WHERE C_DocType_ID=p_DocType_ID -- parameter
+    AND IsDocNoControlled='Y'  AND IsActive='Y';
+EXCEPTION
+WHEN OTHERS THEN
+  NULL;
+END;
+IF(v_Sequence_ID IS NULL) THEN -- No Sequence Number
+  p_DocumentNo:= NULL; -- Return NULL
+  DBMS_OUTPUT.PUT_LINE('[LEGAP_SEQUENCE_DOCTYPE: not found - C_DocType_ID=' || p_DocType_ID || ']') ;
+  RETURN;
+END IF;
+  IF p_Update_Next='Y' THEN
+    UPDATE AD_Sequence
+      SET CurrentNext=CurrentNext + IncrementNo
+    WHERE AD_Sequence_ID=v_Sequence_ID;
+  END IF;
+
+  SELECT s.CurrentNext - (CASE WHEN p_Update_Next='Y' THEN IncrementNo ELSE 0 END), s.Prefix, s.Suffix
+  INTO v_NextNo, v_Prefix, v_Suffix
+  FROM AD_Sequence s
+  WHERE s.AD_Sequence_ID = v_Sequence_ID  AND s.IsActive='Y'  AND s.IsTableID='N'  AND s.IsAutoSequence='Y';
+
+  p_DocumentNo:=COALESCE(v_Prefix, '') || v_NextNo || COALESCE(v_Suffix, '') ;
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+  RAISE_APPLICATION_ERROR(-20000, '@DocumentTypeSequenceNotFound@') ;
 END AD_SEQUENCE_DOCTYPE
 ]]></body>
     </function>

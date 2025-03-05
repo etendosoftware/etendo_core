@@ -3,8 +3,10 @@ package com.smf.jobs.defaults;
 import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
+import com.smf.jobs.defaults.Utils.ProcessUtils;
 
 import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -37,8 +39,9 @@ public class ProcessShipment extends Action {
     try {
       var input = getInputContents(getInputClass());
       var documentAction = parameters.getString("DocAction");
-      var processMessages = new StringBuilder();
-      int errors = 0;
+      var errors = new MutableInt(0);
+      var success = new MutableInt(0);
+      OBError message = new OBError();
 
       result.setType(Result.Type.SUCCESS);
 
@@ -46,34 +49,11 @@ public class ProcessShipment extends Action {
       log.debug(parameters.toString());
 
       for (ShipmentInOut shipmentInOut : input) {
-        var message = processShipment(shipmentInOut, documentAction);
-        if (message.getType().equals("Error")) {
-          errors++;
-        }
-        if (message.getMessage().isBlank()) {
-          processMessages.append(shipmentInOut.getDocumentNo()).append(": ").append(message.getTitle()).append("\n");
-        } else {
-          processMessages.append(shipmentInOut.getDocumentNo()).append(": ").append(message.getMessage()).append("\n");
-        }
+        message = processShipment(shipmentInOut, documentAction);
+        ProcessUtils.updateResult(message, errors, success);
       }
 
-      if (errors == input.size()) {
-        result.setType(Result.Type.ERROR);
-      } else if (errors > 0) {
-        result.setType(Result.Type.WARNING);
-      }
-
-      if (input.size() > 1) {
-        // Show the message in a pop up when more than one shipment was selected, for better readability.
-        var jsonMessage = new JSONObject();
-        jsonMessage.put("message", processMessages.toString().replaceAll("\n", "<br>"));
-        result.setResponseActionsBuilder(getResponseBuilder().addCustomResponseAction("smartclientSay", jsonMessage));
-      }
-
-      result.setMessage(processMessages.toString());
-      result.setOutput(getInput());
-
-
+      ProcessUtils.massiveMessageHandler(result, message, input, errors, success, getInput());
     } catch (JSONException | ParseException e) {
       log.error(e.getMessage(), e);
       result.setType(Result.Type.ERROR);

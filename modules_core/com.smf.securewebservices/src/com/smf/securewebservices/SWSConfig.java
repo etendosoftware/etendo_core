@@ -48,5 +48,4 @@ public class SWSConfig implements OBSingleton {
     public String getPrivateKey() {
         return privateKey;
     }
-
 }
