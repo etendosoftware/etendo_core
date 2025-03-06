@@ -25,7 +25,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
@@ -82,7 +82,7 @@ public class DefaultsAttachmentActionHandler extends BaseActionHandler {
           parameters.put(param.getDBColumnName(), value);
           // Add the value as a String in the fixedParameters so they can be used in Default Values
           // expressions of other parameters.
-          fixedParameters.put(param.getDBColumnName(), ObjectUtils.toString(value, null));
+          fixedParameters.put(param.getDBColumnName(), ObjectUtils.toString(value, (String) null));
           continue;
         }
 
