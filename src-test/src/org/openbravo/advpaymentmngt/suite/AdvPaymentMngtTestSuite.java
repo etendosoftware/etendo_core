@@ -15,8 +15,11 @@ import org.openbravo.advpaymentmngt.actionHandler.CheckExistsOverissueBinForRFCS
 import org.openbravo.advpaymentmngt.actionHandler.CheckRecordChangedActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.FindTransactionsToMatchActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.FundsTransferOnChangeDepositToActionHandlerTest;
+import org.openbravo.advpaymentmngt.actionHandler.GLItemTransactionActionHandlerTest;
+import org.openbravo.advpaymentmngt.actionHandler.MatchStatementActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.MatchStatementOnLoadGetPreferenceActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.MatchStatementOnLoadPreferenceActionHandlerTest;
+import org.openbravo.advpaymentmngt.actionHandler.PaymentMethodMulticurrencyActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.PaymentProposalPickEditLinesTest;
 import org.openbravo.advpaymentmngt.actionHandler.ReceivedFromPaymentMethodActionHandlerTest;
 import org.openbravo.advpaymentmngt.actionHandler.SalesOrderAddPaymentDefaultValuesTest;
@@ -36,6 +39,7 @@ import org.openbravo.advpaymentmngt.filterexpression.PaymentInAddPaymentDefaultV
 import org.openbravo.advpaymentmngt.filterexpression.PaymentInAddPaymentDisplayLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.PaymentOutAddPaymentDefaultValuesTest;
 import org.openbravo.advpaymentmngt.filterexpression.PaymentOutAddPaymentReadOnlyLogicsTest;
+import org.openbravo.advpaymentmngt.filterexpression.PurchaseInvoiceAddPaymentDefaultValuesTest;
 import org.openbravo.advpaymentmngt.filterexpression.PurchaseInvoiceAddPaymentDisplayLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.PurchaseInvoiceAddPaymentReadOnlyLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.PurchaseOrderAddPaymentDefaultValuesTest;
@@ -53,6 +57,7 @@ import org.openbravo.advpaymentmngt.hqlinjections.AddPaymentCreditToUseInjectorT
 import org.openbravo.advpaymentmngt.hqlinjections.CreditToUseTransformerTest;
 import org.openbravo.advpaymentmngt.hqlinjections.MatchStatementTransformerTest;
 import org.openbravo.advpaymentmngt.hqlinjections.TransactionsToMatchTransformerTest;
+import org.openbravo.advpaymentmngt.process.RecordID2FillingTest;
 import org.openbravo.advpaymentmngt.test.DocumentNumberGeneration;
 import org.openbravo.advpaymentmngt.test.FinancialAccountTest;
 import org.openbravo.advpaymentmngt.test.PaymentMethodTest;
@@ -98,12 +103,15 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     CheckRecordChangedActionHandlerTest.class,
     AddPaymentOrganizationActionHandlerTest.class,
     AddMultiplePaymentsHandlerTest.class,
+    PaymentMethodMulticurrencyActionHandlerTest.class,
+    GLItemTransactionActionHandlerTest.class,
+    MatchStatementActionHandlerTest.class,
 
     //tests hqlinjections
     AddPaymentCreditToUseInjectorTest.class,
     CreditToUseTransformerTest.class,
     MatchStatementTransformerTest.class,
-    //TransactionsToMatchTransformerTest.class,
+    TransactionsToMatchTransformerTest.class,
     //executionprocess
     PrintCheckTest.class,
     LeaveAsCreditTest.class,
@@ -131,10 +139,14 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     PurchaseOrderAddPaymentDefaultValuesTest.class,
     PurchaseInvoiceAddPaymentReadOnlyLogicsTest.class,
     PurchaseInvoiceAddPaymentDisplayLogicsTest.class,
-    //PaymentOutAddPaymentReadOnlyLogicsTest.class,
+    PurchaseInvoiceAddPaymentDefaultValuesTest.class,
+    PaymentOutAddPaymentReadOnlyLogicsTest.class,
 
     //hooks
-    //PaymentProcessOrderHookTest.class,
+    PaymentProcessOrderHookTest.class,
+
+    //process
+    RecordID2FillingTest.class,
 
     //ad_actionbutton
     GLItemSelectorFilterExpressionTest.class,
