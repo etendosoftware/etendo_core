@@ -21,7 +21,6 @@ package org.openbravo.test.role.inheritance;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -47,25 +46,7 @@ import org.openbravo.model.ad.access.Role;
  * 
  */
 public class DeletedAccessPropagation extends WeldBaseTest {
-  private final List<String> ORGANIZATIONS = Arrays.asList("F&B España - Región Norte",
-      "F&B España - Región Sur");
-  private final List<String> WINDOWS = Arrays.asList("Sales Invoice", "Sales Order");
-  private final List<String> TABS = Arrays.asList("Bank Account", "Basic Discount");
-  private final List<String> FIELDS = Arrays.asList("Business Partner Category", "Commercial Name");
-  private final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants");
-  private final List<String> FORMS = Arrays.asList("About", "Heartbeat");
-  private final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect");
-  private final List<String> VIEWS = Arrays.asList("OBUIAPP_AlertManagement",
-      RoleInheritanceTestUtils.DUMMY_VIEW_IMPL_NAME);
-  private final List<String> PROCESSES = Arrays.asList("Create Purchase Order Lines",
-      "Grant Portal Access");
-  private final List<String> TABLES = Arrays.asList("AD_User", "C_Order");
-  private final List<String> ALERTS = Arrays.asList("Alert Taxes: Inversión del Sujeto Pasivo",
-      "CUSTOMER WITHOUT ACCOUNTING");
-  private final List<String> PREFERENCES = Arrays.asList("AllowAttachment", "AllowDelete");
 
-  private final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS, FIELDS,
-      REPORTS, FORMS, WIDGETS, VIEWS, PROCESSES, TABLES, ALERTS, PREFERENCES);
   private static int testCounter = 0;
 
   /** defines the values the parameter will take. */
@@ -114,7 +95,7 @@ public class DeletedAccessPropagation extends WeldBaseTest {
           true);
       String template3Id = template3.getId();
 
-      List<String> accesses = ACCESSES.get(testCounter);
+      List<String> accesses = InheritanceAndPropagationUtil.accesses.get(testCounter);
       // Add accesses
       RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(0));
       RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(1));
