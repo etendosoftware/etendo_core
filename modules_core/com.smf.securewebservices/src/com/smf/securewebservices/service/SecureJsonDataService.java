@@ -14,7 +14,7 @@ import javax.inject.Inject;
 
 import com.smf.securewebservices.utils.SecureWebServicesUtils;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -265,9 +265,9 @@ public class SecureJsonDataService implements JsonDataService {
         toJsonConverter.setDisplayProperty(displayField);
       }
       if (parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER) != null) {
-        toJsonConverter.setIncludeIdentifier(new Boolean(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
+        toJsonConverter.setIncludeIdentifier(Boolean.valueOf(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
       }
-      toJsonConverter.setIncludeChildren(new Boolean(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
+      toJsonConverter.setIncludeChildren(Boolean.valueOf(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
       final List<JSONObject> jsonObjects = toJsonConverter.toJsonObjects(bobs);
 
       addWritableAttribute(jsonObjects);
@@ -322,9 +322,9 @@ public class SecureJsonDataService implements JsonDataService {
     // all of them will be converted to Json
     toJsonConverter.setSelectedProperties(selectedProperties);
     if (parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER) != null) {
-      toJsonConverter.setIncludeIdentifier(new Boolean(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
+      toJsonConverter.setIncludeIdentifier(Boolean.valueOf(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
     }
-    toJsonConverter.setIncludeChildren(new Boolean(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
+    toJsonConverter.setIncludeChildren(Boolean.valueOf(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
 
     if (parameters.containsKey(JsonConstants.ID)) {
       final String id = parameters.get(JsonConstants.ID);
@@ -748,9 +748,9 @@ public class SecureJsonDataService implements JsonDataService {
         final SecureDataToJson toJsonConverter = OBProvider.getInstance()
             .get(SecureDataToJson.class);
         if (parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER) != null) {
-          toJsonConverter.setIncludeIdentifier(new Boolean(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
+          toJsonConverter.setIncludeIdentifier(Boolean.valueOf(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
         }
-        toJsonConverter.setIncludeChildren(new Boolean(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
+        toJsonConverter.setIncludeChildren(Boolean.valueOf(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
         final List<JSONObject> jsonObjects = toJsonConverter
             .toJsonObjects(Collections.singletonList(bob));
 
@@ -909,9 +909,9 @@ public class SecureJsonDataService implements JsonDataService {
         toJsonConverter.setAdditionalProperties(JsonUtils.getAdditionalProperties(parameters));
         final List<JSONObject> jsonObjects = toJsonConverter.toJsonObjects(refreshedBobs);
         if (parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER) != null) {
-          toJsonConverter.setIncludeIdentifier(new Boolean(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
+          toJsonConverter.setIncludeIdentifier(Boolean.valueOf(parameters.get(OBRestConstants.IDENTIFIERS_PARAMETER)));
         }
-        toJsonConverter.setIncludeChildren(new Boolean(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
+        toJsonConverter.setIncludeChildren(Boolean.valueOf(parameters.get(OBRestConstants.CHILDREN_PARAMETER)));
         if (sendOriginalIdBack) {
           // now it is assumed that the jsonObjects are the same size and the same location
           // in the array

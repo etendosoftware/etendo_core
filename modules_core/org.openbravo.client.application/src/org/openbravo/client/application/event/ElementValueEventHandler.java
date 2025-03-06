@@ -25,7 +25,7 @@ import java.util.List;
 
 import javax.enterprise.event.Observes;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.model.Entity;

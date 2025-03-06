@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class SE_Amount_Transaction extends SimpleCallout {
 

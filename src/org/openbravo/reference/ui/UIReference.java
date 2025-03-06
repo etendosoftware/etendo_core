@@ -18,7 +18,7 @@
  */
 package org.openbravo.reference.ui;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.ComboTableData;
@@ -46,7 +46,7 @@ public class UIReference {
    * @param vars
    */
   public String formatGridValue(VariablesSecureApp vars, String value) {
-    return StringEscapeUtils.escapeHtml(value);
+    return StringEscapeUtils.escapeHtml4(value);
   }
 
   public boolean isNumeric() {

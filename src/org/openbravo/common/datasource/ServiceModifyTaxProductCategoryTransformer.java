@@ -21,7 +21,7 @@ package org.openbravo.common.datasource;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
