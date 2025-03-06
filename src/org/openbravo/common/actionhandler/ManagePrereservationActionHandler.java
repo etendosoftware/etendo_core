@@ -131,6 +131,7 @@ public class ManagePrereservationActionHandler extends BaseProcessActionHandler 
         resStock.setSalesOrderLine(pol);
         resStock.setReleased(BigDecimal.ZERO);
         reservation.setRESStatus("CO");
+        reservation.setRESProcess("HO");
 
         List<ReservationStock> resStocks = pol.getMaterialMgmtReservationStockList();
         resStocks.add(resStock);

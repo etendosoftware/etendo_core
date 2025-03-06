@@ -88,6 +88,8 @@ import org.openbravo.test.inventoryStatus.InventoryStatusTest;
 import org.openbravo.test.invoice.CloneInvoiceTest;
 import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromShipmentTest;
 import org.openbravo.test.materialMgmt.iscompletelyinvoicedshipment.IsCompletelyInvoicedShipment;
+import org.openbravo.test.materialMgmt.linevalidation.GoodMovementTest;
+import org.openbravo.test.materialMgmt.linevalidation.InventoryCountProcessTest;
 import org.openbravo.test.model.ClassLoaderTest;
 import org.openbravo.test.model.DBModifiedTest;
 import org.openbravo.test.model.OneToManyTest;
@@ -104,6 +106,7 @@ import org.openbravo.test.pricelist.PriceListTest;
 import org.openbravo.test.process.order.OrderProcessTest;
 import org.openbravo.test.process.utils.ProcessUtilsTest;
 import org.openbravo.test.productStatus.ProductStatusTest;
+import org.openbravo.test.purchaseOrder.PurchaseOrderStatus;
 import org.openbravo.test.referencedinventory.ReferencedInventoryTestSuite;
 import org.openbravo.test.reporting.AllJrxmlCompilation;
 import org.openbravo.test.reporting.CompiledReportsCacheTest;
@@ -399,7 +402,16 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     LandedCostTypeTest.class,
 
     // Landed Cost Receipt Test
-    LandedCostDuplicateReceiptValidatorTest.class
+    LandedCostDuplicateReceiptValidatorTest.class,
+
+    // Physical Inventory Test
+    InventoryCountProcessTest.class,
+
+    // Good Movement Test
+    GoodMovementTest.class,
+
+    // Purchase Order Status
+    PurchaseOrderStatus.class
 })
 public class StandaloneTestSuite {
 }
