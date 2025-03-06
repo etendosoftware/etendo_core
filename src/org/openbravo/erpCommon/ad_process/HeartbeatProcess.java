@@ -105,7 +105,9 @@ public class HeartbeatProcess implements Process {
 
     try {
       processHeartbeat(beatType);
+      updateHeartbeatLogStatus("S");
     } catch (Exception e) {
+      updateHeartbeatLogStatus("E");
       handleException(e);
     } finally {
       finalizeProcess(beatType);
@@ -702,5 +704,23 @@ public class HeartbeatProcess implements Process {
 
   private static void logFormatError(String itemLabel, String systemItemLabel) {
     log.warn("Incorrect format for {} : {}", itemLabel, systemItemLabel);
+  }
+
+  /**
+   * Updates the status of the HeartbeatLog entry identified by `logHeartbeatID`.
+   *
+   * @param status the new status to set
+   */
+  private void updateHeartbeatLogStatus(String status) {
+    OBContext.setAdminMode();
+    try {
+      HeartbeatLog hbLog = OBDal.getInstance().get(HeartbeatLog.class, logHeartbeatID);
+      if (hbLog != null) {
+        hbLog.setStatus(status);
+        OBDal.getInstance().save(hbLog);
+      }
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 }
