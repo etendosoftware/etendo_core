@@ -29,9 +29,11 @@ import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
+import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
+import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.service.json.JsonUtils;
@@ -54,7 +56,7 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
   @Override
   public String getDefaultActualAmount(Map<String, String> requestMap) throws JSONException {
     if ("Y".equals(getDefaultIsSOTrx(requestMap))) {
-      JSONObject context = new JSONObject(requestMap.get("context"));
+      JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
       if (context.has("depositamt") && context.has("withdrawalamt")) {
         return new BigDecimal(convertToSafeDecimalString(context.getString("depositamt")))
             .subtract(
@@ -125,7 +127,7 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
 
   @Override
   public String getDefaultIsSOTrx(Map<String, String> requestMap) throws JSONException {
-    JSONObject context = new JSONObject(requestMap.get("context"));
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
     String document = null;
     if (context.has("trxtype") && context.get("trxtype") != JSONObject.NULL
         && StringUtils.isNotEmpty(context.getString("trxtype"))) {
@@ -175,7 +177,7 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
 
   @Override
   public String getDefaultReceivedFrom(Map<String, String> requestMap) throws JSONException {
-    JSONObject context = new JSONObject(requestMap.get("context"));
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
     if (context.has("c_bpartner_id") && context.get("c_bpartner_id") != JSONObject.NULL
         && StringUtils.isNotEmpty(context.getString("c_bpartner_id"))) {
       return context.getString("c_bpartner_id");
@@ -200,22 +202,37 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
   @Override
   public String getOrganization(Map<String, String> requestMap) throws JSONException {
     // Organization of the current Payment
-    JSONObject context = new JSONObject(requestMap.get("context"));
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
     if (context.has("ad_org_id") && context.get("ad_org_id") != JSONObject.NULL
         && StringUtils.isNotEmpty(context.getString("ad_org_id"))) {
       return context.getString("ad_org_id");
     }
-    if (context.has("inpadOrgId") && context.get("inpadOrgId") != JSONObject.NULL
-        && StringUtils.isNotEmpty(context.getString("inpadOrgId"))) {
-      return context.getString("inpadOrgId");
+    if (context.has(APRMConstants.INPAD_ORG_ID) && context.get(APRMConstants.INPAD_ORG_ID) != JSONObject.NULL
+        && StringUtils.isNotEmpty(context.getString(APRMConstants.INPAD_ORG_ID))) {
+      return context.getString(APRMConstants.INPAD_ORG_ID);
     }
     return getFinancialAccount(requestMap).getOrganization().getId();
   }
 
   @Override
   public String getDefaultPaymentMethod(Map<String, String> requestMap) throws JSONException {
-    boolean isReceipt = "Y".equals(getDefaultIsSOTrx(requestMap));
-
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
+    boolean isReceipt = StringUtils.equals("Y", getDefaultIsSOTrx(requestMap));
+    String bpartnerId = getDefaultReceivedFrom(requestMap);
+    if (StringUtils.isNotEmpty(bpartnerId)) {
+      BusinessPartner businessPartner = OBDal.getInstance().get(BusinessPartner.class, bpartnerId);
+      if (isReceipt && businessPartner.getPaymentMethod() != null && businessPartner.getAccount() != null &&
+          FIN_Utility.getFinancialAccountPaymentMethod(
+              businessPartner.getPaymentMethod().getId(), businessPartner.getAccount().getId(), isReceipt, null,
+              context.getString(APRMConstants.INPAD_ORG_ID)) != null) {
+        return businessPartner.getPaymentMethod().getId();
+      } else if (!isReceipt && businessPartner.getPOPaymentMethod() != null && businessPartner.getPOFinancialAccount() != null &&
+          FIN_Utility.getFinancialAccountPaymentMethod(
+              businessPartner.getPOPaymentMethod().getId(), businessPartner.getPOFinancialAccount().getId(), !isReceipt,
+              null, context.getString(APRMConstants.INPAD_ORG_ID)) != null) {
+        return businessPartner.getPOPaymentMethod().getId();
+      }
+    }
     FinAccPaymentMethod anyFinAccPaymentMethod = null;
     for (FinAccPaymentMethod finAccPaymentMethod : getFinancialAccount(requestMap)
         .getFinancialMgmtFinAccPaymentMethodList()) {
@@ -238,27 +255,13 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
   @Override
   public String getDefaultDocument(Map<String, String> requestMap) throws JSONException {
     // Document Type
-    JSONObject context = new JSONObject(requestMap.get("context"));
-    String document = null;
-    if (context.has("trxtype") && context.get("trxtype") != JSONObject.NULL
-        && StringUtils.isNotEmpty(context.getString("trxtype"))) {
-      document = context.getString("trxtype");
-    } else if (context.has("inptrxtype") && context.get("inptrxtype") != JSONObject.NULL
-        && StringUtils.isNotEmpty(context.getString("inptrxtype"))) {
-      document = context.getString("inptrxtype");
-    }
-    if ("BPD".equals(document)) {
-      return "RCIN";
-    } else if ("BPW".equals(document)) {
-      return "PDOUT";
-    } else {
-      return "";
-    }
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
+    return FIN_Utility.getDefaultAddPaymentDocument(context);
   }
 
   @Override
   public String getDefaultPaymentDate(Map<String, String> requestMap) throws JSONException {
-    JSONObject context = new JSONObject(requestMap.get("context"));
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
     String strTransactionDate = null;
     try {
       if (context.has("trxdate") && context.get("trxdate") != JSONObject.NULL
@@ -284,7 +287,7 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
 
   private FIN_FinancialAccount getFinancialAccount(Map<String, String> requestMap)
       throws JSONException {
-    JSONObject context = new JSONObject(requestMap.get("context"));
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
     String strFinancialAccount = null;
     if (context.has("inpfinFinancialAccountId")
         && context.get("inpfinFinancialAccountId") != JSONObject.NULL
@@ -303,7 +306,7 @@ public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesH
 
   @Override
   public String getBankStatementLineAmount(Map<String, String> requestMap) throws JSONException {
-    JSONObject context = new JSONObject(requestMap.get("context"));
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
     if (context.has("depositamt") && context.has("withdrawalamt")
         && context.get("depositamt") != JSONObject.NULL
         && context.get("withdrawalamt") != JSONObject.NULL) {

@@ -21,10 +21,12 @@ package org.openbravo.advpaymentmngt.filterexpression;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
+import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -53,32 +55,60 @@ public class TransactionAddPaymentDisplayLogics extends AddPaymentDisplayLogicsH
     return false;
   }
 
+  /**
+   * Determine if the "Credit to use" field should be displayed based on the request map.
+   *
+   * The field is displayed if:
+   * <ul>
+   * <li>the document type is not RCIN</li>
+   * <li>the generated credit is 0</li>
+   * <li>the received from business partner has a credit</li>
+   * </ul>
+   *
+   * @param requestMap
+   *          the request map
+   * @return true if the field should be displayed, false otherwise
+   * @throws JSONException
+   *           if the request map does not contain the expected keys
+   */
   @Override
   public boolean getCreditToUseDisplayLogic(Map<String, String> requestMap) throws JSONException {
-    JSONObject context = new JSONObject(requestMap.get("context"));
-    if ((context.has("received_from") && !context.isNull("received_from")
-        && !"".equals(context.getString("received_from")))
-        || (context.has("inpreceivedFrom") && !context.isNull("inpreceivedFrom")
-            && !"".equals(context.getString("inpreceivedFrom")))) {
-      String document = !context.isNull("received_from") ? context.getString("trxtype")
-          : context.getString("inptrxtype");
-      String strBusinessPartner = !context.isNull("received_from")
-          ? context.getString("received_from")
-          : context.getString("inpreceivedFrom");
-      if (getDefaultGeneratedCredit(requestMap).signum() == 0 || "RCIN".equals(document)) {
-        BusinessPartner bpartner = OBDal.getInstance()
-            .get(BusinessPartner.class, strBusinessPartner);
-        Organization org = OBDal.getInstance().get(Organization.class, context.get("ad_org_id"));
-        Currency currency = OBDal.getInstance().get(Currency.class, context.get("c_currency_id"));
-        BigDecimal customerCredit = new AdvPaymentMngtDao().getCustomerCredit(bpartner,
-            "RCIN".equals(document), org, currency);
-        return customerCredit.signum() > 0;
-      } else {
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
+
+    String receivedFrom = FIN_Utility.getFirstNonEmpty(context, APRMConstants.RECEIVED_FROM, APRMConstants.INPRECEIVED_FROM);
+    String document = null;
+    String orgId = null;
+    String currencyId = null;
+
+    if (StringUtils.isNotBlank(receivedFrom)) {
+      document = context.optString(StringUtils.isNotBlank(context.optString(APRMConstants.TRXTYPE)) ? APRMConstants.TRXTYPE : APRMConstants.INPTRXTYPE, APRMConstants.DEFAULT_EMPTY_VALUE);
+      orgId = context.optString(APRMConstants.AD_ORG_ID, APRMConstants.DEFAULT_EMPTY_VALUE);
+      currencyId = context.optString(APRMConstants.C_CURRENCY_ID, APRMConstants.DEFAULT_EMPTY_VALUE);
+    } else {
+      receivedFrom = FIN_Utility.getFirstNonEmpty(context, APRMConstants.C_BPARTNER_ID, APRMConstants.INPC_BPARTNER_ID);
+      if (StringUtils.isBlank(receivedFrom)) {
         return false;
       }
-    } else {
-      return false;
+      orgId = FIN_Utility.getDefaultOrganization(context);
+      currencyId = FIN_Utility.getDefaultFinancialAccount(context).getCurrency().getId();
+      document = FIN_Utility.getDefaultAddPaymentDocument(context);
     }
+
+    if (StringUtils.isNotBlank(orgId) && StringUtils.isNotBlank(currencyId) &&
+        (getDefaultGeneratedCredit(requestMap).signum() == 0 || APRMConstants.RCIN.equals(document))) {
+      BusinessPartner bpartner = OBDal.getInstance().get(BusinessPartner.class, receivedFrom);
+      Organization org = OBDal.getInstance().get(Organization.class, orgId);
+      Currency currency = OBDal.getInstance().get(Currency.class, currencyId);
+
+      BigDecimal customerCredit = new AdvPaymentMngtDao().getCustomerCredit(
+          bpartner,
+          APRMConstants.RCIN.equals(document),
+          org,
+          currency
+      );
+      return customerCredit.signum() > 0;
+    }
+    return false;
   }
 
   BigDecimal getDefaultGeneratedCredit(Map<String, String> requestMap) throws JSONException {
@@ -88,7 +118,7 @@ public class TransactionAddPaymentDisplayLogics extends AddPaymentDisplayLogicsH
   @Override
   public boolean getBankStatementLineDisplayLogic(Map<String, String> requestMap)
       throws JSONException {
-    JSONObject context = new JSONObject(requestMap.get("context"));
+    JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
 
     // BankStatementLineDisplayLogic
     if (context.has("trxtype")) {
