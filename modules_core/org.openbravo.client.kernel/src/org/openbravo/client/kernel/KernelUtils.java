@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -146,11 +146,11 @@ public class KernelUtils {
     if (e instanceof OBUserException) {
       OBUserException ex = (OBUserException) e;
       sb.append("OB.KernelUtilities.handleUserException('"
-          + StringEscapeUtils.escapeJavaScript(ex.getMessage()) + "', " + ex.getJavaScriptParams()
+          + StringEscapeUtils.escapeEcmaScript(ex.getMessage()) + "', " + ex.getJavaScriptParams()
           + ");");
     } else {
       sb.append("OB.KernelUtilities.handleSystemException('"
-          + StringEscapeUtils.escapeJavaScript(e.getMessage()) + "');");
+          + StringEscapeUtils.escapeEcmaScript(e.getMessage()) + "');");
     }
     return sb.toString();
   }

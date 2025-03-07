@@ -20,7 +20,7 @@ package org.openbravo.common.filterexpression;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.application.FilterExpression;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;

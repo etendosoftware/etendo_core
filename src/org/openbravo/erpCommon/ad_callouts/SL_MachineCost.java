@@ -24,7 +24,7 @@ import java.math.RoundingMode;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class SL_MachineCost extends SimpleCallout {
   @Override

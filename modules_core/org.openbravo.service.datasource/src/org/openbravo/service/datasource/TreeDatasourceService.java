@@ -32,7 +32,8 @@ import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.inject.Inject;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -743,6 +744,19 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
       String hqlWhereClause);
 
   /**
+   * Escapes single quotes in a SQL string by replacing them with two single quotes.
+   * This is useful to prevent SQL injection attacks by ensuring that single quotes
+   * in the input string are properly escaped.
+   *
+   * @param str the input string to be escaped
+   * @return the escaped string with single quotes replaced by two single quotes,
+   *         or null if the input string is null
+   */
+  public static String escapeSql(String str) {
+    return str == null ? null : StringUtils.replace(str, "'", "''");
+  }
+
+  /**
    * If a where clause contains parameters, substitute the parameter with the actual value
    * 
    * @param hqlTreeWhereClause
@@ -764,7 +778,7 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
         // try again without the '@'
         value = parameters.get(contextPropertyName.substring(1, contextPropertyName.length() - 1));
       }
-      replacements.put(contextPropertyName, "'" + StringEscapeUtils.escapeSql(value) + "'");
+      replacements.put(contextPropertyName, "'" + escapeSql(value) + "'");
     }
     String hqlCopy = hqlTreeWhereClause;
     for (Entry<String, String> entry : replacements.entrySet()) {
@@ -788,7 +802,7 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
       return value;
     }
 
-    return "'" + StringEscapeUtils.escapeSql(value) + "'";
+    return "'" + escapeSql(value) + "'";
   }
 
   /**
