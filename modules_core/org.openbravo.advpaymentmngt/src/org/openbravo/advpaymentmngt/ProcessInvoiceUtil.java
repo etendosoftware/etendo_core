@@ -106,7 +106,7 @@ public class ProcessInvoiceUtil {
 
             Date voidDate = null;
             Date voidAcctDate = null;
-            Map<String, String> parameters = null;
+            Map<String, String> parameters = new HashMap<>();
             if (!strVoidInvoiceDate.isEmpty() && !strVoidInvoiceAcctDate.isEmpty()) {
                 try {
                     voidDate = OBDateUtils.getDate(strVoidInvoiceDate);
@@ -117,12 +117,25 @@ public class ProcessInvoiceUtil {
                     log4j.error("Not possible to parse the following date: " + strVoidInvoiceDate, pe);
                     log4j.error("Not possible to parse the following date: " + strVoidInvoiceAcctDate, pe);
                 }
-                parameters = new HashMap<String, String>();
                 parameters.put("voidedDocumentDate", OBDateUtils.formatDate(voidDate, "yyyy-MM-dd"));
                 parameters.put("voidedDocumentAcctDate",
                         OBDateUtils.formatDate(voidAcctDate, "yyyy-MM-dd"));
-                parameters.put("supplierReference", strSupplierReference);
 
+            }
+
+            if ("RC".equals(strdocaction)) {
+                if (strSupplierReference == null || strSupplierReference.isBlank()) {
+                    strSupplierReference = "";
+                } else if (invoice.getOrderReference() != null && StringUtils.equals(invoice.getOrderReference(),
+                    strSupplierReference)) {
+                    String errorMSG = Utility.messageBD(conn, "ValidateSupplierReference", vars.getLanguage(), false);
+                    msg = new OBError();
+                    msg.setType("Error");
+                    msg.setTitle(Utility.messageBD(conn, "Error", vars.getLanguage()));
+                    msg.setMessage(String.format(errorMSG, invoice.getOrderReference()));
+                    return msg;
+                }
+                parameters.put("supplierReference", strSupplierReference);
             }
 
             // In case of void a non paid invoice, create a dummy payment related to it with zero amount
