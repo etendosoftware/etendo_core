@@ -60,9 +60,9 @@
       <![CDATA[
         select m_warehouse_id AS ID from ad_org_warehouse
         where ad_org_id = ?
-        and (select isactive from m_warehouse where m_warehouse_id=ad_org_warehouse.m_warehouse_id)='Y'
-        group by m_warehouse_id, priority
-        having min(priority) = priority
+        and m_warehouse_id IN (select m_warehouse_id from m_warehouse where isactive ='Y')
+        ORDER BY priority ASC
+        LIMIT 1
       ]]>
     </Sql>
     <Parameter name="adOrgId"/>
