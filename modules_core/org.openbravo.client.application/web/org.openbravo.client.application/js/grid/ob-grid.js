@@ -623,8 +623,8 @@ isc.OBGrid.addProperties({
       // The original criteria is in the position 0, the rest are specific ids
       length = criteria.criteria.length;
       for (i = 1; i < length; i++) {
-        if (criteria.criteria.get(i).fieldName !== 'id') {
-          return criteria;
+        if (criteria.criteria.get(i)?.fieldName !== 'id') {
+          return criteria.criteria.get(i);
         }
       }
       return criteria.criteria.get(0);

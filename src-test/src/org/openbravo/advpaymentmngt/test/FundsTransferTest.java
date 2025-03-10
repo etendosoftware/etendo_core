@@ -27,7 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.jboss.arquillian.junit.InSequence;
 import org.junit.After;
 import org.junit.Before;

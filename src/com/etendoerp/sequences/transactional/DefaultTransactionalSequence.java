@@ -5,7 +5,7 @@ import com.etendoerp.sequences.SequenceDatabaseUtils;
 import com.etendoerp.sequences.dimensions.DimensionListOriginalColumnFormat;
 import com.etendoerp.sequences.parameters.SequenceParameterList;
 import com.etendoerp.sequences.parameters.SequenceParametersUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;

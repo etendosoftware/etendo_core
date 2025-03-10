@@ -27,8 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.IsPositiveIntFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -205,7 +205,7 @@ public class ReportShipmentDimensionalAnalyzeJR extends HttpSecureAppServlet {
       }
       response.setContentType("text/html; charset=UTF-8");
       PrintWriter out = response.getWriter();
-      out.print(StringEscapeUtils.escapeHtml(strOrgCurrencyId));
+      out.print(StringEscapeUtils.escapeHtml4(strOrgCurrencyId));
       out.close();
     } else {
       pageErrorPopUp(response);

@@ -3,8 +3,8 @@ package org.openbravo.buildvalidation;
 
 import java.sql.*;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import javax.servlet.ServletException;
 
@@ -13,6 +13,7 @@ import org.openbravo.database.ConnectionProvider;
 import org.openbravo.data.UtilSql;
 import java.util.*;
 
+@SuppressWarnings("serial")
 class DuplicatedOrgWarehouseData implements FieldProvider {
 static Logger log4j = LogManager.getLogger();
   private String InitRecordNumber="0";
@@ -53,7 +54,7 @@ static Logger log4j = LogManager.getLogger();
       "        HAVING count(*)>1";
 
     ResultSet result;
-    Vector<java.lang.Object> vector = new Vector<java.lang.Object>(0);
+    Vector<DuplicatedOrgWarehouseData> vector = new Vector<DuplicatedOrgWarehouseData>(0);
     PreparedStatement st = null;
 
     try {
@@ -81,16 +82,24 @@ static Logger log4j = LogManager.getLogger();
       }
       result.close();
     } catch(SQLException e){
-      log4j.error("SQL error in query: " + strSql + "Exception:"+ e);
+      if (log4j.isDebugEnabled()) {
+        log4j.error("SQL error in query: " + strSql, e);
+      } else {
+        log4j.error("SQL error in query: " + strSql + " :" + e);
+      }
       throw new ServletException("@CODE=" + Integer.toString(e.getErrorCode()) + "@" + e.getMessage());
     } catch(Exception ex){
-      log4j.error("Exception in query: " + strSql + "Exception:"+ ex);
+      if (log4j.isDebugEnabled()) {
+        log4j.error("Exception in query: " + strSql, ex);
+      } else {
+        log4j.error("Exception in query: " + strSql + " :" + ex);
+      }
       throw new ServletException("@CODE=@" + ex.getMessage());
     } finally {
       try {
         connectionProvider.releasePreparedStatement(st);
-      } catch(Exception ignore){
-        ignore.printStackTrace();
+      } catch(Exception e){
+        log4j.error("Error during release*Statement of query: " + strSql, e);
       }
     }
     DuplicatedOrgWarehouseData objectDuplicatedOrgWarehouseData[] = new DuplicatedOrgWarehouseData[vector.size()];
@@ -119,16 +128,24 @@ static Logger log4j = LogManager.getLogger();
       }
       result.close();
     } catch(SQLException e){
-      log4j.error("SQL error in query: " + strSql + "Exception:"+ e);
+      if (log4j.isDebugEnabled()) {
+        log4j.error("SQL error in query: " + strSql, e);
+      } else {
+        log4j.error("SQL error in query: " + strSql + " :" + e);
+      }
       throw new ServletException("@CODE=" + Integer.toString(e.getErrorCode()) + "@" + e.getMessage());
     } catch(Exception ex){
-      log4j.error("Exception in query: " + strSql + "Exception:"+ ex);
+      if (log4j.isDebugEnabled()) {
+        log4j.error("Exception in query: " + strSql, ex);
+      } else {
+        log4j.error("Exception in query: " + strSql + " :" + ex);
+      }
       throw new ServletException("@CODE=@" + ex.getMessage());
     } finally {
       try {
         connectionProvider.releasePreparedStatement(st);
-      } catch(Exception ignore){
-        ignore.printStackTrace();
+      } catch(Exception e){
+        log4j.error("Error during release*Statement of query: " + strSql, e);
       }
     }
     return(boolReturn);
@@ -157,16 +174,24 @@ Check if the AD_Org_Warehouse table exist
       }
       result.close();
     } catch(SQLException e){
-      log4j.error("SQL error in query: " + strSql + "Exception:"+ e);
+      if (log4j.isDebugEnabled()) {
+        log4j.error("SQL error in query: " + strSql, e);
+      } else {
+        log4j.error("SQL error in query: " + strSql + " :" + e);
+      }
       throw new ServletException("@CODE=" + Integer.toString(e.getErrorCode()) + "@" + e.getMessage());
     } catch(Exception ex){
-      log4j.error("Exception in query: " + strSql + "Exception:"+ ex);
+      if (log4j.isDebugEnabled()) {
+        log4j.error("Exception in query: " + strSql, ex);
+      } else {
+        log4j.error("Exception in query: " + strSql + " :" + ex);
+      }
       throw new ServletException("@CODE=@" + ex.getMessage());
     } finally {
       try {
         connectionProvider.releasePreparedStatement(st);
-      } catch(Exception ignore){
-        ignore.printStackTrace();
+      } catch(Exception e){
+        log4j.error("Error during release*Statement of query: " + strSql, e);
       }
     }
     return(boolReturn);
