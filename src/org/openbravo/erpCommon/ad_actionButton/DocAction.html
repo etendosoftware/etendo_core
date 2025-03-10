@@ -176,6 +176,7 @@
       
       displayLogicElement('voidedDocumentDateRow', displayVoidDates && (purchaseInvoiceWindow === currentWindowId || goodsReceiptWindow === currentWindowId));
       displayLogicElement('voidedDocumentDateAcctRow', displayVoidDates && (purchaseInvoiceWindow === currentWindowId || goodsReceiptWindow === currentWindowId));
+      displayLogicElement('supplierReferenceRow', displayVoidDates && purchaseInvoiceWindow === currentWindowId);
     }
     
     function applyInvoiceIfPossibleDisplayLogic() {
@@ -466,6 +467,11 @@
                 </td>
               </tr>
               
+              <tr id="supplierReferenceRow">
+              <td class="TitleCell"><span id="lblSupplierReference" class="LabelText">Supplier Reference</span></td>
+              <td class="TextBox_ContentCell"><input type="text" name="inpSupplierReference" id="paramSupplierReference" size="30" maxlength="30" value="" class="dojoValidateValid TextBox_TwoCell_width"></input>
+              </tr>
+
               <tr id="invoiceIfPossible">
               	<td class="TitleCell"><span id="lblInvoiceIfPossible" class="LabelText">Invoice if possible</span></td>
               	<td class="Radio_Check_ContentCell">

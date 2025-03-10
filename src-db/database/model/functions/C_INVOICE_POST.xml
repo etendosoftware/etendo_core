@@ -162,6 +162,7 @@
 
   v_voiddate_inv C_Invoice.DateInvoiced%TYPE;
   v_voiddate_acct C_Invoice.DateAcct%TYPE;
+  v_supplier_reference C_Invoice.POReference%TYPE;
 
   v_bpartner_blocked VARCHAR2(1):='N';
   v_invoiceBlocking VARCHAR2(1):='N';
@@ -203,6 +204,8 @@ BEGIN
         v_voiddate_inv := TO_DATE(Cur_Parameter.p_string, 'YYYY-MM-DD');
       ELSIF (Cur_Parameter.parametername = 'voidedDocumentAcctDate') THEN
         v_voiddate_acct := TO_DATE(Cur_Parameter.p_string, 'YYYY-MM-DD');
+      ELSIF (Cur_Parameter.parametername = 'supplierReference') THEN
+        v_supplier_reference := Cur_Parameter.p_string;
       END IF;
     END LOOP; -- Get Parameter
     DBMS_OUTPUT.PUT_LINE('  v_Record_ID=' || v_Record_ID) ;
@@ -823,6 +826,9 @@ IF (NOT FINISH_PROCESS) THEN
         END IF;
         IF (v_voiddate_acct IS NOT NULL) THEN
           UPDATE C_INVOICE SET DateAcct = v_voiddate_acct WHERE C_Invoice_ID=v_RInvoice_ID;
+        END IF;
+        IF (v_supplier_reference IS NOT NULL) THEN
+          UPDATE C_INVOICE SET POReference = v_supplier_reference WHERE C_Invoice_ID=v_RInvoice_ID;
         END IF;
         IF (v_prepaymentamt !=0) THEN
           UPDATE C_INVOICE SET prepaymentamt = v_prepaymentamt WHERE C_Invoice_ID=v_RInvoice_ID;

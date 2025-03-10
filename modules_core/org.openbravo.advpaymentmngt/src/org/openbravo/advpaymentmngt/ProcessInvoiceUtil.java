@@ -59,11 +59,12 @@ public class ProcessInvoiceUtil {
      * @param strdocaction Document Action
      * @param strVoidInvoiceDate Void date where applicable
      * @param strVoidInvoiceAcctDate Void accounting date where applicable
+     * @param strSupplierReference Supplier reference associated with the invoice, used for tracking purposes.
      * @param vars {@link VariablesSecureApp} Used to obtain current language and by Payment Processes. Use {@link org.openbravo.client.kernel.RequestContext#getVariablesSecureApp()} outside of servlets.
      * @param conn {@link ConnectionProvider} Used to connect to the database. Use 'this' when in servlets.
      * @return an {@link OBError} with the message of the resulting operation. It can be a success.
      */
-    public OBError process(String strC_Invoice_ID, String strdocaction, String strVoidInvoiceDate, String strVoidInvoiceAcctDate, VariablesSecureApp vars, ConnectionProvider conn) {
+    public OBError process(String strC_Invoice_ID, String strdocaction, String strVoidInvoiceDate, String strVoidInvoiceAcctDate, String strSupplierReference, VariablesSecureApp vars, ConnectionProvider conn) {
         OBError myMessage = null;
         try {
 
@@ -120,6 +121,7 @@ public class ProcessInvoiceUtil {
                 parameters.put("voidedDocumentDate", OBDateUtils.formatDate(voidDate, "yyyy-MM-dd"));
                 parameters.put("voidedDocumentAcctDate",
                         OBDateUtils.formatDate(voidAcctDate, "yyyy-MM-dd"));
+                parameters.put("supplierReference", strSupplierReference);
 
             }
 
