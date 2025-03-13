@@ -41,6 +41,7 @@ public class ProcessInvoices extends Action {
     private static final String VOIDACCOUNTINGDATE = "VoidAccountingDate";
     private static final String SUPPLIERREFERENCE = "POReference";
     private static final String VOID_DOCUMENT_ACTION = "RC";
+    private static final String ERROR = "Error";
     @Inject
     private WeldUtils weldUtils;
 
@@ -84,8 +85,8 @@ public class ProcessInvoices extends Action {
 
     private OBError supplierReferenceValidationError(Invoice invoice) {
         OBError error = new OBError();
-        error.setType("Error");
-        error.setMessage("");
+        error.setType(ERROR);
+        error.setMessage(StringUtils.EMPTY);
         return error;
     }
 
@@ -93,8 +94,8 @@ public class ProcessInvoices extends Action {
         String _strSupplierReference) throws ParseException {
 
         var processor = weldUtils.getInstance(ProcessInvoiceUtil.class);
-        var strVoidDate = "";
-        var strVoidAcctDate = "";
+        var strVoidDate = StringUtils.EMPTY;
+        var strVoidAcctDate = StringUtils.EMPTY;
 
         if (_strVoidDate != null && _strVoidAcctDate != null) {
             // Convert from the JSON date format to the OBProperties date format
@@ -137,7 +138,7 @@ public class ProcessInvoices extends Action {
                 }
                 // In case of a locked record, the docAction will be forced to XL, this will unlock the record and proceed to complete
                 var message = processInvoice(invoice, "XL", voidDate, voidAcctDate, supplierReference);
-                if (!StringUtils.equals("Error", message.getType())){
+                if (!StringUtils.equals(ERROR, message.getType())){
                     invoice.setAPRMProcessinvoice("--");
                     OBDal.getInstance().save(invoice);
                     doFlush = true;

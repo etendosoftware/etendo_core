@@ -127,8 +127,7 @@ public class ProcessInvoiceUtil {
             if (StringUtils.equals("RC", strdocaction)) {
                 if (strSupplierReference == null || strSupplierReference.isBlank()) {
                     strSupplierReference = "";
-                } else if (invoice.getOrderReference() != null && StringUtils.equals(invoice.getOrderReference(),
-                    strSupplierReference)) {
+                } else if (StringUtils.equals(invoice.getOrderReference(), strSupplierReference)) {
                     String errorMSG = Utility.messageBD(conn, "ValidateSupplierReference", vars.getLanguage(), false);
                     msg = new OBError();
                     msg.setType(ERROR);
