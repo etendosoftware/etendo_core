@@ -44,7 +44,6 @@ import org.openbravo.authentication.AuthenticationManager;
 import org.openbravo.authentication.ChangePasswordException;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.HttpBaseServlet;
-import org.openbravo.base.HttpBaseUtils;
 import org.openbravo.base.secureApp.LoginUtils.RoleDefaults;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.application.CachedPreference;
@@ -88,9 +87,6 @@ import org.openbravo.service.password.PasswordStrengthChecker;
 public class LoginHandler extends HttpBaseServlet {
   private static final long serialVersionUID = 1L;
   public static final String SUCCESS_SESSION_STANDARD = "S";
-// "dev-fut-test.us.auth0.com";
-// "zxo9HykojJHT1HXg18KwUjCNlLPs3tZU";
-// "EAlNG8TK063hfFWmQHRdn94F7qzle04GQ7q3O067_lTMzcKAG4tPQ6P476hxdRAV";
   private static final String ERROR = "Error";
 
   @Inject
@@ -134,7 +130,7 @@ public class LoginHandler extends HttpBaseServlet {
 
     if (isPasswordResetFlow) {
       user = vars.getSessionValue("#AD_User_ID");
-    } else if (!StringUtils.isBlank(req.getParameter("code")) && !StringUtils.isBlank(req.getParameter("state"))) {
+    } else if (!StringUtils.isBlank(req.getParameter("code"))) {
       String token = getAuthToken(req);
       HashMap<String, String> tokenValues = decodeToken(token);
       User adUser = matchUser(token, tokenValues.get("sub"));
@@ -144,21 +140,17 @@ public class LoginHandler extends HttpBaseServlet {
         String clientId = ((String) openbravoProperties.get("sso.client.id")).trim();
         String logoutRedirectUri = StringUtils.remove(req.getRequestURL().toString(), req.getServletPath()).trim();
         String contextName = ((String) openbravoProperties.get("context.name")).trim();
-        log4j.info("context.name: " + contextName);
-        log4j.info("sso.domain.url: " + ssoDomain);
-        log4j.info("sso.client.id: " + clientId);
-        log4j.info("logoutRedirectUri: " + logoutRedirectUri);
-        log4j.info("Encoded logoutRedirectUri: " + URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8));
-        String ssoNoUserLinkURL = String.format("/%s" + ReportingUtils.getBaseDesign() + "/org/openbravo/base/secureApp/Auth0ErrorPage.html?ssoDomain=%s&clientId=%s&logoutRedirectUri=%s",
+        String ssoNoUserLinkURL = String.format("/%s%s/org/openbravo/base/secureApp/Auth0ErrorPage.html"
+                + "?ssoDomain=%s&clientId=%s&logoutRedirectUri=%s",
             contextName,
+            ReportingUtils.getBaseDesign(),
             URLEncoder.encode(ssoDomain, StandardCharsets.UTF_8),
             URLEncoder.encode(clientId, StandardCharsets.UTF_8),
             URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8));
         try {
-          log4j.info("User not found in the system, redirecting to: " + ssoNoUserLinkURL);
           res.sendRedirect(ssoNoUserLinkURL);
         } catch (Exception e) {
-          log4j.error("Error redirecting to: " + ssoNoUserLinkURL + " --- " + e.getMessage(), e);
+          log4j.error("Error redirecting to: {} --- {}", ssoNoUserLinkURL, e.getMessage(), e);
         }
         return;
       }
