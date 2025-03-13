@@ -21,9 +21,9 @@
   "author": "Openbravo SLU",
   "license": "SEE LICENSE IN legal/Openbravo_license.txt",
   "dependencies": {
-    "prettier": "~3.4.2",
-    "eslint-config-prettier": "~9.0.0",
-    "eslint-plugin-prettier": "~5.2.1"
+    "prettier": "~3.4.5",
+    "eslint-config-prettier": "~9.1.2",
+    "eslint-plugin-prettier": "~5.2.2"
   },
   "devDependencies": {
     "@babel/plugin-proposal-optional-chaining": "^7.12.7",
