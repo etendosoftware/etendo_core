@@ -59,5 +59,6 @@ public class APRMConstants {
   public static final String INPC_BPARTNER_ID = "inpcBpartnerId";
   public static final String C_CURRENCY_ID = "c_currency_id";
   public static final String DEFAULT_EMPTY_VALUE = "";
+  public static final String NULL_VALUE = "null";
 
 }
