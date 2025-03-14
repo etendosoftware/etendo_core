@@ -83,7 +83,7 @@ public class ProductCharacteristicsDS extends DefaultDataSourceService {
   static final int VAL_NAME = 3;
   static final int VAL_PARENT = 4;
 
-  private static final String PRODUCT_CHARACTERISTICS_TABLE_ID = "8E4A6598CA2747B6B0E7257C6F3DEB19";
+  protected static final String PRODUCT_CHARACTERISTICS_TABLE_ID = "8E4A6598CA2747B6B0E7257C6F3DEB19";
 
   @Inject
   private DataSourceServiceProvider dataSourceServiceProvider;
@@ -136,7 +136,7 @@ public class ProductCharacteristicsDS extends DefaultDataSourceService {
     }
   }
 
-  private JSONArray getAllNodes(Map<String, String> parameters, String dsIdentifier,
+  protected JSONArray getAllNodes(Map<String, String> parameters, String dsIdentifier,
       String productPath, List<String> allNodes, Set<String> missingNodes, boolean addMissingNodes)
       throws JSONException {
 
@@ -348,7 +348,7 @@ public class ProductCharacteristicsDS extends DefaultDataSourceService {
     return responseData;
   }
 
-  private Set<String> getOrgFilter() {
+  protected Set<String> getOrgFilter() {
     final Set<String> orgs = new HashSet<String>();
     OrganizationStructureProvider orgStructure = OBContext.getOBContext()
         .getOrganizationStructureProvider();
