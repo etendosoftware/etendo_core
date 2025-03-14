@@ -35,6 +35,8 @@ import org.openbravo.utils.FormatUtilities;
 
 public class SL_Invoice_Amt extends SimpleCallout {
 
+  private static final String PRICE_ACTUAL = "inppriceactual";
+
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
 
@@ -45,7 +47,7 @@ public class SL_Invoice_Amt extends SimpleCallout {
 
     // Parameters
     BigDecimal qtyInvoice = info.getBigDecimalParameter("inpqtyinvoiced");
-    BigDecimal priceActual = info.getBigDecimalParameter("inppriceactual");
+    BigDecimal priceActual = info.getBigDecimalParameter(PRICE_ACTUAL);
     BigDecimal priceLimit = info.getBigDecimalParameter("inppricelimit");
     String strInvoiceId = info.getStringParameter("inpcInvoiceId", IsIDFilter.instance);
     String strProduct = info.getStringParameter("inpmProductId", IsIDFilter.instance);
@@ -57,6 +59,8 @@ public class SL_Invoice_Amt extends SimpleCallout {
     BigDecimal baseGrossUnitPrice = info.getBigDecimalParameter("inpgrosspricestd");
     BigDecimal taxBaseAmt = info.getBigDecimalParameter("inptaxbaseamt");
     String strInvoicelineId = info.getStringParameter("inpcInvoicelineId", IsIDFilter.instance);
+    String strCancelPriceAd = info.getStringParameter("inpcancelpricead");
+    boolean cancelPriceAd = StringUtils.equals(strCancelPriceAd, "Y");
 
     // Standard Precision and Price Precision
     SLInvoiceAmtData[] data = SLInvoiceAmtData.select(this, strInvoiceId);
@@ -117,9 +121,19 @@ public class SL_Invoice_Amt extends SimpleCallout {
     Product product = OBDal.getInstance().get(Product.class, strProduct);
     boolean priceIncludeTaxes = invoice.getPriceList().isPriceIncludesTax();
 
+    // Handling of the “Cancel Promotions” check
+    if (StringUtils.equals(strChanged, "inpcancelpricead")) {
+      if (cancelPriceAd) {
+        priceActual = priceStd;
+      } else {
+        priceActual = PriceAdjustment.calculatePriceActual(invoice, product, qtyInvoice, priceStd);
+      }
+      info.addResult(PRICE_ACTUAL, priceActual);
+    }
+
     // If unit price (actual price) changes, recalculates standard price
     // (std price) applying price adjustments (offers) if any
-    if (StringUtils.equals(strChanged, "inppriceactual")
+    if (StringUtils.equals(strChanged, PRICE_ACTUAL)
         || StringUtils.equals(strChanged, "inplinenetamt")) {
       if (log4j.isDebugEnabled()) {
         log4j.debug("priceActual:" + Double.toString(priceActual.doubleValue()));
@@ -131,7 +145,7 @@ public class SL_Invoice_Amt extends SimpleCallout {
 
     // If quantity changes, recalculates unit price (actual price) applying
     // price adjustments (offers) if any
-    if (StringUtils.equals(strChanged, "inpqtyinvoiced")) {
+    if (StringUtils.equals(strChanged, "inpqtyinvoiced") && !cancelPriceAd) {
       if (log4j.isDebugEnabled()) {
         log4j.debug(
             "PriceList: " + priceList + " product:" + strProduct + " qty:" + qtyInvoice.toString());
@@ -151,6 +165,7 @@ public class SL_Invoice_Amt extends SimpleCallout {
       } else {
         priceActual = PriceAdjustment.calculatePriceActual(invoice, product, qtyInvoice, priceStd);
       }
+      info.addResult(PRICE_ACTUAL, priceActual);
     }
 
     // If Gross Unit Price or Tax field is changed when price Includes Tax = Yes
@@ -169,7 +184,7 @@ public class SL_Invoice_Amt extends SimpleCallout {
       priceStd = netUnitPrice;
 
       info.addResult("inpgrosspricestd", baseGrossUnitPrice);
-      info.addResult("inppriceactual", netUnitPrice);
+      info.addResult(PRICE_ACTUAL, netUnitPrice);
       info.addResult("inppricelimit", netUnitPrice);
       info.addResult("inppricestd", netUnitPrice);
 
@@ -242,6 +257,6 @@ public class SL_Invoice_Amt extends SimpleCallout {
     // Set TaxbaseAmt, Tax Amount, Price Actual
     info.addResult("inptaxbaseamt", lineNetAmt);
     info.addResult("inptaxamt", taxAmt);
-    info.addResult("inppriceactual", priceActual);
+    info.addResult(PRICE_ACTUAL, priceActual);
   }
 }

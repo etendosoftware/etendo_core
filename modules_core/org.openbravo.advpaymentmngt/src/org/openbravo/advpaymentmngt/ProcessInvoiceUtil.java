@@ -329,6 +329,7 @@ public class ProcessInvoiceUtil {
 
                             // Remove the reference to the order payment schedule
                             fpsd.setOrderPaymentSchedule(null);
+
                             fpsd.setPaymentDetails(pd);
 
                             pd.getFINPaymentScheduleDetailList().add(fpsd);

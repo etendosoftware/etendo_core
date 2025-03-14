@@ -481,10 +481,23 @@ spec:
             try {
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running SonarQube Analysis\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
               echo "--------------- Running SonarQube ---------------"
+
+              def modulesCoreExclusions = [
+                "com.smf.userinterface.skin.legacy",
+                "org.openbravo.client.widgets",
+                "org.openbravo.client.htmlwidget",
+                "com.smf.smartclient.debugtools",
+                "org.openbravo.client.myob",
+                "org.openbravo.userinterface.smartclient",
+                "com.smf.smartclient.boostedui",
+                "com.etendoerp.client.application"
+              ]
+
+              def sourceExclusions = modulesCoreExclusions.collect { "modules_core/${it}/**" }.join(',')
               sh """
               su etendo
               cd ${REPO_NAME}
-              ./gradlew sonar --stacktrace --info
+              ./gradlew sonar -Dsonar.inclusions=**/*.java -Dsonar.exclusions=${sourceExclusions} --stacktrace --info
               """
               echo "---------------------- Getting SonarQube Report URL ----------------------"
               def branchName = URLEncoder.encode(GIT_BRANCH, 'UTF-8')

@@ -77,6 +77,10 @@ public class InventoryCountProcess implements Process {
       final String recordID = (String) bundle.getParams().get("M_Inventory_ID");
       final InventoryCount inventory = OBDal.getInstance().get(InventoryCount.class, recordID);
 
+      if(inventory.getMaterialMgmtInventoryCountLineList().isEmpty()){
+        throw new OBException(OBMessageUtils.messageBD("PhysicalInventoryWithoutLines"));
+      }
+
       // lock inventory
       if (inventory.isProcessNow()) {
         throw new OBException(OBMessageUtils.parseTranslation("@OtherProcessActive@"));
