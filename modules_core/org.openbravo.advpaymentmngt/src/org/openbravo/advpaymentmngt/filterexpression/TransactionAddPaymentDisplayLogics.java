@@ -75,13 +75,16 @@ public class TransactionAddPaymentDisplayLogics extends AddPaymentDisplayLogicsH
   public boolean getCreditToUseDisplayLogic(Map<String, String> requestMap) throws JSONException {
     JSONObject context = new JSONObject(requestMap.get(APRMConstants.CONTEXT));
 
-    String receivedFrom = FIN_Utility.getFirstNonEmpty(context, APRMConstants.RECEIVED_FROM, APRMConstants.INPRECEIVED_FROM);
+    String receivedFrom = FIN_Utility.getFirstNonEmpty(context, APRMConstants.RECEIVED_FROM,
+        APRMConstants.INPRECEIVED_FROM);
     String document = null;
     String orgId = null;
     String currencyId = null;
 
     if (StringUtils.isNotBlank(receivedFrom)) {
-      document = context.optString(StringUtils.isNotBlank(context.optString(APRMConstants.TRXTYPE)) ? APRMConstants.TRXTYPE : APRMConstants.INPTRXTYPE, APRMConstants.DEFAULT_EMPTY_VALUE);
+      document = context.optString(StringUtils.isNotBlank(
+              context.optString(APRMConstants.TRXTYPE)) ? APRMConstants.TRXTYPE : APRMConstants.INPTRXTYPE,
+          APRMConstants.DEFAULT_EMPTY_VALUE);
       orgId = context.optString(APRMConstants.AD_ORG_ID, APRMConstants.DEFAULT_EMPTY_VALUE);
       currencyId = context.optString(APRMConstants.C_CURRENCY_ID, APRMConstants.DEFAULT_EMPTY_VALUE);
     } else {
@@ -94,8 +97,11 @@ public class TransactionAddPaymentDisplayLogics extends AddPaymentDisplayLogicsH
       document = FIN_Utility.getDefaultAddPaymentDocument(context);
     }
 
-    if (StringUtils.isNotBlank(orgId) && StringUtils.isNotBlank(currencyId) &&
-        (getDefaultGeneratedCredit(requestMap).signum() == 0 || APRMConstants.RCIN.equals(document))) {
+    boolean isOrgAndCurrencyValid = StringUtils.isNotBlank(orgId) && StringUtils.isNotBlank(currencyId);
+    boolean isReceivedFromValid = !StringUtils.equals(APRMConstants.NULL_VALUE, receivedFrom);
+    boolean isCreditOrDocumentValid = getDefaultGeneratedCredit(requestMap).signum() == 0 || APRMConstants.RCIN.equals(document);
+
+    if (isOrgAndCurrencyValid && isReceivedFromValid && isCreditOrDocumentValid) {
       BusinessPartner bpartner = OBDal.getInstance().get(BusinessPartner.class, receivedFrom);
       Organization org = OBDal.getInstance().get(Organization.class, orgId);
       Currency currency = OBDal.getInstance().get(Currency.class, currencyId);
