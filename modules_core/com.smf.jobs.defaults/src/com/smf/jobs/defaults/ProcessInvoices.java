@@ -20,12 +20,16 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonUtils;
 
 import javax.inject.Inject;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Action for processing invoices.
@@ -35,6 +39,9 @@ public class ProcessInvoices extends Action {
     Logger log = LogManager.getLogger();
     private static final String VOIDDATE = "VoidDate";
     private static final String VOIDACCOUNTINGDATE = "VoidAccountingDate";
+    private static final String SUPPLIERREFERENCE = "POReference";
+    private static final String VOID_DOCUMENT_ACTION = "RC";
+    private static final String ERROR = "Error";
     @Inject
     private WeldUtils weldUtils;
 
@@ -47,6 +54,8 @@ public class ProcessInvoices extends Action {
             var documentAction = parameters.getString("DocAction");
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
+            var supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? null : parameters.getString(
+                SUPPLIERREFERENCE);
             var errors = new MutableInt(0);
             var success = new MutableInt(0);
             OBError message = new OBError();
@@ -54,9 +63,13 @@ public class ProcessInvoices extends Action {
 
             log.debug("Process Invoice Action Parameters:");
             log.debug(parameters.toString());
-
             for (Invoice invoice : input) {
-                message = processInvoice(invoice, documentAction, voidDate, voidAcctDate);
+                if (input.size() > 1 && StringUtils.equals(documentAction,
+                    VOID_DOCUMENT_ACTION) && invoice.getOrderReference() != null) {
+                    message = supplierReferenceValidationError(invoice);
+                } else {
+                    message = processInvoice(invoice, documentAction, voidDate, voidAcctDate, supplierReference);
+                }
                 ProcessUtils.updateResult(message, errors, success);
             }
 
@@ -70,11 +83,19 @@ public class ProcessInvoices extends Action {
         return result;
     }
 
-    private OBError processInvoice(Invoice invoice, String docAction, String _strVoidDate, String _strVoidAcctDate) throws ParseException {
+    private OBError supplierReferenceValidationError(Invoice invoice) {
+        OBError error = new OBError();
+        error.setType(ERROR);
+        error.setMessage(StringUtils.EMPTY);
+        return error;
+    }
+
+    private OBError processInvoice(Invoice invoice, String docAction, String _strVoidDate, String _strVoidAcctDate,
+        String _strSupplierReference) throws ParseException {
 
         var processor = weldUtils.getInstance(ProcessInvoiceUtil.class);
-        var strVoidDate = "";
-        var strVoidAcctDate = "";
+        var strVoidDate = StringUtils.EMPTY;
+        var strVoidAcctDate = StringUtils.EMPTY;
 
         if (_strVoidDate != null && _strVoidAcctDate != null) {
             // Convert from the JSON date format to the OBProperties date format
@@ -86,13 +107,13 @@ public class ProcessInvoices extends Action {
         }
 
         return processor.process(
-                invoice.getId(),
-                docAction,
-                strVoidDate,
-                strVoidAcctDate,
-                null,
-                RequestContext.get().getVariablesSecureApp(),
-                new DalConnectionProvider(false)
+            invoice.getId(),
+            docAction,
+            strVoidDate,
+            strVoidAcctDate,
+            _strSupplierReference,
+            RequestContext.get().getVariablesSecureApp(),
+            new DalConnectionProvider(false)
         );
     }
 
@@ -104,6 +125,8 @@ public class ProcessInvoices extends Action {
             var input = getInputContents(getInputClass());
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
+            var supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? null : parameters.getString(
+                SUPPLIERREFERENCE);
             log.debug("Process Invoice preRun Parameters:");
             log.debug(parameters.toString());
 
@@ -114,8 +137,8 @@ public class ProcessInvoices extends Action {
                     continue;
                 }
                 // In case of a locked record, the docAction will be forced to XL, this will unlock the record and proceed to complete
-                var message = processInvoice(invoice, "XL", voidDate, voidAcctDate);
-                if (!StringUtils.equals("Error", message.getType())){
+                var message = processInvoice(invoice, "XL", voidDate, voidAcctDate, supplierReference);
+                if (!StringUtils.equals(ERROR, message.getType())){
                     invoice.setAPRMProcessinvoice("--");
                     OBDal.getInstance().save(invoice);
                     doFlush = true;

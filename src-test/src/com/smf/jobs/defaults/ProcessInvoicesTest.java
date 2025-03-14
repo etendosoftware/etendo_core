@@ -96,6 +96,7 @@ public class ProcessInvoicesTest {
         Invoice.class,
         String.class,
         String.class,
+        String.class,
         String.class
     );
     processInvoiceMethod.setAccessible(true);
@@ -142,6 +143,7 @@ public class ProcessInvoicesTest {
           processInvoices,
           mockInvoice,
           docAction,
+          null,
           null,
           null
       );
@@ -192,7 +194,8 @@ public class ProcessInvoicesTest {
           mockInvoice,
           docAction,
           voidDate,
-          voidAcctDate
+          voidAcctDate,
+          null
       );
 
       assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
