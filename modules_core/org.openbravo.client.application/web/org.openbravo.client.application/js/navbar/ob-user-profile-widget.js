@@ -489,14 +489,28 @@ isc.OBUserProfile.addProperties({
         }
 
         function initAuth0() {
-          var webAuth = new auth0.WebAuth({
-            domain: 'dev-fut-test.us.auth0.com',
-            clientID: 'zxo9HykojJHT1HXg18KwUjCNlLPs3tZU',
-            redirectUri: OB.Utilities.getLocationUrlWithoutFragment() + 'secureApp/LinkAuth0Account.html',
-            responseType: 'code',
-            scope: 'openid profile email'
-          });
-          webAuth.authorize();
+          function callbackOnProcessActionHandler(response, data, request) {
+            if (data.message?.severity === 'error') {
+                this.getWindow().showMessage(data.message.text)
+            } else {
+              var webAuth = new auth0.WebAuth({
+                domain: data.domainurl,
+                clientID: data.clientid,
+                redirectUri: OB.Utilities.getLocationUrlWithoutFragment() + 'secureApp/LinkAuth0Account.html',
+                responseType: 'code',
+                scope: 'openid profile email'
+              });
+              webAuth.authorize();
+            }
+          }
+          OB.RemoteCallManager.call(
+              'org.openbravo.base.secureApp.GetSSOProperties',
+              {
+                  properties: 'domain.url, client.id'
+              },
+              {},
+              callbackOnProcessActionHandler
+          );
         }
       },
       baseStyle: "OBFormButton",
