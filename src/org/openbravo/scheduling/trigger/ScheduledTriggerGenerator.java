@@ -25,7 +25,7 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.scheduling.SchedulerTimeUtils;
 import org.quartz.CronTrigger;
 import org.quartz.TriggerBuilder;

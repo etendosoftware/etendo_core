@@ -29,7 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.openbravo.base.filter.RequestFilter;
 import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -385,12 +385,12 @@ public class SalesOrder extends HttpSecureAppServlet {
             if (headers[k].getField("adReferenceId").equals("32")) {
               strRowsData.append(strReplaceWith).append("/images/");
             }
-            strRowsData.append(StringEscapeUtils.escapeHtml(data[j].getField(columnname)));
+            strRowsData.append(StringEscapeUtils.escapeHtml4(data[j].getField(columnname)));
           } else {
             if (headers[k].getField("adReferenceId").equals("32")) {
               strRowsData.append(strReplaceWith).append("/images/blank.gif");
             } else {
-              strRowsData.append(StringEscapeUtils.escapeHtml("&nbsp;"));
+              strRowsData.append(StringEscapeUtils.escapeHtml4("&nbsp;"));
             }
           }
           strRowsData.append("]]></td>\n");

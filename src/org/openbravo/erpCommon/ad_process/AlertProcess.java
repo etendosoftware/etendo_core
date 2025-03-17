@@ -30,7 +30,7 @@ import java.util.Vector;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
@@ -183,7 +183,10 @@ public class AlertProcess implements Process {
     // The date needs to be formated
     String createdStr = "to_timestamp(\'" + created + "\', \'" + dateTimeFormat + "\')";
     // These field needs to be escaped
-    String descriptionStr = StringEscapeUtils.escapeSql(description);
+    String descriptionStr = null;
+    if (description != null) {
+      descriptionStr = StringUtils.replace(description, "'", "''");
+    }
 
     StringBuilder sqlBuilder = new StringBuilder();
     sqlBuilder.append("INSERT INTO AD_ALERT ");

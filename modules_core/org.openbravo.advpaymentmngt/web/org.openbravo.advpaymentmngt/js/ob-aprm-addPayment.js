@@ -1429,8 +1429,13 @@ OB.APRM.AddPayment.receivedFromOnChange = function(item, view, form, grid) {
     financialAccount = form.getItem('fin_financial_account_id').getValue(),
     ordinvgrid = form.getItem('order_invoice').canvas.viewGrid,
     paymentMethodItem = form.getItem('fin_paymentmethod_id'),
-    newCriteria = {};
+    newCriteria = {},
+    creditToUseGrid = form.getItem('credit_to_use');
+
   affectedParams.push(form.getField('credit_to_use_display_logic').paramId);
+  if (creditToUseGrid?.canvas?.viewGrid?.getSelectedRecords()?.length > 0) {
+      creditToUseGrid.canvas.viewGrid.deselectAllRecords();
+  }
   OB.APRM.AddPayment.recalcDisplayLogicOrReadOnlyLogic(
     form,
     view,

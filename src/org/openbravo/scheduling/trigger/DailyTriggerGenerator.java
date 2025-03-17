@@ -23,7 +23,7 @@ import static org.quartz.TriggerBuilder.newTrigger;
 
 import java.text.ParseException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.TriggerBuilder;
 
