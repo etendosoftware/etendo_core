@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
@@ -80,9 +81,6 @@ import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.utils.Replace;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Initialized;
-import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -1629,5 +1627,89 @@ public class FIN_Utility {
         .add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment));
     finAccTransactionCriteria.setMaxResults(1);
     return (FIN_FinaccTransaction) finAccTransactionCriteria.uniqueResult();
+  }
+
+  /**
+   * Get the default document for a payment based on the transaction type.
+   *
+   * If the transaction type is BP Deposit, the default document is RCIN.
+   * If the transaction type is BP Withdrawal, the default document is PDOUT.
+   * If the transaction type is neither BP Deposit nor BP Withdrawal, an empty string is returned.
+   *
+   * @param context the JSON context object
+   * @return the default document for the payment, or an empty string if the transaction type is
+   *         neither BP Deposit nor BP Withdrawal
+   */
+  public static String getDefaultAddPaymentDocument(JSONObject context) {
+    String docType = getFirstNonEmpty(context, APRMConstants.TRXTYPE, APRMConstants.INPTRXTYPE);
+
+    if (StringUtils.isBlank(docType)) {
+      docType = APRMConstants.DEFAULT_EMPTY_VALUE;
+    }
+
+    switch (docType) {
+      case APRMConstants.TRXTYPE_BPDeposit:
+        return APRMConstants.RCIN;
+      case APRMConstants.TRXTYPE_BPWithdrawal:
+        return APRMConstants.PDOUT;
+      default:
+        return APRMConstants.DEFAULT_EMPTY_VALUE;
+    }
+  }
+
+  /**
+   * Gets the default organization for a payment based on the given context.
+   *
+   * If the context contains the organization ID, that ID is returned. Otherwise, the organization of the default financial account is returned.
+   * If no default financial account is found, null is returned.
+   *
+   * @param context the JSON context object
+   * @return the default organization for the payment, or null if no default financial account is found
+   */
+  public static String getDefaultOrganization(JSONObject context) {
+    String orgId = getFirstNonEmpty(context, APRMConstants.AD_ORG_ID, APRMConstants.INPAD_ORG_ID);
+
+    if (StringUtils.isBlank(orgId)) {
+      FIN_FinancialAccount account = getDefaultFinancialAccount(context);
+      return account != null ? account.getOrganization().getId() : null;
+    }
+    return orgId;
+  }
+
+  /**
+   * Retrieves the default financial account from the given JSON context.
+   *
+   * This method checks for financial account identifiers within the context and returns
+   * the corresponding financial account if found. It searches for identifiers using
+   * specific keys defined in APRMConstants.
+   *
+   * @param context the JSON context object containing potential financial account identifiers
+   * @return the FIN_FinancialAccount object if a valid identifier is found, otherwise null
+   */
+  public static FIN_FinancialAccount getDefaultFinancialAccount(JSONObject context) {
+    String strFinancialAccount = getFirstNonEmpty(context,
+        APRMConstants.INPFIN_FINANCIAL_ACCOUNT_ID,
+        APRMConstants.FIN_FINANCIAL_ACCOUNT_ID);
+
+    return StringUtils.isNotBlank(strFinancialAccount)
+        ? OBDal.getInstance().get(FIN_FinancialAccount.class, strFinancialAccount)
+        : null;
+  }
+
+  /**
+   * Retrieves the first non-empty value from the given keys in the given context.
+   *
+   * @param context the JSON context
+   * @param keys the keys to look up
+   * @return the first non-empty value, or null
+   */
+  public static String getFirstNonEmpty(JSONObject context, String... keys) {
+    for (String key : keys) {
+      String value = context.optString(key, APRMConstants.DEFAULT_EMPTY_VALUE);
+      if (StringUtils.isNotBlank(value)) {
+        return value;
+      }
+    }
+    return null;
   }
 }

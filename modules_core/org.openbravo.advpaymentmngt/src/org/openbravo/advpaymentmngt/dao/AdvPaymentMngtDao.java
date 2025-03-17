@@ -1221,12 +1221,16 @@ public class AdvPaymentMngtDao {
 
       //@formatter:off
       String hql = "select p "
-           + " from FIN_Payment as p "
-           + " where p.businessPartner.id = :bpartnerId "
-           + "  and p.receipt = :isReceipt "
-           + "  and p.organization.id in (:orgIds) "
-           + "  and obequals(p.generatedCredit, p.usedCredit) = 'N' "
-           + "  and p.generatedCredit <> 0 ";
+          + " from FIN_Payment as p "
+          + " where p.receipt = :isReceipt "
+          + "  and p.organization.id in (:orgIds) "
+          + "  and obequals(p.generatedCredit, p.usedCredit) = 'N' "
+          + "  and p.generatedCredit <> 0 ";
+
+      if (bp != null) {
+        hql += " and p.businessPartner.id = :bpartnerId";
+        params.put("bpartnerId", bp.getId());
+      }
       if (currency != null) {
         hql += " and p.currency.id = :currencyId";
         params.put("currencyId", currency.getId());
@@ -1234,7 +1238,6 @@ public class AdvPaymentMngtDao {
 
       hql += " order by p.paymentDate asc, p.documentNo asc ";
 
-      params.put("bpartnerId", bp.getId());
       params.put("isReceipt", isReceipt);
       params.put("orgIds", orgIds);
 

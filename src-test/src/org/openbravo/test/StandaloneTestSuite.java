@@ -40,6 +40,7 @@ import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.event.LandedCostDuplicateReceiptValidatorTest;
 import org.openbravo.financial.FinancialUtilsTest;
+import org.openbravo.materialmgmt.MaterialMgmtTestSuite;
 import org.openbravo.scheduling.ProcessSchedulingTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
 import org.openbravo.scheduling.trigger.TriggerProviderTest;
@@ -411,7 +412,10 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     GoodMovementTest.class,
 
     // Purchase Order Status
-    PurchaseOrderStatus.class
+    PurchaseOrderStatus.class,
+
+    //MaterialMgmt
+    MaterialMgmtTestSuite.class,
 })
 public class StandaloneTestSuite {
 }
