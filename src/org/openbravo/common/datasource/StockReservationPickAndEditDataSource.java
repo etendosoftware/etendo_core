@@ -12,7 +12,7 @@
  * The Original Code is Openbravo ERP.
  * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2014-2020 Openbravo SLU
- * All Rights Reserved. 
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -29,6 +29,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Instance;
+import javax.inject.Inject;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +48,8 @@ import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
+import org.openbravo.common.hooks.DatasourceFilterHook;
+import org.openbravo.common.hooks.PriorizeAndSortDatasourceFilterHook;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -70,8 +76,27 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
   private static Logger log4j = LogManager.getLogger();
   private static final String AD_TABLE_ID = "7BDAC914CA60418795E453BC0E8C89DC";
+  private static final String PRE_PROCESS_METHOD = "preProcess";
+  private static final String POST_PROCESS_METHOD = "posProcess";
+  public static final String RESERVATION = "reservation";
+  public static final String ORGANIZATIONS = "organizations";
+  public static final String WAREHOUSES_FILTERED = "warehousesFiltered";
+  public static final String LOCATORS_FILTERED = "locatorsFiltered";
+  public static final String ATTRIBUTES_FILTERED = "attributesFiltered";
+  public static final String ORDER_LINES_FILTERED = "orderLinesFiltered";
+  public static final String AVAILABLE_QTY_FILTER_CRITERIA = "availableQtyFilterCriteria";
+  public static final String RESERVED_IN_OTHERS_FILTER_CRITERIA = "reservedinothersFilterCriteria";
+  public static final String RELEASED_FILTER_CRITERIA = "releasedFilterCriteria";
+  public static final String ALLOCATED_CRITERIA = "allocatedCriteria";
+  public static final String QUANTITY_CRITERIA = "quantityCriteria";
+  public static final String SELECTED_IDS = "selectedIds";
+  public static final String INVENTORY_STATUS_FILTERED = "inventoryStatusFiltered";
+  @Inject
+  @Any
+  private Instance<DatasourceFilterHook> hooks;
 
   String ol = null;
+
 
   @Override
   public Entity getEntity() {
@@ -688,23 +713,33 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     }
     Set<String> organizations = new OrganizationStructureProvider().getChildTree(strOrganization,
         true);
+
+    Map<String, Object> stockReservationGridData = new HashMap<>();
+
+    stockReservationGridData.put(RESERVATION, reservation);
+    stockReservationGridData.put(ORGANIZATIONS, organizations);
+    stockReservationGridData.put(WAREHOUSES_FILTERED, warehousesFiltered);
+    stockReservationGridData.put(LOCATORS_FILTERED, locatorsFiltered);
+    stockReservationGridData.put(ATTRIBUTES_FILTERED, attributesFiltered);
+    stockReservationGridData.put(ORDER_LINES_FILTERED, orderLinesFiltered);
+    stockReservationGridData.put(AVAILABLE_QTY_FILTER_CRITERIA, availableQtyFilterCriteria);
+    stockReservationGridData.put(RESERVED_IN_OTHERS_FILTER_CRITERIA, reservedinothersFilterCriteria);
+    stockReservationGridData.put(RELEASED_FILTER_CRITERIA, releasedFilterCriteria);
+    stockReservationGridData.put(ALLOCATED_CRITERIA, allocatedCriteria);
+    stockReservationGridData.put(QUANTITY_CRITERIA, quantityCriteria);
+    stockReservationGridData.put(SELECTED_IDS, selectedIds);
+    stockReservationGridData.put(INVENTORY_STATUS_FILTERED, inventoryStatusFiltered);
+
+    executeHooks(parameters, stockReservationGridData, PRE_PROCESS_METHOD);
+
     try {
-      result.addAll(getSelectedLines(reservation, organizations, warehousesFiltered,
-          locatorsFiltered, attributesFiltered, orderLinesFiltered, availableQtyFilterCriteria,
-          reservedinothersFilterCriteria, releasedFilterCriteria, allocatedCriteria,
-          quantityCriteria, selectedIds, inventoryStatusFiltered));
+      result.addAll(getSelectedLines(stockReservationGridData));
 
       if (orderLinesFiltered == null || orderLinesFiltered.isEmpty()) {
-        result.addAll(getStorageDetail(reservation, organizations, warehousesFiltered,
-            locatorsFiltered, attributesFiltered, availableQtyFilterCriteria,
-            reservedinothersFilterCriteria, releasedFilterCriteria, allocatedCriteria,
-            quantityCriteria, selectedIds, inventoryStatusFiltered));
+        result.addAll(getStorageDetail(stockReservationGridData));
       }
       if (locatorsFiltered == null) {
-        result.addAll(getPurchaseOrderLines(reservation, organizations, warehousesFiltered,
-            attributesFiltered, orderLinesFiltered, availableQtyFilterCriteria,
-            reservedinothersFilterCriteria, releasedFilterCriteria, allocatedCriteria,
-            quantityCriteria, selectedIds));
+        result.addAll(getPurchaseOrderLines(stockReservationGridData));
       }
 
     } finally {
@@ -714,7 +749,26 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
       OBDal.getInstance().rollbackAndClose();
     }
     result = sortResult(result, parameters.get("_sortBy"));
+
+    stockReservationGridData.put("result", result);
+    executeHooks(parameters, stockReservationGridData, POST_PROCESS_METHOD);
+
     return result;
+  }
+
+  protected void executeHooks(Map<String, String> parameters, Map<String, Object> filtersCriteria, String methodName) {
+    List<DatasourceFilterHook> hookList = PriorizeAndSortDatasourceFilterHook.sortHooksByPriority(hooks);
+    for (DatasourceFilterHook hook : hookList) {
+      try {
+        if (StringUtils.equals(methodName, PRE_PROCESS_METHOD)) {
+          hook.preProcess(parameters, filtersCriteria);
+        } else if (StringUtils.equals(methodName, POST_PROCESS_METHOD)) {
+          hook.posProcess(parameters, filtersCriteria);
+        }
+      } catch (Exception e) {
+        log4j.error("Error executing DatasourceFilterHook hooks.", e);
+      }
+    }
   }
 
   private List<Map<String, Object>> sortResult(List<Map<String, Object>> result, String sortBy) {
@@ -965,27 +1019,46 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     return new StringTokenizer(orderLineIdentifier).nextToken();
   }
 
-  private List<Map<String, Object>> getSelectedLines(Reservation reservation,
-      Set<String> organizations, List<Warehouse> warehousesFiltered, List<Locator> locatorsFiltered,
-      List<AttributeSetInstance> attributeSetInstancesFiltered, List<OrderLine> orderLinesFiltered,
-      String availableQtyFilterCriteria, String reservedinothersFilterCriteria,
-      String releasedFilterCriteria, String allocatedCriteria, String quantityCriteria,
-      ArrayList<String> selectedIds, List<InventoryStatus> inventoryStatusFiltered) {
+  @SuppressWarnings("unchecked")
+  private List<Map<String, Object>> getSelectedLines(Map<String, Object> filtersCriteria) {
     List<Map<String, Object>> result = new ArrayList<>();
+
+    Reservation reservation = (Reservation) filtersCriteria.get(RESERVATION);
+    List<AttributeSetInstance> attributeSetInstancesFiltered =
+        (List<AttributeSetInstance>) filtersCriteria.get(ATTRIBUTES_FILTERED);
+    List<Locator> locatorsFiltered = (List<Locator>) filtersCriteria.get(LOCATORS_FILTERED);
+    List<Warehouse> warehousesFiltered = (List<Warehouse>) filtersCriteria.get(WAREHOUSES_FILTERED);
+    List<OrderLine> orderLinesFiltered = (List<OrderLine>) filtersCriteria.get(ORDER_LINES_FILTERED);
+    List<InventoryStatus> inventoryStatusFiltered =
+        (List<InventoryStatus>) filtersCriteria.get(INVENTORY_STATUS_FILTERED);
+
+    ArrayList<String> selectedIds = (ArrayList<String>) filtersCriteria.get(SELECTED_IDS);
+    String availableQtyFilterCriteria =
+        (String) filtersCriteria.get(AVAILABLE_QTY_FILTER_CRITERIA);
+    String reservedinothersFilterCriteria =
+        (String) filtersCriteria.get(RESERVED_IN_OTHERS_FILTER_CRITERIA);
+    String releasedFilterCriteria =
+        (String) filtersCriteria.get(RELEASED_FILTER_CRITERIA);
+    String quantityCriteria =
+        (String) filtersCriteria.get(QUANTITY_CRITERIA);
+    String allocatedCriteria =
+        (String) filtersCriteria.get(ALLOCATED_CRITERIA);
 
     //@formatter:off
     String hql =
-            "select rs from MaterialMgmtReservationStock rs " +
+        "select rs from MaterialMgmtReservationStock rs " +
             "  join rs.reservation as r" +
             "  left join rs.storageBin as sb" +
             " where rs.reservation.id = :reservationId ";
     //@formatter:on
+
     if (reservation.getAttributeSetValue() != null) {
       //@formatter:off
       hql +=
-            "   and rs.attributeSetValue.id = :attributeSetValueId ";
+          "   and rs.attributeSetValue.id = :attributeSetValueId ";
       //@formatter:on
     }
+
     if (attributeSetInstancesFiltered != null) {
       if (attributeSetInstancesFiltered.isEmpty()) {
         //@formatter:off
@@ -999,73 +1072,80 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
         //@formatter:on
       }
     }
+
     if (reservation.getStorageBin() != null) {
       //@formatter:off
-      hql += 
-            "   and sb.id = :storageBinId ";
+      hql +=
+          "   and sb.id = :storageBinId ";
       //@formatter:on
     }
+
     if (locatorsFiltered != null) {
       if (locatorsFiltered.isEmpty()) {
         //@formatter:off
-        hql += 
+        hql +=
             "   and 1 = 2 ";
         //@formatter:on
       } else {
         //@formatter:off
-        hql += 
+        hql +=
             "   and sb in :locatorsFiltered ";
         //@formatter:on
       }
     }
+
     if (reservation.getWarehouse() != null) {
       //@formatter:off
-      hql += 
-            "   and sb.warehouse.id = :warehouseId ";
+      hql +=
+          "   and sb.warehouse.id = :warehouseId ";
       //@formatter:on
     }
+
     if (warehousesFiltered != null) {
       if (warehousesFiltered.isEmpty()) {
         //@formatter:off
-        hql += 
+        hql +=
             "   and 1 = 2 ";
         //@formatter:on
       } else {
         //@formatter:off
-        hql += 
+        hql +=
             "   and sb.warehouse in :warehousesFiltered ";
         //@formatter:on
       }
     }
+
     if (orderLinesFiltered != null) {
       if (orderLinesFiltered.isEmpty()) {
         //@formatter:off
-        hql += 
+        hql +=
             "   and 1 = 2 ";
         //@formatter:on
       } else {
         //@formatter:off
-        hql += 
+        hql +=
             "   and rs.salesOrderLine in :orderLinesFiltered ";
         //@formatter:on
       }
     }
+
     if (inventoryStatusFiltered != null) {
       if (inventoryStatusFiltered.isEmpty()) {
         //@formatter:off
-        hql += 
+        hql +=
             "   and 1 = 2 ";
         //@formatter:on
       } else {
         //@formatter:off
-        hql += 
+        hql +=
             "   and sb.inventoryStatus in :inventoryStatusFiltered ";
         //@formatter:on
       }
     }
+
     //@formatter:off
-    hql += 
-            " order by rs.salesOrderLine DESC, r.warehouse, sb";
+    hql +=
+        " order by rs.salesOrderLine DESC, r.warehouse, sb";
     //@formatter:on
 
     Query<ReservationStock> query = OBDal.getInstance()
@@ -1083,19 +1163,19 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
       query.setParameter("storageBinId", reservation.getStorageBin().getId());
     }
     if (locatorsFiltered != null && !locatorsFiltered.isEmpty()) {
-      query.setParameterList("locatorsFiltered", locatorsFiltered);
+      query.setParameterList(LOCATORS_FILTERED, locatorsFiltered);
     }
     if (reservation.getWarehouse() != null) {
       query.setParameter("warehouseId", reservation.getWarehouse().getId());
     }
     if (warehousesFiltered != null && !warehousesFiltered.isEmpty()) {
-      query.setParameterList("warehousesFiltered", warehousesFiltered);
+      query.setParameterList(WAREHOUSES_FILTERED, warehousesFiltered);
     }
     if (orderLinesFiltered != null && !orderLinesFiltered.isEmpty()) {
-      query.setParameterList("orderLinesFiltered", orderLinesFiltered);
+      query.setParameterList(ORDER_LINES_FILTERED, orderLinesFiltered);
     }
     if (inventoryStatusFiltered != null && !inventoryStatusFiltered.isEmpty()) {
-      query.setParameterList("inventoryStatusFiltered", inventoryStatusFiltered);
+      query.setParameterList(INVENTORY_STATUS_FILTERED, inventoryStatusFiltered);
     }
 
     for (ReservationStock rs : query.list()) {
@@ -1106,18 +1186,19 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             // Check Filter Criteria
             if (availableQtyFilterCriteria != null && !"".equals(availableQtyFilterCriteria)
                 && !isInScope("availableQty", availableQtyFilterCriteria,
-                    getQtyOnHand(reservation.getProduct(),
-                        rs.getStorageBin() != null ? rs.getStorageBin() : null,
-                        rs.getAttributeSetValue() != null ? rs.getAttributeSetValue() : null,
-                        rs.getSalesOrderLine() != null ? rs.getSalesOrderLine() : null))) {
+                getQtyOnHand(reservation.getProduct(),
+                    rs.getStorageBin() != null ? rs.getStorageBin() : null,
+                    rs.getAttributeSetValue() != null ? rs.getAttributeSetValue() : null,
+                    rs.getSalesOrderLine() != null ? rs.getSalesOrderLine() : null))) {
               continue;
             }
-            if (reservedinothersFilterCriteria != null && !"".equals(reservedinothersFilterCriteria)
+            if (reservedinothersFilterCriteria != null
+                && !"".equals(reservedinothersFilterCriteria)
                 && !isInScope("reservedinothers", reservedinothersFilterCriteria,
-                    rs.getSalesOrderLine() != null
-                        ? getQtyReserved(reservation, rs.getSalesOrderLine())
-                        : getQtyReserved(reservation, reservation.getProduct(),
-                            rs.getAttributeSetValue(), rs.getStorageBin()))) {
+                rs.getSalesOrderLine() != null
+                    ? getQtyReserved(reservation, rs.getSalesOrderLine())
+                    : getQtyReserved(reservation, reservation.getProduct(),
+                    rs.getAttributeSetValue(), rs.getStorageBin()))) {
               continue;
             }
             if (releasedFilterCriteria != null && !"".equals(releasedFilterCriteria)
@@ -1142,17 +1223,17 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
         // Check Filter Criterias
         if (availableQtyFilterCriteria != null && !"".equals(availableQtyFilterCriteria)
             && !isInScope("availableQty", availableQtyFilterCriteria,
-                getQtyOnHand(reservation.getProduct(),
-                    rs.getStorageBin() != null ? rs.getStorageBin() : null,
-                    rs.getAttributeSetValue() != null ? rs.getAttributeSetValue() : null,
-                    rs.getSalesOrderLine() != null ? rs.getSalesOrderLine() : null))) {
+            getQtyOnHand(reservation.getProduct(),
+                rs.getStorageBin() != null ? rs.getStorageBin() : null,
+                rs.getAttributeSetValue() != null ? rs.getAttributeSetValue() : null,
+                rs.getSalesOrderLine() != null ? rs.getSalesOrderLine() : null))) {
           continue;
         }
         if (reservedinothersFilterCriteria != null && !"".equals(reservedinothersFilterCriteria)
             && !isInScope("reservedinothers", reservedinothersFilterCriteria,
-                rs.getSalesOrderLine() != null ? getQtyReserved(reservation, rs.getSalesOrderLine())
-                    : getQtyReserved(reservation, reservation.getProduct(),
-                        rs.getAttributeSetValue(), rs.getStorageBin()))) {
+            rs.getSalesOrderLine() != null ? getQtyReserved(reservation, rs.getSalesOrderLine())
+                : getQtyReserved(reservation, reservation.getProduct(),
+                rs.getAttributeSetValue(), rs.getStorageBin()))) {
           continue;
         }
         if (releasedFilterCriteria != null && !"".equals(releasedFilterCriteria)
@@ -1214,17 +1295,25 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     return rs;
   }
 
-  private List<Map<String, Object>> getPurchaseOrderLines(Reservation reservation,
-      Set<String> organizations, List<Warehouse> warehousesFiltered,
-      List<AttributeSetInstance> attributeSetInstancesFiltered, List<OrderLine> orderLinesFiltered,
-      String availableQtyFilterCriteria, String reservedinothersFilterCriteria,
-      String releasedFilterCriteria, String allocatedCriteria, String quantityCriteria,
-      ArrayList<String> selectedIds) {
+  @SuppressWarnings("unchecked")
+  private List<Map<String, Object>> getPurchaseOrderLines(Map<String, Object> filtersCriteria) {
     List<Map<String, Object>> result = new ArrayList<>();
+
+    Reservation reservation = (Reservation) filtersCriteria.get(RESERVATION);
+    List<Warehouse> warehousesFiltered = (List<Warehouse>) filtersCriteria.get(WAREHOUSES_FILTERED);
+    List<AttributeSetInstance> attributeSetInstancesFiltered = (List<AttributeSetInstance>) filtersCriteria
+        .get(ATTRIBUTES_FILTERED);
+    List<OrderLine> orderLinesFiltered = (List<OrderLine>) filtersCriteria.get(ORDER_LINES_FILTERED);
+    String availableQtyFilterCriteria = (String) filtersCriteria.get(AVAILABLE_QTY_FILTER_CRITERIA);
+    String reservedinothersFilterCriteria = (String) filtersCriteria
+        .get(RESERVED_IN_OTHERS_FILTER_CRITERIA);
+    String releasedFilterCriteria = (String) filtersCriteria.get(RELEASED_FILTER_CRITERIA);
+    String allocatedCriteria = (String) filtersCriteria.get(ALLOCATED_CRITERIA);
+    String quantityCriteria = (String) filtersCriteria.get(QUANTITY_CRITERIA);
 
     //@formatter:off
     String hql =
-            "select ol from OrderLine as ol " +
+        "select ol from OrderLine as ol " +
             "  join  ol.salesOrder as o " +
             " where o.salesTransaction = false and o.documentStatus = 'CO' " +
             "   and ol.product.id = :productId " +
@@ -1234,36 +1323,37 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             "      where rs.reservation.id = :reservationId " +
             "        and rs.salesOrderLine = ol " +
             "   ) ";
-    //@formatter:off
+    //@formatter:on
 
     if (reservation.getAttributeSetValue() != null) {
       //@formatter:off
-      hql += 
-            "   and ol.attributeSetValue.id = :attributeSetValueId ";
+      hql +=
+          "   and ol.attributeSetValue.id = :attributeSetValueId ";
       //@formatter:on
     }
     if (attributeSetInstancesFiltered != null) {
       if (attributeSetInstancesFiltered.isEmpty()) {
         //@formatter:off
-        hql += 
+        hql +=
             "   and 1 = 2 ";
         //@formatter:on
       } else {
         //@formatter:off
-        hql += 
+        hql +=
             "   and ol.attributeSetValue in :attributeSetInstancesFiltered ";
         //@formatter:on
       }
     }
     if (reservation.getWarehouse() != null) {
       //@formatter:off
-      hql += 
+      hql +=
           "   and o.warehouse.id = :warehouseId ";
       //@formatter:on
     }
+
     if (warehousesFiltered != null) {
       //@formatter:off
-      hql += 
+      hql +=
           "   and 1 = 2 ";
       //@formatter:on
     }
@@ -1282,7 +1372,10 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     }
     //@formatter:off
     hql +=
-            "   and ol.orderedQuantity <> coalesce((select Sum(mpo.quantity) from ProcurementPOInvoiceMatch as mpo where mpo.salesOrderLine.id = ol.id and mpo.goodsShipmentLine is not null),0)" +
+        "   and ol.orderedQuantity <> coalesce((select Sum(mpo.quantity) " +
+            "                                        from ProcurementPOInvoiceMatch as mpo " +
+            "                                        where mpo.salesOrderLine.id = ol.id " +
+            "                                          and mpo.goodsShipmentLine is not null), 0)" +
             " order by o.documentNo, ol.lineNo";
     //@formatter:on
 
@@ -1303,8 +1396,9 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
       query.setParameter("warehouseId", reservation.getWarehouse().getId());
     }
     if (orderLinesFiltered != null && !orderLinesFiltered.isEmpty()) {
-      query.setParameterList("orderLinesFiltered", orderLinesFiltered);
+      query.setParameterList(ORDER_LINES_FILTERED, orderLinesFiltered);
     }
+
     for (OrderLine orderLine : query.list()) {
       Map<String, Object> myMap = new HashMap<>();
       myMap.put("id", orderLine.getId());
@@ -1324,11 +1418,10 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
               : "");
       myMap.put("purchaseOrderLine", orderLine.getId());
       myMap.put("purchaseOrderLine$_identifier", orderLine.getIdentifier());
-      // Check Filter Criterias
 
+      // Check Filter Criteria
       if (availableQtyFilterCriteria != null && !"".equals(availableQtyFilterCriteria)
-          && !isInScope("availableQty", availableQtyFilterCriteria,
-              orderLine.getOrderedQuantity())) {
+          && !isInScope("availableQty", availableQtyFilterCriteria, orderLine.getOrderedQuantity())) {
         continue;
       }
       BigDecimal reservedinothers = getQtyReserved(reservation, orderLine);
@@ -1344,7 +1437,8 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
           && !isInScope("quantity", quantityCriteria, BigDecimal.ZERO)) {
         continue;
       }
-      if (StringUtils.isNotBlank(allocatedCriteria) && !isInScope("allocated", allocatedCriteria,
+      if (StringUtils.isNotBlank(allocatedCriteria)
+          && !isInScope("allocated", allocatedCriteria,
           orderLine.getSalesOrder().getWarehouse().isAllocated())) {
         continue;
       }
@@ -1356,22 +1450,34 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
       myMap.put("reservationQuantity", reservation.getQuantity());
       myMap.put("released", BigDecimal.ZERO);
       myMap.put("allocated", orderLine.getSalesOrder().getWarehouse().isAllocated());
+
       result.add(myMap);
     }
     return result;
   }
 
-  private List<Map<String, Object>> getStorageDetail(Reservation reservation,
-      Set<String> organizations, List<Warehouse> warehousesFiltered, List<Locator> locatorsFiltered,
-      List<AttributeSetInstance> attributeSetInstancesFiltered, String availableQtyFilterCriteria,
-      String reservedinothersFilterCriteria, String releasedFilterCriteria,
-      String allocatedCriteria, String quantityCriteria, ArrayList<String> selectedIds,
-      List<InventoryStatus> inventoryStatusFiltered) {
+  @SuppressWarnings("unchecked")
+  private List<Map<String, Object>> getStorageDetail(Map<String, Object> filtersCriteria) {
     List<Map<String, Object>> result = new ArrayList<>();
+
+    Reservation reservation = (Reservation) filtersCriteria.get(RESERVATION);
+    List<Warehouse> warehousesFiltered = (List<Warehouse>) filtersCriteria.get(WAREHOUSES_FILTERED);
+    List<Locator> locatorsFiltered = (List<Locator>) filtersCriteria.get(LOCATORS_FILTERED);
+    List<AttributeSetInstance> attributeSetInstancesFiltered = (List<AttributeSetInstance>) filtersCriteria
+        .get(ATTRIBUTES_FILTERED);
+    List<InventoryStatus> inventoryStatusFiltered = (List<InventoryStatus>) filtersCriteria
+        .get(INVENTORY_STATUS_FILTERED);
+    String availableQtyFilterCriteria = (String) filtersCriteria.get(AVAILABLE_QTY_FILTER_CRITERIA);
+    String reservedinothersFilterCriteria = (String) filtersCriteria
+        .get(RESERVED_IN_OTHERS_FILTER_CRITERIA);
+    String releasedFilterCriteria = (String) filtersCriteria.get(RELEASED_FILTER_CRITERIA);
+    String allocatedCriteria = (String) filtersCriteria.get(ALLOCATED_CRITERIA);
+    String quantityCriteria = (String) filtersCriteria.get(QUANTITY_CRITERIA);
+    ArrayList<String> selectedIds = (ArrayList<String>) filtersCriteria.get(SELECTED_IDS);
 
     //@formatter:off
     String hql =
-            "select sd from MaterialMgmtStorageDetail as sd " +
+        "select sd from MaterialMgmtStorageDetail as sd " +
             "  join sd.storageBin as sb " +
             "    join sb.inventoryStatus as invs " +
             " where sd.quantityOnHand > 0 and sd.orderUOM is null " +
@@ -1389,7 +1495,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     if (reservation.getAttributeSetValue() != null) {
       //@formatter:off
       hql +=
-            "   and sd.attributeSetValue.id = :attributeSetValueId ";
+          "   and sd.attributeSetValue.id = :attributeSetValueId ";
       //@formatter:on
     }
     if (attributeSetInstancesFiltered != null) {
@@ -1397,7 +1503,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
         //@formatter:off
         hql +=
             "   and 1 = 2 ";
-        //@formatter:off
+        //@formatter:on
       } else {
         //@formatter:off
         hql +=
@@ -1408,7 +1514,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     if (reservation.getStorageBin() != null) {
       //@formatter:off
       hql +=
-            "   and sd.storageBin.id = :storageBinId ";
+          "   and sd.storageBin.id = :storageBinId ";
       //@formatter:on
     }
     if (locatorsFiltered != null) {
@@ -1427,7 +1533,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     if (reservation.getWarehouse() != null) {
       //@formatter:off
       hql +=
-            "   and sb.warehouse.id = :warehouseId ";
+          "   and sb.warehouse.id = :warehouseId ";
       //@formatter:on
     }
     if (warehousesFiltered != null) {
@@ -1450,15 +1556,15 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             "   and 1 = 2 ";
         //@formatter:on
       } else {
-      //@formatter:off
+        //@formatter:off
         hql +=
             "   and sb.inventoryStatus in :inventoryStatusFiltered ";
-      //@formatter:on
+        //@formatter:on
       }
     }
     //@formatter:off
     hql +=
-            "   and sb.warehouse in :warehouses " +
+        "   and sb.warehouse in :warehouses " +
             " order by sb.warehouse DESC, sd.storageBin.rowX, sd.storageBin.stackY, " +
             "   sd.storageBin.levelZ, sd.attributeSetValue.description";
     //@formatter:on
@@ -1480,105 +1586,68 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
       query.setParameter("storageBinId", reservation.getStorageBin().getId());
     }
     if (locatorsFiltered != null && !locatorsFiltered.isEmpty()) {
-      query.setParameterList("locatorsFiltered", locatorsFiltered);
+      query.setParameterList(LOCATORS_FILTERED, locatorsFiltered);
     }
     if (reservation.getWarehouse() != null) {
       query.setParameter("warehouseId", reservation.getWarehouse().getId());
     }
     if (warehousesFiltered != null && !warehousesFiltered.isEmpty()) {
-      query.setParameterList("warehousesFiltered", warehousesFiltered);
+      query.setParameterList(WAREHOUSES_FILTERED, warehousesFiltered);
     }
     if (inventoryStatusFiltered != null && !inventoryStatusFiltered.isEmpty()) {
-      query.setParameterList("inventoryStatusFiltered", inventoryStatusFiltered);
+      query.setParameterList(INVENTORY_STATUS_FILTERED, inventoryStatusFiltered);
     }
 
     query.setParameterList("warehouses", getOnHandWarehouses(reservation.getOrganization()));
+
     for (int i = 0; i < selectedIds.size(); i++) {
       StorageDetail sd = OBDal.getInstance().get(StorageDetail.class, selectedIds.get(i));
-
       if (sd != null) {
         BigDecimal reservedinothers = getQtyReserved(reservation, reservation.getProduct(),
             sd.getAttributeSetValue(), sd.getStorageBin());
-
         result = tomap(sd, true, result, reservedinothers, reservation);
       }
     }
 
     for (StorageDetail sd : query.list()) {
       if (!selectedIds.isEmpty()) {
-        for (int i = 0; i < selectedIds.size(); i++) {
-          if (!(sd.getId().equals(selectedIds.get(i)))) {
-            // Check Filter Criteria
-            if (availableQtyFilterCriteria != null && !"".equals(availableQtyFilterCriteria)
-                && !isInScope("availableQty", availableQtyFilterCriteria, sd.getQuantityOnHand())) {
-              continue;
-            }
-            BigDecimal reservedinothers = getQtyReserved(reservation, reservation.getProduct(),
-                sd.getAttributeSetValue(), sd.getStorageBin());
-
-            if (reservedinothersFilterCriteria != null && !"".equals(reservedinothersFilterCriteria)
-                && !isInScope("reservedinothers", reservedinothersFilterCriteria,
-                    reservedinothers)) {
-              continue;
-            }
-            if (releasedFilterCriteria != null && !"".equals(releasedFilterCriteria)
-                && !isInScope("released", releasedFilterCriteria, BigDecimal.ZERO)) {
-              continue;
-            }
-            BigDecimal qtty = BigDecimal.ZERO;
-            if (reservation.getRESStatus().equals("DR")) {
-              ReservationStock rs = getPrereservedStock(reservation, sd.getStorageBin(),
-                  sd.getAttributeSetValue());
-              if (rs != null) {
-                qtty = rs.getQuantity();
-              }
-            }
-            if (quantityCriteria != null && !"".equals(quantityCriteria)
-                && !isInScope("quantity", quantityCriteria, qtty)) {
-              continue;
-            }
-            if (StringUtils.isNotBlank(allocatedCriteria) && !isInScope("allocated",
-                allocatedCriteria, sd.getStorageBin().getWarehouse().isAllocated())) {
-              continue;
-            }
-            result = tomap(sd, false, result, reservedinothers, reservation);
-          }
-        }
-      } else {
-        // Check Filter Criterias
-        if (availableQtyFilterCriteria != null && !"".equals(availableQtyFilterCriteria)
-            && !isInScope("availableQty", availableQtyFilterCriteria, sd.getQuantityOnHand())) {
+        if (selectedIds.contains(sd.getId())) {
           continue;
         }
-        BigDecimal reservedinothers = getQtyReserved(reservation, reservation.getProduct(),
-            sd.getAttributeSetValue(), sd.getStorageBin());
-
-        if (reservedinothersFilterCriteria != null && !"".equals(reservedinothersFilterCriteria)
-            && !isInScope("reservedinothers", reservedinothersFilterCriteria, reservedinothers)) {
-          continue;
-        }
-        if (releasedFilterCriteria != null && !"".equals(releasedFilterCriteria)
-            && !isInScope("released", releasedFilterCriteria, BigDecimal.ZERO)) {
-          continue;
-        }
-        BigDecimal qtty = BigDecimal.ZERO;
-        if (reservation.getRESStatus().equals("DR")) {
-          ReservationStock rs = getPrereservedStock(reservation, sd.getStorageBin(),
-              sd.getAttributeSetValue());
-          if (rs != null) {
-            qtty = rs.getQuantity();
-          }
-        }
-        if (quantityCriteria != null && !"".equals(quantityCriteria)
-            && !isInScope("quantity", quantityCriteria, qtty)) {
-          continue;
-        }
-        if (StringUtils.isNotBlank(allocatedCriteria) && !isInScope("allocated", allocatedCriteria,
-            sd.getStorageBin().getWarehouse().isAllocated())) {
-          continue;
-        }
-        result = tomap(sd, false, result, reservedinothers, reservation);
       }
+      if (availableQtyFilterCriteria != null && !"".equals(availableQtyFilterCriteria)
+          && !isInScope("availableQty", availableQtyFilterCriteria, sd.getQuantityOnHand())) {
+        continue;
+      }
+      BigDecimal reservedinothers = getQtyReserved(reservation, reservation.getProduct(),
+          sd.getAttributeSetValue(), sd.getStorageBin());
+
+      if (reservedinothersFilterCriteria != null && !"".equals(reservedinothersFilterCriteria)
+          && !isInScope("reservedinothers", reservedinothersFilterCriteria, reservedinothers)) {
+        continue;
+      }
+      if (releasedFilterCriteria != null && !"".equals(releasedFilterCriteria)
+          && !isInScope("released", releasedFilterCriteria, BigDecimal.ZERO)) {
+        continue;
+      }
+      BigDecimal qtty = BigDecimal.ZERO;
+      if (reservation.getRESStatus().equals("DR")) {
+        ReservationStock rs = getPrereservedStock(reservation, sd.getStorageBin(),
+            sd.getAttributeSetValue());
+        if (rs != null) {
+          qtty = rs.getQuantity();
+        }
+      }
+      if (quantityCriteria != null && !"".equals(quantityCriteria)
+          && !isInScope("quantity", quantityCriteria, qtty)) {
+        continue;
+      }
+      if (StringUtils.isNotBlank(allocatedCriteria)
+          && !isInScope("allocated", allocatedCriteria,
+          sd.getStorageBin().getWarehouse().isAllocated())) {
+        continue;
+      }
+      result = tomap(sd, false, result, reservedinothers, reservation);
     }
     return result;
   }
