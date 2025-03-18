@@ -48,12 +48,12 @@ import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
-import org.openbravo.common.hooks.DatasourceFilterHook;
-import org.openbravo.common.hooks.PriorizeAndSortDatasourceFilterHook;
+import org.openbravo.common.hooks.DataSourceFilterHook;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.common.enterprise.Locator;
 import org.openbravo.model.common.enterprise.OrgWarehouse;
@@ -77,23 +77,24 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
   private static Logger log4j = LogManager.getLogger();
   private static final String AD_TABLE_ID = "7BDAC914CA60418795E453BC0E8C89DC";
   private static final String PRE_PROCESS_METHOD = "preProcess";
-  private static final String POST_PROCESS_METHOD = "posProcess";
-  public static final String RESERVATION = "reservation";
-  public static final String ORGANIZATIONS = "organizations";
-  public static final String WAREHOUSES_FILTERED = "warehousesFiltered";
-  public static final String LOCATORS_FILTERED = "locatorsFiltered";
-  public static final String ATTRIBUTES_FILTERED = "attributesFiltered";
-  public static final String ORDER_LINES_FILTERED = "orderLinesFiltered";
-  public static final String AVAILABLE_QTY_FILTER_CRITERIA = "availableQtyFilterCriteria";
-  public static final String RESERVED_IN_OTHERS_FILTER_CRITERIA = "reservedinothersFilterCriteria";
-  public static final String RELEASED_FILTER_CRITERIA = "releasedFilterCriteria";
-  public static final String ALLOCATED_CRITERIA = "allocatedCriteria";
-  public static final String QUANTITY_CRITERIA = "quantityCriteria";
-  public static final String SELECTED_IDS = "selectedIds";
-  public static final String INVENTORY_STATUS_FILTERED = "inventoryStatusFiltered";
+  private static final String POST_PROCESS_METHOD = "postProcess";
+  private static final String RESERVATION = "reservation";
+  private static final String ORGANIZATIONS = "organizations";
+  private static final String WAREHOUSES_FILTERED = "warehousesFiltered";
+  private static final String LOCATORS_FILTERED = "locatorsFiltered";
+  private static final String ATTRIBUTES_FILTERED = "attributesFiltered";
+  private static final String ORDER_LINES_FILTERED = "orderLinesFiltered";
+  private static final String AVAILABLE_QTY_FILTER_CRITERIA = "availableQtyFilterCriteria";
+  private static final String RESERVED_IN_OTHERS_FILTER_CRITERIA = "reservedinothersFilterCriteria";
+  private static final String RELEASED_FILTER_CRITERIA = "releasedFilterCriteria";
+  private static final String ALLOCATED_CRITERIA = "allocatedCriteria";
+  private static final String QUANTITY_CRITERIA = "quantityCriteria";
+  private static final String SELECTED_IDS = "selectedIds";
+  private static final String INVENTORY_STATUS_FILTERED = "inventoryStatusFiltered";
+  private static final String RESULT = "result";
   @Inject
   @Any
-  private Instance<DatasourceFilterHook> hooks;
+  private Instance<DataSourceFilterHook> hooks;
 
   String ol = null;
 
@@ -548,11 +549,12 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
   private List<Map<String, Object>> getGridData(Map<String, String> parameters) {
     List<Map<String, Object>> result = new ArrayList<>();
     Map<String, String> filterCriteria = new HashMap<>();
-    ArrayList<String> selectedIds = new ArrayList<>();
+    Map<String, Object> stockReservationGridData = new HashMap<>();
+
     try {
       // Builds the criteria based on the fetch parameters
       JSONArray criterias = (JSONArray) JsonUtils.buildCriteria(parameters).get("criteria");
-
+      ArrayList<String> selectedIds = new ArrayList<>();
       for (int i = 0; i < criterias.length(); i++) {
         final JSONObject criteria = criterias.getJSONObject(i);
         if (criteria.has("fieldName") && criteria.getString("fieldName").equals("id")) {
@@ -618,7 +620,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
               criteria.has("value") ? criteria.getString("value") : criteria.toString());
         }
       }
-
+      stockReservationGridData.put(SELECTED_IDS, selectedIds);
     } catch (JSONException e) {
       log4j.error("Error while building the criteria", e);
     }
@@ -632,70 +634,60 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
       parameters.put("@MaterialMgmtReservation.id@", reservation.getId());
     }
     // Filters
-    List<Warehouse> warehousesFiltered = null;
     if (filterCriteria.get("warehouse$_identifier") != null
         || filterCriteria.get("warehouse") != null) {
       String warehouseCriteria = filterCriteria.get("warehouse$_identifier");
       if (warehouseCriteria == null) {
         warehouseCriteria = filterCriteria.get("warehouse");
       }
-      warehousesFiltered = getFilteredWarehouse(warehouseCriteria, parameters);
+      stockReservationGridData.put(WAREHOUSES_FILTERED, getFilteredWarehouse(warehouseCriteria, parameters));
     }
-    List<Locator> locatorsFiltered = null;
     if (filterCriteria.get("storageBin$_identifier") != null
         || filterCriteria.get("storageBin") != null) {
       String locatorCriteria = filterCriteria.get("storageBin$_identifier");
       if (locatorCriteria == null) {
         locatorCriteria = filterCriteria.get("storageBin");
       }
-      locatorsFiltered = getFilteredStorageBin(locatorCriteria, parameters);
+      stockReservationGridData.put(LOCATORS_FILTERED, getFilteredStorageBin(locatorCriteria, parameters));
     }
-    List<AttributeSetInstance> attributesFiltered = null;
     if (filterCriteria.get("attributeSetValue$_identifier") != null
         || filterCriteria.get("attributeSetValue") != null) {
       String attributesCriteria = filterCriteria.get("attributeSetValue$_identifier");
       if (attributesCriteria == null) {
         attributesCriteria = filterCriteria.get("attributeSetValue");
       }
-      attributesFiltered = getFilteredAttribute(attributesCriteria, parameters);
+      stockReservationGridData.put(ATTRIBUTES_FILTERED, getFilteredAttribute(attributesCriteria, parameters));
     }
-    List<OrderLine> orderLinesFiltered = null;
     if (filterCriteria.get("purchaseOrderLine$_identifier") != null
         || filterCriteria.get("purchaseOrderLine") != null) {
       String orderLinesCriteria = filterCriteria.get("purchaseOrderLine$_identifier");
       if (orderLinesCriteria == null) {
         orderLinesCriteria = filterCriteria.get("purchaseOrderLine");
       }
-      orderLinesFiltered = getFilteredOrderline(orderLinesCriteria, parameters);
+      stockReservationGridData.put(ORDER_LINES_FILTERED, getFilteredOrderline(orderLinesCriteria, parameters));
     }
-    List<InventoryStatus> inventoryStatusFiltered = null;
     if (filterCriteria.get("inventoryStatus$_identifier") != null
         || filterCriteria.get("inventoryStatus") != null) {
       String inventoryStatusCriteria = filterCriteria.get("inventoryStatus$_identifier");
       if (inventoryStatusCriteria == null) {
         inventoryStatusCriteria = filterCriteria.get("inventoryStatus");
       }
-      inventoryStatusFiltered = getFilteredInventoryStatus(inventoryStatusCriteria, parameters);
+      stockReservationGridData.put(INVENTORY_STATUS_FILTERED, getFilteredInventoryStatus(inventoryStatusCriteria, parameters));
     }
-    String availableQtyFilterCriteria = "";
     if (filterCriteria.get("availableQty") != null) {
-      availableQtyFilterCriteria = filterCriteria.get("availableQty");
+      stockReservationGridData.put(AVAILABLE_QTY_FILTER_CRITERIA, filterCriteria.get("availableQty"));
     }
-    String reservedinothersFilterCriteria = "";
     if (filterCriteria.get("reservedinothers") != null) {
-      reservedinothersFilterCriteria = filterCriteria.get("reservedinothers");
+      stockReservationGridData.put(RESERVED_IN_OTHERS_FILTER_CRITERIA, filterCriteria.get("reservedinothers"));
     }
-    String releasedFilterCriteria = "";
     if (filterCriteria.get("released") != null) {
-      releasedFilterCriteria = filterCriteria.get("released");
+      stockReservationGridData.put(RELEASED_FILTER_CRITERIA, filterCriteria.get("released"));
     }
-    String allocatedCriteria = "";
     if (filterCriteria.get("allocated") != null) {
-      allocatedCriteria = filterCriteria.get("allocated");
+      stockReservationGridData.put(ALLOCATED_CRITERIA, filterCriteria.get("allocated"));
     }
-    String quantityCriteria = "";
     if (filterCriteria.get("quantity") != null) {
-      quantityCriteria = filterCriteria.get("quantity");
+      stockReservationGridData.put(QUANTITY_CRITERIA, filterCriteria.get("quantity"));
     }
 
     if (ol != null && !"".equals(ol)) {
@@ -707,37 +699,26 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     } else {
       reservation = OBDal.getInstance().get(Reservation.class, strReservation);
     }
+    stockReservationGridData.put(RESERVATION, reservation);
     String strOrganization = parameters.get("@MaterialMgmtReservation.organization@");
     if (strOrganization == null || strOrganization.equals("")) {
       strOrganization = parameters.get("@Order.organization@");
     }
-    Set<String> organizations = new OrganizationStructureProvider().getChildTree(strOrganization,
-        true);
+    stockReservationGridData.put(ORGANIZATIONS, new OrganizationStructureProvider().getChildTree(strOrganization,
+        true));
 
-    Map<String, Object> stockReservationGridData = new HashMap<>();
-
-    stockReservationGridData.put(RESERVATION, reservation);
-    stockReservationGridData.put(ORGANIZATIONS, organizations);
-    stockReservationGridData.put(WAREHOUSES_FILTERED, warehousesFiltered);
-    stockReservationGridData.put(LOCATORS_FILTERED, locatorsFiltered);
-    stockReservationGridData.put(ATTRIBUTES_FILTERED, attributesFiltered);
-    stockReservationGridData.put(ORDER_LINES_FILTERED, orderLinesFiltered);
-    stockReservationGridData.put(AVAILABLE_QTY_FILTER_CRITERIA, availableQtyFilterCriteria);
-    stockReservationGridData.put(RESERVED_IN_OTHERS_FILTER_CRITERIA, reservedinothersFilterCriteria);
-    stockReservationGridData.put(RELEASED_FILTER_CRITERIA, releasedFilterCriteria);
-    stockReservationGridData.put(ALLOCATED_CRITERIA, allocatedCriteria);
-    stockReservationGridData.put(QUANTITY_CRITERIA, quantityCriteria);
-    stockReservationGridData.put(SELECTED_IDS, selectedIds);
-    stockReservationGridData.put(INVENTORY_STATUS_FILTERED, inventoryStatusFiltered);
-
+    //Execution of preProcess DataSourceFilterHook hooks.
     executeHooks(parameters, stockReservationGridData, PRE_PROCESS_METHOD);
 
     try {
       result.addAll(getSelectedLines(stockReservationGridData));
 
+      List<OrderLine> orderLinesFiltered = (List<OrderLine>) stockReservationGridData.get(ORDER_LINES_FILTERED);
       if (orderLinesFiltered == null || orderLinesFiltered.isEmpty()) {
         result.addAll(getStorageDetail(stockReservationGridData));
       }
+
+      List<Locator> locatorsFiltered = (List<Locator>) stockReservationGridData.get(LOCATORS_FILTERED);
       if (locatorsFiltered == null) {
         result.addAll(getPurchaseOrderLines(stockReservationGridData));
       }
@@ -750,26 +731,44 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     }
     result = sortResult(result, parameters.get("_sortBy"));
 
-    stockReservationGridData.put("result", result);
+    stockReservationGridData.put(RESULT, result);
+    //Execution of postProcess DataSourceFilterHook hooks.
     executeHooks(parameters, stockReservationGridData, POST_PROCESS_METHOD);
 
-    return result;
+    return (List<Map<String, Object>>) stockReservationGridData.getOrDefault(RESULT, new ArrayList<>());
   }
 
+  /**
+   * Executes the hooks in order of their defined priority, using the specified method type.
+   * <p>
+   * This method retrieves a list of hooks, sorts them by their priority, and then invokes
+   * either {@code preProcess} or {@code postProcess} on each hook depending on the value of
+   * {@code methodName}. If an exception occurs during execution of a hook, it logs an error
+   * and continues executing subsequent hooks.
+   * </p>
+   *
+   * @param parameters
+   *     A map of parameters that may be needed by the hooks.
+   * @param filtersCriteria
+   *     A map containing filtering criteria, which may be modified by the hooks.
+   * @param methodName
+   *     A string indicating which processing method to call on the hooks, typically {@code "preProcess"} or {@code "postProcess"}.
+   */
   protected void executeHooks(Map<String, String> parameters, Map<String, Object> filtersCriteria, String methodName) {
-    List<DatasourceFilterHook> hookList = PriorizeAndSortDatasourceFilterHook.sortHooksByPriority(hooks);
-    for (DatasourceFilterHook hook : hookList) {
+    List<DataSourceFilterHook> hookList = DataSourceFilterHook.sortHooksByPriority(hooks);
+
+    for (DataSourceFilterHook hook : hookList) {
       try {
         if (StringUtils.equals(methodName, PRE_PROCESS_METHOD)) {
           hook.preProcess(parameters, filtersCriteria);
         } else if (StringUtils.equals(methodName, POST_PROCESS_METHOD)) {
-          hook.posProcess(parameters, filtersCriteria);
+          hook.postProcess(parameters, filtersCriteria);
         }
       } catch (Exception e) {
-        log4j.error("Error executing DatasourceFilterHook hooks.", e);
+        log4j.error(String.format(OBMessageUtils.messageBD("DataSourceFilterHookError"), hook.getClass().getName()), e);
       }
     }
-  }
+}
 
   private List<Map<String, Object>> sortResult(List<Map<String, Object>> result, String sortBy) {
     if (sortBy == null || "".equals(sortBy)) {
