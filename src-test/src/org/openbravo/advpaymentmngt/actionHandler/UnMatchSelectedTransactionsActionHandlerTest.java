@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,23 +29,25 @@ import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtility;
-import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
-import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.service.json.JsonUtils;
-import org.openbravo.service.db.DbUtility;
-import org.openbravo.base.exception.OBException;
 
-
+/**
+ * Unit tests for the UnMatchSelectedTransactionsActionHandler class.
+ */
 @RunWith(MockitoJUnitRunner.class)
-public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
+public class UnMatchSelectedTransactionsActionHandlerTest {
 
+  /**
+   * Rule to define and verify expected exceptions in test cases.
+   * Ensures that tests can specify the type and message of expected exceptions.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -71,6 +72,11 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
 
   private AutoCloseable mocks;
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
@@ -111,6 +117,11 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
         .thenReturn("Error unmatching 1 record(s):");
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedOBDal != null) {
@@ -136,6 +147,11 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
     }
   }
 
+  /**
+   * Tests the execute method for successful unmatching of transactions.
+   *
+   * @throws Exception if an error occurs during the test
+   */
   @Test
   public void testExecute_SuccessfulUnmatch() throws Exception {
     // GIVEN
@@ -177,6 +193,11 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
     assertTrue(message.getString("text").contains("successfully unmatched"));
   }
 
+  /**
+   * Tests the execute method when a stale object exception occurs.
+   *
+   * @throws Exception if an error occurs during the test
+   */
   @Test
   public void testExecute_StaleObjectException() throws Exception {
     // GIVEN
@@ -184,8 +205,8 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
     String referenceNo = "REF123";
 
     // Create dates with different timestamps
-    Date clientDate = new Date(1672531200000L); // 2023-01-01 00:00:00
-    Date serverDate = new Date(1672531201000L); // 2023-01-01 00:00:01
+    Date clientDate = new Date(1672531200000L);
+    Date serverDate = new Date(1672531201000L);
 
     // Mock OBDateUtils
     mockedOBDateUtils.when(() -> OBDateUtils.convertDateToUTC(any())).thenReturn(serverDate);
@@ -213,10 +234,12 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
   }
 
   /**
-   * Test para verificar el manejo de excepciones SQL subyacentes
+   * Tests the execute method for handling underlying SQL exceptions.
+   *
+   * @throws Exception if an error occurs during the test
    */
   @Test
-  public void testExecute_SQLExceptionHandling() throws Exception {
+  public void testExecuteSQLExceptionHandling() throws Exception {
     // GIVEN
     String bslId = "TEST_BSL_ID";
     String referenceNo = "REF123";
@@ -248,10 +271,10 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
   }
 
   /**
-   * Test para verificar el manejo cuando ocurre una excepción al construir el mensaje de error
+   * Tests the execute method for handling exceptions during error message construction.
    */
   @Test
-  public void testExecute_ErrorMessageConstructionException() throws Exception {
+  public void testExecuteErrorMessageConstructionException() {
     // GIVEN
     String bslId = "TEST_BSL_ID";
     String referenceNo = "REF123";
@@ -278,11 +301,12 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
       mockedDbUtility.close();
     }
   }
+
   /**
-   * Test para verificar el manejo de excepciones al inicio del procesamiento
+   * Tests the execute method for handling exceptions at the start of processing.
    */
   @Test
-  public void testExecute_InitialException() throws Exception {
+  public void testExecuteInitialException() {
     // GIVEN
     String invalidJsonData = "{\"bankStatementLineIds\":[{malformed json...";
 
@@ -293,14 +317,15 @@ public class UnMatchSelectedTransactionsActionHandlerTest extends WeldBaseTest {
     JSONObject result = actionHandler.execute(parameters, invalidJsonData);
 
     assertNotNull(result);
-
   }
 
   /**
-   * Test para verificar el manejo de excepciones cuando falla el procesamiento del mensaje de error (catch anidado)
+   * Tests the execute method for handling nested exceptions during error processing.
+   *
+   * @throws Exception if an error occurs during the test
    */
   @Test
-  public void testExecute_NestedExceptionInErrorHandling() throws Exception {
+  public void testExecuteNestedExceptionInErrorHandling() throws Exception {
     // GIVEN
     SQLException sqlException = mock(SQLException.class);
     when(sqlException.getMessage()).thenReturn("SQL Error");

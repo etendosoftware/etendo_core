@@ -18,122 +18,165 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.common.enterprise.Locator;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.materialmgmt.onhandquantity.InventoryStatus;
 
-public class CheckExistsOverissueBinForRFCShipmentWHTest extends WeldBaseTest {
+/**
+ * Test class for CheckExistsOverissueBinForRFCShipmentWH action handler.
+ * Tests the functionality of checking overissue bins in warehouses for RFC shipments.
+ */
+public class CheckExistsOverissueBinForRFCShipmentWHTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
-    private MockedStatic<OBDal> mockedOBDal;
-    private CheckExistsOverissueBinForRFCShipmentWH handler;
-    private AutoCloseable mocks;
+  private MockedStatic<OBDal> mockedOBDal;
+  private CheckExistsOverissueBinForRFCShipmentWH handler;
+  private AutoCloseable mocks;
 
-    @Mock
-    private OBDal mockDal;
-    @Mock
-    private OBQuery<Locator> mockQuery;
+  @Mock
+  private OBDal mockDal;
+  @Mock
+  private OBQuery<Locator> mockQuery;
 
-    @Before
-    public void setUp() throws Exception {
-        mocks = MockitoAnnotations.openMocks(this);
-        handler = new CheckExistsOverissueBinForRFCShipmentWH();
+  /**
+   * Sets up the test environment before each test.
+   * Initializes mocks and configures default behavior.
+   *
+   * @throws Exception
+   *     if there's an error during setup
+   */
+  @Before
+  public void setUp() throws Exception {
+    mocks = MockitoAnnotations.openMocks(this);
+    handler = new CheckExistsOverissueBinForRFCShipmentWH();
 
-        // Initialize static mock for OBDal
-        mockedOBDal = Mockito.mockStatic(OBDal.class);
-        mockedOBDal.when(OBDal::getInstance).thenReturn(mockDal);
+    // Initialize static mock for OBDal
+    mockedOBDal = Mockito.mockStatic(OBDal.class);
+    mockedOBDal.when(OBDal::getInstance).thenReturn(mockDal);
 
-        // Setup default query mock behavior
-        when(mockDal.createQuery(eq(Locator.class), anyString())).thenReturn(mockQuery);
-        when(mockQuery.setNamedParameter(anyString(), any())).thenReturn(mockQuery);
-        when(mockQuery.setMaxResult(1)).thenReturn(mockQuery);
+    // Setup default query mock behavior
+    when(mockDal.createQuery(eq(Locator.class), anyString())).thenReturn(mockQuery);
+    when(mockQuery.setNamedParameter(anyString(), any())).thenReturn(mockQuery);
+    when(mockQuery.setMaxResult(1)).thenReturn(mockQuery);
+  }
+
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if there's an error during cleanup
+   */
+  @After
+  public void tearDown() throws Exception {
+    if (mockedOBDal != null) {
+      mockedOBDal.close();
     }
-
-    @After
-    public void tearDown() throws Exception {
-        if (mockedOBDal != null) {
-            mockedOBDal.close();
-        }
-        if (mocks != null) {
-            mocks.close();
-        }
+    if (mocks != null) {
+      mocks.close();
     }
+  }
 
-    @Test
-    public void testExecute_WithExistingOverissueBin() throws Exception {
-        // Given
-        String warehouseId = "TEST_WAREHOUSE";
-        String locatorId = "TEST_LOCATOR";
-        String locatorIdentifier = "Test Locator";
+  /**
+   * Tests the execute method when an overissue bin exists.
+   * Verifies that the correct locator information is returned.
+   *
+   * @throws Exception
+   *     if there's an error during test execution
+   */
+  @Test
+  public void testExecuteWithExistingOverissueBin() throws Exception {
+    // Given
+    String warehouseId = "TEST_WAREHOUSE";
+    String locatorId = "TEST_LOCATOR";
+    String locatorIdentifier = "Test Locator";
 
-        Locator mockLocator = createMockLocator(locatorId, locatorIdentifier);
-        when(mockQuery.uniqueResult()).thenReturn(mockLocator);
+    Locator mockLocator = createMockLocator(locatorId, locatorIdentifier);
+    when(mockQuery.uniqueResult()).thenReturn(mockLocator);
 
-        String jsonInput = String.format("{\"warehouseId\": \"%s\"}", warehouseId);
+    String jsonInput = String.format("{\"warehouseId\": \"%s\"}", warehouseId);
 
-        // When
-        JSONObject result = handler.execute(null, jsonInput);
+    // When
+    JSONObject result = handler.execute(null, jsonInput);
 
-        // Then
-        assertNotNull("Result should not be null", result);
-        assertEquals("Locator ID should match", locatorId, result.getString("overissueBin"));
-        assertEquals("Locator identifier should match", locatorIdentifier,
-            result.getString("storageBin$_identifier"));
-    }
+    // Then
+    assertNotNull("Result should not be null", result);
+    assertEquals("Locator ID should match", locatorId, result.getString("overissueBin"));
+    assertEquals("Locator identifier should match", locatorIdentifier, result.getString("storageBin$_identifier"));
+  }
 
-    @Test
-    public void testExecute_WithNoOverissueBin() throws Exception {
-        // Given
-        String warehouseId = "TEST_WAREHOUSE";
-        when(mockQuery.uniqueResult()).thenReturn(null);
+  /**
+   * Tests the execute method when no overissue bin exists.
+   * Verifies that empty strings are returned for bin information.
+   *
+   * @throws Exception
+   *     if there's an error during test execution
+   */
+  @Test
+  public void testExecuteWithNoOverissueBin() throws Exception {
+    // Given
+    String warehouseId = "TEST_WAREHOUSE";
+    when(mockQuery.uniqueResult()).thenReturn(null);
 
-        String jsonInput = String.format("{\"warehouseId\": \"%s\"}", warehouseId);
+    String jsonInput = String.format("{\"warehouseId\": \"%s\"}", warehouseId);
 
-        // When
-        JSONObject result = handler.execute(null, jsonInput);
+    // When
+    JSONObject result = handler.execute(null, jsonInput);
 
-        // Then
-        assertNotNull("Result should not be null", result);
-        assertEquals("Overissue bin should be empty", "", result.getString("overissueBin"));
-        assertEquals("Storage bin identifier should be empty", "",
-            result.getString("storageBin$_identifier"));
-    }
+    // Then
+    assertNotNull("Result should not be null", result);
+    assertEquals("Overissue bin should be empty", "", result.getString("overissueBin"));
+    assertEquals("Storage bin identifier should be empty", "", result.getString("storageBin$_identifier"));
+  }
 
-    @Test
-    public void testExecute_WithInvalidJSON() throws Exception {
-        // Given
-        String invalidJson = "invalid json";
+  /**
+   * Tests the execute method with invalid JSON input.
+   * Verifies that appropriate error information is returned.
+   *
+   * @throws Exception
+   *     if there's an error during test execution
+   */
+  @Test
+  public void testExecuteWithInvalidJSON() throws Exception {
+    // Given
+    String invalidJson = "invalid json";
 
-        // When
-        JSONObject result = handler.execute(null, invalidJson);
+    // When
+    JSONObject result = handler.execute(null, invalidJson);
 
-        // Then
-        assertNotNull("Result should not be null", result);
-        assertEquals("Overissue bin should be empty", "", result.getString("overissueBin"));
-        assertEquals("Storage bin identifier should be empty", "",
-            result.getString("storageBin$_identifier"));
-        assertNotNull("Error message should exist", result.getJSONObject("message"));
-        assertEquals("Error severity should be error", "error",
-            result.getJSONObject("message").getString("severity"));
-    }
+    // Then
+    assertNotNull("Result should not be null", result);
+    assertEquals("Overissue bin should be empty", "", result.getString("overissueBin"));
+    assertEquals("Storage bin identifier should be empty", "", result.getString("storageBin$_identifier"));
+    assertNotNull("Error message should exist", result.getJSONObject("message"));
+    assertEquals("Error severity should be error", "error", result.getJSONObject("message").getString("severity"));
+  }
 
-    private Locator createMockLocator(String locatorId, String identifier) {
-        Locator mockLocator = mock(Locator.class);
-        when(mockLocator.getId()).thenReturn(locatorId);
-        when(mockLocator.getIdentifier()).thenReturn(identifier);
+  /**
+   * Creates a mock Locator with the specified ID and identifier.
+   * Sets up the locator with a warehouse and inventory status.
+   *
+   * @param locatorId
+   *     the ID for the mock locator
+   * @param identifier
+   *     the identifier for the mock locator
+   * @return the configured mock Locator
+   */
+  private Locator createMockLocator(String locatorId, String identifier) {
+    Locator mockLocator = mock(Locator.class);
+    when(mockLocator.getId()).thenReturn(locatorId);
+    when(mockLocator.getIdentifier()).thenReturn(identifier);
 
-        Warehouse mockWarehouse = mock(Warehouse.class);
-        InventoryStatus mockStatus = mock(InventoryStatus.class);
-        when(mockStatus.isOverissue()).thenReturn(true);
+    Warehouse mockWarehouse = mock(Warehouse.class);
+    InventoryStatus mockStatus = mock(InventoryStatus.class);
+    when(mockStatus.isOverissue()).thenReturn(true);
 
-        when(mockLocator.getWarehouse()).thenReturn(mockWarehouse);
-        when(mockLocator.getInventoryStatus()).thenReturn(mockStatus);
+    when(mockLocator.getWarehouse()).thenReturn(mockWarehouse);
+    when(mockLocator.getInventoryStatus()).thenReturn(mockStatus);
 
-        return mockLocator;
-    }
+    return mockLocator;
+  }
 }

@@ -3,8 +3,11 @@ package org.openbravo.advpaymentmngt;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +29,10 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 
+/**
+ * Test class for the APRMActionHandler.
+ * This class contains unit tests for the APRMActionHandler class.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class APRMActionHandlerTest {
 
@@ -50,6 +57,10 @@ public class APRMActionHandlerTest {
   private APRMActionHandler handler;
   private Map<String, Object> parameters;
 
+  /**
+   * Sets up the test environment before each test.
+   * Initializes mocks and configures default mock behavior.
+   */
   @Before
   public void setUp() {
     // Initialize mocked static OBDal
@@ -57,8 +68,7 @@ public class APRMActionHandlerTest {
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockDal);
 
     // Set up financial account mock
-    when(mockDal.get(FIN_FinancialAccount.class, FINANCIAL_ACCOUNT_ID))
-        .thenReturn(mockFinAccount);
+    when(mockDal.get(FIN_FinancialAccount.class, FINANCIAL_ACCOUNT_ID)).thenReturn(mockFinAccount);
 
     // Create list of payment methods
     List<FinAccPaymentMethod> paymentMethods = new ArrayList<>();
@@ -66,18 +76,25 @@ public class APRMActionHandlerTest {
     paymentMethods.add(mockPaymentMethod2);
 
     // Set up financial account to return payment methods
-    when(mockFinAccount.getFinancialMgmtFinAccPaymentMethodList())
-        .thenReturn(paymentMethods);
+    when(mockFinAccount.getFinancialMgmtFinAccPaymentMethodList()).thenReturn(paymentMethods);
 
     handler = new APRMActionHandler();
     parameters = new HashMap<>();
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   * Closes all mock resources.
+   */
   @After
   public void tearDown() {
     mockedOBDal.close();
   }
 
+  /**
+   * Tests the updatePaymentMethodConfiguration method.
+   * Verifies that payment methods are updated correctly.
+   */
   @Test
   public void testUpdatePaymentMethodConfiguration() {
     // Execute method under test
@@ -100,12 +117,13 @@ public class APRMActionHandlerTest {
     inOrder.verify(mockDal).flush();
   }
 
-
-
+  /**
+   * Tests the updatePaymentMethodConfiguration method with an empty list of payment methods.
+   * Verifies that no payment methods are saved.
+   */
   @Test
-  public void testUpdatePaymentMethodConfiguration_EmptyPaymentMethods() {
-    when(mockFinAccount.getFinancialMgmtFinAccPaymentMethodList())
-        .thenReturn(new ArrayList<>());
+  public void testUpdatePaymentMethodConfigurationEmptyPaymentMethods() {
+    when(mockFinAccount.getFinancialMgmtFinAccPaymentMethodList()).thenReturn(new ArrayList<>());
 
     handler.updatePaymentMethodConfiguration(FINANCIAL_ACCOUNT_ID);
 
@@ -113,12 +131,17 @@ public class APRMActionHandlerTest {
     verify(mockDal).flush();
   }
 
+  /**
+   * Tests the execute method for the bankTransitoryCalloutResponse event.
+   * Verifies that payment methods are updated correctly.
+   *
+   * @throws Exception
+   *     if an error occurs during test execution
+   */
   @Test
-  public void testExecute_BankTransitoryCallout() throws Exception {
-    String content = new JSONObject()
-        .put("eventType", "bankTransitoryCalloutResponse")
-        .put("financialAccountId", FINANCIAL_ACCOUNT_ID)
-        .toString();
+  public void testExecuteBankTransitoryCallout() throws Exception {
+    String content = new JSONObject().put("eventType", "bankTransitoryCalloutResponse").put("financialAccountId",
+        FINANCIAL_ACCOUNT_ID).toString();
 
     JSONObject result = handler.execute(parameters, content);
 
@@ -128,12 +151,17 @@ public class APRMActionHandlerTest {
     verify(mockDal).flush();
   }
 
+  /**
+   * Tests the execute method with an unsupported event type.
+   * Verifies that no payment methods are updated.
+   *
+   * @throws Exception
+   *     if an error occurs during test execution
+   */
   @Test
-  public void testExecute_UnsupportedEventType() throws Exception {
-    String content = new JSONObject()
-        .put("eventType", "unsupportedEvent")
-        .put("financialAccountId", FINANCIAL_ACCOUNT_ID)
-        .toString();
+  public void testExecuteUnsupportedEventType() throws Exception {
+    String content = new JSONObject().put("eventType", "unsupportedEvent").put("financialAccountId",
+        FINANCIAL_ACCOUNT_ID).toString();
 
     JSONObject result = handler.execute(parameters, content);
 
@@ -142,8 +170,15 @@ public class APRMActionHandlerTest {
     verify(mockDal, never()).flush();
   }
 
+  /**
+   * Tests the execute method with invalid JSON content.
+   * Verifies that no payment methods are updated.
+   *
+   * @throws Exception
+   *     if an error occurs during test execution
+   */
   @Test
-  public void testExecute_InvalidJson() throws Exception {
+  public void testExecuteInvalidJson() throws Exception {
     String invalidJson = "{ invalid json content }";
 
     JSONObject result = handler.execute(parameters, invalidJson);
@@ -153,11 +188,16 @@ public class APRMActionHandlerTest {
     verify(mockDal, never()).flush();
   }
 
+  /**
+   * Tests the execute method with missing financial account ID.
+   * Verifies that no payment methods are updated.
+   *
+   * @throws Exception
+   *     if an error occurs during test execution
+   */
   @Test
-  public void testExecute_MissingFinancialAccountId() throws Exception {
-    String content = new JSONObject()
-        .put("eventType", "bankTransitoryCalloutResponse")
-        .toString();
+  public void testExecuteMissingFinancialAccountId() throws Exception {
+    String content = new JSONObject().put("eventType", "bankTransitoryCalloutResponse").toString();
 
     JSONObject result = handler.execute(parameters, content);
 

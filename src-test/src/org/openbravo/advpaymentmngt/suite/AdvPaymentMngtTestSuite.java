@@ -25,10 +25,13 @@ import org.openbravo.advpaymentmngt.actionHandler.ReceivedFromPaymentMethodActio
 import org.openbravo.advpaymentmngt.actionHandler.SalesOrderAddPaymentDefaultValuesTest;
 import org.openbravo.advpaymentmngt.actionHandler.UnMatchSelectedTransactionsActionHandlerTest;
 import org.openbravo.advpaymentmngt.ad_actionbutton.GLItemSelectorFilterExpressionTest;
+import org.openbravo.advpaymentmngt.dao.TransactionsDaoTest;
 import org.openbravo.advpaymentmngt.executionprocess.LeaveAsCreditTest;
 import org.openbravo.advpaymentmngt.executionprocess.PrintCheckTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddOrderOrInvoiceFilterExpressionTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddPaymentDefaultValuesExpressionTest;
+import org.openbravo.advpaymentmngt.filterexpression.AddPaymentDisplayLogicsExpressionTest;
+import org.openbravo.advpaymentmngt.filterexpression.AddPaymentReadOnlyLogicsExpressionTest;
 import org.openbravo.advpaymentmngt.filterexpression.AddTransactionFilterExpressionTest;
 import org.openbravo.advpaymentmngt.filterexpression.BusinessPartnerCustomerFilterExpressionTest;
 import org.openbravo.advpaymentmngt.filterexpression.BusinessPartnerVendorFilterExpressionTest;
@@ -38,6 +41,7 @@ import org.openbravo.advpaymentmngt.filterexpression.MatchStatementFilterExpress
 import org.openbravo.advpaymentmngt.filterexpression.PaymentInAddPaymentDefaultValuesTest;
 import org.openbravo.advpaymentmngt.filterexpression.PaymentInAddPaymentDisplayLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.PaymentOutAddPaymentDefaultValuesTest;
+import org.openbravo.advpaymentmngt.filterexpression.PaymentOutAddPaymentDisplayLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.PaymentOutAddPaymentReadOnlyLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.PurchaseInvoiceAddPaymentDefaultValuesTest;
 import org.openbravo.advpaymentmngt.filterexpression.PurchaseInvoiceAddPaymentDisplayLogicsTest;
@@ -46,6 +50,7 @@ import org.openbravo.advpaymentmngt.filterexpression.PurchaseOrderAddPaymentDefa
 import org.openbravo.advpaymentmngt.filterexpression.PurchaseOrderAddPaymentDisplayLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.PurchaseOrderAddPaymentReadOnlyLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.SalesInvoiceAddPaymentDefaultValuesTest;
+import org.openbravo.advpaymentmngt.filterexpression.SalesInvoiceAddPaymentDisplayLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.SalesInvoiceAddPaymentReadOnlyLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.SalesOrderAddPaymentDisplayLogicsTest;
 import org.openbravo.advpaymentmngt.filterexpression.SalesOrderAddPaymentReadOnlyLogicsTest;
@@ -141,9 +146,16 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     PurchaseInvoiceAddPaymentDisplayLogicsTest.class,
     PurchaseInvoiceAddPaymentDefaultValuesTest.class,
     PaymentOutAddPaymentReadOnlyLogicsTest.class,
+    PaymentOutAddPaymentDisplayLogicsTest.class,
+    AddPaymentDisplayLogicsExpressionTest.class,
+    SalesInvoiceAddPaymentDisplayLogicsTest.class,
+    AddPaymentReadOnlyLogicsExpressionTest.class,
 
     //hooks
     PaymentProcessOrderHookTest.class,
+
+    //dao
+    TransactionsDaoTest.class,
 
     //process
     RecordID2FillingTest.class,

@@ -11,6 +11,10 @@ import org.junit.Test;
  */
 public class ValueTest {
 
+  /**
+   * Tests the constructor with two parameters.
+   * Verifies that the field and value are set correctly and the default operator is '=='.
+   */
   @Test
   public void testConstructorWithTwoParameters() {
     // GIVEN
@@ -27,6 +31,10 @@ public class ValueTest {
     assertEquals("Default operator should be '=='", "==", value.getOperator());
   }
 
+  /**
+   * Tests the constructor with three parameters.
+   * Verifies that the field, value, and operator are set correctly.
+   */
   @Test
   public void testConstructorWithThreeParameters() {
     // GIVEN
@@ -44,9 +52,12 @@ public class ValueTest {
     assertEquals("Operator should match the constructor parameter", operator, value.getOperator());
   }
 
+  /**
+   * Tests the constructor with null values.
+   * Verifies that the field, value, and operator are set to null.
+   */
   @Test
   public void testConstructorWithNullValues() {
-
     // WHEN
     Value value = new Value(null, null, null);
 
@@ -57,6 +68,10 @@ public class ValueTest {
     assertNull("Operator should be null", value.getOperator());
   }
 
+  /**
+   * Tests the constructor with different value types.
+   * Verifies that the field, value, and operator are set correctly for different value types.
+   */
   @Test
   public void testDifferentValueTypes() {
     // GIVEN

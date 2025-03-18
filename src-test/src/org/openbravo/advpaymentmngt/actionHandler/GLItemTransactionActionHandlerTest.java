@@ -1,21 +1,3 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2023 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
@@ -49,7 +31,7 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 
 /**
- * Test class for the GLItemTransactionActionHandler functionality
+ * Test class for the GLItemTransactionActionHandler functionality.
  */
 public class GLItemTransactionActionHandlerTest {
 
@@ -69,11 +51,16 @@ public class GLItemTransactionActionHandlerTest {
   // Mocks
   @Mock
   private OBDal obDal;
-  @Mock
-  private OBContext obContext;
+
   @Mock
   private GLItem glItem;
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
@@ -91,11 +78,17 @@ public class GLItemTransactionActionHandlerTest {
     mockedOBContext.when(OBContext::restorePreviousMode).thenAnswer(invocation -> null);
 
     mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
-    
+
     // Configure OBMessageUtils
     mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("APRM_GLItem")).thenReturn("GL Item");
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     // Make sure to close all static mocks in reverse order of creation
@@ -128,6 +121,9 @@ public class GLItemTransactionActionHandlerTest {
   /**
    * Test scenario where GLItem ID is null, and description should be modified
    * by removing any occurrence of the GLItem prefix.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteNullGLItem() throws Exception {
@@ -135,18 +131,17 @@ public class GLItemTransactionActionHandlerTest {
     String originalDescription = "GL Item: Test Description\nSome other text GL Item: other text";
     JSONObject jsonData = new JSONObject();
     jsonData.put("strDescription", originalDescription);
-    
+
     String data = jsonData.toString();
     Map<String, Object> parameters = new HashMap<>();
 
     // Mock utility methods
-    mockedFinUtility
-        .when(() -> FIN_Utility.getFinAccTransactionDescription(eq(originalDescription), eq("\nGL Item"), eq("")))
-        .thenReturn("Some other text GL Item: other text");
-    mockedFinUtility
-        .when(() -> FIN_Utility.getFinAccTransactionDescription(eq("Some other text GL Item: other text"), 
-            eq("GL Item"), eq("")))
-        .thenReturn("Some other text");
+    mockedFinUtility.when(
+        () -> FIN_Utility.getFinAccTransactionDescription(eq(originalDescription), eq("\nGL Item"), eq(""))).thenReturn(
+        "Some other text GL Item: other text");
+    mockedFinUtility.when(
+        () -> FIN_Utility.getFinAccTransactionDescription(eq("Some other text GL Item: other text"), eq("GL Item"),
+            eq(""))).thenReturn("Some other text");
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, data);
@@ -154,15 +149,13 @@ public class GLItemTransactionActionHandlerTest {
     // THEN
     assertNotNull(result);
     assertEquals("Some other text", result.getString("description"));
-    
+
     // Verify methods were called
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
     mockedFinUtility.verify(
-        () -> FIN_Utility.getFinAccTransactionDescription(eq(originalDescription), eq("\nGL Item"), eq("")),
-        times(1));
-    mockedFinUtility.verify(
-        () -> FIN_Utility.getFinAccTransactionDescription(anyString(), eq("GL Item"), eq("")),
+        () -> FIN_Utility.getFinAccTransactionDescription(eq(originalDescription), eq("\nGL Item"), eq("")), times(1));
+    mockedFinUtility.verify(() -> FIN_Utility.getFinAccTransactionDescription(anyString(), eq("GL Item"), eq("")),
         times(1));
   }
 
@@ -171,6 +164,9 @@ public class GLItemTransactionActionHandlerTest {
    * According to the implementation, when strGLItemId is an empty string (not null),
    * the description should remain unchanged since it doesn't enter the null block
    * and doesn't qualify for StringUtils.isNotBlank(strGLItemId).
+   *
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteEmptyGLItemId() throws Exception {
@@ -196,15 +192,16 @@ public class GLItemTransactionActionHandlerTest {
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
 
     // No calls to FIN_Utility.getFinAccTransactionDescription should occur for empty strGLItemId
-    mockedFinUtility.verify(
-        () -> FIN_Utility.getFinAccTransactionDescription(anyString(), anyString(), anyString()),
+    mockedFinUtility.verify(() -> FIN_Utility.getFinAccTransactionDescription(anyString(), anyString(), anyString()),
         times(0));
   }
-
 
   /**
    * Test scenario where a valid GLItem ID is provided, and the description
    * should be updated with the GLItem name.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteValidGLItem() throws Exception {
@@ -212,24 +209,22 @@ public class GLItemTransactionActionHandlerTest {
     String originalDescription = "Original Description";
     String glItemId = "TEST_GLITEM_ID";
     String glItemName = "Test GL Item";
-    
+
     JSONObject jsonData = new JSONObject();
     jsonData.put("strDescription", originalDescription);
     jsonData.put("strGLItemId", glItemId);
-    
+
     String data = jsonData.toString();
     Map<String, Object> parameters = new HashMap<>();
 
     // Mock GLItem
     when(obDal.get(GLItem.class, glItemId)).thenReturn(glItem);
     when(glItem.getName()).thenReturn(glItemName);
-    
+
     // Mock utility methods
     String expectedGLItemDesc = "GL Item: " + glItemName;
-    mockedFinUtility
-        .when(() -> FIN_Utility.getFinAccTransactionDescription(eq(originalDescription), 
-            eq("GL Item"), eq(expectedGLItemDesc)))
-        .thenReturn("Original Description GL Item: Test GL Item");
+    mockedFinUtility.when(() -> FIN_Utility.getFinAccTransactionDescription(eq(originalDescription), eq("GL Item"),
+        eq(expectedGLItemDesc))).thenReturn("Original Description GL Item: Test GL Item");
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, data);
@@ -237,31 +232,32 @@ public class GLItemTransactionActionHandlerTest {
     // THEN
     assertNotNull(result);
     assertEquals("Original Description GL Item: Test GL Item", result.getString("description"));
-    
+
     // Verify methods were called
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
     verify(obDal, times(1)).get(GLItem.class, glItemId);
-    mockedFinUtility.verify(
-        () -> FIN_Utility.getFinAccTransactionDescription(
-            eq(originalDescription), eq("GL Item"), eq(expectedGLItemDesc)),
-        times(1));
+    mockedFinUtility.verify(() -> FIN_Utility.getFinAccTransactionDescription(eq(originalDescription), eq("GL Item"),
+        eq(expectedGLItemDesc)), times(1));
   }
 
   /**
    * Test scenario where a valid GLItem ID is provided but the GLItem is not found.
    * The description should remain unchanged.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteNonExistentGLItem() throws Exception {
     // GIVEN
     String originalDescription = "Original Description";
     String glItemId = "NONEXISTENT_GLITEM_ID";
-    
+
     JSONObject jsonData = new JSONObject();
     jsonData.put("strDescription", originalDescription);
     jsonData.put("strGLItemId", glItemId);
-    
+
     String data = jsonData.toString();
     Map<String, Object> parameters = new HashMap<>();
 
@@ -274,7 +270,7 @@ public class GLItemTransactionActionHandlerTest {
     // THEN
     assertNotNull(result);
     assertEquals(originalDescription, result.getString("description"));
-    
+
     // Verify methods were called
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
@@ -283,30 +279,32 @@ public class GLItemTransactionActionHandlerTest {
 
   /**
    * Test scenario where an exception occurs during processing.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteException() throws Exception {
     // GIVEN
     String originalDescription = "Original Description";
     String glItemId = "TEST_GLITEM_ID";
-    
+
     JSONObject jsonData = new JSONObject();
     jsonData.put("strDescription", originalDescription);
     jsonData.put("strGLItemId", glItemId);
-    
+
     String data = jsonData.toString();
     Map<String, Object> parameters = new HashMap<>();
 
     // Mock exception
     RuntimeException testException = new RuntimeException("Test exception");
     when(obDal.get(GLItem.class, glItemId)).thenThrow(testException);
-    
+
     // Mock error handling
     JSONArray errorActions = new JSONArray();
     errorActions.put("Test error action");
-    mockedMatchingUtility
-        .when(() -> APRM_MatchingUtility.createMessageInProcessView("Test exception", "error"))
-        .thenReturn(errorActions);
+    mockedMatchingUtility.when(
+        () -> APRM_MatchingUtility.createMessageInProcessView("Test exception", "error")).thenReturn(errorActions);
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, data);
@@ -315,13 +313,12 @@ public class GLItemTransactionActionHandlerTest {
     assertNotNull(result);
     assertEquals(errorActions, result.getJSONArray("responseActions"));
     assertTrue(result.getBoolean("retryExecution"));
-    
+
     // Verify methods were called
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
     verify(obDal, times(1)).get(GLItem.class, glItemId);
-    mockedMatchingUtility.verify(
-        () -> APRM_MatchingUtility.createMessageInProcessView("Test exception", "error"),
+    mockedMatchingUtility.verify(() -> APRM_MatchingUtility.createMessageInProcessView("Test exception", "error"),
         times(1));
   }
 }

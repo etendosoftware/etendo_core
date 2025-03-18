@@ -2,7 +2,6 @@ package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -22,7 +21,6 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.exception.OBException;
-import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBDal;
@@ -33,7 +31,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * Unit tests for the AddPaymentOrganizationActionHandler class.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
+public class AddPaymentOrganizationActionHandlerTest {
 
   private static final String ORG_ID = "TEST_ORG_ID";
   private static final String CURRENCY_ID = "TEST_CURRENCY_ID";
@@ -67,6 +65,9 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
   @InjectMocks
   private AddPaymentOrganizationActionHandler handler;
 
+  /**
+   * Sets up the test environment before each test.
+   */
   @Before
   public void setUp() {
     // Setup static mocks
@@ -97,6 +98,9 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
     when(currency.getIdentifier()).thenReturn(CURRENCY_IDENTIFIER);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   */
   @After
   public void tearDown() {
     if (mockedOBDal != null) {
@@ -110,8 +114,13 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
     }
   }
 
+  /**
+   * Tests the execute method with a valid organization.
+   *
+   * @throws Exception if an error occurs during the test
+   */
   @Test
-  public void testExecute_WithValidOrganization() throws Exception {
+  public void testExecuteWithValidOrganization() throws Exception {
     // Given
     String jsonData = createJsonData(ORG_ID);
     Map<String, Object> parameters = new HashMap<>();
@@ -124,8 +133,11 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
     assertEquals(CURRENCY_IDENTIFIER, result.getString("currencyIdIdentifier"));
   }
 
+  /**
+   * Tests the execute method with an empty organization.
+   */
   @Test
-  public void testExecute_WithEmptyOrganization() throws Exception {
+  public void testExecuteWithEmptyOrganization() {
     // Given
     String jsonData = createJsonData("");
     Map<String, Object> parameters = new HashMap<>();
@@ -139,8 +151,11 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
     // Then - exception is expected
   }
 
+  /**
+   * Tests the execute method with a null organization.
+   */
   @Test
-  public void testExecute_WithNullOrganization() throws Exception {
+  public void testExecuteWithNullOrganization() {
     // Given
     String jsonData = "{\"organization\":null}";
     Map<String, Object> parameters = new HashMap<>();
@@ -154,8 +169,11 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
     // Then - exception is expected
   }
 
+  /**
+   * Tests the execute method with invalid JSON data.
+   */
   @Test
-  public void testExecute_WithInvalidJson() throws Exception {
+  public void testExecuteWithInvalidJson() {
     // Given
     String jsonData = "invalid json";
     Map<String, Object> parameters = new HashMap<>();
@@ -169,8 +187,13 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
     // Then - exception is expected
   }
 
+  /**
+   * Tests the execute method with a null currency.
+   *
+   * @throws Exception if an error occurs during the test
+   */
   @Test
-  public void testExecute_WithNullCurrency() throws Exception {
+  public void testExecuteWithNullCurrency() throws Exception {
     // Given
     String jsonData = createJsonData(ORG_ID);
     Map<String, Object> parameters = new HashMap<>();
@@ -187,6 +210,12 @@ public class AddPaymentOrganizationActionHandlerTest extends WeldBaseTest {
     // Then - exception is expected
   }
 
+  /**
+   * Creates JSON data for the given organization ID.
+   *
+   * @param organizationId the organization ID
+   * @return the JSON data as a string
+   */
   private String createJsonData(String organizationId) {
     return String.format("{\"organization\":\"%s\"}", organizationId);
   }

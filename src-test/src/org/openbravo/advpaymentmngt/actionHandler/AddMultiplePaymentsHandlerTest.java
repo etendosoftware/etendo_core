@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
 import org.openbravo.advpaymentmngt.process.FIN_TransactionProcess;
 import org.openbravo.client.kernel.RequestContext;
@@ -42,6 +44,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 import org.openbravo.service.json.JsonUtils;
 
+/**
+ * Test class for the AddMultiplePaymentsHandler.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class AddMultiplePaymentsHandlerTest {
 
@@ -86,6 +91,12 @@ public class AddMultiplePaymentsHandlerTest {
   @InjectMocks
   private AddMultiplePaymentsHandler classUnderTest;
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.openMocks(this);
@@ -116,7 +127,7 @@ public class AddMultiplePaymentsHandlerTest {
     mockedJsonUtils.when(JsonUtils::createDateFormat).thenReturn(mockDateFormat);
 
     // Mock empty afterHooks
-    when(afterHooks.iterator()).thenReturn(new ArrayList<AddMultiplePaymentsProcessAfterProcessHook>().iterator());
+    when(afterHooks.iterator()).thenReturn(Collections.emptyIterator());
 
     ArrayList<AddMultiplePaymentsProcessAfterProcessHook> emptyHooks = new ArrayList<>();
     when(afterHooks.iterator()).thenReturn(emptyHooks.iterator());
@@ -125,6 +136,9 @@ public class AddMultiplePaymentsHandlerTest {
     when(mockOBDal.getSession()).thenReturn(mockSession);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   */
   @After
   public void tearDown() throws Exception {
     // Close all static mocks
@@ -151,15 +165,21 @@ public class AddMultiplePaymentsHandlerTest {
     }
   }
 
+  /**
+   * Tests the successful execution of the doExecute method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
-  public void testDoExecute_SuccessfulExecution() throws Exception {
+  public void testDoExecuteSuccessfulExecution() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
 
     // Create JSON data
-    String financialAccountId = "TEST_ACCOUNT_ID";
+    String financialAccountId = TestConstants.TEST_ACCOUNT_ID;
     Date testDate = new Date();
-    String formattedDate = "2023-01-01";
+    String formattedDate = TestConstants.TEST_DATE;
 
     // Create JSON structure
     JSONObject jsonData = new JSONObject();
@@ -187,15 +207,13 @@ public class AddMultiplePaymentsHandlerTest {
     when(mockOBDal.get(FIN_FinancialAccount.class, financialAccountId)).thenReturn(mockFinancialAccount);
 
     // Mock TransactionsDao.createFinAccTransaction
-    mockedTransactionsDao.when(() -> TransactionsDao.createFinAccTransaction(mockPayment))
-        .thenReturn(mockTransaction);
+    mockedTransactionsDao.when(() -> TransactionsDao.createFinAccTransaction(mockPayment)).thenReturn(mockTransaction);
 
     // Mock success message
     String successMessage = "Success message";
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("APRM_MULTIPLE_TRANSACTIONS_ADDED"))
-        .thenReturn(successMessage);
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("success"))
-        .thenReturn("success");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("APRM_MULTIPLE_TRANSACTIONS_ADDED")).thenReturn(
+        successMessage);
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.RESULT_SUCCESS)).thenReturn(TestConstants.RESULT_SUCCESS);
 
     // Mock session.clear()
     org.hibernate.Session mockSession = mock(org.hibernate.Session.class);
@@ -209,8 +227,8 @@ public class AddMultiplePaymentsHandlerTest {
     JSONObject result = classUnderTest.doExecute(parameters, jsonData.toString());
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertTrue("Result should contain responseActions", result.has("responseActions"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertTrue("Result should contain responseActions", result.has(TestConstants.RESPONSE_ACTIONS));
 
     // Verify transaction was created and processed
     verify(mockTransaction).setTransactionDate(any(Date.class));
@@ -218,25 +236,31 @@ public class AddMultiplePaymentsHandlerTest {
     verify(mockTransaction).setAccount(mockFinancialAccount);
 
     // Verify transaction process was called
-    mockedFIN_TransactionProcess.verify(
-        () -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction), times(1));
+    mockedFIN_TransactionProcess.verify(() -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction),
+        times(1));
   }
 
+  /**
+   * Tests the doExecute method when no payments are selected.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
-  public void testDoExecute_NoPaymentsSelected() throws Exception {
+  public void testDoExecuteNoPaymentsSelected() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
 
     // Create JSON data
-    String financialAccountId = "TEST_ACCOUNT_ID";
+    String financialAccountId = TestConstants.TEST_ACCOUNT_ID;
 
     // Create JSON structure
     JSONObject jsonData = new JSONObject();
     jsonData.put("Fin_Financial_Account_ID", financialAccountId);
 
     JSONObject jsonParams = new JSONObject();
-    jsonParams.put("statementDate", "2023-01-01");
-    jsonParams.put("dateAcct", "2023-01-01");
+    jsonParams.put("statementDate", TestConstants.TEST_DATE);
+    jsonParams.put("dateAcct", TestConstants.TEST_DATE);
 
     JSONObject paymentsObj = new JSONObject();
     JSONArray selectedPayments = new JSONArray();
@@ -248,23 +272,28 @@ public class AddMultiplePaymentsHandlerTest {
 
     // Mock error message
     String errorMessage = "No payments selected";
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("APRM_NO_PAYMENTS_SELECTED"))
-        .thenReturn(errorMessage);
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("APRM_NO_PAYMENTS_SELECTED")).thenReturn(errorMessage);
 
     // WHEN
     JSONObject result = classUnderTest.doExecute(parameters, jsonData.toString());
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertTrue("Result should contain message", result.has("message"));
-    JSONObject message = result.getJSONObject("message");
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertTrue("Result should contain message", result.has(TestConstants.RESPONSE_MESSAGE));
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
     assertEquals("Error severity should be set", "error", message.getString("severity"));
     assertEquals("Error text should match", errorMessage, message.getString("text"));
     assertTrue("Should retry execution", result.getBoolean("retryExecution"));
   }
 
+  /**
+   * Tests the doExecute method for exception handling.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
-  public void testDoExecute_ExceptionHandling() throws Exception {
+  public void testDoExecuteExceptionHandling() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
 
@@ -276,7 +305,7 @@ public class AddMultiplePaymentsHandlerTest {
     JSONObject result = classUnderTest.doExecute(parameters, jsonData.toString());
 
     // THEN
-    assertNotNull("Result should not be null", result);
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
     // Should return an empty JSONObject when exception is not properly handled
     assertEquals("Should return empty JSONObject", 0, result.length());
 
@@ -284,11 +313,17 @@ public class AddMultiplePaymentsHandlerTest {
     verify(mockOBDal).rollbackAndClose();
   }
 
+  /**
+   * Tests the createAndProcessTransactionFromPayment method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testCreateAndProcessTransactionFromPayment() throws Exception {
     // GIVEN
     String paymentId = "TEST_PAYMENT_ID";
-    String accountId = "TEST_ACCOUNT_ID";
+    String accountId = TestConstants.TEST_ACCOUNT_ID;
     Date testDate = new Date();
 
     // Create payment JSON
@@ -300,13 +335,11 @@ public class AddMultiplePaymentsHandlerTest {
     when(mockOBDal.get(FIN_FinancialAccount.class, accountId)).thenReturn(mockFinancialAccount);
 
     // Mock TransactionsDao.createFinAccTransaction
-    mockedTransactionsDao.when(() -> TransactionsDao.createFinAccTransaction(mockPayment))
-        .thenReturn(mockTransaction);
+    mockedTransactionsDao.when(() -> TransactionsDao.createFinAccTransaction(mockPayment)).thenReturn(mockTransaction);
 
     // WHEN - Use reflection to access private method
     java.lang.reflect.Method method = AddMultiplePaymentsHandler.class.getDeclaredMethod(
-        "createAndProcessTransactionFromPayment",
-        JSONObject.class, Date.class, Date.class, String.class);
+        "createAndProcessTransactionFromPayment", JSONObject.class, Date.class, Date.class, String.class);
     method.setAccessible(true);
     method.invoke(classUnderTest, paymentJS, testDate, testDate, accountId);
 
@@ -317,61 +350,72 @@ public class AddMultiplePaymentsHandlerTest {
     verify(mockTransaction).setAccount(mockFinancialAccount);
 
     // Verify transaction process was called
-    mockedFIN_TransactionProcess.verify(
-        () -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction), times(1));
+    mockedFIN_TransactionProcess.verify(() -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction),
+        times(1));
 
     // Verify setAdminMode and restorePreviousMode were called in balance
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the getSuccessMessage method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetSuccessMessage() throws Exception {
     // GIVEN
     String successText = "1 transaction processed successfully";
 
     // Mock success message
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("success"))
-        .thenReturn("success");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.RESULT_SUCCESS)).thenReturn(TestConstants.RESULT_SUCCESS);
 
     // WHEN - Use reflection to access private method
-    java.lang.reflect.Method method = AddMultiplePaymentsHandler.class.getDeclaredMethod(
-        "getSuccessMessage", String.class);
+    java.lang.reflect.Method method = AddMultiplePaymentsHandler.class.getDeclaredMethod("getSuccessMessage",
+        String.class);
     method.setAccessible(true);
     JSONObject result = (JSONObject) method.invoke(null, successText);
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertTrue("Result should contain responseActions", result.has("responseActions"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertTrue("Result should contain responseActions", result.has(TestConstants.RESPONSE_ACTIONS));
 
-    JSONArray actions = result.getJSONArray("responseActions");
+    JSONArray actions = result.getJSONArray(TestConstants.RESPONSE_ACTIONS);
     assertEquals("Should have one action", 1, actions.length());
 
     JSONObject action = actions.getJSONObject(0);
     assertTrue("Action should contain showMsgInProcessView", action.has("showMsgInProcessView"));
 
     JSONObject msg = action.getJSONObject("showMsgInProcessView");
-    assertEquals("Message type should be success", "success", msg.getString("msgType"));
-    assertEquals("Message title should be success", "success", msg.getString("msgTitle"));
+    assertEquals("Message type should be success", TestConstants.RESULT_SUCCESS, msg.getString("msgType"));
+    assertEquals("Message title should be success", TestConstants.RESULT_SUCCESS, msg.getString("msgTitle"));
     assertEquals("Message text should match", successText, msg.getString("msgText"));
   }
 
+  /**
+   * Tests the getErrorMessage method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetErrorMessage() throws Exception {
     // GIVEN
     String errorText = "Error processing transactions";
 
     // WHEN - Use reflection to access private method
-    java.lang.reflect.Method method = AddMultiplePaymentsHandler.class.getDeclaredMethod(
-        "getErrorMessage", String.class);
+    java.lang.reflect.Method method = AddMultiplePaymentsHandler.class.getDeclaredMethod("getErrorMessage",
+        String.class);
     method.setAccessible(true);
     JSONObject result = (JSONObject) method.invoke(null, errorText);
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertTrue("Result should contain message", result.has("message"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertTrue("Result should contain message", result.has(TestConstants.RESPONSE_MESSAGE));
 
-    JSONObject message = result.getJSONObject("message");
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
     assertEquals("Error severity should be set", "error", message.getString("severity"));
     assertEquals("Error text should match", errorText, message.getString("text"));
 

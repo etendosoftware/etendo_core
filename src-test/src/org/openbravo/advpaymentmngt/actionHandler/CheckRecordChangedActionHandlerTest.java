@@ -33,7 +33,8 @@ import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.service.json.JsonUtils;
 
 /**
- * Test for the CheckRecordChangedActionHandler class
+ * Test class for the CheckRecordChangedActionHandler. This class verifies the functionality
+ * of checking whether a bank statement line record has been modified by another user.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CheckRecordChangedActionHandlerTest {
@@ -57,6 +58,12 @@ public class CheckRecordChangedActionHandlerTest {
   private MockedStatic<JsonUtils> mockedJsonUtils;
   private AutoCloseable mocks;
 
+  /**
+   * Sets up the test environment before each test.
+   * Initializes mocks and configures default mock behavior.
+   *
+   * @throws Exception if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
@@ -81,6 +88,12 @@ public class CheckRecordChangedActionHandlerTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   * Closes all mock resources.
+   *
+   * @throws Exception if an error occurs during cleanup
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedOBDal != null) {
@@ -104,10 +117,13 @@ public class CheckRecordChangedActionHandlerTest {
   }
 
   /**
-   * Test case for when the record has not been changed (dates match)
+   * Tests the execute method when the record update dates match between UI and database.
+   * Verifies that no error message is returned when the dates are identical.
+   *
+   * @throws Exception if an error occurs during test execution
    */
   @Test
-  public void testExecute_DatesMatch() throws Exception {
+  public void testExecuteDatesMatch() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
     String jsonData = createJsonData("2023-01-01T12:00:00Z");
@@ -133,10 +149,13 @@ public class CheckRecordChangedActionHandlerTest {
   }
 
   /**
-   * Test case for when the record has been changed (dates don't match)
+   * Tests the execute method when the record update dates don't match between UI and database.
+   * Verifies that an appropriate error message is returned when the dates differ.
+   *
+   * @throws Exception if an error occurs during test execution
    */
   @Test
-  public void testExecute_DatesMismatch() throws Exception {
+  public void testExecuteDatesMismatch() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
     String jsonData = createJsonData("2023-01-01T12:00:00Z");
@@ -174,10 +193,13 @@ public class CheckRecordChangedActionHandlerTest {
   }
 
   /**
-   * Test case for handling JSON parsing exceptions
+   * Tests the execute method's handling of JSON parsing exceptions.
+   * Verifies that an appropriate error message is returned when invalid JSON is provided.
+   *
+   * @throws Exception if an error occurs during test execution
    */
   @Test
-  public void testExecute_JsonException() throws Exception {
+  public void testExecuteJsonException() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
     String invalidJsonData = "{invalid json";
