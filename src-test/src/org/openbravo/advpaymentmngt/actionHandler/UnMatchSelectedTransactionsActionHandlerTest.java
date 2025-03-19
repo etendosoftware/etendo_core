@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtility;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -75,7 +76,8 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
   /**
    * Sets up the test environment before each test.
    *
-   * @throws Exception if an error occurs during setup
+   * @throws Exception
+   *     if an error occurs during setup
    */
   @Before
   public void setUp() throws Exception {
@@ -100,7 +102,7 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     try {
       when(mockDateFormat.parse(any(String.class))).thenReturn(new Date());
     } catch (Exception e) {
-      System.err.println("Error configurando el mock de parse: " + e.getMessage());
+      System.err.println("Error configuring parse mock: " + e.getMessage());
     }
 
     // Mock OBContext methods
@@ -108,19 +110,24 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     mockedOBContext.when(OBContext::restorePreviousMode).thenAnswer(invocation -> null);
 
     // Mock OBMessageUtils methods
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("Success")).thenReturn("Success");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.MESSAGE_SUCCESS)).thenReturn(
+        TestConstants.MESSAGE_SUCCESS);
     mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("Warning")).thenReturn("Warning");
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("Error")).thenReturn("Error");
-    mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage("APRM_UnmatchedRecords", new String[]{ "1" }))
-        .thenReturn("1 record(s) successfully unmatched");
-    mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage("APRM_ErrorOnUnmatchingRecords", new String[]{ "1" }))
-        .thenReturn("Error unmatching 1 record(s):");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.USER_ERROR)).thenReturn(
+        TestConstants.USER_ERROR);
+    mockedOBMessageUtils.when(
+        () -> OBMessageUtils.getI18NMessage("APRM_UnmatchedRecords", new String[]{ "1" })).thenReturn(
+        "1 record(s) successfully unmatched");
+    mockedOBMessageUtils.when(
+        () -> OBMessageUtils.getI18NMessage("APRM_ErrorOnUnmatchingRecords", new String[]{ "1" })).thenReturn(
+        "Error unmatching 1 record(s):");
   }
 
   /**
    * Cleans up the test environment after each test.
    *
-   * @throws Exception if an error occurs during teardown
+   * @throws Exception
+   *     if an error occurs during teardown
    */
   @After
   public void tearDown() throws Exception {
@@ -150,13 +157,14 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
   /**
    * Tests the execute method for successful unmatching of transactions.
    *
-   * @throws Exception if an error occurs during the test
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
-  public void testExecute_SuccessfulUnmatch() throws Exception {
+  public void testExecuteSuccessfulUnmatch() throws Exception {
     // GIVEN
-    String bslId = "TEST_BSL_ID";
-    String referenceNo = "REF123";
+    String bslId = TestConstants.BANK_STATEMENT_LINE_ID;
+    String referenceNo = TestConstants.REFERENCE;
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     Date specificDate = format.parse("2023-01-01T00:00:00");
@@ -174,11 +182,11 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     when(mockBankStatementLine.getFinancialAccountTransaction()).thenReturn(mockTransaction);
 
     // Mock APRM_MatchingUtility.unmatch
-    mockedMatchingUtility.when(() -> APRM_MatchingUtility.unmatch(mockBankStatementLine)).thenAnswer(invocation -> null);
+    mockedMatchingUtility.when(() -> APRM_MatchingUtility.unmatch(mockBankStatementLine)).thenAnswer(
+        invocation -> null);
 
     Map<String, Object> parameters = new HashMap<>();
-    String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo +
-        "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
+    String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo + "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, jsonData);
@@ -187,25 +195,25 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     verify(mockOBDal, times(1)).get(FIN_BankStatementLine.class, bslId);
     mockedMatchingUtility.verify(() -> APRM_MatchingUtility.unmatch(mockBankStatementLine), times(1));
 
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("success", message.getString("severity"));
-    assertEquals("Success", message.getString("title"));
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
+    assertEquals(TestConstants.RESULT_SUCCESS, message.getString(TestConstants.SEVERITY));
+    assertEquals(TestConstants.MESSAGE_SUCCESS, message.getString(TestConstants.TITLE));
     assertTrue(message.getString("text").contains("successfully unmatched"));
   }
 
   /**
    * Tests the execute method when a stale object exception occurs.
    *
-   * @throws Exception if an error occurs during the test
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
-  public void testExecute_StaleObjectException() throws Exception {
+  public void testExecuteStaleObjectException() throws Exception {
     // GIVEN
-    String bslId = "TEST_BSL_ID";
-    String referenceNo = "REF123";
+    String bslId = TestConstants.BANK_STATEMENT_LINE_ID;
+    String referenceNo = TestConstants.REFERENCE;
 
     // Create dates with different timestamps
-    Date clientDate = new Date(1672531200000L);
     Date serverDate = new Date(1672531201000L);
 
     // Mock OBDateUtils
@@ -217,8 +225,7 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
 
     // Prepare test data
     Map<String, Object> parameters = new HashMap<>();
-    String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo +
-        "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
+    String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo + "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, jsonData);
@@ -226,9 +233,9 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     // THEN
     verify(mockOBDal, times(1)).get(FIN_BankStatementLine.class, bslId);
 
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("error", message.getString("severity"));
-    assertEquals("Error", message.getString("title"));
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
+    assertEquals(TestConstants.ERROR, message.getString(TestConstants.SEVERITY));
+    assertEquals(TestConstants.USER_ERROR, message.getString(TestConstants.TITLE));
     assertTrue(message.getString("text").contains("Error unmatching 1 record(s)"));
     assertTrue(message.getString("text").contains(referenceNo));
   }
@@ -236,13 +243,14 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
   /**
    * Tests the execute method for handling underlying SQL exceptions.
    *
-   * @throws Exception if an error occurs during the test
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteSQLExceptionHandling() throws Exception {
     // GIVEN
-    String bslId = "TEST_BSL_ID";
-    String referenceNo = "REF123";
+    String bslId = TestConstants.BANK_STATEMENT_LINE_ID;
+    String referenceNo = TestConstants.REFERENCE;
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     Date specificDate = format.parse("2023-01-01T00:00:00");
@@ -250,21 +258,20 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     when(mockOBDal.get(FIN_BankStatementLine.class, bslId)).thenReturn(mockBankStatementLine);
     when(mockBankStatementLine.getUpdated()).thenReturn(specificDate);
 
-    mockedMatchingUtility.when(() -> APRM_MatchingUtility.unmatch(mockBankStatementLine))
-        .thenThrow(new RuntimeException("Error in unmatch operation"));
+    mockedMatchingUtility.when(() -> APRM_MatchingUtility.unmatch(mockBankStatementLine)).thenThrow(
+        new RuntimeException("Error in unmatch operation"));
 
     // Prepare test data
     Map<String, Object> parameters = new HashMap<>();
-    String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo +
-        "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
+    String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo + "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, jsonData);
 
     // THEN
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("error", message.getString("severity"));
-    assertEquals("Error", message.getString("title"));
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
+    assertEquals(TestConstants.ERROR, message.getString(TestConstants.SEVERITY));
+    assertEquals(TestConstants.USER_ERROR, message.getString(TestConstants.TITLE));
 
     assertTrue(message.getString("text").contains(referenceNo));
     assertTrue(message.getString("text").contains("Error unmatching"));
@@ -276,21 +283,19 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
   @Test
   public void testExecuteErrorMessageConstructionException() {
     // GIVEN
-    String bslId = "TEST_BSL_ID";
-    String referenceNo = "REF123";
+    String bslId = TestConstants.BANK_STATEMENT_LINE_ID;
+    String referenceNo = TestConstants.REFERENCE;
 
     MockedStatic<DbUtility> mockedDbUtility = mockStatic(DbUtility.class);
     try {
-      mockedDbUtility.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
-          .thenThrow(new NullPointerException("Error getting SQL exception"));
+      mockedDbUtility.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class))).thenThrow(
+          new NullPointerException("Error getting SQL exception"));
 
-      when(mockOBDal.get(FIN_BankStatementLine.class, bslId))
-          .thenThrow(new RuntimeException("Database error"));
+      when(mockOBDal.get(FIN_BankStatementLine.class, bslId)).thenThrow(new RuntimeException("Database error"));
 
       // Prepare test data
       Map<String, Object> parameters = new HashMap<>();
-      String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo +
-          "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
+      String jsonData = "{\"bankStatementLineIds\":[{\"id\":\"" + bslId + "\",\"referenceNo\":\"" + referenceNo + "\",\"cleared\":true,\"bslUpdated\":\"2023-01-01T00:00:00\"}]}";
 
       // WHEN
       JSONObject result = actionHandler.execute(parameters, jsonData);
@@ -321,11 +326,9 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
 
   /**
    * Tests the execute method for handling nested exceptions during error processing.
-   *
-   * @throws Exception if an error occurs during the test
    */
   @Test
-  public void testExecuteNestedExceptionInErrorHandling() throws Exception {
+  public void testExecuteNestedExceptionInErrorHandling() {
     // GIVEN
     SQLException sqlException = mock(SQLException.class);
     when(sqlException.getMessage()).thenReturn("SQL Error");
@@ -333,14 +336,12 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     MockedStatic<DbUtility> mockedDbUtility = mockStatic(DbUtility.class);
 
     try {
-      mockedDbUtility.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
-          .thenReturn(sqlException);
+      mockedDbUtility.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class))).thenReturn(sqlException);
 
-      mockedOBMessageUtils.when(() -> OBMessageUtils.translateError(any()))
-          .thenThrow(new NullPointerException("Error in message translation"));
+      mockedOBMessageUtils.when(() -> OBMessageUtils.translateError(any())).thenThrow(
+          new NullPointerException("Error in message translation"));
 
-      mockedJsonUtils.when(() -> JsonUtils.createJSTimeFormat())
-          .thenThrow(new RuntimeException("Error in JsonUtils"));
+      mockedJsonUtils.when(() -> JsonUtils.createJSTimeFormat()).thenThrow(new RuntimeException("Error in JsonUtils"));
 
       // Prepare test data
       Map<String, Object> parameters = new HashMap<>();

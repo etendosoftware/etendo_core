@@ -1,7 +1,10 @@
 package org.openbravo.advpaymentmngt.executionprocess;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +16,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.financialmgmt.payment.PaymentRun;
 import org.openbravo.model.financialmgmt.payment.PaymentRunParameter;
 
+/**
+ * Test class for the PrintCheck class.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class PrintCheckTest {
 
@@ -29,21 +34,25 @@ public class PrintCheckTest {
   @Mock
   private PaymentRunParameter parameter;
 
-  @Mock
-  private OBDal obDal;
-
+  /**
+   * Sets up the test environment before each test.
+   */
   @Before
   public void setUp() {
     printCheck = new PrintCheck();
     List<PaymentRunParameter> parameters = new ArrayList<>();
     parameters.add(parameter);
     when(paymentRun.getFinancialMgmtPaymentRunParameterList()).thenReturn(parameters);
-
   }
 
-
+  /**
+   * Tests the execute method with an invalid check number.
+   *
+   * @throws ServletException
+   *     if a servlet error occurs
+   */
   @Test
-  public void testExecute_InvalidCheckNumber() throws ServletException {
+  public void testExecuteInvalidCheckNumber() throws ServletException {
     // Arrange
     String invalidCheckNumber = "ABC";
     when(parameter.getValueOfTheTextParameter()).thenReturn(invalidCheckNumber);

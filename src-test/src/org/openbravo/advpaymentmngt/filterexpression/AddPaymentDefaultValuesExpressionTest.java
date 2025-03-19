@@ -1,22 +1,3 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2023 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
-
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
@@ -46,14 +27,21 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.client.application.OBBindingsConstants;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 
+/**
+ * Unit tests for the AddPaymentDefaultValuesExpression class.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class AddPaymentDefaultValuesExpressionTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -67,6 +55,9 @@ public class AddPaymentDefaultValuesExpressionTest {
   private MockedStatic<OBMessageUtils> mockedOBMessageUtils;
   private AutoCloseable mocks;
 
+  /**
+   * Sets up the test environment before each test.
+   */
   @Before
   public void setUp() {
     mocks = MockitoAnnotations.openMocks(this);
@@ -74,6 +65,12 @@ public class AddPaymentDefaultValuesExpressionTest {
     mockedOBMessageUtils = mockStatic(OBMessageUtils.class);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedOBContext != null) {
@@ -87,24 +84,28 @@ public class AddPaymentDefaultValuesExpressionTest {
     }
   }
 
+  /**
+   * Tests the getExpression method with a handler for the actual payment parameter.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetExpressionWithHandlerActualPayment() throws JSONException {
     // GIVEN
-    Map<String, String> requestMap = createRequestMapWithWindowId("TEST_WINDOW");
-    requestMap.put("currentParam", "actual_payment");
-    
+    Map<String, String> requestMap = createRequestMapWithWindowId(TestConstants.TEST_WINDOW_ID);
+    requestMap.put(TestConstants.CURRENT_PARAM, "actual_payment");
+
     AddPaymentDefaultValuesHandler mockHandler = mock(AddPaymentDefaultValuesHandler.class);
     when(mockHandler.getDefaultActualAmount(requestMap)).thenReturn("100.00");
-    
+
     Instance<AddPaymentDefaultValuesHandler> mockInstance = mock(Instance.class);
-    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class)))
-        .thenReturn(mockInstance);
-    when(mockInstance.iterator())
-        .thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
-    
+    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class))).thenReturn(mockInstance);
+    when(mockInstance.iterator()).thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
+
     // WHEN
     String result = classUnderTest.getExpression(requestMap);
-    
+
     // THEN
     assertEquals("100.00", result);
     verify(mockHandler, times(1)).getDefaultActualAmount(requestMap);
@@ -112,24 +113,28 @@ public class AddPaymentDefaultValuesExpressionTest {
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the getExpression method with a handler for the expected payment parameter.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetExpressionWithHandlerExpectedPayment() throws JSONException {
     // GIVEN
-    Map<String, String> requestMap = createRequestMapWithWindowId("TEST_WINDOW");
-    requestMap.put("currentParam", "expected_payment");
-    
+    Map<String, String> requestMap = createRequestMapWithWindowId(TestConstants.TEST_WINDOW_ID);
+    requestMap.put(TestConstants.CURRENT_PARAM, "expected_payment");
+
     AddPaymentDefaultValuesHandler mockHandler = mock(AddPaymentDefaultValuesHandler.class);
     when(mockHandler.getDefaultExpectedAmount(requestMap)).thenReturn("200.00");
-    
+
     Instance<AddPaymentDefaultValuesHandler> mockInstance = mock(Instance.class);
-    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class)))
-        .thenReturn(mockInstance);
-    when(mockInstance.iterator())
-        .thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
-    
+    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class))).thenReturn(mockInstance);
+    when(mockInstance.iterator()).thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
+
     // WHEN
     String result = classUnderTest.getExpression(requestMap);
-    
+
     // THEN
     assertEquals("200.00", result);
     verify(mockHandler, times(1)).getDefaultExpectedAmount(requestMap);
@@ -137,53 +142,61 @@ public class AddPaymentDefaultValuesExpressionTest {
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the getExpression method with a handler for the document number parameter.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetExpressionWithHandlerDocumentNo() throws JSONException {
     // GIVEN
-    Map<String, String> requestMap = createRequestMapWithWindowId("TEST_WINDOW");
-    requestMap.put("currentParam", "payment_documentno");
-    
+    Map<String, String> requestMap = createRequestMapWithWindowId(TestConstants.TEST_WINDOW_ID);
+    requestMap.put(TestConstants.CURRENT_PARAM, TestConstants.PAYMENT_DOCUMENT_NO);
+
     AddPaymentDefaultValuesHandler mockHandler = mock(AddPaymentDefaultValuesHandler.class);
-    when(mockHandler.getDefaultDocumentNo(requestMap)).thenReturn("DOC-001");
-    
+    when(mockHandler.getDefaultDocumentNo(requestMap)).thenReturn(TestConstants.DOC_001);
+
     Instance<AddPaymentDefaultValuesHandler> mockInstance = mock(Instance.class);
-    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class)))
-        .thenReturn(mockInstance);
-    when(mockInstance.iterator())
-        .thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
-    
+    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class))).thenReturn(mockInstance);
+    when(mockInstance.iterator()).thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
+
     // WHEN
     String result = classUnderTest.getExpression(requestMap);
-    
+
     // THEN
-    assertEquals("DOC-001", result);
+    assertEquals(TestConstants.DOC_001, result);
     verify(mockHandler, times(1)).getDefaultDocumentNo(requestMap);
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the getExpression method with multiple handlers, selecting the one with the lowest sequence.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetExpressionMultipleHandlersSelectsLowestSeq() throws JSONException {
     // GIVEN
-    Map<String, String> requestMap = createRequestMapWithWindowId("TEST_WINDOW");
-    requestMap.put("currentParam", "payment_documentno");
-    
+    Map<String, String> requestMap = createRequestMapWithWindowId(TestConstants.TEST_WINDOW_ID);
+    requestMap.put(TestConstants.CURRENT_PARAM, TestConstants.PAYMENT_DOCUMENT_NO);
+
     AddPaymentDefaultValuesHandler mockHandler1 = mock(AddPaymentDefaultValuesHandler.class);
     when(mockHandler1.getSeq()).thenReturn(20L);
-    
+
     AddPaymentDefaultValuesHandler mockHandler2 = mock(AddPaymentDefaultValuesHandler.class);
     when(mockHandler2.getSeq()).thenReturn(10L);
     when(mockHandler2.getDefaultDocumentNo(requestMap)).thenReturn("DOC-002");
-    
+
     Instance<AddPaymentDefaultValuesHandler> mockInstance = mock(Instance.class);
-    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class)))
-        .thenReturn(mockInstance);
-    when(mockInstance.iterator())
-        .thenReturn(java.util.Arrays.asList(mockHandler1, mockHandler2).iterator());
-    
+    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class))).thenReturn(mockInstance);
+    when(mockInstance.iterator()).thenReturn(java.util.Arrays.asList(mockHandler1, mockHandler2).iterator());
+
     // WHEN
     String result = classUnderTest.getExpression(requestMap);
-    
+
     // THEN
     assertEquals("DOC-002", result);
     verify(mockHandler2, times(1)).getDefaultDocumentNo(requestMap);
@@ -192,24 +205,28 @@ public class AddPaymentDefaultValuesExpressionTest {
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the getExpression method when the handler throws an exception.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetExpressionHandlerThrowsException() throws JSONException {
     // GIVEN
-    Map<String, String> requestMap = createRequestMapWithWindowId("TEST_WINDOW");
-    requestMap.put("currentParam", "payment_documentno");
-    
+    Map<String, String> requestMap = createRequestMapWithWindowId(TestConstants.TEST_WINDOW_ID);
+    requestMap.put(TestConstants.CURRENT_PARAM, TestConstants.PAYMENT_DOCUMENT_NO);
+
     AddPaymentDefaultValuesHandler mockHandler = mock(AddPaymentDefaultValuesHandler.class);
     when(mockHandler.getDefaultDocumentNo(requestMap)).thenThrow(new RuntimeException("Test exception"));
-    
+
     Instance<AddPaymentDefaultValuesHandler> mockInstance = mock(Instance.class);
-    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class)))
-        .thenReturn(mockInstance);
-    when(mockInstance.iterator())
-        .thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
-    
+    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class))).thenReturn(mockInstance);
+    when(mockInstance.iterator()).thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
+
     // WHEN
     String result = classUnderTest.getExpression(requestMap);
-    
+
     // THEN
     assertNull("Result should be null when handler throws exception", result);
     verify(mockHandler, times(1)).getDefaultDocumentNo(requestMap);
@@ -217,31 +234,44 @@ public class AddPaymentDefaultValuesExpressionTest {
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the getExpression method when no window ID is provided.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetExpressionNoWindowId() throws JSONException {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
-    requestMap.put("currentParam", "payment_documentno");
-    
+    requestMap.put(TestConstants.CURRENT_PARAM, TestConstants.PAYMENT_DOCUMENT_NO);
+
     AddPaymentDefaultValuesHandler mockHandler = mock(AddPaymentDefaultValuesHandler.class);
-    when(mockHandler.getDefaultDocumentNo(requestMap)).thenReturn("DOC-001");
-    
+    when(mockHandler.getDefaultDocumentNo(requestMap)).thenReturn(TestConstants.DOC_001);
+
     Instance<AddPaymentDefaultValuesHandler> mockInstance = mock(Instance.class);
-    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class)))
-        .thenReturn(mockInstance);
-    when(mockInstance.iterator())
-        .thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
-    
+    when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class))).thenReturn(mockInstance);
+    when(mockInstance.iterator()).thenReturn(java.util.Collections.singletonList(mockHandler).iterator());
+
     // WHEN
     String result = classUnderTest.getExpression(requestMap);
-    
+
     // THEN
-    assertEquals("DOC-001", result);
+    assertEquals(TestConstants.DOC_001, result);
     verify(mockHandler, times(1)).getDefaultDocumentNo(requestMap);
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Creates a request map with the given window ID.
+   *
+   * @param windowId
+   *     the window ID to include in the request map
+   * @return the created request map
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   private Map<String, String> createRequestMapWithWindowId(String windowId) throws JSONException {
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();

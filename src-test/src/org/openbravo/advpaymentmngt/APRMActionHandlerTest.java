@@ -140,7 +140,7 @@ public class APRMActionHandlerTest {
    */
   @Test
   public void testExecuteBankTransitoryCallout() throws Exception {
-    String content = new JSONObject().put("eventType", "bankTransitoryCalloutResponse").put("financialAccountId",
+    String content = new JSONObject().put(TestConstants.EVENT_TYPE, "bankTransitoryCalloutResponse").put("financialAccountId",
         FINANCIAL_ACCOUNT_ID).toString();
 
     JSONObject result = handler.execute(parameters, content);
@@ -160,7 +160,7 @@ public class APRMActionHandlerTest {
    */
   @Test
   public void testExecuteUnsupportedEventType() throws Exception {
-    String content = new JSONObject().put("eventType", "unsupportedEvent").put("financialAccountId",
+    String content = new JSONObject().put(TestConstants.EVENT_TYPE, "unsupportedEvent").put("financialAccountId",
         FINANCIAL_ACCOUNT_ID).toString();
 
     JSONObject result = handler.execute(parameters, content);
@@ -197,7 +197,7 @@ public class APRMActionHandlerTest {
    */
   @Test
   public void testExecuteMissingFinancialAccountId() throws Exception {
-    String content = new JSONObject().put("eventType", "bankTransitoryCalloutResponse").toString();
+    String content = new JSONObject().put(TestConstants.EVENT_TYPE, "bankTransitoryCalloutResponse").toString();
 
     JSONObject result = handler.execute(parameters, content);
 

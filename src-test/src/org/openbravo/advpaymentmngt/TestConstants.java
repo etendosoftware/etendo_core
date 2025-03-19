@@ -1,26 +1,21 @@
 package org.openbravo.advpaymentmngt;
 
+import java.math.BigDecimal;
+
+/**
+ * This class contains constants used for testing purposes in the advpaymentmngt module.
+ */
 public final class TestConstants {
 
-  // Prevent instantiation
-  private TestConstants() {
-    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
-  }
-
   public static final String TEST_ACCOUNT_ID = "TEST_ACCOUNT_ID";
-
   public static final String RESULT_SUCCESS = "success";
   public static final String RESULT_NOT_NULL_MESSAGE = "Result should not be null";
-
   public static final String TEST_DATE = "2023-01-01";
-
   public static final String RESPONSE_ACTIONS = "responseActions";
   public static final String RESPONSE_MESSAGE = "message";
-
   public static final String PARAM_ID_1 = "paramId1";
   public static final String PAYMENT_DOCUMENT_NO = "payment_documentno";
   public static final String SEVERITY = "severity";
-
   public static final String BUSINESS_PARTNER = "businessPartner";
   public static final String BP_ID = "BP_ID";
   public static final String FINANCIAL_ACCOUNT = "financialAccount";
@@ -28,6 +23,120 @@ public final class TestConstants {
   public static final String BUSINESS_PARTNER_LABEL = "Business Partner Label";
   public static final String FINANCIAL_ACCOUNT_LABEL = "Financial Account Label";
   public static final String VALUES = "values";
+  public static final String SELECT_ENTITY_QUERY = "SELECT e FROM Entity e WHERE @whereclause@ @joinClause@ @selectClause@";
+  public static final String ACCOUNT_CONDITION = "e.account.id = :account";
+  public static final String RECEIVED_FROM = "received_from";
+  public static final String IS_SO_TRX = "issotrx";
+  public static final String BP_RECEIPT_CONDITION = "f.businessPartner.id = :bp and f.receipt = :issotrx";
+  public static final String FINANCIAL_ACCOUNT_ID = "TEST_FINANCIAL_ACCOUNT_ID";
+  public static final String RECONCILIATION_ID = "TEST_RECONCILIATION_ID";
+  public static final BigDecimal INITIAL_BALANCE = new BigDecimal("1000.00");
+  public static final String AMOUNT = "100.00";
+  public static final String REFERENCE = "REF123";
+  public static final String INPAD_ORG_ID = "inpadOrgId";
+  public static final String AD_ORG_ID = "ad_org_id";
+  public static final String ORG_ID = "TEST_ORG_ID";
+  public static final String CURRENCY_ID = "TEST_CURRENCY_ID";
+  public static final String CURRENCY_IDENTIFIER = "USD";
+  public static final String PROCESSED_DESCRIPTION = "Processed Description";
+  public static final String OVERISSUE_BIN = "overissueBin";
+  public static final String STORAGE_BIN_IDENTIFIER = "storageBin$_identifier";
+  public static final String TEST_DATE_STRING = "2023-01-01T12:00:00Z";
+  public static final String BANK_STATEMENT_LINE_ID = "TEST_BSL_ID";
+  public static final String STALE_DATE_MESSAGE = "APRM_StaleDate";
+  public static final String ERROR = "error";
+  public static final String RETRY_EXECUTION = "retryExecution";
+  public static final String TEST_CURRENCY_ID = "TEST_CURRENCY_ID";
+  public static final String RESULT_SHOULD_BE_EMPTY = "Result should be empty";
+  public static final String GL_ITEM = "GL Item";
+  public static final String TEST_EXCEPTION = "Test exception";
+  public static final String STR_DESCRIPTION = "strDescription";
+  public static final String DESCRIPTION = "description";
+  public static final String STR_GL_ITEM_ID = "strGLItemId";
+  public static final String ORIGINAL_DESCRIPTION = "Original Description";
+  public static final String TEST_FINANCIAL_ACCOUNT = "TEST_FINANCIAL_ACCOUNT";
+  public static final String FIN_FINANCIAL_ACCOUNT_ID = "Fin_Financial_Account_ID";
+  public static final String BUTTON_VALUE = "_buttonValue";
+  public static final String MATCH = "MATCH";
+  public static final String PAYMENT_METHOD_ID = "PM1";
+  public static final String CURRENCY_TO_ID = "C2";
+  public static final String CURRENCY_NAME_1 = "Currency 1";
+  public static final String CURRENCY_NAME_2 = "Currency 2";
+  public static final String CONVERSION_RATE_MESSAGE = "Conversion rate should match";
+  public static final String IS_MULTICURRENCY_TRUE_MESSAGE = "Is multicurrency should be true";
+  public static final String WRONG_FINANCIAL_ACCOUNT_FALSE_MESSAGE = "Wrong financial account should be false";
+  public static final String CURRENCY_TO_ID_MATCH_MESSAGE = "CurrencyToId should match";
+  public static final String TEST_PROPOSAL_ID = "test-proposal-id";
+  public static final String TEST_METHOD_ID = "test-method-id";
+  public static final String DIFFERENT_METHOD_ID = "different-method-id";
+  public static final String TEST_PSD_ID = "test-psd-id";
+  public static final String MESSAGE_SUCCESS = "Success";
+  public static final String PAYMENT_METHOD = "paymentMethodId";
+  public static final String PAYMENT_METHOD_NAME = "paymentMethodName";
+  public static final String INPC_ORDER_ID = "inpcOrderId";
+  public static final String TEST_ORDER_ID = "test-order-id";
+  public static final String CONTEXT = "context";
+  public static final String USER_ERROR = "Error";
+  public static final String FILTER_EXPRESSION_COLUMN_NAME = "filterExpressionColumnName";
+  public static final String TEST_WINDOW_ID = "TEST_WINDOW";
+  public static final String TEST_PAYMENT_METHOD_ID = "TEST_PAYMENT_METHOD";
+  public static final String TEST_IDENTIFIER = "TEST_IDENTIFIER";
+  public static final String CURRENT_PARAM = "currentParam";
+  public static final String DOC_001 = "DOC-001";
+  public static final String INVOICE_ID = "TEST_INVOICE_ID";
+  public static final String BUSINESS_PARTNER_ID = "TEST_BP_ID";
+  public static final String ORGANIZATION_ID = "TEST_ORG_ID";
+  public static final String FORMATTED_DATE = "01-01-2023";
+  public static final String PAYMENT_ID = "TEST_PAYMENT_ID";
+  public static final String DOCUMENT_NO = "TEST_DOC_NO";
+  public static final BigDecimal PAYMENT_AMOUNT = new BigDecimal("100.00");
+  public static final BigDecimal GENERATED_CREDIT = new BigDecimal("50.00");
+  public static final BigDecimal CONVERSION_RATE = new BigDecimal("1.25");
+  public static final BigDecimal CONVERTED_AMOUNT = new BigDecimal("125.00");
+  public static final BigDecimal STANDARD_PRECISION = new BigDecimal("2");
+  public static final String AD_ORG_ID_DISPLAY_LOGIC = "ad_org_id_display_logic";
+  public static final String TEST_WINDOW = "TestWindow";
+  public static final String PAYMENT_DOCUMENTNO_READONLY_LOGIC = "payment_documentno_readonly_logic";
+  public static final String ERROR_MSG = "No handler found for window";
+  public static final String REQUEST_MAP = "requestMap";
+  public static final String TEST_LINE_ID = "testLineId";
+  public static final String BANK_STATEMENT_LINE = "bankStatementLineId";
+  public static final String FINANCIAL_ACCOUNT_WINDOW_ID = "94EAA455D2644E04AB25D93BE5157B6D";
+  public static final String TRUE = "true";
+  public static final String INPFIN_PAYMENT_ID = "inpfinPaymentId";
+  public static final String DIFFERENCE = "difference";
+  public static final String PAYMENT_ID_2 = "TEST_PAYMENT_ID_2";
+  public static final String INPWINDOW_ID = "inpwindowId";
+  public static final String NOT_ALLOW_CHANGE_EXCHANGE = "NotAllowChangeExchange";
+  public static final String INPC_INVOICE_ID = "inpcInvoiceId";
+  public static final String EMPTY_MAP_MESSAGE = "The method should return false with an empty map";
+  public static final String POPULATED_MAP_MESSAGE = "The method should return false with a populated map";
+  public static final String TEST_FIN_ACCOUNT = "TEST_FIN_ACCOUNT";
+  public static final String WITHDRAWAL_AMOUNT = "20.00";
+  public static final String TRXTYPE = "trxtype";
+  public static final String DEPOSIT_AMOUNT = "80.00";
+  public static final String CONVERT_TO_SAFE_DECIMAL_STRING = "convertToSafeDecimalString";
+  public static final String TEST_BPARTNER_ID = "BP123";
+  public static final String PAYMENT_TYPE = "PAYMENT";
+  public static final String TEST_ORG_ID = "ORG123";
+  public static final String C_CURRENCY_ID = "CURR123";
+  public static final String C_CURRENCY = "c_currency_id";
+  public static final String TEST_FINANCIAL_ACCOUNT_ID = "testFinancialAccountId";
+  public static final String TEST_PAYMENT_METHOD = "testPaymentMethodId";
+  public static final String EVENT_TYPE = "eventType";
+  public static final String IS_WRONG_FINANCIAL_ACCOUNT = "isWrongFinancialAccount";
+  public static final String CONVERSION = "conversionrate";
+  public static final String IS_PAY_IS_MULTICURRENCY = "isPayIsMulticurrency";
+  public static final String TITLE = "title";
+  public static final String FIN_PAYMENT_METHOD_ID = "fin_paymentmethod_id";
+  public static final String TEST_ACCT_SCHEMA_ID = "testAcctSchemaId";
+  public static final String ACCOUNT_ID = "testAccountId";
+  public static final String ALGORITHM = "algorithm";
+  public static final String MOCK_MATCHING_ALGORITHM = "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm";
+  public static final String NO_ALGORITHM_DEFINED_MESSAGE = "No algorithm has been defined to match bank statement lines";
+  public static final String VALUE_INSTANCE_NOT_NULL = "Value instance should not be null";
+  public static final String FIELD_MATCH_CONSTRUCTOR_PARAMETER = "Field should match the constructor parameter";
+  public static final String VALUE_MATCH_CONSTRUCTOR_PARAMETER = "Value should match the constructor parameter";
 
 
 }

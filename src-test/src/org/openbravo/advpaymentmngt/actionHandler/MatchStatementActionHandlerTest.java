@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -37,8 +39,14 @@ import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 
-public class MatchStatementActionHandlerTest{
+/**
+ * Unit tests for the MatchStatementActionHandler class.
+ */
+public class MatchStatementActionHandlerTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -68,9 +76,13 @@ public class MatchStatementActionHandlerTest{
   private FIN_FinancialAccount financialAccount;
   @Mock
   private FIN_Reconciliation reconciliation;
-  @Mock
-  private DalConnectionProvider dalConnectionProvider;
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
@@ -98,6 +110,12 @@ public class MatchStatementActionHandlerTest{
     mockedRequestContext.when(RequestContext::get).thenReturn(requestContext);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     // Make sure to close all static mocks in reverse order of creation
@@ -139,15 +157,20 @@ public class MatchStatementActionHandlerTest{
     }
   }
 
+  /**
+   * Tests the execute method with the "OK" action.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
-  public void testExecute_OKAction() throws Exception {
+  public void testExecuteOKAction() throws Exception {
     // GIVEN
-    String financialAccountId = "TEST_FINANCIAL_ACCOUNT";
+    String financialAccountId = TestConstants.TEST_FINANCIAL_ACCOUNT;
 
-    // Mock JSON content
     JSONObject jsonContent = new JSONObject();
-    jsonContent.put("Fin_Financial_Account_ID", financialAccountId);
-    jsonContent.put("_buttonValue", "OK");
+    jsonContent.put(TestConstants.FIN_FINANCIAL_ACCOUNT_ID, financialAccountId);
+    jsonContent.put(TestConstants.BUTTON_VALUE, "OK");
 
     String content = jsonContent.toString();
     Map<String, Object> parameters = new HashMap<>();
@@ -157,26 +180,29 @@ public class MatchStatementActionHandlerTest{
 
     // THEN
     assertNotNull(result);
-    // Verify that for OK action, nothing gets called and an empty JSONObject is returned
     mockedTransactionsDao.verify(() -> TransactionsDao.getLastReconciliation(any(), any()), times(0));
     mockedMatchingUtility.verify(() -> APRM_MatchingUtility.updateReconciliation(any(), any(), eq(true)), times(0));
 
-    // Modified verification to check setAdminMode with true parameter
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the execute method with a successful match.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
-  public void testExecute_SuccessfulMatch() throws Exception {
+  public void testExecuteSuccessfulMatch() throws Exception {
     // GIVEN
-    String financialAccountId = "TEST_FINANCIAL_ACCOUNT";
-    String reconciliationId = "TEST_RECONCILIATION";
+    String financialAccountId = TestConstants.TEST_FINANCIAL_ACCOUNT;
     String successMessage = "Success";
 
     // Mock JSON content
     JSONObject jsonContent = new JSONObject();
-    jsonContent.put("Fin_Financial_Account_ID", financialAccountId);
-    jsonContent.put("_buttonValue", "MATCH"); // Any non-OK value
+    jsonContent.put(TestConstants.FIN_FINANCIAL_ACCOUNT_ID, financialAccountId);
+    jsonContent.put(TestConstants.BUTTON_VALUE, TestConstants.MATCH); // Any non-OK value
 
     String content = jsonContent.toString();
     Map<String, Object> parameters = new HashMap<>();
@@ -185,51 +211,57 @@ public class MatchStatementActionHandlerTest{
     when(obDal.get(FIN_FinancialAccount.class, financialAccountId)).thenReturn(financialAccount);
 
     // Mock getting the last reconciliation
-    mockedTransactionsDao.when(() -> TransactionsDao.getLastReconciliation(financialAccount, "N"))
-        .thenReturn(reconciliation);
+    mockedTransactionsDao.when(() -> TransactionsDao.getLastReconciliation(financialAccount, "N")).thenReturn(
+        reconciliation);
 
     // Mock updating reconciliation successfully
-    mockedMatchingUtility.when(() -> APRM_MatchingUtility.updateReconciliation(reconciliation, financialAccount, true))
-        .thenReturn(true);
+    mockedMatchingUtility.when(
+        () -> APRM_MatchingUtility.updateReconciliation(reconciliation, financialAccount, true)).thenReturn(true);
 
     // Mock translation for success message
-    mockedUtility.when(() -> Utility.parseTranslation(any(DalConnectionProvider.class), eq(vars),
-            eq("en_US"), eq("@Success@")))
-        .thenReturn(successMessage);
+    mockedUtility.when(() -> Utility.parseTranslation(any(DalConnectionProvider.class), eq(vars), eq("en_US"),
+        eq("@Success@"))).thenReturn(successMessage);
 
     // WHEN
     JSONObject result = actionHandler.doExecute(parameters, content);
 
     // THEN
     assertNotNull(result);
-    assertTrue(result.has("message"));
+    assertTrue(result.has(TestConstants.RESPONSE_MESSAGE));
 
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("success", message.getString("severity"));
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
+    assertEquals(TestConstants.RESULT_SUCCESS, message.getString("severity"));
     assertEquals("", message.getString("title"));
     assertEquals(successMessage, message.getString("text"));
 
     // Verify method calls
     verify(obDal, times(1)).get(FIN_FinancialAccount.class, financialAccountId);
     mockedTransactionsDao.verify(() -> TransactionsDao.getLastReconciliation(financialAccount, "N"), times(1));
-    mockedMatchingUtility.verify(() -> APRM_MatchingUtility.updateReconciliation(reconciliation, financialAccount, true), times(1));
+    mockedMatchingUtility.verify(
+        () -> APRM_MatchingUtility.updateReconciliation(reconciliation, financialAccount, true), times(1));
 
     // Modified verification to check setAdminMode with true parameter
     mockedOBContext.verify(() -> OBContext.setAdminMode(true), times(1));
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
   }
 
+  /**
+   * Tests the execute method when an exception occurs.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
-  public void testExecute_Exception() throws Exception {
+  public void testExecuteException() throws Exception {
     // GIVEN
-    String financialAccountId = "TEST_FINANCIAL_ACCOUNT";
+    String financialAccountId = TestConstants.TEST_FINANCIAL_ACCOUNT;
     String errorMessage = "Test exception message";
-    Exception exception = new RuntimeException("Test exception");
+    Exception exception = new RuntimeException(TestConstants.TEST_EXCEPTION);
 
     // Mock JSON content
     JSONObject jsonContent = new JSONObject();
-    jsonContent.put("Fin_Financial_Account_ID", financialAccountId);
-    jsonContent.put("_buttonValue", "MATCH"); // Any non-OK value
+    jsonContent.put(TestConstants.FIN_FINANCIAL_ACCOUNT_ID, financialAccountId);
+    jsonContent.put(TestConstants.BUTTON_VALUE, TestConstants.MATCH); // Any non-OK value
 
     String content = jsonContent.toString();
     Map<String, Object> parameters = new HashMap<>();
@@ -250,10 +282,10 @@ public class MatchStatementActionHandlerTest{
 
     // THEN
     assertNotNull(result);
-    assertTrue(result.has("message"));
+    assertTrue(result.has(TestConstants.RESPONSE_MESSAGE));
 
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("error", message.getString("severity"));
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
+    assertEquals(TestConstants.ERROR, message.getString("severity"));
     assertEquals(errorMessage, message.getString("text"));
 
     // Verify rollback was called

@@ -50,6 +50,9 @@ import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
 
+/**
+ * Test class for payment functionality.
+ */
 public class PaymentTest_01 extends WeldBaseTest {
 
   private static final Logger log = LogManager.getLogger();
@@ -66,16 +69,19 @@ public class PaymentTest_01 extends WeldBaseTest {
 
   /**
    * Initial Set up.
-   *
+   * <p>
    * This before method is named setUpP01() to avoid overwriting the super setUp method that is
-   * invoke automatically before this one.
+   * invoked automatically before this one.
    *
    */
   @Before
-  public void setUpP01() throws Exception {
+  public void setUpP01() {
     TestUtility.setTestContext();
   }
 
+  /**
+   * Tests the payment process.
+   */
   @Test
   public void testRunPayment_01() {
     boolean exception = false;
@@ -168,6 +174,12 @@ public class PaymentTest_01 extends WeldBaseTest {
 
   }
 
+  /**
+   * Sets up the data for the test.
+   *
+   * @return the created invoice
+   * @throws Exception if an error occurs during data setup
+   */
   private Invoice dataSetup() throws Exception {
 
     // DATA SETUP

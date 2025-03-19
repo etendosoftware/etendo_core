@@ -39,6 +39,9 @@ import org.openbravo.service.db.DbUtility;
  */
 public class AddPaymentDisplayLogicActionHandlerTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 

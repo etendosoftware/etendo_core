@@ -1,4 +1,3 @@
-
 package org.openbravo.advpaymentmngt.dao;
 
 import static org.junit.Assert.assertEquals;
@@ -27,6 +26,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -35,10 +35,10 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.data.FieldProvider;
-import org.openbravo.erpCommon.utility.FieldProviderFactory;
-import org.openbravo.model.ad.system.Client;
 import org.openbravo.erpCommon.utility.AccDefUtility;
+import org.openbravo.erpCommon.utility.FieldProviderFactory;
 import org.openbravo.model.ad.datamodel.Table;
+import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
@@ -48,11 +48,16 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 import org.openbravo.model.project.Project;
-import org.openbravo.test.base.TestConstants;
 
-
+/**
+ * Test class for the TransactionsDao class.
+ * This class contains unit tests for the TransactionsDao class.
+ */
 public class TransactionsDaoTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -114,6 +119,13 @@ public class TransactionsDaoTest {
   @Mock
   private OBContext mockOBContext;
 
+  /**
+   * Sets up the test environment before each test.
+   * Initializes mocks and configures default mock behavior.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     // Initialize mocks
@@ -135,12 +147,20 @@ public class TransactionsDaoTest {
     when(mockOBContext.getCurrentOrganization()).thenReturn(mock(Organization.class));
     when(mockOBContext.getRole()).thenReturn(mock(org.openbravo.model.ad.access.Role.class));
 
-    when(mockOBContext.getUser().getId()).thenReturn(TestConstants.Users.ADMIN);
-    when(mockOBContext.getCurrentClient().getId()).thenReturn(TestConstants.Clients.FB_GRP);
-    when(mockOBContext.getCurrentOrganization().getId()).thenReturn(TestConstants.Orgs.ESP_NORTE);
-    when(mockOBContext.getRole().getId()).thenReturn(TestConstants.Roles.FB_GRP_ADMIN);
+    when(mockOBContext.getUser().getId()).thenReturn(org.openbravo.test.base.TestConstants.Users.ADMIN);
+    when(mockOBContext.getCurrentClient().getId()).thenReturn(org.openbravo.test.base.TestConstants.Clients.FB_GRP);
+    when(mockOBContext.getCurrentOrganization().getId()).thenReturn(
+        org.openbravo.test.base.TestConstants.Orgs.ESP_NORTE);
+    when(mockOBContext.getRole().getId()).thenReturn(org.openbravo.test.base.TestConstants.Roles.FB_GRP_ADMIN);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   * Closes all mocked static resources and mocks.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedOBContext != null) {
@@ -163,6 +183,10 @@ public class TransactionsDaoTest {
     }
   }
 
+  /**
+   * Tests the createFinAccTransaction method.
+   * Verifies that a financial account transaction is created successfully.
+   */
   @Test
   public void testCreateFinAccTransactionSuccess() {
     // GIVEN
@@ -189,11 +213,11 @@ public class TransactionsDaoTest {
 
     when(mockDocumentType.getDocumentCategory()).thenReturn("ARR");
     when(mockPayment.getDocumentType()).thenReturn(mockDocumentType);
-    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal("100.00"));
+    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal(TestConstants.AMOUNT));
     when(mockPayment.getCurrency()).thenReturn(mockCurrency);
 
     when(mockPayment.getFinancialTransactionConvertRate()).thenReturn(new BigDecimal("1.0"));
-    when(mockPayment.getAmount()).thenReturn(new BigDecimal("100.00"));
+    when(mockPayment.getAmount()).thenReturn(new BigDecimal(TestConstants.AMOUNT));
 
     List<FIN_FinaccTransaction> transactionList = new ArrayList<>();
     when(mockPayment.getFINFinaccTransactionList()).thenReturn(transactionList);
@@ -201,21 +225,18 @@ public class TransactionsDaoTest {
     // Mock getTransactionMaxLineNo
     when(obDal.getSession()).thenReturn(mock(org.hibernate.Session.class));
     org.hibernate.query.Query mockHibernateQuery = mock(org.hibernate.query.Query.class);
-    when(obDal.getSession().createQuery(anyString(),
-        eq(Long.class)))
-        .thenReturn(mockHibernateQuery);
-    when(mockHibernateQuery.setParameter(anyString(),
-        org.mockito.ArgumentMatchers.any()))
-        .thenReturn(mockHibernateQuery);
+    when(obDal.getSession().createQuery(anyString(), eq(Long.class))).thenReturn(mockHibernateQuery);
+    when(mockHibernateQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(
+        mockHibernateQuery);
     when(mockHibernateQuery.uniqueResult()).thenReturn(10L);
 
     // Mock FIN_Utility methods
-    mockedFINUtility.when(() -> FIN_Utility.getDepositAmount(true, new BigDecimal("100.00")))
-        .thenReturn(new BigDecimal("100.00"));
-    mockedFINUtility.when(() -> FIN_Utility.getPaymentAmount(true, new BigDecimal("100.00")))
-        .thenReturn(BigDecimal.ZERO);
+    mockedFINUtility.when(() -> FIN_Utility.getDepositAmount(true, new BigDecimal(TestConstants.AMOUNT))).thenReturn(
+        new BigDecimal(TestConstants.AMOUNT));
+    mockedFINUtility.when(() -> FIN_Utility.getPaymentAmount(true, new BigDecimal(TestConstants.AMOUNT))).thenReturn(
+        BigDecimal.ZERO);
 
-    when(newTransaction.getDepositAmount()).thenReturn(new BigDecimal("100.00"));
+    when(newTransaction.getDepositAmount()).thenReturn(new BigDecimal(TestConstants.AMOUNT));
     when(newTransaction.getPaymentAmount()).thenReturn(BigDecimal.ZERO);
 
     when(newTransaction.getCurrency()).thenReturn(mockAccountCurrency);
@@ -231,17 +252,18 @@ public class TransactionsDaoTest {
     assertEquals(newTransaction, transactionList.get(0));
   }
 
+  /**
+   * Tests the getTransactionMaxLineNo method.
+   * Verifies that the maximum line number is returned correctly.
+   */
   @Test
   public void testGetTransactionMaxLineNoReturnsMaxLineNo() {
     // GIVEN
     when(obDal.getSession()).thenReturn(mock(org.hibernate.Session.class));
     org.hibernate.query.Query mockHibernateQuery = mock(org.hibernate.query.Query.class);
-    when(obDal.getSession().createQuery(anyString(),
-        eq(Long.class)))
-        .thenReturn(mockHibernateQuery);
-    when(mockHibernateQuery.setParameter(anyString(),
-        org.mockito.ArgumentMatchers.any()))
-        .thenReturn(mockHibernateQuery);
+    when(obDal.getSession().createQuery(anyString(), eq(Long.class))).thenReturn(mockHibernateQuery);
+    when(mockHibernateQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(
+        mockHibernateQuery);
     when(mockHibernateQuery.uniqueResult()).thenReturn(100L);
 
     // WHEN
@@ -251,17 +273,18 @@ public class TransactionsDaoTest {
     assertEquals(Long.valueOf(100), result);
   }
 
+  /**
+   * Tests the getTransactionMaxLineNo method when no transactions exist.
+   * Verifies that zero is returned.
+   */
   @Test
   public void testGetTransactionMaxLineNoReturnsZeroWhenNoTransactions() {
     // GIVEN
     when(obDal.getSession()).thenReturn(mock(org.hibernate.Session.class));
     org.hibernate.query.Query mockHibernateQuery = mock(org.hibernate.query.Query.class);
-    when(obDal.getSession().createQuery(anyString(),
-        eq(Long.class)))
-        .thenReturn(mockHibernateQuery);
-    when(mockHibernateQuery.setParameter(anyString(),
-        org.mockito.ArgumentMatchers.any()))
-        .thenReturn(mockHibernateQuery);
+    when(obDal.getSession().createQuery(anyString(), eq(Long.class))).thenReturn(mockHibernateQuery);
+    when(mockHibernateQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(
+        mockHibernateQuery);
     when(mockHibernateQuery.uniqueResult()).thenReturn(null);
 
     // WHEN
@@ -271,15 +294,17 @@ public class TransactionsDaoTest {
     assertEquals(Long.valueOf(0), result);
   }
 
+  /**
+   * Tests the getLastReconciliation method.
+   * Verifies that the last reconciliation is returned correctly.
+   */
   @Test
   public void testGetLastReconciliationProcessed() {
     // GIVEN
     when(obDal.createCriteria(FIN_Reconciliation.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(org.mockito.ArgumentMatchers.any(org.hibernate.criterion.Criterion.class)))
-        .thenReturn(mockCriteria);
-    when(mockCriteria.addOrderBy(anyString(),
-        org.mockito.ArgumentMatchers.anyBoolean()))
-        .thenReturn(mockCriteria);
+    when(mockCriteria.add(org.mockito.ArgumentMatchers.any(org.hibernate.criterion.Criterion.class))).thenReturn(
+        mockCriteria);
+    when(mockCriteria.addOrderBy(anyString(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(1)).thenReturn(mockCriteria);
     when(mockCriteria.uniqueResult()).thenReturn(mockReconciliation);
 
@@ -290,6 +315,10 @@ public class TransactionsDaoTest {
     assertEquals(mockReconciliation, result);
   }
 
+  /**
+   * Tests the updateAccountingDate method.
+   * Verifies that the accounting date is updated successfully.
+   */
   @Test
   public void testUpdateAccountingDateUpdatesDateSuccessfully() {
     // GIVEN
@@ -300,8 +329,9 @@ public class TransactionsDaoTest {
     when(mockTransaction.getId()).thenReturn("TEST_TRANSACTION_ID");
 
     when(obDal.createCriteria(AccountingFact.class)).thenReturn(mockAccountingFactCriteria);
-    when(mockAccountingFactCriteria.add(org.mockito.ArgumentMatchers.any(org.hibernate.criterion.Criterion.class)))
-        .thenReturn(mockAccountingFactCriteria);
+    when(mockAccountingFactCriteria.add(
+        org.mockito.ArgumentMatchers.any(org.hibernate.criterion.Criterion.class))).thenReturn(
+        mockAccountingFactCriteria);
 
     when(obDal.get(Table.class, FIN_FINACC_TRANSACTION_TABLE)).thenReturn(mockTable);
 
@@ -309,36 +339,35 @@ public class TransactionsDaoTest {
     accountingFacts.add(mockAccountingFact);
     when(mockAccountingFactCriteria.list()).thenReturn(accountingFacts);
 
-    org.openbravo.model.financialmgmt.calendar.Period mockPeriod = mock(org.openbravo.model.financialmgmt.calendar.Period.class);
+    org.openbravo.model.financialmgmt.calendar.Period mockPeriod = mock(
+        org.openbravo.model.financialmgmt.calendar.Period.class);
     when(mockPeriod.getId()).thenReturn("202301");
 
-    mockedAccDefUtility.when(() -> AccDefUtility.getCurrentPeriod(
-            org.mockito.ArgumentMatchers.any(Date.class),
-            org.mockito.ArgumentMatchers.any()))
-        .thenReturn(mockPeriod);
+    mockedAccDefUtility.when(() -> AccDefUtility.getCurrentPeriod(org.mockito.ArgumentMatchers.any(Date.class),
+        org.mockito.ArgumentMatchers.any())).thenReturn(mockPeriod);
 
     // WHEN
     TransactionsDao.updateAccountingDate(mockTransaction);
 
     // THEN
     // Verify that the accounting fact was updated with the transaction date
-    mockedAccDefUtility.verify(() -> AccDefUtility.getCurrentPeriod(
-        eq(transactionDate),
-        org.mockito.ArgumentMatchers.any()));
+    mockedAccDefUtility.verify(
+        () -> AccDefUtility.getCurrentPeriod(eq(transactionDate), org.mockito.ArgumentMatchers.any()));
   }
 
+  /**
+   * Tests the getCurrentlyClearedAmt method.
+   * Verifies that the currently cleared amount is returned correctly.
+   */
   @Test
   public void testGetCurrentlyClearedAmtReturnsCorrectAmount() {
     // GIVEN
-    String accountId = "TEST_ACCOUNT_ID";
+    String accountId = TestConstants.TEST_ACCOUNT_ID;
     when(obDal.getSession()).thenReturn(mock(org.hibernate.Session.class));
     org.hibernate.query.Query mockHibernateQuery = mock(org.hibernate.query.Query.class);
-    when(obDal.getSession().createQuery(anyString(),
-        eq(BigDecimal.class)))
-        .thenReturn(mockHibernateQuery);
-    when(mockHibernateQuery.setParameter(anyString(),
-        org.mockito.ArgumentMatchers.any()))
-        .thenReturn(mockHibernateQuery);
+    when(obDal.getSession().createQuery(anyString(), eq(BigDecimal.class))).thenReturn(mockHibernateQuery);
+    when(mockHibernateQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(
+        mockHibernateQuery);
     when(mockHibernateQuery.uniqueResult()).thenReturn(new BigDecimal("150.00"));
 
     // WHEN
@@ -348,18 +377,19 @@ public class TransactionsDaoTest {
     assertMonetaryEquals("The amount should match", new BigDecimal("150.00"), result);
   }
 
+  /**
+   * Tests the getCurrentlyClearedAmt method.
+   * Verifies that the currently cleared amount is returned correctly.
+   */
   @Test
   public void testGetCurrentlyClearedAmtReturnsZeroWhenNoResults() {
     // GIVEN
-    String accountId = "TEST_ACCOUNT_ID";
+    String accountId = TestConstants.TEST_ACCOUNT_ID;
     when(obDal.getSession()).thenReturn(mock(org.hibernate.Session.class));
     org.hibernate.query.Query mockHibernateQuery = mock(org.hibernate.query.Query.class);
-    when(obDal.getSession().createQuery(anyString(),
-        eq(BigDecimal.class)))
-        .thenReturn(mockHibernateQuery);
-    when(mockHibernateQuery.setParameter(anyString(),
-        org.mockito.ArgumentMatchers.any()))
-        .thenReturn(mockHibernateQuery);
+    when(obDal.getSession().createQuery(anyString(), eq(BigDecimal.class))).thenReturn(mockHibernateQuery);
+    when(mockHibernateQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(
+        mockHibernateQuery);
     when(mockHibernateQuery.uniqueResult()).thenReturn(null);
 
     // WHEN
@@ -369,22 +399,25 @@ public class TransactionsDaoTest {
     assertMonetaryEquals("The amount should be zero", BigDecimal.ZERO, result);
   }
 
+  /**
+   * Tests the getTransactionsFiltered method with hideAfterDate set to true.
+   * Verifies that the transactions are filtered correctly.
+   */
   @Test
   public void testGetTransactionsFilteredWithHideAfterDate() {
     // GIVEN
-    String accountId = "TEST_ACCOUNT_ID";
+    String accountId = TestConstants.TEST_ACCOUNT_ID;
     when(mockFinancialAccount.getId()).thenReturn(accountId);
     Date statementDate = new Date();
 
     // Mock para OBQuery
-    when(obDal.createQuery(
-        eq(FIN_FinaccTransaction.class),
-        anyString(),
+    when(obDal.createQuery(eq(FIN_FinaccTransaction.class), anyString(),
         org.mockito.ArgumentMatchers.any(Map.class))).thenReturn(mockQuery);
 
-    FIN_FinaccTransaction mockTransaction1 = createMockTransaction("TRANS_1", new Date(), "100.00", "0.00", "Description 1", "Y");
+    FIN_FinaccTransaction mockTransaction1 = createMockTransaction("TRANS_1", new Date(), TestConstants.AMOUNT, "0.00",
+        "Description 1", "Y");
 
-    List<FIN_FinaccTransaction> transactionsList = Arrays.asList(mockTransaction1);
+    List<FIN_FinaccTransaction> transactionsList = List.of(mockTransaction1);
     when(mockQuery.list()).thenReturn(transactionsList);
 
     // Mock para FieldProviderFactory
@@ -393,10 +426,9 @@ public class TransactionsDaoTest {
       mockFieldProviders[i] = mock(FieldProvider.class);
     }
 
-    org.mockito.MockedStatic<FieldProviderFactory> mockedFieldProviderFactory =
-        mockStatic(FieldProviderFactory.class);
-    mockedFieldProviderFactory.when(() -> FieldProviderFactory.getFieldProviderArray(
-        eq(transactionsList))).thenReturn(mockFieldProviders);
+    org.mockito.MockedStatic<FieldProviderFactory> mockedFieldProviderFactory = mockStatic(FieldProviderFactory.class);
+    mockedFieldProviderFactory.when(() -> FieldProviderFactory.getFieldProviderArray(eq(transactionsList))).thenReturn(
+        mockFieldProviders);
 
 
     // WHEN
@@ -418,28 +450,44 @@ public class TransactionsDaoTest {
     mockedFieldProviderFactory.close();
   }
 
+  /**
+   * Tests the getTransactionsFiltered method when an exception is thrown.
+   * Verifies that an OBException is thrown.
+   */
   @Test
   public void testGetTransactionsFilteredWithException() {
     // GIVEN
-    String accountId = "TEST_ACCOUNT_ID";
+    String accountId = TestConstants.TEST_ACCOUNT_ID;
     when(mockFinancialAccount.getId()).thenReturn(accountId);
 
     // Mock para OBQuery
-    when(obDal.createQuery(
-        eq(FIN_FinaccTransaction.class),
-        anyString(),
-        org.mockito.ArgumentMatchers.any(Map.class)))
-        .thenThrow(new RuntimeException("Test database error"));
+    when(obDal.createQuery(eq(FIN_FinaccTransaction.class), anyString(),
+        org.mockito.ArgumentMatchers.any(Map.class))).thenThrow(new RuntimeException("Test database error"));
 
     // WHEN & THEN
     expectedException.expect(OBException.class);
     TransactionsDao.getTransactionsFiltered(mockFinancialAccount, new Date(), false);
   }
 
-
-  private FIN_FinaccTransaction createMockTransaction(
-      String id, Date transactionDate, String depositAmount, String paymentAmount,
-      String description, String status) {
+  /**
+   * Utility method for creating a mock FIN_FinaccTransaction.
+   *
+   * @param id
+   *     the transaction ID
+   * @param transactionDate
+   *     the transaction date
+   * @param depositAmount
+   *     the deposit amount
+   * @param paymentAmount
+   *     the payment amount
+   * @param description
+   *     the transaction description
+   * @param status
+   *     the transaction status
+   * @return the mock FIN_FinaccTransaction
+   */
+  private FIN_FinaccTransaction createMockTransaction(String id, Date transactionDate, String depositAmount,
+      String paymentAmount, String description, String status) {
 
     FIN_FinaccTransaction mockTrans = mock(FIN_FinaccTransaction.class);
     when(mockTrans.getId()).thenReturn(id);
@@ -451,9 +499,18 @@ public class TransactionsDaoTest {
 
     return mockTrans;
   }
-  // Utility method for comparing monetary values
+
+  /**
+   * Utility method for comparing monetary values.
+   *
+   * @param message
+   *     the assertion message
+   * @param expected
+   *     the expected value
+   * @param actual
+   *     the actual value
+   */
   protected void assertMonetaryEquals(String message, BigDecimal expected, BigDecimal actual) {
-    assertEquals(message, expected.setScale(2, RoundingMode.HALF_UP),
-        actual.setScale(2, RoundingMode.HALF_UP));
+    assertEquals(message, expected.setScale(2, RoundingMode.HALF_UP), actual.setScale(2, RoundingMode.HALF_UP));
   }
 }

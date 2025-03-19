@@ -200,9 +200,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // costing
     TestCosting.class, //
 
-    //AdvPayment
-    AdvPaymentMngtTestSuite.class, //
-
     // Taxes
     TaxesTest.class, //
     ModifyTaxesTest.class, //
@@ -414,8 +411,11 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // Purchase Order Status
     PurchaseOrderStatus.class,
 
-    //MaterialMgmt
+    // MaterialMgmt
     MaterialMgmtTestSuite.class,
+
+    // AdvPayment
+    AdvPaymentMngtTestSuite.class, //
 })
 public class StandaloneTestSuite {
 }

@@ -14,15 +14,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.Before;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -36,6 +27,15 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.query.Query;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -51,6 +51,9 @@ import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 
+/**
+ * Test class for RecordID2Filling.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class RecordID2FillingTest {
 
@@ -123,6 +126,12 @@ public class RecordID2FillingTest {
   @Spy
   private RecordID2Filling recordID2Filling = new RecordID2Filling();
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mockedOBDal = mockStatic(OBDal.class);
@@ -135,7 +144,7 @@ public class RecordID2FillingTest {
 
     when(mockOBDal.createCriteria(AcctSchema.class)).thenReturn(mockAcctSchemaCriteria);
     List<AcctSchema> acctSchemaList = new ArrayList<>();
-    when(mockAcctSchema.getId()).thenReturn("testAcctSchemaId");
+    when(mockAcctSchema.getId()).thenReturn(TestConstants.TEST_ACCT_SCHEMA_ID);
     acctSchemaList.add(mockAcctSchema);
     when(mockAcctSchemaCriteria.list()).thenReturn(acctSchemaList);
 
@@ -148,17 +157,20 @@ public class RecordID2FillingTest {
     when(mockAcctCombQuery.setParameter(anyString(), any())).thenReturn(mockAcctCombQuery);
 
     when(mockGenericQuery.setParameterList(anyString(), (Collection) any())).thenReturn(mockGenericQuery);
-    when(mockAccountingFactQuery.setParameterList(anyString(), any(Collection.class))).thenReturn(mockAccountingFactQuery);
+    when(mockAccountingFactQuery.setParameterList(anyString(), any(Collection.class))).thenReturn(
+        mockAccountingFactQuery);
 
     when(mockAccountingFactQuery.setFetchSize(anyInt())).thenReturn(mockAccountingFactQuery);
     when(mockAccountingFactQuery.scroll(any(ScrollMode.class))).thenReturn(mockScrollableResults);
 
     when(mockOBDal.createQuery(eq(AccountingFact.class), anyString())).thenReturn(mockOBAccountingFactQuery);
-    when(mockOBDal.createQuery(eq(FIN_PaymentScheduleDetail.class), anyString())).thenReturn(mockOBPaymentScheduleDetailQuery);
+    when(mockOBDal.createQuery(eq(FIN_PaymentScheduleDetail.class), anyString())).thenReturn(
+        mockOBPaymentScheduleDetailQuery);
     when(mockOBAccountingFactQuery.setNamedParameter(anyString(), any())).thenReturn(mockOBAccountingFactQuery);
     when(mockOBAccountingFactQuery.setFilterOnReadableClients(anyBoolean())).thenReturn(mockOBAccountingFactQuery);
     when(mockOBAccountingFactQuery.setFilterOnReadableOrganization(anyBoolean())).thenReturn(mockOBAccountingFactQuery);
-    when(mockOBPaymentScheduleDetailQuery.setNamedParameter(anyString(), any())).thenReturn(mockOBPaymentScheduleDetailQuery);
+    when(mockOBPaymentScheduleDetailQuery.setNamedParameter(anyString(), any())).thenReturn(
+        mockOBPaymentScheduleDetailQuery);
 
     when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockFinAccPMCriteria);
     when(mockFinAccPMCriteria.add(any(Criterion.class))).thenReturn(mockFinAccPMCriteria);
@@ -168,7 +180,7 @@ public class RecordID2FillingTest {
     when(mockGenericQuery.executeUpdate()).thenReturn(10);
 
     when(mockAcctComb.getAccount()).thenReturn(mockElementValue);
-    when(mockElementValue.getId()).thenReturn("testAccountId");
+    when(mockElementValue.getId()).thenReturn(TestConstants.ACCOUNT_ID);
 
     when(mockAccountingFact.getId()).thenReturn("testAccountingFactId");
     when(mockAccountingFact.getRecordID()).thenReturn("testRecordId");
@@ -180,6 +192,9 @@ public class RecordID2FillingTest {
     loggerField.set(recordID2Filling, mockLogger);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   */
   @After
   public void tearDown() {
     if (mockedOBDal != null) {
@@ -190,15 +205,23 @@ public class RecordID2FillingTest {
     }
   }
 
+  /**
+   * Tests the getSchemas method.
+   */
   @Test
   public void testGetSchemas() {
-
     Set<AcctSchema> result = recordID2Filling.getSchemas();
 
-    assertNotNull("El resultado no debe ser nulo", result);
-    assertEquals("Debe contener los esquemas esperados", 1, result.size());
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("It should contain the expected schemas", 1, result.size());
   }
 
+  /**
+   * Tests the getBPAccountList method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetBPAccountList() throws Exception {
     List<Object[]> accountList = new ArrayList<>();
@@ -208,41 +231,62 @@ public class RecordID2FillingTest {
     accountList.add(accountRow);
     when(mockObjectArrayQuery.list()).thenReturn(accountList);
 
-    Method getBPAccountListMethod = RecordID2Filling.class.getDeclaredMethod("getBPAccountList", boolean.class, String.class);
+    Method getBPAccountListMethod = RecordID2Filling.class.getDeclaredMethod("getBPAccountList", boolean.class,
+        String.class);
     getBPAccountListMethod.setAccessible(true);
-    Set<String> result = (Set<String>) getBPAccountListMethod.invoke(recordID2Filling, true, "testAcctSchemaId");
+    Set<String> result = (Set<String>) getBPAccountListMethod.invoke(recordID2Filling, true,
+        TestConstants.TEST_ACCT_SCHEMA_ID);
 
-    // ENTONCES
-    assertNotNull("El resultado no debe ser nulo", result);
-    assertEquals("Debe contener las cuentas esperadas", 1, result.size());
-    assertTrue("Debe contener el ID de la cuenta de prueba", result.contains("testAccountId"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("It should contain the expected accounts", 1, result.size());
+    assertTrue("It should contain the test account ID", result.contains(TestConstants.ACCOUNT_ID));
   }
 
+  /**
+   * Tests the getFAAccountList method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetFAAccountList() throws Exception {
     List<AccountingCombination> accountList = new ArrayList<>();
     accountList.add(mockAcctComb);
     when(mockAcctCombQuery.list()).thenReturn(accountList);
 
-    Method getFAAccountListMethod = RecordID2Filling.class.getDeclaredMethod("getFAAccountList", boolean.class, String.class);
+    Method getFAAccountListMethod = RecordID2Filling.class.getDeclaredMethod("getFAAccountList", boolean.class,
+        String.class);
     getFAAccountListMethod.setAccessible(true);
-    Set<String> result = (Set<String>) getFAAccountListMethod.invoke(recordID2Filling, true, "testAcctSchemaId");
+    Set<String> result = (Set<String>) getFAAccountListMethod.invoke(recordID2Filling, true,
+        TestConstants.TEST_ACCT_SCHEMA_ID);
 
-    assertNotNull("El resultado no debe ser nulo", result);
-    assertEquals("Debe contener las cuentas esperadas", 1, result.size());
-    assertTrue("Debe contener el ID de la cuenta de prueba", result.contains("testAccountId"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("It should contain the expected accounts", 1, result.size());
+    assertTrue("It should contain the test account ID", result.contains(TestConstants.ACCOUNT_ID));
   }
 
+  /**
+   * Tests the getUse method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetUse() throws Exception {
-
-    Method getUseMethod = RecordID2Filling.class.getDeclaredMethod("getUse", FIN_PaymentMethod.class, String.class, boolean.class, String.class);
+    Method getUseMethod = RecordID2Filling.class.getDeclaredMethod("getUse", FIN_PaymentMethod.class, String.class,
+        boolean.class, String.class);
     getUseMethod.setAccessible(true);
     String result = (String) getUseMethod.invoke(recordID2Filling, mockPaymentMethod, "testFinAccountId", true, "PAY");
 
-    assertEquals("Debe devolver el valor esperado", "INT", result);
+    assertEquals("It should return the expected value", "INT", result);
   }
 
+  /**
+   * Tests the getAccountingEntryPosition method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetAccountingEntryPosition() throws Exception {
     List<AccountingFact> accountingFactList = new ArrayList<>();
@@ -250,15 +294,22 @@ public class RecordID2FillingTest {
     when(mockOBAccountingFactQuery.list()).thenReturn(accountingFactList);
 
     Set<String> accounts = new HashSet<>();
-    accounts.add("testAccountId");
+    accounts.add(TestConstants.ACCOUNT_ID);
 
-    Method getAccountingEntryPositionMethod = RecordID2Filling.class.getDeclaredMethod("getAccountingEntryPosition", AccountingFact.class, Set.class);
+    Method getAccountingEntryPositionMethod = RecordID2Filling.class.getDeclaredMethod("getAccountingEntryPosition",
+        AccountingFact.class, Set.class);
     getAccountingEntryPositionMethod.setAccessible(true);
     int result = (int) getAccountingEntryPositionMethod.invoke(recordID2Filling, mockAccountingFact, accounts);
 
-    assertEquals("Debe devolver la posición esperada", 0, result);
+    assertEquals("It should return the expected position", 0, result);
   }
 
+  /**
+   * Tests the getOrderedPSDs method.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetOrderedPSDs() throws Exception {
     List<FIN_PaymentScheduleDetail> psdList = new ArrayList<>();
@@ -267,12 +318,19 @@ public class RecordID2FillingTest {
 
     Method getOrderedPSDsMethod = RecordID2Filling.class.getDeclaredMethod("getOrderedPSDs", FIN_Payment.class);
     getOrderedPSDsMethod.setAccessible(true);
-    List<FIN_PaymentScheduleDetail> result = (List<FIN_PaymentScheduleDetail>) getOrderedPSDsMethod.invoke(recordID2Filling, mockPayment);
+    List<FIN_PaymentScheduleDetail> result = (List<FIN_PaymentScheduleDetail>) getOrderedPSDsMethod.invoke(
+        recordID2Filling, mockPayment);
 
-    assertNotNull("El resultado no debe ser nulo", result);
-    assertEquals("Debe contener los PSDs esperados", 1, result.size());
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("It should contain the expected PSDs", 1, result.size());
   }
 
+  /**
+   * Tests the doExecute method and verifies that queries are executed.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testDoExecute_VerifyQueriesExecuted() throws Exception {
     Set<AcctSchema> schemas = new HashSet<>();
@@ -286,10 +344,7 @@ public class RecordID2FillingTest {
     recordID2Filling.doExecute(mockProcessBundle);
 
     verify(mockGenericQuery, atLeast(3)).executeUpdate();
-
     verify(mockLogger, atLeast(3)).logln(anyString());
-
     verify(mockOBDal, atLeast(3)).flush();
   }
-
 }

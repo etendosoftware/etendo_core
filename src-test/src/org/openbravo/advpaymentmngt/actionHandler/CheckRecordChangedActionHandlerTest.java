@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
@@ -39,8 +40,6 @@ import org.openbravo.service.json.JsonUtils;
 @RunWith(MockitoJUnitRunner.class)
 public class CheckRecordChangedActionHandlerTest {
 
-  private static final String BANK_STATEMENT_LINE_ID = "TEST_BSL_ID";
-  private static final String STALE_DATE_MESSAGE = "APRM_StaleDate";
 
   @Mock
   private FIN_BankStatementLine mockBankStatementLine;
@@ -60,9 +59,10 @@ public class CheckRecordChangedActionHandlerTest {
 
   /**
    * Sets up the test environment before each test.
-   * Initializes mocks and configures default mock behavior.
+   * Initialize mocks and configures default mock behavior.
    *
-   * @throws Exception if an error occurs during setup
+   * @throws Exception
+   *     if an error occurs during setup
    */
   @Before
   public void setUp() throws Exception {
@@ -77,22 +77,24 @@ public class CheckRecordChangedActionHandlerTest {
 
     // Configure default mock behavior
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
-    when(mockOBDal.get(FIN_BankStatementLine.class, BANK_STATEMENT_LINE_ID)).thenReturn(mockBankStatementLine);
+    when(mockOBDal.get(FIN_BankStatementLine.class, TestConstants.BANK_STATEMENT_LINE_ID)).thenReturn(
+        mockBankStatementLine);
 
     // Mock the message bundle
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(STALE_DATE_MESSAGE))
-        .thenReturn("Record has been modified by another user");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.STALE_DATE_MESSAGE)).thenReturn(
+        "Record has been modified by another user");
 
     // mock OBDateUtils.convertDateToUTC
-    mockedOBDateUtils.when(() -> OBDateUtils.convertDateToUTC(any(Date.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+    mockedOBDateUtils.when(() -> OBDateUtils.convertDateToUTC(any(Date.class))).thenAnswer(
+        invocation -> invocation.getArgument(0));
   }
 
   /**
    * Cleans up the test environment after each test.
    * Closes all mock resources.
    *
-   * @throws Exception if an error occurs during cleanup
+   * @throws Exception
+   *     if an error occurs during cleanup
    */
   @After
   public void tearDown() throws Exception {
@@ -120,13 +122,14 @@ public class CheckRecordChangedActionHandlerTest {
    * Tests the execute method when the record update dates match between UI and database.
    * Verifies that no error message is returned when the dates are identical.
    *
-   * @throws Exception if an error occurs during test execution
+   * @throws Exception
+   *     if an error occurs during test execution
    */
   @Test
   public void testExecuteDatesMatch() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
-    String jsonData = createJsonData("2023-01-01T12:00:00Z");
+    String jsonData = createJsonData(TestConstants.TEST_DATE_STRING);
 
     // Setup matching dates
     Calendar calendar = Calendar.getInstance();
@@ -139,26 +142,28 @@ public class CheckRecordChangedActionHandlerTest {
     // Mock date parsing to return the same date
     SimpleDateFormat mockDateFormat = mock(SimpleDateFormat.class);
     mockedJsonUtils.when(JsonUtils::createJSTimeFormat).thenReturn(mockDateFormat);
-    when(mockDateFormat.parse("2023-01-01T12:00:00Z")).thenReturn(testDate);
+    when(mockDateFormat.parse(TestConstants.TEST_DATE_STRING)).thenReturn(testDate);
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, jsonData);
 
     // THEN
-    assertNull("No error message should be returned when dates match", result.optJSONObject("message"));
+    assertNull("No error message should be returned when dates match",
+        result.optJSONObject(TestConstants.RESPONSE_MESSAGE));
   }
 
   /**
    * Tests the execute method when the record update dates don't match between UI and database.
    * Verifies that an appropriate error message is returned when the dates differ.
    *
-   * @throws Exception if an error occurs during test execution
+   * @throws Exception
+   *     if an error occurs during test execution
    */
   @Test
   public void testExecuteDatesMismatch() throws Exception {
     // GIVEN
     Map<String, Object> parameters = new HashMap<>();
-    String jsonData = createJsonData("2023-01-01T12:00:00Z");
+    String jsonData = createJsonData(TestConstants.TEST_DATE_STRING);
 
     // Setup different dates
     // DB date (one hour later than UI date)
@@ -178,25 +183,26 @@ public class CheckRecordChangedActionHandlerTest {
     // Mock date parsing to return the UI date
     SimpleDateFormat mockDateFormat = mock(SimpleDateFormat.class);
     mockedJsonUtils.when(JsonUtils::createJSTimeFormat).thenReturn(mockDateFormat);
-    when(mockDateFormat.parse("2023-01-01T12:00:00Z")).thenReturn(uiDate);
+    when(mockDateFormat.parse(TestConstants.TEST_DATE_STRING)).thenReturn(uiDate);
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, jsonData);
 
     // THEN
-    JSONObject message = result.getJSONObject("message");
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
     assertNotNull("Error message should be returned when dates don't match", message);
-    assertEquals("Error message should have severity 'error'", "error", message.getString("severity"));
-    assertEquals("Error message should have title 'Error'", "Error", message.getString("title"));
-    assertEquals("Error message should contain stale date message",
-        "Record has been modified by another user", message.getString("text"));
+    assertEquals("Error message should have severity 'error'", TestConstants.ERROR, message.getString("severity"));
+    assertEquals("Error message should have title 'Error'", TestConstants.USER_ERROR, message.getString("title"));
+    assertEquals("Error message should contain stale date message", "Record has been modified by another user",
+        message.getString("text"));
   }
 
   /**
    * Tests the execute method's handling of JSON parsing exceptions.
    * Verifies that an appropriate error message is returned when invalid JSON is provided.
    *
-   * @throws Exception if an error occurs during test execution
+   * @throws Exception
+   *     if an error occurs during test execution
    */
   @Test
   public void testExecuteJsonException() throws Exception {
@@ -208,10 +214,10 @@ public class CheckRecordChangedActionHandlerTest {
     JSONObject result = actionHandler.execute(parameters, invalidJsonData);
 
     // THEN
-    JSONObject message = result.getJSONObject("message");
+    JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
     assertNotNull("Error message should be returned for invalid JSON", message);
-    assertEquals("Error message should have severity 'error'", "error", message.getString("severity"));
-    assertEquals("Error message should have title 'Error'", "Error", message.getString("title"));
+    assertEquals("Error message should have severity 'error'", TestConstants.ERROR, message.getString("severity"));
+    assertEquals("Error message should have title 'Error'", TestConstants.USER_ERROR, message.getString("title"));
     assertEquals("Error message should be empty for JSON exception", "", message.getString("text"));
   }
 
@@ -220,7 +226,7 @@ public class CheckRecordChangedActionHandlerTest {
    */
   private String createJsonData(String dateStr) throws JSONException {
     JSONObject jsonData = new JSONObject();
-    jsonData.put("bankStatementLineId", BANK_STATEMENT_LINE_ID);
+    jsonData.put("bankStatementLineId", TestConstants.BANK_STATEMENT_LINE_ID);
     jsonData.put("updated", dateStr);
     return jsonData.toString();
   }

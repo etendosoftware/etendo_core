@@ -25,6 +25,7 @@ import org.openbravo.advpaymentmngt.actionHandler.ReceivedFromPaymentMethodActio
 import org.openbravo.advpaymentmngt.actionHandler.SalesOrderAddPaymentDefaultValuesTest;
 import org.openbravo.advpaymentmngt.actionHandler.UnMatchSelectedTransactionsActionHandlerTest;
 import org.openbravo.advpaymentmngt.ad_actionbutton.GLItemSelectorFilterExpressionTest;
+import org.openbravo.advpaymentmngt.dao.MatchTransactionDaoTest;
 import org.openbravo.advpaymentmngt.dao.TransactionsDaoTest;
 import org.openbravo.advpaymentmngt.executionprocess.LeaveAsCreditTest;
 import org.openbravo.advpaymentmngt.executionprocess.PrintCheckTest;
@@ -91,6 +92,7 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 
+    // actionHandler
     CheckExistsOverissueBinForRFCShipmentWHTest.class,
     MatchStatementOnLoadGetPreferenceActionHandlerTest.class,
     ReceivedFromPaymentMethodActionHandlerTest.class,
@@ -112,15 +114,17 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     GLItemTransactionActionHandlerTest.class,
     MatchStatementActionHandlerTest.class,
 
-    //tests hqlinjections
+    // tests hqlinjections
     AddPaymentCreditToUseInjectorTest.class,
     CreditToUseTransformerTest.class,
     MatchStatementTransformerTest.class,
     TransactionsToMatchTransformerTest.class,
-    //executionprocess
+
+    // executionprocess
     PrintCheckTest.class,
     LeaveAsCreditTest.class,
-    //tests filterexpression
+
+    // tests filterexpression
     MatchStatementFilterExpressionHandlerTest.class,
     AddTransactionFilterExpressionTest.class,
     AddOrderOrInvoiceFilterExpressionTest.class,
@@ -151,21 +155,25 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     SalesInvoiceAddPaymentDisplayLogicsTest.class,
     AddPaymentReadOnlyLogicsExpressionTest.class,
 
-    //hooks
+    // hooks
     PaymentProcessOrderHookTest.class,
 
-    //dao
+    // dao
     TransactionsDaoTest.class,
+    MatchTransactionDaoTest.class,
 
-    //process
+    // process
     RecordID2FillingTest.class,
 
-    //ad_actionbutton
+    // ad_actionbutton
     GLItemSelectorFilterExpressionTest.class,
-    //utility
+
+    // utility
     FIN_MatchingTransactionTest.class,
     ValueTest.class,
-    //other tests
+
+    // other tests
+    DocumentNumberGeneration.class,
     PaymentTest_01.class,
     PaymentTest_02.class,
     PaymentTest_03.class,
@@ -175,14 +183,10 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
     PaymentTest_06.class,
     PaymentTest_11.class,
     ReversePaymentTest.class,
-    DocumentNumberGeneration.class,
     FinancialAccountTest.class,
     PaymentMethodTest.class,
     APRMActionHandlerTest.class,
     APRMApplicationProviderTest.class,
-
-
-
 })
 public class AdvPaymentMngtTestSuite {
 }

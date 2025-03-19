@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.client.application.OBBindingsConstants;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
@@ -81,7 +82,7 @@ public class AddPaymentDisplayLogicsExpressionTest {
   @Test
   public void testGetExpressionOrganizationTrue() throws Exception {
     // GIVEN
-    Map<String, String> requestMap = createRequestMap("ad_org_id_display_logic", "TestWindow");
+    Map<String, String> requestMap = createRequestMap(TestConstants.AD_ORG_ID_DISPLAY_LOGIC, TestConstants.TEST_WINDOW);
 
     // Set up the mock to return a handler for the window ID
     mockHandlerSelection();
@@ -107,7 +108,7 @@ public class AddPaymentDisplayLogicsExpressionTest {
   @Test
   public void testGetExpressionOrganizationFalse() throws Exception {
     // GIVEN
-    Map<String, String> requestMap = createRequestMap("ad_org_id_display_logic", "TestWindow");
+    Map<String, String> requestMap = createRequestMap(TestConstants.AD_ORG_ID_DISPLAY_LOGIC, TestConstants.TEST_WINDOW);
 
     // Set up the mock to return a handler for the window ID
     mockHandlerSelection();
@@ -133,7 +134,7 @@ public class AddPaymentDisplayLogicsExpressionTest {
   @Test
   public void testGetExpressionDocumentTrue() throws Exception {
     // GIVEN
-    Map<String, String> requestMap = createRequestMap("trxtype_display_logic", "TestWindow");
+    Map<String, String> requestMap = createRequestMap("trxtype_display_logic", TestConstants.TEST_WINDOW);
 
     // Set up the mock to return a handler for the window ID
     mockHandlerSelection();
@@ -159,7 +160,7 @@ public class AddPaymentDisplayLogicsExpressionTest {
   @Test
   public void testGetExpressionCreditToUseTrue() throws Exception {
     // GIVEN
-    Map<String, String> requestMap = createRequestMap("credit_to_use_display_logic", "TestWindow");
+    Map<String, String> requestMap = createRequestMap("credit_to_use_display_logic", TestConstants.TEST_WINDOW);
 
     // Set up the mock to return a handler for the window ID
     mockHandlerSelection();
@@ -185,7 +186,7 @@ public class AddPaymentDisplayLogicsExpressionTest {
   @Test
   public void testGetExpressionOverpaymentActionTrue() throws Exception {
     // GIVEN
-    Map<String, String> requestMap = createRequestMap("overpayment_action_display_logic", "TestWindow");
+    Map<String, String> requestMap = createRequestMap("overpayment_action_display_logic", TestConstants.TEST_WINDOW);
 
     // Set up the mock to return a handler for the window ID
     mockHandlerSelection();
@@ -211,7 +212,7 @@ public class AddPaymentDisplayLogicsExpressionTest {
   @Test
   public void testGetExpressionBankStatementLineTrue() throws Exception {
     // GIVEN
-    Map<String, String> requestMap = createRequestMap("bslamount_display_logic", "TestWindow");
+    Map<String, String> requestMap = createRequestMap("bslamount_display_logic", TestConstants.TEST_WINDOW);
 
     // Set up the mock to return a handler for the window ID
     mockHandlerSelection();
@@ -236,12 +237,10 @@ public class AddPaymentDisplayLogicsExpressionTest {
   @Test
   public void testGetExpressionHandlerException() throws Exception {
     // GIVEN
-    Map<String, String> requestMap = createRequestMap("ad_org_id_display_logic", "TestWindow");
+    Map<String, String> requestMap = createRequestMap(TestConstants.AD_ORG_ID_DISPLAY_LOGIC, TestConstants.TEST_WINDOW);
 
-    // Set up the mock to return a handler for the window ID
     mockHandlerSelection();
 
-    // Prepare the handler to throw an exception
     when(mockHandler.getOrganizationDisplayLogic(requestMap)).thenThrow(new RuntimeException("Test exception"));
 
     // WHEN
@@ -285,6 +284,5 @@ public class AddPaymentDisplayLogicsExpressionTest {
     // Return our mockInstance when select is called with the right selector
     when(addPaymentFilterExpressionHandlers.select(any(ComponentProvider.Selector.class))).thenReturn(mockInstance);
 
-    // Set up the sequence
   }
 }

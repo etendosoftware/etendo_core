@@ -167,7 +167,7 @@ public class AddPaymentOnProcessActionHandlerTest {
     // Verify
     assertTrue(result.has(TestConstants.RESPONSE_MESSAGE));
     JSONObject message = result.getJSONObject(TestConstants.RESPONSE_MESSAGE);
-    assertEquals("success", message.getString(TestConstants.SEVERITY));
+    assertEquals(TestConstants.RESULT_SUCCESS, message.getString(TestConstants.SEVERITY));
     assertEquals("Ok", message.getString("text"));
   }
 
@@ -258,6 +258,16 @@ public class AddPaymentOnProcessActionHandlerTest {
    * @return JSON string containing payment data
    */
   private String createJsonData(boolean usesCredit, boolean generatesCredit, String currencyId) {
-    return "{" + "\"issotrx\": \"true\"," + "\"finFinancialAccount\": \"" + FINANCIAL_ACCOUNT_ID + "\"," + "\"receivedFrom\": \"" + BUSINESS_PARTNER_ID + "\"," + "\"currencyId\": \"" + currencyId + "\"," + "\"usesCredit\": " + usesCredit + "," + "\"generatesCredit\": " + generatesCredit + "}";
+    StringBuilder jsonBuilder = new StringBuilder();
+    jsonBuilder.append("{")
+        .append("\"issotrx\": \"true\",")
+        .append("\"finFinancialAccount\": \"").append(FINANCIAL_ACCOUNT_ID).append("\",")
+        .append("\"receivedFrom\": \"").append(BUSINESS_PARTNER_ID).append("\",")
+        .append("\"currencyId\": \"").append(currencyId).append("\",")
+        .append("\"usesCredit\": ").append(usesCredit).append(",")
+        .append("\"generatesCredit\": ").append(generatesCredit)
+        .append("}");
+
+    return jsonBuilder.toString();
   }
 }

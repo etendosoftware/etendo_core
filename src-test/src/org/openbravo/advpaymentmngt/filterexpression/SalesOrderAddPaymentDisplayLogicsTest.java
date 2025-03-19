@@ -24,18 +24,18 @@ import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.order.Order;
-import org.openbravo.test.base.OBBaseTest;
 
 /**
- * Test class for SalesOrderAddPaymentDisplayLogics
+ * Test class for SalesOrderAddPaymentDisplayLogics.
  */
-public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
+public class SalesOrderAddPaymentDisplayLogicsTest {
 
   private SalesOrderAddPaymentDisplayLogics displayLogics;
   private MockedStatic<OBDal> mockedOBDal;
@@ -57,6 +57,12 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
   @Mock
   private Currency mockCurrency;
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
@@ -73,6 +79,12 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     when(mockOrder.getCurrency()).thenReturn(mockCurrency);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedOBDal != null) {
@@ -86,6 +98,9 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     }
   }
 
+  /**
+   * Tests the getSeq method.
+   */
   @Test
   public void testGetSeq() {
     // WHEN
@@ -95,6 +110,12 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertEquals("The sequence should be 100", 100L, sequence);
   }
 
+  /**
+   * Tests the getOrganizationDisplayLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetOrganizationDisplayLogic() throws JSONException {
     // GIVEN
@@ -107,6 +128,12 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Organization display logic should return false", result);
   }
 
+  /**
+   * Tests the getDocumentDisplayLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetDocumentDisplayLogic() throws JSONException {
     // GIVEN
@@ -119,6 +146,12 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Document display logic should return false", result);
   }
 
+  /**
+   * Tests the getBankStatementLineDisplayLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetBankStatementLineDisplayLogic() throws JSONException {
     // GIVEN
@@ -131,19 +164,23 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Bank statement line display logic should return false", result);
   }
 
+  /**
+   * Tests the getCreditToUseDisplayLogic method with positive credit.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
+   */
   @Test
   public void testGetCreditToUseDisplayLogicWithPositiveCredit() throws Exception {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpcOrderId", "TEST_ORDER_ID");
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.INPC_ORDER_ID, TestConstants.TEST_ORDER_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class,
-        (mock, ctx) -> {
-          when(mock.getCustomerCredit(any(BusinessPartner.class), anyBoolean(), any(Organization.class), any(Currency.class)))
-              .thenReturn(new BigDecimal("100.00"));
-        });
+    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class, (mock, ctx) -> when(
+        mock.getCustomerCredit(any(BusinessPartner.class), anyBoolean(), any(Organization.class),
+            any(Currency.class))).thenReturn(new BigDecimal("100.00")));
 
     // WHEN
     boolean result = displayLogics.getCreditToUseDisplayLogic(requestMap);
@@ -152,19 +189,23 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertTrue("Credit to use display logic should return true for positive credit", result);
   }
 
+  /**
+   * Tests the getCreditToUseDisplayLogic method with zero credit.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
+   */
   @Test
   public void testGetCreditToUseDisplayLogicWithZeroCredit() throws Exception {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpcOrderId", "TEST_ORDER_ID");
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.INPC_ORDER_ID, TestConstants.TEST_ORDER_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class,
-        (mock, ctx) -> {
-          when(mock.getCustomerCredit(any(BusinessPartner.class), anyBoolean(), any(Organization.class), any(Currency.class)))
-              .thenReturn(BigDecimal.ZERO);
-        });
+    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class, (mock, ctx) -> when(
+        mock.getCustomerCredit(any(BusinessPartner.class), anyBoolean(), any(Organization.class),
+            any(Currency.class))).thenReturn(BigDecimal.ZERO));
 
     // WHEN
     boolean result = displayLogics.getCreditToUseDisplayLogic(requestMap);
@@ -173,19 +214,23 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Credit to use display logic should return false for zero credit", result);
   }
 
+  /**
+   * Tests the getCreditToUseDisplayLogic method with negative credit.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
+   */
   @Test
   public void testGetCreditToUseDisplayLogicWithNegativeCredit() throws Exception {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpcOrderId", "TEST_ORDER_ID");
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.INPC_ORDER_ID, TestConstants.TEST_ORDER_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class,
-        (mock, ctx) -> {
-          when(mock.getCustomerCredit(any(BusinessPartner.class), anyBoolean(), any(Organization.class), any(Currency.class)))
-              .thenReturn(new BigDecimal("-50.00"));
-        });
+    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class, (mock, ctx) -> when(
+        mock.getCustomerCredit(any(BusinessPartner.class), anyBoolean(), any(Organization.class),
+            any(Currency.class))).thenReturn(new BigDecimal("-50.00")));
 
     // WHEN
     boolean result = displayLogics.getCreditToUseDisplayLogic(requestMap);
@@ -194,13 +239,19 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Credit to use display logic should return false for negative credit", result);
   }
 
+  /**
+   * Tests the getCreditToUseDisplayLogic method with null business partner.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
+   */
   @Test
   public void testGetCreditToUseDisplayLogicWithNullBusinessPartner() throws Exception {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpcOrderId", "TEST_ORDER_ID");
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.INPC_ORDER_ID, TestConstants.TEST_ORDER_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // Set business partner to null
     when(mockOrder.getBusinessPartner()).thenReturn(null);
@@ -212,13 +263,19 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Credit to use display logic should return false for null business partner", result);
   }
 
+  /**
+   * Tests the getOverpaymentActionDisplayLogic method with positive difference.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetOverpaymentActionDisplayLogicWithPositiveDifference() throws JSONException {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("difference", 50.0);
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.DIFFERENCE, 50.0);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // WHEN
     boolean result = displayLogics.getOverpaymentActionDisplayLogic(requestMap);
@@ -227,13 +284,19 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertTrue("Overpayment action display logic should return true for positive difference", result);
   }
 
+  /**
+   * Tests the getOverpaymentActionDisplayLogic method with zero difference.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetOverpaymentActionDisplayLogicWithZeroDifference() throws JSONException {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("difference", 0.0);
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.DIFFERENCE, 0.0);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // WHEN
     boolean result = displayLogics.getOverpaymentActionDisplayLogic(requestMap);
@@ -242,13 +305,19 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Overpayment action display logic should return false for zero difference", result);
   }
 
+  /**
+   * Tests the getOverpaymentActionDisplayLogic method with negative difference.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetOverpaymentActionDisplayLogicWithNegativeDifference() throws JSONException {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("difference", -25.0);
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.DIFFERENCE, -25.0);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // WHEN
     boolean result = displayLogics.getOverpaymentActionDisplayLogic(requestMap);
@@ -257,6 +326,12 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Overpayment action display logic should return false for negative difference", result);
   }
 
+  /**
+   * Tests the getOverpaymentActionDisplayLogic method with null context.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetOverpaymentActionDisplayLogicWithNullContext() throws JSONException {
     // GIVEN
@@ -269,13 +344,19 @@ public class SalesOrderAddPaymentDisplayLogicsTest extends OBBaseTest {
     assertFalse("Overpayment action display logic should return false for null context", result);
   }
 
+  /**
+   * Tests the getOverpaymentActionDisplayLogic method without difference in context.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetOverpaymentActionDisplayLogicWithoutDifference() throws JSONException {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
     // No difference key in the context
-    requestMap.put("context", context.toString());
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // WHEN
     boolean result = displayLogics.getOverpaymentActionDisplayLogic(requestMap);

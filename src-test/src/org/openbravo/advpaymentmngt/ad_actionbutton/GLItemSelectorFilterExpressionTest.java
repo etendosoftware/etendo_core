@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.dal.core.OBContext;
 
 /**
@@ -47,7 +48,7 @@ public class GLItemSelectorFilterExpressionTest {
   public void testGetExpressionExceptionHandling() {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
-    requestMap.put("ad_org_id", "123");
+    requestMap.put(TestConstants.AD_ORG_ID, "123");
 
     try (MockedStatic<OBContext> obContextMock = Mockito.mockStatic(OBContext.class)) {
       obContextMock.when(OBContext::getOBContext).thenThrow(new RuntimeException("Test Exception"));
@@ -76,17 +77,17 @@ public class GLItemSelectorFilterExpressionTest {
 
     // Test with valid AD_ORG_ID
     JSONObject validContext = new JSONObject();
-    validContext.put("ad_org_id", "123");
+    validContext.put(TestConstants.AD_ORG_ID, "123");
     assertEquals(true, method.invoke(filterExpression, validContext));
 
     // Test with null AD_ORG_ID
     JSONObject nullContext = new JSONObject();
-    nullContext.put("ad_org_id", JSONObject.NULL);
+    nullContext.put(TestConstants.AD_ORG_ID, JSONObject.NULL);
     assertEquals(false, method.invoke(filterExpression, nullContext));
 
     // Test with empty AD_ORG_ID
     JSONObject emptyContext = new JSONObject();
-    emptyContext.put("ad_org_id", "");
+    emptyContext.put(TestConstants.AD_ORG_ID, "");
     assertEquals(false, method.invoke(filterExpression, emptyContext));
   }
 
@@ -106,17 +107,17 @@ public class GLItemSelectorFilterExpressionTest {
 
     // Test with valid inpadOrgId
     JSONObject validContext = new JSONObject();
-    validContext.put("inpadOrgId", "456");
+    validContext.put(TestConstants.INPAD_ORG_ID, "456");
     assertEquals(true, method.invoke(filterExpression, validContext));
 
     // Test with null inpadOrgId
     JSONObject nullContext = new JSONObject();
-    nullContext.put("inpadOrgId", JSONObject.NULL);
+    nullContext.put(TestConstants.INPAD_ORG_ID, JSONObject.NULL);
     assertEquals(false, method.invoke(filterExpression, nullContext));
 
     // Test with empty inpadOrgId
     JSONObject emptyContext = new JSONObject();
-    emptyContext.put("inpadOrgId", "");
+    emptyContext.put(TestConstants.INPAD_ORG_ID, "");
     assertEquals(false, method.invoke(filterExpression, emptyContext));
   }
 }

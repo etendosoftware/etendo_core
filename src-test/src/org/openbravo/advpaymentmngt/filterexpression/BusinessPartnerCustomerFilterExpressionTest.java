@@ -8,32 +8,37 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.client.application.OBBindingsConstants;
-import org.openbravo.client.kernel.RequestContext;
 
+/**
+ * Unit tests for the BusinessPartnerCustomerFilterExpression class.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class BusinessPartnerCustomerFilterExpressionTest {
 
     private BusinessPartnerCustomerFilterExpression filterExpression;
 
-    @Mock
-    private RequestContext mockRequestContext;
-
+    /**
+     * Sets up the test environment before each test.
+     */
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         filterExpression = new BusinessPartnerCustomerFilterExpression();
     }
 
+    /**
+     * Tests the getExpression method for a financial account window with a sales transaction.
+     */
     @Test
     public void testGetExpressionFinancialAccountWindowSalesTransaction() {
         // GIVEN
         Map<String, String> requestMap = new HashMap<>();
-        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, "94EAA455D2644E04AB25D93BE5157B6D");
-        requestMap.put("issotrx", "true");
+        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, TestConstants.FINANCIAL_ACCOUNT_WINDOW_ID);
+        requestMap.put(TestConstants.IS_SO_TRX, TestConstants.TRUE);
 
         // WHEN
         String result = filterExpression.getExpression(requestMap);
@@ -42,12 +47,15 @@ public class BusinessPartnerCustomerFilterExpressionTest {
         assertEquals("true", result);
     }
 
+    /**
+     * Tests the getExpression method for a financial account window with a non-sales transaction.
+     */
     @Test
     public void testGetExpressionFinancialAccountWindowNonSalesTransaction() {
         // GIVEN
         Map<String, String> requestMap = new HashMap<>();
-        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, "94EAA455D2644E04AB25D93BE5157B6D");
-        requestMap.put("issotrx", "false");
+        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, TestConstants.FINANCIAL_ACCOUNT_WINDOW_ID);
+        requestMap.put(TestConstants.IS_SO_TRX, "false");
 
         // WHEN
         String result = filterExpression.getExpression(requestMap);
@@ -56,11 +64,14 @@ public class BusinessPartnerCustomerFilterExpressionTest {
         assertEquals("", result);
     }
 
+    /**
+     * Tests the getExpression method for a financial account window with isSOTrx set to "Y".
+     */
     @Test
-    public void testGetExpressionFinancialAccountWindowIsSOTrx_Y() {
+    public void testGetExpressionFinancialAccountWindowIsSOTrxY() {
         // GIVEN
         Map<String, String> requestMap = new HashMap<>();
-        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, "94EAA455D2644E04AB25D93BE5157B6D");
+        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, TestConstants.FINANCIAL_ACCOUNT_WINDOW_ID);
         requestMap.put("IsSOTrx", "Y");
 
         // WHEN
@@ -70,12 +81,15 @@ public class BusinessPartnerCustomerFilterExpressionTest {
         assertEquals("true", result);
     }
 
+    /**
+     * Tests the getExpression method for a financial account window with isSOTrx set to "N".
+     */
     @Test
-    public void testGetExpressionFinancialAccountWindowIsSOTrx_N() {
+    public void testGetExpressionFinancialAccountWindowIsSOTrxN() {
         // GIVEN
         Map<String, String> requestMap = new HashMap<>();
-        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, "94EAA455D2644E04AB25D93BE5157B6D");
-        requestMap.put("IsSOTrx", "N");
+        requestMap.put(OBBindingsConstants.WINDOW_ID_PARAM, TestConstants.FINANCIAL_ACCOUNT_WINDOW_ID);
+        requestMap.put(TestConstants.IS_SO_TRX, "N");
 
         // WHEN
         String result = filterExpression.getExpression(requestMap);
@@ -84,11 +98,14 @@ public class BusinessPartnerCustomerFilterExpressionTest {
         assertEquals("", result);
     }
 
+    /**
+     * Tests the getExpression method with a null window ID and a sales transaction.
+     */
     @Test
     public void testGetExpressionNullWindowIdSalesTransaction() {
         // GIVEN
         Map<String, String> requestMap = new HashMap<>();
-        requestMap.put("issotrx", "true");
+        requestMap.put(TestConstants.IS_SO_TRX, TestConstants.TRUE);
 
         // WHEN
         String result = filterExpression.getExpression(requestMap);
@@ -96,5 +113,4 @@ public class BusinessPartnerCustomerFilterExpressionTest {
         // THEN
         assertEquals("true", result);
     }
-
 }

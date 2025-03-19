@@ -87,6 +87,9 @@ public class PaymentTest_08 extends WeldBaseTest {
     TestUtility.setTestContextSpain();
   }
 
+  /**
+   * Runs the Payment_08 test.
+   */
   @Test
   public void testRunPayment_08() {
     boolean exception = false;
@@ -123,7 +126,12 @@ public class PaymentTest_08 extends WeldBaseTest {
     assertFalse(exception);
 
   }
-
+  /**
+   * Sets up the data for the test.
+   *
+   * @return the created invoice
+   * @throws Exception if an error occurs during data setup
+   */
   private Invoice dataSetup() throws Exception {
 
     // DATA SETUP

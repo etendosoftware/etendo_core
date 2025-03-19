@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
@@ -33,10 +34,9 @@ import org.openbravo.model.common.enterprise.Organization;
 @RunWith(MockitoJUnitRunner.class)
 public class AddPaymentOrganizationActionHandlerTest {
 
-  private static final String ORG_ID = "TEST_ORG_ID";
-  private static final String CURRENCY_ID = "TEST_CURRENCY_ID";
-  private static final String CURRENCY_IDENTIFIER = "USD";
-
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -85,17 +85,17 @@ public class AddPaymentOrganizationActionHandlerTest {
     mockedOBContext.when(OBContext::restorePreviousMode).thenAnswer(invocation -> null);
 
     // Mock StringUtils
-    mockedStringUtils.when(() -> StringUtils.isNotEmpty(ORG_ID)).thenReturn(true);
+    mockedStringUtils.when(() -> StringUtils.isNotEmpty(TestConstants.ORG_ID)).thenReturn(true);
     mockedStringUtils.when(() -> StringUtils.isNotEmpty("")).thenReturn(false);
     mockedStringUtils.when(() -> StringUtils.isNotEmpty(null)).thenReturn(false);
 
     // Setup organization and currency
-    when(obDal.get(Organization.class, ORG_ID)).thenReturn(organization);
+    when(obDal.get(Organization.class, TestConstants.ORG_ID)).thenReturn(organization);
     when(obContext.getOrganizationStructureProvider()).thenReturn(orgStructureProvider);
     when(orgStructureProvider.getLegalEntity(organization)).thenReturn(legalEntity);
     when(legalEntity.getCurrency()).thenReturn(currency);
-    when(currency.getId()).thenReturn(CURRENCY_ID);
-    when(currency.getIdentifier()).thenReturn(CURRENCY_IDENTIFIER);
+    when(currency.getId()).thenReturn(TestConstants.CURRENCY_ID);
+    when(currency.getIdentifier()).thenReturn(TestConstants.CURRENCY_IDENTIFIER);
   }
 
   /**
@@ -117,20 +117,21 @@ public class AddPaymentOrganizationActionHandlerTest {
   /**
    * Tests the execute method with a valid organization.
    *
-   * @throws Exception if an error occurs during the test
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteWithValidOrganization() throws Exception {
     // Given
-    String jsonData = createJsonData(ORG_ID);
+    String jsonData = createJsonData(TestConstants.ORG_ID);
     Map<String, Object> parameters = new HashMap<>();
 
     // When
     JSONObject result = handler.execute(parameters, jsonData);
 
     // Then
-    assertEquals(CURRENCY_ID, result.getString("currency"));
-    assertEquals(CURRENCY_IDENTIFIER, result.getString("currencyIdIdentifier"));
+    assertEquals(TestConstants.CURRENCY_ID, result.getString("currency"));
+    assertEquals(TestConstants.CURRENCY_IDENTIFIER, result.getString("currencyIdIdentifier"));
   }
 
   /**
@@ -190,12 +191,13 @@ public class AddPaymentOrganizationActionHandlerTest {
   /**
    * Tests the execute method with a null currency.
    *
-   * @throws Exception if an error occurs during the test
+   * @throws Exception
+   *     if an error occurs during the test
    */
   @Test
   public void testExecuteWithNullCurrency() throws Exception {
     // Given
-    String jsonData = createJsonData(ORG_ID);
+    String jsonData = createJsonData(TestConstants.ORG_ID);
     Map<String, Object> parameters = new HashMap<>();
 
     // Mock null currency
@@ -213,7 +215,8 @@ public class AddPaymentOrganizationActionHandlerTest {
   /**
    * Creates JSON data for the given organization ID.
    *
-   * @param organizationId the organization ID
+   * @param organizationId
+   *     the organization ID
    * @return the JSON data as a string
    */
   private String createJsonData(String organizationId) {

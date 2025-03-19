@@ -17,6 +17,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -28,6 +29,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_Payment;
  */
 public class AddTransactionOnChangePaymentActionHandlerTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
   private AddTransactionOnChangePaymentActionHandler actionHandler;
@@ -85,12 +89,12 @@ public class AddTransactionOnChangePaymentActionHandlerTest {
 
     // WHEN
     finUtilityMock.when(() -> FIN_Utility.getFinAccTransactionDescription("Test Description", "", "")).thenReturn(
-        "Processed Description");
+        TestConstants.PROCESSED_DESCRIPTION);
 
     JSONObject result = actionHandler.execute(parameters, data);
 
     // THEN
-    assertEquals("Processed Description", result.getString("description"));
+    assertEquals(TestConstants.PROCESSED_DESCRIPTION, result.getString("description"));
     assertEquals(BigDecimal.ZERO, result.get("depositamt"));
     assertEquals(BigDecimal.ZERO, result.get("paymentamt"));
   }
@@ -120,7 +124,7 @@ public class AddTransactionOnChangePaymentActionHandlerTest {
     // Configure utility mock
     finUtilityMock.when(
         () -> FIN_Utility.getFinAccTransactionDescription("Test Description", "", "Payment Description")).thenReturn(
-        "Processed Description");
+        TestConstants.PROCESSED_DESCRIPTION);
 
     // WHEN
     JSONObject result = actionHandler.execute(parameters, data);
@@ -129,7 +133,7 @@ public class AddTransactionOnChangePaymentActionHandlerTest {
     assertEquals(BigDecimal.TEN, result.get("depositamt"));
     assertEquals(BigDecimal.ZERO, result.get("paymentamt"));
     assertEquals("testBPartnerId", result.getString("cBpartnerId"));
-    assertEquals("Processed Description", result.getString("description"));
+    assertEquals(TestConstants.PROCESSED_DESCRIPTION, result.getString("description"));
   }
 
   /**

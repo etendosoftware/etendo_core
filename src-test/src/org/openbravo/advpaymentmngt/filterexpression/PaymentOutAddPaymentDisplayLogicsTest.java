@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 
@@ -49,8 +50,8 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
     requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
     try {
-      context.put("inpfinPaymentId", "TEST_PAYMENT_ID");
-      requestMap.put("context", context.toString());
+      context.put("inpfinPaymentId", TestConstants.PAYMENT_ID);
+      requestMap.put(TestConstants.CONTEXT, context.toString());
     } catch (JSONException e) {
       fail("Error setting up test: " + e.getMessage());
     }
@@ -111,7 +112,7 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
   public void testCreditToUseDisplayLogicNoBpartner() throws JSONException {
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(eq(FIN_Payment.class), eq("TEST_PAYMENT_ID"))).thenReturn(payment);
+      when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
       when(payment.getGeneratedCredit()).thenReturn(BigDecimal.ZERO);
       when(payment.getBusinessPartner()).thenReturn(null);
 
@@ -127,10 +128,10 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
    *     if there is an error during JSON processing
    */
   @Test
-  public void testCreditToUseDisplayLogic_WithGeneratedCredit() throws JSONException {
+  public void testCreditToUseDisplayLogicWithGeneratedCredit() throws JSONException {
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(eq(FIN_Payment.class), eq("TEST_PAYMENT_ID"))).thenReturn(payment);
+      when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
       when(payment.getGeneratedCredit()).thenReturn(BigDecimal.TEN);
 
       boolean result = logicsHandler.getCreditToUseDisplayLogic(requestMap);
@@ -148,11 +149,11 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
   public void testGetPayment() throws Exception {
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(eq(FIN_Payment.class), eq("TEST_PAYMENT_ID"))).thenReturn(payment);
+      when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
 
       JSONObject context = new JSONObject();
-      context.put("inpfinPaymentId", "TEST_PAYMENT_ID");
-      requestMap.put("context", context.toString());
+      context.put("inpfinPaymentId", TestConstants.PAYMENT_ID);
+      requestMap.put(TestConstants.CONTEXT, context.toString());
 
       java.lang.reflect.Method getPaymentMethod = PaymentOutAddPaymentDisplayLogics.class.getDeclaredMethod(
           "getPayment", Map.class);
@@ -160,17 +161,17 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
 
       FIN_Payment result = (FIN_Payment) getPaymentMethod.invoke(logicsHandler, requestMap);
       assertSame("Should return the payment object for inpfinPaymentId", payment, result);
-      verify(obDal).get(FIN_Payment.class, "TEST_PAYMENT_ID");
+      verify(obDal).get(FIN_Payment.class, TestConstants.PAYMENT_ID);
 
       context = new JSONObject();
-      context.put("Fin_Payment_ID", "TEST_PAYMENT_ID_2");
-      requestMap.put("context", context.toString());
+      context.put("Fin_Payment_ID", TestConstants.PAYMENT_ID_2);
+      requestMap.put(TestConstants.CONTEXT, context.toString());
 
-      when(obDal.get(eq(FIN_Payment.class), eq("TEST_PAYMENT_ID_2"))).thenReturn(payment);
+      when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID_2))).thenReturn(payment);
 
       result = (FIN_Payment) getPaymentMethod.invoke(logicsHandler, requestMap);
       assertSame("Should return the payment object for Fin_Payment_ID", payment, result);
-      verify(obDal).get(FIN_Payment.class, "TEST_PAYMENT_ID_2");
+      verify(obDal).get(FIN_Payment.class, TestConstants.PAYMENT_ID_2);
     }
   }
 
@@ -185,7 +186,7 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
     BigDecimal creditAmount = BigDecimal.valueOf(123.45);
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(eq(FIN_Payment.class), eq("TEST_PAYMENT_ID"))).thenReturn(payment);
+      when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
       when(payment.getGeneratedCredit()).thenReturn(creditAmount);
 
       java.lang.reflect.Method getGeneratedCreditMethod = PaymentOutAddPaymentDisplayLogics.class.getDeclaredMethod(

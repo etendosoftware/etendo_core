@@ -13,16 +13,28 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.openbravo.advpaymentmngt.TestConstants;
 
+/**
+ * Unit tests for the SalesInvoiceAddPaymentReadOnlyLogics class.
+ */
 public class SalesInvoiceAddPaymentReadOnlyLogicsTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
   private SalesInvoiceAddPaymentReadOnlyLogics logics;
   private Map<String, String> emptyRequestMap;
   private Map<String, String> populatedRequestMap;
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     logics = new SalesInvoiceAddPaymentReadOnlyLogics();
@@ -34,95 +46,173 @@ public class SalesInvoiceAddPaymentReadOnlyLogicsTest {
     populatedRequestMap.put("PaymentMethod", "B");
   }
 
+  /**
+   * Tests the getSeq method.
+   */
   @Test
   public void testGetSeq() {
     assertEquals("The sequence number must be 100", 100L, logics.getSeq());
   }
 
+  /**
+   * Tests the getPaymentDocumentNoReadOnlyLogic method with an empty map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetPaymentDocumentNoReadOnlyLogic_EmptyMap() throws JSONException {
-    assertFalse("The method should return false with an empty map",
-        logics.getPaymentDocumentNoReadOnlyLogic(emptyRequestMap));
+  public void testGetPaymentDocumentNoReadOnlyLogicEmptyMap() throws JSONException {
+    assertFalse(TestConstants.EMPTY_MAP_MESSAGE, logics.getPaymentDocumentNoReadOnlyLogic(emptyRequestMap));
   }
 
+  /**
+   * Tests the getPaymentDocumentNoReadOnlyLogic method with a populated map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetPaymentDocumentNoReadOnlyLogic_PopulatedMap() throws JSONException {
-    assertFalse("The method should return false with a populated map",
-        logics.getPaymentDocumentNoReadOnlyLogic(populatedRequestMap));
+  public void testGetPaymentDocumentNoReadOnlyLogicPopulatedMap() throws JSONException {
+    assertFalse(TestConstants.POPULATED_MAP_MESSAGE, logics.getPaymentDocumentNoReadOnlyLogic(populatedRequestMap));
   }
 
+  /**
+   * Tests the getReceivedFromReadOnlyLogic method with an empty map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetReceivedFromReadOnlyLogic_EmptyMap() throws JSONException {
-    assertTrue("The method should return true with an empty map",
-        logics.getReceivedFromReadOnlyLogic(emptyRequestMap));
+  public void testGetReceivedFromReadOnlyLogicEmptyMap() throws JSONException {
+    assertTrue("The method should return true with an empty map", logics.getReceivedFromReadOnlyLogic(emptyRequestMap));
   }
 
+  /**
+   * Tests the getReceivedFromReadOnlyLogic method with a populated map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetReceivedFromReadOnlyLogic_PopulatedMap() throws JSONException {
+  public void testGetReceivedFromReadOnlyLogicPopulatedMap() throws JSONException {
     assertTrue("The method should return true with a populated map",
         logics.getReceivedFromReadOnlyLogic(populatedRequestMap));
   }
 
+  /**
+   * Tests the getPaymentMethodReadOnlyLogic method with an empty map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetPaymentMethodReadOnlyLogic_EmptyMap() throws JSONException {
-    assertFalse("The method should return false with an empty map",
-        logics.getPaymentMethodReadOnlyLogic(emptyRequestMap));
+  public void testGetPaymentMethodReadOnlyLogicEmptyMap() throws JSONException {
+    assertFalse(TestConstants.EMPTY_MAP_MESSAGE, logics.getPaymentMethodReadOnlyLogic(emptyRequestMap));
   }
 
+  /**
+   * Tests the getPaymentMethodReadOnlyLogic method with a populated map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetPaymentMethodReadOnlyLogic_PopulatedMap() throws JSONException {
-    assertFalse("The method should return false with a populated map",
-        logics.getPaymentMethodReadOnlyLogic(populatedRequestMap));
+  public void testGetPaymentMethodReadOnlyLogicPopulatedMap() throws JSONException {
+    assertFalse(TestConstants.POPULATED_MAP_MESSAGE, logics.getPaymentMethodReadOnlyLogic(populatedRequestMap));
   }
 
+  /**
+   * Tests the getActualPaymentReadOnlyLogic method with an empty map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetActualPaymentReadOnlyLogic_EmptyMap() throws JSONException {
-    assertFalse("The method should return false with an empty map",
-        logics.getActualPaymentReadOnlyLogic(emptyRequestMap));
+  public void testGetActualPaymentReadOnlyLogicEmptyMap() throws JSONException {
+    assertFalse(TestConstants.EMPTY_MAP_MESSAGE, logics.getActualPaymentReadOnlyLogic(emptyRequestMap));
   }
 
+  /**
+   * Tests the getActualPaymentReadOnlyLogic method with a populated map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetActualPaymentReadOnlyLogic_PopulatedMap() throws JSONException {
-    assertFalse("The method should return false with a populated map",
-        logics.getActualPaymentReadOnlyLogic(populatedRequestMap));
+  public void testGetActualPaymentReadOnlyLogicPopulatedMap() throws JSONException {
+    assertFalse(TestConstants.POPULATED_MAP_MESSAGE, logics.getActualPaymentReadOnlyLogic(populatedRequestMap));
   }
 
+  /**
+   * Tests the getPaymentDateReadOnlyLogic method with an empty map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetPaymentDateReadOnlyLogic_EmptyMap() throws JSONException {
-    assertFalse("The method should return false with an empty map",
-        logics.getPaymentDateReadOnlyLogic(emptyRequestMap));
+  public void testGetPaymentDateReadOnlyLogicEmptyMap() throws JSONException {
+    assertFalse(TestConstants.EMPTY_MAP_MESSAGE, logics.getPaymentDateReadOnlyLogic(emptyRequestMap));
   }
 
+  /**
+   * Tests the getPaymentDateReadOnlyLogic method with a populated map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetPaymentDateReadOnlyLogic_PopulatedMap() throws JSONException {
-    assertFalse("The method should return false with a populated map",
-        logics.getPaymentDateReadOnlyLogic(populatedRequestMap));
+  public void testGetPaymentDateReadOnlyLogicPopulatedMap() throws JSONException {
+    assertFalse(TestConstants.POPULATED_MAP_MESSAGE, logics.getPaymentDateReadOnlyLogic(populatedRequestMap));
   }
 
+  /**
+   * Tests the getFinancialAccountReadOnlyLogic method with an empty map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetFinancialAccountReadOnlyLogic_EmptyMap() throws JSONException {
-    assertFalse("The method should return false with an empty map",
-        logics.getFinancialAccountReadOnlyLogic(emptyRequestMap));
+  public void testGetFinancialAccountReadOnlyLogicEmptyMap() throws JSONException {
+    assertFalse(TestConstants.EMPTY_MAP_MESSAGE, logics.getFinancialAccountReadOnlyLogic(emptyRequestMap));
   }
 
+  /**
+   * Tests the getFinancialAccountReadOnlyLogic method with a populated map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetFinancialAccountReadOnlyLogic_PopulatedMap() throws JSONException {
-    assertFalse("The method should return false with a populated map",
-        logics.getFinancialAccountReadOnlyLogic(populatedRequestMap));
+  public void testGetFinancialAccountReadOnlyLogicPopulatedMap() throws JSONException {
+    assertFalse(TestConstants.POPULATED_MAP_MESSAGE, logics.getFinancialAccountReadOnlyLogic(populatedRequestMap));
   }
 
+  /**
+   * Tests the getCurrencyReadOnlyLogic method with an empty map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetCurrencyReadOnlyLogic_EmptyMap() throws JSONException {
-    assertTrue("The method should return true with an empty map",
-        logics.getCurrencyReadOnlyLogic(emptyRequestMap));
+  public void testGetCurrencyReadOnlyLogicEmptyMap() throws JSONException {
+    assertTrue("The method should return true with an empty map", logics.getCurrencyReadOnlyLogic(emptyRequestMap));
   }
 
+  /**
+   * Tests the getCurrencyReadOnlyLogic method with a populated map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetCurrencyReadOnlyLogic_PopulatedMap() throws JSONException {
+  public void testGetCurrencyReadOnlyLogicPopulatedMap() throws JSONException {
     assertTrue("The method should return true with a populated map",
         logics.getCurrencyReadOnlyLogic(populatedRequestMap));
   }
 
+  /**
+   * Tests the read-only logic methods with invalid JSON values.
+   */
   @Test
   public void testWithInvalidJSONValues() {
     Map<String, String> invalidJsonMap = new HashMap<>();
@@ -141,6 +231,12 @@ public class SalesInvoiceAddPaymentReadOnlyLogicsTest {
     }
   }
 
+  /**
+   * Tests the read-only logic methods with a large request map.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testWithLargeRequestMap() throws JSONException {
     Map<String, String> largeMap = new HashMap<>();
