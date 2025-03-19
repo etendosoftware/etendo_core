@@ -90,7 +90,7 @@ publishing {
 
     repositories {
         maven {
-            url ''
+            url = ''
         }
     }
 }

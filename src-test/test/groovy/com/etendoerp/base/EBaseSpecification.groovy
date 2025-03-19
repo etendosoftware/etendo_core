@@ -49,11 +49,6 @@ class EBaseSpecification extends Specification {
     protected static final String TEST_ORG_ID = "E443A31992CB4635AFCAEABE7183CE85";
 
     /**
-     * Record ID of Organization "F&amp;B US West Coast"
-     */
-    protected static final String TEST_US_ORG_ID = TestConstants.Orgs.US_WEST;
-
-    /**
      * Record ID of Warehouse "España Región Norte"
      */
     protected static final String TEST_WAREHOUSE_ID = "B2D40D8A5D644DD89E329DC297309055";
