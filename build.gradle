@@ -6,8 +6,7 @@ plugins {
     id 'idea'
     id 'groovy'
     id 'jacoco'
-    id 'com.etendoerp.gradleplugin' version '1.5.1'
-    id 'org.kordamp.gradle.jandex' version '0.11.0'
+    id 'com.etendoerp.gradleplugin' version '2.0.0-SNAPSHOT'
 }
 compileJava.options.encoding = "UTF-8"
 apply from: 'tests.gradle'
@@ -16,22 +15,6 @@ apply from: "artifacts.list.COMPILATION.gradle"
 repositories {
     gradlePluginPortal()
     mavenCentral()
-}
-
-/**
- * Jandex is used to index the .class files containing annotations.
- * This generates a file called 'jandex.inx', and is stored in the 'META-INF' dir of the core jar.
- * Weld uses this file to scan all the beans when tomcat is started.
- */
-jandex {
-    includeInJar true
-}
-
-/**
- * This dependency version is equal to the one located in the 'lib/runtime' dir
- */
-dependencies {
-    jandex 'org.jboss:jandex:2.0.5.Final'
 }
 
 final String CURRENT_VERSION = "24.4.8"
@@ -107,7 +90,7 @@ publishing {
 
     repositories {
         maven {
-            url ''
+            url = ''
         }
     }
 }
@@ -228,8 +211,8 @@ task upgradeCoreVersion {
  */
 task assembleArtifact(type: Zip) {
     System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
-    archiveName artifactID + "-" + project.version + '.zip'
-    destinationDir file("$buildDir/libs/")
+    archiveFileName.set(artifactID + "-" + project.version + '.zip')
+    destinationDirectory.set(file("$buildDir/libs/"))
     include(whiteSyncCoreList)
     from "."
     into "."
@@ -327,8 +310,7 @@ task configPublishJAR(){
                 username = "$nexusUser"
                 password = "$nexusPassword"
             }
-        }
-        else {
+        } else {
             publishing.repositories.maven.url = PROD_URL
             publishing.repositories.maven.credentials {
                 username = "$githubUser"
@@ -353,6 +335,6 @@ idea {
 
 task call_sass(type: Exec) {}
 
-task deploySkin (dependsOn: ["cssCompile", "deploy.skin"]) doLast {
+task deploySkin(dependsOn: ["cssCompile", "deploy.skin"]) doLast {
 
 }

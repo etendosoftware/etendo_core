@@ -7,7 +7,7 @@ test {
     systemProperty 'com.athaydes.spockframework.report.showCodeBlocks', true
     maxParallelForks 1
     forkEvery 100
-    maxHeapSize= '2G'
+    maxHeapSize = '2G'
 }
 
 dependencies {
@@ -18,7 +18,7 @@ dependencies {
     testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.mockito:mockito-core:5.0.0'
     testImplementation( "com.athaydes:spock-reports:2.0-groovy-3.0" ) {
-        transitive = false // this avoids affecting your version of Groovy/Spock
+        transitive = false
     }
     testImplementation fileTree(project.projectDir) {
         include "lib/test/*.jar"
@@ -33,38 +33,47 @@ dependencies {
 ant.taskdef(name: 'junit', classname: 'org.apache.tools.ant.taskdefs.optional.junit.JUnitTask',
         classpath: configurations.antClasspath.asPath)
 
-sourceSets{
+sourceSets {
     test {
         java {
-            srcDirs 'src-test/src'
-            outputDir = file("src-test/build/classes")
+            srcDirs = ['src-test/src']
+            output.classesDirs = project.files("src-test/build/classes")
         }
         resources {
-            srcDirs 'src-test/resources'
+            srcDirs = ['src-test/resources']
         }
         groovy {
-            srcDirs "src-test/test/groovy"
+            srcDirs = ["src-test/test/groovy"]
+            output.classesDirs = project.files("src-test/build/classes")
         }
     }
 }
 
 if (file('modules').exists() && file('modules').isDirectory()) {
     file('modules').eachDir {
-        sourceSets.test.java.srcDirs += it.toString()+"/src-test/src"
-        sourceSets.test.resources.srcDirs +=  it.toString()+"/src-test/resources"
-        sourceSets.test.java.outputDir = file("src-test/build/classes")
-        sourceSets.test.groovy.srcDirs += it.toString()+"/src-test/test/groovy"
-        sourceSets.test.groovy.outputDir = file("src-test/build/classes")
+        sourceSets.test.java.srcDirs += it.toString() + "/src-test/src"
+        sourceSets.test.resources.srcDirs += it.toString() + "/src-test/resources"
+        sourceSets.test.groovy.srcDirs += it.toString() + "/src-test/test/groovy"
     }
 }
 if (file('modules_core').exists() && file('modules_core').isDirectory()) {
     file('modules_core').eachDir {
-        sourceSets.test.java.srcDirs += it.toString()+"/src-test"
-        sourceSets.test.resources.srcDirs +=  it.toString()+"/src-test/resources"
-        sourceSets.test.java.outputDir = file("src-test/build/classes")
-        sourceSets.test.groovy.srcDirs += it.toString()+"/src-test/test/groovy"
-        sourceSets.test.groovy.outputDir = file("src-test/build/classes")
+        sourceSets.test.java.srcDirs += it.toString() + "/src-test"
+        sourceSets.test.resources.srcDirs += it.toString() + "/src-test/resources"
+        sourceSets.test.groovy.srcDirs += it.toString() + "/src-test/test/groovy"
     }
+}
+
+sourceSets.test.java.srcDirs += "src-test/src"
+
+// Forzar la salida de compileTestJava
+tasks.named('compileTestJava') {
+    destinationDir = file("src-test/build/classes")
+}
+
+// Asegurar que la tarea test use el directorio correcto
+tasks.named('test') {
+    classpath += files("src-test/build/classes")
 }
 
 task depsTest {
@@ -73,4 +82,12 @@ task depsTest {
             dependencies.testImplementation files(file)
         }
     }
+}
+
+tasks.named('compileTestGroovy') {
+    dependsOn tasks.named('compileTestJava')
+}
+
+test {
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
 }
