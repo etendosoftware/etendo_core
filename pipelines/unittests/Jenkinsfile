@@ -523,7 +523,10 @@ spec:
     stage('Run Deploy Snapshot') { // MARK: Run Deploy Snapshot
       when {
         allOf {
-          branch 'develop'
+          anyOf {
+            branch 'develop'
+            branch 'epic/ETP-1004'
+          }
           expression {
               env.STATUSTEST == "1"
           }

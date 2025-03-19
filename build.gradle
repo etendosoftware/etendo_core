@@ -17,7 +17,7 @@ repositories {
     mavenCentral()
 }
 
-final String CURRENT_VERSION = "24.4.8"
+final String CURRENT_VERSION = "25.1.0"
 final String NEXT_RELEASE = "25.1.0"
 final String NEXT_HOTFIX = "24.4.9"
 
