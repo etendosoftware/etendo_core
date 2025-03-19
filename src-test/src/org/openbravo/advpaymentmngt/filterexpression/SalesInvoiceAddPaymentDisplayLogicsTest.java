@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -62,7 +63,7 @@ public class SalesInvoiceAddPaymentDisplayLogicsTest {
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
 
     // Setup default mock behavior
-    when(mockOBDal.get(Invoice.class, "testInvoiceId")).thenReturn(mockInvoice);
+    when(mockOBDal.get(Invoice.class, TestConstants.INVOICE_ID)).thenReturn(mockInvoice);
     when(mockInvoice.getBusinessPartner()).thenReturn(mockBusinessPartner);
 
     // Create a new instance of the class under test with a mocked DAO
@@ -161,8 +162,8 @@ public class SalesInvoiceAddPaymentDisplayLogicsTest {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpcInvoiceId", "testInvoiceId");
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.INPC_INVOICE_ID, TestConstants.INVOICE_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // Mock AdvPaymentMngtDao
     AdvPaymentMngtDao mockDao = mock(AdvPaymentMngtDao.class);
@@ -183,7 +184,7 @@ public class SalesInvoiceAddPaymentDisplayLogicsTest {
 
         @Override
         public boolean getCreditToUseDisplayLogic(Map<String, String> requestMap) throws JSONException {
-          JSONObject context = new JSONObject(requestMap.get("context"));
+          JSONObject context = new JSONObject(requestMap.get(TestConstants.CONTEXT));
           Invoice invoice = getInvoice(context);
           BusinessPartner bpartner = invoice.getBusinessPartner();
           if (bpartner != null) {
@@ -213,8 +214,8 @@ public class SalesInvoiceAddPaymentDisplayLogicsTest {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpcInvoiceId", "testInvoiceId");
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.INPC_INVOICE_ID, TestConstants.INVOICE_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // Mock AdvPaymentMngtDao
     AdvPaymentMngtDao mockDao = mock(AdvPaymentMngtDao.class);
@@ -235,7 +236,7 @@ public class SalesInvoiceAddPaymentDisplayLogicsTest {
 
         @Override
         public boolean getCreditToUseDisplayLogic(Map<String, String> requestMap) throws JSONException {
-          JSONObject context = new JSONObject(requestMap.get("context"));
+          JSONObject context = new JSONObject(requestMap.get(TestConstants.CONTEXT));
           Invoice invoice = getInvoice(context);
           BusinessPartner bpartner = invoice.getBusinessPartner();
           if (bpartner != null) {
@@ -265,8 +266,8 @@ public class SalesInvoiceAddPaymentDisplayLogicsTest {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpcInvoiceId", "testInvoiceId");
-    requestMap.put("context", context.toString());
+    context.put(TestConstants.INPC_INVOICE_ID, TestConstants.INVOICE_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
     // Set null business partner
     when(mockInvoice.getBusinessPartner()).thenReturn(null);
@@ -288,7 +289,7 @@ public class SalesInvoiceAddPaymentDisplayLogicsTest {
   public void testGetInvoice() throws JSONException {
     // Given
     JSONObject context = new JSONObject();
-    context.put("inpcInvoiceId", "testInvoiceId");
+    context.put(TestConstants.INPC_INVOICE_ID, TestConstants.INVOICE_ID);
 
     // Create a new instance without overriding getInvoice
     SalesInvoiceAddPaymentDisplayLogics instance = new SalesInvoiceAddPaymentDisplayLogics();

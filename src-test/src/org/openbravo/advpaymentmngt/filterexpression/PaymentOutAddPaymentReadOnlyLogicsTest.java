@@ -17,10 +17,10 @@ import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
+import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.ui.Window;
-import org.openbravo.client.kernel.ComponentProvider;
 
 /**
  * Test cases for the PaymentOutAddPaymentReadOnlyLogics class.
@@ -34,6 +34,12 @@ public class PaymentOutAddPaymentReadOnlyLogicsTest {
   private MockedStatic<org.openbravo.erpCommon.businessUtility.Preferences> mockedPreferences;
   private AutoCloseable mocks;
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
@@ -60,6 +66,12 @@ public class PaymentOutAddPaymentReadOnlyLogicsTest {
     mockedPreferences = mockStatic(org.openbravo.erpCommon.businessUtility.Preferences.class);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedPreferences != null) {
@@ -77,7 +89,7 @@ public class PaymentOutAddPaymentReadOnlyLogicsTest {
   }
 
   /**
-   * Test that the sequence value is correctly set to 100
+   * Test that the sequence value is correctly set to 100.
    */
   @Test
   public void testGetSeq() {
@@ -85,25 +97,28 @@ public class PaymentOutAddPaymentReadOnlyLogicsTest {
   }
 
   /**
-   * Test that the component provider qualifier is correctly set to the payment out window ID
+   * Test that the component provider qualifier is correctly set to the payment out window ID.
    */
   @Test
   public void testComponentProviderQualifier() {
-    ComponentProvider.Qualifier annotation = PaymentOutAddPaymentReadOnlyLogics.class
-        .getAnnotation(ComponentProvider.Qualifier.class);
+    ComponentProvider.Qualifier annotation = PaymentOutAddPaymentReadOnlyLogics.class.getAnnotation(
+        ComponentProvider.Qualifier.class);
 
     if (annotation != null) {
       String qualifierValue = annotation.value();
       assertEquals("Component provider qualifier should match payment out window ID",
           APRMConstants.PAYMENT_OUT_WINDOW_ID, qualifierValue);
     } else {
-      assertEquals("Component provider qualifier should be set",
-          APRMConstants.PAYMENT_OUT_WINDOW_ID, APRMConstants.PAYMENT_OUT_WINDOW_ID);
+      assertEquals("Component provider qualifier should be set", APRMConstants.PAYMENT_OUT_WINDOW_ID,
+          APRMConstants.PAYMENT_OUT_WINDOW_ID);
     }
   }
 
   /**
-   * Test that all read-only logic methods return true
+   * Test that all read-only logic methods return true.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
    */
   @Test
   public void testAllReadOnlyLogicsReturnTrue() throws JSONException {
@@ -111,30 +126,26 @@ public class PaymentOutAddPaymentReadOnlyLogicsTest {
     context.put("inpwindowId", APRMConstants.PAYMENT_OUT_WINDOW_ID);
     requestMap.put("context", context.toString());
 
-    assertTrue("Payment document number should be read-only",
-        logics.getPaymentDocumentNoReadOnlyLogic(requestMap));
+    assertTrue("Payment document number should be read-only", logics.getPaymentDocumentNoReadOnlyLogic(requestMap));
 
-    assertTrue("Received from should be read-only",
-        logics.getReceivedFromReadOnlyLogic(requestMap));
+    assertTrue("Received from should be read-only", logics.getReceivedFromReadOnlyLogic(requestMap));
 
-    assertTrue("Payment method should be read-only",
-        logics.getPaymentMethodReadOnlyLogic(requestMap));
+    assertTrue("Payment method should be read-only", logics.getPaymentMethodReadOnlyLogic(requestMap));
 
-    assertTrue("Actual payment should be read-only",
-        logics.getActualPaymentReadOnlyLogic(requestMap));
+    assertTrue("Actual payment should be read-only", logics.getActualPaymentReadOnlyLogic(requestMap));
 
-    assertTrue("Payment date should be read-only",
-        logics.getPaymentDateReadOnlyLogic(requestMap));
+    assertTrue("Payment date should be read-only", logics.getPaymentDateReadOnlyLogic(requestMap));
 
-    assertTrue("Financial account should be read-only",
-        logics.getFinancialAccountReadOnlyLogic(requestMap));
+    assertTrue("Financial account should be read-only", logics.getFinancialAccountReadOnlyLogic(requestMap));
 
-    assertTrue("Currency should be read-only",
-        logics.getCurrencyReadOnlyLogic(requestMap));
+    assertTrue("Currency should be read-only", logics.getCurrencyReadOnlyLogic(requestMap));
   }
 
   /**
-   * Test the conversion rate read-only logic with NotAllowChangeExchange preference set to Y
+   * Test the conversion rate read-only logic with NotAllowChangeExchange preference set to Y.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
    */
   @Test
   public void testConversionRateReadOnlyLogicWithPreferenceY() throws Exception {
@@ -149,7 +160,12 @@ public class PaymentOutAddPaymentReadOnlyLogicsTest {
   }
 
   /**
-   * Helper method to set up mocks for preference tests
+   * Helper method to set up mocks for preference tests.
+   *
+   * @param preferenceValue
+   *     the value of the preference to set up
+   * @throws Exception
+   *     if an error occurs during setup
    */
   private void setupMocksForPreferenceTest(String preferenceValue) throws Exception {
     // Create context with window ID
@@ -167,9 +183,9 @@ public class PaymentOutAddPaymentReadOnlyLogicsTest {
     Window mockWindow = mockOBDal.get(Window.class, APRMConstants.PAYMENT_OUT_WINDOW_ID);
 
     // Mock Preferences response
-    mockedPreferences.when(() -> org.openbravo.erpCommon.businessUtility.Preferences.getPreferenceValue(
-        "NotAllowChangeExchange", true, mockContext.getCurrentClient(),
-        mockContext.getCurrentOrganization(), mockContext.getUser(),
-        mockContext.getRole(), mockWindow)).thenReturn(preferenceValue);
+    mockedPreferences.when(
+        () -> org.openbravo.erpCommon.businessUtility.Preferences.getPreferenceValue("NotAllowChangeExchange", true,
+            mockContext.getCurrentClient(), mockContext.getCurrentOrganization(), mockContext.getUser(),
+            mockContext.getRole(), mockWindow)).thenReturn(preferenceValue);
   }
 }

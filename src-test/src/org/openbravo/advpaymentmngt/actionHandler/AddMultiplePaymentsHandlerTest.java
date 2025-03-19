@@ -50,6 +50,9 @@ import org.openbravo.service.json.JsonUtils;
 @RunWith(MockitoJUnitRunner.class)
 public class AddMultiplePaymentsHandlerTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -58,7 +61,7 @@ public class AddMultiplePaymentsHandlerTest {
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<OBMessageUtils> mockedOBMessageUtils;
   private MockedStatic<TransactionsDao> mockedTransactionsDao;
-  private MockedStatic<FIN_TransactionProcess> mockedFIN_TransactionProcess;
+  private MockedStatic<FIN_TransactionProcess> mockedFINTransactionProcess;
   private MockedStatic<JsonUtils> mockedJsonUtils;
   private MockedStatic<RequestContext> mockedRequestContext;
 
@@ -106,7 +109,7 @@ public class AddMultiplePaymentsHandlerTest {
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBMessageUtils = mockStatic(OBMessageUtils.class);
     mockedTransactionsDao = mockStatic(TransactionsDao.class);
-    mockedFIN_TransactionProcess = mockStatic(FIN_TransactionProcess.class);
+    mockedFINTransactionProcess = mockStatic(FIN_TransactionProcess.class);
     mockedJsonUtils = mockStatic(JsonUtils.class);
     mockedRequestContext = mockStatic(RequestContext.class);
 
@@ -138,6 +141,9 @@ public class AddMultiplePaymentsHandlerTest {
 
   /**
    * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during cleanup
    */
   @After
   public void tearDown() throws Exception {
@@ -154,8 +160,8 @@ public class AddMultiplePaymentsHandlerTest {
     if (mockedTransactionsDao != null) {
       mockedTransactionsDao.close();
     }
-    if (mockedFIN_TransactionProcess != null) {
-      mockedFIN_TransactionProcess.close();
+    if (mockedFINTransactionProcess != null) {
+      mockedFINTransactionProcess.close();
     }
     if (mockedJsonUtils != null) {
       mockedJsonUtils.close();
@@ -178,7 +184,6 @@ public class AddMultiplePaymentsHandlerTest {
 
     // Create JSON data
     String financialAccountId = TestConstants.TEST_ACCOUNT_ID;
-    Date testDate = new Date();
     String formattedDate = TestConstants.TEST_DATE;
 
     // Create JSON structure
@@ -213,7 +218,8 @@ public class AddMultiplePaymentsHandlerTest {
     String successMessage = "Success message";
     mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("APRM_MULTIPLE_TRANSACTIONS_ADDED")).thenReturn(
         successMessage);
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.RESULT_SUCCESS)).thenReturn(TestConstants.RESULT_SUCCESS);
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.RESULT_SUCCESS)).thenReturn(
+        TestConstants.RESULT_SUCCESS);
 
     // Mock session.clear()
     org.hibernate.Session mockSession = mock(org.hibernate.Session.class);
@@ -236,7 +242,7 @@ public class AddMultiplePaymentsHandlerTest {
     verify(mockTransaction).setAccount(mockFinancialAccount);
 
     // Verify transaction process was called
-    mockedFIN_TransactionProcess.verify(() -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction),
+    mockedFINTransactionProcess.verify(() -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction),
         times(1));
   }
 
@@ -350,7 +356,7 @@ public class AddMultiplePaymentsHandlerTest {
     verify(mockTransaction).setAccount(mockFinancialAccount);
 
     // Verify transaction process was called
-    mockedFIN_TransactionProcess.verify(() -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction),
+    mockedFINTransactionProcess.verify(() -> FIN_TransactionProcess.doTransactionProcess("P", mockTransaction),
         times(1));
 
     // Verify setAdminMode and restorePreviousMode were called in balance
@@ -370,7 +376,8 @@ public class AddMultiplePaymentsHandlerTest {
     String successText = "1 transaction processed successfully";
 
     // Mock success message
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.RESULT_SUCCESS)).thenReturn(TestConstants.RESULT_SUCCESS);
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(TestConstants.RESULT_SUCCESS)).thenReturn(
+        TestConstants.RESULT_SUCCESS);
 
     // WHEN - Use reflection to access private method
     java.lang.reflect.Method method = AddMultiplePaymentsHandler.class.getDeclaredMethod("getSuccessMessage",

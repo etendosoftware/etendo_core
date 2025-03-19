@@ -22,14 +22,17 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 
+/**
+ * Unit tests for the FundsTransferGLItemDefaultValueExpression class.
+ */
 @RunWith(MockitoJUnitRunner.class)
-public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest {
+public class FundsTransferGLItemDefaultValueExpressionTest {
 
     private FundsTransferGLItemDefaultValueExpression expression;
     private MockedStatic<OBContext> mockedOBContext;
@@ -50,6 +53,11 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
     @Mock
     private Query<GLItem> mockQuery;
 
+    /**
+     * Sets up the test environment before each test.
+     *
+     * @throws Exception if an error occurs during setup
+     */
     @Before
     public void setUp() throws Exception {
         expression = new FundsTransferGLItemDefaultValueExpression();
@@ -66,6 +74,9 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         when(mockQuery.setMaxResults(1)).thenReturn(mockQuery);
     }
 
+    /**
+     * Cleans up the test environment after each test.
+     */
     @After
     public void tearDown() {
         if (mockedOBContext != null) {
@@ -76,16 +87,21 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         }
     }
 
+    /**
+     * Tests the getExpression method with a valid organization and GL item.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithValidOrganizationAndGLItem() throws Exception {
+    public void testGetExpressionWithValidOrganizationAndGLItem() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
         JSONObject context = new JSONObject();
-        context.put("ad_org_id", "TEST_ORG_ID");
-        requestMap.put("context", context.toString());
+        context.put(TestConstants.AD_ORG_ID, TestConstants.ORGANIZATION_ID);
+        requestMap.put(TestConstants.CONTEXT, context.toString());
 
         String expectedGLItemId = "TEST_GL_ITEM_ID";
-        when(mockOBDal.get(Organization.class, "TEST_ORG_ID")).thenReturn(mockOrganization);
+        when(mockOBDal.get(Organization.class, TestConstants.ORGANIZATION_ID)).thenReturn(mockOrganization);
         when(mockOrganization.getAPRMGlitem()).thenReturn(mockGLItem);
         when(mockGLItem.getId()).thenReturn(expectedGLItemId);
 
@@ -96,16 +112,21 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         assertEquals(expectedGLItemId, result);
     }
 
+    /**
+     * Tests the getExpression method with the inpadOrgId parameter.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithInpAdOrgId() throws Exception {
+    public void testGetExpressionWithInpAdOrgId() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
         JSONObject context = new JSONObject();
-        context.put("inpadOrgId", "TEST_ORG_ID");
-        requestMap.put("context", context.toString());
+        context.put("inpadOrgId", TestConstants.ORGANIZATION_ID);
+        requestMap.put(TestConstants.CONTEXT, context.toString());
 
         String expectedGLItemId = "TEST_GL_ITEM_ID";
-        when(mockOBDal.get(Organization.class, "TEST_ORG_ID")).thenReturn(mockOrganization);
+        when(mockOBDal.get(Organization.class, TestConstants.ORGANIZATION_ID)).thenReturn(mockOrganization);
         when(mockOrganization.getAPRMGlitem()).thenReturn(mockGLItem);
         when(mockGLItem.getId()).thenReturn(expectedGLItemId);
 
@@ -116,18 +137,23 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         assertEquals(expectedGLItemId, result);
     }
 
+    /**
+     * Tests the getExpression method when there is no direct GL item.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithNoDirectGLItem() throws Exception {
+    public void testGetExpressionWithNoDirectGLItem() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
         JSONObject context = new JSONObject();
-        context.put("ad_org_id", "TEST_ORG_ID");
-        requestMap.put("context", context.toString());
+        context.put(TestConstants.AD_ORG_ID, TestConstants.ORGANIZATION_ID);
+        requestMap.put(TestConstants.CONTEXT, context.toString());
 
         String expectedGLItemId = "PARENT_GL_ITEM_ID";
-        when(mockOBDal.get(Organization.class, "TEST_ORG_ID")).thenReturn(mockOrganization);
+        when(mockOBDal.get(Organization.class, TestConstants.ORGANIZATION_ID)).thenReturn(mockOrganization);
         when(mockOrganization.getAPRMGlitem()).thenReturn(null);
-        when(mockOrganization.getId()).thenReturn("TEST_ORG_ID");
+        when(mockOrganization.getId()).thenReturn(TestConstants.ORGANIZATION_ID);
 
         GLItem parentGLItem = mock(GLItem.class);
         when(parentGLItem.getId()).thenReturn(expectedGLItemId);
@@ -140,11 +166,16 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         assertEquals(expectedGLItemId, result);
     }
 
+    /**
+     * Tests the getExpression method with an invalid context.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithInvalidContext() throws Exception {
+    public void testGetExpressionWithInvalidContext() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
-        requestMap.put("context", "invalid-json");
+        requestMap.put(TestConstants.CONTEXT, "invalid-json");
 
         // When
         String result = expression.getExpression(requestMap);
@@ -153,13 +184,18 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         assertNull(result);
     }
 
+    /**
+     * Tests the getExpression method with a null organization ID.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithNullOrganizationId() throws Exception {
+    public void testGetExpressionWithNullOrganizationId() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
         JSONObject context = new JSONObject();
-        context.put("ad_org_id", JSONObject.NULL);
-        requestMap.put("context", context.toString());
+        context.put(TestConstants.AD_ORG_ID, JSONObject.NULL);
+        requestMap.put(TestConstants.CONTEXT, context.toString());
 
         // When
         String result = expression.getExpression(requestMap);
@@ -168,13 +204,18 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         assertNull(result);
     }
 
+    /**
+     * Tests the getExpression method with an empty organization ID.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithEmptyOrganizationId() throws Exception {
+    public void testGetExpressionWithEmptyOrganizationId() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
         JSONObject context = new JSONObject();
-        context.put("ad_org_id", "");
-        requestMap.put("context", context.toString());
+        context.put(TestConstants.AD_ORG_ID, "");
+        requestMap.put(TestConstants.CONTEXT, context.toString());
 
         // When
         String result = expression.getExpression(requestMap);
@@ -183,13 +224,18 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         assertNull(result);
     }
 
+    /**
+     * Tests the getExpression method with a non-existent organization.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithNonExistentOrganization() throws Exception {
+    public void testGetExpressionWithNonExistentOrganization() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
         JSONObject context = new JSONObject();
-        context.put("ad_org_id", "NON_EXISTENT_ORG");
-        requestMap.put("context", context.toString());
+        context.put(TestConstants.AD_ORG_ID, "NON_EXISTENT_ORG");
+        requestMap.put(TestConstants.CONTEXT, context.toString());
 
         when(mockOBDal.get(Organization.class, "NON_EXISTENT_ORG")).thenReturn(null);
 
@@ -200,17 +246,22 @@ public class FundsTransferGLItemDefaultValueExpressionTest extends WeldBaseTest 
         assertNull(result);
     }
 
+    /**
+     * Tests the getExpression method when there is no GL item in the organization tree.
+     *
+     * @throws Exception if an error occurs during execution
+     */
     @Test
-    public void testGetExpression_WithNoGLItemInOrganizationTree() throws Exception {
+    public void testGetExpressionWithNoGLItemInOrganizationTree() throws Exception {
         // Given
         Map<String, String> requestMap = new HashMap<>();
         JSONObject context = new JSONObject();
-        context.put("ad_org_id", "TEST_ORG_ID");
-        requestMap.put("context", context.toString());
+        context.put(TestConstants.AD_ORG_ID, TestConstants.ORGANIZATION_ID);
+        requestMap.put(TestConstants.CONTEXT, context.toString());
 
-        when(mockOBDal.get(Organization.class, "TEST_ORG_ID")).thenReturn(mockOrganization);
+        when(mockOBDal.get(Organization.class, TestConstants.ORGANIZATION_ID)).thenReturn(mockOrganization);
         when(mockOrganization.getAPRMGlitem()).thenReturn(null);
-        when(mockOrganization.getId()).thenReturn("TEST_ORG_ID");
+        when(mockOrganization.getId()).thenReturn(TestConstants.ORGANIZATION_ID);
         when(mockQuery.uniqueResult()).thenReturn(null);
 
         // When

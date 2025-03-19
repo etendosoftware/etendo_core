@@ -10,11 +10,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
@@ -47,6 +49,9 @@ import org.openbravo.model.pricing.pricelist.PriceList;
  * It also includes methods to delete a Payment, reactivate an Invoice, delete an Invoice, and delete the payment configuration in the system.
  */
 public class ReversePaymentTest extends WeldBaseTest {
+
+
+
 
   private static final Logger log = LogManager.getLogger();
   private static final String MANUAL_EXECUTION = "M";

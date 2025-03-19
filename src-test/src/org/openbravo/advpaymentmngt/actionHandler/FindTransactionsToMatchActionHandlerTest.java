@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtility;
 import org.openbravo.dal.core.OBContext;
@@ -147,8 +148,8 @@ public class FindTransactionsToMatchActionHandlerTest {
 
     // Verify matchBankStatementLine was called
     mockedMatchingUtility.verify(
-        () -> APRM_MatchingUtility.matchBankStatementLine(eq(bankStatementLine),
-            (List<String>) any(), eq(reconciliation), any(), eq(true)), times(1));
+        () -> APRM_MatchingUtility.matchBankStatementLine(eq(bankStatementLine), (List<String>) any(),
+            eq(reconciliation), any(), eq(true)), times(1));
 
     // Verify result
     assertEquals(0, result.length());
@@ -170,7 +171,7 @@ public class FindTransactionsToMatchActionHandlerTest {
 
     // Configure mocks for this test
     mockedMatchingUtility.when(() -> APRM_MatchingUtility.createMessageInProcessView(eq("@APRM_SELECT_RECORD_ERROR@"),
-        eq("error"))).thenReturn(mockActions);
+        eq(TestConstants.ERROR))).thenReturn(mockActions);
 
     // When
     JSONObject result = actionHandler.execute(parameters, data);
@@ -181,13 +182,13 @@ public class FindTransactionsToMatchActionHandlerTest {
     mockedOBContext.verify(OBContext::restorePreviousMode, times(1));
 
     // Verify createMessageInProcessView was called
-    mockedMatchingUtility.verify(
-        () -> APRM_MatchingUtility.createMessageInProcessView(eq("@APRM_SELECT_RECORD_ERROR@"), eq("error")), times(1));
+    mockedMatchingUtility.verify(() -> APRM_MatchingUtility.createMessageInProcessView(eq("@APRM_SELECT_RECORD_ERROR@"),
+        eq(TestConstants.ERROR)), times(1));
 
     // Verify result
     assertTrue(result.has("responseActions"));
-    assertTrue(result.has("retryExecution"));
-    assertTrue(result.getBoolean("retryExecution"));
+    assertTrue(result.has(TestConstants.RETRY_EXECUTION));
+    assertTrue(result.getBoolean(TestConstants.RETRY_EXECUTION));
   }
 
   /**
@@ -208,9 +209,8 @@ public class FindTransactionsToMatchActionHandlerTest {
     // Configure mocks for this test
     when(obDal.get(eq(FIN_FinancialAccount.class), anyString())).thenThrow(mockException);
     mockedDbUtility.when(() -> DbUtility.getUnderlyingSQLException(any())).thenReturn(mockException);
-    mockedMatchingUtility.when(
-        () -> APRM_MatchingUtility.createMessageInProcessView(eq("Test exception"), eq("error"))).thenReturn(
-        mockActions);
+    mockedMatchingUtility.when(() -> APRM_MatchingUtility.createMessageInProcessView(eq("Test exception"),
+        eq(TestConstants.ERROR))).thenReturn(mockActions);
 
     // When
     JSONObject result = actionHandler.execute(parameters, data);
@@ -225,8 +225,8 @@ public class FindTransactionsToMatchActionHandlerTest {
 
     // Verify result
     assertTrue(result.has("responseActions"));
-    assertTrue(result.has("retryExecution"));
-    assertTrue(result.getBoolean("retryExecution"));
+    assertTrue(result.has(TestConstants.RETRY_EXECUTION));
+    assertTrue(result.getBoolean(TestConstants.RETRY_EXECUTION));
   }
 
   /**

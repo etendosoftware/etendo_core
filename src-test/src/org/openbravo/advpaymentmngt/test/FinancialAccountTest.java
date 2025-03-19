@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -34,6 +35,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.test.base.OBBaseTest;
 
 public class FinancialAccountTest extends OBBaseTest {
+
 
   private static final String BANK = "B";
   private static final String CASH = "C";

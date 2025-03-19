@@ -27,11 +27,14 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.invoice.Invoice;
 
 /**
- * Test class for PurchaseInvoiceAddPaymentDisplayLogics
+ * Test class for PurchaseInvoiceAddPaymentDisplayLogics.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -50,12 +53,17 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
   @Mock
   private Currency mockCurrency;
 
-
   @InjectMocks
   private PurchaseInvoiceAddPaymentDisplayLogics classUnderTest;
 
   private AutoCloseable mocks;
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
@@ -76,6 +84,12 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
     when(mockInvoice.getBusinessPartner()).thenReturn(mockBusinessPartner);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     if (mocks != null) {
@@ -83,6 +97,9 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
     }
   }
 
+  /**
+   * Tests the getSeq method.
+   */
   @Test
   public void testGetSeq() {
     // WHEN
@@ -92,6 +109,12 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
     assertEquals(100L, result);
   }
 
+  /**
+   * Tests the getOrganizationDisplayLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetOrganizationDisplayLogic() throws JSONException {
     // GIVEN
@@ -104,6 +127,12 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
     assertFalse(result);
   }
 
+  /**
+   * Tests the getDocumentDisplayLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetDocumentDisplayLogic() throws JSONException {
     // GIVEN
@@ -116,6 +145,12 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
     assertFalse(result);
   }
 
+  /**
+   * Tests the getBankStatementLineDisplayLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetBankStatementLineDisplayLogic() throws JSONException {
     // GIVEN
@@ -128,9 +163,14 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
     assertFalse(result);
   }
 
-
+  /**
+   * Tests the getCreditToUseDisplayLogic method with a null business partner.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetCreditToUseDisplayLogic_WithNullBusinessPartner() throws JSONException {
+  public void testGetCreditToUseDisplayLogicWithNullBusinessPartner() throws JSONException {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
@@ -147,8 +187,14 @@ public class PurchaseInvoiceAddPaymentDisplayLogicsTest {
     assertFalse(result);
   }
 
+  /**
+   * Tests the getCreditToUseDisplayLogic method with non-zero default generated credit.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetCreditToUseDisplayLogic_WithNonZeroDefaultGeneratedCredit() throws JSONException {
+  public void testGetCreditToUseDisplayLogicWithNonZeroDefaultGeneratedCredit() throws JSONException {
     // GIVEN
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();

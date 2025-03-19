@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.common.enterprise.Locator;
@@ -30,6 +31,9 @@ import org.openbravo.model.materialmgmt.onhandquantity.InventoryStatus;
  */
 public class CheckExistsOverissueBinForRFCShipmentWHTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -103,9 +107,10 @@ public class CheckExistsOverissueBinForRFCShipmentWHTest {
     JSONObject result = handler.execute(null, jsonInput);
 
     // Then
-    assertNotNull("Result should not be null", result);
-    assertEquals("Locator ID should match", locatorId, result.getString("overissueBin"));
-    assertEquals("Locator identifier should match", locatorIdentifier, result.getString("storageBin$_identifier"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("Locator ID should match", locatorId, result.getString(TestConstants.OVERISSUE_BIN));
+    assertEquals("Locator identifier should match", locatorIdentifier,
+        result.getString(TestConstants.STORAGE_BIN_IDENTIFIER));
   }
 
   /**
@@ -127,9 +132,9 @@ public class CheckExistsOverissueBinForRFCShipmentWHTest {
     JSONObject result = handler.execute(null, jsonInput);
 
     // Then
-    assertNotNull("Result should not be null", result);
-    assertEquals("Overissue bin should be empty", "", result.getString("overissueBin"));
-    assertEquals("Storage bin identifier should be empty", "", result.getString("storageBin$_identifier"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("Overissue bin should be empty", "", result.getString(TestConstants.OVERISSUE_BIN));
+    assertEquals("Storage bin identifier should be empty", "", result.getString(TestConstants.STORAGE_BIN_IDENTIFIER));
   }
 
   /**
@@ -148,9 +153,9 @@ public class CheckExistsOverissueBinForRFCShipmentWHTest {
     JSONObject result = handler.execute(null, invalidJson);
 
     // Then
-    assertNotNull("Result should not be null", result);
-    assertEquals("Overissue bin should be empty", "", result.getString("overissueBin"));
-    assertEquals("Storage bin identifier should be empty", "", result.getString("storageBin$_identifier"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("Overissue bin should be empty", "", result.getString(TestConstants.OVERISSUE_BIN));
+    assertEquals("Storage bin identifier should be empty", "", result.getString(TestConstants.STORAGE_BIN_IDENTIFIER));
     assertNotNull("Error message should exist", result.getJSONObject("message"));
     assertEquals("Error severity should be error", "error", result.getJSONObject("message").getString("severity"));
   }

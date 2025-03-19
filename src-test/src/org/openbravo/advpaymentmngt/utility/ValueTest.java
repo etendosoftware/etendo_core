@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
+import org.openbravo.advpaymentmngt.TestConstants;
 
 /**
  * Test cases for the Value utility class.
@@ -25,9 +26,9 @@ public class ValueTest {
     Value value = new Value(field, testValue);
 
     // THEN
-    assertNotNull("Value instance should not be null", value);
-    assertEquals("Field should match the constructor parameter", field, value.getField());
-    assertEquals("Value should match the constructor parameter", testValue, value.getValue());
+    assertNotNull(TestConstants.VALUE_INSTANCE_NOT_NULL, value);
+    assertEquals(TestConstants.FIELD_MATCH_CONSTRUCTOR_PARAMETER, field, value.getField());
+    assertEquals(TestConstants.VALUE_MATCH_CONSTRUCTOR_PARAMETER, testValue, value.getValue());
     assertEquals("Default operator should be '=='", "==", value.getOperator());
   }
 
@@ -46,9 +47,9 @@ public class ValueTest {
     Value value = new Value(field, testValue, operator);
 
     // THEN
-    assertNotNull("Value instance should not be null", value);
-    assertEquals("Field should match the constructor parameter", field, value.getField());
-    assertEquals("Value should match the constructor parameter", testValue, value.getValue());
+    assertNotNull(TestConstants.VALUE_INSTANCE_NOT_NULL, value);
+    assertEquals(TestConstants.FIELD_MATCH_CONSTRUCTOR_PARAMETER, field, value.getField());
+    assertEquals(TestConstants.VALUE_MATCH_CONSTRUCTOR_PARAMETER, testValue, value.getValue());
     assertEquals("Operator should match the constructor parameter", operator, value.getOperator());
   }
 
@@ -62,7 +63,7 @@ public class ValueTest {
     Value value = new Value(null, null, null);
 
     // THEN
-    assertNotNull("Value instance should not be null", value);
+    assertNotNull(TestConstants.VALUE_INSTANCE_NOT_NULL, value);
     assertNull("Field should be null", value.getField());
     assertNull("Value should be null", value.getValue());
     assertNull("Operator should be null", value.getOperator());
@@ -83,9 +84,9 @@ public class ValueTest {
     Value value = new Value(field, amount, operator);
 
     // THEN
-    assertNotNull("Value instance should not be null", value);
-    assertEquals("Field should match the constructor parameter", field, value.getField());
-    assertEquals("Value should match the constructor parameter", amount, value.getValue());
+    assertNotNull(TestConstants.VALUE_INSTANCE_NOT_NULL, value);
+    assertEquals(TestConstants.FIELD_MATCH_CONSTRUCTOR_PARAMETER, field, value.getField());
+    assertEquals(TestConstants.VALUE_MATCH_CONSTRUCTOR_PARAMETER, amount, value.getValue());
     assertEquals("Operator should match the constructor parameter", operator, value.getOperator());
   }
 }

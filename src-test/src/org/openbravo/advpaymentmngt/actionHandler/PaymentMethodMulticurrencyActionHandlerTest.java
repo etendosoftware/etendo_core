@@ -29,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -42,50 +43,68 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.service.json.JsonUtils;
 
+/**
+ * Unit tests for the PaymentMethodMulticurrencyActionHandler class.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class PaymentMethodMulticurrencyActionHandlerTest {
 
-  // ========== MOCKS ==========
+  private static final String JSON_TEMPLATE = "{" + "\"paymentMethodId\":\"%s\"," + "\"financialAccountId\":\"%s\"," + "\"isSOTrx\":%b," + "\"currencyId\":\"%s\"," + "\"paymentDate\":\"%s\"," + "\"orgId\":\"%s\"" + "}";
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<FinancialUtils> mockedFinancialUtils;
   private MockedStatic<JsonUtils> mockedJsonUtils;
-
   @Mock
   private OBDal mockOBDal;
-
   @Mock
   private OBCriteria<FinAccPaymentMethod> mockCriteria;
-
   @Mock
   private FIN_FinancialAccount mockFinancialAccount;
-
   @Mock
   private FIN_PaymentMethod mockPaymentMethod;
-
   @Mock
   private FinAccPaymentMethod mockFinAccPaymentMethod;
-
   @Mock
   private Currency mockCurrency;
-
   @Mock
   private Currency mockCurrencyTo;
-
   @Mock
   private Organization mockOrganization;
-
   @Mock
   private ConversionRate mockConversionRate;
-
   @Mock
   private SimpleDateFormat mockDateFormat;
-
-  // ========== CLASS TO TEST ==========
   @InjectMocks
   private PaymentMethodMulticurrencyActionHandler handlerUnderTest;
 
-  // ========== SETUP ==========
+  /**
+   * Generates the JSON string for tests using the provided parameters
+   *
+   * @param paymentMethodId
+   *     Payment method ID
+   * @param financialAccountId
+   *     Financial account ID
+   * @param isSOTrx
+   *     SOTrx flag value
+   * @param currencyId
+   *     Currency ID (or "null" for tests with null currency)
+   * @param paymentDate
+   *     Payment date
+   * @param orgId
+   *     Organization ID
+   * @return Formatted JSON string
+   */
+  private String createJsonData(String paymentMethodId, String financialAccountId, boolean isSOTrx, String currencyId,
+      String paymentDate, String orgId) {
+    return String.format(JSON_TEMPLATE, paymentMethodId, financialAccountId, isSOTrx, currencyId, paymentDate, orgId);
+  }
+
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
   @Before
   public void setUp() throws Exception {
     // Initialize static mocks
@@ -108,6 +127,9 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     mockedJsonUtils.when(JsonUtils::createDateFormat).thenReturn(mockDateFormat);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   */
   @After
   public void tearDown() {
     // Close all static mocks
@@ -125,24 +147,25 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     }
   }
 
-  // ========== TESTS ==========
-
   /**
-   * Test the execute method with a financial account that has the same currency as the payment
+   * Test the execute method with a financial account that has the same currency as the payment.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
    */
   @Test
-  public void testExecute_SameCurrency() throws Exception {
+  public void testExecuteSameCurrency() throws Exception {
     // GIVEN
-    String paymentMethodId = "PM1";
-    String financialAccountId = "FA1";
-    String currencyId = "C1";
+    String paymentMethodId = TestConstants.PAYMENT_METHOD_ID;
+    String financialAccountId = TestConstants.FINANCIAL_ACCOUNT_ID;
+    String currencyId = TestConstants.CURRENCY_ID;
     boolean isSOTrx = true;
-    String strPaymentDate = "2023-01-01";
+    String strPaymentDate = TestConstants.TEST_DATE;
     Date paymentDate = new Date();
-    String orgId = "ORG1";
+    String orgId = TestConstants.ORG_ID;
 
     // Setup JSON data
-    String jsonData = "{" + "\"paymentMethodId\":\"" + paymentMethodId + "\"," + "\"financialAccountId\":\"" + financialAccountId + "\"," + "\"isSOTrx\":" + isSOTrx + "," + "\"currencyId\":\"" + currencyId + "\"," + "\"paymentDate\":\"" + strPaymentDate + "\"," + "\"orgId\":\"" + orgId + "\"" + "}";
+    String jsonData = createJsonData(paymentMethodId, financialAccountId, isSOTrx, currencyId, strPaymentDate, orgId);
 
     // Setup mock objects
     when(mockOBDal.get(FIN_FinancialAccount.class, financialAccountId)).thenReturn(mockFinancialAccount);
@@ -151,7 +174,7 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
 
     when(mockFinancialAccount.getCurrency()).thenReturn(mockCurrency);
     when(mockCurrency.getId()).thenReturn(currencyId);
-    when(mockCurrency.getIdentifier()).thenReturn("Currency 1");
+    when(mockCurrency.getIdentifier()).thenReturn(TestConstants.CURRENCY_NAME_1);
 
     when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPaymentMethod);
     when(mockFinAccPaymentMethod.getAccount()).thenReturn(mockFinancialAccount);
@@ -164,39 +187,39 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     JSONObject result = handlerUnderTest.execute(parameters, jsonData);
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertEquals("Conversion rate should be 1 for same currency", 1, result.getInt("conversionrate"));
-    assertTrue("Is multicurrency should be true", result.getBoolean("isPayIsMulticurrency"));
-    assertFalse("Wrong financial account should be false", result.getBoolean("isWrongFinancialAccount"));
-    assertEquals("CurrencyToId should match", currencyId, result.getString("currencyToId"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("Conversion rate should be 1 for same currency", 1, result.getInt(TestConstants.CONVERSION));
+    assertTrue(TestConstants.IS_MULTICURRENCY_TRUE_MESSAGE, result.getBoolean(TestConstants.IS_PAY_IS_MULTICURRENCY));
+    assertFalse(TestConstants.WRONG_FINANCIAL_ACCOUNT_FALSE_MESSAGE, result.getBoolean(TestConstants.IS_WRONG_FINANCIAL_ACCOUNT));
+    assertEquals(TestConstants.CURRENCY_TO_ID_MATCH_MESSAGE, currencyId, result.getString("currencyToId"));
 
-    // Verify interactions - Note: We're not verifying exact call counts for getAccount() and isPayinIsMulticurrency()
-    // as they're called multiple times internally, which was causing the test failures
     verify(mockCriteria).uniqueResult();
-    // Make sure these methods are called at least once, but don't specify exact count
     verify(mockFinAccPaymentMethod, atLeastOnce()).isPayinIsMulticurrency();
     verify(mockFinAccPaymentMethod, atLeastOnce()).getAccount();
     verify(mockFinancialAccount, atLeastOnce()).getCurrency();
   }
 
   /**
-   * Test the execute method with a different currency requiring conversion
+   * Test the execute method with a different currency requiring conversion.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
    */
   @Test
-  public void testExecute_DifferentCurrency() throws Exception {
+  public void testExecuteDifferentCurrency() throws Exception {
     // GIVEN
-    String paymentMethodId = "PM1";
-    String financialAccountId = "FA1";
-    String currencyId = "C1";
-    String currencyToId = "C2";
+    String paymentMethodId = TestConstants.PAYMENT_METHOD_ID;
+    String financialAccountId = TestConstants.FINANCIAL_ACCOUNT_ID;
+    String currencyId = TestConstants.CURRENCY_ID;
+    String currencyToId = TestConstants.CURRENCY_TO_ID;
     boolean isSOTrx = true;
-    String strPaymentDate = "2023-01-01";
+    String strPaymentDate = TestConstants.TEST_DATE;
     Date paymentDate = new Date();
-    String orgId = "ORG1";
+    String orgId = TestConstants.ORG_ID;
     BigDecimal conversionRate = new BigDecimal("1.25");
 
     // Setup JSON data
-    String jsonData = "{" + "\"paymentMethodId\":\"" + paymentMethodId + "\"," + "\"financialAccountId\":\"" + financialAccountId + "\"," + "\"isSOTrx\":" + isSOTrx + "," + "\"currencyId\":\"" + currencyId + "\"," + "\"paymentDate\":\"" + strPaymentDate + "\"," + "\"orgId\":\"" + orgId + "\"" + "}";
+    String jsonData = createJsonData(paymentMethodId, financialAccountId, isSOTrx, currencyId, strPaymentDate, orgId);
 
     // Setup mock objects
     when(mockOBDal.get(FIN_FinancialAccount.class, financialAccountId)).thenReturn(mockFinancialAccount);
@@ -207,7 +230,7 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
 
     when(mockFinancialAccount.getCurrency()).thenReturn(mockCurrencyTo);
     when(mockCurrencyTo.getId()).thenReturn(currencyToId);
-    when(mockCurrencyTo.getIdentifier()).thenReturn("Currency 2");
+    when(mockCurrencyTo.getIdentifier()).thenReturn(TestConstants.CURRENCY_NAME_2);
 
     when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPaymentMethod);
     when(mockFinAccPaymentMethod.getAccount()).thenReturn(mockFinancialAccount);
@@ -215,7 +238,6 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
 
     when(mockOrganization.getClient()).thenReturn(null);
 
-    // Setup conversion rate
     mockedFinancialUtils.when(
         () -> FinancialUtils.getConversionRate(eq(paymentDate), eq(mockCurrency), eq(mockCurrencyTo),
             eq(mockOrganization), any())).thenReturn(mockConversionRate);
@@ -227,13 +249,13 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     JSONObject result = handlerUnderTest.execute(parameters, jsonData);
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertEquals("Conversion rate should match", conversionRate.toString(), result.get("conversionrate").toString());
-    assertTrue("Is multicurrency should be true", result.getBoolean("isPayIsMulticurrency"));
-    assertFalse("Wrong financial account should be false", result.getBoolean("isWrongFinancialAccount"));
-    assertEquals("CurrencyToId should match", currencyToId, result.getString("currencyToId"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals(TestConstants.CONVERSION_RATE_MESSAGE, conversionRate.toString(),
+        result.get(TestConstants.CONVERSION).toString());
+    assertTrue(TestConstants.IS_MULTICURRENCY_TRUE_MESSAGE, result.getBoolean(TestConstants.IS_PAY_IS_MULTICURRENCY));
+    assertFalse(TestConstants.WRONG_FINANCIAL_ACCOUNT_FALSE_MESSAGE, result.getBoolean(TestConstants.IS_WRONG_FINANCIAL_ACCOUNT));
+    assertEquals(TestConstants.CURRENCY_TO_ID_MATCH_MESSAGE, currencyToId, result.getString("currencyToId"));
 
-    // Verify interactions - Using atLeastOnce() instead of specific counts
     verify(mockCriteria).uniqueResult();
     verify(mockFinAccPaymentMethod, atLeastOnce()).isPayinIsMulticurrency();
     verify(mockFinAccPaymentMethod, atLeastOnce()).getAccount();
@@ -242,19 +264,22 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
   }
 
   /**
-   * Test the execution when no conversion rate is found
+   * Test the execution when no conversion rate is found.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
    */
   @Test
-  public void testExecute_NoConversionRate() throws Exception {
+  public void testExecuteNoConversionRate() throws Exception {
     // GIVEN
-    String paymentMethodId = "PM1";
-    String financialAccountId = "FA1";
-    String currencyId = "C1";
-    String currencyToId = "C2";
+    String paymentMethodId = TestConstants.PAYMENT_METHOD_ID;
+    String financialAccountId = TestConstants.FINANCIAL_ACCOUNT_ID;
+    String currencyId = TestConstants.CURRENCY_ID;
+    String currencyToId = TestConstants.CURRENCY_TO_ID;
     boolean isSOTrx = true;
-    String strPaymentDate = "2023-01-01";
+    String strPaymentDate = TestConstants.TEST_DATE;
     Date paymentDate = new Date();
-    String orgId = "ORG1";
+    String orgId = TestConstants.ORG_ID;
 
     // Setup JSON data
     String jsonData = "{" + "\"paymentMethodId\":\"" + paymentMethodId + "\"," + "\"financialAccountId\":\"" + financialAccountId + "\"," + "\"isSOTrx\":" + isSOTrx + "," + "\"currencyId\":\"" + currencyId + "\"," + "\"paymentDate\":\"" + strPaymentDate + "\"," + "\"orgId\":\"" + orgId + "\"" + "}";
@@ -268,7 +293,7 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
 
     when(mockFinancialAccount.getCurrency()).thenReturn(mockCurrencyTo);
     when(mockCurrencyTo.getId()).thenReturn(currencyToId);
-    when(mockCurrencyTo.getIdentifier()).thenReturn("Currency 2");
+    when(mockCurrencyTo.getIdentifier()).thenReturn(TestConstants.CURRENCY_NAME_2);
 
     when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPaymentMethod);
     when(mockFinAccPaymentMethod.getAccount()).thenReturn(mockFinancialAccount);
@@ -276,7 +301,6 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
 
     when(mockOrganization.getClient()).thenReturn(null);
 
-    // Set up null conversion rate
     mockedFinancialUtils.when(
         () -> FinancialUtils.getConversionRate(eq(paymentDate), eq(mockCurrency), eq(mockCurrencyTo),
             eq(mockOrganization), any())).thenReturn(null);
@@ -287,14 +311,14 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     JSONObject result = handlerUnderTest.execute(parameters, jsonData);
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertEquals("Conversion rate should be empty", "", result.getString("conversionrate"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("Conversion rate should be empty", "", result.getString(TestConstants.CONVERSION));
     assertEquals("Converted amount should be empty", "", result.getString("convertedamount"));
-    assertTrue("Is multicurrency should be true", result.getBoolean("isPayIsMulticurrency"));
-    assertFalse("Wrong financial account should be false", result.getBoolean("isWrongFinancialAccount"));
-    assertEquals("CurrencyToId should match", currencyToId, result.getString("currencyToId"));
+    assertTrue(TestConstants.IS_MULTICURRENCY_TRUE_MESSAGE, result.getBoolean(TestConstants.IS_PAY_IS_MULTICURRENCY));
+    assertFalse(TestConstants.WRONG_FINANCIAL_ACCOUNT_FALSE_MESSAGE, result.getBoolean(TestConstants.IS_WRONG_FINANCIAL_ACCOUNT));
+    assertEquals(TestConstants.CURRENCY_TO_ID_MATCH_MESSAGE, currencyToId, result.getString("currencyToId"));
 
-    // Verify interactions - Using atLeastOnce() instead of specific counts
+    // Verify
     verify(mockCriteria).uniqueResult();
     verify(mockFinAccPaymentMethod, atLeastOnce()).isPayinIsMulticurrency();
     verify(mockFinAccPaymentMethod, atLeastOnce()).getAccount();
@@ -303,21 +327,24 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
   }
 
   /**
-   * Test when null currency is provided and financial account is used to determine currency
+   * Test when null currency is provided and financial account is used to determine currency.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
    */
   @Test
-  public void testExecute_NullCurrency() throws Exception {
+  public void testExecuteNullCurrency() throws Exception {
     // GIVEN
-    String paymentMethodId = "PM1";
-    String financialAccountId = "FA1";
-    String currencyId = "C1";
+    String paymentMethodId = TestConstants.PAYMENT_METHOD_ID;
+    String financialAccountId = TestConstants.FINANCIAL_ACCOUNT_ID;
+    String currencyId = TestConstants.CURRENCY_ID;
     boolean isSOTrx = true;
-    String strPaymentDate = "2023-01-01";
+    String strPaymentDate = TestConstants.TEST_DATE;
     Date paymentDate = new Date();
-    String orgId = "ORG1";
+    String orgId = TestConstants.ORG_ID;
 
     // Setup JSON data
-    String jsonData = "{" + "\"paymentMethodId\":\"" + paymentMethodId + "\"," + "\"financialAccountId\":\"" + financialAccountId + "\"," + "\"isSOTrx\":" + isSOTrx + "," + "\"currencyId\":\"null\"," + "\"paymentDate\":\"" + strPaymentDate + "\"," + "\"orgId\":\"" + orgId + "\"" + "}";
+    String jsonData = createJsonData(paymentMethodId, financialAccountId, isSOTrx, "null", strPaymentDate, orgId);
 
     // Setup mock objects
     when(mockOBDal.get(FIN_FinancialAccount.class, financialAccountId)).thenReturn(mockFinancialAccount);
@@ -326,7 +353,7 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
 
     when(mockFinancialAccount.getCurrency()).thenReturn(mockCurrency);
     when(mockCurrency.getId()).thenReturn(currencyId);
-    when(mockCurrency.getIdentifier()).thenReturn("Currency 1");
+    when(mockCurrency.getIdentifier()).thenReturn(TestConstants.CURRENCY_NAME_1);
 
     when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPaymentMethod);
     when(mockFinAccPaymentMethod.getAccount()).thenReturn(mockFinancialAccount);
@@ -339,12 +366,13 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     JSONObject result = handlerUnderTest.execute(parameters, jsonData);
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertEquals("Conversion rate should be 1 for same currency", 1, result.getInt("conversionrate"));
-    assertTrue("Is multicurrency should be true", result.getBoolean("isPayIsMulticurrency"));
-    assertFalse("Wrong financial account should be false", result.getBoolean("isWrongFinancialAccount"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertEquals("Conversion rate should be 1 for same currency", 1, result.getInt(TestConstants.CONVERSION));
+    assertTrue(TestConstants.IS_MULTICURRENCY_TRUE_MESSAGE, result.getBoolean(TestConstants.IS_PAY_IS_MULTICURRENCY));
+    assertFalse(TestConstants.WRONG_FINANCIAL_ACCOUNT_FALSE_MESSAGE, result.getBoolean(TestConstants.IS_WRONG_FINANCIAL_ACCOUNT));
     assertEquals("CurrencyId should match", currencyId, result.getString("currencyId"));
-    assertEquals("CurrencyIdIdentifier should match", "Currency 1", result.getString("currencyIdIdentifier"));
+    assertEquals("CurrencyIdIdentifier should match", TestConstants.CURRENCY_NAME_1,
+        result.getString("currencyIdIdentifier"));
 
     // Verify interactions - Using atLeastOnce() instead of specific counts
     verify(mockCriteria).uniqueResult();
@@ -354,10 +382,10 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
   }
 
   /**
-   * Test the exception handling of the execute method
+   * Test the exception handling of the execute method.
    */
   @Test(expected = OBException.class)
-  public void testExecute_Exception() throws Exception {
+  public void testExecuteException() {
     // GIVEN
     String invalidJsonData = "{invalid json";
     Map<String, Object> parameters = new HashMap<>();
@@ -369,18 +397,21 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
   }
 
   /**
-   * Test when the FinAccPaymentMethod is null
+   * Test when the FinAccPaymentMethod is null.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
    */
   @Test
-  public void testExecute_NullFinAccPaymentMethod() throws Exception {
+  public void testExecuteNullFinAccPaymentMethod() throws Exception {
     // GIVEN
-    String paymentMethodId = "PM1";
-    String financialAccountId = "FA1";
-    String currencyId = "C1";
+    String paymentMethodId = TestConstants.PAYMENT_METHOD_ID;
+    String financialAccountId = TestConstants.FINANCIAL_ACCOUNT_ID;
+    String currencyId = TestConstants.CURRENCY_ID;
     boolean isSOTrx = true;
-    String strPaymentDate = "2023-01-01";
+    String strPaymentDate = TestConstants.TEST_DATE;
     Date paymentDate = new Date();
-    String orgId = "ORG1";
+    String orgId = TestConstants.ORG_ID;
 
     // Setup JSON data
     String jsonData = "{" + "\"paymentMethodId\":\"" + paymentMethodId + "\"," + "\"financialAccountId\":\"" + financialAccountId + "\"," + "\"isSOTrx\":" + isSOTrx + "," + "\"currencyId\":\"" + currencyId + "\"," + "\"paymentDate\":\"" + strPaymentDate + "\"," + "\"orgId\":\"" + orgId + "\"" + "}";
@@ -397,11 +428,11 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     JSONObject result = handlerUnderTest.execute(parameters, jsonData);
 
     // THEN
-    assertNotNull("Result should not be null", result);
-    assertFalse("Is multicurrency should be false", result.getBoolean("isPayIsMulticurrency"));
-    assertTrue("Wrong financial account should be true", result.getBoolean("isWrongFinancialAccount"));
-    assertEquals("Conversion rate should be 1", 1, result.getInt("conversionrate"));
-    assertEquals("CurrencyToId should match", currencyId, result.getString("currencyToId"));
+    assertNotNull(TestConstants.RESULT_NOT_NULL_MESSAGE, result);
+    assertFalse("Is multicurrency should be false", result.getBoolean(TestConstants.IS_PAY_IS_MULTICURRENCY));
+    assertTrue("Wrong financial account should be true", result.getBoolean(TestConstants.IS_WRONG_FINANCIAL_ACCOUNT));
+    assertEquals("Conversion rate should be 1", 1, result.getInt(TestConstants.CONVERSION));
+    assertEquals(TestConstants.CURRENCY_TO_ID_MATCH_MESSAGE, currencyId, result.getString("currencyToId"));
 
     // Verify interactions
     verify(mockCriteria).uniqueResult();
@@ -409,11 +440,14 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
 
   /**
    * Test for isValidFinancialAccount method using reflection
+   *
+   * @throws Exception
+   *     if an error occurs during execution
    */
   @Test
   public void testIsValidFinancialAccount() throws Exception {
     // GIVEN
-    String currencyId = "C1";
+    String currencyId = TestConstants.CURRENCY_ID;
     boolean isSOTrx = true;
 
     // Setup mock objects
@@ -427,14 +461,14 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
         "isValidFinancialAccount", FinAccPaymentMethod.class, String.class, boolean.class);
     isValidFinancialAccountMethod.setAccessible(true);
 
-    // WHEN - Same currency with payin allowed
+    // WHEN
     boolean result1 = (boolean) isValidFinancialAccountMethod.invoke(handlerUnderTest, mockFinAccPaymentMethod,
         currencyId, isSOTrx);
 
     // THEN
     assertTrue("Should be valid with same currency and payin allowed", result1);
 
-    // WHEN - Same currency with payin not allowed
+    // WHEN
     when(mockFinAccPaymentMethod.isPayinAllow()).thenReturn(false);
     boolean result2 = (boolean) isValidFinancialAccountMethod.invoke(handlerUnderTest, mockFinAccPaymentMethod,
         currencyId, isSOTrx);
@@ -442,8 +476,8 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     // THEN
     assertFalse("Should be invalid with same currency and payin not allowed", result2);
 
-    // WHEN - Different currency with multicurrency allowed
-    String differentCurrencyId = "C2";
+    // WHEN
+    String differentCurrencyId = TestConstants.CURRENCY_TO_ID;
     when(mockFinAccPaymentMethod.isPayinIsMulticurrency()).thenReturn(true);
     boolean result3 = (boolean) isValidFinancialAccountMethod.invoke(handlerUnderTest, mockFinAccPaymentMethod,
         differentCurrencyId, isSOTrx);
@@ -451,7 +485,7 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     // THEN
     assertTrue("Should be valid with different currency and multicurrency allowed", result3);
 
-    // WHEN - Different currency with multicurrency not allowed
+    // WHEN
     when(mockFinAccPaymentMethod.isPayinIsMulticurrency()).thenReturn(false);
     boolean result4 = (boolean) isValidFinancialAccountMethod.invoke(handlerUnderTest, mockFinAccPaymentMethod,
         differentCurrencyId, isSOTrx);
@@ -459,7 +493,7 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     // THEN
     assertFalse("Should be invalid with different currency and multicurrency not allowed", result4);
 
-    // WHEN - Null FinAccPaymentMethod
+    // WHEN
     boolean result5 = (boolean) isValidFinancialAccountMethod.invoke(handlerUnderTest, null, currencyId, isSOTrx);
 
     // THEN

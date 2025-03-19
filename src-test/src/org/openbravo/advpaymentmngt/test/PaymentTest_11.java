@@ -30,6 +30,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -56,6 +57,7 @@ import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
 
 public class PaymentTest_11 extends WeldBaseTest {
+
 
   // 1) Create an order without discount
   // 2) Invoice the complete order (without discount)

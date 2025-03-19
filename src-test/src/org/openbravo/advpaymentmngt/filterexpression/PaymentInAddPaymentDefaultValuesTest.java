@@ -5,7 +5,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -30,300 +30,419 @@ import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 
+/**
+ * Unit tests for the PaymentInAddPaymentDefaultValues class.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class PaymentInAddPaymentDefaultValuesTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+  private static final String DOCUMENT_NO = "P-0001";
+  private static final Integer STANDARD_PRECISION = 2;
+  private static final Date PAYMENT_DATE = new Date();
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
+  @InjectMocks
+  private PaymentInAddPaymentDefaultValues classUnderTest;
+  @Mock
+  private OBDal mockOBDal;
+  @Mock
+  private FIN_Payment mockPayment;
+  @Mock
+  private Currency mockCurrency;
+  @Mock
+  private BusinessPartner mockBusinessPartner;
+  @Mock
+  private Organization mockOrganization;
+  private MockedStatic<OBDal> mockedOBDal;
+  private MockedStatic<OBDateUtils> mockedOBDateUtils;
+  private AutoCloseable mocks;
+  private Map<String, String> requestMap;
+  private Method getPaymentMethod;
 
-    @InjectMocks
-    private PaymentInAddPaymentDefaultValues classUnderTest;
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
+  @Before
+  public void setUp() throws Exception {
+    mocks = MockitoAnnotations.openMocks(this);
 
-    @Mock
-    private OBDal mockOBDal;
+    getPaymentMethod = PaymentInAddPaymentDefaultValues.class.getDeclaredMethod("getPayment", Map.class);
+    getPaymentMethod.setAccessible(true);
 
-    @Mock
-    private FIN_Payment mockPayment;
+    // Setup static mocks
+    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
 
-    @Mock
-    private Currency mockCurrency;
+    mockedOBDateUtils = mockStatic(OBDateUtils.class);
+    mockedOBDateUtils.when(() -> OBDateUtils.formatDate(PAYMENT_DATE)).thenReturn(TestConstants.TEST_DATE);
 
-    @Mock
-    private BusinessPartner mockBusinessPartner;
+    // Setup request map with context
+    requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    context.put("inpfinPaymentId", TestConstants.PAYMENT_ID);
+    requestMap.put("context", context.toString());
 
-    @Mock
-    private Organization mockOrganization;
+    // Setup mock payment
+    when(mockOBDal.get(FIN_Payment.class, TestConstants.PAYMENT_ID)).thenReturn(mockPayment);
+    when(mockPayment.getAmount()).thenReturn(TestConstants.PAYMENT_AMOUNT);
+    when(mockPayment.getDocumentNo()).thenReturn(DOCUMENT_NO);
+    when(mockPayment.getFinancialTransactionConvertRate()).thenReturn(TestConstants.CONVERSION_RATE);
+    when(mockPayment.getFinancialTransactionAmount()).thenReturn(TestConstants.CONVERTED_AMOUNT);
+    when(mockPayment.getBusinessPartner()).thenReturn(mockBusinessPartner);
+    when(mockPayment.getCurrency()).thenReturn(mockCurrency);
+    when(mockPayment.getOrganization()).thenReturn(mockOrganization);
+    when(mockPayment.getPaymentDate()).thenReturn(PAYMENT_DATE);
 
-    private MockedStatic<OBDal> mockedOBDal;
-    private MockedStatic<OBDateUtils> mockedOBDateUtils;
-    private AutoCloseable mocks;
+    // Setup mock currency
+    when(mockCurrency.getId()).thenReturn(TestConstants.CURRENCY_ID);
+    when(mockCurrency.getStandardPrecision()).thenReturn(Long.valueOf(STANDARD_PRECISION));
 
-    private Map<String, String> requestMap;
-    private JSONObject context;
-    private static final String PAYMENT_ID = "TEST_PAYMENT_ID";
-    private static final String CURRENCY_ID = "TEST_CURRENCY_ID";
-    private static final String BP_ID = "TEST_BP_ID";
-    private static final String ORG_ID = "TEST_ORG_ID";
-    private static final String DOCUMENT_NO = "P-0001";
-    private static final BigDecimal PAYMENT_AMOUNT = new BigDecimal("100.00");
-    private static final BigDecimal CONVERSION_RATE = new BigDecimal("1.25");
-    private static final BigDecimal CONVERTED_AMOUNT = new BigDecimal("125.00");
-    private static final Integer STANDARD_PRECISION = 2;
-    private static final Date PAYMENT_DATE = new Date();
-    private static final String FORMATTED_DATE = "2023-01-01";
+    // Setup mock business partner
+    when(mockBusinessPartner.getId()).thenReturn(TestConstants.BUSINESS_PARTNER_ID);
 
-    private Method getPaymentMethod;
+    // Setup mock organization
+    when(mockOrganization.getId()).thenReturn(TestConstants.ORG_ID);
+  }
 
-    @Before
-    public void setUp() throws Exception {
-        mocks = MockitoAnnotations.openMocks(this);
-
-        getPaymentMethod = PaymentInAddPaymentDefaultValues.class.getDeclaredMethod("getPayment", Map.class);
-        getPaymentMethod.setAccessible(true);
-
-        // Setup static mocks
-        mockedOBDal = mockStatic(OBDal.class);
-        mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
-
-        mockedOBDateUtils = mockStatic(OBDateUtils.class);
-        mockedOBDateUtils.when(() -> OBDateUtils.formatDate(PAYMENT_DATE)).thenReturn(FORMATTED_DATE);
-
-        // Setup request map with context
-        requestMap = new HashMap<>();
-        context = new JSONObject();
-        context.put("inpfinPaymentId", PAYMENT_ID);
-        requestMap.put("context", context.toString());
-
-        // Setup mock payment
-        when(mockOBDal.get(FIN_Payment.class, PAYMENT_ID)).thenReturn(mockPayment);
-        when(mockPayment.getAmount()).thenReturn(PAYMENT_AMOUNT);
-        when(mockPayment.getDocumentNo()).thenReturn(DOCUMENT_NO);
-        when(mockPayment.getFinancialTransactionConvertRate()).thenReturn(CONVERSION_RATE);
-        when(mockPayment.getFinancialTransactionAmount()).thenReturn(CONVERTED_AMOUNT);
-        when(mockPayment.getBusinessPartner()).thenReturn(mockBusinessPartner);
-        when(mockPayment.getCurrency()).thenReturn(mockCurrency);
-        when(mockPayment.getOrganization()).thenReturn(mockOrganization);
-        when(mockPayment.getPaymentDate()).thenReturn(PAYMENT_DATE);
-
-        // Setup mock currency
-        when(mockCurrency.getId()).thenReturn(CURRENCY_ID);
-        when(mockCurrency.getStandardPrecision()).thenReturn(Long.valueOf(STANDARD_PRECISION));
-
-        // Setup mock business partner
-        when(mockBusinessPartner.getId()).thenReturn(BP_ID);
-
-        // Setup mock organization
-        when(mockOrganization.getId()).thenReturn(ORG_ID);
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
+  @After
+  public void tearDown() throws Exception {
+    if (mockedOBDal != null) {
+      mockedOBDal.close();
     }
-
-    @After
-    public void tearDown() throws Exception {
-        if (mockedOBDal != null) {
-            mockedOBDal.close();
-        }
-        if (mockedOBDateUtils != null) {
-            mockedOBDateUtils.close();
-        }
-        if (mocks != null) {
-            mocks.close();
-        }
+    if (mockedOBDateUtils != null) {
+      mockedOBDateUtils.close();
     }
-
-    @Test
-    public void testGetDefaultExpectedAmountReturnsPaymentAmount() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultExpectedAmount(requestMap);
-
-        // Then
-        assertEquals("Expected amount should match payment amount", PAYMENT_AMOUNT.toPlainString(), result);
+    if (mocks != null) {
+      mocks.close();
     }
+  }
 
-    @Test
-    public void testGetDefaultActualAmountReturnsPaymentAmount() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultActualAmount(requestMap);
+  /**
+   * Tests the getDefaultExpectedAmount method, expecting the payment amount to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultExpectedAmountReturnsPaymentAmount() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultExpectedAmount(requestMap);
 
-        // Then
-        assertEquals("Actual amount should match payment amount", PAYMENT_AMOUNT.toPlainString(), result);
-    }
+    // Then
+    assertEquals("Expected amount should match payment amount", TestConstants.PAYMENT_AMOUNT.toPlainString(), result);
+  }
 
-    @Test
-    public void testGetDefaultIsSOTrxReturnsY() {
-        // When
-        String result = classUnderTest.getDefaultIsSOTrx(requestMap);
+  /**
+   * Tests the getDefaultActualAmount method, expecting the payment amount to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultActualAmountReturnsPaymentAmount() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultActualAmount(requestMap);
 
-        // Then
-        assertEquals("IsSOTrx should be Y", "Y", result);
-    }
+    // Then
+    assertEquals("Actual amount should match payment amount", TestConstants.PAYMENT_AMOUNT.toPlainString(), result);
+  }
 
-    @Test
-    public void testGetDefaultTransactionTypeReturnsI() {
-        // When
-        String result = classUnderTest.getDefaultTransactionType(requestMap);
+  /**
+   * Tests the getDefaultIsSOTrx method, expecting "Y" to be returned.
+   */
+  @Test
+  public void testGetDefaultIsSOTrxReturnsY() {
+    // When
+    String result = classUnderTest.getDefaultIsSOTrx(requestMap);
 
-        // Then
-        assertEquals("Transaction type should be I", "I", result);
-    }
+    // Then
+    assertEquals("IsSOTrx should be Y", "Y", result);
+  }
 
-    @Test
-    public void testGetDefaultPaymentTypeReturnsPaymentId() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultPaymentType(requestMap);
+  /**
+   * Tests the getDefaultTransactionType method, expecting "I" to be returned.
+   */
+  @Test
+  public void testGetDefaultTransactionTypeReturnsI() {
+    // When
+    String result = classUnderTest.getDefaultTransactionType(requestMap);
 
-        // Then
-        assertEquals("Payment type should match payment ID", PAYMENT_ID, result);
-    }
+    // Then
+    assertEquals("Transaction type should be I", "I", result);
+  }
 
-    @Test
-    public void testGetDefaultOrderTypeReturnsEmptyString() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultOrderType(requestMap);
+  /**
+   * Tests the getDefaultPaymentType method, expecting the payment ID to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultPaymentTypeReturnsPaymentId() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultPaymentType(requestMap);
 
-        // Then
-        assertEquals("Order type should be empty", "", result);
-    }
+    // Then
+    assertEquals("Payment type should match payment ID", TestConstants.PAYMENT_ID, result);
+  }
 
-    @Test
-    public void testGetDefaultInvoiceTypeReturnsEmptyString() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultInvoiceType(requestMap);
+  /**
+   * Tests the getDefaultOrderType method, expecting an empty string to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultOrderTypeReturnsEmptyString() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultOrderType(requestMap);
 
-        // Then
-        assertEquals("Invoice type should be empty", "", result);
-    }
+    // Then
+    assertEquals("Order type should be empty", "", result);
+  }
 
-    @Test
-    public void testGetDefaultDocumentNoReturnsPaymentDocumentNo() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultDocumentNo(requestMap);
+  /**
+   * Tests the getDefaultInvoiceType method, expecting an empty string to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultInvoiceTypeReturnsEmptyString() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultInvoiceType(requestMap);
 
-        // Then
-        assertEquals("Document number should match payment document number", DOCUMENT_NO, result);
-    }
+    // Then
+    assertEquals("Invoice type should be empty", "", result);
+  }
 
-    @Test
-    public void testGetPaymentWithFinPaymentId() throws Exception {
-        // When
-        FIN_Payment result = (FIN_Payment) getPaymentMethod.invoke(classUnderTest, requestMap);
+  /**
+   * Tests the getDefaultDocumentNo method, expecting the payment document number to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultDocumentNoReturnsPaymentDocumentNo() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultDocumentNo(requestMap);
 
-        // Then
-        assertEquals("Should return the mocked payment", mockPayment, result);
-    }
+    // Then
+    assertEquals("Document number should match payment document number", DOCUMENT_NO, result);
+  }
 
-    @Test
-    public void testGetPaymentWithFinPaymentIdInDifferentFormat() throws Exception {
-        // Given
-        JSONObject altContext = new JSONObject();
-        altContext.put("Fin_Payment_ID", PAYMENT_ID);
-        Map<String, String> altRequestMap = new HashMap<>();
-        altRequestMap.put("context", altContext.toString());
+  /**
+   * Tests the getPayment method with a valid payment ID, expecting the mocked payment to be returned.
+   *
+   * @throws Exception
+   *     if an error occurs during method invocation
+   */
+  @Test
+  public void testGetPaymentWithFinPaymentId() throws Exception {
+    // When
+    FIN_Payment result = (FIN_Payment) getPaymentMethod.invoke(classUnderTest, requestMap);
 
-        // When
-        FIN_Payment result = (FIN_Payment) getPaymentMethod.invoke(classUnderTest, altRequestMap);
+    // Then
+    assertEquals("Should return the mocked payment", mockPayment, result);
+  }
 
-        // Then
-        assertEquals("Should return the mocked payment", mockPayment, result);
-    }
+  /**
+   * Tests the getPayment method with a payment ID in a different format, expecting the mocked payment to be returned.
+   *
+   * @throws Exception
+   *     if an error occurs during method invocation
+   */
+  @Test
+  public void testGetPaymentWithFinPaymentIdInDifferentFormat() throws Exception {
+    // Given
+    JSONObject altContext = new JSONObject();
+    altContext.put("Fin_Payment_ID", TestConstants.PAYMENT_ID);
+    Map<String, String> altRequestMap = new HashMap<>();
+    altRequestMap.put("context", altContext.toString());
 
-    @Test
-    public void testGetDefaultConversionRateReturnsPaymentConversionRate() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultConversionRate(requestMap);
+    // When
+    FIN_Payment result = (FIN_Payment) getPaymentMethod.invoke(classUnderTest, altRequestMap);
 
-        // Then
-        assertEquals("Conversion rate should match payment conversion rate", CONVERSION_RATE.toPlainString(), result);
-    }
+    // Then
+    assertEquals("Should return the mocked payment", mockPayment, result);
+  }
 
-    @Test
-    public void testGetDefaultConvertedAmountReturnsPaymentConvertedAmount() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultConvertedAmount(requestMap);
+  /**
+   * Tests the getDefaultConversionRate method, expecting the payment conversion rate to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultConversionRateReturnsPaymentConversionRate() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultConversionRate(requestMap);
 
-        // Then
-        assertEquals("Converted amount should match payment converted amount", CONVERTED_AMOUNT.toPlainString(), result);
-    }
+    // Then
+    assertEquals("Conversion rate should match payment conversion rate", TestConstants.CONVERSION_RATE.toPlainString(),
+        result);
+  }
 
-    @Test
-    public void testGetDefaultReceivedFromReturnsBusinessPartnerId() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultReceivedFrom(requestMap);
+  /**
+   * Tests the getDefaultConvertedAmount method, expecting the payment converted amount to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultConvertedAmountReturnsPaymentConvertedAmount() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultConvertedAmount(requestMap);
 
-        // Then
-        assertEquals("Received from should match business partner ID", BP_ID, result);
-    }
+    // Then
+    assertEquals("Converted amount should match payment converted amount",
+        TestConstants.CONVERTED_AMOUNT.toPlainString(), result);
+  }
 
-    @Test
-    public void testGetDefaultReceivedFromWithNullBusinessPartner() throws JSONException {
-        // Given
-        when(mockPayment.getBusinessPartner()).thenReturn(null);
+  /**
+   * Tests the getDefaultReceivedFrom method, expecting the business partner ID to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultReceivedFromReturnsBusinessPartnerId() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultReceivedFrom(requestMap);
 
-        // When
-        String result = classUnderTest.getDefaultReceivedFrom(requestMap);
+    // Then
+    assertEquals("Received from should match business partner ID", TestConstants.BUSINESS_PARTNER_ID, result);
+  }
 
-        // Then
-        assertEquals("Received from should be empty when business partner is null", "", result);
-    }
+  /**
+   * Tests the getDefaultReceivedFrom method with a null business partner, expecting an empty string to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultReceivedFromWithNullBusinessPartner() throws JSONException {
+    // Given
+    when(mockPayment.getBusinessPartner()).thenReturn(null);
 
-    @Test
-    public void testGetDefaultStandardPrecisionReturnsCurrencyPrecision() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultStandardPrecision(requestMap);
+    // When
+    String result = classUnderTest.getDefaultReceivedFrom(requestMap);
 
-        // Then
-        assertEquals("Standard precision should match currency standard precision", STANDARD_PRECISION.toString(), result);
-    }
+    // Then
+    assertEquals("Received from should be empty when business partner is null", "", result);
+  }
 
-    @Test
-    public void testGetDefaultCurrencyReturnsCurrencyId() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultCurrency(requestMap);
+  /**
+   * Tests the getDefaultStandardPrecision method, expecting the currency standard precision to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultStandardPrecisionReturnsCurrencyPrecision() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultStandardPrecision(requestMap);
 
-        // Then
-        assertEquals("Currency should match payment currency ID", CURRENCY_ID, result);
-    }
+    // Then
+    assertEquals("Standard precision should match currency standard precision", STANDARD_PRECISION.toString(), result);
+  }
 
-    @Test
-    public void testGetOrganizationReturnsOrganizationId() throws JSONException {
-        // When
-        String result = classUnderTest.getOrganization(requestMap);
+  /**
+   * Tests the getDefaultCurrency method, expecting the currency ID to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultCurrencyReturnsCurrencyId() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultCurrency(requestMap);
 
-        // Then
-        assertEquals("Organization should match payment organization ID", ORG_ID, result);
-    }
+    // Then
+    assertEquals("Currency should match payment currency ID", TestConstants.CURRENCY_ID, result);
+  }
 
-    @Test
-    public void testGetDefaultPaymentDateReturnsFormattedPaymentDate() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultPaymentDate(requestMap);
+  /**
+   * Tests the getOrganization method, expecting the organization ID to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetOrganizationReturnsOrganizationId() throws JSONException {
+    // When
+    String result = classUnderTest.getOrganization(requestMap);
 
-        // Then
-        assertEquals("Payment date should match formatted payment date", FORMATTED_DATE, result);
-    }
+    // Then
+    assertEquals("Organization should match payment organization ID", TestConstants.ORG_ID, result);
+  }
 
-    @Test
-    public void testGetDefaultDocumentReturnsEmptyString() throws JSONException {
-        // When
-        String result = classUnderTest.getDefaultDocument(requestMap);
+  /**
+   * Tests the getDefaultPaymentDate method, expecting the formatted payment date to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultPaymentDateReturnsFormattedPaymentDate() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultPaymentDate(requestMap);
 
-        // Then
-        assertEquals("Document should be empty", "", result);
-    }
+    // Then
+    assertEquals("Payment date should match formatted payment date", TestConstants.TEST_DATE, result);
+  }
 
-    @Test
-    public void testGetBankStatementLineAmountReturnsEmptyString() throws JSONException {
-        // When
-        String result = classUnderTest.getBankStatementLineAmount(requestMap);
+  /**
+   * Tests the getDefaultDocument method, expecting an empty string to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultDocumentReturnsEmptyString() throws JSONException {
+    // When
+    String result = classUnderTest.getDefaultDocument(requestMap);
 
-        // Then
-        assertEquals("Bank statement line amount should be empty", "", result);
-    }
+    // Then
+    assertEquals("Document should be empty", "", result);
+  }
 
-    @Test
-    public void testGetSeqReturns100() {
-        // When
-        long result = classUnderTest.getSeq();
+  /**
+   * Tests the getBankStatementLineAmount method, expecting an empty string to be returned.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetBankStatementLineAmountReturnsEmptyString() throws JSONException {
+    // When
+    String result = classUnderTest.getBankStatementLineAmount(requestMap);
 
-        // Then
-        assertEquals("Sequence should be 100", 100L, result);
-    }
+    // Then
+    assertEquals("Bank statement line amount should be empty", "", result);
+  }
+
+  /**
+   * Tests the getSeq method, expecting 100 to be returned.
+   */
+  @Test
+  public void testGetSeqReturns100() {
+    // When
+    long result = classUnderTest.getSeq();
+
+    // Then
+    assertEquals("Sequence should be 100", 100L, result);
+  }
 }

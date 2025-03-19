@@ -1,27 +1,8 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2023 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -48,7 +30,7 @@ import org.openbravo.erpCommon.utility.PropertyNotFoundException;
 import org.openbravo.model.ad.ui.Window;
 
 /**
- * Test class for PurchaseInvoiceAddPaymentReadOnlyLogics
+ * Unit tests for the PurchaseInvoiceAddPaymentReadOnlyLogics class.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PurchaseInvoiceAddPaymentReadOnlyLogicsTest {
@@ -64,27 +46,36 @@ public class PurchaseInvoiceAddPaymentReadOnlyLogicsTest {
 
   @Mock
   private OBContext mockOBContext;
-  
+
   @Mock
   private OBDal mockOBDal;
-  
+
   @Mock
   private Window mockWindow;
 
+  /**
+   * Sets up the test environment before each test.
+   */
   @Before
   public void setUp() {
     mocks = MockitoAnnotations.openMocks(this);
-    
+
     // Setup static mocks
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
-    
+
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
-    
+
     mockedPreferences = mockStatic(Preferences.class);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedOBContext != null) {
@@ -101,295 +92,416 @@ public class PurchaseInvoiceAddPaymentReadOnlyLogicsTest {
     }
   }
 
+  /**
+   * Tests the getSeq method.
+   */
   @Test
   public void testGetSeq() {
     // When
     long result = classUnderTest.getSeq();
-    
+
     // Then
     assertEquals("Sequence should be 100", 100L, result);
   }
 
+  /**
+   * Tests the getPaymentDocumentNoReadOnlyLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetPaymentDocumentNoReadOnlyLogic() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
-    
+
     // When
     boolean result = classUnderTest.getPaymentDocumentNoReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Payment document number should not be read-only", result);
   }
 
+  /**
+   * Tests the getReceivedFromReadOnlyLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetReceivedFromReadOnlyLogic() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
-    
+
     // When
     boolean result = classUnderTest.getReceivedFromReadOnlyLogic(requestMap);
-    
+
     // Then
     assertTrue("Received from field should be read-only", result);
   }
 
+  /**
+   * Tests the getPaymentMethodReadOnlyLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetPaymentMethodReadOnlyLogic() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
-    
+
     // When
     boolean result = classUnderTest.getPaymentMethodReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Payment method should not be read-only", result);
   }
 
+  /**
+   * Tests the getActualPaymentReadOnlyLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetActualPaymentReadOnlyLogic() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
-    
+
     // When
     boolean result = classUnderTest.getActualPaymentReadOnlyLogic(requestMap);
-    
+
     // Then
     assertTrue("Actual payment should be read-only", result);
   }
 
+  /**
+   * Tests the getPaymentDateReadOnlyLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
   public void testGetPaymentDateReadOnlyLogic() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
-    
+
     // When
     boolean result = classUnderTest.getPaymentDateReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Payment date should not be read-only", result);
   }
 
+  /**
+   * Tests the getFinancialAccountReadOnlyLogic method.
+   * <p>
+   * Tests the getConvertedAmountReadOnlyLogic method when preference is YES.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetFinancialAccountReadOnlyLogic() throws JSONException {
-    // Given
-    Map<String, String> requestMap = new HashMap<>();
-    
-    // When
-    boolean result = classUnderTest.getFinancialAccountReadOnlyLogic(requestMap);
-    
-    // Then
-    assertFalse("Financial account should not be read-only", result);
-  }
-
-  @Test
-  public void testGetCurrencyReadOnlyLogic() throws JSONException {
-    // Given
-    Map<String, String> requestMap = new HashMap<>();
-    
-    // When
-    boolean result = classUnderTest.getCurrencyReadOnlyLogic(requestMap);
-    
-    // Then
-    assertTrue("Currency should be read-only", result);
-  }
-
-  @Test
-  public void testGetConvertedAmountReadOnlyLogic_NullContext() throws JSONException {
-    // Given
-    Map<String, String> requestMap = new HashMap<>();
-    
-    // When
-    boolean result = classUnderTest.getConvertedAmountReadOnlyLogic(requestMap);
-    
-    // Then
-    assertFalse("Converted amount should not be read-only when context is null", result);
-  }
-
-  @Test
-  public void testGetConvertedAmountReadOnlyLogic_PreferenceYes() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetConvertedAmountReadOnlyLogicPreferenceYes() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenReturn(Preferences.YES);
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenReturn(Preferences.YES);
+
     // When
     boolean result = classUnderTest.getConvertedAmountReadOnlyLogic(requestMap);
-    
+
     // Then
     assertTrue("Converted amount should be read-only when preference is YES", result);
   }
 
+  /**
+   * Tests the getConvertedAmountReadOnlyLogic method when preference is NO.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   * @throws PropertyNotFoundException
+   *     if the property is not found
+   * @throws PropertyException
+   *     if a property exception occurs
+   */
   @Test
-  public void testGetConvertedAmountReadOnlyLogic_PreferenceNo() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetConvertedAmountReadOnlyLogicPreferenceNo() throws JSONException, PropertyNotFoundException, PropertyException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenReturn(Preferences.NO);
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenReturn(Preferences.NO);
+
     // When
     boolean result = classUnderTest.getConvertedAmountReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Converted amount should not be read-only when preference is NO", result);
   }
 
+  /**
+   * Tests the getConvertedAmountReadOnlyLogic method when property is not found.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   * @throws PropertyNotFoundException
+   *     if the property is not found
+   * @throws PropertyException
+   *     if a property exception occurs
+   */
   @Test
-  public void testGetConvertedAmountReadOnlyLogic_PropertyNotFoundException() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetConvertedAmountReadOnlyLogicPropertyNotFoundException() throws JSONException, PropertyNotFoundException, PropertyException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenThrow(new PropertyNotFoundException());
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenThrow(new PropertyNotFoundException());
+
     // When
     boolean result = classUnderTest.getConvertedAmountReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Converted amount should not be read-only when property is not found", result);
   }
 
+  /**
+   * Tests the getConvertedAmountReadOnlyLogic method when a property exception occurs.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   * @throws PropertyNotFoundException
+   *     if the property is not found
+   * @throws PropertyException
+   *     if a property exception occurs
+   */
   @Test
-  public void testGetConvertedAmountReadOnlyLogic_PropertyException() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetConvertedAmountReadOnlyLogicPropertyException() throws JSONException, PropertyNotFoundException, PropertyException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenThrow(new PropertyException());
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenThrow(new PropertyException());
+
     // When
     boolean result = classUnderTest.getConvertedAmountReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Converted amount should not be read-only when property exception occurs", result);
   }
 
+  /**
+   * Tests the getConversionRateReadOnlyLogic method when context is null.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetConversionRateReadOnlyLogic_NullContext() throws JSONException {
+  public void testGetConversionRateReadOnlyLogicNullContext() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
-    
+
     // When
     boolean result = classUnderTest.getConversionRateReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Conversion rate should not be read-only when context is null", result);
   }
 
+  /**
+   * Tests the getConversionRateReadOnlyLogic method when preference is YES.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   * @throws PropertyNotFoundException
+   *     if the property is not found
+   * @throws PropertyException
+   *     if a property exception occurs
+   */
   @Test
-  public void testGetConversionRateReadOnlyLogic_PreferenceYes() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetConversionRateReadOnlyLogicPreferenceYes() throws JSONException, PropertyNotFoundException, PropertyException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenReturn(Preferences.YES);
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenReturn(Preferences.YES);
+
     // When
     boolean result = classUnderTest.getConversionRateReadOnlyLogic(requestMap);
-    
+
     // Then
     assertTrue("Conversion rate should be read-only when preference is YES", result);
   }
 
+  /**
+   * Tests the getConversionRateReadOnlyLogic method when preference is NO.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   * @throws PropertyNotFoundException
+   *     if the property is not found
+   * @throws PropertyException
+   *     if a property exception occurs
+   */
   @Test
-  public void testGetConversionRateReadOnlyLogic_PreferenceNo() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetConversionRateReadOnlyLogicPreferenceNo() throws JSONException, PropertyNotFoundException, PropertyException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenReturn(Preferences.NO);
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenReturn(Preferences.NO);
+
     // When
     boolean result = classUnderTest.getConversionRateReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Conversion rate should not be read-only when preference is NO", result);
   }
 
+  /**
+   * Tests the getConversionRateReadOnlyLogic method when property is not found.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
   @Test
-  public void testGetConversionRateReadOnlyLogic_PropertyNotFoundException() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetFinancialAccountReadOnlyLogic() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+
+    // When
+    boolean result = classUnderTest.getFinancialAccountReadOnlyLogic(requestMap);
+
+    // Then
+    assertFalse("Financial account should not be read-only", result);
+  }
+
+  /**
+   * Tests the getCurrencyReadOnlyLogic method.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetCurrencyReadOnlyLogic() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+
+    // When
+    boolean result = classUnderTest.getCurrencyReadOnlyLogic(requestMap);
+
+    // Then
+    assertTrue("Currency should be read-only", result);
+  }
+
+  /**
+   * Tests the getConvertedAmountReadOnlyLogic method when context is null.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetConvertedAmountReadOnlyLogicNullContext() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+
+    // When
+    boolean result = classUnderTest.getConvertedAmountReadOnlyLogic(requestMap);
+
+    // Then
+    assertFalse("Converted amount should not be read-only when context is null", result);
+  }
+
+  /**
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetConversionRateReadOnlyLogicPropertyNotFoundException() throws JSONException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenThrow(new PropertyNotFoundException());
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenThrow(new PropertyNotFoundException());
+
     // When
     boolean result = classUnderTest.getConversionRateReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Conversion rate should not be read-only when property is not found", result);
   }
 
+  /**
+   * Tests the getConversionRateReadOnlyLogic method when a property exception occurs.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   * @throws PropertyNotFoundException
+   *     if the property is not found
+   * @throws PropertyException
+   *     if a property exception occurs
+   */
   @Test
-  public void testGetConversionRateReadOnlyLogic_PropertyException() throws JSONException, PropertyNotFoundException, PropertyException {
+  public void testGetConversionRateReadOnlyLogicPropertyException() throws JSONException, PropertyNotFoundException, PropertyException {
     // Given
     Map<String, String> requestMap = new HashMap<>();
     JSONObject context = new JSONObject();
-    context.put("inpwindowId", APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
-    requestMap.put("context", context.toString());
-    
+    context.put(TestConstants.INPWINDOW_ID, APRMConstants.PURCHASE_INVOICE_WINDOW_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
     when(mockOBDal.get(Window.class, APRMConstants.PURCHASE_INVOICE_WINDOW_ID)).thenReturn(mockWindow);
-    
-    mockedPreferences.when(() -> Preferences.getPreferenceValue("NotAllowChangeExchange", true, 
-        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), 
-        mockOBContext.getUser(), mockOBContext.getRole(), mockWindow))
-        .thenThrow(new PropertyException());
-    
+
+    mockedPreferences.when(() -> Preferences.getPreferenceValue(TestConstants.NOT_ALLOW_CHANGE_EXCHANGE, true,
+        mockOBContext.getCurrentClient(), mockOBContext.getCurrentOrganization(), mockOBContext.getUser(),
+        mockOBContext.getRole(), mockWindow)).thenThrow(new PropertyException());
+
     // When
     boolean result = classUnderTest.getConversionRateReadOnlyLogic(requestMap);
-    
+
     // Then
     assertFalse("Conversion rate should not be read-only when property exception occurs", result);
   }

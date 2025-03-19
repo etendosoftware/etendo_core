@@ -20,6 +20,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.exception.NoAlgorithmFoundException;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
@@ -30,6 +31,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 @RunWith(MockitoJUnitRunner.class)
 public class FIN_MatchingTransactionTest {
 
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
@@ -48,7 +52,7 @@ public class FIN_MatchingTransactionTest {
   @Test
   public void testConstructorNullAlgorithm() {
     expectedException.expect(NoAlgorithmFoundException.class);
-    expectedException.expectMessage("No algorithm has been defined to match bank statement lines");
+    expectedException.expectMessage(TestConstants.NO_ALGORITHM_DEFINED_MESSAGE);
 
     matchingTransaction = new FIN_MatchingTransaction(null);
   }
@@ -60,7 +64,7 @@ public class FIN_MatchingTransactionTest {
   @Test
   public void testConstructorEmptyAlgorithm() {
     expectedException.expect(NoAlgorithmFoundException.class);
-    expectedException.expectMessage("No algorithm has been defined to match bank statement lines");
+    expectedException.expectMessage(TestConstants.NO_ALGORITHM_DEFINED_MESSAGE);
 
     matchingTransaction = new FIN_MatchingTransaction("");
   }
@@ -83,7 +87,7 @@ public class FIN_MatchingTransactionTest {
    */
   @Test
   public void testConstructorValidAlgorithm() {
-    String validAlgorithm = "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm";
+    String validAlgorithm = TestConstants.MOCK_MATCHING_ALGORITHM;
 
     matchingTransaction = new FIN_MatchingTransaction(validAlgorithm);
 
@@ -100,8 +104,7 @@ public class FIN_MatchingTransactionTest {
    */
   @Test
   public void testMatchSuccess() throws Exception {
-    matchingTransaction = new FIN_MatchingTransaction(
-        "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm");
+    matchingTransaction = new FIN_MatchingTransaction(TestConstants.MOCK_MATCHING_ALGORITHM);
 
     List<FIN_FinaccTransaction> excludedTransactions = new ArrayList<>();
 
@@ -120,11 +123,10 @@ public class FIN_MatchingTransactionTest {
   @Test
   public void testMatchNullAlgorithm() throws Exception {
     expectedException.expect(NoAlgorithmFoundException.class);
-    expectedException.expectMessage("No algorithm has been defined to match bank statement lines");
+    expectedException.expectMessage(TestConstants.NO_ALGORITHM_DEFINED_MESSAGE);
 
-    matchingTransaction = new FIN_MatchingTransaction(
-        "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm");
-    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField("algorithm");
+    matchingTransaction = new FIN_MatchingTransaction(TestConstants.MOCK_MATCHING_ALGORITHM);
+    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField(TestConstants.ALGORITHM);
     algorithmField.setAccessible(true);
     algorithmField.set(matchingTransaction, null);
 
@@ -142,8 +144,7 @@ public class FIN_MatchingTransactionTest {
    */
   @Test
   public void testUnmatchSuccess() throws Exception {
-    matchingTransaction = new FIN_MatchingTransaction(
-        "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm");
+    matchingTransaction = new FIN_MatchingTransaction(TestConstants.MOCK_MATCHING_ALGORITHM);
 
     matchingTransaction.unmatch(mockFinaccTransaction);
   }
@@ -160,9 +161,8 @@ public class FIN_MatchingTransactionTest {
     expectedException.expect(NoAlgorithmFoundException.class);
     expectedException.expectMessage("No algorithm has been defined to unmatch");
 
-    matchingTransaction = new FIN_MatchingTransaction(
-        "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm");
-    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField("algorithm");
+    matchingTransaction = new FIN_MatchingTransaction(TestConstants.MOCK_MATCHING_ALGORITHM);
+    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField(TestConstants.ALGORITHM);
     algorithmField.setAccessible(true);
     algorithmField.set(matchingTransaction, null);
 
@@ -182,9 +182,8 @@ public class FIN_MatchingTransactionTest {
     when(mockExceptionAlgorithm.match(any(FIN_BankStatementLine.class), anyList())).thenThrow(
         new ServletException("Test exception"));
 
-    matchingTransaction = new FIN_MatchingTransaction(
-        "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm");
-    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField("algorithm");
+    matchingTransaction = new FIN_MatchingTransaction(TestConstants.MOCK_MATCHING_ALGORITHM);
+    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField(TestConstants.ALGORITHM);
     algorithmField.setAccessible(true);
     algorithmField.set(matchingTransaction, mockExceptionAlgorithm);
 
@@ -209,9 +208,8 @@ public class FIN_MatchingTransactionTest {
     doThrow(new ServletException("Test unmatch exception")).when(mockExceptionAlgorithm).unmatch(
         any(FIN_FinaccTransaction.class));
 
-    matchingTransaction = new FIN_MatchingTransaction(
-        "org.openbravo.advpaymentmngt.utility.FIN_MatchingTransactionTest$MockMatchingAlgorithm");
-    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField("algorithm");
+    matchingTransaction = new FIN_MatchingTransaction(TestConstants.MOCK_MATCHING_ALGORITHM);
+    Field algorithmField = FIN_MatchingTransaction.class.getDeclaredField(TestConstants.ALGORITHM);
     algorithmField.setAccessible(true);
     algorithmField.set(matchingTransaction, mockExceptionAlgorithm);
 

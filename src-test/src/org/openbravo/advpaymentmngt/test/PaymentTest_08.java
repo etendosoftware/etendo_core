@@ -1,22 +1,3 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2011-2017 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- *************************************************************************
- */
-
 package org.openbravo.advpaymentmngt.test;
 
 import static org.junit.Assert.assertFalse;
@@ -57,6 +38,7 @@ import org.openbravo.model.pricing.pricelist.PriceList;
 
 public class PaymentTest_08 extends WeldBaseTest {
 
+
   // 1) Create an order
   // 2) Add a partial payment but do not execute it
   // 3) Invoice the order partially using an automatic receipt payment method
@@ -87,6 +69,9 @@ public class PaymentTest_08 extends WeldBaseTest {
     TestUtility.setTestContextSpain();
   }
 
+  /**
+   * Runs the Payment_08 test.
+   */
   @Test
   public void testRunPayment_08() {
     boolean exception = false;
@@ -123,7 +108,12 @@ public class PaymentTest_08 extends WeldBaseTest {
     assertFalse(exception);
 
   }
-
+  /**
+   * Sets up the data for the test.
+   *
+   * @return the created invoice
+   * @throws Exception if an error occurs during data setup
+   */
   private Invoice dataSetup() throws Exception {
 
     // DATA SETUP

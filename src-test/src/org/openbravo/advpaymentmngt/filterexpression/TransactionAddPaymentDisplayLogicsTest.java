@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -34,293 +35,366 @@ import org.openbravo.model.common.enterprise.Organization;
  */
 public class TransactionAddPaymentDisplayLogicsTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+  /**
+   * Rule for handling expected exceptions in tests.
+   */
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
-    @Mock
-    private OBDal mockOBDal;
+  @Mock
+  private OBDal mockOBDal;
 
-    private TransactionAddPaymentDisplayLogics classUnderTest;
+  private TransactionAddPaymentDisplayLogics classUnderTest;
 
-    @Mock
-    private BusinessPartner mockBusinessPartner;
+  @Mock
+  private BusinessPartner mockBusinessPartner;
 
-    @Mock
-    private Organization mockOrganization;
+  @Mock
+  private Organization mockOrganization;
 
-    @Mock
-    private Currency mockCurrency;
+  @Mock
+  private Currency mockCurrency;
 
-    private MockedStatic<OBDal> mockedOBDal;
+  private MockedStatic<OBDal> mockedOBDal;
 
-    private MockedConstruction<AdvPaymentMngtDao> mockedAdvPaymentMngtDao;
+  private MockedConstruction<AdvPaymentMngtDao> mockedAdvPaymentMngtDao;
 
-    private AutoCloseable mocks;
+  private AutoCloseable mocks;
 
-    @Before
-    public void setUp() {
-        mocks = MockitoAnnotations.openMocks(this);
+  /**
+   * Sets up the test environment before each test.
+   */
+  @Before
+  public void setUp() {
+    mocks = MockitoAnnotations.openMocks(this);
 
-        classUnderTest = new TransactionAddPaymentDisplayLogics();
+    classUnderTest = new TransactionAddPaymentDisplayLogics();
 
-        mockedOBDal = mockStatic(OBDal.class);
-        mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
+    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
+  }
+
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * @throws Exception
+   *     if an error occurs during teardown
+   */
+  @After
+  public void tearDown() throws Exception {
+    if (mockedOBDal != null) {
+      mockedOBDal.close();
     }
-
-    @After
-    public void tearDown() throws Exception {
-        if (mockedOBDal != null) {
-            mockedOBDal.close();
-        }
-        if (mockedAdvPaymentMngtDao != null) {
-            mockedAdvPaymentMngtDao.close();
-        }
-        if (mocks != null) {
-            mocks.close();
-        }
+    if (mockedAdvPaymentMngtDao != null) {
+      mockedAdvPaymentMngtDao.close();
     }
-
-    @Test
-    public void testGetSeq_returnsExpectedValue() {
-        // When
-        long result = classUnderTest.getSeq();
-
-        // Then
-        assertEquals(100L, result);
+    if (mocks != null) {
+      mocks.close();
     }
+  }
 
-    @Test
-    public void testGetDocumentDisplayLogic_alwaysReturnsTrue() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
+  /**
+   * Tests the getSeq method to ensure it returns the expected value.
+   */
+  @Test
+  public void testGetSeqReturnsExpectedValue() {
+    // When
+    long result = classUnderTest.getSeq();
 
-        // When
-        boolean result = classUnderTest.getDocumentDisplayLogic(requestMap);
+    // Then
+    assertEquals(100L, result);
+  }
 
-        // Then
-        assertTrue("Document display logic should always return true", result);
-    }
+  /**
+   * Tests the getDocumentDisplayLogic method to ensure it always returns true.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDocumentDisplayLogicAlwaysReturnsTrue() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
 
-    @Test
-    public void testGetOrganizationDisplayLogic_alwaysReturnsFalse() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
+    // When
+    boolean result = classUnderTest.getDocumentDisplayLogic(requestMap);
 
-        // When
-        boolean result = classUnderTest.getOrganizationDisplayLogic(requestMap);
+    // Then
+    assertTrue("Document display logic should always return true", result);
+  }
 
-        // Then
-        assertFalse("Organization display logic should always return false", result);
-    }
+  /**
+   * Tests the getOrganizationDisplayLogic method to ensure it always returns false.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetOrganizationDisplayLogicAlwaysReturnsFalse() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
 
-    @Test
-    public void testGetCreditToUseDisplayLogic_withNoBusinessPartner_returnsFalse() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        requestMap.put("context", context.toString());
+    // When
+    boolean result = classUnderTest.getOrganizationDisplayLogic(requestMap);
 
-        // When
-        boolean result = classUnderTest.getCreditToUseDisplayLogic(requestMap);
+    // Then
+    assertFalse("Organization display logic should always return false", result);
+  }
 
-        // Then
-        assertFalse("Credit to use display logic should return false when no business partner is provided", result);
-    }
+  /**
+   * Tests the getCreditToUseDisplayLogic method with no business partner to ensure it returns false.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetCreditToUseDisplayLogicWithNoBusinessPartnerReturnsFalse() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-    @Test
-    public void testGetCreditToUseDisplayLogic_withEmptyBusinessPartner_returnsFalse() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        context.put("received_from", "");
-        requestMap.put("context", context.toString());
+    // When
+    boolean result = classUnderTest.getCreditToUseDisplayLogic(requestMap);
 
-        // When
-        boolean result = classUnderTest.getCreditToUseDisplayLogic(requestMap);
+    // Then
+    assertFalse("Credit to use display logic should return false when no business partner is provided", result);
+  }
 
-        // Then
-        assertFalse("Credit to use display logic should return false when business partner is empty", result);
-    }
+  /**
+   * Tests the getCreditToUseDisplayLogic method with an empty business partner to ensure it returns false.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetCreditToUseDisplayLogicWithEmptyBusinessPartnerReturnsFalse() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    context.put(TestConstants.RECEIVED_FROM, "");
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-    @Test
-    public void testGetCreditToUseDisplayLogic_withBusinessPartnerAndZeroCredit_returnsFalse() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        context.put("received_from", "BP123");
-        context.put("trxtype", "PAYMENT");
-        context.put("ad_org_id", "ORG123");
-        context.put("c_currency_id", "CURR123");
-        requestMap.put("context", context.toString());
+    // When
+    boolean result = classUnderTest.getCreditToUseDisplayLogic(requestMap);
 
-        // Mock OBDal.get calls
-        when(mockOBDal.get(BusinessPartner.class, "BP123")).thenReturn(mockBusinessPartner);
-        when(mockOBDal.get(Organization.class, "ORG123")).thenReturn(mockOrganization);
-        when(mockOBDal.get(Currency.class, "CURR123")).thenReturn(mockCurrency);
+    // Then
+    assertFalse("Credit to use display logic should return false when business partner is empty", result);
+  }
 
-        mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class,
-            (mock, ctx) -> {
-                when(mock.getCustomerCredit(mockBusinessPartner, false, mockOrganization, mockCurrency))
-                    .thenReturn(BigDecimal.ZERO);
-            });
+  /**
+   * Tests the getCreditToUseDisplayLogic method with a business partner and zero credit to ensure it returns false.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetCreditToUseDisplayLogicWithBusinessPartnerAndZeroCreditReturnsFalse() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    context.put(TestConstants.RECEIVED_FROM, TestConstants.TEST_BPARTNER_ID);
+    context.put(TestConstants.TRXTYPE, TestConstants.PAYMENT_TYPE);
+    context.put(TestConstants.AD_ORG_ID, TestConstants.TEST_ORG_ID);
+    context.put(TestConstants.C_CURRENCY, TestConstants.C_CURRENCY_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-        TransactionAddPaymentDisplayLogics spyClassUnderTest = new TransactionAddPaymentDisplayLogics() {
-            @Override
-            BigDecimal getDefaultGeneratedCredit(Map<String, String> requestMap) {
-                return BigDecimal.ZERO;
-            }
-        };
+    // Mock OBDal.get calls
+    when(mockOBDal.get(BusinessPartner.class, TestConstants.TEST_BPARTNER_ID)).thenReturn(mockBusinessPartner);
+    when(mockOBDal.get(Organization.class, TestConstants.TEST_ORG_ID)).thenReturn(mockOrganization);
+    when(mockOBDal.get(Currency.class, TestConstants.C_CURRENCY_ID)).thenReturn(mockCurrency);
 
-        // When
-        boolean result = spyClassUnderTest.getCreditToUseDisplayLogic(requestMap);
+    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class, (mock, ctx) -> when(
+        mock.getCustomerCredit(mockBusinessPartner, false, mockOrganization, mockCurrency)).thenReturn(
+        BigDecimal.ZERO));
 
-        // Then
-        assertFalse("Credit to use display logic should return false when customer credit is zero", result);
-    }
+    TransactionAddPaymentDisplayLogics spyClassUnderTest = new TransactionAddPaymentDisplayLogics() {
+      @Override
+      BigDecimal getDefaultGeneratedCredit(Map<String, String> requestMap) {
+        return BigDecimal.ZERO;
+      }
+    };
 
-    @Test
-    public void testGetCreditToUseDisplayLogicWithBusinessPartnerAndPositiveCreditReturnsTrue() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        context.put("received_from", "BP123");
-        context.put("trxtype", "PAYMENT");
-        context.put("ad_org_id", "ORG123");
-        context.put("c_currency_id", "CURR123");
-        requestMap.put("context", context.toString());
+    // When
+    boolean result = spyClassUnderTest.getCreditToUseDisplayLogic(requestMap);
 
-        // Mock OBDal.get calls
-        when(mockOBDal.get(BusinessPartner.class, "BP123")).thenReturn(mockBusinessPartner);
-        when(mockOBDal.get(Organization.class, "ORG123")).thenReturn(mockOrganization);
-        when(mockOBDal.get(Currency.class, "CURR123")).thenReturn(mockCurrency);
+    // Then
+    assertFalse("Credit to use display logic should return false when customer credit is zero", result);
+  }
 
-        mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class,
-            (mock, ctx) -> {
-                when(mock.getCustomerCredit(mockBusinessPartner, false, mockOrganization, mockCurrency))
-                    .thenReturn(new BigDecimal("100.00"));
-            });
+  /**
+   * Tests the getCreditToUseDisplayLogic method with a business partner and positive credit to ensure it returns true.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetCreditToUseDisplayLogicWithBusinessPartnerAndPositiveCreditReturnsTrue() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    context.put(TestConstants.RECEIVED_FROM, TestConstants.TEST_BPARTNER_ID);
+    context.put(TestConstants.TRXTYPE, TestConstants.PAYMENT_TYPE);
+    context.put(TestConstants.AD_ORG_ID, TestConstants.TEST_ORG_ID);
+    context.put(TestConstants.C_CURRENCY, TestConstants.C_CURRENCY_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-        TransactionAddPaymentDisplayLogics spyClassUnderTest = new TransactionAddPaymentDisplayLogics() {
-            @Override
-            BigDecimal getDefaultGeneratedCredit(Map<String, String> requestMap) {
-                return BigDecimal.ZERO;
-            }
-        };
+    // Mock OBDal.get calls
+    when(mockOBDal.get(BusinessPartner.class, TestConstants.TEST_BPARTNER_ID)).thenReturn(mockBusinessPartner);
+    when(mockOBDal.get(Organization.class, TestConstants.TEST_ORG_ID)).thenReturn(mockOrganization);
+    when(mockOBDal.get(Currency.class, TestConstants.C_CURRENCY_ID)).thenReturn(mockCurrency);
 
-        // When
-        boolean result = spyClassUnderTest.getCreditToUseDisplayLogic(requestMap);
+    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class, (mock, ctx) -> when(
+        mock.getCustomerCredit(mockBusinessPartner, false, mockOrganization, mockCurrency)).thenReturn(
+        new BigDecimal(TestConstants.AMOUNT)));
 
-        // Then
-        assertTrue("Credit to use display logic should return true when customer credit is positive", result);
-    }
+    TransactionAddPaymentDisplayLogics spyClassUnderTest = new TransactionAddPaymentDisplayLogics() {
+      @Override
+      BigDecimal getDefaultGeneratedCredit(Map<String, String> requestMap) {
+        return BigDecimal.ZERO;
+      }
+    };
 
-    @Test
-    public void testGetCreditToUseDisplayLogicWithRCINDocumentTypeChecksCredit() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        context.put("received_from", "BP123");
-        context.put("trxtype", "RCIN");
-        context.put("ad_org_id", "ORG123");
-        context.put("c_currency_id", "CURR123");
-        requestMap.put("context", context.toString());
+    // When
+    boolean result = spyClassUnderTest.getCreditToUseDisplayLogic(requestMap);
 
-        // Mock OBDal.get calls
-        when(mockOBDal.get(BusinessPartner.class, "BP123")).thenReturn(mockBusinessPartner);
-        when(mockOBDal.get(Organization.class, "ORG123")).thenReturn(mockOrganization);
-        when(mockOBDal.get(Currency.class, "CURR123")).thenReturn(mockCurrency);
+    // Then
+    assertTrue("Credit to use display logic should return true when customer credit is positive", result);
+  }
 
-        AdvPaymentMngtDao mockDao = mock(AdvPaymentMngtDao.class);
-        when(mockDao.getCustomerCredit(mockBusinessPartner, true, mockOrganization, mockCurrency))
-            .thenReturn(new BigDecimal("100.00"));
+  /**
+   * Tests the getCreditToUseDisplayLogic method with RCIN document type to ensure it checks credit.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetCreditToUseDisplayLogicWithRCINDocumentTypeChecksCredit() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    context.put(TestConstants.RECEIVED_FROM, TestConstants.TEST_BPARTNER_ID);
+    context.put(TestConstants.TRXTYPE, "RCIN");
+    context.put(TestConstants.AD_ORG_ID, TestConstants.TEST_ORG_ID);
+    context.put(TestConstants.C_CURRENCY, TestConstants.C_CURRENCY_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-        mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class,
-            (mock, ctx) -> {
-                when(mock.getCustomerCredit(mockBusinessPartner, true, mockOrganization, mockCurrency))
-                    .thenReturn(new BigDecimal("100.00"));
-            });
+    // Mock OBDal.get calls
+    when(mockOBDal.get(BusinessPartner.class, TestConstants.TEST_BPARTNER_ID)).thenReturn(mockBusinessPartner);
+    when(mockOBDal.get(Organization.class, TestConstants.TEST_ORG_ID)).thenReturn(mockOrganization);
+    when(mockOBDal.get(Currency.class, TestConstants.C_CURRENCY_ID)).thenReturn(mockCurrency);
 
-        // When
-        boolean result = classUnderTest.getCreditToUseDisplayLogic(requestMap);
+    AdvPaymentMngtDao mockDao = mock(AdvPaymentMngtDao.class);
+    when(mockDao.getCustomerCredit(mockBusinessPartner, true, mockOrganization, mockCurrency)).thenReturn(
+        new BigDecimal(TestConstants.AMOUNT));
 
-        // Then
-        assertTrue("Credit to use display logic should return true for RCIN document with positive credit", result);
-    }
+    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class, (mock, ctx) -> when(
+        mock.getCustomerCredit(mockBusinessPartner, true, mockOrganization, mockCurrency)).thenReturn(
+        new BigDecimal(TestConstants.AMOUNT)));
 
-    @Test
-    public void testGetCreditToUseDisplayLogicWithInpreceivedFromUsesAlternativeParameter() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        context.put("inpreceivedFrom", "BP123");
-        context.put("inptrxtype", "PAYMENT");
-        context.put("ad_org_id", "ORG123");
-        context.put("c_currency_id", "CURR123");
-        requestMap.put("context", context.toString());
+    // When
+    boolean result = classUnderTest.getCreditToUseDisplayLogic(requestMap);
 
-        // Mock OBDal.get calls
-        when(mockOBDal.get(BusinessPartner.class, "BP123")).thenReturn(mockBusinessPartner);
-        when(mockOBDal.get(Organization.class, "ORG123")).thenReturn(mockOrganization);
-        when(mockOBDal.get(Currency.class, "CURR123")).thenReturn(mockCurrency);
+    // Then
+    assertTrue("Credit to use display logic should return true for RCIN document with positive credit", result);
+  }
 
-        mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class,
-            (mock, ctx) -> {
-                when(mock.getCustomerCredit(mockBusinessPartner, false, mockOrganization, mockCurrency))
-                    .thenReturn(new BigDecimal("100.00"));
-            });
+  /**
+   * Tests the getCreditToUseDisplayLogic method with inpreceivedFrom parameter to ensure it uses the alternative parameter.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetCreditToUseDisplayLogicWithInpreceivedFromUsesAlternativeParameter() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    context.put("inpreceivedFrom", TestConstants.TEST_BPARTNER_ID);
+    context.put("inptrxtype", TestConstants.PAYMENT_TYPE);
+    context.put(TestConstants.AD_ORG_ID, TestConstants.TEST_ORG_ID);
+    context.put(TestConstants.C_CURRENCY, TestConstants.C_CURRENCY_ID);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-        TransactionAddPaymentDisplayLogics spyClassUnderTest = new TransactionAddPaymentDisplayLogics() {
-            @Override
-            BigDecimal getDefaultGeneratedCredit(Map<String, String> requestMap) {
-                return BigDecimal.ZERO;
-            }
-        };
+    // Mock OBDal.get calls
+    when(mockOBDal.get(BusinessPartner.class, TestConstants.TEST_BPARTNER_ID)).thenReturn(mockBusinessPartner);
+    when(mockOBDal.get(Organization.class, TestConstants.TEST_ORG_ID)).thenReturn(mockOrganization);
+    when(mockOBDal.get(Currency.class, TestConstants.C_CURRENCY_ID)).thenReturn(mockCurrency);
 
-        // When
-        boolean result = spyClassUnderTest.getCreditToUseDisplayLogic(requestMap);
+    mockedAdvPaymentMngtDao = mockConstruction(AdvPaymentMngtDao.class, (mock, ctx) -> when(
+        mock.getCustomerCredit(mockBusinessPartner, false, mockOrganization, mockCurrency)).thenReturn(
+        new BigDecimal(TestConstants.AMOUNT)));
 
-        // Then
-        assertTrue("Credit to use display logic should return true when using inpreceivedFrom parameter", result);
-    }
+    TransactionAddPaymentDisplayLogics spyClassUnderTest = new TransactionAddPaymentDisplayLogics() {
+      @Override
+      BigDecimal getDefaultGeneratedCredit(Map<String, String> requestMap) {
+        return BigDecimal.ZERO;
+      }
+    };
 
-    @Test
-    public void testGetDefaultGeneratedCreditReturnsZero() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
+    // When
+    boolean result = spyClassUnderTest.getCreditToUseDisplayLogic(requestMap);
 
-        // When
-        BigDecimal result = classUnderTest.getDefaultGeneratedCredit(requestMap);
+    // Then
+    assertTrue("Credit to use display logic should return true when using inpreceivedFrom parameter", result);
+  }
 
-        // Then
-        assertEquals("Default generated credit should be zero", BigDecimal.ZERO, result);
-    }
+  /**
+   * Tests the getDefaultGeneratedCredit method to ensure it returns zero.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetDefaultGeneratedCreditReturnsZero() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
 
-    @Test
-    public void testGetBankStatementLineDisplayLogicWithTrxtypeReturnsTrue() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        context.put("trxtype", "PAYMENT");
-        requestMap.put("context", context.toString());
+    // When
+    BigDecimal result = classUnderTest.getDefaultGeneratedCredit(requestMap);
 
-        // When
-        boolean result = classUnderTest.getBankStatementLineDisplayLogic(requestMap);
+    // Then
+    assertEquals("Default generated credit should be zero", BigDecimal.ZERO, result);
+  }
 
-        // Then
-        assertTrue("Bank statement line display logic should return true when trxtype is present", result);
-    }
+  /**
+   * Tests the getBankStatementLineDisplayLogic method with trxtype to ensure it returns true.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetBankStatementLineDisplayLogicWithTrxtypeReturnsTrue() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    context.put(TestConstants.TRXTYPE, TestConstants.PAYMENT_TYPE);
+    requestMap.put(TestConstants.CONTEXT, context.toString());
 
-    @Test
-    public void testGetBankStatementLineDisplayLogicwithoutTrxtypeReturnsFalse() throws JSONException {
-        // Given
-        Map<String, String> requestMap = new HashMap<>();
-        JSONObject context = new JSONObject();
-        requestMap.put("context", context.toString());
+    // When
+    boolean result = classUnderTest.getBankStatementLineDisplayLogic(requestMap);
 
-        // When
-        boolean result = classUnderTest.getBankStatementLineDisplayLogic(requestMap);
+    // Then
+    assertTrue("Bank statement line display logic should return true when trxtype is present", result);
+  }
 
-        // Then
-        assertFalse("Bank statement line display logic should return false when trxtype is not present", result);
-    }
+  /**
+   * Tests the getBankStatementLineDisplayLogic method without trxtype to ensure it returns false.
+   *
+   * @throws JSONException
+   *     if a JSON error occurs
+   */
+  @Test
+  public void testGetBankStatementLineDisplayLogicWithoutTrxtypeReturnsFalse() throws JSONException {
+    // Given
+    Map<String, String> requestMap = new HashMap<>();
+    JSONObject context = new JSONObject();
+    requestMap.put(TestConstants.CONTEXT, context.toString());
+
+    // When
+    boolean result = classUnderTest.getBankStatementLineDisplayLogic(requestMap);
+
+    // Then
+    assertFalse("Bank statement line display logic should return false when trxtype is not present", result);
+  }
 }

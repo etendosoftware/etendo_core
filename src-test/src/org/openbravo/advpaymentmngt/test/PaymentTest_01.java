@@ -1,22 +1,3 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2010-2017 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- *************************************************************************
- */
-
 package org.openbravo.advpaymentmngt.test;
 
 import static org.junit.Assert.assertFalse;
@@ -28,6 +9,7 @@ import java.util.Date;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
+
 import org.junit.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -50,7 +32,11 @@ import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
 
+/**
+ * Test class for payment functionality.
+ */
 public class PaymentTest_01 extends WeldBaseTest {
+
 
   private static final Logger log = LogManager.getLogger();
 
@@ -66,16 +52,20 @@ public class PaymentTest_01 extends WeldBaseTest {
 
   /**
    * Initial Set up.
-   *
+   * <p>
    * This before method is named setUpP01() to avoid overwriting the super setUp method that is
-   * invoke automatically before this one.
+   * invoked automatically before this one.
    *
    */
   @Before
-  public void setUpP01() throws Exception {
+  public void setUpP01() {
     TestUtility.setTestContext();
   }
 
+
+  /**
+   * Tests the payment process.
+   */
   @Test
   public void testRunPayment_01() {
     boolean exception = false;
@@ -168,6 +158,12 @@ public class PaymentTest_01 extends WeldBaseTest {
 
   }
 
+  /**
+   * Sets up the data for the test.
+   *
+   * @return the created invoice
+   * @throws Exception if an error occurs during data setup
+   */
   private Invoice dataSetup() throws Exception {
 
     // DATA SETUP

@@ -28,120 +28,135 @@ import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 import org.openbravo.model.financialmgmt.payment.PaymentRun;
 import org.openbravo.model.financialmgmt.payment.PaymentRunPayment;
-import org.openbravo.test.base.OBBaseTest;
 
 /**
- * Test class for LeaveAsCredit
+ * Test class for LeaveAsCredit.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class LeaveAsCreditTest extends OBBaseTest {
+public class LeaveAsCreditTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+  /**
+   * Rule to handle expected exceptions in tests.
+   */
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
-    // Static mocks
-    private MockedStatic<OBDal> mockedOBDal;
-    private MockedStatic<OBContext> mockedOBContext;
+  // Static mocks
+  private MockedStatic<OBDal> mockedOBDal;
+  private MockedStatic<OBContext> mockedOBContext;
 
-    // Mocks
-    @Mock
-    private OBDal obDal;
+  // Mocks
+  @Mock
+  private OBDal obDal;
 
-    @Mock
-    private PaymentRun mockPaymentRun;
+  @Mock
+  private PaymentRun mockPaymentRun;
 
-    @Mock
-    private PaymentRunPayment mockPaymentRunPayment;
+  @Mock
+  private PaymentRunPayment mockPaymentRunPayment;
 
-    @Mock
-    private FIN_Payment mockPayment;
+  @Mock
+  private FIN_Payment mockPayment;
 
-    @InjectMocks
-    private LeaveAsCredit classUnderTest;
+  @InjectMocks
+  private LeaveAsCredit classUnderTest;
 
-    @Before
-    public void setUp() throws Exception {
-        // Initialize static mocks
-        mockedOBDal = mockStatic(OBDal.class);
-        mockedOBContext = mockStatic(OBContext.class);
+  /**
+   * Sets up the test environment before each test.
+   *
+   * @throws Exception
+   *     if an error occurs during setup
+   */
+  @Before
+  public void setUp() throws Exception {
+    // Initialize static mocks
+    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBContext = mockStatic(OBContext.class);
 
-        // Configure static mocks
-        mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
-        mockedOBContext.when(() -> OBContext.setAdminMode(false)).thenAnswer(invocation -> null);
-        mockedOBContext.when(OBContext::restorePreviousMode).thenAnswer(invocation -> null);
+    // Configure static mocks
+    mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
+    mockedOBContext.when(() -> OBContext.setAdminMode(false)).thenAnswer(invocation -> null);
+    mockedOBContext.when(OBContext::restorePreviousMode).thenAnswer(invocation -> null);
 
-        // Configure OBDal behaviors
-        doNothing().when(obDal).save(any());
-        doNothing().when(obDal).flush();
+    // Configure OBDal behaviors
+    doNothing().when(obDal).save(any());
+    doNothing().when(obDal).flush();
 
-        // Configure mock payment run
-        List<PaymentRunPayment> paymentRunPayments = new ArrayList<>();
-        paymentRunPayments.add(mockPaymentRunPayment);
-        when(mockPaymentRun.getFinancialMgmtPaymentRunPaymentList()).thenReturn(paymentRunPayments);
+    // Configure mock payment run
+    List<PaymentRunPayment> paymentRunPayments = new ArrayList<>();
+    paymentRunPayments.add(mockPaymentRunPayment);
+    when(mockPaymentRun.getFinancialMgmtPaymentRunPaymentList()).thenReturn(paymentRunPayments);
 
-        // Configure mock payment run payment
-        when(mockPaymentRunPayment.getPayment()).thenReturn(mockPayment);
+    // Configure mock payment run payment
+    when(mockPaymentRunPayment.getPayment()).thenReturn(mockPayment);
+  }
 
+  /**
+   * Cleans up the test environment after each test.
+   */
+  @After
+  public void tearDown() {
+    if (mockedOBDal != null) {
+      mockedOBDal.close();
     }
-
-    @After
-    public void tearDown() {
-        if (mockedOBDal != null) {
-            mockedOBDal.close();
-        }
-        if (mockedOBContext != null) {
-            mockedOBContext.close();
-        }
+    if (mockedOBContext != null) {
+      mockedOBContext.close();
     }
+  }
 
-    /**
-     * Test the execute method with a payment that has a zero amount
-     */
-    @Test
-    public void testExecuteZeroPaymentAmount() throws Exception {
-        // GIVEN
-        BigDecimal zeroAmount = BigDecimal.ZERO;
+  /**
+   * Test the execute method with a payment that has a zero amount.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
+   */
+  @Test
+  public void testExecuteZeroPaymentAmount() throws Exception {
+    // GIVEN
+    BigDecimal zeroAmount = BigDecimal.ZERO;
 
-        when(mockPayment.getAmount()).thenReturn(zeroAmount);
-        when(mockPayment.isReceipt()).thenReturn(false);
+    when(mockPayment.getAmount()).thenReturn(zeroAmount);
+    when(mockPayment.isReceipt()).thenReturn(false);
 
-        // WHEN
-        OBError result = classUnderTest.execute(mockPaymentRun);
+    // WHEN
+    OBError result = classUnderTest.execute(mockPaymentRun);
 
-        // THEN
-        verify(mockPayment, times(0)).setGeneratedCredit(any());
-        verify(mockPayment, times(0)).setProcessed(false);
+    // THEN
+    verify(mockPayment, times(0)).setGeneratedCredit(any());
+    verify(mockPayment, times(0)).setProcessed(false);
 
-        verify(mockPayment).setStatus("PPM");
-        verify(mockPaymentRunPayment).setResult("S");
+    verify(mockPayment).setStatus("PPM");
+    verify(mockPaymentRunPayment).setResult("S");
 
-        assertEquals("Success", result.getType());
-        assertEquals("@Success@", result.getMessage());
-    }
+    assertEquals("Success", result.getType());
+    assertEquals("@Success@", result.getMessage());
+  }
 
-    /**
-     * Test the execute method with a payment that has a positive amount
-     */
-    @Test
-    public void testExecutePositivePaymentAmount() throws Exception {
-        // GIVEN
-        BigDecimal positiveAmount = new BigDecimal("100.00");
+  /**
+   * Test the execute method with a payment that has a positive amount.
+   *
+   * @throws Exception
+   *     if an error occurs during execution
+   */
+  @Test
+  public void testExecutePositivePaymentAmount() throws Exception {
+    // GIVEN
+    BigDecimal positiveAmount = new BigDecimal("100.00");
 
-        when(mockPayment.getAmount()).thenReturn(positiveAmount);
-        when(mockPayment.isReceipt()).thenReturn(true);
+    when(mockPayment.getAmount()).thenReturn(positiveAmount);
+    when(mockPayment.isReceipt()).thenReturn(true);
 
-        // WHEN
-        OBError result = classUnderTest.execute(mockPaymentRun);
+    // WHEN
+    OBError result = classUnderTest.execute(mockPaymentRun);
 
-        // THEN
-        verify(mockPayment, times(0)).setGeneratedCredit(any());
-        verify(mockPayment, times(0)).setProcessed(false);
+    // THEN
+    verify(mockPayment, times(0)).setGeneratedCredit(any());
+    verify(mockPayment, times(0)).setProcessed(false);
 
-        verify(mockPayment).setStatus("RPR");
-        verify(mockPaymentRunPayment).setResult("S");
+    verify(mockPayment).setStatus("RPR");
+    verify(mockPaymentRunPayment).setResult("S");
 
-        assertEquals("Success", result.getType());
-        assertEquals("@Success@", result.getMessage());
-    }
-
+    assertEquals("Success", result.getType());
+    assertEquals("@Success@", result.getMessage());
+  }
 }

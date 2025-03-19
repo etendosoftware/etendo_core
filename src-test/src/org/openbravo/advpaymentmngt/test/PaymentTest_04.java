@@ -28,6 +28,7 @@ import java.util.Date;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -53,6 +54,7 @@ import org.openbravo.model.pricing.pricelist.PriceList;
  * The PaymentTest_04 class used to test the payment document generation with Refund option.
  */
 public class PaymentTest_04 extends WeldBaseTest {
+
 
   private static final Logger log = LogManager.getLogger();
 
