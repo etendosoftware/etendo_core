@@ -87,7 +87,8 @@ List<String> _dependenciesListCOMPILATION = [
   'org.jboss.spec.javax.annotation:jboss-annotations-api_1.3_spec:1.0.0.Final', 
   'org.jboss.weld.environment:weld-environment-common:3.1.1.Final', 
   'org.jboss.weld.servlet:weld-servlet-core:3.1.1.Final', 
-  'javax.inject:javax.inject:1', 
+  'javax.inject:javax.inject:1',
+  'com.etendoerp:dbsm:1.0.4-SNAPSHOT'
 ] 
  
 ext { 

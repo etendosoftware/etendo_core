@@ -214,6 +214,7 @@ task assembleArtifact(type: Zip) {
     archiveFileName.set(artifactID + "-" + project.version + '.zip')
     destinationDirectory.set(file("$buildDir/libs/"))
     include(whiteSyncCoreList)
+    exclude("src-test/build/**")
     from "."
     into "."
 }
@@ -337,4 +338,10 @@ task call_sass(type: Exec) {}
 
 task deploySkin(dependsOn: ["cssCompile", "deploy.skin"]) doLast {
 
+}
+
+tasks.named('publishCorePublicationToMavenRepository') {
+    dependsOn tasks.named('assembleArtifact')
+    dependsOn tasks.named('jar')
+    dependsOn tasks.named('sourcesJar')
 }
