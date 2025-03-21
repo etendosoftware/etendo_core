@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -30,6 +31,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.test.base.OBBaseTest;
 
 public class PaymentMethodTest extends OBBaseTest {
+
 
   private static final String AUTOMATIC_EXECUTION = "A";
   private static final String MANUAL_EXECUTION = "M";

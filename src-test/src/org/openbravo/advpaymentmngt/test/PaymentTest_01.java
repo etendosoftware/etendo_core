@@ -1,22 +1,3 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.0  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2010-2017 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- *************************************************************************
- */
-
 package org.openbravo.advpaymentmngt.test;
 
 import static org.junit.Assert.assertFalse;
@@ -28,8 +9,10 @@ import java.util.Date;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
+
 import org.junit.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
+import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -48,9 +31,12 @@ import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
-import org.openbravo.test.base.OBBaseTest;
 
-public class PaymentTest_01 extends OBBaseTest {
+/**
+ * Test class for payment functionality.
+ */
+public class PaymentTest_01 extends WeldBaseTest {
+
 
   private static final Logger log = LogManager.getLogger();
 
@@ -66,16 +52,20 @@ public class PaymentTest_01 extends OBBaseTest {
 
   /**
    * Initial Set up.
-   * 
+   * <p>
    * This before method is named setUpP01() to avoid overwriting the super setUp method that is
-   * invoke automatically before this one.
-   * 
+   * invoked automatically before this one.
+   *
    */
   @Before
-  public void setUpP01() throws Exception {
+  public void setUpP01() {
     TestUtility.setTestContext();
   }
 
+
+  /**
+   * Tests the payment process.
+   */
   @Test
   public void testRunPayment_01() {
     boolean exception = false;
@@ -103,7 +93,8 @@ public class PaymentTest_01 extends OBBaseTest {
             new Value(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
                 invoice.getFINPaymentScheduleList().get(0)));
 
-        assertTrue("Payment Schedule Outstanding Amount != 0", BigDecimal.ZERO
+        assertTrue("Payment Schedule Outstanding Amount (" + invoice.getFINPaymentScheduleList().get(0).getOutstandingAmount().toPlainString() +
+            ") != 0", BigDecimal.ZERO
             .compareTo(invoice.getFINPaymentScheduleList().get(0).getOutstandingAmount()) == 0);
         assertTrue("Payment Schedule Received Amount != Total Amount", invoice.getGrandTotalAmount()
             .compareTo(invoice.getFINPaymentScheduleList().get(0).getPaidAmount()) == 0);
@@ -167,13 +158,18 @@ public class PaymentTest_01 extends OBBaseTest {
 
   }
 
+  /**
+   * Sets up the data for the test.
+   *
+   * @return the created invoice
+   * @throws Exception if an error occurs during data setup
+   */
   private Invoice dataSetup() throws Exception {
 
     // DATA SETUP
     String bpartnerId = "2C4C71BC828B47A0AF2A79855FD3BA7A"; // Sleep Well Hotels, Co.
     String priceListId = "8366EAF1EDF442A98377D74A199084A8"; // General Sales
     String paymentTermId = "66BA1164A7394344BB9CD1A6ECEED05D"; // 30 days
-    String currencyId = EURO_ID;
     String productId = "34560A057833457D962F7A573F76F5BB"; // Ale Beer
     String taxId = "3CCDACCCF02C4D209174159A8AF43127"; // NY Sales Tax
     String docTypeId = "61D7AC2360F0417C80237B5D2131BACD"; // AR Invoice
@@ -189,7 +185,7 @@ public class PaymentTest_01 extends OBBaseTest {
     Location location = TestUtility.getOneInstance(Location.class,
         new Value(Location.PROPERTY_BUSINESSPARTNER, testBusinessPartner));
     PaymentTerm testPaymentTerm = OBDal.getInstance().get(PaymentTerm.class, paymentTermId);
-    Currency testCurrency = OBDal.getInstance().get(Currency.class, currencyId);
+    Currency testCurrency = OBDal.getInstance().get(Currency.class, DOLLAR_ID);
     Product testProduct = OBDal.getInstance().get(Product.class, productId);
     UOM uom = TestUtility.getOneInstance(UOM.class,
         new Value(UOM.PROPERTY_NAME, testProduct.getUOM().getName()));

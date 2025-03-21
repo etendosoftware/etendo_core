@@ -63,7 +63,7 @@ import org.openbravo.test.base.OBBaseTest;
 
 public class PaymentTest_10 extends OBBaseTest {
 
-  // 1) Create an order without discount
+  // 1) Create an order without discoun
   // 2) Add a partial payment but do not execute it
   // 3) Invoice the complete order (with discount) using an automatic receipt payment method
   // 4) Review payment info
