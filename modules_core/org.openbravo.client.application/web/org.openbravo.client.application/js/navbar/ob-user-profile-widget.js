@@ -473,51 +473,7 @@ isc.OBUserProfile.addProperties({
         click: isc.OBQuickRun.hide
       })
     );
-
-	var auth0Button = isc.OBFormButton.create({
-      title: OB.I18N.getLabel('UINAVBA_LinkSSOAccount'),
-      click: function() {
-        if (typeof auth0 === "undefined") {
-          var script = document.createElement("script");
-          script.src = "https://cdn.auth0.com/js/auth0/9.18/auth0.min.js";
-          script.onload = function () {
-            initAuth0();
-          };
-          document.head.appendChild(script);
-        } else {
-          initAuth0();
-        }
-
-        function initAuth0() {
-          function callbackOnProcessActionHandler(response, data, request) {
-            if (data.message?.severity === 'error') {
-                this.getWindow().showMessage(data.message.text)
-            } else {
-              var webAuth = new auth0.WebAuth({
-                domain: data.domainurl,
-                clientID: data.clientid,
-                redirectUri: OB.Utilities.getLocationUrlWithoutFragment() + 'secureApp/LinkAuth0Account.html',
-                responseType: 'code',
-                scope: 'openid profile email'
-              });
-              webAuth.authorize();
-            }
-          }
-          OB.RemoteCallManager.call(
-              'org.openbravo.base.secureApp.GetSSOProperties',
-              {
-                  properties: 'domain.url, client.id'
-              },
-              {},
-              callbackOnProcessActionHandler
-          );
-        }
-      },
-      baseStyle: "OBFormButton",
-    });
-
     profileFormLayout.addMembers(buttonLayout);
-	profileFormLayout.addMember(auth0Button);
 
     // pointer to the form
     this.profileForm = profileForm;

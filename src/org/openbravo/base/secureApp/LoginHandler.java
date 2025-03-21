@@ -11,20 +11,11 @@
  */
 package org.openbravo.base.secureApp;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -45,9 +36,7 @@ import org.openbravo.authentication.ChangePasswordException;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.HttpBaseServlet;
 import org.openbravo.base.secureApp.LoginUtils.RoleDefaults;
-import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.application.CachedPreference;
-import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
@@ -61,7 +50,6 @@ import org.openbravo.erpCommon.utility.PropertyConflictException;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Session;
-import org.openbravo.model.ad.access.TokenUser;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.access.UserRoles;
 import org.openbravo.model.ad.module.Module;
@@ -130,32 +118,6 @@ public class LoginHandler extends HttpBaseServlet {
 
     if (isPasswordResetFlow) {
       user = vars.getSessionValue("#AD_User_ID");
-    } else if (!StringUtils.isBlank(req.getParameter("code"))) {
-      String token = getAuthToken(req);
-      HashMap<String, String> tokenValues = decodeToken(token);
-      User adUser = matchUser(token, tokenValues.get("sub"));
-      if (adUser == null) {
-        final Properties openbravoProperties = OBPropertiesProvider.getInstance().getOpenbravoProperties();
-        String ssoDomain = ((String) openbravoProperties.get("sso.domain.url")).trim();
-        String clientId = ((String) openbravoProperties.get("sso.client.id")).trim();
-        String logoutRedirectUri = StringUtils.remove(req.getRequestURL().toString(), req.getServletPath()).trim();
-        String contextName = ((String) openbravoProperties.get("context.name")).trim();
-        String ssoNoUserLinkURL = String.format("/%s%s/org/openbravo/base/secureApp/Auth0ErrorPage.html"
-                + "?ssoDomain=%s&clientId=%s&logoutRedirectUri=%s",
-            contextName,
-            ReportingUtils.getBaseDesign(),
-            URLEncoder.encode(ssoDomain, StandardCharsets.UTF_8),
-            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
-            URLEncoder.encode(logoutRedirectUri, StandardCharsets.UTF_8));
-        try {
-          res.sendRedirect(ssoNoUserLinkURL);
-        } catch (Exception e) {
-          log4j.error("Error redirecting to: {} --- {}", ssoNoUserLinkURL, e.getMessage(), e);
-        }
-        return;
-      }
-      req.setAttribute("user-token-sub", tokenValues.get("sub"));
-      user = adUser.getUsername();
     } else {
       user = vars.getStringParameter("user");
     }
@@ -167,7 +129,8 @@ public class LoginHandler extends HttpBaseServlet {
       String language = systemClient.getLanguage().getLanguage();
       vars.setSessionValue("#AD_Language", language);
       ConnectionProvider cp = new DalConnectionProvider(false);
-      if ("".equals(user)) {
+      if ("".equals(user) && StringUtils.isBlank(req.getParameter("code")) &&
+          StringUtils.isBlank(req.getParameter("access_token"))) {
         goToRetry(res, vars, Utility.messageBD(cp, "IDENTIFICATION_FAILURE_TITLE", language),
             Utility.messageBD(cp, "IDENTIFICATION_FAILURE_MSG", language), ERROR,
             "../security/Login");
@@ -213,114 +176,6 @@ public class LoginHandler extends HttpBaseServlet {
     } finally {
       OBContext.restorePreviousMode();
     }
-  }
-
-  /**
-   * Matches the user based on the provided token and subject.
-   *
-   * @param token the authentication token
-   * @param sub   the subject identifier from the token
-   * @return the matched User object, or null if no match is found
-   */
-  private User matchUser(String token, String sub) {
-    OBContext.setAdminMode(true);
-    TokenUser tokenUser = (TokenUser) OBDal.getInstance().createCriteria(TokenUser.class)
-        .add(Restrictions.eq(TokenUser.PROPERTY_SUB, sub))
-        .setFilterOnReadableClients(false)
-        .setFilterOnReadableOrganization(false)
-        .setMaxResults(1).uniqueResult();
-    if (tokenUser != null) {
-      tokenUser.setToken(token);
-    } else {
-      return null;
-    }
-    return tokenUser.getUser();
-  }
-
-  /**
-   * Decodes the provided token and extracts its claims.
-   *
-   * @param token the authentication token
-   * @return a HashMap containing the token claims
-   */
-  private HashMap<String, String> decodeToken(String token) {
-
-    HashMap<String, String> tokenValues = new HashMap<>();
-    DecodedJWT decodedJWT = JWT.decode(token);
-
-    tokenValues.put("given_name", decodedJWT.getClaim("given_name").asString());
-    tokenValues.put("family_name", decodedJWT.getClaim("family_name").asString());
-    tokenValues.put("email", decodedJWT.getClaim("email").asString());
-    tokenValues.put("sid", decodedJWT.getClaim("sid").asString());
-    tokenValues.put("sub", decodedJWT.getClaim("sub").asString());
-    return tokenValues;
-  }
-
-  /**
-   * Retrieves the authentication token from the request.
-   *
-   * @param request the HttpServletRequest object
-   * @return the authentication token, or null if the token could not be retrieved
-   */
-  private String getAuthToken(HttpServletRequest request) {
-    String code = request.getParameter("code");
-    String token = "";
-    String domain = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.domain.url");
-    String tokenEndpoint = "https://" + domain + "/oauth/token";
-    try {
-      URL url = new URL(tokenEndpoint);
-      HttpURLConnection con = (HttpURLConnection) url.openConnection();
-      con.setRequestMethod("POST");
-      con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-      con.setDoOutput(true);
-
-      String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id");
-      String clientSecret = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.secret");
-
-      String codeVerifier = (String) request.getSession().getAttribute("code_verifier");
-      boolean isPKCE = (codeVerifier != null && !codeVerifier.isEmpty());
-      String strDirection = request.getScheme() + "://" + request.getServerName() + request.getContextPath() + "/secureApp/LoginHandler.html";
-      String params;
-      if (isPKCE) {
-        params = String.format(
-            "grant_type=authorization_code&client_id=%s&code=%s&redirect_uri=%s&code_verifier=%s",
-            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
-            URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(strDirection, StandardCharsets.UTF_8),
-            URLEncoder.encode(codeVerifier, StandardCharsets.UTF_8)
-        );
-      } else {
-        params = String.format(
-            "grant_type=authorization_code&client_id=%s&client_secret=%s&code=%s&redirect_uri=%s",
-            URLEncoder.encode(clientId, StandardCharsets.UTF_8),
-            URLEncoder.encode(clientSecret, StandardCharsets.UTF_8),
-            URLEncoder.encode(code, StandardCharsets.UTF_8),
-            URLEncoder.encode(strDirection, StandardCharsets.UTF_8)
-        );
-      }
-
-      try (OutputStream os = con.getOutputStream()) {
-        byte[] input = params.getBytes(StandardCharsets.UTF_8);
-        os.write(input, 0, input.length);
-      } catch (Exception e) {
-        log4j.error(e.getMessage(), e);
-      }
-
-      int status = con.getResponseCode();
-      if (status == 200) {
-        try (InputStream in = con.getInputStream()) {
-          String responseBody = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-          JSONObject jsonResponse = new JSONObject(responseBody);
-          token = jsonResponse.getString("id_token");
-        }
-      } else {
-        log4j.error(con.getResponseMessage());
-        token = null;
-      }
-    } catch (JSONException | IOException e) {
-      log4j.error(e);
-    }
-    return token;
   }
 
   /**

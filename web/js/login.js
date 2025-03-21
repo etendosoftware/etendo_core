@@ -76,7 +76,6 @@ function setLoginMessage(type, title, text) {
 }
 
 function doLogin(command) {
-  doLoginWithToken()
   var extraParams;
   if (
     document.getElementById('resetPassword').value === 'true' &&
@@ -136,38 +135,6 @@ function doLogin(command) {
 
   return false;
 }
-
-function doLoginWithToken() {
-    const params = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = params.get("access_token");
-
-    if (accessToken) {
-        var xhr = new XMLHttpRequest();
-        const path = window.location.pathname;
-        const context = path.split('/')[1];
-        var loginUrl = "../../" + context + "/org.openbravo.client.kernel/OBCLKER_Kernel/SessionDynamic";
-        var requestData = new FormData();
-
-        requestData.append("access_token", accessToken);
-        requestData.append("targetQueryString", getURLQueryString());
-
-        xhr.open("POST", loginUrl, true);
-        xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
-
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    console.log("Login success:", xhr.responseText);
-                } else {
-                    console.error("HTTP error! Status:", xhr.status, xhr.responseText);
-                }
-            }
-        };
-
-        xhr.send(requestData); // Enviamos el formulario simulado
-    }
-}
-
 
 function getURLQueryString() {
   return encodeURIComponent(window.location.search.substr(1));

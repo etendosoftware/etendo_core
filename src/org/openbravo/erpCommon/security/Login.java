@@ -18,13 +18,9 @@
  */
 package org.openbravo.erpCommon.security;
 
-import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -36,9 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.query.Query;
 import org.openbravo.base.HttpBaseServlet;
-import org.openbravo.base.secureApp.LoginHandler;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
@@ -121,8 +115,6 @@ public class Login extends HttpBaseServlet {
         printPageLogin(vars, response, strTheme, cacheMsg, validBrowserMsg, orHigherMsg,
             recBrowserMsgTitle, recBrowserMsgText, identificationFailureTitle,
             emptyUsernameOrPasswordText, errorSamePassword, errorDifferentPasswordInFields);
-      } catch (NoSuchAlgorithmException e) {
-        log4j.error("Error in login page", e);
       } finally {
         vars.clearSession(false);
         OBContext.restorePreviousMode();
@@ -134,7 +126,7 @@ public class Login extends HttpBaseServlet {
       String strTheme, String cacheMsg, String validBrowserMsg, String orHigherMsg,
       String recBrowserMsgTitle, String recBrowserMsgText, String identificationFailureTitle,
       String emptyUsernameOrPasswordText, String errorSamePassword,
-      String errorDifferentPasswordInFields) throws IOException, NoSuchAlgorithmException {
+      String errorDifferentPasswordInFields) throws IOException {
 
     boolean showITLogo = false;
     boolean showCompanyLogo = false;
@@ -145,15 +137,13 @@ public class Login extends HttpBaseServlet {
     SystemInformation sysInfo = OBDal.getInstance().get(SystemInformation.class, "0");
 
     ActivationKey ak = ActivationKey.getInstance(true);
-    if (ak.isActive()) {
-      String hql = "from ADPreference pref where searchKey like :value and property = :prop and (visibleAtClient is null or visibleAtClient.id = '0')";
-      Query<Object> q = OBDal.getInstance().getSession().createQuery(hql, Object.class);
-      q.setParameter("value", "N");
-      q.setParameter("prop", GOOGLE_PREFERENCE_PROPERTY);
+    String hql = "from ADPreference pref where searchKey like :value and property = :prop and (visibleAtClient is null or visibleAtClient.id = '0')";
+    Query<Object> q = OBDal.getInstance().getSession().createQuery(hql, Object.class);
+    q.setParameter("value", "N");
+    q.setParameter("prop", GOOGLE_PREFERENCE_PROPERTY);
 
-      // show by default - not show when there is a preference to disable it
-      showGSignInButtonDemo = q.list().size() == 0;
-    }
+    // show by default - not show when there is a preference to disable it
+    showGSignInButtonDemo = q.list().size() == 0;
 
     if (sysInfo == null) {
       log4j.error("System information not found");
@@ -207,8 +197,7 @@ public class Login extends HttpBaseServlet {
     insertMessageInPage(xmlDocument, "recBrowserMsgText", recBrowserMsgText);
 
     if (showGSignInButtonDemo || !signInProvider.isUnsatisfied()) {
-      String link = "<span class=\"LabelText Login_LabelText\">"
-          + Utility.messageBD(cp, "OBUIAPP_SignIn", vars.getLanguage()) + "</span>";
+      String link = "";
       if (signInProvider.isUnsatisfied()) {
         // if there is no external sign in provider, show Google Sign In icon with demo purposes
         String lang = OBDal.getInstance().get(Client.class, "0").getLanguage().getLanguage();
@@ -223,7 +212,8 @@ public class Login extends HttpBaseServlet {
         message = message.replaceAll("&quot;", "\"")
             .replaceAll("\"", "\\\\\"")
             .replaceAll("'", "´");
-
+        link = "<span class=\"LabelText Login_LabelText\">"
+            + Utility.messageBD(cp, "OBUIAPP_SignIn", vars.getLanguage()) + "</span>";
         link += "<style type=\"text/css\">" //
             + "  .gSignInButtonDemo {" //
             + "    display: inline-block;" //
@@ -269,42 +259,6 @@ public class Login extends HttpBaseServlet {
         }
       }
 
-      String domain = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.domain.url");
-      String clientId = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.client.id");
-      String redirectUri = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("sso.callback.url");
-      String soruceURL = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty(
-          "sso.source.url");
-
-      String ssoButton = "<style>"
-          + ".sso-login-button {"
-          + "  display: inline-block;"
-          + "  background-color: #202452;"
-          + "  color: white;"
-          + "  padding: 10px 20px;"
-          + "  font-size: 16px;"
-          + "  border-radius: 5px;"
-          + "  cursor: pointer;"
-          + "  text-decoration: none;"
-          + "  margin-top: 10px;"
-          + "}"
-          + ".sso-login-button:hover { opacity: 80%; }"
-          + "</style>"
-          + "<script src=\"" + soruceURL + "\"></script>"
-          + "<script>"
-          + "function loginWithSSO() {"
-          + "  var webAuth = new auth0.WebAuth({" // TODO: VER COMO SOLUCIONAR ESTE METODO DE AUTH0 HARDCODED
-          + "    domain: '" + domain + "',"
-          + "    clientID: '" + clientId + "',"
-          + "    redirectUri: '" + redirectUri + "',"
-          + "    responseType: 'code',"
-          + "    scope: 'openid profile email'"
-          + "  });"
-          + "  webAuth.authorize();"
-          + "}"
-          + "</script>"
-          + "<a href=\"#\" class=\"sso-login-button\" onclick=\"loginWithSSO()\">Sign in with SSO account</a>";
-
-      link += "<br>" + ssoButton;
       xmlDocument.setParameter("sign-in", link);
     }
 

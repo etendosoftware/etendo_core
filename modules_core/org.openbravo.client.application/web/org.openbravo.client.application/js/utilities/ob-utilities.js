@@ -787,8 +787,6 @@ OB.Utilities.logout = function(confirmed) {
     tabsLength = tabs.length,
     appFrame;
 
-  logoutFromSSO();
-
   // Push the logout process to the 'end' of the queue
   q.push({
     func: OB.RemoteCallManager.call,
@@ -825,34 +823,6 @@ OB.Utilities.logout = function(confirmed) {
   }
   OB.Utilities.processLogoutQueue();
 };
-
-function logoutFromSSO() {
-	var ssoDomain;
-	var clientId;
-    function callbackOnProcessActionHandler(response, data, request) {
-        if (data.message?.severity === 'error') {
-            this.getWindow().showMessage(data.message.text)
-        } else {
-          ssoDomain = data.domainurl;
-          clientId = data.clientid;
-          var logoutRedirectUri = window.location.origin + OB.Application.contextUrl;
-          if (logoutRedirectUri.endsWith('/')) {
-            logoutRedirectUri = logoutRedirectUri.slice(0, -1);
-          }
-          var logoutUrl = `https://${ssoDomain}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(logoutRedirectUri)}`;
-          window.location.href = logoutUrl;
-        }
-    }
-
-    OB.RemoteCallManager.call(
-        'org.openbravo.base.secureApp.GetSSOProperties',
-        {
-            properties: 'domain.url, client.id'
-        },
-        {},
-        callbackOnProcessActionHandler
-    );
-}
 
 // ** {{{ OB.Utilities.getYesNoDisplayValue }}} **
 // Returns the Yes label if the passed value is true, the No label if false.
