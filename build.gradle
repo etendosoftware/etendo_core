@@ -15,6 +15,13 @@ apply from: "artifacts.list.COMPILATION.gradle"
 repositories {
     gradlePluginPortal()
     mavenCentral()
+    maven {
+        url = uri("https://repo.futit.cloud/repository/maven-snapshots/")
+        credentials {
+            username = "${nexusUser}"
+            password = "${nexusPassword}"
+        }
+    }
 }
 
 final String CURRENT_VERSION = "25.1.0"
@@ -76,7 +83,8 @@ def whiteSyncCoreList = [
         'config/*.template',
         'gradlew',
         'gradle.bat',
-        'build.xml'
+        'build.xml',
+        'artifacts.list.COMPILATION.gradle'
 ]
 
 publishing {
@@ -344,4 +352,26 @@ tasks.named('publishCorePublicationToMavenRepository') {
     dependsOn tasks.named('assembleArtifact')
     dependsOn tasks.named('jar')
     dependsOn tasks.named('sourcesJar')
+}
+
+tasks.named('jar') {
+    dependsOn tasks.named('compileJavaDummy')
+}
+
+def loadedDeps = ext.dependenciesListCOMPILATION
+
+dependencies {
+    if (loadedDeps != null) {
+        loadedDeps.each { String dependency ->
+            implementation(dependency) {
+                exclude group: '*', module: '*'
+            }
+        }
+    } else {
+        throw new GradleException("Does not have dependencies to load.")
+    }
+}
+
+etendo {
+    forceResolution = true
 }
