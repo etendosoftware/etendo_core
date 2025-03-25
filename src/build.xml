@@ -326,7 +326,7 @@ build.war: build a war file in the lib directory.
     </copy>
 
     <!-- also compile the domaintypes in modules -->
-    <javac srcdir="${basedir}/../" includes="modules_core/*/src/**/model/domaintype/**/*.java,modules/*/src/**/model/domaintype/**/*.java" destdir="${build}"  fork="true" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+    <javac srcdir="${basedir}/../" includes="modules_core/*/src/**/model/domaintype/**/*.java,modules/*/src/**/model/domaintype/**/*.java" destdir="${build}"  deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="true">
       <classpath refid="project.class.path" />
     </javac>
 
