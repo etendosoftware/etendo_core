@@ -21,8 +21,7 @@ package org.openbravo.test;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.openbravo.advpaymentmngt.test.DocumentNumberGeneration;
-import org.openbravo.advpaymentmngt.test.ReversePaymentTest;
+import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.authentication.hashing.PasswordHashing;
 import org.openbravo.base.weld.test.testinfrastructure.CdiInfrastructure;
 import org.openbravo.base.weld.test.testinfrastructure.DalPersistanceEventTest;
@@ -363,7 +362,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ServicesTest3.class,
 
     // others
-    DocumentNumberGeneration.class, //
     GridExport.class, //
     FinancialUtilsTest.class, //
 
@@ -382,9 +380,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Count and Discount a Document without Doc base type configured and get an error. [EPL-534]
     PostedNoDocConfigTest.class,
-
-    // Reverse Payment Test
-    ReversePaymentTest.class,
 
     // Report Valuation Stock Test
     ReportValuationStockTest.class,
@@ -416,8 +411,11 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // Purchase Order Status
     PurchaseOrderStatus.class,
 
-    //MaterialMgmt
+    // MaterialMgmt
     MaterialMgmtTestSuite.class,
+
+    // AdvPayment
+    AdvPaymentMngtTestSuite.class, //
 })
 public class StandaloneTestSuite {
 }
