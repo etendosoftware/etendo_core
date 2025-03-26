@@ -31,20 +31,16 @@ import org.openbravo.service.db.DalConnectionProvider;
 
 /**
  * Defines test cases to guarantee uniqueness in document number generation.
- * 
  * There are 2 methods to obtain document numbers: Utility.getDocumentNo and
  * FIN_Uilitiy.getDocumentNo; first one uses PL function to obtain it, whereas second one uses only
  * DAL.
- * 
  * In case of concurrent requests for the same document type, locks should occur to ensure the
  * returned document number is unique. This locks should be seen in both directions DAL &lt;--&gt;
  * PL.
- * 
  * In case of 1st concurrent thread commits, 2nd thread should get a different doc number than first
  * one, if 1st rolls back, 2nd should get same number.
- * 
+ *
  * @author alostale
- * 
  */
 public class DocumentNumberGeneration extends WeldBaseTest {
   public static final List<Boolean> PARAMS = Arrays.asList(false, true);
