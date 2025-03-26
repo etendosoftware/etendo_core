@@ -89,6 +89,8 @@ public class ProcessInvoice extends HttpSecureAppServlet {
   private List<FIN_Payment> creditPayments = new ArrayList<>();
   private final AdvPaymentMngtDao dao = new AdvPaymentMngtDao();
   private static final String PURCHASE_INVOICE_WINDOW_ID = "183";
+  private static final String C_INVOICE_ID = "|C_Invoice_ID";
+  private static final String INP_KEY = "inpKey";
 
   @Inject
   private WeldUtils weldUtils;
@@ -109,7 +111,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
           IsIDFilter.instance);
 
       final String strC_Invoice_ID = vars.getGlobalVariable("inpcInvoiceId",
-          strWindowId + "|C_Invoice_ID", "", IsIDFilter.instance);
+          strWindowId + C_INVOICE_ID, StringUtils.EMPTY, IsIDFilter.instance);
 
       final String strdocaction = vars.getStringParameter("inpdocaction");
       final String strProcessing = vars.getStringParameter("inpprocessing", "Y");
@@ -140,8 +142,8 @@ public class ProcessInvoice extends HttpSecureAppServlet {
           IsIDFilter.instance);
       final String strTabId = vars.getGlobalVariable("inpTabId", "ProcessInvoice|Tab_ID",
           IsIDFilter.instance);
-      final String strC_Invoice_ID = vars.getGlobalVariable("inpKey", strWindowId + "|C_Invoice_ID",
-          "");
+      final String strC_Invoice_ID = vars.getGlobalVariable(INP_KEY, strWindowId + C_INVOICE_ID,
+          StringUtils.EMPTY);
       final String strdocaction = vars.getStringParameter("inpdocaction");
       final String strVoidInvoiceDate = vars.getStringParameter("inpVoidedDocumentDate");
       final String strVoidInvoiceAcctDate = vars.getStringParameter("inpVoidedDocumentAcctDate");
@@ -162,7 +164,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
         try {
           if (!"CO".equals(strdocaction)) {
             String strWindowPath = Utility.getTabURL(strTabId, "R", true);
-            if (strWindowPath.equals("")) {
+            if (StringUtils.isEmpty(strWindowPath)) {
               strWindowPath = strDefaultServlet;
             }
             printPageClosePopUp(response, vars, strWindowPath);
@@ -176,7 +178,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
           // Need to refresh the invoice again from the db
           invoice = dao.getObject(Invoice.class, strC_Invoice_ID);
           OBContext.setAdminMode(false);
-          String invoiceDocCategory = "";
+          String invoiceDocCategory = StringUtils.EMPTY;
           try {
             invoiceDocCategory = invoice.getDocumentType().getDocumentCategory();
 
@@ -223,8 +225,8 @@ public class ProcessInvoice extends HttpSecureAppServlet {
     } else if (vars.commandIn("GRIDLIST")) {
       final String strWindowId = vars.getGlobalVariable("inpwindowId", "ProcessInvoice|Window_ID",
           IsIDFilter.instance);
-      final String strC_Invoice_ID = vars.getGlobalVariable("inpKey", strWindowId + "|C_Invoice_ID",
-          "", IsIDFilter.instance);
+      final String strC_Invoice_ID = vars.getGlobalVariable(INP_KEY, strWindowId + C_INVOICE_ID,
+          StringUtils.EMPTY, IsIDFilter.instance);
 
       printGrid(response, vars, strC_Invoice_ID);
     } else if (vars.commandIn("USECREDITPAYMENTS") || vars.commandIn("CANCEL_USECREDITPAYMENTS")) {
@@ -232,8 +234,8 @@ public class ProcessInvoice extends HttpSecureAppServlet {
           IsIDFilter.instance);
       final String strTabId = vars.getGlobalVariable("inpTabId", "ProcessInvoice|Tab_ID",
           IsIDFilter.instance);
-      final String strC_Invoice_ID = vars.getGlobalVariable("inpKey", strWindowId + "|C_Invoice_ID",
-          "");
+      final String strC_Invoice_ID = vars.getGlobalVariable(INP_KEY, strWindowId + C_INVOICE_ID,
+          StringUtils.EMPTY);
       final String strPaymentDate = vars.getRequiredStringParameter("inpPaymentDate");
       final String strOrg = vars.getGlobalVariable("inpadOrgId", "ProcessInvoice|Org_ID",
           IsIDFilter.instance);
@@ -266,7 +268,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
             creditPayment.setUsedCredit(usedCreditAmt.add(creditPayment.getUsedCredit()));
             final StringBuilder description = new StringBuilder();
             if (creditPayment.getDescription() != null
-                && !creditPayment.getDescription().equals("")) {
+                && !creditPayment.getDescription().equals(StringUtils.EMPTY)) {
               description.append(creditPayment.getDescription()).append("\n");
             }
             description.append(String.format(
@@ -309,7 +311,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
           final DocumentType docType = FIN_Utility.getDocumentType(invoice.getOrganization(),
               isSalesTransaction ? AcctServer.DOCTYPE_ARReceipt : AcctServer.DOCTYPE_APPayment);
           final String strPaymentDocumentNo = FIN_Utility.getDocumentNo(docType,
-              docType.getTable() != null ? docType.getTable().getDBTableName() : "");
+              docType.getTable() != null ? docType.getTable().getDBTableName() : StringUtils.EMPTY);
           final FIN_FinancialAccount bpFinAccount = isSalesTransaction
               ? invoice.getBusinessPartner().getAccount()
               : invoice.getBusinessPartner().getPOFinancialAccount();
@@ -389,7 +391,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
           strDireccion + "/org.openbravo.advpaymentmngt.ad_actionbutton/ExecutePayments.html");
     } else {
       String strWindowPath = Utility.getTabURL(strTabId, "R", true);
-      if (strWindowPath.equals("")) {
+      if (StringUtils.isEmpty(strWindowPath)) {
         strWindowPath = strDefaultServlet;
       }
       printPageClosePopUp(response, vars, strWindowPath);
@@ -474,7 +476,7 @@ public class ProcessInvoice extends HttpSecureAppServlet {
       String strCInvoiceID, String strWindowId, String strTabId, Date invoiceDate, String strOrg)
       throws IOException, ServletException {
     log4j.debug("Output: Credit Payment Grid popup");
-    String[] discard = { "" };
+    String[] discard = { StringUtils.EMPTY };
     response.setContentType("text/html; charset=UTF-8");
     PrintWriter out = response.getWriter();
     XmlDocument xmlDocument = xmlEngine
@@ -557,11 +559,11 @@ public class ProcessInvoice extends HttpSecureAppServlet {
 
         FieldProviderFactory.setField(data[i], "paymentAmount",
             pendingToPay.compareTo(outStandingAmt) > 0 ? outStandingAmt.toString()
-                : (pendingToPay.compareTo(BigDecimal.ZERO) > 0 ? pendingToPay.toString() : ""));
+                : (pendingToPay.compareTo(BigDecimal.ZERO) > 0 ? pendingToPay.toString() : StringUtils.EMPTY));
         pendingToPay = pendingToPay.subtract(outStandingAmt);
 
         FieldProviderFactory.setField(data[i], "finSelectedCreditPaymentId",
-            "".equals(data[i].getField("paymentAmount")) ? "" : creditPayments.get(i).getId());
+            StringUtils.EMPTY.equals(data[i].getField("paymentAmount")) ? StringUtils.EMPTY : creditPayments.get(i).getId());
         FieldProviderFactory.setField(data[i], "rownum", String.valueOf(i));
       }
     } finally {

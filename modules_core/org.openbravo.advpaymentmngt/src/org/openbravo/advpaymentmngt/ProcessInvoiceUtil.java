@@ -123,13 +123,13 @@ public class ProcessInvoiceUtil {
                         OBDateUtils.formatDate(voidAcctDate, "yyyy-MM-dd"));
             }
 
-            if ("RC".equals(strdocaction) && strSupplierReference != null) {
+            if (StringUtils.equals("RC", strdocaction) && StringUtils.isNotEmpty(strSupplierReference)) {
                 parameters.put("supplierReference", strSupplierReference);
             }
 
             if (StringUtils.equals("RC", strdocaction)) {
                 if (strSupplierReference == null || strSupplierReference.isBlank()) {
-                    strSupplierReference = "";
+                    strSupplierReference = StringUtils.EMPTY;
                 } else if (StringUtils.equals(invoice.getOrderReference(), strSupplierReference)) {
                     String errorMSG = Utility.messageBD(conn, "ValidateSupplierReference", vars.getLanguage(), false);
                     msg = new OBError();
@@ -151,7 +151,7 @@ public class ProcessInvoiceUtil {
                     final DocumentType docType = FIN_Utility.getDocumentType(invoice.getOrganization(),
                             isSOTrx ? AcctServer.DOCTYPE_ARReceipt : AcctServer.DOCTYPE_APPayment);
                     final String strPaymentDocumentNo = FIN_Utility.getDocumentNo(docType,
-                            docType.getTable() != null ? docType.getTable().getDBTableName() : "");
+                            docType.getTable() != null ? docType.getTable().getDBTableName() : StringUtils.EMPTY);
 
                     // Get default Financial Account as it is done in Add Payment
                     FIN_FinancialAccount bpFinAccount = null;
@@ -308,7 +308,7 @@ public class ProcessInvoiceUtil {
                                 orderPayment.isReceipt() ? AcctServer.DOCTYPE_ARReceipt
                                         : AcctServer.DOCTYPE_APPayment);
                         final String strPaymentDocumentNo = FIN_Utility.getDocumentNo(docType,
-                                docType.getTable() != null ? docType.getTable().getDBTableName() : "");
+                                docType.getTable() != null ? docType.getTable().getDBTableName() : StringUtils.EMPTY);
 
                         // Creating a dummy payment
                         dummyPayment = dao.getNewPayment(orderPayment.isReceipt(), invoice.getOrganization(),
@@ -455,7 +455,7 @@ public class ProcessInvoiceUtil {
                         for (final String line : invDesc.split("\n")) {
                             if (!line.startsWith(creditMsg.substring(0, creditMsg.lastIndexOf("%s")))) {
                                 newDesc.append(line);
-                                if (!"".equals(line)) {
+                                if (!StringUtils.EMPTY.equals(line)) {
                                     newDesc.append("\n");
                                 }
                             }
@@ -473,7 +473,7 @@ public class ProcessInvoiceUtil {
                 if (pinstance.getResult() == 0L) {
                     OBDal.getInstance().rollbackAndClose();
                     myMessage = Utility.translateError(conn, vars, vars.getLanguage(),
-                            pinstance.getErrorMsg().replaceFirst("@ERROR=", ""));
+                            pinstance.getErrorMsg().replaceFirst("@ERROR=", StringUtils.EMPTY));
                     log4j.debug(myMessage.getMessage());
 
                     return myMessage;

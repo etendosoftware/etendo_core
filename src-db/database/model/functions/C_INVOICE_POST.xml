@@ -651,7 +651,7 @@ IF (NOT FINISH_PROCESS) THEN
             TRUNC(now()), NULL, 'N', NULL,
             TRUNC(now()), C_PaymentTerm_ID, C_BPartner_ID, C_BPartner_Location_ID,
             AD_User_ID, CASE WHEN v_supplier_reference IS NULL THEN POReference ELSE v_supplier_reference END, 
-						DateOrdered, IsDiscountPrinted, C_Currency_ID, C_Charge_ID, ChargeAmt * -1,
+	    DateOrdered, IsDiscountPrinted, C_Currency_ID, C_Charge_ID, ChargeAmt * -1,
             0, 0, --Totals are recalculed adding invoice lines
             M_PriceList_ID, C_Campaign_ID,
             C_Project_ID, C_Activity_ID, AD_OrgTrx_ID, User1_ID,

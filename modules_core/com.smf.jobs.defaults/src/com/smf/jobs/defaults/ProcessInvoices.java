@@ -112,7 +112,7 @@ public class ProcessInvoices extends Action {
             if (input.size() > 1) {
                 supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? null : parameters.getString(SUPPLIERREFERENCE);
             } else {
-                supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? "" : parameters.getString(SUPPLIERREFERENCE);
+                supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? StringUtils.EMPTY : parameters.getString(SUPPLIERREFERENCE);
             }
 
             log.debug("Process Invoice preRun Parameters:");
