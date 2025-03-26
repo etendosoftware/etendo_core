@@ -159,7 +159,7 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
       return false;
     } catch (OBException e) {
       // Log the exception for debugging purposes
-      log.debug("Custom action detected: " + action);
+      log.debug(String.format(OBMessageUtils.messageBD("CustomActionDetected"), action));
       // If getExportType throws exception, assume it is a custom action.
       return true;
     }
