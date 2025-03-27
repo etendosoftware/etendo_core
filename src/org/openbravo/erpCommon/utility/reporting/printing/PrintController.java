@@ -612,7 +612,7 @@ public class PrintController extends HttpSecureAppServlet {
           handleDirectPrint(response, jrPrintReports, reports, filename, tempOutputStream, os);
         }
       } else {
-        concatReport(reports.toArray(new Report[]{ }), jrPrintReports, response, directPrint);
+        tempOutputStream = concatReport(reports.toArray(new Report[]{ }), jrPrintReports, response, directPrint);
       }
       updateOrderDatePrintedForSalesOrders(reports);
     } catch (IOException e) {
@@ -753,7 +753,7 @@ public class PrintController extends HttpSecureAppServlet {
     printReports(response, jrPrintReports, reports, false);
   }
 
-  private void concatReport(Report[] reports, Collection<JasperPrint> jrPrintReports,
+  private ByteArrayOutputStream concatReport(Report[] reports, Collection<JasperPrint> jrPrintReports,
       HttpServletResponse response, boolean directPrint) {
     ByteArrayOutputStream tempOutputStream = new ByteArrayOutputStream();
     String filename = "";
@@ -810,6 +810,8 @@ public class PrintController extends HttpSecureAppServlet {
     } catch (Exception e) {
       log4j.error(e);
     }
+
+    return tempOutputStream;
   }
 
   private void hookedDirectPrint(String filename, File path, Report reports, ByteArrayOutputStream tempResponse,

@@ -15,16 +15,9 @@ apply from: "artifacts.list.COMPILATION.gradle"
 repositories {
     gradlePluginPortal()
     mavenCentral()
-    maven {
-        url = uri("https://repo.futit.cloud/repository/maven-snapshots/")
-        credentials {
-            username = "${nexusUser}"
-            password = "${nexusPassword}"
-        }
-    }
 }
 
-final String CURRENT_VERSION = "25.1.0"
+final String CURRENT_VERSION = "24.4.8"
 final String NEXT_RELEASE = "25.1.0"
 final String NEXT_HOTFIX = "24.4.9"
 
