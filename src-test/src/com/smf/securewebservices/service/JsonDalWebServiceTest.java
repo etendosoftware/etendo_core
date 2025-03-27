@@ -22,6 +22,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.smf.securewebservices.TestingConstants;
+
 /**
  * Unit tests for the JsonDalWebService class.
  */
@@ -62,15 +64,17 @@ public class JsonDalWebServiceTest {
   @Test
   public void testGetParameterMap() throws Exception {
     // Given
-    when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(Collections.singletonList("testParam")));
-    when(mockRequest.getParameter("testParam")).thenReturn("testValue");
+    when(mockRequest.getParameterNames()).thenReturn(
+        Collections.enumeration(Collections.singletonList(TestingConstants.TEST_PARAM)));
+    when(mockRequest.getParameter(TestingConstants.TEST_PARAM)).thenReturn("testValue");
 
     // When
-    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod("getParameterMap", mockRequest);
+    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod(TestingConstants.GET_PARAMETER_MAP,
+        mockRequest);
 
     // Then
     assertEquals(1, result.size());
-    assertEquals("testValue", result.get("testParam"));
+    assertEquals("testValue", result.get(TestingConstants.TEST_PARAM));
   }
 
   /**
@@ -82,20 +86,21 @@ public class JsonDalWebServiceTest {
   @Test
   public void testGetParameterMapMultipleParameters() throws Exception {
     // Given
-    when(mockRequest.getParameterNames()).thenReturn(
-        Collections.enumeration(Arrays.asList("param1", "param2", "param3")));
-    when(mockRequest.getParameter("param1")).thenReturn("value1");
-    when(mockRequest.getParameter("param2")).thenReturn("value2");
-    when(mockRequest.getParameter("param3")).thenReturn("value3");
+    when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(
+        Arrays.asList(TestingConstants.PARAM_1, TestingConstants.PARAM_2, TestingConstants.PARAM_3)));
+    when(mockRequest.getParameter(TestingConstants.PARAM_1)).thenReturn("value1");
+    when(mockRequest.getParameter(TestingConstants.PARAM_2)).thenReturn("value2");
+    when(mockRequest.getParameter(TestingConstants.PARAM_3)).thenReturn("value3");
 
     // When
-    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod("getParameterMap", mockRequest);
+    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod(TestingConstants.GET_PARAMETER_MAP,
+        mockRequest);
 
     // Then
     assertEquals(3, result.size());
-    assertEquals("value1", result.get("param1"));
-    assertEquals("value2", result.get("param2"));
-    assertEquals("value3", result.get("param3"));
+    assertEquals("value1", result.get(TestingConstants.PARAM_1));
+    assertEquals("value2", result.get(TestingConstants.PARAM_2));
+    assertEquals("value3", result.get(TestingConstants.PARAM_3));
   }
 
   /**
@@ -110,7 +115,8 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(Collections.emptyList()));
 
     // When
-    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod("getParameterMap", mockRequest);
+    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod(TestingConstants.GET_PARAMETER_MAP,
+        mockRequest);
 
     // Then
     assertNotNull(result);
@@ -131,7 +137,7 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getReader()).thenReturn(reader);
 
     // When
-    String result = invokePrivateMethod("getRequestContent", mockRequest);
+    String result = invokePrivateMethod(TestingConstants.GET_REQUEST_CONTENT, mockRequest);
 
     // Then
     assertEquals(content, result);
@@ -151,7 +157,7 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getReader()).thenReturn(reader);
 
     // When
-    String result = invokePrivateMethod("getRequestContent", mockRequest);
+    String result = invokePrivateMethod(TestingConstants.GET_REQUEST_CONTENT, mockRequest);
 
     // Then
     assertEquals(content, result);
@@ -171,7 +177,7 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getReader()).thenReturn(reader);
 
     // When
-    String result = invokePrivateMethod("getRequestContent", mockRequest);
+    String result = invokePrivateMethod(TestingConstants.GET_REQUEST_CONTENT, mockRequest);
 
     // Then
     assertEquals(content, result);
@@ -189,7 +195,7 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getReader()).thenReturn(null);
 
     // When
-    String result = invokePrivateMethod("getRequestContent", mockRequest);
+    String result = invokePrivateMethod(TestingConstants.GET_REQUEST_CONTENT, mockRequest);
 
     // Then
     assertEquals("", result);
@@ -210,8 +216,8 @@ public class JsonDalWebServiceTest {
     invokePrivateMethod("writeResult", mockResponse, result);
 
     // Then
-    verify(mockResponse).setContentType("application/json;charset=UTF-8");
-    verify(mockResponse).setHeader("Content-Type", "application/json;charset=UTF-8");
+    verify(mockResponse).setContentType(TestingConstants.APPLICATION_JSON_UTF8);
+    verify(mockResponse).setHeader("Content-Type", TestingConstants.APPLICATION_JSON_UTF8);
 
     mockPrintWriter.flush();
     assertEquals(result, stringWriter.toString());
@@ -232,8 +238,8 @@ public class JsonDalWebServiceTest {
     invokePrivateMethod("writeResult", mockResponse, result);
 
     // Then
-    verify(mockResponse).setContentType("application/json;charset=UTF-8");
-    verify(mockResponse).setHeader("Content-Type", "application/json;charset=UTF-8");
+    verify(mockResponse).setContentType(TestingConstants.APPLICATION_JSON_UTF8);
+    verify(mockResponse).setHeader("Content-Type", TestingConstants.APPLICATION_JSON_UTF8);
     verify(mockResponse).getWriter();
   }
 
@@ -246,19 +252,21 @@ public class JsonDalWebServiceTest {
   @Test
   public void testParameterMapWithSpecialValues() throws Exception {
     // Given
-    when(mockRequest.getParameterNames()).thenReturn(Collections.enumeration(Arrays.asList("null", "empty", "space")));
+    when(mockRequest.getParameterNames()).thenReturn(
+        Collections.enumeration(Arrays.asList("null", TestingConstants.EMPTY, TestingConstants.SPACE)));
     when(mockRequest.getParameter("null")).thenReturn(null);
-    when(mockRequest.getParameter("empty")).thenReturn("");
-    when(mockRequest.getParameter("space")).thenReturn(" ");
+    when(mockRequest.getParameter(TestingConstants.EMPTY)).thenReturn("");
+    when(mockRequest.getParameter(TestingConstants.SPACE)).thenReturn(" ");
 
     // When
-    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod("getParameterMap", mockRequest);
+    @SuppressWarnings("unchecked") Map<String, String> result = invokePrivateMethod(TestingConstants.GET_PARAMETER_MAP,
+        mockRequest);
 
     // Then
     assertEquals(3, result.size());
     assertNull(result.get("null"));
-    assertEquals("", result.get("empty"));
-    assertEquals(" ", result.get("space"));
+    assertEquals("", result.get(TestingConstants.EMPTY));
+    assertEquals(" ", result.get(TestingConstants.SPACE));
   }
 
   /**
@@ -275,7 +283,7 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getReader()).thenReturn(reader);
 
     // When
-    String result = invokePrivateMethod("getRequestContent", mockRequest);
+    String result = invokePrivateMethod(TestingConstants.GET_REQUEST_CONTENT, mockRequest);
 
     // Then
     assertEquals(content, result);
@@ -294,7 +302,7 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getReader()).thenReturn(reader);
 
     // When
-    String result = invokePrivateMethod("getRequestContent", mockRequest);
+    String result = invokePrivateMethod(TestingConstants.GET_REQUEST_CONTENT, mockRequest);
 
     // Then
     assertEquals("", result);
@@ -316,7 +324,7 @@ public class JsonDalWebServiceTest {
     when(mockRequest.getReader()).thenReturn(reader);
 
     // When
-    String result = invokePrivateMethod("getRequestContent", mockRequest);
+    String result = invokePrivateMethod(TestingConstants.GET_REQUEST_CONTENT, mockRequest);
 
     // Then
     assertEquals(1000, result.length());

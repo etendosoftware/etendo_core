@@ -35,6 +35,16 @@ public class TestingConstants {
   public static final String ORGANIZATION = "organization";
   public static final String WAREHOUSE = "warehouse";
   public static final String AUTHORIZATION = "Authorization";
+  public static final String VALID_ENTITY = "validEntity";
+  public static final String INVALID_ENTITY = "invalidEntity";
+  public static final String TEST_PARAM = "testParam";
+  public static final String GET_PARAMETER_MAP = "getParameterMap";
+  public static final String PARAM_3 = "param3";
+  public static final String PARAM_2 = "param2";
+  public static final String EMPTY = "empty";
+  public static final String SPACE = "space";
+  public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
+  public static final String GET_REQUEST_CONTENT = "getRequestContent";
 
   private TestingConstants() {
     // Private constructor to prevent instantiation

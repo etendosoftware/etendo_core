@@ -15,7 +15,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
-import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.system.Client;
@@ -26,6 +25,10 @@ import com.smf.securewebservices.service.ContextInfoServlet;
 import com.smf.securewebservices.utils.SecureWebServicesUtils;
 import com.smf.securewebservices.utils.WSResult;
 
+/**
+ * Unit tests for the ContextInfoServlet class.
+ * Tests the retrieval of context information including client, role, organization, and warehouse data.
+ */
 public class ContextInfoServletTest {
 
   private ContextInfoServlet contextInfoServlet;
@@ -42,6 +45,10 @@ public class ContextInfoServletTest {
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<SecureWebServicesUtils> mockedSecureWebServicesUtils;
 
+  /**
+   * Sets up the test environment before each test.
+   * Initialize mocks, creates test instances and configures mock behavior.
+   */
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
@@ -72,6 +79,10 @@ public class ContextInfoServletTest {
     when(mockWarehouse.getId()).thenReturn("warehouseId");
   }
 
+  /**
+   * Cleans up resources after each test.
+   * Closes the static mocks to prevent memory leaks.
+   */
   @After
   public void tearDown() {
     if (mockedOBContext != null) {
@@ -82,6 +93,12 @@ public class ContextInfoServletTest {
     }
   }
 
+  /**
+   * Tests the successful retrieval of context information.
+   * Verifies that the get method returns the expected status and result type.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testGetHappyPath() throws Exception {
     // Given
@@ -94,6 +111,5 @@ public class ContextInfoServletTest {
     // Then
     assertEquals(WSResult.Status.OK, result.getStatus());
     assertEquals(WSResult.ResultType.SINGLE, result.getResultType());
-
   }
 }

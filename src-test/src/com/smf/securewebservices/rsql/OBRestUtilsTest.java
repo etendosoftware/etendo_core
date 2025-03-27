@@ -114,14 +114,16 @@ public class OBRestUtilsTest {
       OBRestUtils.addEntitynameToParams(path, params);
 
       // THEN
-      Assertions.assertEquals(TestingConstants.ENTITY_NAME, params.get(JsonConstants.ENTITYNAME), "Entity name should be EntityName");
+      Assertions.assertEquals(TestingConstants.ENTITY_NAME, params.get(JsonConstants.ENTITYNAME),
+          "Entity name should be EntityName");
       Assertions.assertEquals("123", params.get(JsonConstants.ID), "ID should be 123");
     } catch (UnsupportedOperationException e) {
       Map<String, String> params = new HashMap<>();
       params.put(JsonConstants.ENTITYNAME, TestingConstants.ENTITY_NAME);
       params.put(JsonConstants.ID, "123");
 
-      Assertions.assertEquals(TestingConstants.ENTITY_NAME, params.get(JsonConstants.ENTITYNAME), "Entity name should be EntityName");
+      Assertions.assertEquals(TestingConstants.ENTITY_NAME, params.get(JsonConstants.ENTITYNAME),
+          "Entity name should be EntityName");
       Assertions.assertEquals("123", params.get(JsonConstants.ID), "ID should be 123");
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -243,11 +245,30 @@ public class OBRestUtilsTest {
     }
   }
 
+  /**
+   * Interface for mocking static methods in tests.
+   * Provides functionality to mock static method behaviors and ensure proper resource cleanup.
+   */
   interface MockedStatic extends AutoCloseable {
+    /**
+     * Specifies the behavior for a static method that returns void.
+     *
+     * @param runnable
+     *     the void operation to be executed when the static method is called
+     */
     void when(Runnable runnable);
 
+    /**
+     * Specifies the behavior for a static method that returns a value.
+     *
+     * @param verification
+     *     the operation that returns a value when the static method is called
+     */
     void when(MockedStatic.Verification verification);
 
+    /**
+     * Interface for defining verification operations that can throw exceptions.
+     */
     interface Verification {
       Object invoke() throws Throwable;
     }

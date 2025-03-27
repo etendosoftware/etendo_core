@@ -26,6 +26,8 @@ import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.util.CheckException;
 import org.openbravo.service.json.JsonConstants;
 
+import com.smf.securewebservices.TestingConstants;
+
 /**
  * Unit tests for JsonDalWebService parameter validation methods.
  * These tests verify the correct handling of entity names, IDs and parameters
@@ -73,20 +75,20 @@ public class JsonDalWebServiceParameterTest {
   @Test
   public void testCheckSetParametersValidEntity() throws Exception {
     // Given
-    String path = "validEntity";
+    String path = TestingConstants.VALID_ENTITY;
     Map<String, String> parameters = new HashMap<>();
     Entity mockEntity = mock(Entity.class);
 
     try (var mocked = mockStatic(ModelProvider.class)) {
       mocked.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
-      when(mockModelProvider.getEntity("validEntity")).thenReturn(mockEntity);
+      when(mockModelProvider.getEntity(TestingConstants.VALID_ENTITY)).thenReturn(mockEntity);
 
       // When
       boolean result = invokeCheckSetParameters(path, mockRequest, mockResponse, parameters);
 
       // Then
       assertTrue(result);
-      assertEquals("validEntity", parameters.get(JsonConstants.ENTITYNAME));
+      assertEquals(TestingConstants.VALID_ENTITY, parameters.get(JsonConstants.ENTITYNAME));
     }
   }
 
@@ -106,14 +108,14 @@ public class JsonDalWebServiceParameterTest {
 
     try (var mocked = mockStatic(ModelProvider.class)) {
       mocked.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
-      when(mockModelProvider.getEntity("validEntity")).thenReturn(mockEntity);
+      when(mockModelProvider.getEntity(TestingConstants.VALID_ENTITY)).thenReturn(mockEntity);
 
       // When
       boolean result = invokeCheckSetParameters(path, mockRequest, mockResponse, parameters);
 
       // Then
       assertTrue(result);
-      assertEquals("validEntity", parameters.get(JsonConstants.ENTITYNAME));
+      assertEquals(TestingConstants.VALID_ENTITY, parameters.get(JsonConstants.ENTITYNAME));
       assertEquals("123", parameters.get(JsonConstants.ID));
       assertEquals(JsonConstants.TEXTMATCH_EXACT, parameters.get(JsonConstants.TEXTMATCH_PARAMETER));
       assertEquals(JsonConstants.TEXTMATCH_EXACT, parameters.get(JsonConstants.TEXTMATCH_PARAMETER_OVERRIDE));
@@ -130,12 +132,12 @@ public class JsonDalWebServiceParameterTest {
   @Test
   public void testCheckSetParametersInvalidEntity() throws Exception {
     // Given
-    String path = "invalidEntity";
+    String path = TestingConstants.INVALID_ENTITY;
     Map<String, String> parameters = new HashMap<>();
 
     try (var mocked = mockStatic(ModelProvider.class)) {
       mocked.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
-      when(mockModelProvider.getEntity("invalidEntity")).thenThrow(new CheckException("Entity not found"));
+      when(mockModelProvider.getEntity(TestingConstants.INVALID_ENTITY)).thenThrow(new CheckException("Entity not found"));
 
       // When
       boolean result = invokeCheckSetParameters(path, mockRequest, mockResponse, parameters);
@@ -156,20 +158,20 @@ public class JsonDalWebServiceParameterTest {
   @Test
   public void testCheckSetIDEntityNameValidEntity() throws Exception {
     // Given
-    String path = "validEntity";
+    String path = TestingConstants.VALID_ENTITY;
     Map<String, String> parameters = new HashMap<>();
     Entity mockEntity = mock(Entity.class);
 
     try (var mocked = mockStatic(ModelProvider.class)) {
       mocked.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
-      when(mockModelProvider.getEntity("validEntity")).thenReturn(mockEntity);
+      when(mockModelProvider.getEntity(TestingConstants.VALID_ENTITY)).thenReturn(mockEntity);
 
       // When
       boolean result = invokeCheckSetIDEntityName(path, mockRequest, mockResponse, parameters);
 
       // Then
       assertTrue(result);
-      assertEquals("validEntity", parameters.get(JsonConstants.ENTITYNAME));
+      assertEquals(TestingConstants.VALID_ENTITY, parameters.get(JsonConstants.ENTITYNAME));
     }
   }
 
@@ -183,12 +185,12 @@ public class JsonDalWebServiceParameterTest {
   @Test
   public void testCheckSetIDEntityNameInvalidEntity() throws Exception {
     // Given
-    String path = "invalidEntity";
+    String path = TestingConstants.INVALID_ENTITY;
     Map<String, String> parameters = new HashMap<>();
 
     try (var mocked = mockStatic(ModelProvider.class)) {
       mocked.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
-      when(mockModelProvider.getEntity("invalidEntity")).thenThrow(new CheckException("Entity not found"));
+      when(mockModelProvider.getEntity(TestingConstants.INVALID_ENTITY)).thenThrow(new CheckException("Entity not found"));
 
       // When
       boolean result = invokeCheckSetIDEntityName(path, mockRequest, mockResponse, parameters);
