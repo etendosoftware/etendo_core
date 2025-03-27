@@ -15,30 +15,9 @@ import com.smf.jobs.defaults.offerPick.OfferAddOrgTest;
 import com.smf.jobs.defaults.offerPick.OfferAddProductCategoryTest;
 import com.smf.jobs.defaults.offerPick.OfferAddProductTest;
 import com.smf.jobs.defaults.provider.JobsComponentProviderTest;
-
+import com.smf.securewebservices.SecureWebServicesSuite;
 /**
- * Test suite to run all unit tests for the SMF Jobs defaults module.
- * <p>
- * This suite includes tests for core functionalities such as order processing,
- * invoice creation, shipment processing, and offer handling.
- * </p>
- *
- * <p>JUnit {@link Suite} is used to group related test classes and execute them together.</p>
- *
- * <h2>Test Classes Included</h2>
- * <ul>
- *   <li>{@link CreateFromOrdersHQLTransformerTest}</li>
- *   <li>{@link CreateFromOrderTest}</li>
- *   <li>{@link OfferAddOrgTest}</li>
- *   <li>{@link OfferAddProductCategoryTest}</li>
- *   <li>{@link OfferAddProductTest}</li>
- *   <li>{@link JobsComponentProviderTest}</li>
- *   <li>{@link CloneOrderHookTest}</li>
- *   <li>{@link ProcessInvoicesTest}</li>
- *   <li>{@link ProcessOrdersDefaultsTest}</li>
- *   <li>{@link ProcessOrdersTest}</li>
- *   <li>{@link ProcessShipmentTest}</li>
- * </ul>
+ * Test suite for SMF packages.
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
@@ -56,17 +35,13 @@ import com.smf.jobs.defaults.provider.JobsComponentProviderTest;
     ProcessInvoicesTest.class,
     ProcessOrdersDefaultsTest.class,
     ProcessOrdersTest.class,
-    ProcessShipmentTest.class
+    ProcessShipmentTest.class,
+
+    // Secure webservices
+    SecureWebServicesSuite.class
 
 })
 
 public class CoreTestSuite {
-  /**
-   * The CoreTestSuite class is used as an entry point to run all
-   * the unit tests in the SMF Jobs defaults module.
-   * <p>
-   * No additional logic is required in this class, as it serves as a container
-   * for the list of test classes defined in the {@code @SuiteClasses} annotation.
-   * </p>
-   */
+
 }
