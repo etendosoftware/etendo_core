@@ -113,7 +113,7 @@ public class SecureWebServiceServlet extends BaseSecureWebServiceServlet {
 		return webService;
 	}
 
-	private String getRemainingPath(String pathInfo, String segment) {
+	protected String getRemainingPath(String pathInfo, String segment) {
 		String localPathInfo = pathInfo;
 		if (pathInfo.startsWith("/")) {
 			localPathInfo = pathInfo.substring(1);

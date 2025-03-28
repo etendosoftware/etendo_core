@@ -480,7 +480,6 @@ spec:
           script {
             try {
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running SonarQube Analysis\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-              echo "--------------- Running SonarQube ---------------"
 
               def modulesCoreExclusions = [
                 "com.smf.userinterface.skin.legacy",
@@ -494,6 +493,26 @@ spec:
               ]
 
               def sourceExclusions = modulesCoreExclusions.collect { "modules_core/${it}/**" }.join(',')
+
+              echo "---------------------- Add deprecated classes to sourceExclusions list ----------------------"
+              def deprecatedFiles = sh(
+                  script: '''
+                    cd ${REPO_NAME}
+                    find . -name "*.java" -exec grep -l '@Deprecated' {} + | while read file; do
+                      if grep -A1 '@Deprecated' "$file" | grep -q 'public class'; then
+                        echo "$file"
+                      fi
+                    done
+                  ''',
+                  returnStdout: true
+              ).trim().split('\n')
+
+              def deprecatedExclusions = deprecatedFiles.collect { it.replaceFirst("^\\./", "") }.join(',')
+              sourceExclusions = "${sourceExclusions},${deprecatedExclusions}"
+
+              echo "Sources to exclusions: ${sourceExclusions}"
+
+              echo "--------------- Running SonarQube ---------------"
               sh """
               su etendo
               cd ${REPO_NAME}
