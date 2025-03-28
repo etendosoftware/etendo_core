@@ -8,7 +8,7 @@ on:
 
 jobs:
   make-review:
-    if: github.head_ref != 'develop' && github.event.workflow_run.conclusion == 'success'
+    if: false
     runs-on: ubuntu-latest
     env:
       PROJECT: ${{ github.event.repository.owner.login }}

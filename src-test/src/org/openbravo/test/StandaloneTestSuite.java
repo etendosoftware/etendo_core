@@ -21,8 +21,7 @@ package org.openbravo.test;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import org.openbravo.advpaymentmngt.test.DocumentNumberGeneration;
-import org.openbravo.advpaymentmngt.test.ReversePaymentTest;
+import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.authentication.hashing.PasswordHashing;
 import org.openbravo.base.weld.test.testinfrastructure.CdiInfrastructure;
 import org.openbravo.base.weld.test.testinfrastructure.DalPersistanceEventTest;
@@ -41,6 +40,7 @@ import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.event.LandedCostDuplicateReceiptValidatorTest;
 import org.openbravo.financial.FinancialUtilsTest;
+import org.openbravo.materialmgmt.MaterialMgmtTestSuite;
 import org.openbravo.scheduling.ProcessSchedulingTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
 import org.openbravo.scheduling.trigger.TriggerProviderTest;
@@ -107,6 +107,7 @@ import org.openbravo.test.pricelist.PriceListTest;
 import org.openbravo.test.process.order.OrderProcessTest;
 import org.openbravo.test.process.utils.ProcessUtilsTest;
 import org.openbravo.test.productStatus.ProductStatusTest;
+import org.openbravo.test.purchaseOrder.PurchaseOrderStatus;
 import org.openbravo.test.referencedinventory.ReferencedInventoryTestSuite;
 import org.openbravo.test.reporting.AllJrxmlCompilation;
 import org.openbravo.test.reporting.CompiledReportsCacheTest;
@@ -361,7 +362,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ServicesTest3.class,
 
     // others
-    DocumentNumberGeneration.class, //
     GridExport.class, //
     FinancialUtilsTest.class, //
 
@@ -380,9 +380,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Count and Discount a Document without Doc base type configured and get an error. [EPL-534]
     PostedNoDocConfigTest.class,
-
-    // Reverse Payment Test
-    ReversePaymentTest.class,
 
     // Report Valuation Stock Test
     ReportValuationStockTest.class,
@@ -409,7 +406,16 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     InventoryCountProcessTest.class,
 
     // Good Movement Test
-    GoodMovementTest.class
+    GoodMovementTest.class,
+
+    // Purchase Order Status
+    PurchaseOrderStatus.class,
+
+    // MaterialMgmt
+    MaterialMgmtTestSuite.class,
+
+    // AdvPayment
+    AdvPaymentMngtTestSuite.class, //
 })
 public class StandaloneTestSuite {
 }

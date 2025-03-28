@@ -34,7 +34,7 @@ import javax.mail.internet.MimeUtility;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -120,24 +120,93 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
 
   @Override
   protected JSONObject doExecute(Map<String, Object> parameters, String content) {
-
     try {
-      JSONObject result = getResponseBuilder().retryExecution().showResultsInProcessView().build();
-
+      JSONObject result = getResponseBuilder().retryExecution().build();
       final JSONObject jsonContent = new JSONObject(content);
       final String action = jsonContent.getString(ApplicationConstants.BUTTON_VALUE);
-      doGenerateReport(result, parameters, jsonContent, action);
+
+      if (isCustomAction(action)) {
+        handleCustomAction(result, parameters, jsonContent, action);
+      } else {
+        doGenerateReport(result, parameters, jsonContent, action);
+      }
 
       return result;
     } catch (Exception e) {
       log.error("Error generating report id: {}", parameters.get("reportId"), e);
       Throwable uiException = DbUtility.getUnderlyingSQLException(e);
       return getResponseBuilder().retryExecution()
-          .showResultsInProcessView()
           .showMsgInProcessView(MessageType.ERROR,
               OBMessageUtils.translateError(uiException.getMessage()).getMessage())
           .build();
     }
+  }
+
+  /**
+   * Determines if the given action is a custom action that is not related to
+   * report export. It attempts to obtain the export type of the action; if
+   * successful, it identifies the action as a reporting action. If an
+   * exception is thrown, the action is considered a custom action.
+   *
+   * @param action a string representing the action to be checked
+   * @return true if the action is a custom action; false if it is a reporting action
+   */
+  private boolean isCustomAction(String action) {
+    try {
+      // Attempt to obtain the export type
+      getExportType(action);
+      // If no exception is thrown, it is a reporting action.
+      return false;
+    } catch (OBException e) {
+      // Log the exception for debugging purposes
+      log.debug(String.format(OBMessageUtils.messageBD("CustomActionDetected"), action));
+      // If getExportType throws exception, assume it is a custom action.
+      return true;
+    }
+  }
+
+  /**
+   * Handles custom actions that are not report export actions.
+   *
+   * This method provides a default implementation that throws an exception
+   * indicating an unsupported action. Subclasses can override this method to
+   * implement specific logic for handling custom actions.
+   *
+   * When overridden, the expected response format should be a "message" JSONObject
+   * stored in the provided <code>result</code> parameter. The message object should
+   * include a "severity" field with one of the following values: "success", "error",
+   * or "warning". Optional fields "title" and "text" can be included to provide
+   * additional context to the user, though their presence is strongly recommended
+   * for clarity. It is the responsibility of the developer to construct and set
+   * this response appropriately.
+   *
+   * Example of a successful response:
+   * <pre>
+   * result.put("message", new JSONObject()
+   *     .put("severity", "success")
+   *     .put("title", "Operation Completed")
+   *     .put("text", "The custom action was executed successfully."));
+   * </pre>
+   *
+   * Example of an error response:
+   * <pre>
+   * result.put("message", new JSONObject()
+   *     .put("severity", "error")
+   *     .put("text", "Failed to process the request."));
+   * </pre>
+   *
+   * @param result the JSONObject to store the result of the action
+   * @param parameters a map containing the parameters for the custom action
+   * @param jsonContent the JSON content containing additional data for the action
+   * @param action a string representing the custom action to be handled
+   * @throws JSONException if there is an error processing the JSON content
+   * @throws OBException if the action is unsupported
+   */
+  protected void handleCustomAction(JSONObject result, Map<String, Object> parameters,
+      JSONObject jsonContent, String action) throws JSONException {
+    // Default implementation: throws an exception to maintain the original behavior
+    throw new OBException(
+        OBMessageUtils.getI18NMessage("OBUIAPP_UnsupportedAction", new String[] { action }));
   }
 
   /**

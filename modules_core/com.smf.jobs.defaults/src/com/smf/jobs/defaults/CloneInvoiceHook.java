@@ -2,7 +2,7 @@ package com.smf.jobs.defaults;
 
 import com.smf.jobs.hooks.CloneRecordHook;
 
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.core.DalUtil;

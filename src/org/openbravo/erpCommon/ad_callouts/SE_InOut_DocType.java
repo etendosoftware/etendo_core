@@ -22,7 +22,7 @@ import javax.servlet.ServletException;
 
 import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.erpCommon.calloutsSequence.CalloutSequence;

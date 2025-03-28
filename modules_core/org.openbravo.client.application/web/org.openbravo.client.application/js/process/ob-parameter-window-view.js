@@ -42,6 +42,8 @@ isc.OBParameterWindowView.addProperties({
   defaultsActionHandler:
     'org.openbravo.client.application.process.DefaultsProcessActionHandler',
 
+  customButtons: [],
+
   initWidget: function() {
     this.baseParams.processId = this.processId;
 
@@ -96,10 +98,19 @@ isc.OBParameterWindowView.addProperties({
     }
   },
 
+  /**
+   * Builds and returns the button layout of the parameter window.
+   * Includes custom buttons defined in the process, as well as standard buttons
+   * such as OK, Cancel and export buttons (PDF, XLS, HTML if it is a report).
+   *
+   * It also configures the button that should receive the first focus.
+   *
+   * @returns {Array} List of UI elements (buttons and separators) to add to the layout.
+   */
   buildButtonLayout: function() {
-    var view = this,
-      buttonLayout = [],
-      newButton,
+    const view = this,
+      buttonLayout = [];
+    let newButton,
       i;
 
     function actionClick() {
@@ -149,7 +160,59 @@ isc.OBParameterWindowView.addProperties({
       buttonLayout.push(isc.LayoutSpacer.create({}));
     }
 
+    if (this.isReport) {
+      if (this.htmlExport) {
+        this.htmlButton = isc.OBFormButton.create({
+          title: OB.I18N.getLabel('OBUIAPP_HTMLExport'),
+          realTitle: '',
+          _buttonValue: 'HTML',
+          click: actionClick
+        });
+        buttonLayout.push(this.htmlButton);
+        if (this.popup) {
+          buttonLayout.push(
+            isc.LayoutSpacer.create({
+              width: 32
+            })
+          );
+        }
+      }
+      if (this.pdfExport) {
+        this.pdfButton = isc.OBFormButton.create({
+          title: OB.I18N.getLabel('OBUIAPP_PDFExport'),
+          realTitle: '',
+          _buttonValue: 'PDF',
+          click: actionClick
+        });
+        buttonLayout.push(this.pdfButton);
+        if (this.popup) {
+          buttonLayout.push(
+            isc.LayoutSpacer.create({
+              width: 32
+            })
+          );
+        }
+      }
+      if (this.xlsExport) {
+        this.xlsButton = isc.OBFormButton.create({
+          title: OB.I18N.getLabel('OBUIAPP_XLSExport'),
+          realTitle: '',
+          _buttonValue: 'XLS',
+          click: actionClick
+        });
+        buttonLayout.push(this.xlsButton);
+        if (this.popup) {
+          buttonLayout.push(
+            isc.LayoutSpacer.create({
+              width: 32
+            })
+          );
+        }
+      }
+    }
+
     if (this.buttons && !isc.isA.emptyObject(this.buttons)) {
+      this.customButtons = []; // Reset the array of custom buttons
       for (i in this.buttons) {
         if (Object.prototype.hasOwnProperty.call(this.buttons, i)) {
           newButton = isc.OBFormButton.create({
@@ -158,6 +221,7 @@ isc.OBParameterWindowView.addProperties({
             _buttonValue: i,
             click: actionClick
           });
+          this.customButtons.push(newButton); // Save reference for validations
           buttonLayout.push(newButton);
           OB.TestRegistry.register(
             'org.openbravo.client.application.process.pickandexecute.button.' +
@@ -175,77 +239,26 @@ isc.OBParameterWindowView.addProperties({
           }
         }
       }
-    } else {
-      if (this.isReport) {
-        if (this.htmlExport) {
-          this.htmlButton = isc.OBFormButton.create({
-            title: OB.I18N.getLabel('OBUIAPP_HTMLExport'),
-            realTitle: '',
-            _buttonValue: 'HTML',
-            click: actionClick
-          });
-          buttonLayout.push(this.htmlButton);
-          if (this.popup) {
-            buttonLayout.push(
-              isc.LayoutSpacer.create({
-                width: 32
-              })
-            );
-          }
-        }
-        if (this.pdfExport) {
-          this.pdfButton = isc.OBFormButton.create({
-            title: OB.I18N.getLabel('OBUIAPP_PDFExport'),
-            realTitle: '',
-            _buttonValue: 'PDF',
-            click: actionClick
-          });
-          buttonLayout.push(this.pdfButton);
-          if (this.popup) {
-            buttonLayout.push(
-              isc.LayoutSpacer.create({
-                width: 32
-              })
-            );
-          }
-        }
-        if (this.xlsExport) {
-          this.xlsButton = isc.OBFormButton.create({
-            title: OB.I18N.getLabel('OBUIAPP_XLSExport'),
-            realTitle: '',
-            _buttonValue: 'XLS',
-            click: actionClick
-          });
-          buttonLayout.push(this.xlsButton);
-          if (this.popup) {
-            buttonLayout.push(
-              isc.LayoutSpacer.create({
-                width: 32
-              })
-            );
-          }
-        }
-      } else {
-        this.okButton = isc.OBFormButton.create({
-          title: OB.I18N.getLabel('OBUIAPP_Done'),
-          realTitle: '',
-          _buttonValue: 'DONE',
-          click: actionClick
-        });
+    } else if (!this.isReport) {
+      this.okButton = isc.OBFormButton.create({
+        title: OB.I18N.getLabel('OBUIAPP_Done'),
+        realTitle: '',
+        _buttonValue: 'DONE',
+        click: actionClick
+      });
 
-        buttonLayout.push(this.okButton);
-        // TODO: check if this is used, and remove as it is already registered
-        OB.TestRegistry.register(
-          'org.openbravo.client.application.process.pickandexecute.button.ok',
-          this.okButton
+      buttonLayout.push(this.okButton);
+      // TODO: check if this is used, and remove as it is already registered
+      OB.TestRegistry.register(
+        'org.openbravo.client.application.process.pickandexecute.button.ok',
+        this.okButton
+      );
+      if (this.popup) {
+        buttonLayout.push(
+          isc.LayoutSpacer.create({
+            width: 32
+          })
         );
-        if (this.popup) {
-          buttonLayout.push(
-            isc.LayoutSpacer.create({
-              width: 32
-            })
-          );
-        }
       }
     }
 
@@ -278,6 +291,24 @@ isc.OBParameterWindowView.addProperties({
       );
     }
     return buttonLayout;
+  },
+
+  /**
+   * Overwrites the method from {@link OBViewForm} to include custom buttons.
+   * Enables or disables all the buttons in the window, including the custom
+   * ones.
+   *
+   * @param {boolean} enabled
+   *     Whether to enable or disable the buttons.
+   */
+  setAllButtonEnabled: function(enabled) {
+    // Call the original implementation for default buttons
+    this.Super('setAllButtonEnabled', arguments);
+
+    // Enable or disable custom buttons
+    if (Array.isArray(this.customButtons)) {
+      this.customButtons.forEach(button => button.setEnabled(enabled));
+    }
   },
 
   handleResponse: function(

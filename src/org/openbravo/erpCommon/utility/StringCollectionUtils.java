@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /** Provides common utilities to handle {@code Collection}s as {@code String}s. */
 public class StringCollectionUtils {

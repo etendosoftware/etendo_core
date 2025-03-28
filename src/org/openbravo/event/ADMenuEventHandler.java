@@ -23,7 +23,7 @@ import java.util.Arrays;
 import javax.enterprise.event.Observes;
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

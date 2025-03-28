@@ -21,7 +21,7 @@ package org.openbravo.advpaymentmngt.actionHandler;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.utility.APRM_MatchingUtility;
