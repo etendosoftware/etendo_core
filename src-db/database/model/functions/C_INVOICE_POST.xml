@@ -591,7 +591,6 @@ IF (NOT FINISH_PROCESS) THEN
         RAISE_APPLICATION_ERROR(-20000, '@NotCorrectOrgLines@') ;
       END IF;
 
-
       SELECT COUNT(*) INTO v_Count
       FROM C_INVOICE C,
            C_DOCTYPE
@@ -651,8 +650,8 @@ IF (NOT FINISH_PROCESS) THEN
             v_DoctypeReversed_ID, '(*R*: ' || DocumentNo || ') ' || COALESCE(TO_CHAR(Description), ''), SalesRep_ID,
             TRUNC(now()), NULL, 'N', NULL,
             TRUNC(now()), C_PaymentTerm_ID, C_BPartner_ID, C_BPartner_Location_ID,
-            AD_User_ID, POReference, DateOrdered, IsDiscountPrinted,
-            C_Currency_ID, C_Charge_ID, ChargeAmt * -1,
+            AD_User_ID, CASE WHEN v_supplier_reference IS NULL THEN POReference ELSE v_supplier_reference END, 
+	    DateOrdered, IsDiscountPrinted, C_Currency_ID, C_Charge_ID, ChargeAmt * -1,
             0, 0, --Totals are recalculed adding invoice lines
             M_PriceList_ID, C_Campaign_ID,
             C_Project_ID, C_Activity_ID, AD_OrgTrx_ID, User1_ID,
@@ -826,9 +825,6 @@ IF (NOT FINISH_PROCESS) THEN
         END IF;
         IF (v_voiddate_acct IS NOT NULL) THEN
           UPDATE C_INVOICE SET DateAcct = v_voiddate_acct WHERE C_Invoice_ID=v_RInvoice_ID;
-        END IF;
-        IF (v_supplier_reference IS NOT NULL) THEN
-          UPDATE C_INVOICE SET POReference = v_supplier_reference WHERE C_Invoice_ID=v_RInvoice_ID;
         END IF;
         IF (v_prepaymentamt !=0) THEN
           UPDATE C_INVOICE SET prepaymentamt = v_prepaymentamt WHERE C_Invoice_ID=v_RInvoice_ID;

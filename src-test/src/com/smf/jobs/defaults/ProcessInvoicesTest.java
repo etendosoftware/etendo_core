@@ -306,7 +306,7 @@ public class ProcessInvoicesTest {
           eq("XL"),
           anyString(),
           anyString(),
-          eq(null),
+          anyString(),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(successResult);
