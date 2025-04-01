@@ -41,7 +41,16 @@ import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.event.LandedCostDuplicateReceiptValidatorTest;
 import org.openbravo.financial.FinancialUtilsTest;
 import org.openbravo.materialmgmt.MaterialMgmtTestSuite;
+import org.openbravo.scheduling.GroupInfoTest;
+import org.openbravo.scheduling.JobDetailProviderTest;
+import org.openbravo.scheduling.ProcessGroupTest;
+import org.openbravo.scheduling.ProcessMonitorTest;
 import org.openbravo.scheduling.ProcessSchedulingTest;
+import org.openbravo.scheduling.SchedulerTimeUtilsTest;
+import org.openbravo.scheduling.quartz.JobInitializationListenerTest;
+import org.openbravo.scheduling.quartz.OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest;
+import org.openbravo.scheduling.quartz.OpenbravoOracleJDBCDelegateTest;
+import org.openbravo.scheduling.quartz.OpenbravoPostgreJDBCDelegateTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
 import org.openbravo.scheduling.trigger.TriggerProviderTest;
 import org.openbravo.test.accounting.PostDocumentTest;
@@ -416,6 +425,18 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // AdvPayment
     AdvPaymentMngtTestSuite.class, //
+
+    // scheduling
+    OpenbravoPostgreJDBCDelegateTest.class, //
+    OpenbravoOracleJDBCDelegateTest.class, //
+    OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest.class, //
+    JobInitializationListenerTest.class, //
+    ProcessGroupTest.class, //
+    SchedulerTimeUtilsTest.class, //
+    GroupInfoTest.class, //
+    JobDetailProviderTest.class, //
+    ProcessMonitorTest.class, //
+
 })
 public class StandaloneTestSuite {
 }
