@@ -70,11 +70,11 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.SessionInfo;
+import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.userinterface.selector.reference.FKMultiSelectorUIDefinition;
 import org.openbravo.utils.FileUtility;
-
 import net.sf.jasperreports.engine.JRDataSource;
 
 /**
@@ -86,6 +86,13 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String JASPER_PARAM_PROCESS = "jasper_process";
   protected static final String JASPER_REPORT_PARAMETERS = "JASPER_REPORT_PARAMETERS";
+  private static final String RESPONSE_ACTIONS = "responseActions";
+  private static final String MSG_TYPE = "msgType";
+  private static final String MSG_TEXT = "msgText";
+  private static final String MESSAGE = "message";
+  private static final String SUCCESS = "success";
+  private static final String SHOW_MSG_IN_PROCESS_VIEW = "showMsgInProcessView";
+  private static final String REPORT_GENERATED = "ReportGenerated";
 
   /**
    * execute() method overridden to add the logic to download or display the report file stored in
@@ -396,7 +403,7 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
     Map<String, Object> allParametersMap = new HashMap<>();
     Map<String, Object> jrParams = new HashMap<>();
     loadFilterParams(jrParams, report, params);
-    loadReportParams(jrParams, report, jrTemplatePath, jsonContent);
+    loadReportParams(jrParams, report, jrTemplatePath, jsonContent, result);
     // Include the HTTP session into the parameters that are sent to the report
     jrParams.put("HTTP_SESSION", parameters.get(KernelConstants.HTTP_SESSION));
     allParametersMap.putAll(parameters);
@@ -424,9 +431,16 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
       reportAction.put("OBUIAPP_downloadReport", recordInfo);
     }
 
-    final JSONArray actions = new JSONArray();
-    actions.put(0, reportAction);
-    result.put("responseActions", actions);
+    JSONArray existingActions = result.optJSONArray(RESPONSE_ACTIONS);
+    if (existingActions == null) {
+      existingActions = new JSONArray();
+    }
+
+    if (reportAction instanceof JSONObject) {
+      existingActions.put(reportAction);
+    }
+
+    result.put(RESPONSE_ACTIONS, existingActions);
   }
 
   private ExportType getExportType(String action) {
@@ -568,16 +582,20 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
    * Method to load the generic parameters that are sent to Jasper Reports.
    * 
    * @param jrParams
-   *          the Map instance with all the parameters to be sent to Jasper Reports.
+   *     the Map instance with all the parameters to be sent to Jasper Reports.
    * @param report
-   *          the Report Definition.
+   *     the Report Definition.
    * @param jrTemplatePath
-   *          String with the path where the jr template is stored in the server.
+   *     String with the path where the jr template is stored in the server.
    * @param jsonContent
-   *          JSONObject with the values set in the filter parameters.
+   *     JSONObject with the values set in the filter parameters.
+   * @param result
+   *     JSONObject used to store or return extra response data (e.g., actions, messages).
+   * @throws JSONException
+   *     if there is an error while accessing JSON content.
    */
   private void loadReportParams(Map<String, Object> jrParams, ReportDefinition report,
-      String jrTemplatePath, JSONObject jsonContent) {
+      String jrTemplatePath, JSONObject jsonContent, JSONObject result) throws JSONException {
 
     final int lastSegmentIndex = jrTemplatePath.lastIndexOf("/");
     final String fileDir;
@@ -589,7 +607,7 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
     jrParams.put("SUBREPORT_DIR", fileDir);
     jrParams.put(JASPER_PARAM_PROCESS, report.getProcessDefintion());
 
-    addAdditionalParameters(report, jsonContent, jrParams);
+    addAdditionalParameters(report, jsonContent, jrParams, result);
   }
 
   /**
@@ -625,6 +643,55 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
    */
   protected void addAdditionalParameters(ReportDefinition process, JSONObject jsonContent,
       Map<String, Object> parameters) {
+  }
+
+  /**
+   * Override this method to add additional parameters to be sent to the Jasper Report template,
+   * including optional user-facing messages (such as success or warning) to be displayed in the
+   * Process View.
+   *
+   * <p>This method extends the behavior of the original {@link #addAdditionalParameters(ReportDefinition, JSONObject, Map)}
+   * by also handling the creation of a response message block based on a {@link OBError} instance,
+   * which should be included in the {@code parameters} map using the key {@code "message"}.
+   *
+   * <p>If the {@code parameters} map contains a valid {@code OBError} under the {@code "message"} key,
+   * the message will be wrapped in a JSON object and inserted into the {@code result} object under the
+   * {@code "responseActions"} array, allowing it to be shown in the Process View of the UI.
+   *
+   * @param process
+   *     the Process Definition of the Report.
+   * @param jsonContent
+   *     the values set in the filter parameters.
+   * @param parameters
+   *     the current parameter map that is sent to the Jasper Report. This map can include a
+   *     {@code "message"} entry containing an {@link OBError} with success or warning info.
+   * @param result
+   *     the JSONObject used to add the responseActions to be returned to the client.
+   * @throws JSONException
+   *     if any error occurs while building the JSON response.
+   */
+  protected void addAdditionalParameters(ReportDefinition process, JSONObject jsonContent,
+      Map<String, Object> parameters, JSONObject result) throws JSONException {
+
+    JSONObject showMsg = new JSONObject();
+    showMsg.put(MSG_TYPE, SUCCESS);
+    showMsg.put(MSG_TEXT, OBMessageUtils.messageBD(REPORT_GENERATED));
+
+    addAdditionalParameters(process, jsonContent, parameters);
+
+    if (parameters.containsKey(MESSAGE) && parameters.get(MESSAGE) != null) {
+      OBError msg = (OBError) parameters.get(MESSAGE);
+      showMsg.put(MSG_TYPE, msg.getType());
+      showMsg.put(MSG_TEXT, msg.getMessage());
+    }
+
+    JSONObject wrappedMsg = new JSONObject();
+    wrappedMsg.put(SHOW_MSG_IN_PROCESS_VIEW, showMsg);
+
+    JSONArray responseActions = new JSONArray();
+    responseActions.put(wrappedMsg);
+
+    result.put(RESPONSE_ACTIONS, responseActions);
   }
 
   /**
