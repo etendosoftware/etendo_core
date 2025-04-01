@@ -45,6 +45,8 @@ public class ProcessMonitorTest {
   /**
    * Sets up the test environment before each test.
    * Initialize mocks and configures common trigger setup.
+   *
+   * @throws Exception if there's an error initializing the mocks or configuring the trigger
    */
   @Before
   public void setUp() throws Exception {
@@ -74,6 +76,9 @@ public class ProcessMonitorTest {
 
   /**
    * Tests that job execution is not vetoed when there are no concurrent jobs running.
+   *
+   * @throws SchedulerException if there's an error accessing the scheduler
+   *         or retrieving currently executing jobs
    */
   @Test
   public void testVetoJobExecutionWithPreventConcurrentExecutionsNoConcurrentJobs() throws SchedulerException {

@@ -9,12 +9,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +33,12 @@ import org.openbravo.model.ad.ui.ProcessRun;
  * Tests process group execution, logging and status management.
  */
 public class GroupInfoTest {
+
+  public static final String TEST_PROCESS = "Test Process";
+  public static final String GROUP_LOG = "groupLog";
+  public static final String CURRENT_POSITION = "currentposition";
+  public static final String PROGROUP_PROCESS = "PROGROUP_Process";
+  public static final String PROGROUP_SEPARATOR = "PROGROUP_Separator";
 
   @Mock
   private ProcessGroup mockGroup;
@@ -61,7 +65,7 @@ public class GroupInfoTest {
 
   /**
    * Sets up the test environment before each test.
-   * Initializes mocks, configures mock responses and creates test instances.
+   * Initialize mocks, configures mock responses and creates test instances.
    *
    * @throws Exception
    *     if there's an error during mock initialization
@@ -76,7 +80,7 @@ public class GroupInfoTest {
 
     // Setup mock responses
     when(mockProcess.getId()).thenReturn("testProcessId");
-    when(mockProcess.getName()).thenReturn("Test Process");
+    when(mockProcess.getName()).thenReturn(TEST_PROCESS);
     when(mockProcessGroupList.getProcess()).thenReturn(mockProcess);
     when(mockProcessGroupList.getSequenceNumber()).thenReturn(1L);
     when(mockGroup.getName()).thenReturn("Test Group");
@@ -155,22 +159,22 @@ public class GroupInfoTest {
   public void testLogProcessSuccess() throws Exception {
     groupInfo = spy(groupInfo);
 
-    Field groupLogField = GroupInfo.class.getDeclaredField("groupLog");
+    Field groupLogField = GroupInfo.class.getDeclaredField(GROUP_LOG);
     groupLogField.setAccessible(true);
     groupLogField.set(groupInfo, new StringBuilder());
 
-    Field currentPositionField = GroupInfo.class.getDeclaredField("currentposition");
+    Field currentPositionField = GroupInfo.class.getDeclaredField(CURRENT_POSITION);
     currentPositionField.setAccessible(true);
     currentPositionField.set(groupInfo, 1);
 
-    when(mockProcessGroupList.getProcess().getName()).thenReturn("Test Process");
+    when(mockProcessGroupList.getProcess().getName()).thenReturn(TEST_PROCESS);
     when(mockProcessGroupList.getSequenceNumber()).thenReturn(1L);
 
     mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage("PROGROUP_Success", null)).thenReturn("SUCCESS");
     mockedOBMessageUtils.when(
-        () -> OBMessageUtils.getI18NMessage("PROGROUP_Process", new String[]{ "Test Process" })).thenReturn(
+        () -> OBMessageUtils.getI18NMessage(PROGROUP_PROCESS, new String[]{ TEST_PROCESS })).thenReturn(
         " - Test Process: ");
-    mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage("PROGROUP_Separator", null)).thenReturn(
+    mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage(PROGROUP_SEPARATOR, null)).thenReturn(
         "-------------");
 
     groupInfo.logProcess(org.openbravo.scheduling.Process.SUCCESS);
@@ -179,8 +183,8 @@ public class GroupInfoTest {
 
     mockedOBMessageUtils.verify(() -> OBMessageUtils.getI18NMessage("PROGROUP_Success", null));
     mockedOBMessageUtils.verify(
-        () -> OBMessageUtils.getI18NMessage("PROGROUP_Process", new String[]{ "Test Process" }));
-    mockedOBMessageUtils.verify(() -> OBMessageUtils.getI18NMessage("PROGROUP_Separator", null));
+        () -> OBMessageUtils.getI18NMessage(PROGROUP_PROCESS, new String[]{ TEST_PROCESS }));
+    mockedOBMessageUtils.verify(() -> OBMessageUtils.getI18NMessage(PROGROUP_SEPARATOR, null));
   }
 
   /**
@@ -194,22 +198,22 @@ public class GroupInfoTest {
   public void testLogProcessError() throws Exception {
     groupInfo = spy(groupInfo);
 
-    Field groupLogField = GroupInfo.class.getDeclaredField("groupLog");
+    Field groupLogField = GroupInfo.class.getDeclaredField(GROUP_LOG);
     groupLogField.setAccessible(true);
     groupLogField.set(groupInfo, new StringBuilder());
 
-    Field currentPositionField = GroupInfo.class.getDeclaredField("currentposition");
+    Field currentPositionField = GroupInfo.class.getDeclaredField(CURRENT_POSITION);
     currentPositionField.setAccessible(true);
     currentPositionField.set(groupInfo, 1);
 
-    when(mockProcessGroupList.getProcess().getName()).thenReturn("Test Process");
+    when(mockProcessGroupList.getProcess().getName()).thenReturn(TEST_PROCESS);
     when(mockProcessGroupList.getSequenceNumber()).thenReturn(1L);
 
     mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage("PROGROUP_Fail", null)).thenReturn("ERROR");
     mockedOBMessageUtils.when(
-        () -> OBMessageUtils.getI18NMessage("PROGROUP_Process", new String[]{ "Test Process" })).thenReturn(
+        () -> OBMessageUtils.getI18NMessage(PROGROUP_PROCESS, new String[]{ TEST_PROCESS })).thenReturn(
         " - Test Process: ");
-    mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage("PROGROUP_Separator", null)).thenReturn(
+    mockedOBMessageUtils.when(() -> OBMessageUtils.getI18NMessage(PROGROUP_SEPARATOR, null)).thenReturn(
         "-------------");
 
     groupInfo.logProcess(org.openbravo.scheduling.Process.ERROR);
@@ -218,8 +222,8 @@ public class GroupInfoTest {
 
     mockedOBMessageUtils.verify(() -> OBMessageUtils.getI18NMessage("PROGROUP_Fail", null));
     mockedOBMessageUtils.verify(
-        () -> OBMessageUtils.getI18NMessage("PROGROUP_Process", new String[]{ "Test Process" }));
-    mockedOBMessageUtils.verify(() -> OBMessageUtils.getI18NMessage("PROGROUP_Separator", null));
+        () -> OBMessageUtils.getI18NMessage(PROGROUP_PROCESS, new String[]{ TEST_PROCESS }));
+    mockedOBMessageUtils.verify(() -> OBMessageUtils.getI18NMessage(PROGROUP_SEPARATOR, null));
   }
 
   /**
@@ -240,11 +244,11 @@ public class GroupInfoTest {
     GroupInfo multiGroupInfo = new GroupInfo(mockGroup, mockRequest, mockProcessRun, twoProcessList, false, mockVars,
         mockConn);
 
-    Field groupLogField = GroupInfo.class.getDeclaredField("groupLog");
+    Field groupLogField = GroupInfo.class.getDeclaredField(GROUP_LOG);
     groupLogField.setAccessible(true);
     groupLogField.set(multiGroupInfo, new StringBuilder());
 
-    Field currentPositionField = GroupInfo.class.getDeclaredField("currentposition");
+    Field currentPositionField = GroupInfo.class.getDeclaredField(CURRENT_POSITION);
     currentPositionField.setAccessible(true);
     currentPositionField.set(multiGroupInfo, 1);
 
@@ -274,17 +278,17 @@ public class GroupInfoTest {
     GroupInfo continueOnFailGroupInfo = new GroupInfo(mockGroup, mockRequest, mockProcessRun, mockGroupList, false,
         mockVars, mockConn);
 
-    Field groupLogField = GroupInfo.class.getDeclaredField("groupLog");
+    Field groupLogField = GroupInfo.class.getDeclaredField(GROUP_LOG);
     groupLogField.setAccessible(true);
     groupLogField.set(stopWhenFailsGroupInfo, new StringBuilder());
     groupLogField.set(continueOnFailGroupInfo, new StringBuilder());
 
-    Field currentPositionField = GroupInfo.class.getDeclaredField("currentposition");
+    Field currentPositionField = GroupInfo.class.getDeclaredField(CURRENT_POSITION);
     currentPositionField.setAccessible(true);
     currentPositionField.set(stopWhenFailsGroupInfo, 1);
     currentPositionField.set(continueOnFailGroupInfo, 1);
 
-    when(mockProcessGroupList.getProcess().getName()).thenReturn("Test Process");
+    when(mockProcessGroupList.getProcess().getName()).thenReturn(TEST_PROCESS);
     when(mockProcessGroupList.getSequenceNumber()).thenReturn(1L);
 
     assertEquals(org.openbravo.scheduling.Process.SUCCESS, stopWhenFailsGroupInfo.getStatus());

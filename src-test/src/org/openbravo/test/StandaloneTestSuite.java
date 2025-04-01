@@ -43,6 +43,7 @@ import org.openbravo.financial.FinancialUtilsTest;
 import org.openbravo.materialmgmt.MaterialMgmtTestSuite;
 import org.openbravo.scheduling.GroupInfoTest;
 import org.openbravo.scheduling.JobDetailProviderTest;
+import org.openbravo.scheduling.OBSchedulerTest;
 import org.openbravo.scheduling.ProcessGroupTest;
 import org.openbravo.scheduling.ProcessMonitorTest;
 import org.openbravo.scheduling.ProcessSchedulingTest;
@@ -436,6 +437,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     GroupInfoTest.class, //
     JobDetailProviderTest.class, //
     ProcessMonitorTest.class, //
+    OBSchedulerTest.class, //
 
 })
 public class StandaloneTestSuite {

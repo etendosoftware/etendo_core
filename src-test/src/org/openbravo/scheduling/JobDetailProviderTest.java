@@ -24,6 +24,8 @@ import org.quartz.SchedulerException;
  * Test cases to cover the JobDetailProvider functionality for creating JobDetail objects.
  */
 public class JobDetailProviderTest {
+  public static final String ERROR_JOB_DETAIL_NULL = "JobDetail should not be null";
+  public static final String ERROR_CONNECTION_NOT_SET = "Connection should be set in the bundle";
 
   private JobDetailProvider provider;
   private ProcessBundle testBundle;
@@ -68,7 +70,7 @@ public class JobDetailProviderTest {
     // Test creating job detail without explicit connection provider
     JobDetail jobDetail = provider.createJobDetail(testJobName, testBundle);
 
-    assertThat("JobDetail should not be null", jobDetail, is(notNullValue()));
+    assertThat(ERROR_JOB_DETAIL_NULL, jobDetail, is(notNullValue()));
     assertThat("JobDetail should have the correct name", jobDetail.getKey().getName(), is(equalTo(testJobName)));
     assertThat("JobDetail should have the correct group", jobDetail.getKey().getGroup(), is(equalTo(OB_GROUP)));
     assertThat("JobDetail should use DefaultJob class", jobDetail.getJobClass(), is(equalTo(DefaultJob.class)));
@@ -79,7 +81,7 @@ public class JobDetailProviderTest {
     assertThat("Process bundle map should match the original", bundleMap, is(equalTo(testBundle.getMap())));
 
     // Verify connection is set and is a DalConnectionProvider
-    assertThat("Connection should be set in the bundle", testBundle.getConnection(), is(notNullValue()));
+    assertThat(ERROR_CONNECTION_NOT_SET, testBundle.getConnection(), is(notNullValue()));
     assertThat("Connection should be a DalConnectionProvider", testBundle.getConnection(),
         is(instanceOf(DalConnectionProvider.class)));
   }
@@ -96,12 +98,12 @@ public class JobDetailProviderTest {
     // Test creating job detail with explicit connection provider
     JobDetail jobDetail = provider.createJobDetail(mockConnectionProvider, testJobName, testBundle);
 
-    assertThat("JobDetail should not be null", jobDetail, is(notNullValue()));
+    assertThat(ERROR_JOB_DETAIL_NULL, jobDetail, is(notNullValue()));
     assertThat("JobDetail should have the correct name", jobDetail.getKey().getName(), is(equalTo(testJobName)));
     assertThat("JobDetail should have the correct group", jobDetail.getKey().getGroup(), is(equalTo(OB_GROUP)));
 
     // Verify connection is set to the provided mock
-    assertThat("Connection should be set in the bundle", testBundle.getConnection(), is(notNullValue()));
+    assertThat(ERROR_CONNECTION_NOT_SET, testBundle.getConnection(), is(notNullValue()));
     assertThat("Connection should be the mock provider", testBundle.getConnection(),
         is(equalTo(mockConnectionProvider)));
   }
@@ -131,8 +133,8 @@ public class JobDetailProviderTest {
     // Test that passing null connection uses DalConnectionProvider
     JobDetail jobDetail = provider.createJobDetail(null, testJobName, testBundle);
 
-    assertThat("JobDetail should not be null", jobDetail, is(notNullValue()));
-    assertThat("Connection should be set in the bundle", testBundle.getConnection(), is(notNullValue()));
+    assertThat(ERROR_JOB_DETAIL_NULL, jobDetail, is(notNullValue()));
+    assertThat(ERROR_CONNECTION_NOT_SET, testBundle.getConnection(), is(notNullValue()));
     assertThat("Connection should be a DalConnectionProvider", testBundle.getConnection(),
         is(instanceOf(DalConnectionProvider.class)));
   }
@@ -171,7 +173,7 @@ public class JobDetailProviderTest {
     // Test that the connection is properly set in the bundle
     provider.createJobDetail(mockConnectionProvider, testJobName, testBundle);
 
-    assertThat("Connection should be set in the bundle", testBundle.getConnection(), is(notNullValue()));
+    assertThat(ERROR_CONNECTION_NOT_SET, testBundle.getConnection(), is(notNullValue()));
     assertThat("Connection should be the mock provider", testBundle.getConnection(),
         is(equalTo(mockConnectionProvider)));
   }

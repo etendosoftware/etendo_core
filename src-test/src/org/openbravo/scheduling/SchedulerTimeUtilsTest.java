@@ -16,9 +16,19 @@ import org.junit.Test;
  */
 public class SchedulerTimeUtilsTest {
 
+  public static final String DATE_TIME_FORMAT = "dd-MM-yyyy HH:mm:ss";
+  public static final String DATE_FORMAT = "dd-MM-yyyy";
+
   /**
    * Tests timestamp creation with a valid date and time string.
    * Expected format: "dd-MM-yyyy HH:mm:ss".
+   *
+   * @throws ParseException if the input date string cannot be parsed according to the expected format,
+   *                       which can occur in cases such as:
+   *                       - Invalid date components (e.g., month > 12)
+   *                       - Invalid time components (e.g., hours > 23)
+   *                       - Incorrect date/time format
+   *                       - Malformed input string
    */
   @Test
   public void testTimestampValidDateTime() throws ParseException {
@@ -30,12 +40,15 @@ public class SchedulerTimeUtilsTest {
 
     // THEN
     assertNotNull(result);
-    assertEquals("25-12-2023 15:30:00", SchedulerTimeUtils.format(result, "dd-MM-yyyy HH:mm:ss"));
+    assertEquals("25-12-2023 15:30:00", SchedulerTimeUtils.format(result, DATE_TIME_FORMAT));
   }
 
   /**
    * Tests timestamp creation with an empty date time string.
    * Should return current date and time.
+   *
+   * @throws ParseException if there's an error converting the empty string to timestamp,
+   *                       though this should not occur with empty input as it defaults to current time
    */
   @Test
   public void testTimestampEmptyDateTime() throws ParseException {
@@ -47,13 +60,16 @@ public class SchedulerTimeUtilsTest {
 
     // THEN
     assertNotNull(result);
-    String expectedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"));
-    assertEquals(expectedDate.substring(0, 10), SchedulerTimeUtils.format(result, "dd-MM-yyyy").substring(0, 10));
+    String expectedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+    assertEquals(expectedDate.substring(0, 10), SchedulerTimeUtils.format(result, DATE_FORMAT).substring(0, 10));
   }
 
   /**
    * Tests timestamp creation with an invalid date format.
    * Should throw ParseException.
+   *
+   * @throws ParseException when attempting to parse an invalid date format,
+   *                       which is the expected behavior for this test case
    */
   @Test(expected = ParseException.class)
   public void testTimestampInvalidDateTime() throws ParseException {
@@ -70,6 +86,9 @@ public class SchedulerTimeUtilsTest {
   /**
    * Tests parsing a valid date time string into LocalDateTime.
    * Expected format: "dd-MM-yyyy HH:mm:ss".
+   *
+   * @throws ParseException if the input string cannot be parsed into a LocalDateTime,
+   *                       which should not occur with valid input format
    */
   @Test
   public void testParseValidDateTime() throws ParseException {
@@ -81,12 +100,15 @@ public class SchedulerTimeUtilsTest {
 
     // THEN
     assertNotNull(result);
-    assertEquals("01-01-2024 00:00:00", result.format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
+    assertEquals("01-01-2024 00:00:00", result.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
   }
 
   /**
    * Tests parsing an invalid date time string.
    * Should throw ParseException.
+   *
+   * @throws ParseException when attempting to parse an invalid date string,
+   *                       which is the expected behavior for this test case
    */
   @Test(expected = ParseException.class)
   public void testParseInvalidDateTime() throws ParseException {
@@ -131,7 +153,7 @@ public class SchedulerTimeUtilsTest {
     String result = SchedulerTimeUtils.getCurrentDateTime(date, time);
 
     // THEN
-    String expectedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+    String expectedDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_FORMAT));
     assertEquals(expectedDate + " 12:00:00", result);
   }
 
@@ -178,7 +200,7 @@ public class SchedulerTimeUtilsTest {
   public void testFormatValidDate() {
     // GIVEN
     Date date = new Date();
-    String format = "dd-MM-yyyy";
+    String format = DATE_FORMAT;
 
     // WHEN
     String result = SchedulerTimeUtils.format(date, format);

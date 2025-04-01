@@ -1,23 +1,30 @@
 package org.openbravo.scheduling.quartz;
 
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.InjectMocks;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.junit.runner.RunWith;
-import org.openbravo.scheduling.ClusterInstanceProcessAccess;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+/**
+ * Sets up the test environment before each test.
+ * Configures mock behavior for database connections and statements.
+ *
+ * @throws SQLException if database mock setup fails
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class OpenbravoOracleJDBCDelegateTest {
 
@@ -33,15 +40,25 @@ public class OpenbravoOracleJDBCDelegateTest {
   @Mock
   private ResultSet mockResultSet;
 
-  @Mock
-  private ClusterInstanceProcessAccess mockClusterInstanceProcessAccess;
-
+  /**
+   * Sets up the test environment before each test.
+   * Configures mock behavior for database connections and statements.
+   *
+   * @throws SQLException
+   *     if database mock setup fails
+   */
   @Before
   public void setUp() throws SQLException {
     when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
     when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
   }
 
+  /**
+   * Tests the setBoolean method to ensure proper conversion to 'Y'/'N' format.
+   *
+   * @throws SQLException
+   *     if the database operation fails
+   */
   @Test
   public void testSetBoolean() throws SQLException {
     // GIVEN
@@ -54,6 +71,12 @@ public class OpenbravoOracleJDBCDelegateTest {
     verify(mockPreparedStatement).setString(1, "Y");
   }
 
+  /**
+   * Tests the getBoolean method using column name to ensure proper conversion from 'Y'/'N' format.
+   *
+   * @throws SQLException
+   *     if the database operation fails
+   */
   @Test
   public void testGetBooleanByColumnName() throws SQLException {
     // GIVEN
@@ -66,6 +89,12 @@ public class OpenbravoOracleJDBCDelegateTest {
     assertTrue(result);
   }
 
+  /**
+   * Tests the getBoolean method using column index to ensure proper conversion from 'Y'/'N' format.
+   *
+   * @throws SQLException
+   *     if the database operation fails
+   */
   @Test
   public void testGetBooleanByColumnIndex() throws SQLException {
     // GIVEN
@@ -78,6 +107,12 @@ public class OpenbravoOracleJDBCDelegateTest {
     assertFalse(result);
   }
 
+  /**
+   * Tests updating the scheduler status with instance ID, check-in time and status.
+   *
+   * @throws SQLException
+   *     if the database update operation fails
+   */
   @Test
   public void testUpdateSchedulerStatus() throws SQLException {
     // GIVEN
@@ -97,6 +132,12 @@ public class OpenbravoOracleJDBCDelegateTest {
     verify(mockPreparedStatement).setString(3, instanceId);
   }
 
+  /**
+   * Tests checking if any schedulers are in STARTED status.
+   *
+   * @throws SQLException
+   *     if the database query operation fails
+   */
   @Test
   public void testSchedulersStarted() throws SQLException {
     // GIVEN
