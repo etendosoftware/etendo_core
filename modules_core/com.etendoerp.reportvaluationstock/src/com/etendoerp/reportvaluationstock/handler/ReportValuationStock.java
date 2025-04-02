@@ -300,7 +300,7 @@ public class ReportValuationStock extends BaseReportActionHandler {
     return strCostType;
   }
 
-  private List<String> getWarehouses(String clientId, String orgId) {
+  protected List<String> getWarehouses(String clientId, String orgId) {
     final OrganizationStructureProvider osp = OBContext.getOBContext()
         .getOrganizationStructureProvider(clientId);
     StringBuilder hql = new StringBuilder();
@@ -365,7 +365,7 @@ public class ReportValuationStock extends BaseReportActionHandler {
    *     (Optional) Product category ID to filter by.
    * @return {@code true} if at least one matching transaction exists; {@code false} otherwise.
    */
-  private boolean hasTrxWithNoCost(String strDate, Set<String> orgs, String strWarehouse, String strCategoryProduct) {
+  protected boolean hasTrxWithNoCost(String strDate, Set<String> orgs, String strWarehouse, String strCategoryProduct) {
     try {
       final OBCriteria<MaterialTransaction> criteria = OBDal.getReadOnlyInstance().createCriteria(
           MaterialTransaction.class);
