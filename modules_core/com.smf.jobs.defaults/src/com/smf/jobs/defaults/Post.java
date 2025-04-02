@@ -114,7 +114,7 @@ public class Post extends Action {
     return BaseOBObject.class;
   }
 
-  private String getDateProperty(String adTableId, VariablesSecureApp vars, Entity entity) {
+  String getDateProperty(String adTableId, VariablesSecureApp vars, Entity entity) {
     Map<String, String> mapOfTablesSupported = Map.ofEntries(
         Map.entry("318", Invoice.PROPERTY_ACCOUNTINGDATE),
         Map.entry("800060", Amortization.PROPERTY_ACCOUNTINGDATE),

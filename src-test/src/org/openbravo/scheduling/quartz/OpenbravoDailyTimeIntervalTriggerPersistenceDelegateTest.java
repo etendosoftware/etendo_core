@@ -201,8 +201,8 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
 
       delegate.loadExtendedTriggerProperties(connection, triggerKey);
 
-      verify(preparedStatement).setString(1, "testTriggerName");
-      verify(preparedStatement).setString(2, "testTriggerGroup");
+      verify(preparedStatement).setString(1, TEST_TRIGGER_NAME);
+      verify(preparedStatement).setString(2, TEST_TRIGGER_GROUP);
 
       jdbcSupport.verify(() -> OpenbravoJDBCPersistenceSupport.getBooleanValue(resultSet, "BOOL_PROP_1"));
       jdbcSupport.verify(() -> OpenbravoJDBCPersistenceSupport.getBooleanValue(resultSet, "BOOL_PROP_2"));
