@@ -49,8 +49,12 @@ public class ProcessInvoices extends Action {
             var documentAction = parameters.getString("DocAction");
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
-            var supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? null : parameters.getString(
-                SUPPLIERREFERENCE);
+            String supplierReference;
+            if (input.size() > 1) {
+                supplierReference = null;
+            } else {
+                supplierReference = parameters.optString(SUPPLIERREFERENCE, "");
+            }
             var errors = new MutableInt(0);
             var success = new MutableInt(0);
             OBError message = new OBError();
@@ -108,12 +112,7 @@ public class ProcessInvoices extends Action {
             var input = getInputContents(getInputClass());
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
-            String supplierReference;
-            if (input.size() > 1) {
-                supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? null : parameters.getString(SUPPLIERREFERENCE);
-            } else {
-                supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? StringUtils.EMPTY : parameters.getString(SUPPLIERREFERENCE);
-            }
+            var supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? null : parameters.getString(SUPPLIERREFERENCE);
 
             log.debug("Process Invoice preRun Parameters:");
             log.debug(parameters.toString());

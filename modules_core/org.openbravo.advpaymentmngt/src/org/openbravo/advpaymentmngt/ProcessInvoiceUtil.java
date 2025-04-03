@@ -124,7 +124,7 @@ public class ProcessInvoiceUtil {
                         OBDateUtils.formatDate(voidAcctDate, "yyyy-MM-dd"));
             }
 
-            if (StringUtils.equals("RC", strdocaction) && strSupplierReference != null) {
+            if (StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction) && !invoice.isSalesTransaction()) {
                 parameters.put("supplierReference", strSupplierReference);
             }
 
