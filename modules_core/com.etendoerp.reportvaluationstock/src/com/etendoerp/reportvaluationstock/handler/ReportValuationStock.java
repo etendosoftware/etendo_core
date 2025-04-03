@@ -63,10 +63,10 @@ public class ReportValuationStock extends BaseReportActionHandler {
   private static final String DATE_FORMAT_SQL = "dateTimeFormat.sql";
   private static final String CATEGORY = "category";
   private static final Logger log4j = Logger.getLogger(ReportValuationStock.class);
-  private static final String MESSAGE = "message";
   private static final String WARNING = "warning";
   private static final String TRX_WITH_NO_COST = "TrxWithNoCost";
   private static final String ID = ".id";
+  private static final String POST_ACTION = "postAction";
 
   @Override
   protected ConnectionProvider getReportConnectionProvider() {
@@ -202,7 +202,7 @@ public class ReportValuationStock extends BaseReportActionHandler {
       OBError msg = new OBError();
       msg.setType(WARNING);
       msg.setMessage(OBMessageUtils.messageBD(TRX_WITH_NO_COST));
-      parameters.put(MESSAGE, msg);
+      parameters.put(POST_ACTION, msg);
     }
     printReport(vars, strDate, data, strCostType, costingAlgorithm, parameters);
   }

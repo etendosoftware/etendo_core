@@ -234,7 +234,7 @@ public class ReportValuationStockBuildDataTest {
         );
       } catch (Exception ignored) {
       }
-      OBError msg = (OBError) parameters.get(TestUtils.MESSAGE);
+      OBError msg = (OBError) parameters.get(TestUtils.POST_ACTION);
       assertNotNull(msg);
       assertTrue(msg != null && TestUtils.WARNING.equalsIgnoreCase(msg.getType()));
       assertTrue(msg.getMessage().contains(TestUtils.MOCKED_WARNING_MESSAGE));

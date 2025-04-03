@@ -20,7 +20,7 @@ public class TestUtils {
 
 
   public static final String MOCKED_WARNING_MESSAGE = "Mocked warning message";
-  public static final String MESSAGE = "message";
+  public static final String POST_ACTION = "postAction";
   public static final String WARNING = "warning";
   public static final String TRX_WITH_NO_COST = "TrxWithNoCost";
   public static final String TEST_DATE = "2024-01-01";
