@@ -131,6 +131,9 @@ public class WindowUtilsTest {
     windowUtilsTest = new WindowUtilsTest();
   }
 
+  /**
+   * Tests that the getEntityColumnName method returns the correct property name.
+   */
   @Test
   public void testGetEntityColumnName_ReturnsCorrectPropertyName() {
     when(column.getTable()).thenReturn(table);
@@ -150,6 +153,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the getTabIdentifiers method returns the correct identifiers
+   * for a valid configuration and identifier sequence.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testGetTabIdentifiers_WithValidConfigurationAndIdentifiers() throws Exception {
     MobileIdentifier identifier1 = mock(MobileIdentifier.class);
@@ -193,6 +203,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the computeColumnValues method sets the value of the document no field to <auto> when
+   * the field is a document no field.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testComputeColumnValues_ForDocumentNoField_SetsAutoValue() throws Exception {
     when(tab.getTable()).thenReturn(table);
@@ -223,6 +240,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the computeColumnValues method sets the parent ID and identifier
+   * when the column is a link to a parent column.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testComputeColumnValues_LinkToParentColumn_SetsParentIdAndIdentifier() throws Exception {
     when(tab.getTable()).thenReturn(table);
@@ -260,6 +284,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the computeColumnValues method skips the field when
+   * the property is identified as an ID.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testComputeColumnValues_PropertyIsId_SkipsField() throws Exception {
     when(tab.getTable()).thenReturn(table);
@@ -287,6 +318,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the computeColumnValues method sets the value of an active column to true
+   * when the property is identified as an active column.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testComputeColumnValues_PropertyIsActiveColumn_SetsTrue() throws Exception {
     when(tab.getTable()).thenReturn(table);
@@ -316,24 +354,50 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the parseDefaultValue method returns null when the input is null.
+   *
+   * @throws JSONException
+   *     if an error occurs during the test
+   */
   @Test
   public void testParseDefaultValue_NullInput_ReturnsNull() throws JSONException {
     Object result = WindowUtils.parseDefaultValue(null, false, null, null, null, null);
     assertNull(result);
   }
 
+  /**
+   * Tests that the parseDefaultValue method returns true when the input is "Y"
+   * and the boolean parameter is true.
+   *
+   * @throws JSONException
+   *     if an error occurs during the test
+   */
   @Test
   public void testParseDefaultValue_YesBoolean_ReturnsTrue() throws JSONException {
     Object result = WindowUtils.parseDefaultValue("Y", true, null, null, null, null);
     assertEquals(true, result);
   }
 
+  /**
+   * Tests that the parseDefaultValue method returns false when the input is "N" and the boolean parameter is true.
+   *
+   * @throws JSONException
+   *     if an error occurs during the test
+   */
   @Test
   public void testParseDefaultValue_NoBoolean_ReturnsFalse() throws JSONException {
     Object result = WindowUtils.parseDefaultValue("N", true, null, null, null, null);
     assertEquals(false, result);
   }
 
+  /**
+   * Tests that the parseDefaultValue method correctly replaces auxiliary inputs,
+   * context variables, and other placeholders in the input string.
+   *
+   * @throws JSONException
+   *     if an error occurs during the test
+   */
   @Test
   public void testParseDefaultValue_ReplacesAuxInputsAndContext() throws JSONException {
     JSONObject context = new JSONObject();
@@ -370,6 +434,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the parseDefaultValue method correctly replaces the "@COUNTRYDEF@"
+   * placeholder with the id of the country definition of the current organization.
+   *
+   * @throws JSONException
+   *     if an error occurs during the test
+   */
   @Test
   public void testParseDefaultValue_ReplacesCountryDef() throws JSONException {
     when(organization.getId()).thenReturn("org");
@@ -406,6 +477,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the parseDefaultValue method correctly replaces the
+   * "@PARENT_COLUMN@" placeholder with the provided parent ID.
+   *
+   * @throws JSONException
+   *     if an error occurs during the test
+   */
   @Test
   public void testParseDefaultValue_ReplacesParentLinkColumn() throws JSONException {
     String parentId = "parent-999";
@@ -444,6 +522,13 @@ public class WindowUtilsTest {
     }
   }
 
+  /**
+   * Tests that the parseDefaultValue method correctly executes a SQL statement and returns the
+   * result.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testParseDefaultValue_SQLExecutesAndReturnsResult() throws Exception {
     when(organization.getId()).thenReturn("org");

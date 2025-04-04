@@ -25,6 +25,9 @@ import org.openbravo.model.ad.module.Module;
 import com.smf.securewebservices.rsql.OBRestUtils;
 import com.smf.securewebservices.utils.WSResult;
 
+/**
+ * Test class for VersionTest.
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class VersionTest {
 
@@ -42,11 +45,21 @@ public class VersionTest {
   @Mock
   private OBDal obDal;
 
+  /**
+   * Sets up the test environment before each test.
+   * Initializes the VersionTest instance.
+   */
   @Before
   public void setUp() {
     version = new Version();
   }
 
+  /**
+   * Test that the doGet method correctly returns the version of the module.
+   *
+   * @throws Exception
+   *     if an error occurs during the test
+   */
   @Test
   public void testDoGetSuccess() throws Exception {
     StringWriter stringWriter = new StringWriter();
