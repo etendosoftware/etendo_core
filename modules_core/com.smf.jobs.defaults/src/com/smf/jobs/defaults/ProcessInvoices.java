@@ -112,7 +112,7 @@ public class ProcessInvoices extends Action {
             var input = getInputContents(getInputClass());
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
-            var supplierReference = parameters.isNull(SUPPLIERREFERENCE) ? null : parameters.getString(SUPPLIERREFERENCE);
+            var supplierReference = parameters.getString(SUPPLIERREFERENCE);
 
             log.debug("Process Invoice preRun Parameters:");
             log.debug(parameters.toString());
