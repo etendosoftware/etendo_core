@@ -15,6 +15,10 @@ import com.smf.jobs.defaults.offerPick.OfferAddOrgTest;
 import com.smf.jobs.defaults.offerPick.OfferAddProductCategoryTest;
 import com.smf.jobs.defaults.offerPick.OfferAddProductTest;
 import com.smf.jobs.defaults.provider.JobsComponentProviderTest;
+import com.smf.mobile.utils.webservices.FormValuesServiceTest;
+import com.smf.mobile.utils.webservices.VersionTest;
+import com.smf.mobile.utils.webservices.WindowTest;
+import com.smf.mobile.utils.webservices.WindowUtilsTest;
 import com.smf.securewebservices.SecureWebServicesSuite;
 /**
  * Test suite for SMF packages.
@@ -36,6 +40,10 @@ import com.smf.securewebservices.SecureWebServicesSuite;
     ProcessOrdersDefaultsTest.class,
     ProcessOrdersTest.class,
     ProcessShipmentTest.class,
+    FormValuesServiceTest.class,
+    VersionTest.class,
+    WindowTest.class,
+    WindowUtilsTest.class,
 
     // Secure webservices
     SecureWebServicesSuite.class
