@@ -47,6 +47,7 @@ import java.util.*;
 public class ProcessInvoiceUtil {
     private static final Logger log4j = LogManager.getLogger();
     private final AdvPaymentMngtDao dao = new AdvPaymentMngtDao();
+    private static final String VOID_DOCUMENT_ACTION = "RC";
     private static final String ERROR = "Error";
 
     @Inject
@@ -123,27 +124,13 @@ public class ProcessInvoiceUtil {
                         OBDateUtils.formatDate(voidAcctDate, "yyyy-MM-dd"));
             }
 
-            if (StringUtils.equals("RC", strdocaction) && StringUtils.isNotEmpty(strSupplierReference)) {
-                parameters.put("supplierReference", strSupplierReference);
-            }
-
-            if (StringUtils.equals("RC", strdocaction)) {
-                if (strSupplierReference == null || strSupplierReference.isBlank()) {
-                    strSupplierReference = StringUtils.EMPTY;
-                } else if (StringUtils.equals(invoice.getOrderReference(), strSupplierReference)) {
-                    String errorMSG = Utility.messageBD(conn, "ValidateSupplierReference", vars.getLanguage(), false);
-                    msg = new OBError();
-                    msg.setType(ERROR);
-                    msg.setTitle(Utility.messageBD(conn, ERROR, vars.getLanguage()));
-                    msg.setMessage(String.format(errorMSG, invoice.getOrderReference()));
-                    return msg;
-                }
+            if (StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction) && !invoice.isSalesTransaction()) {
                 parameters.put("supplierReference", strSupplierReference);
             }
 
             // In case of void a non paid invoice, create a dummy payment related to it with zero amount
             FIN_Payment dummyPayment = null;
-            if ("RC".equals(strdocaction) && !invoice.isPaymentComplete()
+            if (StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction) && !invoice.isPaymentComplete()
                     && invoice.getTotalPaid().compareTo(BigDecimal.ZERO) == 0) {
                 try {
                     OBContext.setAdminMode(true);
@@ -267,7 +254,7 @@ public class ProcessInvoiceUtil {
                 }
             }
 
-            boolean voidingPrepaidInvoice = "RC".equals(strdocaction)
+            boolean voidingPrepaidInvoice = StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction)
                     && invoice.getPrepaymentamt().compareTo(BigDecimal.ZERO) != 0;
 
             final ProcessInstance pinstance = CallProcess.getInstance()
@@ -276,7 +263,7 @@ public class ProcessInvoiceUtil {
             OBDal.getInstance().getSession().refresh(invoice);
             invoice.setAPRMProcessinvoice(invoice.getDocumentAction());
 
-            if ("RC".equals(strdocaction) && pinstance.getResult() != 0L) {
+            if (StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction) && pinstance.getResult() != 0L) {
                 try {
                     OBContext.setAdminMode(true);
 

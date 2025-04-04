@@ -253,7 +253,7 @@ public class ProcessInvoicesTest {
           anyString(),
           anyString(),
           anyString(),
-          eq(null),
+          anyString(),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(successResult);
@@ -275,6 +275,7 @@ public class ProcessInvoicesTest {
     JSONObject jsonContent = new JSONObject();
     JSONObject params = new JSONObject();
     params.put("DocAction", "CO");
+    params.put("POReference", "");
     jsonContent.put("_params", params);
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
