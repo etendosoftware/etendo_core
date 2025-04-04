@@ -38,6 +38,13 @@ import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
+import org.openbravo.erpReports.ReportTaxPaymentJRTest;
+import org.openbravo.erpReports.RptC_InvoiceTest;
+import org.openbravo.erpReports.RptC_OrderTest;
+import org.openbravo.erpReports.RptC_ProposalJrTest;
+import org.openbravo.erpReports.RptC_RemittanceTest;
+import org.openbravo.erpReports.RptMA_ProcessPlanTest;
+import org.openbravo.erpReports.RptM_RequisitionTest;
 import org.openbravo.event.LandedCostDuplicateReceiptValidatorTest;
 import org.openbravo.financial.FinancialUtilsTest;
 import org.openbravo.materialmgmt.MaterialMgmtTestSuite;
@@ -439,6 +446,26 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ProcessMonitorTest.class, //
     OBSchedulerTest.class, //
 
+    // ReportTaxPaymentJR
+    ReportTaxPaymentJRTest.class,
+
+    // RptC_Invoice
+    RptC_InvoiceTest.class,
+
+    // RptC_Order Test
+    RptC_OrderTest.class,
+
+    // RptC_ProposalJr
+    RptC_ProposalJrTest.class,
+
+    // RptC_Remittance
+    RptC_RemittanceTest.class,
+
+    // RptM_Requisition
+    RptM_RequisitionTest.class,
+
+    // RptMA_ProcessPlan
+    RptMA_ProcessPlanTest.class,
 })
 public class StandaloneTestSuite {
 }

@@ -41,7 +41,7 @@ public class RptMA_ProcessPlan extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    VariablesSecureApp vars = new VariablesSecureApp(request);
+    VariablesSecureApp vars = createVars(request);
 
     if (vars.commandIn("DEFAULT")) {
       String strmaProcessPlan = vars.getSessionValue("RptMA_ProcessPlan.inpmaProcessplan_R");
@@ -54,7 +54,7 @@ public class RptMA_ProcessPlan extends HttpSecureAppServlet {
     }
   }
 
-  private void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
       String strmaProcessPlan) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: pdf");
@@ -73,8 +73,19 @@ public class RptMA_ProcessPlan extends HttpSecureAppServlet {
     renderJR(vars, response, strReportName, strOutput, parameters, data, null);
   }
 
+
   @Override
   public String getServletInfo() {
     return "Servlet that presents the RptMAProcessPlan seeker";
   } // End of getServletInfo() method
+
+  /**
+   * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
+   *
+   * @param request the HTTP request
+   * @return the initialized secure variables
+   */
+  protected VariablesSecureApp createVars(HttpServletRequest request) {
+    return new VariablesSecureApp(request);
+  }
 }
