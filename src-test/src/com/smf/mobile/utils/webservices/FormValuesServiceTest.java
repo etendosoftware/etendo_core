@@ -74,24 +74,24 @@ public class FormValuesServiceTest {
   @Test
   public void testGetEntityNotFound() {
     Map<String, String> params = new HashMap<>();
-    params.put("tabId", "tab123");
-    params.put("parentId", "parent456");
-    params.put("parentEntity", "InexistentEntity");
+    params.put(WBUtils.TAB_ID, WBUtils.TAB_123);
+    params.put(WBUtils.PARENT_ID, WBUtils.PARENT_456);
+    params.put(WBUtils.PARENT_ENTITY, WBUtils.INEXISTENT_ENTITY);
 
     try (MockedStatic<OBContext> obContext = mockStatic(
         OBContext.class); MockedStatic<ModelProvider> modelProvider = mockStatic(
         ModelProvider.class); MockedStatic<OBMessageUtils> messageUtils = mockStatic(OBMessageUtils.class)) {
       modelProvider.when(ModelProvider::getInstance).thenReturn(modelProviderInstance);
-      when(modelProviderInstance.getEntity("InexistentEntity")).thenReturn(null);
+      when(modelProviderInstance.getEntity(WBUtils.INEXISTENT_ENTITY)).thenReturn(null);
 
       messageUtils.when(() -> OBMessageUtils.getI18NMessage(eq("SMFMU_EntityNotFound"), any())).thenReturn(
           "Entity InexistentEntity not found");
 
-      WSResult result = service.get("/form-values", params);
+      WSResult result = service.get(WBUtils.ENDPOINT, params);
 
       assertEquals(WSResult.Status.INTERNAL_SERVER_ERROR, result.getStatus());
       assertEquals(WSResult.ResultType.SINGLE, result.getResultType());
-      assertTrue(result.getMessage().contains("InexistentEntity"));
+      assertTrue(result.getMessage().contains(WBUtils.INEXISTENT_ENTITY));
     }
   }
 
@@ -103,7 +103,7 @@ public class FormValuesServiceTest {
    */
   @Test
   public void testDoGetCallsGetAndWritesResponse() throws Exception {
-    Map<String, String> mockParams = Map.of("tabId", "tab123", "parentId", "parent456", "parentEntity", "SomeEntity");
+    Map<String, String> mockParams = Map.of(WBUtils.TAB_ID, WBUtils.TAB_123, WBUtils.PARENT_ID, WBUtils.PARENT_456, WBUtils.PARENT_ENTITY, WBUtils.SOME_ENTITY);
 
     WSResult mockResult = new WSResult();
     mockResult.setStatus(WSResult.Status.OK);
@@ -123,12 +123,12 @@ public class FormValuesServiceTest {
       JSONObject jsonData = new JSONObject(Map.of("field1", "value1"));
 
       modelProvider.when(ModelProvider::getInstance).thenReturn(modelProviderInstance);
-      when(modelProviderInstance.getEntity("SomeEntity")).thenReturn(mockEntity);
+      when(modelProviderInstance.getEntity(WBUtils.SOME_ENTITY)).thenReturn(mockEntity);
 
       obDal.when(OBDal::getInstance).thenReturn(obDalInstance);
-      when(obDalInstance.get(Tab.class, "tab123")).thenReturn(mockTab);
+      when(obDalInstance.get(Tab.class, WBUtils.TAB_123)).thenReturn(mockTab);
 
-      windowUtils.when(() -> WindowUtils.computeColumnValues(mockTab, "parent456", mockEntity, null)).thenReturn(
+      windowUtils.when(() -> WindowUtils.computeColumnValues(mockTab, WBUtils.PARENT_456, mockEntity, null)).thenReturn(
           jsonData);
 
       obRestUtils.when(() -> OBRestUtils.writeWSResponse(any(WSResult.class), any())).thenAnswer(invocation -> {
@@ -137,7 +137,7 @@ public class FormValuesServiceTest {
         return null;
       });
 
-      service.doGet("/form-values", request, response);
+      service.doGet(WBUtils.ENDPOINT, request, response);
 
       obRestUtils.verify(() -> OBRestUtils.writeWSResponse(any(WSResult.class), eq(response)));
     }
@@ -151,7 +151,7 @@ public class FormValuesServiceTest {
    */
   @Test
   public void testPostSuccess() throws Exception {
-    Map<String, String> params = Map.of("tabId", "tab123", "parentId", "parent456", "parentEntity", "SomeEntity");
+    Map<String, String> params = Map.of(WBUtils.TAB_ID, WBUtils.TAB_123, WBUtils.PARENT_ID, WBUtils.PARENT_456, WBUtils.PARENT_ENTITY, WBUtils.SOME_ENTITY);
 
     JSONObject contextJson = new JSONObject(Map.of("someCtx", "val"));
     JSONObject body = new JSONObject();
@@ -164,15 +164,15 @@ public class FormValuesServiceTest {
         ModelProvider.class); MockedStatic<OBDal> obDal = mockStatic(
         OBDal.class); MockedStatic<WindowUtils> windowUtils = mockStatic(WindowUtils.class)) {
       modelProvider.when(ModelProvider::getInstance).thenReturn(modelProviderInstance);
-      when(modelProviderInstance.getEntity("SomeEntity")).thenReturn(mockEntity);
+      when(modelProviderInstance.getEntity(WBUtils.SOME_ENTITY)).thenReturn(mockEntity);
 
       obDal.when(OBDal::getInstance).thenReturn(obDalInstance);
-      when(obDalInstance.get(Tab.class, "tab123")).thenReturn(mockTab);
+      when(obDalInstance.get(Tab.class, WBUtils.TAB_123)).thenReturn(mockTab);
 
-      windowUtils.when(() -> WindowUtils.computeColumnValues(mockTab, "parent456", mockEntity, contextJson)).thenReturn(
+      windowUtils.when(() -> WindowUtils.computeColumnValues(mockTab, WBUtils.PARENT_456, mockEntity, contextJson)).thenReturn(
           expectedData);
 
-      WSResult result = service.post("/form-values", params, body);
+      WSResult result = service.post(WBUtils.ENDPOINT, params, body);
 
       assertEquals(WSResult.Status.OK, result.getStatus());
       assertEquals(WSResult.ResultType.SINGLE, result.getResultType());
@@ -187,7 +187,7 @@ public class FormValuesServiceTest {
    */
   @Test
   public void testPostEntityNotFound() throws Exception {
-    Map<String, String> params = Map.of("tabId", "tab123", "parentId", "parent456", "parentEntity", "MissingEntity");
+    Map<String, String> params = Map.of(WBUtils.TAB_ID, WBUtils.TAB_123, WBUtils.PARENT_ID, WBUtils.PARENT_456, WBUtils.PARENT_ENTITY, "MissingEntity");
 
     JSONObject body = new JSONObject();
     body.put("context", new JSONObject());
@@ -201,7 +201,7 @@ public class FormValuesServiceTest {
       obMessageUtils.when(() -> OBMessageUtils.getI18NMessage(eq("SMFMU_EntityNotFound"), any())).thenReturn(
           "Entity MissingEntity not found");
 
-      WSResult result = service.post("/form-values", params, body);
+      WSResult result = service.post(WBUtils.ENDPOINT, params, body);
 
       assertEquals(WSResult.Status.INTERNAL_SERVER_ERROR, result.getStatus());
       assertEquals("Entity MissingEntity not found", result.getMessage());

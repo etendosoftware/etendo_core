@@ -57,8 +57,6 @@ import com.smf.mobile.utils.data.TabConfiguration;
 @RunWith(MockitoJUnitRunner.class)
 public class WindowUtilsTest {
 
-  private WindowUtilsTest windowUtilsTest;
-
   @Mock
   private Column column;
 
@@ -123,19 +121,10 @@ public class WindowUtilsTest {
   private ResultSet rs;
 
   /**
-   * Sets up the test environment before each test.
-   * Initializes the WindowUtilsTest instance.
-   */
-  @Before
-  public void setup() {
-    windowUtilsTest = new WindowUtilsTest();
-  }
-
-  /**
    * Tests that the getEntityColumnName method returns the correct property name.
    */
   @Test
-  public void testGetEntityColumnName_ReturnsCorrectPropertyName() {
+  public void testGetEntityColumnNameReturnsCorrectPropertyName() {
     when(column.getTable()).thenReturn(table);
     when(table.getName()).thenReturn("MyTable");
     when(column.getDBColumnName()).thenReturn("my_column");
@@ -161,7 +150,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testGetTabIdentifiers_WithValidConfigurationAndIdentifiers() throws Exception {
+  public void testGetTabIdentifiersWithValidConfigurationAndIdentifiers() throws Exception {
     MobileIdentifier identifier1 = mock(MobileIdentifier.class);
     MobileIdentifier identifier2 = mock(MobileIdentifier.class);
     Field field1 = mock(Field.class);
@@ -211,9 +200,9 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testComputeColumnValues_ForDocumentNoField_SetsAutoValue() throws Exception {
+  public void testComputeColumnValuesForDocumentNoFieldSetsAutoValue() throws Exception {
     when(tab.getTable()).thenReturn(table);
-    when(table.getId()).thenReturn("tableId");
+    when(table.getId()).thenReturn(WBUtils.TABLE_ID);
     when(tab.getADFieldList()).thenReturn(List.of(field));
 
     when(field.getColumn()).thenReturn(column);
@@ -229,7 +218,7 @@ public class WindowUtilsTest {
     try (MockedStatic<ModelProvider> modelProvider = mockStatic(
         ModelProvider.class); MockedStatic<OBDal> obDal = mockStatic(OBDal.class)) {
       modelProvider.when(ModelProvider::getInstance).thenReturn(provider);
-      when(provider.getEntityByTableId("tableId")).thenReturn(entity);
+      when(provider.getEntityByTableId(WBUtils.TABLE_ID)).thenReturn(entity);
       when(entity.getPropertyByColumnName("documentno")).thenReturn(property);
 
       obDal.when(OBDal::getInstance).thenReturn(obDalInstance);
@@ -248,9 +237,9 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testComputeColumnValues_LinkToParentColumn_SetsParentIdAndIdentifier() throws Exception {
+  public void testComputeColumnValuesLinkToParentColumnSetsParentIdAndIdentifier() throws Exception {
     when(tab.getTable()).thenReturn(table);
-    when(table.getId()).thenReturn("tableId");
+    when(table.getId()).thenReturn(WBUtils.TABLE_ID);
     when(tab.getADFieldList()).thenReturn(List.of(field));
 
     when(field.getColumn()).thenReturn(column);
@@ -270,7 +259,7 @@ public class WindowUtilsTest {
     try (MockedStatic<ModelProvider> modelProvider = mockStatic(
         ModelProvider.class); MockedStatic<OBDal> obDal = mockStatic(OBDal.class)) {
       modelProvider.when(ModelProvider::getInstance).thenReturn(provider);
-      when(provider.getEntityByTableId("tableId")).thenReturn(entity);
+      when(provider.getEntityByTableId(WBUtils.TABLE_ID)).thenReturn(entity);
       when(entity.getPropertyByColumnName("linkedcolumn")).thenReturn(property);
       when(entity.getName()).thenReturn("ParentEntity");
 
@@ -292,9 +281,9 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testComputeColumnValues_PropertyIsId_SkipsField() throws Exception {
+  public void testComputeColumnValuesPropertyIsIdSkipsField() throws Exception {
     when(tab.getTable()).thenReturn(table);
-    when(table.getId()).thenReturn("tableId");
+    when(table.getId()).thenReturn(WBUtils.TABLE_ID);
     when(tab.getADFieldList()).thenReturn(List.of(field));
 
     when(field.getColumn()).thenReturn(column);
@@ -307,7 +296,7 @@ public class WindowUtilsTest {
     try (MockedStatic<ModelProvider> modelProvider = mockStatic(
         ModelProvider.class); MockedStatic<OBDal> obDal = mockStatic(OBDal.class)) {
       modelProvider.when(ModelProvider::getInstance).thenReturn(provider);
-      when(provider.getEntityByTableId("tableId")).thenReturn(entity);
+      when(provider.getEntityByTableId(WBUtils.TABLE_ID)).thenReturn(entity);
       when(entity.getPropertyByColumnName("id_column")).thenReturn(property);
 
       obDal.when(OBDal::getInstance).thenReturn(obDalInstance);
@@ -326,9 +315,9 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testComputeColumnValues_PropertyIsActiveColumn_SetsTrue() throws Exception {
+  public void testComputeColumnValuesPropertyIsActiveColumnSetsTrue() throws Exception {
     when(tab.getTable()).thenReturn(table);
-    when(table.getId()).thenReturn("tableId");
+    when(table.getId()).thenReturn(WBUtils.TABLE_ID);
     when(tab.getADFieldList()).thenReturn(List.of(field));
 
     when(field.getColumn()).thenReturn(column);
@@ -343,7 +332,7 @@ public class WindowUtilsTest {
     try (MockedStatic<ModelProvider> modelProvider = mockStatic(
         ModelProvider.class); MockedStatic<OBDal> obDal = mockStatic(OBDal.class)) {
       modelProvider.when(ModelProvider::getInstance).thenReturn(provider);
-      when(provider.getEntityByTableId("tableId")).thenReturn(entity);
+      when(provider.getEntityByTableId(WBUtils.TABLE_ID)).thenReturn(entity);
       when(entity.getPropertyByColumnName("active_col")).thenReturn(property);
 
       obDal.when(OBDal::getInstance).thenReturn(obDalInstance);
@@ -361,7 +350,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testParseDefaultValue_NullInput_ReturnsNull() throws JSONException {
+  public void testParseDefaultValueNullInputReturnsNull() throws JSONException {
     Object result = WindowUtils.parseDefaultValue(null, false, null, null, null, null);
     assertNull(result);
   }
@@ -374,7 +363,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testParseDefaultValue_YesBoolean_ReturnsTrue() throws JSONException {
+  public void testParseDefaultValueYesBooleanReturnsTrue() throws JSONException {
     Object result = WindowUtils.parseDefaultValue("Y", true, null, null, null, null);
     assertEquals(true, result);
   }
@@ -386,7 +375,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testParseDefaultValue_NoBoolean_ReturnsFalse() throws JSONException {
+  public void testParseDefaultValueNoBooleanReturnsFalse() throws JSONException {
     Object result = WindowUtils.parseDefaultValue("N", true, null, null, null, null);
     assertEquals(false, result);
   }
@@ -399,7 +388,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testParseDefaultValue_ReplacesAuxInputsAndContext() throws JSONException {
+  public void testParseDefaultValueReplacesAuxInputsAndContext() throws JSONException {
     JSONObject context = new JSONObject();
     context.put("@CTX_KEY@", "ctx-value");
 
@@ -442,7 +431,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testParseDefaultValue_ReplacesCountryDef() throws JSONException {
+  public void testParseDefaultValueReplacesCountryDef() throws JSONException {
     when(organization.getId()).thenReturn("org");
     when(organization.getCurrency()).thenReturn(currency);
     when(currency.getId()).thenReturn("curr");
@@ -485,7 +474,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testParseDefaultValue_ReplacesParentLinkColumn() throws JSONException {
+  public void testParseDefaultValueReplacesParentLinkColumn() throws JSONException {
     String parentId = "parent-999";
 
     when(tab.getTable()).thenReturn(table);
@@ -530,7 +519,7 @@ public class WindowUtilsTest {
    *     if an error occurs during the test
    */
   @Test
-  public void testParseDefaultValue_SQLExecutesAndReturnsResult() throws Exception {
+  public void testParseDefaultValueSQLExecutesAndReturnsResult() throws Exception {
     when(organization.getId()).thenReturn("org");
     when(organization.getCurrency()).thenReturn(currency);
     when(currency.getId()).thenReturn("curr");

@@ -38,7 +38,6 @@ import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.domain.ReferencedTree;
 import org.openbravo.model.ad.domain.ReferencedTreeField;
 import org.openbravo.model.ad.ui.Tab;
-import org.openbravo.service.datasource.DataSource;
 import org.openbravo.service.datasource.DatasourceField;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.userinterface.selector.Selector;
@@ -83,9 +82,6 @@ public class WindowTest {
   private Selector selector;
 
   @Mock
-  private DataSource dataSource;
-
-  @Mock
   private Reference reference;
 
   @Mock
@@ -114,8 +110,8 @@ public class WindowTest {
     window = spy(new Window());
     selectorField = spy(new SelectorField());
 
-    doReturn("displayFieldProperty").when(window).getDisplayField(any());
-    doReturn("valueFieldProperty").when(window).getValueField(any());
+    doReturn(WBUtils.DISPLAY_FIELD_PROPERTY).when(window).getDisplayField(any());
+    doReturn(WBUtils.VALUE_FIELD_PROPERTY).when(window).getValueField(any());
     doReturn("extraField").when(window).getExtraSearchFields(any());
   }
 
@@ -124,7 +120,7 @@ public class WindowTest {
    * when there are two linked columns and an HQL where clause is provided.
    */
   @Test
-  public void testGetTabWhereClause_TwoLinkedColumnsWithHQL() {
+  public void testGetTabWhereClauseTwoLinkedColumnsWithHQL() {
     Column column1 = mock(Column.class);
     Column column2 = mock(Column.class);
 
@@ -150,7 +146,7 @@ public class WindowTest {
    * Tests that the getEntityColumnName method returns the correct property name.
    */
   @Test
-  public void testGetEntityColumnName_ReturnsCorrectPropertyName() {
+  public void testGetEntityColumnNameReturnsCorrectPropertyName() {
     when(column.getTable()).thenReturn(table);
     when(table.getName()).thenReturn("TestTable");
     when(column.getDBColumnName()).thenReturn("test_column");
@@ -172,7 +168,7 @@ public class WindowTest {
    * Tests that the getTabEntityName method returns the table name.
    */
   @Test
-  public void testGetTabEntityName_ReturnsTableName() {
+  public void testGetTabEntityNameReturnsTableName() {
     when(tab.getTable()).thenReturn(table);
     when(table.getName()).thenReturn("TestTableName");
 
@@ -186,7 +182,7 @@ public class WindowTest {
    * it is not null.
    */
   @Test
-  public void testGetPropertyOrDataSourceField_WithProperty() {
+  public void testGetPropertyOrDataSourceFieldWithProperty() {
     when(selectorField.getProperty()).thenReturn("property.name");
 
     String result = Window.getPropertyOrDataSourceField(selectorField);
@@ -199,7 +195,7 @@ public class WindowTest {
    * when it is not null.
    */
   @Test
-  public void testGetPropertyOrDataSourceField_WithDisplayColumnAlias() {
+  public void testGetPropertyOrDataSourceFieldWithDisplayColumnAlias() {
     when(selectorField.getProperty()).thenReturn(null);
     when(selectorField.getDisplayColumnAlias()).thenReturn("alias.name");
 
@@ -213,7 +209,7 @@ public class WindowTest {
    * when it is not null.
    */
   @Test
-  public void testGetPropertyOrDataSourceField_WithDatasourceField() {
+  public void testGetPropertyOrDataSourceFieldWithDatasourceField() {
     when(selectorField.getProperty()).thenReturn(null);
     when(selectorField.getDisplayColumnAlias()).thenReturn(null);
     when(selectorField.getObserdsDatasourceField()).thenReturn(datasourceField);
@@ -229,7 +225,7 @@ public class WindowTest {
    * IllegalStateException if all inputs are null.
    */
   @Test
-  public void testGetPropertyOrDataSourceField_AllNull_ThrowsException() {
+  public void testGetPropertyOrDataSourceFieldAllNullThrowsException() {
     when(selectorField.getProperty()).thenReturn(null);
     when(selectorField.getDisplayColumnAlias()).thenReturn(null);
     when(selectorField.getObserdsDatasourceField()).thenReturn(null);
@@ -238,15 +234,14 @@ public class WindowTest {
       Window.getPropertyOrDataSourceField(selectorField);
       fail("Expected IllegalStateException to be thrown");
     } catch (IllegalStateException e) {
-      assertTrue(e.getMessage().contains("Selectorfield"));
-    }
+      assertTrue(StringUtils.contains(e.getMessage(), "Selectorfield"));    }
   }
 
   /**
    * Tests that the getValueField method returns the correct value field.
    */
   @Test
-  public void testGetValueField_ValueFieldNormal_ReturnsValueField() {
+  public void testGetValueFieldValueFieldNormalReturnsValueField() {
     doReturn("testField").when(window).getValueField(selector);
 
     String result = window.getValueField(selector);
@@ -259,7 +254,7 @@ public class WindowTest {
    * no table.
    */
   @Test
-  public void testGetValueField_DataSourceWithoutTable_ReturnsFirstFieldName() {
+  public void testGetValueFieldDataSourceWithoutTableReturnsFirstFieldName() {
     doReturn("datasourceFieldName").when(window).getValueField(selector);
 
     String result = window.getValueField(selector);
@@ -271,15 +266,15 @@ public class WindowTest {
    * Tests that the getDisplayField method returns the correct display field.
    */
   @Test
-  public void testGetDisplayField_DisplayFieldExists_ReturnsPropertyOrDataSourceField() {
-    doReturn("displayFieldTest").when(window).getDisplayField(selector);
+  public void testGetDisplayFieldDisplayFieldExistsReturnsPropertyOrDataSourceField() {
+    doReturn(WBUtils.DISPLAY_FIELD_TEST).when(window).getDisplayField(selector);
 
     try (MockedStatic<Window> windowStatic = mockStatic(Window.class)) {
-      windowStatic.when(() -> Window.getPropertyOrDataSourceField(selectorField)).thenReturn("displayFieldTest");
+      windowStatic.when(() -> Window.getPropertyOrDataSourceField(selectorField)).thenReturn(WBUtils.DISPLAY_FIELD_TEST);
 
       String result = window.getDisplayField(selector);
 
-      assertEquals("displayFieldTest", result);
+      assertEquals(WBUtils.DISPLAY_FIELD_TEST, result);
     }
   }
 
@@ -288,7 +283,7 @@ public class WindowTest {
    * datasource has no table.
    */
   @Test
-  public void testGetDisplayField_DataSourceWithoutTable_ReturnsFirstFieldName() {
+  public void testGetDisplayFieldDataSourceWithoutTableReturnsFirstFieldName() {
     doReturn("field$name").when(window).getDisplayField(selector);
 
     String result = window.getDisplayField(selector);
@@ -301,7 +296,7 @@ public class WindowTest {
    * display field and datasource field are all null.
    */
   @Test
-  public void testGetDisplayField_AllNull_ReturnsIdentifier() {
+  public void testGetDisplayFieldAllNullReturnsIdentifier() {
     doReturn("_identifier").when(window).getDisplayField(selector);
 
     String result = window.getDisplayField(selector);
@@ -313,7 +308,7 @@ public class WindowTest {
    * Tests that the getDomainType method returns the correct domain type when the reference exists.
    */
   @Test
-  public void testGetDomainType_ReferenceExists_ReturnsDomainType() {
+  public void testGetDomainTypeReferenceExistsReturnsDomainType() {
     try (MockedStatic<ModelProvider> modelProviderStatic = mockStatic(ModelProvider.class)) {
       modelProviderStatic.when(ModelProvider::getInstance).thenReturn(provider);
 
@@ -331,7 +326,7 @@ public class WindowTest {
    * @throws CheckException if the reference does not exist
    */
   @Test(expected = CheckException.class)
-  public void testGetDomainType_ReferenceNotFound_ThrowsException() {
+  public void testGetDomainTypeReferenceNotFoundThrowsException() {
     try (MockedStatic<ModelProvider> modelProviderStatic = mockStatic(ModelProvider.class)) {
       modelProviderStatic.when(ModelProvider::getInstance).thenReturn(provider);
 
@@ -345,7 +340,7 @@ public class WindowTest {
    * Tests that the isBoolean method returns false when the domain type is not primitive.
    */
   @Test
-  public void testIsBoolean_DomainTypeIsNotPrimitive_ReturnsFalse() {
+  public void testIsBooleanDomainTypeIsNotPrimitiveReturnsFalse() {
     when(selectorField.getObuiselSelector()).thenReturn(selector);
     when(selector.getTable()).thenReturn(table);
     when(table.getName()).thenReturn("TestEntity");
@@ -370,18 +365,18 @@ public class WindowTest {
    * query and the reference exists.
    */
   @Test
-  public void testGetDomainType_CustomQueryWithReference() {
+  public void testGetDomainTypeCustomQueryWithReference() {
     doReturn(selector).when(selectorField).getObuiselSelector();
     doReturn(null).when(selectorField).getProperty();
     doReturn(obReference).when(selectorField).get(SelectorField.PROPERTY_REFERENCE);
 
     when(selector.getTable()).thenReturn(mock(Table.class));
     when(selector.isCustomQuery()).thenReturn(true);
-    when(obReference.getId()).thenReturn("ref123");
+    when(obReference.getId()).thenReturn(WBUtils.REF_123);
 
     try (MockedStatic<ModelProvider> modelProviderStatic = mockStatic(ModelProvider.class)) {
       modelProviderStatic.when(ModelProvider::getInstance).thenReturn(provider);
-      when(provider.getReference("ref123")).thenReturn(reference);
+      when(provider.getReference(WBUtils.REF_123)).thenReturn(reference);
       when(reference.getDomainType()).thenReturn(domainType);
 
       DomainType result = Window.getDomainType(selectorField);
@@ -395,7 +390,7 @@ public class WindowTest {
    * and the reference exists.
    */
   @Test
-  public void testGetDomainType_DatasourceFieldReferenceNotNull() {
+  public void testGetDomainTypeDatasourceFieldReferenceNotNull() {
     when(selector.getTable()).thenReturn(null);
     doReturn(selector).when(selectorField).getObuiselSelector();
 
@@ -418,8 +413,8 @@ public class WindowTest {
    * Tests that the getExtraSearchFields method returns an empty string if the selector fields list is empty.
    */
   @Test
-  public void testGetExtraSearchFields_EmptyList_ReturnsEmptyString() {
-    doReturn(List.of()).when(window).getExtraSearchFields(selector);
+  public void testGetExtraSearchFieldsEmptyListReturnsEmptyString() {
+    doReturn("").when(window).getExtraSearchFields(selector);
 
     String result = window.getExtraSearchFields(selector);
 
@@ -431,8 +426,7 @@ public class WindowTest {
    * equals the display field.
    */
   @Test
-  public void testGetExtraSearchFields_FieldEqualsDisplayField_SkipsField() {
-    SelectorField selectorField = new SelectorField();
+  public void testGetExtraSearchFieldsFieldEqualsDisplayFieldSkipsField() {
     selectorField.setProperty("sameField");
     selectorField.setActive(true);
     selectorField.setSearchinsuggestionbox(true);
@@ -448,13 +442,13 @@ public class WindowTest {
    * Tests that the getExtraSearchFields method successfully adds a field to the extra search fields property.
    */
   @Test
-  public void testGetExtraSearchFields_FieldAddedSuccessfully() {
+  public void testGetExtraSearchFieldsFieldAddedSuccessfully() {
     when(selector.getOBUISELSelectorFieldList()).thenReturn(List.of(selectorField));
     doReturn(true).when(selectorField).isActive();
     doReturn(selector).when(selectorField).getObuiselSelector();
     doReturn(datasourceField).when(selectorField).getObserdsDatasourceField();
     when(datasourceField.getReference()).thenReturn(obReference);
-    when(obReference.getId()).thenReturn("ref123");
+    when(obReference.getId()).thenReturn(WBUtils.REF_123);
 
     when(window.getDisplayField(selector)).thenReturn("otherField");
     doReturn("fieldToAdd").when(selectorField).getProperty();
@@ -464,7 +458,7 @@ public class WindowTest {
 
     try (MockedStatic<ModelProvider> modelProviderStatic = mockStatic(ModelProvider.class)) {
       modelProviderStatic.when(ModelProvider::getInstance).thenReturn(modelProvider);
-      when(modelProvider.getReference("ref123")).thenReturn(reference);
+      when(modelProvider.getReference(WBUtils.REF_123)).thenReturn(reference);
       when(reference.getDomainType()).thenReturn(foreignKeyDomainType);
 
       String result = window.getExtraSearchFields(selector);
@@ -480,14 +474,14 @@ public class WindowTest {
    *             if an error occurs when modifying the selectorInfo object.
    */
   @Test
-  public void testSetSelectorProperties_SetsCorrectValues() throws JSONException {
+  public void testSetSelectorPropertiesSetsCorrectValues() throws JSONException {
     doReturn("extraProperty").when(selectorField).getProperty();
     when(selectorField.isOutfield()).thenReturn(true);
 
     JSONObject selectorInfo = new JSONObject();
 
-    doReturn("displayFieldProperty").when(window).getDisplayField(any());
-    doReturn("valueFieldProperty").when(window).getValueField(any());
+    doReturn(WBUtils.DISPLAY_FIELD_PROPERTY).when(window).getDisplayField(any());
+    doReturn(WBUtils.VALUE_FIELD_PROPERTY).when(window).getValueField(any());
 
     window.setSelectorProperties(List.of(selectorField), selectorField, selectorField, selectorInfo);
 
@@ -502,7 +496,7 @@ public class WindowTest {
    *             if an error occurs when modifying the selectorInfo object.
    */
   @Test
-  public void testSetSelectorProperties_SetsCorrectValues2() throws JSONException {
+  public void testSetSelectorPropertiesSetsCorrectValues2() throws JSONException {
     JSONObject selectorInfo = new JSONObject();
 
     doReturn("extraProperty").when(selectorField).getProperty();
@@ -522,7 +516,7 @@ public class WindowTest {
    *             if an error occurs when modifying the selectorInfo object.
    */
   @Test
-  public void testSetSelectorProperties_AddsDerivedProperties() throws JSONException {
+  public void testSetSelectorPropertiesAddsDerivedProperties() throws JSONException {
     JSONObject selectorInfo = new JSONObject();
 
     doReturn("field$property").when(selectorField).getProperty();
@@ -541,7 +535,7 @@ public class WindowTest {
    *             if an error occurs when modifying the selectorInfo object.
    */
   @Test
-  public void testSetSelectorProperties_AddsDisplayField() throws JSONException {
+  public void testSetSelectorPropertiesAddsDisplayField() throws JSONException {
     JSONObject selectorInfo = new JSONObject();
 
     doReturn("displayProperty").when(window).getDisplayField(any());
@@ -559,16 +553,16 @@ public class WindowTest {
    *             if an error occurs when creating the JSON object.
    */
   @Test
-  public void testGetSelectorInfo_NullReference() throws JSONException {
-    JSONObject result = window.getSelectorInfo("testFieldId", null);
+  public void testGetSelectorInfoNullReference() throws JSONException {
+    JSONObject result = window.getSelectorInfo(WBUtils.TEST_FIELD_ID, null);
 
     assertFalse(result.has("selectorDefinition"));
     assertEquals(JsonConstants.IDENTIFIER, result.get(JsonConstants.SORTBY_PARAMETER));
     assertEquals(JsonConstants.TEXTMATCH_SUBSTRING, result.get(JsonConstants.TEXTMATCH_PARAMETER));
     assertTrue(result.getBoolean(JsonConstants.NOCOUNT_PARAMETER));
-    assertEquals("testFieldId", result.get("fieldId"));
-    assertEquals(JsonConstants.IDENTIFIER, result.get("displayField"));
-    assertEquals(JsonConstants.ID, result.get("valueField"));
+    assertEquals(WBUtils.TEST_FIELD_ID, result.get(WBUtils.FIELD_ID));
+    assertEquals(JsonConstants.IDENTIFIER, result.get(WBUtils.DISPLAY_FIELD));
+    assertEquals(JsonConstants.ID, result.get(WBUtils.VALUE_FIELD));
     assertEquals(JsonConstants.ID, result.get(JsonConstants.SELECTEDPROPERTIES_PARAMETER));
     assertEquals(JsonConstants.ID + ",", result.get(JsonConstants.ADDITIONAL_PROPERTIES_PARAMETER));
   }
@@ -579,8 +573,8 @@ public class WindowTest {
    * @throws Exception if an error occurs during the test.
    */
   @Test
-  public void testGetSelectorInfo_WithSelector() throws Exception {
-    String fieldId = "testFieldId";
+  public void testGetSelectorInfoWithSelector() throws Exception {
+    String fieldId = WBUtils.TEST_FIELD_ID;
 
     when(obReference.getOBUISELSelectorList()).thenReturn(List.of(selector));
     when(obReference.getADReferencedTreeList()).thenReturn(List.of());
@@ -601,10 +595,10 @@ public class WindowTest {
     assertEquals("displayColumnAlias", result.getString("_sortBy"));
     assertEquals("substring", result.getString("_textMatchStyle"));
     assertTrue(result.getBoolean("_noCount"));
-    assertEquals(fieldId, result.getString("fieldId"));
+    assertEquals(fieldId, result.getString(WBUtils.FIELD_ID));
     assertEquals("extraField", result.getString("extraSearchFields"));
-    assertEquals("displayFieldProperty", result.getString("displayField"));
-    assertEquals("valueFieldProperty", result.getString("valueField"));
+    assertEquals(WBUtils.DISPLAY_FIELD_PROPERTY, result.getString(WBUtils.DISPLAY_FIELD));
+    assertEquals(WBUtils.VALUE_FIELD_PROPERTY, result.getString(WBUtils.VALUE_FIELD));
   }
 
   /**
@@ -613,28 +607,28 @@ public class WindowTest {
    * @throws Exception if an error occurs during the test.
    */
   @Test
-  public void testGetSelectorInfo_WithTreeSelector() throws Exception {
-    String fieldId = "testFieldId";
+  public void testGetSelectorInfoWithTreeSelector() throws Exception {
+    String fieldId = WBUtils.TEST_FIELD_ID;
 
     when(obReference.getOBUISELSelectorList()).thenReturn(List.of());
     when(obReference.getADReferencedTreeList()).thenReturn(List.of(treeSelector));
-    when(treeSelector.getId()).thenReturn("treeSelectorId");
+    when(treeSelector.getId()).thenReturn(WBUtils.TREE_SELECTOR_ID);
     when(treeSelector.getDisplayfield()).thenReturn(treeField);
     when(treeSelector.getValuefield()).thenReturn(treeField);
-    when(treeField.getProperty()).thenReturn("treeProperty");
+    when(treeField.getProperty()).thenReturn(WBUtils.TREE_PROPERTY);
 
     JSONObject result = window.getSelectorInfo(fieldId, obReference);
 
     assertNotNull(result);
     assertEquals("90034CAE96E847D78FBEF6D38CB1930D", result.getString("datasourceName"));
-    assertEquals("treeSelectorId", result.getString("_selectorDefinitionId"));
-    assertEquals("treeSelectorId", result.getString("treeReferenceId"));
-    assertEquals("treeProperty", result.getString("_sortBy"));
-    assertEquals("treeProperty", result.getString("displayField"));
-    assertEquals("treeProperty", result.getString("valueField"));
+    assertEquals(WBUtils.TREE_SELECTOR_ID, result.getString("_selectorDefinitionId"));
+    assertEquals(WBUtils.TREE_SELECTOR_ID, result.getString("treeReferenceId"));
+    assertEquals(WBUtils.TREE_PROPERTY, result.getString("_sortBy"));
+    assertEquals(WBUtils.TREE_PROPERTY, result.getString(WBUtils.DISPLAY_FIELD));
+    assertEquals(WBUtils.TREE_PROPERTY, result.getString(WBUtils.VALUE_FIELD));
     assertEquals(JsonConstants.TEXTMATCH_SUBSTRING, result.getString("_textMatchStyle"));
     assertTrue(result.getBoolean("_noCount"));
-    assertEquals(fieldId, result.getString("fieldId"));
+    assertEquals(fieldId, result.getString(WBUtils.FIELD_ID));
     assertEquals(JsonConstants.ID, result.getString("_selectedProperties"));
   }
 }
