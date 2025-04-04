@@ -1,6 +1,7 @@
 package com.smf.jobs.defaults.offerPick;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -21,6 +22,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 
@@ -116,14 +118,14 @@ public class OfferBaseActionHandlerTest {
     selection.put(new JSONObject().put("id", "testId"));
     parameters.put(Utility.TEST_JSON, new JSONObject().put(Utility.SELECTION, selection));
 
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("Success")).thenReturn("Success");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(Utility.SUCCESS_CAPITALIZED)).thenReturn(Utility.SUCCESS_CAPITALIZED);
 
     // When
     var result = actionHandler.action(parameters, new MutableBoolean(false));
 
     // Then
     assertEquals(Result.Type.SUCCESS, result.getType());
-    assertEquals("Success", result.getMessage());
+    assertEquals(Utility.SUCCESS_CAPITALIZED, result.getMessage());
   }
 
   /**
@@ -139,8 +141,8 @@ public class OfferBaseActionHandlerTest {
     JSONObject parameters = new JSONObject();
     parameters.put(Utility.TEST_JSON, new JSONObject().put(Utility.SELECTION, new JSONArray()));
 
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(Utility.NOT_SELECTED)).thenThrow(
-        new RuntimeException("Test Exception"));
+    OBError mockError = mock(OBError.class);
+    mockedOBMessageUtils.when(() -> OBMessageUtils.translateError(anyString())).thenReturn(mockError);
 
     // When
     var result = actionHandler.action(parameters, new MutableBoolean(false));
