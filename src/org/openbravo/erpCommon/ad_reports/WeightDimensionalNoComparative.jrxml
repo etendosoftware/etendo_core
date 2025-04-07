@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WeightDimensionalNoComparative" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="730" leftMargin="56" rightMargin="56" topMargin="56" bottomMargin="56" uuid="ace3ae64-07eb-4915-a6f0-85c6e9228f21">
+	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="11.918176537727245"/>
