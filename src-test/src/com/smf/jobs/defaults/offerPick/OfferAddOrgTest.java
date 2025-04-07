@@ -13,20 +13,20 @@ import static org.mockito.Mockito.when;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.Session;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.pricing.priceadjustment.OrganizationFilter;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
-import org.hibernate.Session;
 
 import com.smf.jobs.defaults.Utility;
 
@@ -41,10 +41,10 @@ import com.smf.jobs.defaults.Utility;
  *   <li>Handling invalid JSON input</li>
  *   <li>Verifying the JSON name retrieval</li>
  * </ul>
- *
+ * <p>
  * The tests use Mockito for mocking dependencies and static method calls.
  */
-@ExtendWith(MockitoExtension.class)
+@RunWith(MockitoJUnitRunner.class)
 public class OfferAddOrgTest {
 
 
@@ -66,11 +66,10 @@ public class OfferAddOrgTest {
   private OfferAddOrg offerAddOrg;
 
   /**
-   * Sets up the test environment before each test method.
-   *
+   * Sets up the test environment before test method.
    * Initializes the OfferAddOrg instance to be tested.
    */
-  @BeforeEach
+  @Before
   public void setup() {
     offerAddOrg = new OfferAddOrg();
   }
@@ -84,12 +83,13 @@ public class OfferAddOrgTest {
    *   <li>The organization is saved to the database</li>
    * </ul>
    *
-   * @throws JSONException if there's an error creating JSON objects
+   * @throws JSONException
+   *     if there's an error creating JSON objects
    */
   @Test
   public void testDoPickAndExecuteSingleOrganization() throws JSONException {
-    try (MockedStatic<OBDal> mockedOBDal = mockStatic(OBDal.class);
-         MockedStatic<OBProvider> mockedOBProvider = mockStatic(OBProvider.class)) {
+    try (MockedStatic<OBDal> mockedOBDal = mockStatic(
+        OBDal.class); MockedStatic<OBProvider> mockedOBProvider = mockStatic(OBProvider.class)) {
 
       mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.getSession()).thenReturn(session);
@@ -127,12 +127,13 @@ public class OfferAddOrgTest {
    *   <li>The database session is managed appropriately (flushed and cleared)</li>
    * </ul>
    *
-   * @throws JSONException if there's an error creating JSON objects
+   * @throws JSONException
+   *     if there's an error creating JSON objects
    */
   @Test
   public void testDoPickAndExecuteMultipleOrganizations() throws JSONException {
-    try (MockedStatic<OBDal> mockedOBDal = mockStatic(OBDal.class);
-         MockedStatic<OBProvider> mockedOBProvider = mockStatic(OBProvider.class)) {
+    try (MockedStatic<OBDal> mockedOBDal = mockStatic(
+        OBDal.class); MockedStatic<OBProvider> mockedOBProvider = mockStatic(OBProvider.class)) {
 
       mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.getSession()).thenReturn(session);
@@ -168,7 +169,8 @@ public class OfferAddOrgTest {
    *   <li>An invalid JSON input throws a JSONException</li>
    * </ul>
    *
-   * @throws JSONException to be caught and verified by the test
+   * @throws JSONException
+   *     to be caught and verified by the test
    */
   @Test
   public void testDoPickAndExecuteInvalidJSON() throws JSONException {
@@ -180,8 +182,7 @@ public class OfferAddOrgTest {
       invalidJson.put("invalid", "value");
       selectedLines.put(invalidJson);
 
-      assertThrows(JSONException.class, () ->
-          offerAddOrg.doPickAndExecute(priceAdjustment, selectedLines));
+      assertThrows(JSONException.class, () -> offerAddOrg.doPickAndExecute(priceAdjustment, selectedLines));
     }
   }
 

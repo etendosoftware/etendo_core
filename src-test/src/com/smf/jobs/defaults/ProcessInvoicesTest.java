@@ -120,7 +120,7 @@ public class ProcessInvoicesTest {
     String invoiceId = "test-invoice-id";
     String docAction = "CO";
     OBError expectedResult = new OBError();
-    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setType(Utility.SUCCESS_CAPITALIZED);
     expectedResult.setMessage("Invoice processed successfully");
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -145,7 +145,7 @@ public class ProcessInvoicesTest {
           null
       );
 
-      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS_CAPITALIZED, result.getType());
       assertEquals("Should return correct message", "Invoice processed successfully", result.getMessage());
     }
   }
@@ -165,7 +165,7 @@ public class ProcessInvoicesTest {
     String voidAcctDate = "2024-01-15";
 
     OBError expectedResult = new OBError();
-    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setType(Utility.SUCCESS_CAPITALIZED);
 
     SimpleDateFormat jsonDateFormat = JsonUtils.createDateFormat();
     Date testDate = jsonDateFormat.parse(voidDate);
@@ -193,7 +193,7 @@ public class ProcessInvoicesTest {
           voidAcctDate
       );
 
-      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS_CAPITALIZED, result.getType());
     }
   }
 
@@ -231,7 +231,7 @@ public class ProcessInvoicesTest {
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
     OBError successResult = new OBError();
-    successResult.setType(Utility.SUCCESS);
+    successResult.setType(Utility.SUCCESS_CAPITALIZED);
 
     // Instead of using doReturn().when(), use reflection
     when(getInputContentsMethod.invoke(processInvoices, Invoice.class))
@@ -273,7 +273,7 @@ public class ProcessInvoicesTest {
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
     OBError successResult = new OBError();
-    successResult.setType(Utility.SUCCESS);
+    successResult.setType(Utility.SUCCESS_CAPITALIZED);
 
     try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
          MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {

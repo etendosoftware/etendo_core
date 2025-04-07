@@ -12,12 +12,13 @@ import static org.mockito.Mockito.when;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.system.Client;
@@ -35,9 +36,8 @@ import com.smf.jobs.defaults.Utility;
  * ensuring that product categories are correctly handled and associated with a
  * {@link PriceAdjustment} instance in both single and multiple category scenarios.
  */
-@ExtendWith(MockitoExtension.class)
+@RunWith(MockitoJUnitRunner.class)
 public class OfferAddProductCategoryTest {
-
 
   @Mock
   private OBDal obDal;
@@ -57,13 +57,14 @@ public class OfferAddProductCategoryTest {
   private OfferAddProductCategory offerAddProductCategory;
 
   /**
-   * Initializes the test environment before each test.
+   * Initializes the test environment before test.
    *
    * <p>Configures the {@code OfferAddProductCategory} instance and defines default behavior for
    * the mocked objects, such as {@code PriceAdjustment}.
    */
-  @BeforeEach
+  @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     offerAddProductCategory = new OfferAddProductCategory();
     when(priceAdjustment.getClient()).thenReturn(client);
     when(priceAdjustment.getOrganization()).thenReturn(organization);

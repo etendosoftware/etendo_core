@@ -66,12 +66,14 @@ if (file('modules_core').exists() && file('modules_core').isDirectory()) {
 
 sourceSets.test.java.srcDirs += "src-test/src"
 
-// Forzar la salida de compileTestJava
 tasks.named('compileTestJava') {
     destinationDir = file("src-test/build/classes")
 }
 
-// Asegurar que la tarea test use el directorio correcto
+tasks.named('compileTestGroovy') {
+    destinationDir = file("src-test/build/classes")
+}
+
 tasks.named('test') {
     classpath += files("src-test/build/classes")
 }
