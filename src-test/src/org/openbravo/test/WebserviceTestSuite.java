@@ -19,9 +19,8 @@
 
 package org.openbravo.test;
 
-import com.smf.securewebservices.utils.SecureWebServicesUtilsTest;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 import org.openbravo.test.datasource.DataSourceSecurity;
 import org.openbravo.test.datasource.DataSourceWhereParameter;
 import org.openbravo.test.datasource.EmptyStringWhereAndFilterClauseParameter;
@@ -71,8 +70,8 @@ import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
  * @see StandaloneTestSuite
  */
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
 
     DataSourceWhereParameter.class, //
     WSReadTest.class, //
@@ -112,7 +111,6 @@ import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
     TestSelectorDefaultFilterActionHandler.class, //
     SummaryFieldRequestTest.class, //
     CSRFAttackTest.class, //
-    SecureWebServicesUtilsTest.class // Secure Web Services Utils Test
 })
 public class WebserviceTestSuite {
 }

@@ -19,8 +19,8 @@
 
 package org.openbravo.test;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.authentication.hashing.PasswordHashing;
 import org.openbravo.base.weld.test.testinfrastructure.CdiInfrastructure;
@@ -186,8 +186,8 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
  * @author mtaal
  */
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
 
     // dal
     IssuesTest.class, //
