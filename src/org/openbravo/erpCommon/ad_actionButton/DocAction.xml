@@ -54,6 +54,7 @@
   <PARAMETER id="paramVoidedDocumentAcctDate" name="voidedDocumentAcctDate" attribute="value"/>
   <PARAMETER id="paramVoidedDocumentAcctDate" name="dateDisplayFormat" attribute="displayformat" replace="xx"/>
   <PARAMETER id="paramVoidedDocumentAcctDate" name="dateDisplayFormat" attribute="saveformat" replace="yy"/>
+  <PARAMETER id="paramSupplierReference" name="supplierReference" attribute="value" default=""/>
   <PARAMETER id="documentDate" name="documentDate" attribute="value"/>
   <PARAMETER id="documentAcctDate" name="documentAcctDate" attribute="value"/>
   <PARAMETER id="fieldCalendar" name="calendar" attribute="src" replace="es" default="en"/>

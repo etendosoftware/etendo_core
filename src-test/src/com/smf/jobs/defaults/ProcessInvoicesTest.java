@@ -96,6 +96,7 @@ public class ProcessInvoicesTest {
         Invoice.class,
         String.class,
         String.class,
+        String.class,
         String.class
     );
     processInvoiceMethod.setAccessible(true);
@@ -133,6 +134,7 @@ public class ProcessInvoicesTest {
           eq(docAction),
           eq(""),
           eq(""),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(expectedResult);
@@ -141,6 +143,7 @@ public class ProcessInvoicesTest {
           processInvoices,
           mockInvoice,
           docAction,
+          null,
           null,
           null
       );
@@ -181,6 +184,7 @@ public class ProcessInvoicesTest {
           eq(docAction),
           eq(formattedDate),
           eq(formattedDate),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(expectedResult);
@@ -190,7 +194,8 @@ public class ProcessInvoicesTest {
           mockInvoice,
           docAction,
           voidDate,
-          voidAcctDate
+          voidAcctDate,
+          null
       );
 
       assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS_CAPITALIZED, result.getType());
@@ -248,6 +253,7 @@ public class ProcessInvoicesTest {
           anyString(),
           anyString(),
           anyString(),
+          anyString(),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(successResult);
@@ -269,6 +275,7 @@ public class ProcessInvoicesTest {
     JSONObject jsonContent = new JSONObject();
     JSONObject params = new JSONObject();
     params.put("DocAction", "CO");
+    params.put("POReference", "");
     jsonContent.put("_params", params);
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
@@ -298,6 +305,7 @@ public class ProcessInvoicesTest {
       when(mockProcessInvoiceUtil.process(
           anyString(),
           eq("XL"),
+          anyString(),
           anyString(),
           anyString(),
           any(VariablesSecureApp.class),
