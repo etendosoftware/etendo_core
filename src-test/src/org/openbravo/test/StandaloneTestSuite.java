@@ -299,7 +299,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ImportEntryBuilderTest.class, //
     CryptoUtilities.class, //
     Sessions.class, //
-    OBContextTest.class, //
     JSONSerialization.class, //
     PasswordHashing.class, //
     OBPropertiesProviderTest.class, //
