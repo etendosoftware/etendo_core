@@ -45,8 +45,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.Platform;
 import org.apache.ddlutils.PlatformFactory;
 import org.apache.ddlutils.model.Database;
@@ -1358,7 +1358,7 @@ public class ModuleManagement extends HttpSecureAppServlet {
                 + OBMessageUtils.messageBD("ModuleLocalDepErrorsTitle") + "</b><br>"
                 + OBMessageUtils.messageBD("ModuleLocalDepErrorsExplain") + "<ul>";
             for (String localError : localDepsMsg.getMessage().split("\\n")) {
-              localErrorsMsg += "<li>" + StringEscapeUtils.escapeHtml(localError);
+              localErrorsMsg += "<li>" + StringEscapeUtils.escapeHtml4(localError);
             }
             localErrorsMsg += "</ul>";
 

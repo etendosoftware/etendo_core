@@ -23,8 +23,8 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;

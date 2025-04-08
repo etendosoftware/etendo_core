@@ -42,4 +42,23 @@ public class APRMConstants {
   public static final String PAYMENT_STATUS_AWAITING_PAYMENT = "RPAP";
   public static final String PAYMENT_STATUS_WITHDRAWAL_NOT_CLEARED = "PWNC";
   public static final String PAYMENT_STATUS_PAYMENT_RECEIVED = "RPR";
+
+  /* Add Payment */
+  public static final String TRXTYPE = "trxtype";
+  public static final String INPTRXTYPE = "inptrxtype";
+  public static final String RCIN = "RCIN";
+  public static final String PDOUT = "PDOUT";
+  public static final String AD_ORG_ID = "ad_org_id";
+  public static final String INPAD_ORG_ID = "inpadOrgId";
+  public static final String  FIN_FINANCIAL_ACCOUNT_ID = "Fin_Financial_Account_ID";
+  public static final String INPFIN_FINANCIAL_ACCOUNT_ID = "inpfinFinancialAccountId";
+  public static final String CONTEXT = "context";
+  public static final String RECEIVED_FROM = "received_from";
+  public static final String INPRECEIVED_FROM = "inpreceivedFrom";
+  public static final String C_BPARTNER_ID = "c_bpartner_id";
+  public static final String INPC_BPARTNER_ID = "inpcBpartnerId";
+  public static final String C_CURRENCY_ID = "c_currency_id";
+  public static final String DEFAULT_EMPTY_VALUE = "";
+  public static final String NULL_VALUE = "null";
+
 }

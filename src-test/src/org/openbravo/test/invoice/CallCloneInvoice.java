@@ -2,7 +2,7 @@ package org.openbravo.test.invoice;
 
 import java.util.List;
 
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;

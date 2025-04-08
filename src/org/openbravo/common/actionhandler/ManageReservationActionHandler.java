@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -51,6 +51,7 @@ import org.openbravo.service.db.DbUtility;
  */
 public class ManageReservationActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
+  private static final String STR_ALLOCATED = "allocated";
   private static final String strOrderLineTableId = "260";
   private static final String strReservationsTableId = "77264B07BB0E4FA483A07FB40C2E0FE0";
   private static final String strResStockTableId = "7BDAC914CA60418795E453BC0E8C89DC";
@@ -201,9 +202,10 @@ public class ManageReservationActionHandler extends BaseProcessActionHandler {
         reservation.setMaterialMgmtReservationStockList(resStocks);
       }
 
-      final Boolean isAllocated = selectedLine.getString("allocated").equals(null) ? false
-          : selectedLine.getBoolean("allocated");
-      resStock.setAllocated(isAllocated == true);
+      if (resStock != null) {
+        final Boolean isAllocated = selectedLine.has(STR_ALLOCATED) && !selectedLine.isNull(
+            STR_ALLOCATED) && selectedLine.getBoolean(STR_ALLOCATED);
+        resStock.setAllocated(isAllocated);
 
       final BigDecimal qty = new BigDecimal(selectedLine.getString("quantity"));
       resStock.setQuantity(qty);
@@ -211,6 +213,7 @@ public class ManageReservationActionHandler extends BaseProcessActionHandler {
       OBDal.getInstance().save(resStock);
       OBDal.getInstance().save(reservation);
       OBDal.getInstance().flush();
+      }
     }
 
     removeNonSelectedLines(idList, reservation);

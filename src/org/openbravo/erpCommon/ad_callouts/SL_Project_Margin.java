@@ -23,7 +23,7 @@ import java.math.RoundingMode;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;
 
 public class SL_Project_Margin extends SimpleCallout {

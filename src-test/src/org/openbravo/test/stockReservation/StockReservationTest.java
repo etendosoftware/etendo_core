@@ -9,18 +9,16 @@ import java.math.BigDecimal;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
-import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
-import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.materialmgmt.InventoryCountProcess;
 import org.openbravo.model.ad.domain.Preference;
@@ -28,7 +26,7 @@ import org.openbravo.model.common.order.Order;
 import org.openbravo.model.materialmgmt.onhandquantity.Reservation;
 import org.openbravo.model.materialmgmt.transaction.InventoryCount;
 import org.openbravo.service.db.DalConnectionProvider;
-import org.openbravo.test.base.TestConstants;
+import org.openbravo.test.utils.Utils;
 
 /**
  * Test class for automated warehouse reservation.
@@ -50,13 +48,7 @@ public class StockReservationTest extends WeldBaseTest {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
-        TestConstants.Orgs.ESP);
-    OBContext currentContext = OBContext.getOBContext();
-    VariablesSecureApp vsa = new VariablesSecureApp(currentContext.getUser().getId(),
-        currentContext.getCurrentClient().getId(), currentContext.getCurrentOrganization().getId(),
-        currentContext.getRole().getId());
-    RequestContext.get().setVariableSecureApp(vsa);
+    Utils.initializeTestContext();
     stockReservationPreference();
   }
 

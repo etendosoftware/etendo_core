@@ -3,7 +3,7 @@ package com.smf.jobs.defaults.invoices;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;

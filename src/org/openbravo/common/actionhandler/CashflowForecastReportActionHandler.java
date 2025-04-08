@@ -27,8 +27,8 @@ import java.util.Vector;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.model.domaintype.DateDomainType;
 import org.openbravo.base.secureApp.VariablesSecureApp;

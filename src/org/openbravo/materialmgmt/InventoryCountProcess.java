@@ -31,7 +31,7 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.exception.GenericJDBCException;
@@ -76,6 +76,10 @@ public class InventoryCountProcess implements Process {
       // retrieve standard params
       final String recordID = (String) bundle.getParams().get("M_Inventory_ID");
       final InventoryCount inventory = OBDal.getInstance().get(InventoryCount.class, recordID);
+
+      if(inventory.getMaterialMgmtInventoryCountLineList().isEmpty()){
+        throw new OBException(OBMessageUtils.messageBD("PhysicalInventoryWithoutLines"));
+      }
 
       // lock inventory
       if (inventory.isProcessNow()) {

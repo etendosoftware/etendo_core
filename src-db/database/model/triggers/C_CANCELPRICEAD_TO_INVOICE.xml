@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_CANCELPRICEAD_TO_INVOICE">
+    <trigger name="C_CANCELPRICEAD_TO_INVOICE" table="C_INVOICELINE" fires="before" insert="true" update="true" delete="true" foreach="row">
+      <body><![CDATA[    v_order_cancelpricead VARCHAR(1);
+BEGIN
+    IF :NEW.c_orderline_id IS NOT NULL THEN
+        SELECT cancelpricead 
+        INTO v_order_cancelpricead 
+        FROM c_orderline 
+        WHERE c_orderline_id = :NEW.c_orderline_id;
+
+        IF v_order_cancelpricead = 'Y' THEN
+            :NEW.cancelpricead := 'Y';
+        END IF;
+    END IF;
+
+	END C_CANCELPRICEAD_TO_INVOICE
+]]></body>
+    </trigger>
+  </database>

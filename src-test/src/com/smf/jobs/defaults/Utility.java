@@ -36,4 +36,16 @@ public class Utility {
   public static final String LINES_INCLUDE_TAXES = "linesIncludeTaxes";
   public static final String TRUE = "true";
 
+  public static final String POSTED = "posted";
+  public static final String ORGANIZATION = "organization";
+  public static final String CLIENT = "client";
+  public static final String TEST_ORG_ID = "testOrgId";
+  public static final String SUCCESS_CAPITALIZED = "Success";
+  public static final String ERROR = "Error";
+  public static final String TABLE_NOT_FOUND = "TableNotFound";
+
+  public static final String SELECTION = "_selection";
+  public static final String TEST_JSON = "testJSON";
+  public static final String NOT_SELECTED = "NotSelected";
+
 }

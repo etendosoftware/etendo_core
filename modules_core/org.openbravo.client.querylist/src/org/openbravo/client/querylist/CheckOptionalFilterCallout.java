@@ -27,7 +27,7 @@ package org.openbravo.client.querylist;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;

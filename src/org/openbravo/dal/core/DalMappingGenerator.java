@@ -29,7 +29,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.type.YesNoType;
@@ -290,7 +290,7 @@ public class DalMappingGenerator implements OBSingleton {
 
     if (p.getSqlLogic() != null) {
       sb.append(
-          " formula=\"" + StringEscapeUtils.escapeHtml(processSqlLogic(p.getSqlLogic())) + "\"");
+          " formula=\"" + StringEscapeUtils.escapeHtml4(processSqlLogic(p.getSqlLogic())) + "\"");
     } else {
       sb.append(" column=\"" + p.getColumnName() + "\"");
     }
@@ -330,7 +330,7 @@ public class DalMappingGenerator implements OBSingleton {
       sb.append(TAB2 + "<many-to-one name=\"" + p.getName() + "\" ");
       if (p.getSqlLogic() != null) {
         sb.append(
-            "formula=\"" + StringEscapeUtils.escapeHtml(processSqlLogic(p.getSqlLogic())) + "\"");
+            "formula=\"" + StringEscapeUtils.escapeHtml4(processSqlLogic(p.getSqlLogic())) + "\"");
       } else {
         sb.append("column=\"" + p.getColumnName() + "\"");
       }

@@ -21,7 +21,7 @@ package org.openbravo.advpaymentmngt.hqlinjections;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
 import org.openbravo.client.kernel.ComponentProvider;

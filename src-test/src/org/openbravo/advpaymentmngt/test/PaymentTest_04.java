@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
+import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -47,12 +48,11 @@ import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
-import org.openbravo.test.base.OBBaseTest;
 
 /**
  * The PaymentTest_04 class used to test the payment document generation with Refund option.
  */
-public class PaymentTest_04 extends OBBaseTest {
+public class PaymentTest_04 extends WeldBaseTest {
 
   private static final Logger log = LogManager.getLogger();
 
@@ -162,7 +162,6 @@ public class PaymentTest_04 extends OBBaseTest {
     String bpartnerId = "2C4C71BC828B47A0AF2A79855FD3BA7A"; // Sleep Well Hotels, Co.
     String priceListId = "8366EAF1EDF442A98377D74A199084A8"; // General Sales
     String paymentTermId = "66BA1164A7394344BB9CD1A6ECEED05D"; // 30 days
-    String currencyId = EURO_ID;
     String productId = "34560A057833457D962F7A573F76F5BB"; // Ale Beer
     String taxId = "3CCDACCCF02C4D209174159A8AF43127"; // NY Sales Tax
     String docTypeId = "61D7AC2360F0417C80237B5D2131BACD"; // AR Invoice
@@ -178,7 +177,7 @@ public class PaymentTest_04 extends OBBaseTest {
     Location location = TestUtility.getOneInstance(Location.class,
         new Value(Location.PROPERTY_BUSINESSPARTNER, testBusinessPartner));
     PaymentTerm testPaymentTerm = OBDal.getInstance().get(PaymentTerm.class, paymentTermId);
-    Currency testCurrency = OBDal.getInstance().get(Currency.class, currencyId);
+    Currency testCurrency = OBDal.getInstance().get(Currency.class, DOLLAR_ID);
     Product testProduct = OBDal.getInstance().get(Product.class, productId);
     UOM uom = TestUtility.getOneInstance(UOM.class,
         new Value(UOM.PROPERTY_NAME, testProduct.getUOM().getName()));

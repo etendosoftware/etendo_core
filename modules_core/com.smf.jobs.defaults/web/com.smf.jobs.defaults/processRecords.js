@@ -8,6 +8,7 @@ OB.Jobs.ProcessInvoices.onLoad = function(view) {
     var docActionField = form.getItem('DocAction');
     var voidDateField = form.getItem('VoidDate');
     var voidAcctDateField = form.getItem('VoidAccountingDate');
+    var supplierReferenceField = form.getItem('POReference');
     var selectedRecords = view.parentWindow.view.viewGrid.getSelectedRecords();
     var isProcessing = "";
     var tableId = "318";
@@ -26,6 +27,7 @@ OB.Jobs.ProcessInvoices.onLoad = function(view) {
 
     voidDateField.hide();
     voidAcctDateField.hide();
+    supplierReferenceField.hide();
 
 
     OB.RemoteCallManager.call(
@@ -63,9 +65,13 @@ OB.Jobs.ProcessInvoices.onLoad = function(view) {
 
 OB.Jobs.ProcessInvoices.onChangeDocumentAction = function(item, view, form, grid) {
     var docActionField = form.getItem('DocAction');
+    var selectedRecords = view.parentWindow.view.viewGrid.getSelectedRecords();
     if (view.windowId === '183' && (docActionField.getValue() === 'VO' || docActionField.getValue() === 'RC')) {
         form.getItem('VoidDate').show();
         form.getItem('VoidAccountingDate').show();
+        if (selectedRecords.length < 2 ) {
+            form.getItem('POReference').show();
+        }
     }
 
 };
