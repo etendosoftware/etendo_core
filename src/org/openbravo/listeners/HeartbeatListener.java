@@ -1,5 +1,8 @@
 package org.openbravo.listeners;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,7 +53,13 @@ public class HeartbeatListener implements ServletContextListener {
       scheduler = Executors.newSingleThreadScheduledExecutor();
     }
     // Schedule the HeartbeatProcess to run once per day
-    scheduler.scheduleAtFixedRate(HeartbeatListener::runHeartbeat, 0, HEARTBEAT_PERIOD_DAYS, TimeUnit.DAYS);
+    scheduler.execute(HeartbeatListener::runHeartbeat);
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nextExecuteDate = now.toLocalDate().atTime(LocalTime.of(0, 30));
+    long nextExecute = Duration.between(now, nextExecuteDate).getSeconds();
+
+    scheduler.scheduleAtFixedRate(HeartbeatListener::runHeartbeat, nextExecute, HEARTBEAT_PERIOD_DAYS, TimeUnit.DAYS);
   }
 
   /**
