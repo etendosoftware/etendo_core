@@ -17,6 +17,7 @@ dependencies {
     testImplementation 'org.spockframework:spock-junit4'
     testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.mockito:mockito-core:5.0.0'
+    testImplementation 'org.junit.platform:junit-platform-suite-api:1.9.2'
     testImplementation( "com.athaydes:spock-reports:2.0-groovy-3.0" ) {
         transitive = false
     }
@@ -25,6 +26,7 @@ dependencies {
     }
     antClasspath('org.apache.ant:ant-junit:1.9.2') { transitive = false }
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+    testRuntimeOnly 'org.junit.platform:junit-platform-suite-engine:1.9.2'
 
     // Mockito extension for JUnit 5
     testImplementation 'org.mockito:mockito-junit-jupiter:5.2.0'
