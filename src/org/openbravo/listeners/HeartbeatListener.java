@@ -57,8 +57,12 @@ public class HeartbeatListener implements ServletContextListener {
 
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime nextExecuteDate = now.toLocalDate().atTime(LocalTime.of(0, 30));
-    long nextExecute = Duration.between(now, nextExecuteDate).getSeconds();
 
+    if (now.isAfter(nextExecuteDate)) {
+      nextExecuteDate = nextExecuteDate.plusDays(1);
+    }
+
+    long nextExecute = Duration.between(now, nextExecuteDate).getSeconds();
     scheduler.scheduleAtFixedRate(HeartbeatListener::runHeartbeat, nextExecute, HEARTBEAT_PERIOD_DAYS, TimeUnit.DAYS);
   }
 
