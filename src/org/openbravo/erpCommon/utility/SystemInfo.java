@@ -941,7 +941,7 @@ public class SystemInfo {
         }
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      log4j.error("Error obtaining Version of Ubuntu", e);
     }
     return "Unknown";
   }
