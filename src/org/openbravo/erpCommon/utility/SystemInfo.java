@@ -936,7 +936,7 @@ public class SystemInfo {
     try (BufferedReader reader = new BufferedReader(new FileReader("/etc/os-release"))) {
       String line;
       while ((line = reader.readLine()) != null) {
-        if (StringUtils.startsWith(line, "PRETTY NAME=")) {
+        if (StringUtils.startsWith(line, "PRETTY_NAME=")) {
           return line.split("=")[1].replace("\"", "");
         }
       }
