@@ -52,6 +52,7 @@ import java.io.FileReader;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -935,7 +936,7 @@ public class SystemInfo {
     try (BufferedReader reader = new BufferedReader(new FileReader("/etc/os-release"))) {
       String line;
       while ((line = reader.readLine()) != null) {
-        if (line.startsWith("PRETTY_NAME=")) {
+        if (StringUtils.startsWith(line, "PRETTY NAME=")) {
           return line.split("=")[1].replace("\"", "");
         }
       }
