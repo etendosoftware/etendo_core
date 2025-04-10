@@ -20,6 +20,7 @@
 package org.openbravo.test;
 
 import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.SelectPackages;
 import org.junit.platform.suite.api.Suite;
 import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.authentication.hashing.PasswordHashing;
@@ -465,6 +466,18 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // RptMA_ProcessPlan
     RptMA_ProcessPlanTest.class,
+})
+@SelectPackages({"org.openbravo.service.centralrepository",
+    "org.openbravo.service.db",
+    "org.openbravo.erpCommon.ad_process",
+    "org.openbravo.common.actionhandler",
+    "org.openbravo.common.filterexpression",
+    "org.openbravo.common.datasource",
+    "org.openbravo.portal",
+    "org.openbravo.costing",
+    "org.openbravo.cluster",
+
+
 })
 public class StandaloneTestSuite {
 }
