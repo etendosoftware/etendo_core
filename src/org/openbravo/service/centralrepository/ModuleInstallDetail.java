@@ -33,7 +33,7 @@ public class ModuleInstallDetail {
   private Module[] modulesToUpdate;
   private boolean validConfiguration;
 
-  private ModuleInstallDetail(String[] dependencyErrors, Module[] modulesToInstall,
+  protected ModuleInstallDetail(String[] dependencyErrors, Module[] modulesToInstall,
       Module[] modulesToUpdate, boolean validConfiguration) {
     this.dependencyErrors = dependencyErrors;
     this.modulesToInstall = modulesToInstall;
