@@ -48,9 +48,11 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
+import java.io.FileReader;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -204,7 +206,7 @@ public class SystemInfo {
           systemInfo.put(i, os);
           break;
         case OPERATING_SYSTEM_VERSION:
-          systemInfo.put(i, System.getProperty("os.version"));
+          systemInfo.put(i, getUbuntuVersion());
           break;
         case JAVA_VERSION:
           systemInfo.put(i, System.getProperty("java.version"));
@@ -918,6 +920,30 @@ public class SystemInfo {
 
   private static String formatDate(Date date) {
     return (date != null) ? sd.format(date) : "";
+  }
+
+  /**
+   * Reads the Ubuntu version from the /etc/os-release file.
+   * <p>
+   * This method looks for the "PRETTY_NAME" property in the file and returns its value,
+   * which represents the human-readable version of the Ubuntu distribution.
+   * </p>
+   *
+   * @return A string representing the Ubuntu version (e.g., "Ubuntu 22.04.4 LTS"),
+   *         or "Unknown" if the version cannot be determined.
+   */
+  public static String getUbuntuVersion() {
+    try (BufferedReader reader = new BufferedReader(new FileReader("/etc/os-release"))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (StringUtils.startsWith(line, "PRETTY_NAME=")) {
+          return line.split("=")[1].replace("\"", "");
+        }
+      }
+    } catch (IOException e) {
+      log4j.error("Error obtaining Version of Ubuntu", e);
+    }
+    return "Unknown";
   }
 
 }
