@@ -80,6 +80,7 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.xmlEngine.XmlDocument;
 
 import com.google.common.collect.HashBasedTable;
+import com.itextpdf.text.pdf.PdfReader;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -780,13 +781,25 @@ public class PrintController extends HttpSecureAppServlet {
             tempOutputStream, configuration);
         // Modify the concatenated report with hooks
         ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(tempOutputStream.toByteArray());
-        ServletOutputStream os = response.getOutputStream();
+
+        try {
+          PdfReader reader = new PdfReader(pdfInputStream);
+          reader.close();
+        } catch (Exception e) {
+          throw new ServletException("PDF is invalid and cannot be signed.", e);
+        }
+
+        pdfInputStream.reset();
+
         // Call hooks
         if (hooking.booleanValue()) {
+          ByteArrayOutputStream postProcessOutputStream = new ByteArrayOutputStream();
           Report report = reports[0];
-          setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream, os);
+          setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream, postProcessOutputStream);
 
           hookManager.executeHooks(hookParams, hookManager.getPostProcess());
+
+          return postProcessOutputStream;
         }
       } else {
         response.setContentType("text/html");
