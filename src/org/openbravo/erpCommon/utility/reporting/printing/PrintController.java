@@ -782,13 +782,7 @@ public class PrintController extends HttpSecureAppServlet {
         // Modify the concatenated report with hooks
         ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(tempOutputStream.toByteArray());
 
-        try {
-          PdfReader reader = new PdfReader(pdfInputStream);
-          reader.close();
-        } catch (Exception e) {
-          throw new ServletException("PDF is invalid and cannot be signed.", e);
-        }
-
+        validatePdfInputStream(pdfInputStream);
         pdfInputStream.reset();
 
         // Call hooks
@@ -1560,6 +1554,21 @@ public class PrintController extends HttpSecureAppServlet {
       OBContext.restorePreviousMode();
     }
     return Preferences.YES.equals(preferenceValue);
+  }
+
+  /**
+   * Validates that the given PDF input stream can be properly read.
+   *
+   * @param pdfInputStream the input stream containing PDF data
+   * @throws ServletException if the PDF is invalid
+   */
+  private void validatePdfInputStream(ByteArrayInputStream pdfInputStream) throws ServletException {
+    try {
+      PdfReader reader = new PdfReader(pdfInputStream);
+      reader.close();
+    } catch (Exception e) {
+      throw new ServletException("PDF is invalid and cannot be signed.", e);
+    }
   }
 
   @Override
