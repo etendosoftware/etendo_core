@@ -80,7 +80,6 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.xmlEngine.XmlDocument;
 
 import com.google.common.collect.HashBasedTable;
-import com.itextpdf.text.pdf.PdfReader;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -782,9 +781,6 @@ public class PrintController extends HttpSecureAppServlet {
         // Modify the concatenated report with hooks
         ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(tempOutputStream.toByteArray());
 
-        validatePdfInputStream(pdfInputStream);
-        pdfInputStream.reset();
-
         // Call hooks
         if (hooking.booleanValue()) {
           ByteArrayOutputStream postProcessOutputStream = new ByteArrayOutputStream();
@@ -793,7 +789,14 @@ public class PrintController extends HttpSecureAppServlet {
 
           hookManager.executeHooks(hookParams, hookManager.getPostProcess());
 
-          return postProcessOutputStream;
+          if (postProcessOutputStream.size() > 0) {
+            return postProcessOutputStream;
+          } else {
+            ServletOutputStream os = response.getOutputStream();
+            tempOutputStream.writeTo(os);
+            os.flush();
+            return tempOutputStream;
+          }
         }
       } else {
         response.setContentType("text/html");
@@ -1554,21 +1557,6 @@ public class PrintController extends HttpSecureAppServlet {
       OBContext.restorePreviousMode();
     }
     return Preferences.YES.equals(preferenceValue);
-  }
-
-  /**
-   * Validates that the given PDF input stream can be properly read.
-   *
-   * @param pdfInputStream the input stream containing PDF data
-   * @throws ServletException if the PDF is invalid
-   */
-  private void validatePdfInputStream(ByteArrayInputStream pdfInputStream) throws ServletException {
-    try {
-      PdfReader reader = new PdfReader(pdfInputStream);
-      reader.close();
-    } catch (Exception e) {
-      throw new ServletException("PDF is invalid and cannot be signed.", e);
-    }
   }
 
   @Override
