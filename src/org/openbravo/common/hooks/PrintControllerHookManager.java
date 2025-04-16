@@ -80,14 +80,13 @@ public class PrintControllerHookManager {
   public static List<PrintControllerHook> sortHooksByPriority(Instance<PrintControllerHook> hooks) {
     List<PrintControllerHook> hookList = new ArrayList<>();
     hooks.forEach(hookList::add);
-    log4j.info("sorting " + hookList.size() + " hooks...");
+    log4j.debug("sorting " + hookList.size() + " hooks...");
     hookList.sort((Comparator<Object>) (o1, o2) -> {
       int o1Priority = (o1 instanceof PrintControllerHookPrioritizer) ? ((PrintControllerHookPrioritizer) o1).getPriority() : 100;
       int o2Priority = (o2 instanceof PrintControllerHookPrioritizer) ? ((PrintControllerHookPrioritizer) o2).getPriority() : 100;
 
       return Integer.compare(o1Priority, o2Priority);
     });
-    log4j.info("Hooks sorted");
     return hookList;
   }
 
@@ -129,7 +128,7 @@ public class PrintControllerHookManager {
       messageInfo.put(hook.getClass().getSimpleName(), isPreProcess, e.getMessage());
       resultsObj.put(MESSAGE, messageInfo);
       jsonParams.put(RESULTS, resultsObj);
-      log4j.info("Hook error handling completed");
+      log4j.debug("Hook error handling completed");
     } catch (JSONException jsonE) {
       log4j.error("Unexpected error while handling hook errors...");
       throw new PrintControllerHookException(e.getMessage());
@@ -148,12 +147,12 @@ public class PrintControllerHookManager {
    *     if there is an error at any moment executing the hooks
    */
   public void executeHooks(JSONObject jsonParams, String methodName) throws PrintControllerHookException {
-    log4j.info("Starting PrintController hooks " + methodName + " execution...");
+    log4j.debug("Starting PrintController hooks " + methodName + " execution...");
     List<PrintControllerHook> hookList = sortHooksByPriority(hooks);
     for (PrintControllerHook hook : hookList) {
       if (StringUtils.equals(methodName, PREPROCESS)) {
         try {
-          log4j.info("Executing preProcess for " + hook.getClass().getSimpleName() + " hook...");
+          log4j.debug("Executing preProcess for " + hook.getClass().getSimpleName() + " hook...");
           hook.preProcess(jsonParams);
         } catch (Exception e) {
           log4j.error(
@@ -162,7 +161,7 @@ public class PrintControllerHookManager {
         }
       } else {
         try {
-          log4j.info("Executing postProcess for " + hook.getClass().getSimpleName() + " hook...");
+          log4j.debug("Executing postProcess for " + hook.getClass().getSimpleName() + " hook...");
           hook.postProcess(jsonParams);
           refreshReportInputStream(jsonParams, hook);
         } catch (Exception e) {
@@ -172,7 +171,7 @@ public class PrintControllerHookManager {
         }
       }
     }
-    log4j.info("Finished hooks executions");
+    log4j.debug("Finished hooks executions");
   }
 
   /**
@@ -244,12 +243,12 @@ public class PrintControllerHookManager {
   private void refreshReportInputStream(JSONObject jsonParams,
       PrintControllerHook hook) throws PrintControllerHookException {
     try {
-      log4j.info("Refreshing report input stream for next hook postProcess...");
+      log4j.debug("Refreshing report input stream for next hook postProcess...");
       ByteArrayOutputStream reportOutputStream = (ByteArrayOutputStream) jsonParams.get("reportOutputStream");
       ByteArrayInputStream reportInputStream = new ByteArrayInputStream(reportOutputStream.toByteArray());
       jsonParams.put("reportInputStream", reportInputStream);
     } catch (JSONException e) {
-      log4j.error("There was a problem refreshing the report input stream. Handling error...");
+      log4j.debug("There was a problem refreshing the report input stream. Handling error...");
       handleHookError(jsonParams, false, e, hook);
     }
   }
