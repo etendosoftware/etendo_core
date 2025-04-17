@@ -89,7 +89,8 @@ List<String> _dependenciesListCOMPILATION = [
   'org.quartz-scheduler:quartz:2.3.2', 
   'org.redisson:redisson:3.15.4', 
   'oro:oro:2.0.8', 
-  'xerces:xercesImpl:2.9.0'
+  'xerces:xercesImpl:2.9.0',
+  'com.etendoerp:font.bitstreamverasans:1.0.0'
 ]
 
 ext {

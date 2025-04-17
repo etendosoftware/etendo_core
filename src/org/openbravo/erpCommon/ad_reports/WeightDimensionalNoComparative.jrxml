@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WeightDimensionalNoComparative" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="730" leftMargin="56" rightMargin="56" topMargin="56" bottomMargin="56" uuid="ace3ae64-07eb-4915-a6f0-85c6e9228f21">
+	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="11.918176537727245"/>
@@ -9,42 +10,42 @@
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
-	<style name="default" isDefault="true" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11"/>
-	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18">
+	<style name="default" isDefault="true" vAlign="Middle" fontName="SansSerif" fontSize="11"/>
+	<style name="Report_Title" fontName="SansSerif" fontSize="18">
 		<box leftPadding="5"/>
 	</style>
-	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14">
+	<style name="Report_Subtitle" forecolor="#555555" fontName="SansSerif" fontSize="14">
 		<box leftPadding="5"/>
 	</style>
-	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11" isBold="false"/>
-	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true">
+	<style name="Report_Data_Label" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Report_Data_Field" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false">
 		<box leftPadding="5"/>
 	</style>
-	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="10" isBold="true">
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="SansSerif" fontSize="10" isBold="true">
 		<box leftPadding="5">
 			<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
 			<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#FFFFFF"/>
 		</box>
 	</style>
-	<style name="Detail_Line" fontName="Bitstream Vera Sans" fontSize="8" isBold="true">
+	<style name="Detail_Line" fontName="SansSerif" fontSize="8" isBold="true">
 		<conditionalStyle>
 			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()%2==1)]]></conditionExpression>
 			<style mode="Opaque" backcolor="#CCCCCC"/>
 		</conditionalStyle>
 	</style>
-	<style name="Level1_Line" mode="Opaque" backcolor="#E5E5E5" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level2_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level3_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level4_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level5_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level6_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level7_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level8_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level9_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level10_Line" mode="Opaque" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Level11_Line" mode="Opaque" backcolor="#E5E5E5" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Report_Footer" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Level1_Line" mode="Opaque" backcolor="#E5E5E5" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level2_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level3_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level4_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level5_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level6_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level7_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level8_Line" backcolor="#CCCCCC" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level9_Line" backcolor="#E5E5E5" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level10_Line" mode="Opaque" backcolor="#CCCCCC" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Level11_Line" mode="Opaque" backcolor="#E5E5E5" vAlign="Middle" fontName="SansSerif" fontSize="11" isBold="false"/>
+	<style name="Report_Footer" vAlign="Middle" fontName="SansSerif" fontSize="11"/>
 	<parameter name="USER_ORG" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA["0,1000000"]]></defaultValueExpression>
 	</parameter>
