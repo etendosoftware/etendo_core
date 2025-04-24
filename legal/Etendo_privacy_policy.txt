@@ -1,0 +1,11 @@
+The software contains functions to automatically collect information related to the Subscriber's
+use of the Software, including its IP address, the type of hardware and software used by
+and the registration data and number of users connected. This information is processed by FUTIT
+on the basis of its legitimate interest, in accordance with Article 6.1.f) of the General Data Protection Regulation
+. This processing pursues a dual purpose: on the one hand, to ensure the security and integrity
+of the software and, on the other hand, to enable FUTIT to monitor the operation of the software and to improve
+on an ongoing basis. Data subjects have the right to access, modify, cancel and oppose
+such data processing, which can be exercised by writing to
+legal@etendo.software.
+
+For further information, users can consult the Privacy Policy of Etendo Software [link].

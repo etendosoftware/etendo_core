@@ -50,3 +50,20 @@ This task deploying the webContent folder into the tomcat/webapps directory, for
 
 ### Documentation
 For  more information you can read documentation in [Etendo Docs](https://docs.etendo.software) .
+
+### License
+
+This project includes components licensed under different terms. For full license texts and third-party license disclosures, please refer to the `/legal` directory:
+
+- **Etendo License**: See [legal/Etendo_licence.txt]( ./legal/Etendo_licence.txt) or [legal/Etendo_licence_es.txt](./legal/Etendo_licence_es.txt)
+- **Openbravo Public License (OBPL)**: See [legal/Openbravo_license.txt](./legal/Openbravo_license.txt)
+- **Third-party dependency licenses**: See [legal/LEGAL.md](./legal/LEGAL.md)
+
+
+
+For any legal or licensing inquiries, please contact:
+
+FUTIT SERVICES, S.L.
+Calle Eustasio Amilibia, 10 - piso 7 pta 420011 <br>
+Donostia - San Sebastián, Spain  <br>
+legal@etendo.software
