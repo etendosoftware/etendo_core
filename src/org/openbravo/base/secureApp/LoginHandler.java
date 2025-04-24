@@ -11,7 +11,6 @@
  */
 package org.openbravo.base.secureApp;
 
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -76,6 +75,9 @@ public class LoginHandler extends HttpBaseServlet {
   private static final long serialVersionUID = 1L;
   public static final String SUCCESS_SESSION_STANDARD = "S";
   private static final String ERROR = "Error";
+  private static final String LOGIN_FS_HTML = "./security/Login_FS.html";
+  private static final String MENU_HTML = "../security/Menu.html";
+  private static final String WARNING = "Warning";
 
   @Inject
   private ServerControllerHandler serverController;
@@ -113,68 +115,58 @@ public class LoginHandler extends HttpBaseServlet {
     vars.removeSessionValue("#AD_Role_ID");
     vars.setSessionObject("#loggingIn", "Y");
 
-    final String user;
-    final String password;
-
-    if (isPasswordResetFlow) {
-      user = vars.getSessionValue("#AD_User_ID");
-    } else {
-      user = vars.getStringParameter("user");
-    }
+    final String user = isPasswordResetFlow ? vars.getSessionValue("#AD_User_ID") : vars.getStringParameter("user");
 
     OBContext.setAdminMode();
     try {
-      Client systemClient = OBDal.getInstance().get(Client.class, "0");
 
+      Client systemClient = OBDal.getInstance().get(Client.class, "0");
       String language = systemClient.getLanguage().getLanguage();
       vars.setSessionValue("#AD_Language", language);
       ConnectionProvider cp = new DalConnectionProvider(false);
-      if ("".equals(user) && StringUtils.isBlank(req.getParameter("code")) &&
+      if (StringUtils.isBlank(user) && StringUtils.isBlank(req.getParameter("code")) &&
           StringUtils.isBlank(req.getParameter("access_token"))) {
         goToRetry(res, vars, Utility.messageBD(cp, "IDENTIFICATION_FAILURE_TITLE", language),
             Utility.messageBD(cp, "IDENTIFICATION_FAILURE_MSG", language), ERROR,
             "../security/Login");
       } else {
-        try {
-          if (isPasswordResetFlow && StringUtils.isNotBlank(vars.getSessionValue("#AD_User_ID"))) {
-            password = vars.getStringParameter("password");
-            updatePassword(user, password, language);
-          }
-
-          AuthenticationManager authManager = AuthenticationManager.getAuthenticationManager(this);
-
-          final String strUserAuth = authManager.authenticate(req, res);
-          final String sessionId = vars.getSessionValue("#AD_Session_ID");
-
-          if (StringUtils.isEmpty(strUserAuth)) {
-            throw new AuthenticationException("Message");// FIXME
-          }
-
-          checkLicenseAndGo(res, vars, strUserAuth, user, sessionId);
-
-        } catch (AuthenticationExpirationPasswordException | ChangePasswordException exception) {
-          vars.removeSessionValue("#LoginErrorMsg");
-          goToUpdatePassword(res, vars, exception, "../security/Login_FS.html");
-        } catch (AuthenticationException e) {
-
-          final OBError errorMsg = e.getOBError();
-
-          if (errorMsg != null) {
-            vars.removeSessionValue("#LoginErrorMsg");
-
-            final String failureTitle = Utility.messageBD(cp, errorMsg.getTitle(), language);
-            final String failureMessage = Utility.messageBD(cp, errorMsg.getMessage(), language);
-
-            goToRetry(res, vars, failureMessage, failureTitle, ERROR,
-                "../security/Login_FS.html");
-
-          } else {
-            throw new ServletException(ERROR); // FIXME
-          }
-        }
+        doLogin(req, res, isPasswordResetFlow, vars, user, language, cp);
       }
     } finally {
       OBContext.restorePreviousMode();
+    }
+  }
+
+  private void doLogin(HttpServletRequest req, HttpServletResponse res, boolean isPasswordResetFlow,
+      VariablesSecureApp vars, String user, String language,
+      ConnectionProvider cp) throws ServletException, IOException {
+    final String password;
+    try {
+      if (isPasswordResetFlow && StringUtils.isNotBlank(vars.getSessionValue("#AD_User_ID"))) {
+        password = vars.getStringParameter("password");
+        updatePassword(user, password, language);
+      }
+      AuthenticationManager authManager = AuthenticationManager.getAuthenticationManager(this);
+      final String strUserAuth = authManager.authenticate(req, res);
+      final String sessionId = vars.getSessionValue("#AD_Session_ID");
+      if (StringUtils.isEmpty(strUserAuth)) {
+        throw new AuthenticationException("Message");
+      }
+      checkLicenseAndGo(res, vars, strUserAuth, user, sessionId);
+    } catch (AuthenticationExpirationPasswordException | ChangePasswordException exception) {
+      vars.removeSessionValue("#LoginErrorMsg");
+      goToUpdatePassword(res, vars, exception, "." + LOGIN_FS_HTML);
+    } catch (AuthenticationException e) {
+      final OBError errorMsg = e.getOBError();
+      if (errorMsg != null) {
+        vars.removeSessionValue("#LoginErrorMsg");
+        final String failureTitle = Utility.messageBD(cp, errorMsg.getTitle(), language);
+        final String failureMessage = Utility.messageBD(cp, errorMsg.getMessage(), language);
+        goToRetry(res, vars, failureMessage, failureTitle, ERROR,
+            "." + LOGIN_FS_HTML);
+      } else {
+        throw new ServletException(ERROR);
+      }
     }
   }
 
@@ -208,7 +200,7 @@ public class LoginHandler extends HttpBaseServlet {
 
     String origin = request.getHeader("Origin");
 
-    if (origin != null && !origin.equals("")) {
+    if (!StringUtils.isBlank(origin)) {
       response.setHeader("Access-Control-Allow-Origin", origin);
       response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
       response.setHeader("Access-Control-Allow-Headers",
@@ -239,11 +231,11 @@ public class LoginHandler extends HttpBaseServlet {
       }
       String msgType, action;
       if (hasSystem) {
-        msgType = "Warning";
-        action = "../security/Menu.html";
+        msgType = WARNING;
+        action = MENU_HTML;
       } else {
         msgType = ERROR;
-        action = "../security/Login_FS.html";
+        action = "." + LOGIN_FS_HTML;
       }
 
       LicenseRestriction limitation = ak.checkOPSLimitations(sessionId, getSessionType());
@@ -260,14 +252,14 @@ public class LoginHandler extends HttpBaseServlet {
           String title = Utility.messageBD(cp, "NUMBER_OF_CONCURRENT_USERS_REACHED_TITLE",
               vars.getLanguage());
           log4j.warn("Concurrent Users Reached - Session: " + sessionId);
-          updateDBSession(sessionId, msgType.equals("Warning"), "CUR");
+          updateDBSession(sessionId, StringUtils.equals(WARNING, msgType), "CUR");
           goToRetry(res, vars, msg, title, msgType, action);
           return;
         case NUMBER_OF_SOFT_USERS_REACHED:
           msg = Utility.messageBD(cp, "NUMBER_OF_SOFT_USERS_REACHED", vars.getLanguage());
           title = Utility.messageBD(cp, "NUMBER_OF_SOFT_USERS_REACHED_TITLE", vars.getLanguage());
-          action = "../security/Menu.html";
-          msgType = "Warning";
+          action = MENU_HTML;
+          msgType = WARNING;
           log4j.warn("Soft Users Reached - Session: " + sessionId);
           updateDBSession(sessionId, true, "SUR");
           goToRetry(res, vars, msg, title, msgType, action);
@@ -276,7 +268,7 @@ public class LoginHandler extends HttpBaseServlet {
           msg = Utility.messageBD(cp, "OPS_INSTANCE_NOT_ACTIVE", vars.getLanguage());
           title = Utility.messageBD(cp, "OPS_INSTANCE_NOT_ACTIVE_TITLE", vars.getLanguage());
           log4j.warn("Innactive OBPS instance - Session: " + sessionId);
-          updateDBSession(sessionId, msgType.equals("Warning"), "IOBPS");
+          updateDBSession(sessionId, StringUtils.equals(WARNING, msgType), "IOBPS");
           goToRetry(res, vars, msg, title, msgType, action);
           return;
         case MODULE_EXPIRED:
@@ -289,28 +281,28 @@ public class LoginHandler extends HttpBaseServlet {
             log4j.warn("  module:" + module.getName());
           }
           msg += expiredMoudules.toString();
-          updateDBSession(sessionId, msgType.equals("Warning"), "ME");
+          updateDBSession(sessionId, StringUtils.equals(WARNING, msgType), "ME");
           goToRetry(res, vars, msg, title, msgType, action);
           return;
         case NOT_MATCHED_INSTANCE:
           msg = Utility.messageBD(cp, "OPS_NOT_MATCHED_INSTANCE", vars.getLanguage());
           title = Utility.messageBD(cp, "OPS_NOT_MATCHED_INSTANCE_TITLE", vars.getLanguage());
           log4j.warn("No matched instance - Session: " + sessionId);
-          updateDBSession(sessionId, msgType.equals("Warning"), "IOBPS");
+          updateDBSession(sessionId, StringUtils.equals(WARNING, msgType), "IOBPS");
           goToRetry(res, vars, msg, title, msgType, action);
           return;
         case HB_NOT_ACTIVE:
           msg = Utility.messageBD(cp, "OPS_NOT_HB_ACTIVE", vars.getLanguage());
           title = Utility.messageBD(cp, "OPS_NOT_HB_ACTIVE_TITLE", vars.getLanguage());
           log4j.warn("HB not active - Session: " + sessionId);
-          updateDBSession(sessionId, msgType.equals("Warning"), "IOBPS");
+          updateDBSession(sessionId, StringUtils.equals(WARNING, msgType), "IOBPS");
           goToRetry(res, vars, msg, title, msgType, action);
           return;
         case EXPIRED_GOLDEN:
           msg = Utility.messageBD(cp, "OPS_EXPIRED_GOLDEN", vars.getLanguage());
           title = Utility.messageBD(cp, "OPS_EXPIRED_GOLDEN_TITLE", vars.getLanguage());
           updateDBSession(sessionId, false, "IOBPS");
-          goToRetry(res, vars, msg, title, ERROR, "../security/Login_FS.html");
+          goToRetry(res, vars, msg, title, ERROR, "." + LOGIN_FS_HTML);
           return;
         case POS_TERMINALS_EXCEEDED:
           msg = Utility.messageBD(cp, "OPS_POS_TERMINALS_EXCEEDED", vars.getLanguage());
@@ -339,21 +331,21 @@ public class LoginHandler extends HttpBaseServlet {
       }
       // Build checks
 
-      if (sysInfo.getSystemStatus() == null || sysInfo.getSystemStatus().equals("RB70")
-          || this.globalParameters.getOBProperty("safe.mode", "false").equalsIgnoreCase("false")) {
+      if (sysInfo.getSystemStatus() == null || StringUtils.equals("RB70", sysInfo.getSystemStatus())
+          || StringUtils.equalsIgnoreCase("false", this.globalParameters.getOBProperty("safe.mode", "false"))) {
         // Last build went fine and tomcat was restarted. We should continue with the rest of checks
-      } else if (sysInfo.getSystemStatus().equals("RB60")
-          || sysInfo.getSystemStatus().equals("RB51")) {
+      } else if (StringUtils.equals("RB60", sysInfo.getSystemStatus())
+          || StringUtils.equals("RB51", sysInfo.getSystemStatus())) {
         String msg = Utility.messageBD(cp, "TOMCAT_NOT_RESTARTED", vars.getLanguage());
         String title = Utility.messageBD(cp, "TOMCAT_NOT_RESTARTED_TITLE", vars.getLanguage());
         log4j.warn("Tomcat not restarted");
         updateDBSession(sessionId, true, "RT");
-        goToRetry(res, vars, msg, title, "Warning", "../security/Menu.html");
+        goToRetry(res, vars, msg, title, WARNING, MENU_HTML);
         return;
       } else {
         String msg = Utility.messageBD(cp, "LAST_BUILD_FAILED", vars.getLanguage());
         String title = Utility.messageBD(cp, "LAST_BUILD_FAILED_TITLE", vars.getLanguage());
-        updateDBSession(sessionId, msgType.equals("Warning"), "LBF");
+        updateDBSession(sessionId, StringUtils.equals(WARNING, msgType), "LBF");
         goToRetry(res, vars, msg, title, msgType, action);
         return;
       }
@@ -405,7 +397,7 @@ public class LoginHandler extends HttpBaseServlet {
           String msg = Utility.messageBD(cp, error.getMessage(), vars.getLanguage());
           String title = Utility.messageBD(cp, error.getTitle(), vars.getLanguage());
           final String urlToRedirect = StringUtils.equals(ERROR,
-              error.getType()) ? "../security/Login_FS.htm" : "../security/Menu.html";
+              error.getType()) ? "../security/Login_FS.htm" : MENU_HTML;
           goToRetry(res, vars, msg, title, error.getType(), urlToRedirect);
           return;
         }
@@ -420,7 +412,7 @@ public class LoginHandler extends HttpBaseServlet {
             .replace("%0", e.getDefaultField());
         String msg = Utility.messageBD(cp, "InvalidDefaultLoginMsg", vars.getLanguage())
             .replace("%0", e.getDefaultField());
-        goToRetry(res, vars, msg, title, ERROR, "../security/Menu.html");
+        goToRetry(res, vars, msg, title, ERROR, MENU_HTML);
         return;
       }
 
@@ -463,7 +455,7 @@ public class LoginHandler extends HttpBaseServlet {
       } else {
         return strDireccion + startPage;
       }
-    } else if ("".equals(target)) {
+    } else if (StringUtils.isBlank(target)) {
       return strDireccion + "/";
     } else {
       return target;
@@ -491,7 +483,7 @@ public class LoginHandler extends HttpBaseServlet {
   protected boolean isErpAccessRestrictedInStoreServer() {
     String restrictErpAccessInStoreServer = cachedPreference
         .getPreferenceValue(CachedPreference.RESTRICT_ERP_ACCESS_IN_STORE_SERVER);
-    return Preferences.YES.equals(restrictErpAccessInStoreServer);
+    return StringUtils.equals(Preferences.YES, restrictErpAccessInStoreServer);
   }
 
   private void updateDBSession(String sessionId, boolean sessionActive, String status) {
@@ -538,7 +530,7 @@ public class LoginHandler extends HttpBaseServlet {
   protected final void goToRetry(HttpServletResponse response, VariablesSecureApp vars,
       String message, String title, String msgType, String action)
       throws IOException, ServletException {
-    String msg = (message != null && !message.equals("")) ? message
+    String msg = !StringUtils.isBlank(message) ? message
         : Utility.messageBD(myPool, "CPEmptyUserPassword", vars.getLanguage());
     String targetQueryString = vars.getStringParameter("targetQueryString");
     String target = StringUtils.isBlank(targetQueryString) ? action
@@ -546,7 +538,7 @@ public class LoginHandler extends HttpBaseServlet {
 
     // Show the message in the login window, return a JSON object with the info to print the message
     try {
-      boolean loginHasError = ERROR.equals(msgType);
+      boolean loginHasError = StringUtils.equals(ERROR, msgType);
       JSONObject jsonMsg = new JSONObject();
       jsonMsg.put("showMessage", true);
       jsonMsg.put("target", loginHasError ? null : target);
@@ -575,7 +567,7 @@ public class LoginHandler extends HttpBaseServlet {
     String title = authenticationException.getOBError().getTitle();
     String message = authenticationException.getOBError().getMessage();
 
-    String msg = (message != null && !message.equals("")) ? message
+    String msg = !StringUtils.isBlank(message) ? message
         : Utility.messageBD(myPool, "CPEmptyUserPassword", vars.getLanguage());
 
     try {
