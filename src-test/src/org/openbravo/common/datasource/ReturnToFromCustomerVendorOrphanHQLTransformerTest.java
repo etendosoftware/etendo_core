@@ -24,6 +24,8 @@ import org.openbravo.model.pricing.pricelist.PriceList;
  * including handling tax-inclusive and tax-exclusive price lists, and different query transformations.
  */
 public class ReturnToFromCustomerVendorOrphanHQLTransformerTest {
+  private static final String ORDER_ID_PARAMETER = "@Order.id@";
+  private static final String DISTINCT_PARAMETER = "_distinct";
 
   private ReturnToFromCustomerVendorOrphanHQLTransformer transformer;
 
@@ -78,7 +80,7 @@ public class ReturnToFromCustomerVendorOrphanHQLTransformerTest {
   @Test
   public void testTransformHqlQueryIncludeTax() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@Order.id@", "100");
+    requestParameters.put(ORDER_ID_PARAMETER, "100");
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     when(mockPriceList.isPriceIncludesTax()).thenReturn(true);
@@ -98,7 +100,7 @@ public class ReturnToFromCustomerVendorOrphanHQLTransformerTest {
   @Test
   public void testTransformHqlQueryExcludeTax() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@Order.id@", "100");
+    requestParameters.put(ORDER_ID_PARAMETER, "100");
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     when(mockPriceList.isPriceIncludesTax()).thenReturn(false);
@@ -118,8 +120,8 @@ public class ReturnToFromCustomerVendorOrphanHQLTransformerTest {
   @Test
   public void testTransformHqlQueryReturnReasonCountQuery() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@Order.id@", "100");
-    requestParameters.put("_distinct", "returnReason");
+    requestParameters.put(ORDER_ID_PARAMETER, "100");
+    requestParameters.put(DISTINCT_PARAMETER, "returnReason");
     requestParameters.put("_justCount", "true");
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
@@ -142,8 +144,8 @@ public class ReturnToFromCustomerVendorOrphanHQLTransformerTest {
   public void testTransformHqlQueryReturnReasonDataQuery() {
     // GIVEN
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@Order.id@", "100");
-    requestParameters.put("_distinct", "returnReason");
+    requestParameters.put(ORDER_ID_PARAMETER, "100");
+    requestParameters.put(DISTINCT_PARAMETER, "returnReason");
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     when(mockPriceList.isPriceIncludesTax()).thenReturn(false);
@@ -164,8 +166,8 @@ public class ReturnToFromCustomerVendorOrphanHQLTransformerTest {
   @Test
   public void testTransformHqlQueryDefaultClause() {
     Map<String, String> requestParameters = new HashMap<>();
-    requestParameters.put("@Order.id@", "100");
-    requestParameters.put("_distinct", "anotherProperty");
+    requestParameters.put(ORDER_ID_PARAMETER, "100");
+    requestParameters.put(DISTINCT_PARAMETER, "anotherProperty");
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     when(mockPriceList.isPriceIncludesTax()).thenReturn(false);

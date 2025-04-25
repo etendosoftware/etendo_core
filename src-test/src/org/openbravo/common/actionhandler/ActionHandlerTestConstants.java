@@ -37,6 +37,7 @@ public final class ActionHandlerTestConstants {
   public static final String TEST_ORG = "TEST_ORG";
   public static final String TEST_CLIENT = "TEST_CLIENT";
   public static final String TEST_SERVICE_PRODUCT = "TEST_SERVICE_PRODUCT";
+  public static final String AMOUNT = "amount";
 
   /**
    * Private constructor to prevent instantiation of this utility class.

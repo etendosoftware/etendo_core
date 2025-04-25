@@ -52,13 +52,19 @@ public class CentralRepositoryPrivateMethodsTest {
 
   @Mock
   private HttpEntity mockEntity;
-
+   /**
+   * Sets up the test environment by mocking the HttpClients class and its createDefault method.
+   * This allows for controlled testing of the HTTP client behavior.
+   */
   @BeforeEach
   public void setUp() {
     httpClientsStatic = mockStatic(HttpClients.class);
     httpClientsStatic.when(HttpClients::createDefault).thenReturn(mockHttpClient);
   }
-
+   /**
+   * Cleans up the test environment by closing the mocked HttpClients static instance.
+   * This ensures that resources are released after each test.
+   */
   @AfterEach
   public void tearDown() {
     if (httpClientsStatic != null) {
@@ -112,15 +118,15 @@ public class CentralRepositoryPrivateMethodsTest {
     when(mockEntity.getContent()).thenReturn(new ByteArrayInputStream(jsonResponse.getBytes()));
     when(mockHttpClient.execute(any(HttpRequestBase.class))).thenReturn(mockResponse);
 
-    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod("executeRequest",
+    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod(CentralRepositoryTestConstants.EXECUTE_REQUEST,
         CentralRepository.Service.class, List.class, JSONObject.class);
     executeRequestMethod.setAccessible(true);
 
     JSONObject result = (JSONObject) executeRequestMethod.invoke(null, service, path, payload);
 
-    assertTrue(result.getBoolean("success"));
-    assertEquals(200, result.getInt("responseCode"));
-    assertEquals("test data", result.getJSONObject("response").getString("data"));
+    assertTrue(result.getBoolean(CentralRepositoryTestConstants.SUCCESS));
+    assertEquals(200, result.getInt(CentralRepositoryTestConstants.RESPONSE_CODE));
+    assertEquals("test data", result.getJSONObject(CentralRepositoryTestConstants.RESPONSE).getString("data"));
 
     verify(mockHttpClient).execute(any(HttpRequestBase.class));
   }
@@ -146,15 +152,15 @@ public class CentralRepositoryPrivateMethodsTest {
     when(mockEntity.getContent()).thenReturn(new ByteArrayInputStream(jsonResponse.getBytes()));
     when(mockHttpClient.execute(any(HttpRequestBase.class))).thenReturn(mockResponse);
 
-    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod("executeRequest",
+    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod(CentralRepositoryTestConstants.EXECUTE_REQUEST,
         CentralRepository.Service.class, List.class, JSONObject.class);
     executeRequestMethod.setAccessible(true);
 
     JSONObject result = (JSONObject) executeRequestMethod.invoke(null, service, path, payload);
 
-    assertFalse(result.getBoolean("success"));
-    assertEquals(404, result.getInt("responseCode"));
-    assertEquals("not found", result.getJSONObject("response").getString("error"));
+    assertFalse(result.getBoolean(CentralRepositoryTestConstants.SUCCESS));
+    assertEquals(404, result.getInt(CentralRepositoryTestConstants.RESPONSE_CODE));
+    assertEquals("not found", result.getJSONObject(CentralRepositoryTestConstants.RESPONSE).getString("error"));
   }
 
   /**
@@ -174,15 +180,15 @@ public class CentralRepositoryPrivateMethodsTest {
 
     when(mockHttpClient.execute(any(HttpRequestBase.class))).thenThrow(new IOException("Connection timeout"));
 
-    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod("executeRequest",
+    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod(CentralRepositoryTestConstants.EXECUTE_REQUEST,
         CentralRepository.Service.class, List.class, JSONObject.class);
     executeRequestMethod.setAccessible(true);
 
     JSONObject result = (JSONObject) executeRequestMethod.invoke(null, service, path, payload);
 
-    assertFalse(result.getBoolean("success"));
-    assertEquals(500, result.getInt("responseCode"));
-    assertEquals("Connection timeout", result.getJSONObject("response").getString("msg"));
+    assertFalse(result.getBoolean(CentralRepositoryTestConstants.SUCCESS));
+    assertEquals(500, result.getInt(CentralRepositoryTestConstants.RESPONSE_CODE));
+    assertEquals("Connection timeout", result.getJSONObject(CentralRepositoryTestConstants.RESPONSE).getString("msg"));
   }
 
   /**
@@ -205,16 +211,16 @@ public class CentralRepositoryPrivateMethodsTest {
     when(mockEntity.getContent()).thenReturn(new ByteArrayInputStream(invalidJsonResponse.getBytes()));
     when(mockHttpClient.execute(any(HttpRequestBase.class))).thenReturn(mockResponse);
 
-    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod("executeRequest",
+    Method executeRequestMethod = CentralRepository.class.getDeclaredMethod(CentralRepositoryTestConstants.EXECUTE_REQUEST,
         CentralRepository.Service.class, List.class, JSONObject.class);
     executeRequestMethod.setAccessible(true);
 
     JSONObject result = (JSONObject) executeRequestMethod.invoke(null, service, path, payload);
 
-    assertTrue(result.getBoolean("success"));
-    assertEquals(200, result.getInt("responseCode"));
+    assertTrue(result.getBoolean(CentralRepositoryTestConstants.SUCCESS));
+    assertEquals(200, result.getInt(CentralRepositoryTestConstants.RESPONSE_CODE));
 
-    JSONObject responseObj = result.getJSONObject("response");
+    JSONObject responseObj = result.getJSONObject(CentralRepositoryTestConstants.RESPONSE);
     assertEquals(0, responseObj.length());
   }
 }

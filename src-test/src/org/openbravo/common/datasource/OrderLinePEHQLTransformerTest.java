@@ -33,6 +33,9 @@ import org.openbravo.model.pricing.pricelist.PriceList;
  */
 @ExtendWith(MockitoExtension.class)
 public class OrderLinePEHQLTransformerTest {
+  private static final String SALES_TRANSACTION_PARAM = "@Invoice.salesTransaction@" ;
+  private static final String TEST_BUSINESS_PARTNER_ID = "testBusinessPartnerId";
+  private static final String TEST_CURRENCY_ID = "testCurrencyId";
 
   private OrderLinePEHQLTransformer transformer;
 
@@ -79,8 +82,8 @@ public class OrderLinePEHQLTransformerTest {
     baseHqlQuery = "SELECT @selectClause@ FROM @fromClause@ WHERE 1=1 @whereClause@ " + "GROUP BY @groupByClause@ HAVING @filterByDocumentsProcessedSinceNDaysAgo@ " + "ORDER BY @orderByClause@";
 
     requestParameters.put("@Invoice.priceList@", "testPriceListId");
-    requestParameters.put("@Invoice.businessPartner@", "testBusinessPartnerId");
-    requestParameters.put("@Invoice.currency@", "testCurrencyId");
+    requestParameters.put("@Invoice.businessPartner@", TEST_BUSINESS_PARTNER_ID);
+    requestParameters.put("@Invoice.currency@", TEST_CURRENCY_ID);
     requestParameters.put("@Invoice.id@", "testInvoiceId");
 
     when(mockDal.get(PriceList.class, "testPriceListId")).thenReturn(mockPriceList);
@@ -105,7 +108,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQuerySalesTransaction() {
-    requestParameters.put("@Invoice.salesTransaction@", "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
@@ -114,9 +117,9 @@ public class OrderLinePEHQLTransformerTest {
         () -> assertTrue(result.contains("ic.salesTransaction = :issotrx")),
         () -> assertTrue(result.contains("ic.documentNo desc")),
         () -> assertEquals(Boolean.TRUE, queryNamedParameters.get("issotrx")),
-        () -> assertEquals("testBusinessPartnerId", queryNamedParameters.get("bp")),
+        () -> assertEquals(TEST_BUSINESS_PARTNER_ID, queryNamedParameters.get("bp")),
         () -> assertEquals(Boolean.TRUE, queryNamedParameters.get("plIncTax")),
-        () -> assertEquals("testCurrencyId", queryNamedParameters.get("cur")));
+        () -> assertEquals(TEST_CURRENCY_ID, queryNamedParameters.get("cur")));
 
     assertFalse(queryNamedParameters.containsKey("invId"));
   }
@@ -127,7 +130,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryPurchaseTransaction() {
-    requestParameters.put("@Invoice.salesTransaction@", "false");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "false");
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
@@ -137,9 +140,9 @@ public class OrderLinePEHQLTransformerTest {
         () -> assertTrue(result.contains("o.salesTransaction = :issotrx")),
         () -> assertTrue(result.contains("o.documentNo desc")),
         () -> assertEquals(Boolean.FALSE, queryNamedParameters.get("issotrx")),
-        () -> assertEquals("testBusinessPartnerId", queryNamedParameters.get("bp")),
+        () -> assertEquals(TEST_BUSINESS_PARTNER_ID, queryNamedParameters.get("bp")),
         () -> assertEquals(Boolean.TRUE, queryNamedParameters.get("plIncTax")),
-        () -> assertEquals("testCurrencyId", queryNamedParameters.get("cur")),
+        () -> assertEquals(TEST_CURRENCY_ID, queryNamedParameters.get("cur")),
         () -> assertEquals("testInvoiceId", queryNamedParameters.get("invId")));
   }
 
@@ -149,7 +152,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryWithFilterByDaysPreference() {
-    requestParameters.put("@Invoice.salesTransaction@", "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     when(mockDal.get(Window.class, "D0E067F649AC457D9EA2CDAC2E8571D7")).thenReturn(mockWindow);
@@ -174,7 +177,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryAdditionalFilters() {
-    requestParameters.put("@Invoice.salesTransaction@", "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization in ('1')";
@@ -193,7 +196,7 @@ public class OrderLinePEHQLTransformerTest {
    */
   @Test
   public void testTransformHqlQueryAdditionalFiltersPurchaseTransaction() {
-    requestParameters.put("@Invoice.salesTransaction@", "false");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "false");
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
     String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization in ('1')";

@@ -26,6 +26,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ClusterServiceTest {
 
+  private static final String NODE_ID = "node123";
+  private static final String NODE_NAME = "testNode";
+  private static final String SERVICE_NAME = "TestService";
+
   private TestClusterService clusterService;
 
   /**
@@ -46,7 +50,7 @@ class ClusterServiceTest {
   void testInitServiceEnabled() {
     clusterService.setEnabled(true);
 
-    boolean result = clusterService.init("node123", "testNode");
+    boolean result = clusterService.init(NODE_ID, NODE_NAME);
 
     assertTrue(result);
     assertTrue(clusterService.isInitialized());
@@ -60,7 +64,7 @@ class ClusterServiceTest {
   void testInitServiceDisabled() {
     clusterService.setEnabled(false);
 
-    boolean result = clusterService.init("node123", "testNode");
+    boolean result = clusterService.init(NODE_ID, NODE_NAME);
 
     assertFalse(result);
     assertFalse(clusterService.isInitialized());
@@ -102,17 +106,17 @@ class ClusterServiceTest {
         ClusterServiceManager.class); MockedStatic<ClusterServiceData> mockedData = mockStatic(
         ClusterServiceData.class)) {
 
-      String nodeId = "node123";
+      String nodeId = NODE_ID;
       ClusterServiceData[] nodeInfo = new ClusterServiceData[1];
       nodeInfo[0] = new ClusterServiceData();
       nodeInfo[0].nodeId = nodeId;
-      nodeInfo[0].nodeName = "testNode";
+      nodeInfo[0].nodeName = NODE_NAME;
 
       mockedManager.when(ClusterServiceManager::isCluster).thenReturn(true);
-      mockedData.when(() -> ClusterServiceData.getNodeHandlingService(any(), any(), eq("TestService"))).thenReturn(
+      mockedData.when(() -> ClusterServiceData.getNodeHandlingService(any(), any(), eq(SERVICE_NAME))).thenReturn(
           nodeInfo);
 
-      clusterService.init(nodeId, "testNode");
+      clusterService.init(nodeId, NODE_NAME);
       clusterService.setNextPing(new Date().getTime() - 20000L);
 
       boolean result = clusterService.isHandledInCurrentNode();
@@ -131,17 +135,17 @@ class ClusterServiceTest {
         ClusterServiceManager.class); MockedStatic<ClusterServiceData> mockedData = mockStatic(
         ClusterServiceData.class)) {
 
-      String nodeId = "node123";
+      String nodeId = NODE_ID;
       ClusterServiceData[] nodeInfo = new ClusterServiceData[1];
       nodeInfo[0] = new ClusterServiceData();
       nodeInfo[0].nodeId = "differentNode";
       nodeInfo[0].nodeName = "otherNode";
 
       mockedManager.when(ClusterServiceManager::isCluster).thenReturn(true);
-      mockedData.when(() -> ClusterServiceData.getNodeHandlingService(any(), any(), eq("TestService"))).thenReturn(
+      mockedData.when(() -> ClusterServiceData.getNodeHandlingService(any(), any(), eq(SERVICE_NAME))).thenReturn(
           nodeInfo);
 
-      clusterService.init(nodeId, "testNode");
+      clusterService.init(nodeId, NODE_NAME);
       clusterService.setNextPing(new Date().getTime() - 20000L);
 
       boolean result = clusterService.isHandledInCurrentNode();
@@ -206,7 +210,7 @@ class ClusterServiceTest {
 
       mockedManager.when(ClusterServiceManager::isCluster).thenReturn(true);
 
-      clusterService.init("node123", "testNode");
+      clusterService.init(NODE_ID, NODE_NAME);
       clusterService.startProcessing(); // Set processing state
 
       clusterService.deregister();
@@ -230,14 +234,14 @@ class ClusterServiceTest {
 
       mockedManager.when(ClusterServiceManager::isCluster).thenReturn(true);
       mockedData.when(
-          () -> ClusterServiceData.deregisterService(any(), any(), eq("TestService"), eq("node123"))).thenReturn(1);
+          () -> ClusterServiceData.deregisterService(any(), any(), eq(SERVICE_NAME), eq(NODE_ID))).thenReturn(1);
 
-      clusterService.init("node123", "testNode");
+      clusterService.init(NODE_ID, NODE_NAME);
 
       clusterService.deregister();
 
       assertTrue(clusterService.isDisabled());
-      mockedData.verify(() -> ClusterServiceData.deregisterService(any(), any(), eq("TestService"), eq("node123")),
+      mockedData.verify(() -> ClusterServiceData.deregisterService(any(), any(), eq(SERVICE_NAME), eq(NODE_ID)),
           times(1));
     }
   }
@@ -253,9 +257,9 @@ class ClusterServiceTest {
 
       mockedManager.when(ClusterServiceManager::isCluster).thenReturn(true);
       mockedData.when(
-          () -> ClusterServiceData.deregisterService(any(), any(), eq("TestService"), eq("node123"))).thenReturn(1);
+          () -> ClusterServiceData.deregisterService(any(), any(), eq(SERVICE_NAME), eq(NODE_ID))).thenReturn(1);
 
-      clusterService.init("node123", "testNode");
+      clusterService.init(NODE_ID, NODE_NAME);
       clusterService.startProcessing();
 
       setDisableAfterProcess(clusterService, true);
@@ -263,7 +267,7 @@ class ClusterServiceTest {
       clusterService.endProcessing();
 
       assertTrue(clusterService.isDisabled());
-      mockedData.verify(() -> ClusterServiceData.deregisterService(any(), any(), eq("TestService"), eq("node123")),
+      mockedData.verify(() -> ClusterServiceData.deregisterService(any(), any(), eq(SERVICE_NAME), eq(NODE_ID)),
           times(1));
     }
   }
@@ -276,13 +280,13 @@ class ClusterServiceTest {
   void testToString() {
     try (MockedStatic<ClusterServiceManager> mockedManager = mockStatic(ClusterServiceManager.class)) {
       mockedManager.when(ClusterServiceManager::isCluster).thenReturn(true);
-      clusterService.init("node123", "testNode");
+      clusterService.init(NODE_ID, NODE_NAME);
 
       String result = clusterService.toString();
 
-      assertTrue(result.contains("TestService"));
-      assertTrue(result.contains("testNode"));
-      assertTrue(result.contains("node123"));
+      assertTrue(result.contains(SERVICE_NAME));
+      assertTrue(result.contains(NODE_NAME));
+      assertTrue(result.contains(NODE_ID));
     }
   }
 
@@ -360,7 +364,7 @@ class ClusterServiceTest {
 
     @Override
     protected String getServiceName() {
-      return "TestService";
+      return SERVICE_NAME;
     }
 
     @Override

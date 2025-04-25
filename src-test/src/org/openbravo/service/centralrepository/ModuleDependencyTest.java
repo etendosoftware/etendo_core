@@ -28,27 +28,27 @@ class ModuleDependencyTest {
   void testFromJsonValidJsonArray() throws JSONException {
     JSONArray jsonArray = new JSONArray();
     JSONObject jsonObj1 = new JSONObject();
-    jsonObj1.put("moduleID", "module1");
-    jsonObj1.put("moduleName", "Module 1");
-    jsonObj1.put("moduleVersionDependencyID", "1.0");
-    jsonObj1.put("versionStart", "1.0.0");
-    jsonObj1.put("versionEnd", "2.0.0");
+    jsonObj1.put(CentralRepositoryTestConstants.MODULE_ID, CentralRepositoryTestConstants.MODULE_1);
+    jsonObj1.put(CentralRepositoryTestConstants.MODULE_NAME, CentralRepositoryTestConstants.MODULE_1_NAME);
+    jsonObj1.put(CentralRepositoryTestConstants.MODULE_VERSION_DEPENDENCY_ID, "1.0");
+    jsonObj1.put(CentralRepositoryTestConstants.VERSION_START, CentralRepositoryTestConstants.VERSION_1_0_0);
+    jsonObj1.put(CentralRepositoryTestConstants.VERSION_END, CentralRepositoryTestConstants.VERSION_2_0_0);
     jsonArray.put(jsonObj1);
 
     JSONObject jsonObj2 = new JSONObject();
-    jsonObj2.put("moduleID", "module2");
-    jsonObj2.put("moduleName", "Module 2");
-    jsonObj2.put("moduleVersionDependencyID", "1.1");
-    jsonObj2.put("versionStart", "2.0.0");
-    jsonObj2.put("versionEnd", JSONObject.NULL);
+    jsonObj2.put(CentralRepositoryTestConstants.MODULE_ID, "module2");
+    jsonObj2.put(CentralRepositoryTestConstants.MODULE_NAME, "Module 2");
+    jsonObj2.put(CentralRepositoryTestConstants.MODULE_VERSION_DEPENDENCY_ID, "1.1");
+    jsonObj2.put(CentralRepositoryTestConstants.VERSION_START, CentralRepositoryTestConstants.VERSION_2_0_0);
+    jsonObj2.put(CentralRepositoryTestConstants.VERSION_END, JSONObject.NULL);
     jsonArray.put(jsonObj2);
 
     ModuleDependency[] dependencies = ModuleDependency.fromJson(jsonArray);
 
     assertNotNull(dependencies);
     assertEquals(2, dependencies.length);
-    assertEquals("module1", dependencies[0].getModuleID());
-    assertEquals("2.0.0", dependencies[0].getVersionEnd());
+    assertEquals(CentralRepositoryTestConstants.MODULE_1, dependencies[0].getModuleID());
+    assertEquals(CentralRepositoryTestConstants.VERSION_2_0_0, dependencies[0].getVersionEnd());
     assertEquals("module2", dependencies[1].getModuleID());
     assertNull(dependencies[1].getVersionEnd());
   }
@@ -76,20 +76,20 @@ class ModuleDependencyTest {
   void testFromJsonValidJsonObject() throws JSONException {
     // Given
     JSONObject jsonObj = new JSONObject();
-    jsonObj.put("moduleID", "module1");
-    jsonObj.put("moduleName", "Module 1");
-    jsonObj.put("moduleVersionDependencyID", "1.0");
-    jsonObj.put("versionStart", "1.0.0");
-    jsonObj.put("versionEnd", "2.0.0");
+    jsonObj.put(CentralRepositoryTestConstants.MODULE_ID, CentralRepositoryTestConstants.MODULE_1);
+    jsonObj.put(CentralRepositoryTestConstants.MODULE_NAME, CentralRepositoryTestConstants.MODULE_1_NAME);
+    jsonObj.put(CentralRepositoryTestConstants.MODULE_VERSION_DEPENDENCY_ID, "1.0");
+    jsonObj.put(CentralRepositoryTestConstants.VERSION_START, CentralRepositoryTestConstants.VERSION_1_0_0);
+    jsonObj.put(CentralRepositoryTestConstants.VERSION_END, CentralRepositoryTestConstants.VERSION_2_0_0);
 
     ModuleDependency dependency = ModuleDependency.fromJson(jsonObj);
 
     assertNotNull(dependency);
-    assertEquals("module1", dependency.getModuleID());
-    assertEquals("Module 1", dependency.getModuleName());
+    assertEquals(CentralRepositoryTestConstants.MODULE_1, dependency.getModuleID());
+    assertEquals(CentralRepositoryTestConstants.MODULE_1_NAME, dependency.getModuleName());
     assertEquals("1.0", dependency.getModuleVersionDependencyID());
-    assertEquals("1.0.0", dependency.getVersionStart());
-    assertEquals("2.0.0", dependency.getVersionEnd());
+    assertEquals(CentralRepositoryTestConstants.VERSION_1_0_0, dependency.getVersionStart());
+    assertEquals(CentralRepositoryTestConstants.VERSION_2_0_0, dependency.getVersionEnd());
   }
 
   /**
@@ -111,16 +111,16 @@ class ModuleDependencyTest {
   void testGettersAndSetters() {
     ModuleDependency dependency = new ModuleDependency();
 
-    dependency.setModuleID("module1");
-    dependency.setModuleName("Module 1");
+    dependency.setModuleID(CentralRepositoryTestConstants.MODULE_1);
+    dependency.setModuleName(CentralRepositoryTestConstants.MODULE_1_NAME);
     dependency.setModuleVersionDependencyID("1.0");
-    dependency.setVersionStart("1.0.0");
+    dependency.setVersionStart(CentralRepositoryTestConstants.VERSION_1_0_0);
     dependency.setVersionEnd(null);
 
-    assertEquals("module1", dependency.getModuleID());
-    assertEquals("Module 1", dependency.getModuleName());
+    assertEquals(CentralRepositoryTestConstants.MODULE_1, dependency.getModuleID());
+    assertEquals(CentralRepositoryTestConstants.MODULE_1_NAME, dependency.getModuleName());
     assertEquals("1.0", dependency.getModuleVersionDependencyID());
-    assertEquals("1.0.0", dependency.getVersionStart());
+    assertEquals(CentralRepositoryTestConstants.VERSION_1_0_0, dependency.getVersionStart());
     assertNull(dependency.getVersionEnd());
   }
 }

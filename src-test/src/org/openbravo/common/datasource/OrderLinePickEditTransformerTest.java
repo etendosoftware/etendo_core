@@ -37,6 +37,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
  */
 @ExtendWith(MockitoExtension.class)
 class OrderLinePickEditTransformerTest {
+  private static final String  ORDER_LINE_ID = "TEST_ORDERLINE_ID";
 
   @Mock
   private OBDal obDal;
@@ -80,7 +81,7 @@ class OrderLinePickEditTransformerTest {
     requestParameters = new HashMap<>();
     requestParameters.put("@Order.id@", "TEST_ORDER_ID");
     requestParameters.put("@Order.businessPartner@", "TEST_BP_ID");
-    requestParameters.put("@OrderLine.id@", "TEST_ORDERLINE_ID");
+    requestParameters.put("@OrderLine.id@", ORDER_LINE_ID);
     requestParameters.put("@OrderLine.product@", "TEST_PRODUCT_ID");
 
     queryNamedParameters = new HashMap<>();
@@ -137,7 +138,7 @@ class OrderLinePickEditTransformerTest {
           () -> assertTrue(result.contains("and e.product.productType <> 'S'")),
           () -> assertEquals("TEST_ORDER_ID", queryNamedParameters.get("orderId")),
           () -> assertEquals("TEST_BP_ID", queryNamedParameters.get("businessPartnerId")),
-          () -> assertEquals("TEST_ORDERLINE_ID", queryNamedParameters.get("orderLineId")),
+          () -> assertEquals(ORDER_LINE_ID, queryNamedParameters.get("orderLineId")),
           () -> assertEquals("TEST_PRODUCT_ID", queryNamedParameters.get("productId")));
     }
 
@@ -272,7 +273,7 @@ class OrderLinePickEditTransformerTest {
           () -> assertTrue(result.contains(
               "exists (select 1 from OrderlineServiceRelation osr where osr.salesOrderLine.id = :orderLineId and osr.orderlineRelated.id = e.id)")),
           () -> assertEquals("ORIGINAL_ORDERLINE_ID", queryNamedParameters.get("originalOrderLineId")),
-          () -> assertEquals("TEST_ORDERLINE_ID", queryNamedParameters.get("orderLineId")));
+          () -> assertEquals(ORDER_LINE_ID, queryNamedParameters.get("orderLineId")));
     }
 
     /**

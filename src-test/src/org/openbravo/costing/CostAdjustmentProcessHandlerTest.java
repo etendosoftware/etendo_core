@@ -28,6 +28,13 @@ import org.openbravo.service.db.DbUtility;
  */
 @ExtendWith(MockitoExtension.class)
 public class CostAdjustmentProcessHandlerTest {
+  private static final String TEST_ID = "testId";
+  private static final String COST_ADJUSTMENT_ID = "M_CostAdjustment_ID";
+  private static final String SEVERITY = "severity";
+  private static final String MESSAGE = "message";
+  private static final String ERROR = "Error";
+  private static final String ERROR_LOWERCASE = "error";
+  private static final String UNEXPECTED_ERROR = "Unexpected Error";
 
   private CostAdjustmentProcessHandler classUnderTest;
 
@@ -87,12 +94,12 @@ public class CostAdjustmentProcessHandlerTest {
    */
   @Test
   public void testExecuteSuccess() throws Exception {
-    String costAdjustmentId = "testId";
+    String costAdjustmentId = TEST_ID;
     JSONObject mockRequestContent = new JSONObject();
-    mockRequestContent.put("M_CostAdjustment_ID", costAdjustmentId);
+    mockRequestContent.put(COST_ADJUSTMENT_ID, costAdjustmentId);
 
     JSONObject mockResponseMessage = new JSONObject();
-    mockResponseMessage.put("severity", "success");
+    mockResponseMessage.put(SEVERITY, "success");
     mockResponseMessage.put("text", "Cost Adjustment Processed");
 
     when(mockOBDal.get(CostAdjustment.class, costAdjustmentId)).thenReturn(mockCostAdjustment);
@@ -103,8 +110,8 @@ public class CostAdjustmentProcessHandlerTest {
     JSONObject result = classUnderTest.execute(null, mockRequestContent.toString());
 
     assertNotNull(result);
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("success", message.get("severity"));
+    JSONObject message = result.getJSONObject(MESSAGE);
+    assertEquals("success", message.get(SEVERITY));
     assertEquals("Cost Adjustment Processed", message.get("text"));
 
     verify(mockOBDal).get(CostAdjustment.class, costAdjustmentId);
@@ -120,20 +127,20 @@ public class CostAdjustmentProcessHandlerTest {
    */
   @Test
   public void testExecuteWithOBException() throws Exception {
-    String costAdjustmentId = "testId";
+    String costAdjustmentId = TEST_ID;
     JSONObject mockRequestContent = new JSONObject();
-    mockRequestContent.put("M_CostAdjustment_ID", costAdjustmentId);
+    mockRequestContent.put(COST_ADJUSTMENT_ID, costAdjustmentId);
 
     OBException mockException = new OBException("Cost Adjustment Error");
     when(mockOBDal.get(CostAdjustment.class, costAdjustmentId)).thenThrow(mockException);
 
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("Error")).thenReturn("Error");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(ERROR)).thenReturn(ERROR);
 
     JSONObject result = classUnderTest.execute(null, mockRequestContent.toString());
 
     assertNotNull(result);
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("error", message.get("severity"));
+    JSONObject message = result.getJSONObject(MESSAGE);
+    assertEquals(ERROR_LOWERCASE, message.get(SEVERITY));
     assertEquals("Cost Adjustment Error", message.get("text"));
 
     verify(mockOBDal).rollbackAndClose();
@@ -150,13 +157,13 @@ public class CostAdjustmentProcessHandlerTest {
   public void testExecuteWithJSONException() throws Exception {
     String invalidContent = "{ invalidJson }";
 
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("Error")).thenReturn("Error");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(ERROR)).thenReturn(ERROR);
 
     JSONObject result = classUnderTest.execute(null, invalidContent);
 
     assertNotNull(result);
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("error", message.get("severity"));
+    JSONObject message = result.getJSONObject(MESSAGE);
+    assertEquals(ERROR_LOWERCASE, message.get(SEVERITY));
 
     assertNotNull(message.get("text"));
 
@@ -172,30 +179,30 @@ public class CostAdjustmentProcessHandlerTest {
    */
   @Test
   public void testExecuteWithGeneralException() throws Exception {
-    String costAdjustmentId = "testId";
+    String costAdjustmentId = TEST_ID;
     JSONObject mockRequestContent = new JSONObject();
-    mockRequestContent.put("M_CostAdjustment_ID", costAdjustmentId);
+    mockRequestContent.put(COST_ADJUSTMENT_ID, costAdjustmentId);
 
-    NullPointerException mockException = new NullPointerException("Unexpected Error");
+    NullPointerException mockException = new NullPointerException(UNEXPECTED_ERROR);
     when(mockOBDal.get(CostAdjustment.class, costAdjustmentId)).thenThrow(mockException);
 
-    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD("Error")).thenReturn("Error");
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(ERROR)).thenReturn(ERROR);
     mockedOBMessageUtils.when(() -> OBMessageUtils.parseTranslation("@ErrorProcessingCostAdj@")).thenReturn(
         "Error Processing Cost Adjustment");
 
     mockedDbUtility.when(() -> DbUtility.getUnderlyingSQLException(mockException)).thenReturn(mockException);
 
     org.openbravo.erpCommon.utility.OBError translatedError = mock(org.openbravo.erpCommon.utility.OBError.class);
-    when(translatedError.getMessage()).thenReturn("Unexpected Error");
+    when(translatedError.getMessage()).thenReturn(UNEXPECTED_ERROR);
     mockedOBMessageUtils.when(() -> OBMessageUtils.translateError(mockException.getMessage())).thenReturn(
         translatedError);
 
     JSONObject result = classUnderTest.execute(null, mockRequestContent.toString());
 
     assertNotNull(result);
-    JSONObject message = result.getJSONObject("message");
-    assertEquals("error", message.get("severity"));
-    assertEquals("Unexpected Error", message.get("text"));
+    JSONObject message = result.getJSONObject(MESSAGE);
+    assertEquals(ERROR_LOWERCASE, message.get(SEVERITY));
+    assertEquals(UNEXPECTED_ERROR, message.get("text"));
 
     verify(mockOBDal).rollbackAndClose();
   }

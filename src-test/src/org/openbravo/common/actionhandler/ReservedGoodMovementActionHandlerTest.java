@@ -128,9 +128,9 @@ public class ReservedGoodMovementActionHandlerTest {
   @Test
   @DisplayName("Test missing storage bin - should throw exception")
   public void testMissingStorageBin() throws Exception {
-    String ReservationStockID = "TEST_RS_ID";
-    String MovementQuantity = "10.0";
-    String jsonContent = createJsonContent(ReservationStockID, MovementQuantity, "null");
+    String reservationStockID = "TEST_RS_ID";
+    String movementQuantity = "10.0";
+    String jsonContent = createJsonContent(reservationStockID, movementQuantity, "null");
     Map<String, Object> parameters = new HashMap<>();
 
     obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("OBUIAPP_DefineStorageBin")).thenReturn(

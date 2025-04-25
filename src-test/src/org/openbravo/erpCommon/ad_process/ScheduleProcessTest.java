@@ -1,7 +1,13 @@
 package org.openbravo.erpCommon.ad_process;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,8 +31,13 @@ import org.openbravo.model.ad.ui.ProcessRequest;
 import org.openbravo.scheduling.OBScheduler;
 import org.openbravo.scheduling.ProcessBundle;
 
+/**
+ * Unit tests for the {@link ScheduleProcess} class.
+ * Verifies the behavior of methods related to scheduling processes,
+ * including request ID retrieval and process group validation.
+ */
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT) // Add this to avoid strict stubbing issues
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ScheduleProcessTest {
 
   private AutoCloseable mocks;
@@ -49,43 +60,24 @@ class ScheduleProcessTest {
 
   private ScheduleProcess scheduleProcess;
 
-  private static class TestableScheduleProcess extends ScheduleProcess {
-    public boolean advisePopUpCalled = false;
-    public boolean advisePopUpRefreshCalled = false;
-    public String lastPopUpType;
-
-    @Override
-    protected void advisePopUp(HttpServletRequest request, HttpServletResponse response,
-        String type, String title, String text) {
-      advisePopUpCalled = true;
-      lastPopUpType = type;
-    }
-
-    @Override
-    protected void advisePopUpRefresh(HttpServletRequest request, HttpServletResponse response,
-        String type, String title, String text) {
-      advisePopUpRefreshCalled = true;
-      lastPopUpType = type;
-    }
-
-    // Make protected method public for testing
-    @Override
-    public String getRequestId(VariablesSecureApp vars) {
-      return super.getRequestId(vars);
-    }
-  }
-
+  /**
+   * Sets up the test environment before each test.
+   * Initialize mocks and the instance of the class under test.
+   */
   @BeforeEach
   void setUp() {
     mocks = MockitoAnnotations.openMocks(this);
 
-    // Use our testable subclass that overrides the protected methods
     scheduleProcess = spy(new TestableScheduleProcess());
 
     mockedScheduler = mockStatic(OBScheduler.class);
     mockedOBDal = mockStatic(OBDal.class);
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   * Closes all mocked static instances and releases resources.
+   */
   @AfterEach
   void tearDown() throws Exception {
     if (mockedScheduler != null) {
@@ -97,29 +89,31 @@ class ScheduleProcessTest {
     mocks.close();
   }
 
-
+  /**
+   * Tests the `getRequestId` method.
+   * Verifies that the correct request ID is retrieved based on the input parameters.
+   */
   @Test
   void testGetRequestId() {
-    // GIVEN
     when(vars.getStringParameter("inpwindowId")).thenReturn("window123");
     when(vars.getSessionValue("window123|AD_Process_Request_ID")).thenReturn("");
     when(vars.getStringParameter("AD_Process_Request_ID")).thenReturn("request123");
 
-    // WHEN
     String requestId = scheduleProcess.getRequestId(vars);
 
-    // THEN
     assertEquals("request123", requestId);
   }
 
+  /**
+   * Tests the `isEmptyProcessGroup` method.
+   * Verifies that the method correctly identifies an empty process group.
+   */
   @Test
   void testIsEmptyProcessGroup() {
-    // GIVEN
     String requestId = "test-request-id";
     OBDal obdalMock = mock(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(obdalMock);
 
-    // Mock ProcessRequest and ProcessGroup
     when(obdalMock.get(ProcessRequest.class, requestId)).thenReturn(mockProcessRequest);
     when(mockProcessRequest.getProcessGroup()).thenReturn(mockProcessGroup);
 
@@ -129,10 +123,60 @@ class ScheduleProcessTest {
     when(criteriaMock.add(any())).thenReturn(criteriaMock);
     when(criteriaMock.uniqueResult()).thenReturn(null);
 
-    // WHEN
     boolean result = scheduleProcess.isEmptyProcessGroup(requestId);
 
-    // THEN
     assertTrue(result);
+  }
+
+  /**
+   * Testable subclass of {@link ScheduleProcess} to expose protected methods for testing.
+   */
+  private static class TestableScheduleProcess extends ScheduleProcess {
+    /**
+     * Flag to indicate if the advisePopUp method was called.
+     * This is used to verify that the method was called with the expected parameters.
+     */
+    public boolean advisePopUpCalled = false;
+    /**
+     * The last pop-up type used in the advisePopUp method.
+     * This is used to verify that the method was called with the expected parameters.
+     */
+    public boolean advisePopUpRefreshCalled = false;
+    /**
+     * The last pop-up type used in the advisePopUp method.
+     * This is used to verify that the method was called with the expected parameters.
+     */
+    public String lastPopUpType;
+
+    /**
+     * Mock implementation of the advisePopUp method to set a flag for testing.
+     * This is used to verify that the method was called with the expected parameters.
+     */
+    @Override
+    protected void advisePopUp(HttpServletRequest request, HttpServletResponse response, String type, String title,
+        String text) {
+      advisePopUpCalled = true;
+      lastPopUpType = type;
+    }
+
+    /**
+     * Mock implementation of the advisePopUpRefresh method to set a flag for testing.
+     * This is used to verify that the method was called with the expected parameters.
+     */
+    @Override
+    protected void advisePopUpRefresh(HttpServletRequest request, HttpServletResponse response, String type,
+        String title, String text) {
+      advisePopUpRefreshCalled = true;
+      lastPopUpType = type;
+    }
+
+    /**
+     * Mock implementation of the getRequestId method to return a fixed request ID.
+     * This is used for testing purposes to avoid dependency on external systems.
+     */
+    @Override
+    public String getRequestId(VariablesSecureApp vars) {
+      return super.getRequestId(vars);
+    }
   }
 }

@@ -26,6 +26,7 @@ import org.openbravo.base.exception.OBException;
  */
 @ExtendWith(MockitoExtension.class)
 public class SimpleModuleTest {
+  public static final String VALUE_2 = "value2";
 
   private JSONObject validJsonModule;
   private JSONObject jsonModuleWithAdditionalInfo;
@@ -40,7 +41,7 @@ public class SimpleModuleTest {
   @BeforeEach
   public void setUp() throws JSONException {
     validJsonModule = new JSONObject();
-    validJsonModule.put("author", "Test Author");
+    validJsonModule.put("author", CentralRepositoryTestConstants.TEST_AUTHOR);
     validJsonModule.put("description", "Test Description");
     validJsonModule.put("help", "Test Help");
     validJsonModule.put("licenseAgreement", "Test License Agreement");
@@ -53,14 +54,14 @@ public class SimpleModuleTest {
     validJsonModule.put("url", "http://test.example.com");
     validJsonModule.put("versionNo", "1.0");
     validJsonModule.put("isCommercial", true);
-    validJsonModule.put("additionalInfo", "{}");
+    validJsonModule.put(CentralRepositoryTestConstants.ADDITIONAL_INFO, "{}");
 
     jsonModuleWithAdditionalInfo = new JSONObject(validJsonModule.toString());
 
     JSONObject additionalInfo = new JSONObject();
-    additionalInfo.put("key1", "value1");
-    additionalInfo.put("key2", "value2");
-    jsonModuleWithAdditionalInfo.put("additionalInfo", additionalInfo);
+    additionalInfo.put("key1", CentralRepositoryTestConstants.VALUE_1);
+    additionalInfo.put("key2", VALUE_2);
+    jsonModuleWithAdditionalInfo.put(CentralRepositoryTestConstants.ADDITIONAL_INFO, additionalInfo);
   }
 
   /**
@@ -68,10 +69,10 @@ public class SimpleModuleTest {
    * Verifies that a SimpleModule object is created correctly.
    */
   @Test
-  public void testFromJson_WithValidJson_ShouldCreateSimpleModule() {
+  public void testFromJsonWithValidJsonShouldCreateSimpleModule() {
     SimpleModule module = SimpleModule.fromJson(validJsonModule);
 
-    assertEquals("Test Author", module.getAuthor());
+    assertEquals(CentralRepositoryTestConstants.TEST_AUTHOR, module.getAuthor());
     assertEquals("Test Description", module.getDescription());
     assertEquals("Test Help", module.getHelp());
     assertEquals("Test License Agreement", module.getLicenseAgreement());
@@ -99,8 +100,8 @@ public class SimpleModuleTest {
     Map<String, Object> additionalInfo = module.getAdditionalInfo();
     assertNotNull(additionalInfo);
     assertEquals(2, additionalInfo.size());
-    assertEquals("value1", additionalInfo.get("key1"));
-    assertEquals("value2", additionalInfo.get("key2"));
+    assertEquals(CentralRepositoryTestConstants.VALUE_1, additionalInfo.get("key1"));
+    assertEquals(VALUE_2, additionalInfo.get("key2"));
   }
 
   /**
@@ -113,7 +114,7 @@ public class SimpleModuleTest {
   @Test
   public void testFromJsonWithMissingRequiredFieldShouldThrowOBException() throws JSONException {
     JSONObject invalidJson = new JSONObject();
-    invalidJson.put("author", "Test Author");
+    invalidJson.put("author", CentralRepositoryTestConstants.TEST_AUTHOR);
 
     assertThrows(OBException.class, () -> SimpleModule.fromJson(invalidJson));
   }
@@ -177,7 +178,7 @@ public class SimpleModuleTest {
   @Test
   public void testAdditionalInfoSetter() {
     SimpleModule module = SimpleModule.fromJson(validJsonModule);
-    Map<String, Object> newAdditionalInfo = Map.of("key1", "value1", "key2", "value2", "key3", "value3");
+    Map<String, Object> newAdditionalInfo = Map.of("key1", CentralRepositoryTestConstants.VALUE_1, "key2", VALUE_2, "key3", "value3");
 
     module.setAdditionalInfo(newAdditionalInfo);
 
@@ -195,7 +196,7 @@ public class SimpleModuleTest {
   @Test
   public void testFromJsonWithNullAdditionalInfoShouldCreateEmptyMap() throws JSONException {
     JSONObject jsonWithNullAddInfo = new JSONObject(validJsonModule.toString());
-    jsonWithNullAddInfo.put("additionalInfo", JSONObject.NULL);
+    jsonWithNullAddInfo.put(CentralRepositoryTestConstants.ADDITIONAL_INFO, JSONObject.NULL);
 
     SimpleModule module = SimpleModule.fromJson(jsonWithNullAddInfo);
 
@@ -214,9 +215,9 @@ public class SimpleModuleTest {
   public void testFromJsonWithArrayAsAdditionalInfoShouldHandleGracefully() throws JSONException {
     JSONObject jsonWithArrayAddInfo = new JSONObject(validJsonModule.toString());
     JSONArray array = new JSONArray();
-    array.put("value1");
-    array.put("value2");
-    jsonWithArrayAddInfo.put("additionalInfo", array);
+    array.put(CentralRepositoryTestConstants.VALUE_1);
+    array.put(VALUE_2);
+    jsonWithArrayAddInfo.put(CentralRepositoryTestConstants.ADDITIONAL_INFO, array);
 
     SimpleModule module = SimpleModule.fromJson(jsonWithArrayAddInfo);
     assertNotNull(module.getAdditionalInfo());

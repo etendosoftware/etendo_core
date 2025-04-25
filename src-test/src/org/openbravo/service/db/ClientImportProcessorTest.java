@@ -27,6 +27,8 @@ import org.openbravo.model.common.enterprise.Warehouse;
  * Verifies that the properties are correctly set and retrieved.
  */
 public class ClientImportProcessorTest {
+  public static final String NEW_CLIENT = "NewClient";
+  public static final String ORIGINAL_CLIENT = "OriginalClient";
 
   @InjectMocks
   private ClientImportProcessor clientImportProcessor;
@@ -42,7 +44,7 @@ public class ClientImportProcessorTest {
   public void setUp() {
     MockitoAnnotations.openMocks(this);
     clientImportProcessor = new ClientImportProcessor();
-    clientImportProcessor.setNewName("NewClient");
+    clientImportProcessor.setNewName(NEW_CLIENT);
   }
 
   /**
@@ -53,16 +55,16 @@ public class ClientImportProcessorTest {
   public void testProcessWithNewObjects() {
     List<BaseOBObject> newObjects = new ArrayList<>();
     Client mockClient = mock(Client.class);
-    when(mockClient.getName()).thenReturn("OriginalClient");
+    when(mockClient.getName()).thenReturn(ORIGINAL_CLIENT);
     newObjects.add(mockClient);
 
     List<BaseOBObject> updatedObjects = new ArrayList<>();
 
     clientImportProcessor.process(newObjects, updatedObjects);
 
-    verify(mockClient, times(1)).setName("NewClient");
-    verify(mockClient, times(1)).setDescription("NewClient");
-    verify(mockClient, times(1)).setSearchKey("NewClient");
+    verify(mockClient, times(1)).setName(NEW_CLIENT);
+    verify(mockClient, times(1)).setDescription(NEW_CLIENT);
+    verify(mockClient, times(1)).setSearchKey(NEW_CLIENT);
   }
 
   /**
@@ -88,7 +90,7 @@ public class ClientImportProcessorTest {
     Role mockRole = mock(Role.class);
     when(mockRole.getName()).thenReturn("OriginalRole");
 
-    clientImportProcessor.replaceName("OriginalClient", mockRole);
+    clientImportProcessor.replaceName(ORIGINAL_CLIENT, mockRole);
 
     verify(mockRole, times(1)).setName("NewClient_OriginalRole");
   }
@@ -102,7 +104,7 @@ public class ClientImportProcessorTest {
     User mockUser = mock(User.class);
     when(mockUser.getUsername()).thenReturn("OriginalUser");
 
-    clientImportProcessor.replaceName("OriginalClient", mockUser);
+    clientImportProcessor.replaceName(ORIGINAL_CLIENT, mockUser);
 
     verify(mockUser, times(1)).setUsername("NewClient_OriginalUser");
   }
@@ -116,7 +118,7 @@ public class ClientImportProcessorTest {
     Warehouse mockWarehouse = mock(Warehouse.class);
     when(mockWarehouse.getName()).thenReturn("OriginalWarehouse");
 
-    clientImportProcessor.replaceName("OriginalClient", mockWarehouse);
+    clientImportProcessor.replaceName(ORIGINAL_CLIENT, mockWarehouse);
 
     verify(mockWarehouse, times(1)).setName("NewClient_OriginalWarehouse");
   }
@@ -128,7 +130,7 @@ public class ClientImportProcessorTest {
   @Test
   public void testReplaceWithValidValues() {
     String currentValue = "OriginalClientRole";
-    String originalName = "OriginalClient";
+    String originalName = ORIGINAL_CLIENT;
 
     String result = clientImportProcessor.replace(currentValue, originalName);
 
@@ -142,7 +144,7 @@ public class ClientImportProcessorTest {
   @Test
   public void testReplaceWithNullValue() {
     String currentValue = null;
-    String originalName = "OriginalClient";
+    String originalName = ORIGINAL_CLIENT;
 
     String result = clientImportProcessor.replace(currentValue, originalName);
 

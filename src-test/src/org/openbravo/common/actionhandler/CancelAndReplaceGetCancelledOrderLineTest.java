@@ -83,14 +83,14 @@ public class CancelAndReplaceGetCancelledOrderLineTest {
     JSONObject record = new JSONObject();
     record.put("replacedorderline", orderLineId);
     recordsArray.put(record);
-    inputData.put("records", recordsArray);
+    inputData.put(ActionHandlerTestConstants.RECORDS, recordsArray);
 
     JSONObject result = cancelAndReplaceHandler.execute(Collections.emptyMap(), inputData.toString());
 
-    JSONArray resultArray = result.getJSONArray("result");
+    JSONArray resultArray = result.getJSONArray(ActionHandlerTestConstants.RESULT);
     assertEquals(1, resultArray.length());
     JSONObject resultOrderLine = resultArray.getJSONObject(0);
-    assertEquals(orderLineId, resultOrderLine.getJSONObject("record").getString("replacedorderline"));
+    assertEquals(orderLineId, resultOrderLine.getJSONObject("record").getString(ActionHandlerTestConstants.REPLACED_ORDER_LINE));
   }
 
   /**
@@ -99,7 +99,7 @@ public class CancelAndReplaceGetCancelledOrderLineTest {
    *
    * @throws Exception if an error occurs during the test
    */
-  @Disabled("Test deshabilitado temporalmente hasta revisar posible bug en CancelAndReplaceGetCancelledOrderLine")
+  @Disabled("Test temporarily disabled until we review a possible bug in CancelAndReplaceGetCancelledOrderLine")
   public void testExecuteInvalidOrderLineId() throws Exception {
     // Given
     String invalidOrderLineId = "INVALID_ID";
@@ -109,15 +109,15 @@ public class CancelAndReplaceGetCancelledOrderLineTest {
     JSONObject inputData = new JSONObject();
     JSONArray recordsArray = new JSONArray();
     JSONObject record = new JSONObject();
-    record.put("replacedorderline", invalidOrderLineId);
+    record.put(ActionHandlerTestConstants.REPLACED_ORDER_LINE, invalidOrderLineId);
     recordsArray.put(record);
-    inputData.put("records", recordsArray);
+    inputData.put(ActionHandlerTestConstants.RECORDS, recordsArray);
 
     // When
     JSONObject result = cancelAndReplaceHandler.execute(Collections.emptyMap(), inputData.toString());
 
     // Then
-    JSONArray resultArray = result.getJSONArray("result");
+    JSONArray resultArray = result.getJSONArray(ActionHandlerTestConstants.RESULT);
     assertEquals(0, resultArray.length());
   }
 
@@ -127,7 +127,7 @@ public class CancelAndReplaceGetCancelledOrderLineTest {
    *
    * @throws Exception if an error occurs during the test
    */
-  @Disabled("Test deshabilitado temporalmente hasta revisar posible bug en CancelAndReplaceGetCancelledOrderLine")
+  @Disabled("Test temporarily disabled until we review a possible bug in CancelAndReplaceGetCancelledOrderLine")
   public void testExecuteExceptionHandling() throws Exception {
     // Given
     String orderLineId = "12345";
@@ -137,15 +137,15 @@ public class CancelAndReplaceGetCancelledOrderLineTest {
     JSONObject inputData = new JSONObject();
     JSONArray recordsArray = new JSONArray();
     JSONObject record = new JSONObject();
-    record.put("replacedorderline", orderLineId);
+    record.put(ActionHandlerTestConstants.REPLACED_ORDER_LINE, orderLineId);
     recordsArray.put(record);
-    inputData.put("records", recordsArray);
+    inputData.put(ActionHandlerTestConstants.RECORDS, recordsArray);
 
     // When
     JSONObject result = cancelAndReplaceHandler.execute(Collections.emptyMap(), inputData.toString());
 
     // Then
-    JSONArray resultArray = result.getJSONArray("result");
+    JSONArray resultArray = result.getJSONArray(ActionHandlerTestConstants.RESULT);
     assertEquals(0, resultArray.length());
   }
 }

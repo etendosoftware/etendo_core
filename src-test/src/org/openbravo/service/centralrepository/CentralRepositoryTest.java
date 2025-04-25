@@ -57,17 +57,17 @@ public class CentralRepositoryTest {
   public void testExecuteRequestGivenValidServiceAndResponseShouldReturnSuccess() throws Exception {
     CentralRepository.Service service = CentralRepository.Service.VERSION_INFO;
     JSONObject expectedResponse = new JSONObject();
-    expectedResponse.put("success", true);
+    expectedResponse.put(CentralRepositoryTestConstants.SUCCESS, true);
     expectedResponse.put("responseCode", 200);
-    expectedResponse.put("response", new JSONObject("{\"msg\":\"success\"}"));
+    expectedResponse.put(CentralRepositoryTestConstants.RESPONSE, new JSONObject("{\"msg\":\"success\"}"));
 
     centralRepositoryStatic.when(() -> CentralRepository.executeRequest(service)).thenReturn(expectedResponse);
 
     JSONObject actualResponse = CentralRepository.executeRequest(service);
 
-    assertTrue(actualResponse.getBoolean("success"));
+    assertTrue(actualResponse.getBoolean(CentralRepositoryTestConstants.SUCCESS));
     assertEquals(200, actualResponse.getInt("responseCode"));
-    assertEquals("success", actualResponse.getJSONObject("response").getString("msg"));
+    assertEquals(CentralRepositoryTestConstants.SUCCESS, actualResponse.getJSONObject(CentralRepositoryTestConstants.RESPONSE).getString("msg"));
   }
 
   /**
@@ -81,9 +81,7 @@ public class CentralRepositoryTest {
     centralRepositoryStatic.when(() -> CentralRepository.executeRequest(service)).thenThrow(
         new OBException("Invalid URI"));
 
-    Exception exception = assertThrows(OBException.class, () -> {
-      CentralRepository.executeRequest(service);
-    });
+    Exception exception = assertThrows(OBException.class, () -> CentralRepository.executeRequest(service));
 
     assertEquals("Invalid URI", exception.getMessage());
   }
@@ -99,16 +97,16 @@ public class CentralRepositoryTest {
   public void testExecuteRequestGivenHttpServerErrorShouldReturnJsonWithError() throws Exception {
     CentralRepository.Service service = CentralRepository.Service.SEARCH_MODULES;
     JSONObject expectedError = new JSONObject();
-    expectedError.put("success", false);
-    expectedError.put("responseCode", 500);
-    expectedError.put("response", new JSONObject("{\"msg\":\"Internal Server Error\"}"));
+    expectedError.put(CentralRepositoryTestConstants.SUCCESS, false);
+    expectedError.put(CentralRepositoryTestConstants.RESPONSE_CODE, 500);
+    expectedError.put(CentralRepositoryTestConstants.RESPONSE, new JSONObject("{\"msg\":\"Internal Server Error\"}"));
 
     centralRepositoryStatic.when(() -> CentralRepository.executeRequest(service)).thenReturn(expectedError);
 
     JSONObject actualResponse = CentralRepository.executeRequest(service);
 
-    assertFalse(actualResponse.getBoolean("success"));
-    assertEquals(500, actualResponse.getInt("responseCode"));
+    assertFalse(actualResponse.getBoolean(CentralRepositoryTestConstants.SUCCESS));
+    assertEquals(500, actualResponse.getInt(CentralRepositoryTestConstants.RESPONSE_CODE));
   }
 
   /**
@@ -122,8 +120,8 @@ public class CentralRepositoryTest {
   public void testExecuteRequestGivenNullPayloadShouldHandleGracefully() throws JSONException {
     CentralRepository.Service service = CentralRepository.Service.REGISTER_MODULE;
     JSONObject expectedResponse = new JSONObject();
-    expectedResponse.put("success", true);
-    expectedResponse.put("responseCode", 200);
+    expectedResponse.put(CentralRepositoryTestConstants.SUCCESS, true);
+    expectedResponse.put(CentralRepositoryTestConstants.RESPONSE_CODE, 200);
 
     centralRepositoryStatic.when(() -> CentralRepository.executeRequest(service, (JSONObject) null)).thenReturn(
         expectedResponse);
@@ -131,6 +129,6 @@ public class CentralRepositoryTest {
     JSONObject actualResponse = CentralRepository.executeRequest(service, (JSONObject) null);
 
     assertNotNull(actualResponse);
-    assertTrue(actualResponse.getBoolean("success"));
+    assertTrue(actualResponse.getBoolean(CentralRepositoryTestConstants.SUCCESS));
   }
 }

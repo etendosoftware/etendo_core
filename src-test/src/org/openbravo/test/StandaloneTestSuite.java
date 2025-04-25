@@ -476,7 +476,8 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     "org.openbravo.portal",
     "org.openbravo.costing",
     "org.openbravo.cluster",
-
+    "org.openbravo.role.inheritance",
+    "org.openbravo.base.secureApp",
 
 })
 public class StandaloneTestSuite {

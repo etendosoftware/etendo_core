@@ -42,6 +42,10 @@ import org.openbravo.model.pricing.pricelist.PriceList;
 @ExtendWith(MockitoExtension.class)
 public class InOutLinePEHQLTransformerTest {
 
+  private static final String IS_SALES_TRANSACTION = "issotrx";
+  private static final String SALES_TRANSACTION_PARAM = "@Invoice.salesTransaction@" ;
+
+
   @InjectMocks
   private InOutLinePEHQLTransformer transformer;
 
@@ -132,7 +136,7 @@ public class InOutLinePEHQLTransformerTest {
   @Test
   @DisplayName("Test HQL transformation for sales transaction")
   public void testTransformHqlQueryForSalesTransaction() {
-    requestParameters.put("@Invoice.salesTransaction@", "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
     when(priceList.isPriceIncludesTax()).thenReturn(true);
     uomUtilStatic.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
@@ -141,8 +145,8 @@ public class InOutLinePEHQLTransformerTest {
     assertNotNull(transformedHql);
     assertTrue(transformedHql.contains("sh.salesTransaction = :issotrx"));
     assertTrue(transformedHql.contains("sh.completelyInvoiced = 'N'"));
-    assertTrue(queryNamedParameters.containsKey("issotrx"));
-    assertTrue((Boolean) queryNamedParameters.get("issotrx"));
+    assertTrue(queryNamedParameters.containsKey(IS_SALES_TRANSACTION));
+    assertTrue((Boolean) queryNamedParameters.get(IS_SALES_TRANSACTION));
     assertTrue((Boolean) queryNamedParameters.get("plIncTax"));
     assertEquals("testBPartnerId", queryNamedParameters.get("bp"));
     assertEquals("testCurrencyId", queryNamedParameters.get("cur"));
@@ -155,7 +159,7 @@ public class InOutLinePEHQLTransformerTest {
   @Test
   @DisplayName("Test HQL transformation for purchase transaction")
   public void testTransformHqlQueryForPurchaseTransaction() {
-    requestParameters.put("@Invoice.salesTransaction@", "false");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "false");
     when(priceList.isPriceIncludesTax()).thenReturn(false);
     uomUtilStatic.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
@@ -164,8 +168,8 @@ public class InOutLinePEHQLTransformerTest {
     assertNotNull(transformedHql);
     assertTrue(transformedHql.contains("sh.salesTransaction = :issotrx"));
     assertFalse(transformedHql.contains("sh.completelyInvoiced = 'N'"));
-    assertTrue(queryNamedParameters.containsKey("issotrx"));
-    assertFalse((Boolean) queryNamedParameters.get("issotrx"));
+    assertTrue(queryNamedParameters.containsKey(IS_SALES_TRANSACTION));
+    assertFalse((Boolean) queryNamedParameters.get(IS_SALES_TRANSACTION));
     assertFalse((Boolean) queryNamedParameters.get("plIncTax"));
   }
 
@@ -176,7 +180,7 @@ public class InOutLinePEHQLTransformerTest {
   @Test
   @DisplayName("Testing additional filters to change client and organization")
   public void testAdditionalFilters() {
-    requestParameters.put("@Invoice.salesTransaction@", "true");
+    requestParameters.put(SALES_TRANSACTION_PARAM, "true");
     when(priceList.isPriceIncludesTax()).thenReturn(true);
     String queryWithFilters = baseHqlQuery + " AND e.client.id in ('test') AND e.organization in ('test')";
 

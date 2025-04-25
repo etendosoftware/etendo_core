@@ -122,7 +122,7 @@ public class ServiceRelatedLinePriceActionHandlerTest {
   private JSONObject createParameters(String amount, boolean includeState, String tabId) throws Exception {
     JSONObject parameters = new JSONObject();
     parameters.put("orderlineId", "testOrderLineId");
-    parameters.put("amount", amount);
+    parameters.put(ActionHandlerTestConstants.AMOUNT, amount);
     parameters.put("discounts", "10.00");
     parameters.put("priceamount", "90.00");
     parameters.put("relatedqty", "2.00");
@@ -146,15 +146,15 @@ public class ServiceRelatedLinePriceActionHandlerTest {
    */
   @Test
   public void testExecuteHappyPath() throws Exception {
-    JSONObject parameters = createParameters("100.00", false, ActionHandlerTestConstants.NON_RFC_ID);
+    JSONObject parameters = createParameters(ActionHandlerTestConstants.PRODUCT_PRICE, false, ActionHandlerTestConstants.NON_RFC_ID);
 
     JSONObject result = actionHandler.execute(Collections.emptyMap(), parameters.toString());
 
     assertNotNull(result);
-    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get("amount"));
+    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get(ActionHandlerTestConstants.AMOUNT));
 
     mockedServicePriceUtils.verify(
-        () -> ServicePriceUtils.getServiceAmount(eq(mockServiceOrderLine), eq(new BigDecimal("100.00")),
+        () -> ServicePriceUtils.getServiceAmount(eq(mockServiceOrderLine), eq(new BigDecimal(ActionHandlerTestConstants.PRODUCT_PRICE)),
             eq(new BigDecimal("10.00")), eq(new BigDecimal("90.00")), eq(new BigDecimal("2.00")),
             eq(new BigDecimal("5.00")), any(JSONObject.class)));
   }
@@ -191,7 +191,7 @@ public class ServiceRelatedLinePriceActionHandlerTest {
    */
   @Test
   public void testExecuteWithDeferredSale() throws Exception {
-    JSONObject parameters = createParameters("100.00", true, ActionHandlerTestConstants.NON_RFC_ID);
+    JSONObject parameters = createParameters(ActionHandlerTestConstants.PRODUCT_PRICE, true, ActionHandlerTestConstants.NON_RFC_ID);
 
     JSONObject deferredSale = new JSONObject();
     deferredSale.put("deferred", true);
@@ -202,7 +202,7 @@ public class ServiceRelatedLinePriceActionHandlerTest {
     JSONObject result = actionHandler.execute(Collections.emptyMap(), parameters.toString());
 
     assertNotNull(result);
-    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get("amount"));
+    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get(ActionHandlerTestConstants.AMOUNT));
     assertTrue(result.getJSONObject(ActionHandlerTestConstants.MESSAGE).has("deferred"));
 
     mockedServicePriceUtils.verify(
@@ -218,12 +218,12 @@ public class ServiceRelatedLinePriceActionHandlerTest {
    */
   @Test
   public void testExecuteWithRFCTabId() throws Exception {
-    JSONObject parameters = createParameters("100.00", true, RFC_ORDERLINE_TAB_ID);
+    JSONObject parameters = createParameters(ActionHandlerTestConstants.PRODUCT_PRICE, true, RFC_ORDERLINE_TAB_ID);
 
     JSONObject result = actionHandler.execute(Collections.emptyMap(), parameters.toString());
 
     assertNotNull(result);
-    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get("amount"));
+    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get(ActionHandlerTestConstants.AMOUNT));
     assertFalse(result.has(ActionHandlerTestConstants.MESSAGE) && result.get(ActionHandlerTestConstants.MESSAGE) != JSONObject.NULL);
 
     mockedServicePriceUtils.verify(() -> ServicePriceUtils.deferredSaleAllowed(any(), any()), never());
@@ -238,13 +238,13 @@ public class ServiceRelatedLinePriceActionHandlerTest {
    */
   @Test
   public void testExecuteWithNullState() throws Exception {
-    JSONObject parameters = createParameters("100.00", false, ActionHandlerTestConstants.NON_RFC_ID);
+    JSONObject parameters = createParameters(ActionHandlerTestConstants.PRODUCT_PRICE, false, ActionHandlerTestConstants.NON_RFC_ID);
     parameters.put("state", JSONObject.NULL);
 
     JSONObject result = actionHandler.execute(Collections.emptyMap(), parameters.toString());
 
     assertNotNull(result);
-    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get("amount"));
+    assertEquals(new BigDecimal(ActionHandlerTestConstants.DEFAULT_AMOUNT), result.get(ActionHandlerTestConstants.AMOUNT));
     assertFalse(result.has(ActionHandlerTestConstants.MESSAGE) && result.get(ActionHandlerTestConstants.MESSAGE) != JSONObject.NULL);
   }
 

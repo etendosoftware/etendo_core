@@ -50,11 +50,14 @@ public class ModuleTest {
   @BeforeEach
   public void setUp() throws JSONException {
     validJsonDependencies = new JSONArray();
-    validJsonDependencies.put(new JSONObject().put("moduleId", "dep1").put("versionStart", "1.0"));
-    validJsonDependencies.put(new JSONObject().put("moduleId", "dep2").put("versionStart", "2.0"));
+    validJsonDependencies.put(new JSONObject().put(CentralRepositoryTestConstants.MODULE_ID, "dep1").put(
+        CentralRepositoryTestConstants.VERSION_START, "1.0"));
+    validJsonDependencies.put(new JSONObject().put(CentralRepositoryTestConstants.MODULE_ID, "dep2").put(
+        CentralRepositoryTestConstants.VERSION_START, "2.0"));
 
     validJsonIncludes = new JSONArray();
-    validJsonIncludes.put(new JSONObject().put("moduleId", "inc1").put("versionStart", "1.0"));
+    validJsonIncludes.put(new JSONObject().put(CentralRepositoryTestConstants.MODULE_ID, "inc1").put(
+        CentralRepositoryTestConstants.VERSION_START, "1.0"));
 
     mockDependencies = new ModuleDependency[2];
     mockDependencies[0] = new ModuleDependency();
@@ -64,7 +67,7 @@ public class ModuleTest {
     mockIncludes[0] = new ModuleDependency();
 
     validJsonModule = new JSONObject();
-    validJsonModule.put("author", "Test Author");
+    validJsonModule.put("author", CentralRepositoryTestConstants.TEST_AUTHOR);
     validJsonModule.put("dbPrefix", "TEST");
     validJsonModule.put("dependencies", validJsonDependencies);
     validJsonModule.put("description", "Test Description");
@@ -85,7 +88,7 @@ public class ModuleTest {
     JSONObject additionalInfo = new JSONObject();
     additionalInfo.put("key1", "value1");
     additionalInfo.put("key2", "value2");
-    validJsonModule.put("additionalInfo", additionalInfo);
+    validJsonModule.put(CentralRepositoryTestConstants.ADDITIONAL_INFO, additionalInfo);
 
     validJsonModules = new JSONArray();
     validJsonModules.put(validJsonModule);
@@ -104,7 +107,7 @@ public class ModuleTest {
 
       Module module = Module.fromJson(validJsonModule);
 
-      assertEquals("Test Author", module.getAuthor());
+      assertEquals(CentralRepositoryTestConstants.TEST_AUTHOR, module.getAuthor());
       assertEquals("TEST", module.getDbPrefix());
       assertEquals("Test Description", module.getDescription());
       assertEquals("Test Help", module.getHelp());
@@ -140,7 +143,7 @@ public class ModuleTest {
   @Test
   public void testFromJsonWithMissingRequiredFieldShouldThrowOBException() throws JSONException {
     JSONObject invalidJson = new JSONObject();
-    invalidJson.put("author", "Test Author");
+    invalidJson.put("author", CentralRepositoryTestConstants.TEST_AUTHOR);
 
     assertThrows(OBException.class, () -> Module.fromJson(invalidJson));
   }

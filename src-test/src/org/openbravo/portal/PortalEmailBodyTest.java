@@ -44,7 +44,6 @@ public class PortalEmailBodyTest {
     mockedPreferences = mockStatic(Preferences.class);
 
     mockClient = mock(Client.class);
-    Organization mockOrganization = mock(Organization.class);
     OBContext mockOBContext = mock(OBContext.class);
 
     when(mockOBContext.getCurrentClient()).thenReturn(mockClient);
