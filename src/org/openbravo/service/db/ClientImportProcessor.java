@@ -80,7 +80,7 @@ public class ClientImportProcessor implements EntityXMLProcessor {
     return importedValue;
   }
 
-  private void replaceName(String originalName, BaseOBObject bob) {
+  protected void replaceName(String originalName, BaseOBObject bob) {
     if (newName == null || newName.trim().length() == 0) {
       return;
     }
