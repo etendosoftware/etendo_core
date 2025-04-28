@@ -122,8 +122,6 @@ public class ClusterServiceThreadTest {
    * Sets up the test environment before each test.
    * Initializes the `ClusterServiceThread` instance and mocks required dependencies.
    *
-   * @throws Exception
-   *     if an error occurs during setup
    */
   @Test
   public void testRegisterService() {
@@ -160,7 +158,7 @@ public class ClusterServiceThreadTest {
         assertEquals(mockADClusterService, result);
 
       } catch (Exception e) {
-        fail("Error al utilizar reflection: " + e.getMessage());
+        fail("Error using reflection: " + e.getMessage());
       }
     }
   }
