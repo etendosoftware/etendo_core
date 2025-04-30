@@ -11,7 +11,8 @@
 <!--0138E7A89B5E4DC3932462252801FFBC-->  <HELP><![CDATA[Openbravo 3.0 is a collection (distribution) of modules. This template is a container of all the modules and configuration changes that compose Openbravo 3.0.]]></HELP>
 <!--0138E7A89B5E4DC3932462252801FFBC-->  <URL><![CDATA[http://forge.openbravo.com/projects/vthree]]></URL>
 <!--0138E7A89B5E4DC3932462252801FFBC-->  <TYPE><![CDATA[T]]></TYPE>
-<!--0138E7A89B5E4DC3932462252801FFBC-->  <LICENSE><![CDATA[Licensed under the Openbravo Public License version 1.1. You may obtain a copy of the License at http://www.openbravo.com/legal/license.html or in the legal folder of the Openbravo ERP core distribution.]]></LICENSE>
+<!--0138E7A89B5E4DC3932462252801FFBC-->  <LICENSE><![CDATA[Licensed under the Openbravo Public License version 1.1.
+You may obtain a copy of the License at http://www.openbravo.com/legal/license.html or in the legal folder of the Openbravo ERP core distribution.]]></LICENSE>
 <!--0138E7A89B5E4DC3932462252801FFBC-->  <JAVAPACKAGE><![CDATA[org.openbravo.v3]]></JAVAPACKAGE>
 <!--0138E7A89B5E4DC3932462252801FFBC-->  <LICENSETYPE><![CDATA[OBPL]]></LICENSETYPE>
 <!--0138E7A89B5E4DC3932462252801FFBC-->  <AUTHOR><![CDATA[Openbravo S.L.U.]]></AUTHOR>

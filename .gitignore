@@ -12,6 +12,7 @@ gradle.properties
 !.settings/org.eclipse.wst.common.component.template
 !.settings/org.eclipse.wst.common.project.facet.core.xml
 .idea
+.smarttomcat
 *.iml
 attachments
 bin

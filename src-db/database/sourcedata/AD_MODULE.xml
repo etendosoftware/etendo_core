@@ -9,19 +9,19 @@
 <!--0-->  <VERSION><![CDATA[24.4.13]]></VERSION>
 <!--0-->  <DESCRIPTION><![CDATA[Core module is the base one]]></DESCRIPTION>
 <!--0-->  <HELP><![CDATA[Core module is the base one, all developments in core are included as part of the standard Etendo ERP.]]></HELP>
-<!--0-->  <URL><![CDATA[www.etendo.software]]></URL>
+<!--0-->  <URL><![CDATA[https://github.com/etendosoftware/etendo_core]]></URL>
 <!--0-->  <TYPE><![CDATA[M]]></TYPE>
 <!--0-->  <LICENSE><![CDATA[Licensed under the Openbravo Public License Version 1.1.
 You may obtain a copy of the License at support@etendo.software or in the legal folder of the Etendo ERP core distribution.]]></LICENSE>
 <!--0-->  <JAVAPACKAGE><![CDATA[org.openbravo]]></JAVAPACKAGE>
 <!--0-->  <LICENSETYPE><![CDATA[OBPL]]></LICENSETYPE>
-<!--0-->  <AUTHOR><![CDATA[Futit S.L.]]></AUTHOR>
+<!--0-->  <AUTHOR><![CDATA[Openbravo S.L.U.]]></AUTHOR>
 <!--0-->  <ISTRANSLATIONREQUIRED><![CDATA[Y]]></ISTRANSLATIONREQUIRED>
 <!--0-->  <AD_LANGUAGE><![CDATA[en_US]]></AD_LANGUAGE>
 <!--0-->  <HASCHARTOFACCOUNTS><![CDATA[N]]></HASCHARTOFACCOUNTS>
 <!--0-->  <ISTRANSLATIONMODULE><![CDATA[N]]></ISTRANSLATIONMODULE>
 <!--0-->  <HASREFERENCEDATA><![CDATA[Y]]></HASREFERENCEDATA>
-<!--0-->  <UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/24Q4-13]]></UPDATEINFO>
+<!--0-->  <UPDATEINFO><![CDATA[https://github.com/etendosoftware/etendo_core/releases/tag/24.4.13]]></UPDATEINFO>
 <!--0-->  <REFERENCEDATAINFO><![CDATA[Standard document types for orders, invoices, etc. and settings]]></REFERENCEDATAINFO>
 <!--0-->  <VERSION_LABEL><![CDATA[24Q4.13]]></VERSION_LABEL>
 <!--0-->  <ISCOMMERCIAL><![CDATA[N]]></ISCOMMERCIAL>
