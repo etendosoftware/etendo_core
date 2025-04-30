@@ -1340,9 +1340,29 @@
               WHERE c_orderline_id = cur_orderline.c_orderline_id
               AND res_status <> 'CL';
               -- Initialize so_res_status
-              UPDATE c_orderline
-              SET so_res_status = 'NR'
-              WHERE c_orderline_id = cur_orderline.c_orderline_id;
+              DECLARE
+                v_exists_reservation NUMBER:= 0;
+              BEGIN
+                SELECT COUNT(*)
+                INTO v_exists_reservation
+                FROM m_reservation r
+                WHERE r.c_orderline_id = cur_orderline.c_orderline_id
+                  AND r.res_status = 'CL';
+              
+                IF v_exists_reservation > 0 THEN
+                  UPDATE c_orderline
+                  SET so_res_status = 'CR',
+                      updated = now(),
+                      updatedby = v_User
+                  WHERE c_orderline_id = cur_orderline.c_orderline_id;
+                ELSE
+                  UPDATE c_orderline
+                  SET so_res_status = 'NR',
+                      updated = now(),
+                      updatedby = v_User
+                  WHERE c_orderline_id = cur_orderline.c_orderline_id;
+                END IF;
+              END;
               IF (v_aux > 1) THEN
                 RAISE_APPLICATION_ERROR(-20000, '@SOLineWithMoreThanOneOpenReservation@');
               ELSIF (v_aux = 1) THEN
