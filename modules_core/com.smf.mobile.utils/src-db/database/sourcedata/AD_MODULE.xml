@@ -10,7 +10,7 @@
 <!--37E030C1F39E457B963664582870CEBB-->  <DESCRIPTION><![CDATA[Utilities for Mobile Applications]]></DESCRIPTION>
 <!--37E030C1F39E457B963664582870CEBB-->  <TYPE><![CDATA[M]]></TYPE>
 <!--37E030C1F39E457B963664582870CEBB-->  <LICENSE><![CDATA[This module is licensed under the Etendo License Version 1.0.
-You can find a copy of the license at: https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt or in the LICENSE.md file located in the root directory of this module’s source code.]]></LICENSE>
+You can find a copy of the license at: https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt or in the LICENSE.md file located in the root directory of Etendo Classic.]]></LICENSE>
 <!--37E030C1F39E457B963664582870CEBB-->  <JAVAPACKAGE><![CDATA[com.smf.mobile.utils]]></JAVAPACKAGE>
 <!--37E030C1F39E457B963664582870CEBB-->  <LICENSETYPE><![CDATA[ETCL]]></LICENSETYPE>
 <!--37E030C1F39E457B963664582870CEBB-->  <AUTHOR><![CDATA[Futit Services S.L.]]></AUTHOR>
@@ -19,7 +19,7 @@ You can find a copy of the license at: https://github.com/etendosoftware/etendo_
 <!--37E030C1F39E457B963664582870CEBB-->  <HASCHARTOFACCOUNTS><![CDATA[N]]></HASCHARTOFACCOUNTS>
 <!--37E030C1F39E457B963664582870CEBB-->  <ISTRANSLATIONMODULE><![CDATA[N]]></ISTRANSLATIONMODULE>
 <!--37E030C1F39E457B963664582870CEBB-->  <HASREFERENCEDATA><![CDATA[N]]></HASREFERENCEDATA>
-<!--37E030C1F39E457B963664582870CEBB-->  <ISCOMMERCIAL><![CDATA[Y]]></ISCOMMERCIAL>
+<!--37E030C1F39E457B963664582870CEBB-->  <ISCOMMERCIAL><![CDATA[N]]></ISCOMMERCIAL>
 <!--37E030C1F39E457B963664582870CEBB-->  <ISTRIALALLOWED><![CDATA[N]]></ISTRIALALLOWED>
 <!--37E030C1F39E457B963664582870CEBB--></AD_MODULE>
 

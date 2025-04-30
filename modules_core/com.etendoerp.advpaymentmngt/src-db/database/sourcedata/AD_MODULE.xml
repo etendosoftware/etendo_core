@@ -10,7 +10,7 @@
 <!--FF9AC97E86094F43A2842277D641A480-->  <DESCRIPTION><![CDATA[Etendo payment management]]></DESCRIPTION>
 <!--FF9AC97E86094F43A2842277D641A480-->  <TYPE><![CDATA[M]]></TYPE>
 <!--FF9AC97E86094F43A2842277D641A480-->  <LICENSE><![CDATA[This module is licensed under the Etendo License Version 1.0.
-You can find a copy of the license at: https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt or in the LICENSE.md file located in the root directory of this module’s source code.]]></LICENSE>
+You can find a copy of the license at: https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt or in the LICENSE.md file located in the root directory of Etendo Classic.]]></LICENSE>
 <!--FF9AC97E86094F43A2842277D641A480-->  <JAVAPACKAGE><![CDATA[com.etendoerp.advpaymentmngt]]></JAVAPACKAGE>
 <!--FF9AC97E86094F43A2842277D641A480-->  <LICENSETYPE><![CDATA[ETCL]]></LICENSETYPE>
 <!--FF9AC97E86094F43A2842277D641A480-->  <AUTHOR><![CDATA[Futit Services S.L.]]></AUTHOR>

@@ -10,7 +10,7 @@
 <!--05252D17486D4E148C12F26FB6A161C8-->  <DESCRIPTION><![CDATA[Debug tools for smartclient UI]]></DESCRIPTION>
 <!--05252D17486D4E148C12F26FB6A161C8-->  <TYPE><![CDATA[M]]></TYPE>
 <!--05252D17486D4E148C12F26FB6A161C8-->  <LICENSE><![CDATA[This module is licensed under the Etendo License Version 1.0.
-You can find a copy of the license at: https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt or in the LICENSE.md file located in the root directory of this module’s source code.]]></LICENSE>
+You can find a copy of the license at: https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt or in the LICENSE.md file located in the root directory of Etendo Classic.]]></LICENSE>
 <!--05252D17486D4E148C12F26FB6A161C8-->  <JAVAPACKAGE><![CDATA[com.smf.smartclient.debugtools]]></JAVAPACKAGE>
 <!--05252D17486D4E148C12F26FB6A161C8-->  <LICENSETYPE><![CDATA[ETCL]]></LICENSETYPE>
 <!--05252D17486D4E148C12F26FB6A161C8-->  <AUTHOR><![CDATA[Futit Services S.L.]]></AUTHOR>
