@@ -1,4 +1,4 @@
-ETENDO LICENSE
+ETENDO LICENSE VERSION 1.0
 
 SOFTWARE LICENSE AGREEMENT
 
@@ -129,9 +129,9 @@ Is required to be disclosed by law or court order.
 The confidentiality obligations set forth in this Agreement shall survive termination of this Agreement for any reason.
 
 
-IX. LANGUAGE AND INTEGRITY
+IX. INTEGRITY
 
-In the event that translations of this Agreement are provided in other languages, the Spanish version shall prevail in case of discrepancy or conflict in interpretation. The nullity or invalidity of any provision of this Agreement shall not affect the validity of the remaining provisions, which shall remain in full force and effect. The headings of the clauses are included for convenience only and shall not affect their interpretation.
+The nullity or invalidity of any provision of this Agreement shall not affect the validity of the remaining provisions, which shall remain in full force and effect. The headings of the clauses are included for convenience only and shall not affect their interpretation.
 
 
 X. MAINTENANCE PACKAGES AND UPDATES

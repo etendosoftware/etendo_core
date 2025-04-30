@@ -55,7 +55,7 @@ For  more information you can read documentation in [Etendo Docs](https://docs.e
 
 This project includes components licensed under different terms. For full license texts and third-party license disclosures, please refer to the `/legal` directory:
 
-- **Etendo License**: See [legal/Etendo_licence.txt]( ./legal/Etendo_licence.txt) or [legal/Etendo_licence_es.txt](./legal/Etendo_licence_es.txt)
+- **Etendo License**: See [legal/Etendo_licence.txt]( ./legal/Etendo_licence.txt)
 - **Openbravo Public License (OBPL)**: See [legal/Openbravo_license.txt](./legal/Openbravo_license.txt)
 - **Third-party dependency licenses**: See [legal/LEGAL.md](./legal/LEGAL.md)
 
