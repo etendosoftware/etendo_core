@@ -194,7 +194,7 @@ task upgradeCoreVersion {
             }
             adModuleContent = adModuleContent.replaceAll(/<VERSION><!\[CDATA\[\d+.\d+.\d+/, "<VERSION><![CDATA[${version[0]}.${version[1]}.${version[2]}")
             adModuleContent = adModuleContent.replaceAll(/<VERSION_LABEL><!\[CDATA\[\d+Q\d+.\d+/, "<VERSION_LABEL><![CDATA[${version[0]}Q${version[1]}.${version[2]}")
-            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/docs.etendo.software\/whats-new\/release-notes\/etendo-classic\/versions\/\d+Q\d+-\d+/, "<UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/${version[0]}Q${version[1]}-${version[2]}")
+            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/github.com\/etendosoftware\/etendo_core\/releases\/tag\/\d+\.\d+\.\d+/, "<UPDATEINFO><![CDATA[https://github.com/etendosoftware/etendo_core/releases/tag/${version[0]}.${version[1]}.${version[2]}")
             file(filePath).write(adModuleContent)
         }
 
