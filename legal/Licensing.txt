@@ -16,8 +16,7 @@ ANY  WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A  PARTICULAR PURPOSE. See the Openbravo Public License
 (www.openbravo.com/legal/license.html) for more details.
 
-You should have received a copy of the Openbravo Public License along with this
-product; if not, write to legal@openbravo.com.  You can also find the terms of
+You can also find the terms of
 the Openbravo Public License here: http://www.openbravo.com/legal/license.html
 
 
