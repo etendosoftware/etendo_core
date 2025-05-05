@@ -10,10 +10,11 @@
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <DESCRIPTION><![CDATA[Provides the main application components for the Etendo ERP user interface.]]></DESCRIPTION>
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <HELP><![CDATA[Provides the main application components for the Etendo ERP user interface. The main layout includes a navigation bar and a main view area.]]></HELP>
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <TYPE><![CDATA[M]]></TYPE>
-<!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <LICENSE><![CDATA[Etendo Commercial License]]></LICENSE>
+<!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <LICENSE><![CDATA[This module is licensed under the Etendo License Version 1.0.
+You can find a copy of the license at: https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt or in the LICENSE.md file located in the root directory of Etendo Classic.]]></LICENSE>
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <JAVAPACKAGE><![CDATA[com.etendoerp.client.application]]></JAVAPACKAGE>
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <LICENSETYPE><![CDATA[ETCL]]></LICENSETYPE>
-<!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <AUTHOR><![CDATA[Etendo Software]]></AUTHOR>
+<!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <AUTHOR><![CDATA[Futit Services S.L.]]></AUTHOR>
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <ISTRANSLATIONREQUIRED><![CDATA[N]]></ISTRANSLATIONREQUIRED>
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <AD_LANGUAGE><![CDATA[en_US]]></AD_LANGUAGE>
 <!--BDA79ABCDC2C4BB58C0520C3102896D5-->  <HASCHARTOFACCOUNTS><![CDATA[N]]></HASCHARTOFACCOUNTS>
