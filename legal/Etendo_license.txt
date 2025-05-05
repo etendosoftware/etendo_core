@@ -1,0 +1,178 @@
+ETENDO LICENSE VERSION 1.0
+
+SOFTWARE LICENSE AGREEMENT
+
+This Software License Agreement (hereinafter, the "Agreement") is entered into between FUTIT SERVICES, S.L., with Tax Identification Number B75117705 and registered office in Calle Eustasio Amilibia, 10 - piso 7 pta 4, 20011, Donostia - San Sebastián (Spain), registered in the Commercial Registry of Gipuzkoa (hereinafter, "FUTIT" or the "LICENSOR"), and the company or entity acquiring the license (hereinafter, the "the LICENSEE").
+
+
+I. INTRODUCTION
+
+This Agreement sets forth the terms and conditions governing the use of the software called ETENDO (hereinafter referred to as the "Software"), for which FUTIT is the exclusive owner of all intellectual property rights. The Software includes the additional modules and packages created for it.
+
+By using the Software or expressly accepting this Agreement, the LICENSEE agrees to be bound by its terms and conditions. If the LICENSEE does not agree with any of the terms of this Agreement, the LICENSEE shall not use the Software and shall notify its representative within the company or entity.
+
+
+II. DECLARATIONS AND WARRANTIES
+
+Both parties acknowledge that they have the legal capacity to enter into this Agreement. The natural person accepting this Agreement warrants that they have sufficient authority and power to do so on behalf of the LICENSEE and to bind the LICENSEE to its terms.
+
+
+III. GRANT OF LICENSE
+
+Under this Agreement, FUTIT grants the LICENSEE a limited, non-exclusive, non-transferable and revocable license to use the Software on the terms and conditions set forth below. This license allows access to the source code of the Software and grants rights to use and modify the Software exclusively for the LICENSEE's internal business purposes.
+
+
+IV. ACCEPTANCE OF AGREEMENT
+
+Acceptance of this Agreement by the LICENSEE shall be made by:
+ - Use of the Software; or
+ - the LICENSEE's express acceptance of this Agreement.
+
+
+V. DEFINITIONS
+
+For the purposes of this Agreement, the following terms shall have the following meanings:
+
+Agreement: means this Software License Agreement, including its attachments and any subsequent amendments.
+Software: means the software program (ETENDO), in its current version and any updates or new versions provided, including object code, source code (if provided), documentation, user manuals and any other related materials.
+Original Work or Software: the source code distributed under this License and any updates specified in the Agreement.
+Source Code: human-readable form of the Software, suitable for study and modification.
+Modifications: any additions to or deletions from the content or structure of the original Work or software. When the software is published as a series of files, a modification is: any addition to or deletion from the content of a file containing Source Code or previous modifications; any new file containing any part of the Source Code or previous modifications.
+Derivative works: works or software created by the LICENSEE, based on the Original Work or its modifications.
+Distribution or communication: acts of sale, lending, rental, distribution, public communication, transmission or any other action that makes copies of the Work available to third parties.
+LICENSOR: is the company FUTIT SERVICES, S.L., with Tax Identification Number B75117705, holder of the intellectual property rights of the Software.
+the LICENSEE or You: is the entity that acquires the license to use the Software under this Agreement. Any natural or legal person who uses the Software under the terms of this License.
+License to Use: means the non-exclusive and non-transferable right granted to the LICENSEE to use the Software under the terms and conditions set forth in this Agreement.
+Documentation: means user manuals, installation guides and any other written or electronic materials accompanying the Software that describe its operation and use.
+Update: means any modification or enhancement to the Software provided to the LICENSEE, whether free of charge or for a fee.
+Version: means a new version of the Software that includes significant changes to its functionality or design.
+Confidential Information: means any technical, commercial or other information, data or know-how disclosed by either party to the other in connection with this Agreement that has been identified as confidential.
+Territory: means the geographical area in which the LICENSEE is authorized to use the Software.
+User: means any person using the Software under the LICENSEE's authorization.
+
+FUTIT grants to the LICENSEE a license to use this Software, which is revocable under the terms legally or contractually established, non-transferable, non-exclusive and non-sublicensable.
+
+This license is expressly limited to the functionalities defined in this Agreement.
+
+The Software is the exclusive property of FUTIT and is protected by applicable copyright laws and international treaties.
+
+By virtue of this license, no ownership rights in the Software are transferred to the LICENSEE. FUTIT reserves all rights not specifically granted in this license.
+
+FUTIT grants to the LICENSEE a limited, non-exclusive, non-transferable license to use the Software in accordance with the terms and conditions set forth in the offer sent to Client. The scope of use of this license is detailed in the offer and may only be exercised by the LICENSEE in accordance with the terms set forth therein and/or in this Agreement.
+
+Any use of the Software beyond the scope specified in the offer and/or in this Agreement shall require the prior written approval of FUTIT.
+
+The LICENSEE is responsible for ensuring that its employees, agents or any person using the licensed Software comply with the terms and conditions of this Agreement. FUTIT shall not be liable for the acts or omissions of the LICENSEE's employees or representatives in connection with the use of the Software.
+
+
+VI. LICENSEE'S OBLIGATIONS
+
+The LICENSEE agrees to comply with the following obligations:
+
+VI.1. Attribution
+The LICENSEE shall keep intact all copyright and trademark notices of the LICENSOR contained in the Software, including those in the source code, documentation and user interface. the LICENSEE shall also include a copyright and trademark notice of the LICENSOR on any copy or adaptation of the Software that the LICENSEE makes.
+
+VI.2. Modifications
+In the event that the LICENSEE makes modifications to the Software, the LICENSEE shall include a prominent notice in the source code and documentation stating that the Work has been modified, the date of modification and the identification of the LICENSEE as the author of the modifications. This notice shall be sufficiently clear and conspicuous so that any person accessing the source code or documentation can easily identify the modifications made.
+
+VI.3 Permitted Use
+The LICENSEE agrees to use the Software solely for the purposes permitted in this Agreement. In particular, the LICENSEE may not use the Software for purposes other than internal business purposes within its company, such as redistribution, sublicensing or the creation of derivative works for external marketing.
+
+VI.4 Restrictions on Use
+The LICENSEE agrees not to do the following:
+Use the Software in a manner contrary to applicable laws and regulations.
+Modify the Software in an unauthorized manner.
+Use the Software for illegal purposes or purposes that infringe third party rights.
+Redistribute the Software to third parties without prior written authorization from FUTIT.
+
+VI.5 Confidentiality
+The LICENSEE agrees to maintain the confidentiality of the LICENSOR's confidential information to which it has access under this Agreement. This confidentiality obligation includes, but is not limited to, technical, business and financial information related to the Software.
+
+The LICENSEE may not under any circumstances share all or any part of the Source Code with third parties not authorized by FUTIT; this includes computer tools provided by third parties that use Artificial Intelligence or similar functions for code optimization or enhancement.
+
+VI.6 Notification of Unauthorized Use
+In the event that the LICENSEE becomes aware of any unauthorized use of the Software, the LICENSEE shall immediately notify the LICENSOR.
+
+VI.7 Compliance with other provisions
+The LICENSEE agrees to comply with all other provisions set forth in this Agreement, including those relating to intellectual property, warranties, limitation of liability and termination.
+
+
+VII. WARRANTIES AND LIMITATION OF LIABILITY
+
+The Software is provided "as is", without any other express or implied warranties, including, but not limited to, warranties of marketability, fitness for a particular purpose or non-infringement. FUTIT does not warrant that the Software will be error-free or that it will operate uninterrupted.
+
+The LICENSEE acknowledges and agrees that it is responsible for verifying that the Software is suited to the specific needs of its business and for determining whether the Software is suitable for its operational use before implementing it in its organization.
+
+To the fullest extent permitted by applicable law, FUTIT shall not be liable for any indirect, incidental, special, consequential or punitive damages, including, but not limited to, loss of profits, loss of business, business interruption, loss of data or any other commercial damages or losses, arising out of the use or inability to use the Software, even if FUTIT has been advised of the possibility of such damages.
+
+FUTIT's total liability to the LICENSEE for any claim arising out of this Agreement or the use of the Software shall be limited to the amount paid by the LICENSEE for the license of the Software during the last year.
+
+The Software is provided by FUTIT in full compliance with any regulatory obligations that may apply. FUTIT shall not be liable for the regulatory compliance of the Software from the moment it is modified in whole or in part by the LICENSEE.
+
+
+VIII. CONFIDENTIALITY
+
+The parties acknowledge that, in the course of their contractual relationship, they may have access to confidential information of the other party. Therefore, they agree as follows:
+
+Definition of Confidential Information: “Confidential Information” is considered to be any information, documentation or technical data provided by one party to the other, including, but not limited to, information concerning the business, customers, operations, facilities, procedures, methods, transactions, know-how or any other aspect related to the business of the other party, as well as any information related to the Software that is the subject of this Agreement.
+
+Each party agrees to:
+Keep the Confidential Information in strict confidentiality and not disclose it to third parties without the prior written consent of the other party.
+Use the Confidential Information only for the purpose of complying with the obligations set forth in this Agreement.
+Protect the Confidential Information with the same degree of care that it uses to protect its own confidential information of a similar nature.
+
+The confidentiality obligations set forth in this Agreement shall not apply to information that:
+Is or has been in the public domain.
+Has been legally obtained from a third party without confidentiality restrictions.
+Is required to be disclosed by law or court order.
+
+The confidentiality obligations set forth in this Agreement shall survive termination of this Agreement for any reason.
+
+
+IX. INTEGRITY
+
+The nullity or invalidity of any provision of this Agreement shall not affect the validity of the remaining provisions, which shall remain in full force and effect. The headings of the clauses are included for convenience only and shall not affect their interpretation.
+
+
+X. MAINTENANCE PACKAGES AND UPDATES
+
+FUTIT shall publish software updates as often as it deems appropriate and shall make them available to the LICENSEE for installation by the LICENSEE.
+
+FUTIT shall not be responsible for the operation or security of ETENDO when the LICENSEE has not updated the software within the previous 12 months.
+
+
+XI. MODIFICATIONS TO THE SOFTWARE
+
+In those cases in which it is contractually foreseen that FUTIT may carry out modifications to the software requested by the LICENSEE, such modifications shall be subject to the ownership and licensing regime established in paragraph III of this Agreement.
+
+
+XII. TERMINATION
+
+Without prejudice to its other rights, FUTIT may terminate this Agreement if the LICENSEE breaches any of its terms and conditions. In the event of termination, the LICENSEE shall immediately cease use of the Software and destroy all copies of the Software and related Confidential Information in its possession or under its control.
+
+
+XIII. ASSIGNMENT
+
+The LICENSEE may not assign or transfer this Agreement, in whole or in part, without the prior written consent of FUTIT. However, FUTIT may assign or transfer this Agreement, in whole or in part, to an affiliate, its parent or a third party acquirer of its business upon prior written notice to the LICENSEE.
+
+
+XIV. NOTICES
+
+All notices and communications between the parties in connection with this Agreement shall be in writing and shall be deemed duly given if sent by e-mail with confirmation of receipt, courier with acknowledgment of receipt or bureaufax to the addresses set forth below, or to any other address that one party notifies to the other in writing:
+
+By the LICENSEE: The address shown on the order or invoice.
+By FUTIT: The address indicated in the heading of this Agreement.
+
+XV. APPLICABLE LAW AND JURISDICTION
+
+This Agreement shall be governed by and construed in accordance with the laws of Spain. The parties submit to the exclusive jurisdiction of the courts and tribunals of the city of Donostia-San Sebastián (Gipuzkoa), Spain, for the resolution of any dispute related to this Agreement, expressly waiving any other jurisdiction that may correspond to them.
+
+CONTACT INFORMATION
+FUTIT's contact information is as follows:
+
+FUTIT SERVICES, S.L.
+_________
+
+Spain.
+
+Copyright © 2025 FUTIT SERVICES, S.L.
