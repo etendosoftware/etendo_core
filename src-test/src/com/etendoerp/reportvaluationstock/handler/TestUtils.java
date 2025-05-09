@@ -18,6 +18,11 @@ public class TestUtils {
     throw new IllegalStateException("Utility class");
   }
 
+
+  public static final String MOCKED_WARNING_MESSAGE = "Mocked warning message";
+  public static final String POST_ACTION = "postAction";
+  public static final String WARNING = "warning";
+  public static final String TRX_WITH_NO_COST = "TrxWithNoCost";
   public static final String TEST_DATE = "2024-01-01";
   public static final String TEST_ORG_ID = "testOrgId";
   public static final String TEST_WAREHOUSE_ID = "testWarehouseId";

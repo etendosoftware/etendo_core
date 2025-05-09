@@ -2,6 +2,7 @@
 <!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
 <!-- 2016-12-07T15:45:56 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportValuationStockExcel" printOrder="Horizontal" pageWidth="1325" pageHeight="595" orientation="Landscape" columnWidth="1325" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="de20ebe7-a956-454f-9dbb-a60c3e076d85">
+	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
 	<property name="ireport.zoom" value="1.8150000000000042"/>
 	<property name="ireport.x" value="932"/>
 	<property name="ireport.y" value="0"/>

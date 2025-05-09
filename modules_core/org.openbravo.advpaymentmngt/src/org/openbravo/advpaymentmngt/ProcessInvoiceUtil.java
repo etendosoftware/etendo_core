@@ -47,6 +47,8 @@ import java.util.*;
 public class ProcessInvoiceUtil {
     private static final Logger log4j = LogManager.getLogger();
     private final AdvPaymentMngtDao dao = new AdvPaymentMngtDao();
+    private static final String VOID_DOCUMENT_ACTION = "RC";
+    private static final String ERROR = "Error";
 
     @Inject
     @Any
@@ -59,11 +61,12 @@ public class ProcessInvoiceUtil {
      * @param strdocaction Document Action
      * @param strVoidInvoiceDate Void date where applicable
      * @param strVoidInvoiceAcctDate Void accounting date where applicable
+     * @param strSupplierReference Supplier reference associated with the invoice, used for tracking purposes.
      * @param vars {@link VariablesSecureApp} Used to obtain current language and by Payment Processes. Use {@link org.openbravo.client.kernel.RequestContext#getVariablesSecureApp()} outside of servlets.
      * @param conn {@link ConnectionProvider} Used to connect to the database. Use 'this' when in servlets.
      * @return an {@link OBError} with the message of the resulting operation. It can be a success.
      */
-    public OBError process(String strC_Invoice_ID, String strdocaction, String strVoidInvoiceDate, String strVoidInvoiceAcctDate, VariablesSecureApp vars, ConnectionProvider conn) {
+    public OBError process(String strC_Invoice_ID, String strdocaction, String strVoidInvoiceDate, String strVoidInvoiceAcctDate, String strSupplierReference, VariablesSecureApp vars, ConnectionProvider conn) {
         OBError myMessage = null;
         try {
 
@@ -75,7 +78,7 @@ public class ProcessInvoiceUtil {
             OBError msg = null;
             for (ProcessInvoiceHook hook : hooks) {
                 msg = hook.preProcess(invoice, strdocaction);
-                if (msg != null && "Error".equals(msg.getType())) {
+                if (msg != null && StringUtils.equals(ERROR, msg.getType())) {
                     return msg;
                 }
             }
@@ -86,8 +89,8 @@ public class ProcessInvoiceUtil {
                     String errorMSG = Utility.messageBD(conn, "InitBPCurrencyLnk", vars.getLanguage(),
                             false);
                     msg = new OBError();
-                    msg.setType("Error");
-                    msg.setTitle(Utility.messageBD(conn, "Error", vars.getLanguage()));
+                    msg.setType(ERROR);
+                    msg.setTitle(Utility.messageBD(conn, ERROR, vars.getLanguage()));
                     msg.setMessage(String.format(errorMSG, invoice.getBusinessPartner().getId(),
                             invoice.getBusinessPartner().getName()));
 
@@ -105,7 +108,7 @@ public class ProcessInvoiceUtil {
 
             Date voidDate = null;
             Date voidAcctDate = null;
-            Map<String, String> parameters = null;
+            Map<String, String> parameters = new HashMap<>();
             if (!strVoidInvoiceDate.isEmpty() && !strVoidInvoiceAcctDate.isEmpty()) {
                 try {
                     voidDate = OBDateUtils.getDate(strVoidInvoiceDate);
@@ -116,16 +119,18 @@ public class ProcessInvoiceUtil {
                     log4j.error("Not possible to parse the following date: " + strVoidInvoiceDate, pe);
                     log4j.error("Not possible to parse the following date: " + strVoidInvoiceAcctDate, pe);
                 }
-                parameters = new HashMap<String, String>();
                 parameters.put("voidedDocumentDate", OBDateUtils.formatDate(voidDate, "yyyy-MM-dd"));
                 parameters.put("voidedDocumentAcctDate",
                         OBDateUtils.formatDate(voidAcctDate, "yyyy-MM-dd"));
+            }
 
+            if (StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction) && !invoice.isSalesTransaction()) {
+                parameters.put("supplierReference", strSupplierReference);
             }
 
             // In case of void a non paid invoice, create a dummy payment related to it with zero amount
             FIN_Payment dummyPayment = null;
-            if ("RC".equals(strdocaction) && !invoice.isPaymentComplete()
+            if (StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction) && !invoice.isPaymentComplete()
                     && invoice.getTotalPaid().compareTo(BigDecimal.ZERO) == 0) {
                 try {
                     OBContext.setAdminMode(true);
@@ -133,7 +138,7 @@ public class ProcessInvoiceUtil {
                     final DocumentType docType = FIN_Utility.getDocumentType(invoice.getOrganization(),
                             isSOTrx ? AcctServer.DOCTYPE_ARReceipt : AcctServer.DOCTYPE_APPayment);
                     final String strPaymentDocumentNo = FIN_Utility.getDocumentNo(docType,
-                            docType.getTable() != null ? docType.getTable().getDBTableName() : "");
+                            docType.getTable() != null ? docType.getTable().getDBTableName() : StringUtils.EMPTY);
 
                     // Get default Financial Account as it is done in Add Payment
                     FIN_FinancialAccount bpFinAccount = null;
@@ -159,8 +164,8 @@ public class ProcessInvoiceUtil {
                     // If no Financial Account exists, show an Error
                     if (bpFinAccount == null) {
                         msg = new OBError();
-                        msg.setType("Error");
-                        msg.setTitle(Utility.messageBD(conn, "Error", vars.getLanguage()));
+                        msg.setType(ERROR);
+                        msg.setTitle(Utility.messageBD(conn, ERROR, vars.getLanguage()));
                         msg.setMessage(OBMessageUtils.messageBD("APRM_NoFinancialAccountAvailable"));
                         return msg;
                     }
@@ -178,8 +183,8 @@ public class ProcessInvoiceUtil {
                     paymentQuery.setMaxResult(1);
                     if (paymentQuery.uniqueResult() != null) {
                         msg = new OBError();
-                        msg.setType("Error");
-                        msg.setTitle(Utility.messageBD(conn, "Error", vars.getLanguage()));
+                        msg.setType(ERROR);
+                        msg.setTitle(Utility.messageBD(conn, ERROR, vars.getLanguage()));
                         msg.setMessage(
                                 OBMessageUtils.messageBD("APRM_InvoiceAwaitingExcutionPaymentRelated"));
                         return msg;
@@ -249,7 +254,7 @@ public class ProcessInvoiceUtil {
                 }
             }
 
-            boolean voidingPrepaidInvoice = "RC".equals(strdocaction)
+            boolean voidingPrepaidInvoice = StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction)
                     && invoice.getPrepaymentamt().compareTo(BigDecimal.ZERO) != 0;
 
             final ProcessInstance pinstance = CallProcess.getInstance()
@@ -258,7 +263,7 @@ public class ProcessInvoiceUtil {
             OBDal.getInstance().getSession().refresh(invoice);
             invoice.setAPRMProcessinvoice(invoice.getDocumentAction());
 
-            if ("RC".equals(strdocaction) && pinstance.getResult() != 0L) {
+            if (StringUtils.equals(VOID_DOCUMENT_ACTION, strdocaction) && pinstance.getResult() != 0L) {
                 try {
                     OBContext.setAdminMode(true);
 
@@ -290,7 +295,7 @@ public class ProcessInvoiceUtil {
                                 orderPayment.isReceipt() ? AcctServer.DOCTYPE_ARReceipt
                                         : AcctServer.DOCTYPE_APPayment);
                         final String strPaymentDocumentNo = FIN_Utility.getDocumentNo(docType,
-                                docType.getTable() != null ? docType.getTable().getDBTableName() : "");
+                                docType.getTable() != null ? docType.getTable().getDBTableName() : StringUtils.EMPTY);
 
                         // Creating a dummy payment
                         dummyPayment = dao.getNewPayment(orderPayment.isReceipt(), invoice.getOrganization(),
@@ -412,7 +417,7 @@ public class ProcessInvoiceUtil {
                     if (processPayment) {
                         // Process dummy payment related with both actual invoice and reversed invoice
                         OBError message = FIN_AddPayment.processPayment(vars, conn, "P", dummyPayment);
-                        if ("Error".equals(message.getType())) {
+                        if (StringUtils.equals(ERROR, message.getType())) {
                             message.setMessage(
                                     OBMessageUtils.messageBD("PaymentError") + " " + message.getMessage());
                             return message;
@@ -437,7 +442,7 @@ public class ProcessInvoiceUtil {
                         for (final String line : invDesc.split("\n")) {
                             if (!line.startsWith(creditMsg.substring(0, creditMsg.lastIndexOf("%s")))) {
                                 newDesc.append(line);
-                                if (!"".equals(line)) {
+                                if (!StringUtils.EMPTY.equals(line)) {
                                     newDesc.append("\n");
                                 }
                             }
@@ -455,7 +460,7 @@ public class ProcessInvoiceUtil {
                 if (pinstance.getResult() == 0L) {
                     OBDal.getInstance().rollbackAndClose();
                     myMessage = Utility.translateError(conn, vars, vars.getLanguage(),
-                            pinstance.getErrorMsg().replaceFirst("@ERROR=", ""));
+                            pinstance.getErrorMsg().replaceFirst("@ERROR=", StringUtils.EMPTY));
                     log4j.debug(myMessage.getMessage());
 
                     return myMessage;
@@ -466,7 +471,7 @@ public class ProcessInvoiceUtil {
 
             for (ProcessInvoiceHook hook : hooks) {
                 msg = hook.postProcess(invoice, strdocaction);
-                if (msg != null && "Error".equals(msg.getType())) {
+                if (msg != null && StringUtils.equals(ERROR, msg.getType())) {
                     OBDal.getInstance().rollbackAndClose();
                     return msg;
                 }

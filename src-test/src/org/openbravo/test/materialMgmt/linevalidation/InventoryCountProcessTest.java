@@ -17,13 +17,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
@@ -42,7 +42,7 @@ import org.openbravo.scheduling.ProcessContext;
  * - Error when inventory has no lines.
  * - Successful processing when inventory has lines.
  */
-@ExtendWith(MockitoExtension.class)
+@RunWith(MockitoJUnitRunner.class)
 public class InventoryCountProcessTest {
 
   private static final String PHYSICAL_INVENTORY_WITHOUT_LINES = "PhysicalInventoryWithoutLines";
@@ -58,16 +58,23 @@ public class InventoryCountProcessTest {
   @Mock
   private ProcessContext processContext;
 
-  @BeforeEach
-  void setUp() {
+  /**
+   * Sets up the test environment before each test.
+   * Initializes the InventoryCountProcess instance and configures common behavior.
+   */
+  @Before
+  public void setUp() {
     inventoryCountProcess = spy(new InventoryCountProcess());
   }
 
   /**
    * Verifies that an error is set when the inventory has no lines.
+   *
+   * @throws Exception
+   *     if an error occurs during test execution
    */
   @Test
-  void shouldSetErrorResultWhenInventoryHasNoLines() throws Exception {
+  public void shouldSetErrorResultWhenInventoryHasNoLines() throws Exception {
     String inventoryId = "TEST_INV_001";
     Map<String, Object> params = new HashMap<>();
     params.put("M_Inventory_ID", inventoryId);
@@ -78,17 +85,16 @@ public class InventoryCountProcessTest {
 
     when(inventory.getMaterialMgmtInventoryCountLineList()).thenReturn(Collections.emptyList());
 
-    try (var obDalMock = mockStatic(OBDal.class);
-         var messageUtilsMock = mockStatic(OBMessageUtils.class);
-         var finUtilityMock = mockStatic(FIN_Utility.class);
-         MockedStatic<OBContext> mockedOBContext = mockStatic(OBContext.class)) {
+    try (var obDalMock = mockStatic(OBDal.class); var messageUtilsMock = mockStatic(
+        OBMessageUtils.class); var finUtilityMock = mockStatic(
+        FIN_Utility.class); MockedStatic<OBContext> mockedOBContext = mockStatic(OBContext.class)) {
 
       OBDal obDalInstance = mock(OBDal.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDalInstance);
       when(obDalInstance.get(InventoryCount.class, inventoryId)).thenReturn(inventory);
 
-      messageUtilsMock.when(() -> OBMessageUtils.messageBD(PHYSICAL_INVENTORY_WITHOUT_LINES))
-          .thenReturn(PHYSICAL_INVENTORY_WITHOUT_LINES);
+      messageUtilsMock.when(() -> OBMessageUtils.messageBD(PHYSICAL_INVENTORY_WITHOUT_LINES)).thenReturn(
+          PHYSICAL_INVENTORY_WITHOUT_LINES);
 
       finUtilityMock.when(() -> FIN_Utility.getExceptionMessage(any())).thenReturn(PHYSICAL_INVENTORY_WITHOUT_LINES);
 
@@ -115,14 +121,15 @@ public class InventoryCountProcessTest {
    * Verifies successful processing when the inventory has lines.
    */
   @Test
-  void shouldNotThrowExceptionWhenInventoryHasLines() throws Exception {
+  public void shouldNotThrowExceptionWhenInventoryHasLines() {
     String inventoryId = "TEST_INV_002";
     Map<String, Object> params = new HashMap<>();
     params.put("M_Inventory_ID", inventoryId);
 
     when(bundle.getParams()).thenReturn(params);
 
-    when(inventory.getMaterialMgmtInventoryCountLineList()).thenReturn(Collections.singletonList(mock(InventoryCountLine.class)));
+    when(inventory.getMaterialMgmtInventoryCountLineList()).thenReturn(
+        Collections.singletonList(mock(InventoryCountLine.class)));
     when(inventory.isProcessNow()).thenReturn(false);
 
     OBError successMessage = new OBError();
@@ -130,17 +137,15 @@ public class InventoryCountProcessTest {
     successMessage.setTitle(SUCCESS);
     doReturn(successMessage).when(inventoryCountProcess).processInventory(inventory);
 
-    try (var obDalMock = mockStatic(OBDal.class);
-         var messageUtilsMock = mockStatic(OBMessageUtils.class);
-         var sessionHandlerMock = mockStatic(SessionHandler.class);
-         MockedStatic<OBContext> mockedOBContext = mockStatic(OBContext.class)) {
+    try (var obDalMock = mockStatic(OBDal.class); var messageUtilsMock = mockStatic(
+        OBMessageUtils.class); var sessionHandlerMock = mockStatic(
+        SessionHandler.class); MockedStatic<OBContext> mockedOBContext = mockStatic(OBContext.class)) {
 
       OBDal obDalInstance = mock(OBDal.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDalInstance);
       when(obDalInstance.get(InventoryCount.class, inventoryId)).thenReturn(inventory);
 
-      messageUtilsMock.when(() -> OBMessageUtils.messageBD(SUCCESS))
-          .thenReturn(SUCCESS);
+      messageUtilsMock.when(() -> OBMessageUtils.messageBD(SUCCESS)).thenReturn(SUCCESS);
 
       sessionHandlerMock.when(SessionHandler::isSessionHandlerPresent).thenReturn(true);
       SessionHandler sessionHandlerInstance = mock(SessionHandler.class);

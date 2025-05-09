@@ -162,6 +162,7 @@
 
   v_voiddate_inv C_Invoice.DateInvoiced%TYPE;
   v_voiddate_acct C_Invoice.DateAcct%TYPE;
+  v_supplier_reference C_Invoice.POReference%TYPE;
 
   v_bpartner_blocked VARCHAR2(1):='N';
   v_invoiceBlocking VARCHAR2(1):='N';
@@ -203,6 +204,8 @@ BEGIN
         v_voiddate_inv := TO_DATE(Cur_Parameter.p_string, 'YYYY-MM-DD');
       ELSIF (Cur_Parameter.parametername = 'voidedDocumentAcctDate') THEN
         v_voiddate_acct := TO_DATE(Cur_Parameter.p_string, 'YYYY-MM-DD');
+      ELSIF (Cur_Parameter.parametername = 'supplierReference') THEN
+        v_supplier_reference := Cur_Parameter.p_string;
       END IF;
     END LOOP; -- Get Parameter
     DBMS_OUTPUT.PUT_LINE('  v_Record_ID=' || v_Record_ID) ;
@@ -654,10 +657,10 @@ IF (NOT FINISH_PROCESS) THEN
             v_UpdatedBy, IsSOTrx, v_RDocumentNo, 'DR',
              'CO', 'N', 'N', v_DoctypeReversed_ID,
             v_DoctypeReversed_ID, '(*R*: ' || DocumentNo || ') ' || COALESCE(TO_CHAR(Description), ''), SalesRep_ID,
-            TRUNC(now()), NULL, 'N', NULL,
-            TRUNC(now()), C_PaymentTerm_ID, C_BPartner_ID, C_BPartner_Location_ID,
-            AD_User_ID, POReference, DateOrdered, IsDiscountPrinted,
-            C_Currency_ID, C_Charge_ID, ChargeAmt * -1,
+            COALESCE(v_voiddate_inv, TRUNC(now())), NULL, 'N', NULL,
+            COALESCE(v_voiddate_acct, TRUNC(now())), C_PaymentTerm_ID, C_BPartner_ID, C_BPartner_Location_ID,
+            AD_User_ID, CASE WHEN v_supplier_reference IS NULL THEN POReference ELSE v_supplier_reference END,
+            DateOrdered, IsDiscountPrinted, C_Currency_ID, C_Charge_ID, ChargeAmt * -1,
             0, 0, --Totals are recalculed adding invoice lines
             M_PriceList_ID, C_Campaign_ID,
             C_Project_ID, C_Activity_ID, AD_OrgTrx_ID, User1_ID,
@@ -826,12 +829,6 @@ IF (NOT FINISH_PROCESS) THEN
                       WHERE il.c_invoice_id = v_Record_ID
                         AND l.M_InOut_ID = M_InOut.M_InOut_ID);
         -- Update reversal invoice dates
-        IF (v_voiddate_inv IS NOT NULL) THEN
-          UPDATE C_INVOICE SET DateInvoiced = v_voiddate_inv WHERE C_Invoice_ID=v_RInvoice_ID;
-        END IF;
-        IF (v_voiddate_acct IS NOT NULL) THEN
-          UPDATE C_INVOICE SET DateAcct = v_voiddate_acct WHERE C_Invoice_ID=v_RInvoice_ID;
-        END IF;
         IF (v_prepaymentamt !=0) THEN
           UPDATE C_INVOICE SET prepaymentamt = v_prepaymentamt WHERE C_Invoice_ID=v_RInvoice_ID;
         END IF;

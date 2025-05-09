@@ -55,7 +55,7 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    VariablesSecureApp vars = new VariablesSecureApp(request);
+    VariablesSecureApp vars = createVars(request);
 
     if (vars.commandIn("DEFAULT")) {
       String strcBpartnerId = vars.getSessionValue("RptC_Bpartner.inpcBpartnerId_R");
@@ -76,7 +76,7 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
     }
   }
 
-  private void printPageDataSheet(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPageDataSheet(HttpServletResponse response, VariablesSecureApp vars,
       String strcBpartnerId) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: dataSheet");
@@ -210,7 +210,7 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
     }
   }
 
-  private void printPageAjaxResponse(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPageAjaxResponse(HttpServletResponse response, VariablesSecureApp vars,
       String strcBpartnerId, String strmProductTemplate) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: ajaxreponse");
@@ -236,7 +236,7 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
     out.close();
   }
 
-  private void printPageAjaxDocumentResponse(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPageAjaxDocumentResponse(HttpServletResponse response, VariablesSecureApp vars,
       String strcBpartnerId, String strmTypeDocument) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: ajaxreponse");
@@ -423,4 +423,14 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
   public String getServletInfo() {
     return "Servlet RptC_Bpartner. This Servlet was made by Pablo Sarobe";
   } // End of getServletInfo() method
+
+  /**
+   * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
+   *
+   * @param request the HTTP request
+   * @return the initialized secure variables
+   */
+  protected VariablesSecureApp createVars(HttpServletRequest request) {
+    return new VariablesSecureApp(request);
+  }
 }

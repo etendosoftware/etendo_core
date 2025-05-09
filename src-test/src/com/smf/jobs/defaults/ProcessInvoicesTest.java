@@ -96,6 +96,7 @@ public class ProcessInvoicesTest {
         Invoice.class,
         String.class,
         String.class,
+        String.class,
         String.class
     );
     processInvoiceMethod.setAccessible(true);
@@ -120,7 +121,7 @@ public class ProcessInvoicesTest {
     String invoiceId = "test-invoice-id";
     String docAction = "CO";
     OBError expectedResult = new OBError();
-    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setType(Utility.SUCCESS_CAPITALIZED);
     expectedResult.setMessage("Invoice processed successfully");
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -133,6 +134,7 @@ public class ProcessInvoicesTest {
           eq(docAction),
           eq(""),
           eq(""),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(expectedResult);
@@ -142,10 +144,11 @@ public class ProcessInvoicesTest {
           mockInvoice,
           docAction,
           null,
+          null,
           null
       );
 
-      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS_CAPITALIZED, result.getType());
       assertEquals("Should return correct message", "Invoice processed successfully", result.getMessage());
     }
   }
@@ -165,7 +168,7 @@ public class ProcessInvoicesTest {
     String voidAcctDate = "2024-01-15";
 
     OBError expectedResult = new OBError();
-    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setType(Utility.SUCCESS_CAPITALIZED);
 
     SimpleDateFormat jsonDateFormat = JsonUtils.createDateFormat();
     Date testDate = jsonDateFormat.parse(voidDate);
@@ -181,6 +184,7 @@ public class ProcessInvoicesTest {
           eq(docAction),
           eq(formattedDate),
           eq(formattedDate),
+          eq(null),
           any(VariablesSecureApp.class),
           any(DalConnectionProvider.class)
       )).thenReturn(expectedResult);
@@ -190,10 +194,11 @@ public class ProcessInvoicesTest {
           mockInvoice,
           docAction,
           voidDate,
-          voidAcctDate
+          voidAcctDate,
+          null
       );
 
-      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS_CAPITALIZED, result.getType());
     }
   }
 
@@ -231,7 +236,7 @@ public class ProcessInvoicesTest {
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
     OBError successResult = new OBError();
-    successResult.setType(Utility.SUCCESS);
+    successResult.setType(Utility.SUCCESS_CAPITALIZED);
 
     // Instead of using doReturn().when(), use reflection
     when(getInputContentsMethod.invoke(processInvoices, Invoice.class))
@@ -244,6 +249,7 @@ public class ProcessInvoicesTest {
           .thenReturn(mockProcessInvoiceUtil);
       when(mockInvoice.getId()).thenReturn("testId");
       when(mockProcessInvoiceUtil.process(
+          anyString(),
           anyString(),
           anyString(),
           anyString(),
@@ -269,11 +275,12 @@ public class ProcessInvoicesTest {
     JSONObject jsonContent = new JSONObject();
     JSONObject params = new JSONObject();
     params.put("DocAction", "CO");
+    params.put("POReference", "");
     jsonContent.put("_params", params);
 
     List<Invoice> mockInvoices = List.of(mockInvoice);
     OBError successResult = new OBError();
-    successResult.setType(Utility.SUCCESS);
+    successResult.setType(Utility.SUCCESS_CAPITALIZED);
 
     try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
          MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -298,6 +305,7 @@ public class ProcessInvoicesTest {
       when(mockProcessInvoiceUtil.process(
           anyString(),
           eq("XL"),
+          anyString(),
           anyString(),
           anyString(),
           any(VariablesSecureApp.class),
