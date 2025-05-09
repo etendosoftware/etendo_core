@@ -780,13 +780,23 @@ public class PrintController extends HttpSecureAppServlet {
             tempOutputStream, configuration);
         // Modify the concatenated report with hooks
         ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(tempOutputStream.toByteArray());
-        ServletOutputStream os = response.getOutputStream();
+
         // Call hooks
         if (hooking.booleanValue()) {
+          ByteArrayOutputStream postProcessOutputStream = new ByteArrayOutputStream();
           Report report = reports[0];
-          setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream, os);
+          setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream, postProcessOutputStream);
 
           hookManager.executeHooks(hookParams, hookManager.getPostProcess());
+
+          if (postProcessOutputStream.size() > 0) {
+            return postProcessOutputStream;
+          } else {
+            ServletOutputStream os = response.getOutputStream();
+            tempOutputStream.writeTo(os);
+            os.flush();
+            return tempOutputStream;
+          }
         }
       } else {
         response.setContentType("text/html");
