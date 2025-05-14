@@ -18,7 +18,7 @@ import java.util.Map;
 
 import javax.persistence.Tuple;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.query.Query;
 import org.junit.Test;

@@ -18,7 +18,8 @@
 * Company admin - The administrator of the company]]></HELP>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <URL><![CDATA[http://forge.openbravo.com/projects/vthreedataset]]></URL>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <TYPE><![CDATA[M]]></TYPE>
-<!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <LICENSE><![CDATA[Licensed under the Openbravo Public License version 1.1. You may obtain a copy of the License at http://www.openbravo.com/legal/license.html or in the legal folder of the Openbravo ERP core distribution.]]></LICENSE>
+<!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <LICENSE><![CDATA[Licensed under the Openbravo Public License version 1.1.
+You may obtain a copy of the License at http://www.openbravo.com/legal/license.html or in the legal folder of the Openbravo ERP core distribution.]]></LICENSE>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <JAVAPACKAGE><![CDATA[org.openbravo.v3.datasets]]></JAVAPACKAGE>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <LICENSETYPE><![CDATA[OBPL]]></LICENSETYPE>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <AUTHOR><![CDATA[Openbravo S.L.U.]]></AUTHOR>
@@ -27,7 +28,6 @@
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <HASCHARTOFACCOUNTS><![CDATA[N]]></HASCHARTOFACCOUNTS>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <ISTRANSLATIONMODULE><![CDATA[N]]></ISTRANSLATIONMODULE>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <HASREFERENCEDATA><![CDATA[Y]]></HASREFERENCEDATA>
-<!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/21Q4-0]]></UPDATEINFO>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <REFERENCEDATAINFO><![CDATA[Pre-configured collection of standard ERP roles]]></REFERENCEDATAINFO>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <VERSION_LABEL><![CDATA[PR21Q4]]></VERSION_LABEL>
 <!--883B5872CA0548F9AF2BBBE7D2DDFA61-->  <ISCOMMERCIAL><![CDATA[N]]></ISCOMMERCIAL>
