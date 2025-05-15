@@ -51,9 +51,8 @@ isc.SMFSWSGenerateKeyButton.addProperties({
 
 // Convert ArrayBuffer to PEM format without newlines
 function arrayBufferToPem(buffer, label) {
-    const binary = String.fromCharCode(...new Uint8Array(buffer));
-    const base64 = window.btoa(binary);
-    // Concatenate everything into a single line
+    const binary = new Uint8Array(buffer);
+    let base64 = btoa(String.fromCharCode(...binary));
     const pem = `-----BEGIN ${label}-----${base64}-----END ${label}-----`;
     return pem;
 }
