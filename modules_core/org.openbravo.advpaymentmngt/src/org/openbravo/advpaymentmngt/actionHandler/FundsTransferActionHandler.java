@@ -30,6 +30,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
 import org.openbravo.advpaymentmngt.process.FIN_TransactionProcess;
 import org.openbravo.base.exception.OBException;
@@ -41,6 +43,10 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.financial.FinancialUtils;
+import org.openbravo.model.common.currency.ConversionRateDoc;
+import org.openbravo.model.common.currency.Currency;
+import org.openbravo.model.common.enterprise.Organization;
+import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
@@ -212,9 +218,9 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
       }
 
       // Target Account
-      newTrx = createTransaction(accountTo, BP_DEPOSIT, trxDate, glitem, targetAmount, lineNoUtil,
+      FIN_FinaccTransaction targetTrx = createTransaction(accountTo, BP_DEPOSIT, trxDate, glitem, targetAmount, lineNoUtil,
           sourceTrx, description);
-      transactions.add(newTrx);
+      transactions.add(targetTrx);
 
       if (bankFeeTo != null && BigDecimal.ZERO.compareTo(bankFeeTo) != 0) {
         newTrx = createTransaction(accountTo, BANK_FEE, trxDate, glitem, bankFeeTo, lineNoUtil,
@@ -223,6 +229,23 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
       }
 
       OBDal.getInstance().flush();
+
+      if (manualConversionRate != null && manualConversionRate.compareTo(BigDecimal.ONE) != 0) {
+        AcctSchema glSchema = getOrgGeneralLedger(accountFrom.getOrganization());
+        Currency glCurrency = glSchema.getCurrency();
+
+        Currency fromCurrency = accountFrom.getCurrency();
+        Currency toCurrency = accountTo.getCurrency();
+
+        if (!glCurrency.equals(fromCurrency)) {
+          createConversionRateDoc(sourceTrx, fromCurrency, glCurrency, manualConversionRate);
+        }
+
+        if (!glCurrency.equals(toCurrency)) {
+          createConversionRateDoc(targetTrx, toCurrency, glCurrency, manualConversionRate);
+        }
+      }
+
       processTransactions(transactions);
 
       WeldUtils.getInstanceFromStaticBeanManager(FundsTransferHookCaller.class)
@@ -232,6 +255,46 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
       String message = OBMessageUtils.parseTranslation(e.getMessage());
       throw new OBException(message, e);
     }
+  }
+
+  private static AcctSchema getOrgGeneralLedger(Organization org) {
+    OBContext.setAdminMode(false);
+    try {
+      final String hsqlScript =
+              "select o.generalLedger " +
+                      "from Organization o " +
+                      "where ad_isorgincluded(:orgId, o.id, o.client) <> -1 " +
+                      "and o.generalLedger is not null " +
+                      "order by ad_isorgincluded(:orgId, o.id, o.client) asc";
+
+      final Session session = OBDal.getInstance().getSession();
+      final Query<AcctSchema> query = session.createQuery(hsqlScript, AcctSchema.class);
+      query.setParameter("orgId", org.getId());
+      query.setMaxResults(1);
+
+      return query.uniqueResult();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  private static void createConversionRateDoc(FIN_FinaccTransaction transaction, Currency fromCurrency,
+                                              Currency toCurrency, BigDecimal rate) {
+    ConversionRateDoc convRateDoc = OBProvider.getInstance().get(ConversionRateDoc.class);
+
+    convRateDoc.setClient(transaction.getClient());
+    convRateDoc.setOrganization(transaction.getOrganization());
+
+    convRateDoc.setCurrency(fromCurrency);
+    convRateDoc.setToCurrency(toCurrency);
+    convRateDoc.setRate(rate);
+    convRateDoc.setFINFinancialAccountTransaction(transaction);
+
+    BigDecimal baseAmount = transaction.getDepositAmount().subtract(transaction.getPaymentAmount());
+    BigDecimal foreignAmount = baseAmount.multiply(rate);
+    convRateDoc.setForeignAmount(foreignAmount);
+
+    OBDal.getInstance().save(convRateDoc);
   }
 
   private static BigDecimal convertAmount(BigDecimal amount, FIN_FinancialAccount accountFrom,
