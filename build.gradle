@@ -34,9 +34,9 @@ dependencies {
     jandex 'org.jboss:jandex:2.0.5.Final'
 }
 
-final String CURRENT_VERSION = "24.4.15"
+final String CURRENT_VERSION = "24.4.16"
 final String NEXT_RELEASE = "25.1.0"
-final String NEXT_HOTFIX = "24.4.16"
+final String NEXT_HOTFIX = "24.4.17"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
