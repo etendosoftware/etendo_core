@@ -231,19 +231,10 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
       OBDal.getInstance().flush();
 
       if (manualConversionRate != null && manualConversionRate.compareTo(BigDecimal.ONE) != 0) {
-        AcctSchema glSchema = getOrgGeneralLedger(accountFrom.getOrganization());
-        Currency glCurrency = glSchema.getCurrency();
-
         Currency fromCurrency = accountFrom.getCurrency();
         Currency toCurrency = accountTo.getCurrency();
-
-        if (!glCurrency.equals(fromCurrency)) {
-          createConversionRateDoc(sourceTrx, fromCurrency, toCurrency, glCurrency, manualConversionRate, true);
-        }
-
-        if (!glCurrency.equals(toCurrency)) {
-          createConversionRateDoc(targetTrx, toCurrency, fromCurrency, glCurrency, manualConversionRate, false);
-        }
+        createConversionRateDoc(sourceTrx, fromCurrency, toCurrency, manualConversionRate, true);
+        createConversionRateDoc(targetTrx, toCurrency, fromCurrency, manualConversionRate, false);
       }
 
       processTransactions(transactions);
@@ -257,29 +248,8 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
     }
   }
 
-  private static AcctSchema getOrgGeneralLedger(Organization org) {
-    OBContext.setAdminMode(false);
-    try {
-      final String hsqlScript =
-              "select o.generalLedger " +
-                      "from Organization o " +
-                      "where ad_isorgincluded(:orgId, o.id, o.client) <> -1 " +
-                      "and o.generalLedger is not null " +
-                      "order by ad_isorgincluded(:orgId, o.id, o.client) asc";
-
-      final Session session = OBDal.getInstance().getSession();
-      final Query<AcctSchema> query = session.createQuery(hsqlScript, AcctSchema.class);
-      query.setParameter("orgId", org.getId());
-      query.setMaxResults(1);
-
-      return query.uniqueResult();
-    } finally {
-      OBContext.restorePreviousMode();
-    }
-  }
-
   private static void createConversionRateDoc(FIN_FinaccTransaction transaction, Currency fromCurrency,
-                                              Currency toCurrency, Currency accountingCurrency, BigDecimal rate, boolean isSourceTransaction) {
+                                              Currency toCurrency, BigDecimal rate, boolean isSourceTransaction) {
     ConversionRateDoc convRateDoc = OBProvider.getInstance().get(ConversionRateDoc.class);
 
     convRateDoc.setClient(transaction.getClient());
@@ -290,7 +260,7 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
 
     BigDecimal appliedRate = rate;
 
-    if (!transaction.getCurrency().getId().equals(accountingCurrency.getId()) && !isSourceTransaction) {
+    if (!isSourceTransaction) {
       appliedRate = BigDecimal.ONE.divide(rate, 12, RoundingMode.HALF_UP);
     }
 
