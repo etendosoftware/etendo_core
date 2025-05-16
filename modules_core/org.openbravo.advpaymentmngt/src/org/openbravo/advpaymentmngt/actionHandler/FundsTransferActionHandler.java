@@ -238,11 +238,11 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
         Currency toCurrency = accountTo.getCurrency();
 
         if (!glCurrency.equals(fromCurrency)) {
-          createConversionRateDoc(sourceTrx, fromCurrency, glCurrency, manualConversionRate);
+          createConversionRateDoc(sourceTrx, fromCurrency, toCurrency, glCurrency, manualConversionRate, true);
         }
 
         if (!glCurrency.equals(toCurrency)) {
-          createConversionRateDoc(targetTrx, toCurrency, glCurrency, manualConversionRate);
+          createConversionRateDoc(targetTrx, toCurrency, fromCurrency, glCurrency, manualConversionRate, false);
         }
       }
 
@@ -279,7 +279,7 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
   }
 
   private static void createConversionRateDoc(FIN_FinaccTransaction transaction, Currency fromCurrency,
-                                              Currency toCurrency, BigDecimal rate) {
+                                              Currency toCurrency, Currency accountingCurrency, BigDecimal rate, boolean isSourceTransaction) {
     ConversionRateDoc convRateDoc = OBProvider.getInstance().get(ConversionRateDoc.class);
 
     convRateDoc.setClient(transaction.getClient());
@@ -287,11 +287,18 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
 
     convRateDoc.setCurrency(fromCurrency);
     convRateDoc.setToCurrency(toCurrency);
-    convRateDoc.setRate(rate);
+
+    BigDecimal appliedRate = rate;
+
+    if (!transaction.getCurrency().getId().equals(accountingCurrency.getId()) && !isSourceTransaction) {
+      appliedRate = BigDecimal.ONE.divide(rate, 12, RoundingMode.HALF_UP);
+    }
+
+    convRateDoc.setRate(appliedRate);
     convRateDoc.setFINFinancialAccountTransaction(transaction);
 
     BigDecimal baseAmount = transaction.getDepositAmount().subtract(transaction.getPaymentAmount());
-    BigDecimal foreignAmount = baseAmount.multiply(rate);
+    BigDecimal foreignAmount = baseAmount.multiply(appliedRate);
     convRateDoc.setForeignAmount(foreignAmount);
 
     OBDal.getInstance().save(convRateDoc);
