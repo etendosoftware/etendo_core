@@ -244,6 +244,23 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
     }
   }
 
+  /**
+   * Creates a conversion rate document for a given financial account transaction.
+   * <p>
+   * If the transaction is not the source of the transfer, the given rate is inverted (1/rate) to
+   * correctly represent the exchange direction from the target currency's perspective.
+   *
+   * @param transaction
+   *          the financial account transaction to associate with the conversion rate document.
+   * @param fromCurrency
+   *          the currency from which the amount is being converted.
+   * @param toCurrency
+   *          the currency to which the amount is being converted.
+   * @param rate
+   *          the multiply rate to convert from the source to the target currency.
+   * @param isSourceTransaction
+   *          flag indicating if the transaction is the source transaction in the transfer.
+   */
   private static void createConversionRateDoc(FIN_FinaccTransaction transaction, Currency fromCurrency,
                                               Currency toCurrency, BigDecimal rate, boolean isSourceTransaction) {
     ConversionRateDoc convRateDoc = OBProvider.getInstance().get(ConversionRateDoc.class);
