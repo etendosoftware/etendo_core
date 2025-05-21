@@ -342,26 +342,33 @@ public class PriceAdjustment {
             "   ))" +
             // Product characteristic
             "   and (" +
-            "     (includedCharacteristics='Y' and not exists (" +
+            "     (includedCharacteristics = 'Y' and exists (" +
             "       select 1" +
-            "         from Characteristic c" +
-            "           join c.pricingAdjustmentCharacteristicList pac" +
-            "           join c.productCharacteristicValueList pcv" +
-            "        where  pcv.product.id = :productId" +
-            "          and pac.offer = p" +
-            "          and m_isparent_ch_value(pcv.characteristicValue.id, pac.chValue.id, pac.characteristic.id) != -1" +
-            "       )" +
-            "     )" +
-            "     or (includedCharacteristics='N' and exists("+
+            "         from ProductCharacteristicValue pcv" +
+            "        where pcv.product.id = :productId" +
+            "     ))" +
+            "     or (includedCharacteristics = 'N' and exists (" +
             "       select 1" +
-            "         from Characteristic c" +
-            "           join c.pricingAdjustmentCharacteristicList pac" +
-            "           join c.productCharacteristicValueList pcv" +
-            "        where  pcv.product.id = :productId" +
-            "          and pac.offer = p" +
-            "          and m_isparent_ch_value(pcv.characteristicValue.id, pac.chValue.id, pac.characteristic.id) != -1" +
-            "       )" +
-            "   ))";
+            "         from PricingAdjustmentCharacteristic pac" +
+            "        where pac.offer = p" +
+            "          and pac.active = true" +
+            "          and exists (" +
+            "            select 1 from ProductCharacteristicValue pcv" +
+            "            where pcv.product.id = :productId" +
+            "              and pcv.characteristicValue.id = pac.chValue.id" +
+            "          )" +
+            "     ))" +
+            "     or (includedCharacteristics = 'A' and not exists (" +
+            "       select 1 from PricingAdjustmentCharacteristic pac" +
+            "        where pac.offer = p" +
+            "          and pac.active = true" +
+            "          and not exists (" +
+            "            select 1 from ProductCharacteristicValue pcv" +
+            "            where pcv.product.id = :productId" +
+            "              and pcv.characteristicValue.id = pac.chValue.id" +
+            "          )" +
+            "     ))" +
+            "   )";
     //@formatter:on
 
     final PriceAdjustment priceAdInstance = WeldUtils
