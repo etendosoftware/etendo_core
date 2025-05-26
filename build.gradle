@@ -6,7 +6,7 @@ plugins {
     id 'idea'
     id 'groovy'
     id 'jacoco'
-    id 'com.etendoerp.gradleplugin' version '2.0.1'
+    id 'com.etendoerp.gradleplugin' version '2.0.2'
     id 'com.etendoerp.testing.gradleplugin' version '2.0.0'
 }
 compileJava.options.encoding = "UTF-8"
