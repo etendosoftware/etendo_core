@@ -52,6 +52,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.PrivateKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.UUID;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -459,6 +460,24 @@ public class SecureWebServicesUtils {
 	 *                   or issues with key generation or token signing.
 	 */
 	public static String generateToken(User user, Role role, Organization org, Warehouse warehouse) throws Exception {
+		return generateToken(user, role, org, warehouse, null);
+	}
+
+	/**
+	 * Generates a JSON Web Token (JWT) for a given user with specified role, organization, and warehouse details.
+	 * This method dynamically selects the token signing algorithm based on the configuration setting.
+	 * It supports both ECDSA and HMAC algorithms for signing the token. It also handles role, organization,
+	 * and warehouse selection based on the input parameters or defaults when specific entities are not defined.
+	 *
+	 * @param user The {@link User} object representing the user for whom the token is being generated.
+	 * @param role The {@link Role} to be associated with the user. If null, the user's default or first role is used.
+	 * @param org The {@link Organization} to be associated with the user. If null, the user's default or first organization is used.
+	 * @param warehouse The {@link Warehouse} to be associated with the organization. If null, the organization's default or first warehouse is used.
+	 * @return A signed JWT as a {@link String}.
+	 * @throws Exception If there are any issues during token generation, such as missing roles, organizations, or warehouse information,
+	 *                   or issues with key generation or token signing.
+	 */
+	public static String generateToken(User user, Role role, Organization org, Warehouse warehouse, String sessionId) throws Exception {
 		try {
 			OBContext.setAdminMode(true);
 			SWSConfig config = SWSConfig.getInstance();
@@ -486,7 +505,12 @@ public class SecureWebServicesUtils {
 				// Legacy private key format. Use HS256 algorithm.
 				algorithm = getEncoderAlgorithm(privateKey, HS256_ALGORITHM);
 			}
-			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse);
+
+			if (sessionId == null) {
+				sessionId = UUID.randomUUID().toString();
+			}
+
+			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse, sessionId);
 
 			if (config.getExpirationTime() > 0) {
 				Calendar date = Calendar.getInstance();
@@ -703,7 +727,7 @@ public class SecureWebServicesUtils {
 	 * @return A {@link Builder} for the JWT with pre-set claims.
 	 */
 	private static Builder getJwtBuilder(User user, Role selectedRole, Organization selectedOrg,
-			Warehouse selectedWarehouse) {
+			Warehouse selectedWarehouse, String sessionId) {
 		return JWT.create()
 				.withIssuer("sws")
 				.withAudience("sws")
@@ -712,6 +736,7 @@ public class SecureWebServicesUtils {
 				.withClaim("role", selectedRole.getId())
 				.withClaim("organization", selectedOrg.getId())
 				.withClaim("warehouse", selectedWarehouse.getId())
+				.withClaim("jti", sessionId)
 				.withIssuedAt(new Date());
 	}
 }
