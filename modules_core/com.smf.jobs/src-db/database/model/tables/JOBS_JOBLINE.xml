@@ -61,6 +61,10 @@
         <default/>
         <onCreateDefault/>
       </column>
+      <column name="AD_MODULE_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
       <foreign-key foreignTable="OBUIAPP_PROCESS" name="JOBS_JOBLINE_ACTION">
         <reference local="ACTION_ID" foreign="OBUIAPP_PROCESS_ID"/>
       </foreign-key>
@@ -75,6 +79,9 @@
       </foreign-key>
       <foreign-key foreignTable="JOBS_JOB" name="JOBS_JOBLINE_JOB">
         <reference local="JOBS_JOB_ID" foreign="JOBS_JOB_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_MODULE" name="JOBS_JOBLINE_MODULE">
+        <reference local="AD_MODULE_ID" foreign="AD_MODULE_ID"/>
       </foreign-key>
       <foreign-key foreignTable="AD_ORG" name="JOBS_JOBLINE_ORG">
         <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
