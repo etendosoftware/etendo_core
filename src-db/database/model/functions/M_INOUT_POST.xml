@@ -1043,14 +1043,26 @@
             UPDATE M_InOut
             SET iscompletelyinvoiced = 'Y'
             WHERE iscompletelyinvoiced = 'N'
-            AND NOT EXISTS (SELECT 1 FROM M_INOUTLINE l
-                            LEFT JOIN c_invoiceline il ON l.m_inoutline_id = il.m_inoutline_id
-                            LEFT JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id
-                      WHERE l.M_INOUT_ID = M_InOut.M_INOUT_ID
-                      GROUP BY l.m_inoutline_id, l.movementqty
-                      HAVING ( l.movementqty >= 0 AND l.movementqty > Sum(COALESCE(CASE WHEN i.docstatus = 'CO' THEN il.qtyinvoiced ELSE 0 END, 0)) )
-                           OR ( l.movementqty < 0 AND l.movementqty < Sum(COALESCE(CASE WHEN i.docstatus = 'CO' THEN il.qtyinvoiced ELSE 0 END, 0)) ) )
-            AND M_INOUT_ID = Cur_InOut.M_INOUT_ID;
+            AND NOT EXISTS (
+                              SELECT 1
+                              FROM M_INOUTLINE l
+                              LEFT JOIN c_orderline ol ON l.c_orderline_id = ol.c_orderline_id
+                              LEFT JOIN (
+                                  SELECT 
+                                      COALESCE(il.m_inoutline_id, l2.m_inoutline_id) AS m_inoutline_id,
+                                      SUM(CASE WHEN i.docstatus = 'CO' THEN il.qtyinvoiced ELSE 0 END) AS totalinvoiced
+                                  FROM c_invoiceline il
+                                  JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id
+                                  LEFT JOIN c_orderline ol2 ON il.c_orderline_id = ol2.c_orderline_id
+                                  LEFT JOIN m_inoutline l2 ON ol2.c_orderline_id = l2.c_orderline_id
+                                  WHERE i.processed = 'Y' AND i.docstatus <> 'VO'
+                                  GROUP BY COALESCE(il.m_inoutline_id, l2.m_inoutline_id)
+                              ) inv ON l.m_inoutline_id = inv.m_inoutline_id
+                              WHERE l.M_INOUT_ID = M_InOut.M_INOUT_ID
+                              GROUP BY l.m_inoutline_id, l.movementqty
+                              HAVING l.movementqty > COALESCE(MAX(inv.totalinvoiced), 0)
+                            )
+          AND M_INOUT_ID = Cur_InOut.M_INOUT_ID;
           END IF;
          
           -- Not Processed + Complete --
