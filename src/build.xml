@@ -415,6 +415,7 @@ build.war: build a war file in the lib directory.
     </copy>
     <copy todir="${build}">
       <fileset file="${base.config}/quartz.properties" />
+      <fileset file="${basedir}/org/openbravo/erpReports/jasperreports.properties" />
     </copy>
     <antcall target="build.local.context" inheritAll="true" inheritrefs="true" />
   </target>
