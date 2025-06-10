@@ -6,11 +6,11 @@ plugins {
     id 'idea'
     id 'groovy'
     id 'jacoco'
-    id 'com.etendoerp.gradleplugin' version '1.5.1'
+    id 'com.etendoerp.gradleplugin' version '1.5.4'
     id 'org.kordamp.gradle.jandex' version '0.11.0'
+    id 'com.etendoerp.testing.gradleplugin' version '1.0.0'
 }
 compileJava.options.encoding = "UTF-8"
-apply from: 'tests.gradle'
 apply from: "artifacts.list.COMPILATION.gradle"
 
 repositories {
@@ -34,9 +34,9 @@ dependencies {
     jandex 'org.jboss:jandex:2.0.5.Final'
 }
 
-final String CURRENT_VERSION = "24.4.10"
+final String CURRENT_VERSION = "24.4.18"
 final String NEXT_RELEASE = "25.1.0"
-final String NEXT_HOTFIX = "24.4.11"
+final String NEXT_HOTFIX = "24.4.19"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
@@ -194,7 +194,7 @@ task upgradeCoreVersion {
             }
             adModuleContent = adModuleContent.replaceAll(/<VERSION><!\[CDATA\[\d+.\d+.\d+/, "<VERSION><![CDATA[${version[0]}.${version[1]}.${version[2]}")
             adModuleContent = adModuleContent.replaceAll(/<VERSION_LABEL><!\[CDATA\[\d+Q\d+.\d+/, "<VERSION_LABEL><![CDATA[${version[0]}Q${version[1]}.${version[2]}")
-            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/docs.etendo.software\/whats-new\/release-notes\/etendo-classic\/versions\/\d+Q\d+-\d+/, "<UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/${version[0]}Q${version[1]}-${version[2]}")
+            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/github.com\/etendosoftware\/etendo_core\/releases\/tag\/\d+\.\d+\.\d+/, "<UPDATEINFO><![CDATA[https://github.com/etendosoftware/etendo_core/releases/tag/${version[0]}.${version[1]}.${version[2]}")
             file(filePath).write(adModuleContent)
         }
 

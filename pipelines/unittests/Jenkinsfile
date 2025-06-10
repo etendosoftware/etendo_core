@@ -57,7 +57,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: jenkins-node-core-unittests-0
-  namespace: jenkins
+  namespace: jenkins2025
   labels:
     app.kubernetes.io/name: jenkins-node-core-unittests
 spec:
@@ -72,7 +72,7 @@ spec:
         type: ''
   containers:
     - name: compiler
-      image: etendo/compiler_jenkins:1.0.6
+      image: etendo/compiler_jenkins:1.0.7-jdk.17.0.13
       ports:
         - name: ssh
           containerPort: 22
@@ -475,12 +475,16 @@ spec:
           EXIST_JACOCO_REPORT == TRUE
         }
       }
+      environment {
+        JAVA_HOME = "/usr/lib/jvm/jdk-17.0.13"
+      }
       steps {
         container('compiler') {
           script {
             try {
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running SonarQube Analysis\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
               echo "--------------- Running SonarQube ---------------"
+              env.JAVA_HOME = "/usr/lib/jvm/jdk-17.0.13"
               sh """
               su etendo
               cd ${REPO_NAME}

@@ -12,9 +12,7 @@
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <URL><![CDATA[http://forge.openbravo.com/projects/openbravov30framework]]></URL>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <TYPE><![CDATA[P]]></TYPE>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <LICENSE><![CDATA[Licensed under the Openbravo Public License version 1.1.
-You may obtain a copy of the License at
-http://www.openbravo.com/legal/license.html
-or in the legal folder of the Openbravo ERP core distribution.]]></LICENSE>
+You may obtain a copy of the License at http://www.openbravo.com/legal/license.html or in the legal folder of the Openbravo ERP core distribution.]]></LICENSE>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <JAVAPACKAGE><![CDATA[org.openbravo.v3.framework]]></JAVAPACKAGE>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <LICENSETYPE><![CDATA[OBPL]]></LICENSETYPE>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <AUTHOR><![CDATA[Openbravo S.L.U.]]></AUTHOR>
@@ -23,7 +21,6 @@ or in the legal folder of the Openbravo ERP core distribution.]]></LICENSE>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <HASCHARTOFACCOUNTS><![CDATA[N]]></HASCHARTOFACCOUNTS>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <ISTRANSLATIONMODULE><![CDATA[N]]></ISTRANSLATIONMODULE>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <HASREFERENCEDATA><![CDATA[N]]></HASREFERENCEDATA>
-<!--7E48CDD73B7E493A8BED4F7253E7C989-->  <UPDATEINFO><![CDATA[https://docs.etendo.software/whats-new/release-notes/etendo-classic/versions/21Q4-0]]></UPDATEINFO>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <VERSION_LABEL><![CDATA[PR21Q4]]></VERSION_LABEL>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <ISCOMMERCIAL><![CDATA[N]]></ISCOMMERCIAL>
 <!--7E48CDD73B7E493A8BED4F7253E7C989-->  <ISTRIALALLOWED><![CDATA[N]]></ISTRIALALLOWED>

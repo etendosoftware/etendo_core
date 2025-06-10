@@ -50,7 +50,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: jenkins-node-unittests-orcl-0
-  namespace: jenkins
+  namespace: jenkins2025
   labels:
     app.kubernetes.io/name: jenkins-node-unittests-orcl
 spec:

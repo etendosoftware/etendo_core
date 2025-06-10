@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
-<!-- 2019-03-20T17:42:19 -->
+<!-- 2025-05-08T11:05:44 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Customer Statement" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="497a0ae3-5aac-448b-a8a4-4b6619407498">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
@@ -73,7 +73,7 @@
 	<parameter name="reportType" class="java.lang.String"/>
 	<parameter name="sumInitialBalance" class="java.lang.String"/>
 	<parameter name="Multicurrency" class="java.lang.String"/>
-	<queryString>
+	<queryString language="SQL">
 		<![CDATA[SELECT trunc(f.dateacct) as dateacct,
         CASE WHEN f.c_doctype_id IS NOT NULL THEN (SELECT MIN(name)
                                        FROM c_doctype
@@ -92,8 +92,8 @@
     curr.description as currency_name,
     bp.name as bpname, o.ad_org_id as organizationid,
     loc.address1 || ' ' || COALESCE(TO_CHAR(loc.address2), TO_CHAR('')) as org_address,
-    loc.city || ', ' || ad_column_identifier('C_Region', loc.c_region_id, 'en_US') || ' ' || loc.postal
-    || ' ' || ad_column_identifier('C_Country', loc.c_country_id, 'en_US') AS org_postal,
+    loc.city || ', ' || ad_column_identifier('C_Region', loc.c_region_id, COALESCE($P{LANGUAGE}, 'en_US')) || ' ' || loc.postal
+    || ' ' || ad_column_identifier('C_Country', loc.c_country_id, COALESCE($P{LANGUAGE}, 'en_US')) AS org_postal,
     (SELECT MAX(email) FROM ad_user WHERE ad_user_id=oinfo.ad_user_id) as email,
     (SELECT MAX(phone) FROM ad_user WHERE ad_user_id=oinfo.ad_user_id) as phone,
     issotrx.issotrx as issotrx
@@ -469,7 +469,7 @@ ORDER BY currency_id, issotrx, f.dateacct, f.created]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{bpname}]]></textFieldExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
 				<reportElement x="10" y="59" width="301" height="12" isPrintInFirstWholeBand="true" isPrintWhenDetailOverflows="true" forecolor="#595959" uuid="714e47f3-816e-4fc3-ae02-57bb0a15be40"/>
 				<textElement>
 					<font fontName="DejaVu Sans" size="9"/>
