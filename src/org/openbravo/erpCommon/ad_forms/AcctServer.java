@@ -3613,15 +3613,16 @@ public abstract class AcctServer {
           psdPrevious = paymentDetailPrevious.getFINPaymentScheduleDetailList().get(0);
         }
         // If the Payment Detail has no Order associated, and the next Payment Detail belongs to the
-        // same Invoice and it has an Order related, then return null
+        // same Invoice, and it has an Order related, then return null
         if (pso == null && psdNext != null && psdNext.getInvoicePaymentSchedule() == psi
             && psdNext.getOrderPaymentSchedule() != null) {
           amountAndWriteOff.put("amount", null);
           amountAndWriteOff.put("writeoff", null);
           // If there is a previous Payment Detail that belongs to the same Invoice and has no Order
           // related to it, return the sum of amounts.
-        } else if (psdPrevious != null && psdPrevious.getInvoicePaymentSchedule() == psi
-            && psdPrevious.getOrderPaymentSchedule() == null && BigDecimal.ZERO.compareTo(paymentDetail.getFinPayment().getAmount()) != 0) {
+        } else if ((psdPrevious != null && psdPrevious.getInvoicePaymentSchedule() == psi
+            && psdPrevious.getOrderPaymentSchedule() == null && BigDecimal.ZERO.compareTo(paymentDetail.getFinPayment().getAmount()) != 0) ||
+                (pso != null && BigDecimal.ZERO.compareTo(paymentDetail.getFinPayment().getAmount()) == 0)) {
           amountAndWriteOff.put("amount",
               paymentDetail.getAmount().add(paymentDetailPrevious.getAmount()));
           amountAndWriteOff.put("writeoff",
