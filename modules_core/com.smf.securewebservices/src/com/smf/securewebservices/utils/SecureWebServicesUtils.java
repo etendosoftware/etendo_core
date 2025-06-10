@@ -473,6 +473,7 @@ public class SecureWebServicesUtils {
 	 * @param role The {@link Role} to be associated with the user. If null, the user's default or first role is used.
 	 * @param org The {@link Organization} to be associated with the user. If null, the user's default or first organization is used.
 	 * @param warehouse The {@link Warehouse} to be associated with the organization. If null, the organization's default or first warehouse is used.
+	 * @param sessionId The {@link String} to be associated with the user. If null, If null, a new UUID will be assigned.
 	 * @return A signed JWT as a {@link String}.
 	 * @throws Exception If there are any issues during token generation, such as missing roles, organizations, or warehouse information,
 	 *                   or issues with key generation or token signing.
@@ -724,6 +725,7 @@ public class SecureWebServicesUtils {
 	 * @param selectedRole The role assigned to the user.
 	 * @param selectedOrg The organization associated with the user.
 	 * @param selectedWarehouse The warehouse associated with the organization.
+	 * @param sessionId The sessionId associated with the user.
 	 * @return A {@link Builder} for the JWT with pre-set claims.
 	 */
 	private static Builder getJwtBuilder(User user, Role selectedRole, Organization selectedOrg,
