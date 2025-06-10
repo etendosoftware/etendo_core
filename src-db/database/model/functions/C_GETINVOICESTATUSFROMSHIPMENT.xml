@@ -21,28 +21,38 @@
 * Contributor(s):  ______________________________________.
 ************************************************************************/
 v_percent NUMBER:=0;
+v_isinvoiced VARCHAR2(1):='N';
 BEGIN
 
-  SELECT CASE WHEN MIN(a.suma) = 0 THEN 0 
-              ELSE ROUND(COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)/MIN(a.suma) * 100, 0) END 
-  INTO v_percent
-  FROM m_inoutline minline 
-  JOIN c_invoiceline inv on minline.m_inoutline_id=inv.m_inoutline_id,
-  (SELECT COALESCE(SUM(ABS(g.movementqty)), 0) AS suma
-   FROM m_inoutline g 
-   WHERE g.m_inout_id =p_minoutid
-  ) a
-  WHERE minline.m_inout_id=p_minoutid
-  AND EXISTS (SELECT 1 
-              FROM c_invoice i 
-              WHERE i.c_invoice_id = inv.c_invoice_id
-              AND i.processed = 'Y'
-              AND i.docstatus <> 'VO'
-              AND i.docstatus <> 'CL'
-              AND i.docstatus <> 'DR');
-
+  SELECT 
+  CASE 
+    WHEN SUM(COALESCE(del.movementqty, 0)) = 0 THEN 0 
+    ELSE ROUND(SUM(COALESCE(inv.qtyinvoiced, 0)) / SUM(COALESCE(del.movementqty, 0)) * 100, 0) 
+  END AS invoiced_percentage
+  into v_percent
+FROM m_inoutline del
+LEFT JOIN (
+    SELECT 
+        COALESCE(del.m_inoutline_id, il.m_inoutline_id) AS m_inoutline_id,
+        SUM(ABS(il.qtyinvoiced)) AS qtyinvoiced
+    FROM c_invoiceline il
+    JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id
+    LEFT JOIN c_orderline ol ON il.c_orderline_id = ol.c_orderline_id
+    LEFT JOIN m_inoutline del ON ol.c_orderline_id = del.c_orderline_id
+    WHERE i.processed = 'Y' AND i.docstatus NOT IN ('VO', 'CL', 'DR')
+    GROUP BY COALESCE(del.m_inoutline_id, il.m_inoutline_id)
+) inv ON del.m_inoutline_id = inv.m_inoutline_id
+  WHERE del.m_inout_id = p_minoutid;
+  
   IF (v_percent IS NULL) THEN
-    v_percent:=0;
+    SELECT iscompletelyinvoiced
+    INTO v_isinvoiced
+    FROM m_inout WHERE m_inout_id =p_minoutid;
+    IF (v_isinvoiced = 'Y') THEN
+      v_percent:=100;
+    ELSE
+      v_percent:=0;
+    END IF;
   ELSIF (v_percent > 100) THEN
     v_percent:=100;
   END IF;
