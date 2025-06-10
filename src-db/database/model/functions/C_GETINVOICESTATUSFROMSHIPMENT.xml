@@ -21,6 +21,7 @@
 * Contributor(s):  ______________________________________.
 ************************************************************************/
 v_percent NUMBER:=0;
+v_isinvoiced VARCHAR2(1):='N';
 BEGIN
 
   SELECT CASE WHEN MIN(a.suma) = 0 THEN 0 
@@ -42,7 +43,14 @@ BEGIN
               AND i.docstatus <> 'DR');
 
   IF (v_percent IS NULL) THEN
-    v_percent:=0;
+    SELECT iscompletelyinvoiced
+    INTO v_isinvoiced
+    FROM m_inout WHERE m_inout_id =p_minoutid;
+    IF (v_isinvoiced = 'Y') THEN
+      v_percent:=100;
+    ELSE
+      v_percent:=0;
+    END IF;
   ELSIF (v_percent > 100) THEN
     v_percent:=100;
   END IF;

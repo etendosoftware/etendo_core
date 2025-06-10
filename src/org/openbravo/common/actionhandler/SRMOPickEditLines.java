@@ -304,6 +304,18 @@ public class SRMOPickEditLines extends BaseProcessActionHandler {
       newOrderLine.setLineGrossAmount(grossAmt);
       newOrderLine.setBaseGrossUnitPrice(baseGrossUnitPrice);
 
+      BigDecimal taxBaseAmt;
+      if (order.getPriceList().isPriceIncludesTax()) {
+        BigDecimal grossAmount = grossPrice.multiply(qtyReturned)
+            .setScale(stdPrecision, RoundingMode.HALF_UP);
+        taxBaseAmt = FinancialUtils.calculateNetAmtFromGross(
+            tax.getId(), grossAmount, stdPrecision, BigDecimal.ZERO);
+      } else {
+        taxBaseAmt = netPrice.multiply(qtyReturned)
+            .setScale(stdPrecision, RoundingMode.HALF_UP);
+      }
+      newOrderLine.setTaxableAmount(taxBaseAmt);
+
       if (!selectedLine.get("returnReason").equals(null)) {
         newOrderLine.setReturnReason(
             OBDal.getInstance().get(ReturnReason.class, selectedLine.getString("returnReason")));
