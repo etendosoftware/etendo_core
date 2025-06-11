@@ -36,7 +36,7 @@ dependencies {
 
 final String CURRENT_VERSION = "24.4.19"
 final String NEXT_RELEASE = "25.1.0"
-final String NEXT_HOTFIX = "24.4.1:"
+final String NEXT_HOTFIX = "24.4.20"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
 final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_core/")
@@ -180,10 +180,14 @@ task upgradeCoreVersion {
             throw new GradleException("The parameter value '${versionType}' is not valid, the options should be 'release' or 'hotfix'")
         }
 
-        def version = nextVersion.split("\\.")
-        if (version.length != 3) {
+        def versionParts = nextVersion.trim().split("\\.")
+        if (versionParts.length != 3) {
             throw new GradleException("The version must be in the format major.minor.patch")
         }
+
+        int major = versionParts[0].toInteger()
+        int minor = versionParts[1].toInteger()
+        int patch = versionParts[2].toInteger()
         def files = ['src-db/database/sourcedata/AD_MODULE.xml', 'modules_core/org.openbravo.v3/src-db/database/sourcedata/AD_MODULE.xml']
 
         //Update versions in AD_MODULE.xml files
@@ -192,25 +196,25 @@ task upgradeCoreVersion {
             if (!adModuleContent.contains("<VERSION><![CDATA[") && !adModuleContent.contains("<VERSION_LABEL><![CDATA[") && !adModuleContent.contains("<UPDATEINFO><![CDATA[")) {
                 throw new GradleException(" The format of the ${filePath} file was changed, and it will not be possible to update the versions automatically")
             }
-            adModuleContent = adModuleContent.replaceAll(/<VERSION><!\[CDATA\[\d+.\d+.\d+/, "<VERSION><![CDATA[${version[0]}.${version[1]}.${version[2]}")
-            adModuleContent = adModuleContent.replaceAll(/<VERSION_LABEL><!\[CDATA\[\d+Q\d+.\d+/, "<VERSION_LABEL><![CDATA[${version[0]}Q${version[1]}.${version[2]}")
-            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/github.com\/etendosoftware\/etendo_core\/releases\/tag\/\d+\.\d+\.\d+/, "<UPDATEINFO><![CDATA[https://github.com/etendosoftware/etendo_core/releases/tag/${version[0]}.${version[1]}.${version[2]}")
+            adModuleContent = adModuleContent.replaceAll(/<VERSION><!\[CDATA\[\d+.\d+.\d+/, "<VERSION><![CDATA[${major}.${minor}.${patch}")
+            adModuleContent = adModuleContent.replaceAll(/<VERSION_LABEL><!\[CDATA\[\d+Q\d+.\d+/, "<VERSION_LABEL><![CDATA[${major}Q${minor}.${patch}")
+            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/github.com\/etendosoftware\/etendo_core\/releases\/tag\/\d+\.\d+\.\d+/, "<UPDATEINFO><![CDATA[https://github.com/etendosoftware/etendo_core/releases/tag/${major}.${minor}.${patch}")
             file(filePath).write(adModuleContent)
         }
 
         // Recalculate the constants CURRENT_VERSION, NEXT_RELEASE and NEXT_HOTFIX
         if (versionType == RELEASE) {
-            nextHotfix = "${version[0]}.${version[1]}.1"
-            if (version[1] == "4") {
-                version[0]++
-                version[1] = 1
+            nextHotfix = "${major}.${minor}.1"
+            if (minor == 4) {
+                major++
+                minor = 1
             } else {
-                version[1]++
+                minor++
             }
-            nextRelease = "${version[0]}.${version[1]}.0"
+            nextRelease = "${major}.${minor}.0"
         } else if (versionType == HOTFIX) {
-            version[2]++
-            nextHotfix = "${version[0]}.${version[1]}.${version[2]}"
+            patch++
+            nextHotfix = "${major}.${minor}.${patch}"
         }
 
         //Rewrite build.gradle file with new values
