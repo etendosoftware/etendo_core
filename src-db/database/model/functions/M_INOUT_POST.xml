@@ -798,7 +798,7 @@
                                     FROM C_ORDERLINE 
                                     WHERE C_ORDERLINE_ID = Cur_InOutLine.C_OrderLine_ID);
                 IF (v_IsSOTrx = 'Y') THEN
-                  IF (v_DocStatus = 'DR') THEN
+                  IF (v_DocStatus = 'CO') THEN
                     UPDATE C_ORDERLINE
                       SET QtyDelivered = QtyDelivered + v_QtySO,
                       DATEDELIVERED = (CASE WHEN (QtyDelivered + v_QtySO) > 0 THEN v_DateDelivered ELSE NULL END),
@@ -815,7 +815,7 @@
                     WHERE C_OrderLine_ID = Cur_InOutLine.C_OrderLine_ID;
                   END IF;
                 ELSE
-                  IF (v_DocStatus = 'DR') THEN
+                  IF (v_DocStatus = 'CO') THEN
                     UPDATE C_ORDERLINE
                       SET QtyDelivered = QtyDelivered + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyDelivered))),
                       QtyReserved = QtyReserved + LEAST(ABS(v_QtyPO), (ABS(QtyOrdered) - ABS(QtyReserved))),
