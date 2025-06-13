@@ -519,7 +519,12 @@ IF (NOT FINISH_PROCESS) THEN
 		AND Ad_Isorgincluded(Cur_InvoiceNetLine.AD_ORG_ID, AD_ORG_ID, Cur_InvoiceNetLine.AD_Client_ID) <> -1;
 	
 		UPDATE C_ORDERLINE
-		SET QtyInvoiced = COALESCE(QtyInvoiced, 0) + COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0),
+		SET QtyInvoiced = COALESCE(QtyInvoiced, 0) + 
+      CASE WHEN v_DocAction = 'CO' THEN 
+        COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0)
+      ELSE 
+        -COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0)
+      END,
 			DateInvoiced = COALESCE(v_DateInvoiced, now()),
 			Updated = now(),
 			UpdatedBy = v_UpdatedBy
@@ -1097,7 +1102,13 @@ IF (NOT FINISH_PROCESS) THEN
   -- Set qtyinvoiced in m_inoutline
   UPDATE m_inoutline 
   SET qtyinvoiced = COALESCE(qtyinvoiced, 0) + (
-      SELECT COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)
+      SELECT 
+        CASE 
+          WHEN v_DocAction = 'CO' 
+            THEN COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)
+          ELSE 
+            -COALESCE(SUM(ABS(inv.qtyinvoiced)), 0)
+        END
       FROM c_invoiceline inv
       WHERE inv.m_inoutline_id = m_inoutline.m_inoutline_id
         AND inv.c_invoice_id = v_Record_ID
