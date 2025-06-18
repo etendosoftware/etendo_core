@@ -520,11 +520,11 @@ IF (NOT FINISH_PROCESS) THEN
 	
 		UPDATE C_ORDERLINE
 		SET QtyInvoiced = COALESCE(QtyInvoiced, 0) + 
-      CASE WHEN v_DocAction = 'CO' THEN 
-        COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0)
-      ELSE 
-        -COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0)
-      END,
+		    CASE WHEN v_DocAction = 'CO' THEN 
+		      COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0)
+		    ELSE 
+		      -COALESCE(Cur_InvoiceNetLine.QtyInvoiced, 0)
+		    END,
 			DateInvoiced = COALESCE(v_DateInvoiced, now()),
 			Updated = now(),
 			UpdatedBy = v_UpdatedBy
