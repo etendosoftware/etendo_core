@@ -1,7 +1,9 @@
 package com.smf.jobs;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
+
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -68,9 +70,12 @@ public abstract class Action extends BaseProcessActionHandler {
       if (jsonContent.has("_buttonValue")) {
         allParams.put("_buttonValue", jsonContent.get("_buttonValue"));
       }
-      JSONObject params = jsonContent.optJSONObject(PARAMS);
+      for (Iterator it = allParams.keys(); it.hasNext(); ) {
+        String key = (String) it.next();
+        jsonContent.put(key, parameters.get(key));
+      }
       runPreActionHooks(jsonContent);
-      var result = action(params, new MutableBoolean(false));
+      var result = action(jsonContent, new MutableBoolean(false));
 
       result = postRun(result);
       runPostActionHooks(jsonContent, result);
