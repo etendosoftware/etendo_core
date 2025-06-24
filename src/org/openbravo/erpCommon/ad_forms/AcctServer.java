@@ -35,7 +35,7 @@ import java.util.Vector;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Projections;
@@ -3620,8 +3620,9 @@ public abstract class AcctServer {
           amountAndWriteOff.put("writeoff", null);
           // If there is a previous Payment Detail that belongs to the same Invoice and has no Order
           // related to it, return the sum of amounts.
-        } else if (psdPrevious != null && psdPrevious.getInvoicePaymentSchedule() == psi
-            && psdPrevious.getOrderPaymentSchedule() == null && BigDecimal.ZERO.compareTo(paymentDetail.getFinPayment().getAmount()) != 0) {
+        } else if ((psdPrevious != null && psdPrevious.getInvoicePaymentSchedule() == psi
+                && psdPrevious.getOrderPaymentSchedule() == null && BigDecimal.ZERO.compareTo(paymentDetail.getFinPayment().getAmount()) != 0) ||
+                (pso != null && BigDecimal.ZERO.compareTo(paymentDetail.getFinPayment().getAmount()) == 0)) {
           amountAndWriteOff.put("amount",
               paymentDetail.getAmount().add(paymentDetailPrevious.getAmount()));
           amountAndWriteOff.put("writeoff",

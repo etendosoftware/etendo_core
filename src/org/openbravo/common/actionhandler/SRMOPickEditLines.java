@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -303,6 +303,18 @@ public class SRMOPickEditLines extends BaseProcessActionHandler {
           netPrice.multiply(qtyReturned).setScale(stdPrecision, RoundingMode.HALF_UP));
       newOrderLine.setLineGrossAmount(grossAmt);
       newOrderLine.setBaseGrossUnitPrice(baseGrossUnitPrice);
+
+      BigDecimal taxBaseAmt;
+      if (order.getPriceList().isPriceIncludesTax()) {
+        BigDecimal grossAmount = grossPrice.multiply(qtyReturned)
+            .setScale(stdPrecision, RoundingMode.HALF_UP);
+        taxBaseAmt = FinancialUtils.calculateNetAmtFromGross(
+            tax.getId(), grossAmount, stdPrecision, BigDecimal.ZERO);
+      } else {
+        taxBaseAmt = netPrice.multiply(qtyReturned)
+            .setScale(stdPrecision, RoundingMode.HALF_UP);
+      }
+      newOrderLine.setTaxableAmount(taxBaseAmt);
 
       if (!selectedLine.get("returnReason").equals(null)) {
         newOrderLine.setReturnReason(

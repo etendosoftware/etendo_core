@@ -41,7 +41,7 @@ public class RptC_Order extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    VariablesSecureApp vars = new VariablesSecureApp(request);
+    VariablesSecureApp vars = createVars(request);
 
     if (vars.commandIn("DEFAULT")) {
       String strcOrderId = vars.getSessionValue("RptC_Order.inpcOrderId_R");
@@ -58,7 +58,7 @@ public class RptC_Order extends HttpSecureAppServlet {
     }
   }
 
-  private void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
       String strcOrderId) throws IOException, ServletException {
 
     if (log4j.isDebugEnabled()) {
@@ -96,4 +96,14 @@ public class RptC_Order extends HttpSecureAppServlet {
   public String getServletInfo() {
     return "Servlet that presents the RptCOrders seeker";
   } // End of getServletInfo() method
+
+  /**
+   * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
+   *
+   * @param request the HTTP request
+   * @return the initialized secure variables
+   */
+  protected VariablesSecureApp createVars(HttpServletRequest request) {
+    return new VariablesSecureApp(request);
+  }
 }

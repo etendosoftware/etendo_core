@@ -32,8 +32,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -476,7 +476,7 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
       String strcAcctSchemaId = OBLedgerUtils.getOrgLedger(strOrg);
       response.setContentType("text/html; charset=UTF-8");
       PrintWriter out = response.getWriter();
-      out.print(StringEscapeUtils.escapeHtml(strcAcctSchemaId));
+      out.print(StringEscapeUtils.escapeHtml4(strcAcctSchemaId));
       out.close();
     } else {
       pageError(response);
@@ -1136,7 +1136,10 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
 
     try {
       OBContext.setAdminMode();
-      String documentNo = StringEscapeUtils.escapeSql(strDocumentNo);
+      String documentNo = null;
+      if (strDocumentNo != null) {
+        documentNo = StringUtils.replace(strDocumentNo, "'", "''");
+      }
       documentNo = documentNo.replaceAll(";", "");
 
       //@formatter:off

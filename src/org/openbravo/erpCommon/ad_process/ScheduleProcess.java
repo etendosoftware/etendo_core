@@ -102,7 +102,7 @@ public class ScheduleProcess extends HttpSecureAppServlet {
     advisePopUpRefresh(request, response, "SUCCESS", processTitle, message);
   }
 
-  private String getRequestId(VariablesSecureApp vars) {
+  protected String getRequestId(VariablesSecureApp vars) {
     String windowId = vars.getStringParameter("inpwindowId");
     String requestId = vars.getSessionValue(windowId + "|" + PROCESS_REQUEST_ID);
     if (requestId.isEmpty()) {
@@ -111,7 +111,7 @@ public class ScheduleProcess extends HttpSecureAppServlet {
     return requestId;
   }
 
-  private boolean isEmptyProcessGroup(String requestId) {
+  protected boolean isEmptyProcessGroup(String requestId) {
     OBCriteria<ProcessGroupList> processListCri = OBDal.getInstance()
         .createCriteria(ProcessGroupList.class);
     processListCri

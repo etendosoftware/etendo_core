@@ -43,7 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -612,7 +612,7 @@ public class PrintController extends HttpSecureAppServlet {
           handleDirectPrint(response, jrPrintReports, reports, filename, tempOutputStream, os);
         }
       } else {
-        concatReport(reports.toArray(new Report[]{ }), jrPrintReports, response, directPrint);
+        tempOutputStream = concatReport(reports.toArray(new Report[]{ }), jrPrintReports, response, directPrint);
       }
       updateOrderDatePrintedForSalesOrders(reports);
     } catch (IOException e) {
@@ -753,7 +753,7 @@ public class PrintController extends HttpSecureAppServlet {
     printReports(response, jrPrintReports, reports, false);
   }
 
-  private void concatReport(Report[] reports, Collection<JasperPrint> jrPrintReports,
+  private ByteArrayOutputStream concatReport(Report[] reports, Collection<JasperPrint> jrPrintReports,
       HttpServletResponse response, boolean directPrint) {
     ByteArrayOutputStream tempOutputStream = new ByteArrayOutputStream();
     String filename = "";
@@ -780,13 +780,23 @@ public class PrintController extends HttpSecureAppServlet {
             tempOutputStream, configuration);
         // Modify the concatenated report with hooks
         ByteArrayInputStream pdfInputStream = new ByteArrayInputStream(tempOutputStream.toByteArray());
-        ServletOutputStream os = response.getOutputStream();
+
         // Call hooks
         if (hooking.booleanValue()) {
+          ByteArrayOutputStream postProcessOutputStream = new ByteArrayOutputStream();
           Report report = reports[0];
-          setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream, os);
+          setPostHookParams(report.getDocumentType(), hookParams, report.getDocumentId(), pdfInputStream, postProcessOutputStream);
 
           hookManager.executeHooks(hookParams, hookManager.getPostProcess());
+
+          if (postProcessOutputStream.size() > 0) {
+            return postProcessOutputStream;
+          } else {
+            ServletOutputStream os = response.getOutputStream();
+            tempOutputStream.writeTo(os);
+            os.flush();
+            return tempOutputStream;
+          }
         }
       } else {
         response.setContentType("text/html");
@@ -810,6 +820,8 @@ public class PrintController extends HttpSecureAppServlet {
     } catch (Exception e) {
       log4j.error(e);
     }
+
+    return tempOutputStream;
   }
 
   private void hookedDirectPrint(String filename, File path, Report reports, ByteArrayOutputStream tempResponse,

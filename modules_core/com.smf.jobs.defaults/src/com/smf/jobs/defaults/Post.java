@@ -4,8 +4,8 @@ import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
@@ -114,7 +114,7 @@ public class Post extends Action {
     return BaseOBObject.class;
   }
 
-  private String getDateProperty(String adTableId, VariablesSecureApp vars, Entity entity) {
+  protected String getDateProperty(String adTableId, VariablesSecureApp vars, Entity entity) {
     Map<String, String> mapOfTablesSupported = Map.ofEntries(
         Map.entry("318", Invoice.PROPERTY_ACCOUNTINGDATE),
         Map.entry("800060", Amortization.PROPERTY_ACCOUNTINGDATE),

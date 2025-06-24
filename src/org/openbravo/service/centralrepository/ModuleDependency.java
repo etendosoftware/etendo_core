@@ -57,7 +57,7 @@ public class ModuleDependency {
     }
   }
 
-  private static ModuleDependency fromJson(JSONObject jsonDep) {
+  protected static ModuleDependency fromJson(JSONObject jsonDep) {
     try {
       String moduleID = jsonDep.getString("moduleID");
       String moduleName = jsonDep.getString("moduleName");

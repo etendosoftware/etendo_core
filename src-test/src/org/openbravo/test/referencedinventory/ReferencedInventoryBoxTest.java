@@ -30,7 +30,7 @@ import static org.junit.Assert.assertThat;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.materialmgmt.refinventory.BoxProcessor;

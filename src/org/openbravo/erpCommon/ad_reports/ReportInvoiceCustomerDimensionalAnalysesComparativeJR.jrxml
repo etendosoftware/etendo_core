@@ -2,6 +2,7 @@
 <!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
 <!-- 2017-03-02T13:15:56 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportInvoiceCustomerDimensionalAnalysesComparativeJR" pageWidth="1108" pageHeight="595" orientation="Landscape" columnWidth="970" leftMargin="14" rightMargin="14" topMargin="56" bottomMargin="28" uuid="8fac4b02-733e-45dd-b883-668ce5862e8c">
+	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>

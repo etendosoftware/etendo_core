@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
 import org.junit.After;
 import org.junit.AfterClass;

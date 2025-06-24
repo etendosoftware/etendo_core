@@ -31,9 +31,9 @@ pipeline {
     UNSTABLE            = "UNSTABLE"
 
     // Stack
-    JAVA_HOME           = "/usr/lib/jvm/java-11-openjdk-amd64"
-    TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.86/bin/apache-tomcat-9.0.86.tar.gz"
-    POSTGRES_VERSION    = "14"
+    JAVA_HOME           = "/usr/lib/jvm/jdk-17.0.13"
+    TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz"
+    POSTGRES_VERSION    = "16"
 
     CONTEXT_BUILD       = "Unit Tests with Postgres Database"
 
@@ -57,7 +57,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: jenkins-node-core-unittests-0
-  namespace: jenkins
+  namespace: jenkins2025
   labels:
     app.kubernetes.io/name: jenkins-node-core-unittests
 spec:
@@ -72,7 +72,7 @@ spec:
         type: ''
   containers:
     - name: compiler
-      image: etendo/compiler_jenkins:1.0.6
+      image: etendo/compiler_jenkins:1.0.7-jdk.17.0.13
       ports:
         - name: ssh
           containerPort: 22
@@ -106,7 +106,7 @@ spec:
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
     - name: postgres
-      image: postgres:14
+      image: postgres:16
       workingDir: /home/jenkins
       env:
         - name: POSTGRES_PASSWORD
@@ -480,11 +480,43 @@ spec:
           script {
             try {
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running SonarQube Analysis\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+
+              def modulesCoreExclusions = [
+                "com.smf.userinterface.skin.legacy",
+                "org.openbravo.client.widgets",
+                "org.openbravo.client.htmlwidget",
+                "com.smf.smartclient.debugtools",
+                "org.openbravo.client.myob",
+                "org.openbravo.userinterface.smartclient",
+                "com.smf.smartclient.boostedui",
+                "com.etendoerp.client.application"
+              ]
+
+              def sourceExclusions = modulesCoreExclusions.collect { "modules_core/${it}/**" }.join(',')
+
+              echo "---------------------- Add deprecated classes to sourceExclusions list ----------------------"
+              def deprecatedFiles = sh(
+                  script: '''
+                    cd ${REPO_NAME}
+                    find . -name "*.java" -exec grep -l '@Deprecated' {} + | while read file; do
+                      if grep -A1 '@Deprecated' "$file" | grep -q 'public class'; then
+                        echo "$file"
+                      fi
+                    done
+                  ''',
+                  returnStdout: true
+              ).trim().split('\n')
+
+              def deprecatedExclusions = deprecatedFiles.collect { it.replaceFirst("^\\./", "") }.join(',')
+              sourceExclusions = "${sourceExclusions},${deprecatedExclusions}"
+
+              echo "Sources to exclusions: ${sourceExclusions}"
+
               echo "--------------- Running SonarQube ---------------"
               sh """
               su etendo
               cd ${REPO_NAME}
-              ./gradlew sonar --stacktrace --info
+              ./gradlew sonar -Dsonar.inclusions=**/*.java -Dsonar.exclusions=${sourceExclusions} --stacktrace --info
               """
               echo "---------------------- Getting SonarQube Report URL ----------------------"
               def branchName = URLEncoder.encode(GIT_BRANCH, 'UTF-8')
@@ -510,7 +542,10 @@ spec:
     stage('Run Deploy Snapshot') { // MARK: Run Deploy Snapshot
       when {
         allOf {
-          branch 'develop'
+          anyOf {
+            branch 'develop'
+            branch 'epic/ETP-1004'
+          }
           expression {
               env.STATUSTEST == "1"
           }

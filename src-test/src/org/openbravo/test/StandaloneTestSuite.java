@@ -19,10 +19,10 @@
 
 package org.openbravo.test;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
-import org.openbravo.advpaymentmngt.test.DocumentNumberGeneration;
-import org.openbravo.advpaymentmngt.test.ReversePaymentTest;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.SelectPackages;
+import org.junit.platform.suite.api.Suite;
+import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.authentication.hashing.PasswordHashing;
 import org.openbravo.base.weld.test.testinfrastructure.CdiInfrastructure;
 import org.openbravo.base.weld.test.testinfrastructure.DalPersistanceEventTest;
@@ -39,9 +39,27 @@ import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
+import org.openbravo.erpReports.ReportTaxPaymentJRTest;
+import org.openbravo.erpReports.RptC_InvoiceTest;
+import org.openbravo.erpReports.RptC_OrderTest;
+import org.openbravo.erpReports.RptC_ProposalJrTest;
+import org.openbravo.erpReports.RptC_RemittanceTest;
+import org.openbravo.erpReports.RptMA_ProcessPlanTest;
+import org.openbravo.erpReports.RptM_RequisitionTest;
 import org.openbravo.event.LandedCostDuplicateReceiptValidatorTest;
 import org.openbravo.financial.FinancialUtilsTest;
+import org.openbravo.materialmgmt.MaterialMgmtTestSuite;
+import org.openbravo.scheduling.GroupInfoTest;
+import org.openbravo.scheduling.JobDetailProviderTest;
+import org.openbravo.scheduling.OBSchedulerTest;
+import org.openbravo.scheduling.ProcessGroupTest;
+import org.openbravo.scheduling.ProcessMonitorTest;
 import org.openbravo.scheduling.ProcessSchedulingTest;
+import org.openbravo.scheduling.SchedulerTimeUtilsTest;
+import org.openbravo.scheduling.quartz.JobInitializationListenerTest;
+import org.openbravo.scheduling.quartz.OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest;
+import org.openbravo.scheduling.quartz.OpenbravoOracleJDBCDelegateTest;
+import org.openbravo.scheduling.quartz.OpenbravoPostgreJDBCDelegateTest;
 import org.openbravo.scheduling.trigger.MisfirePolicyTest;
 import org.openbravo.scheduling.trigger.TriggerProviderTest;
 import org.openbravo.test.accounting.PostDocumentTest;
@@ -169,8 +187,8 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
  * @author mtaal
  */
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
 
     // dal
     IssuesTest.class, //
@@ -282,7 +300,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ImportEntryBuilderTest.class, //
     CryptoUtilities.class, //
     Sessions.class, //
-    OBContextTest.class, //
     JSONSerialization.class, //
     PasswordHashing.class, //
     OBPropertiesProviderTest.class, //
@@ -362,7 +379,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     ServicesTest3.class,
 
     // others
-    DocumentNumberGeneration.class, //
     GridExport.class, //
     FinancialUtilsTest.class, //
 
@@ -381,9 +397,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // Count and Discount a Document without Doc base type configured and get an error. [EPL-534]
     PostedNoDocConfigTest.class,
-
-    // Reverse Payment Test
-    ReversePaymentTest.class,
 
     // Report Valuation Stock Test
     ReportValuationStockTest.class,
@@ -413,7 +426,59 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     GoodMovementTest.class,
 
     // Purchase Order Status
-    PurchaseOrderStatus.class
+    PurchaseOrderStatus.class,
+
+    // MaterialMgmt
+    MaterialMgmtTestSuite.class,
+
+    // AdvPayment
+    AdvPaymentMngtTestSuite.class, //
+
+    // scheduling
+    OpenbravoPostgreJDBCDelegateTest.class, //
+    OpenbravoOracleJDBCDelegateTest.class, //
+    OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest.class, //
+    JobInitializationListenerTest.class, //
+    ProcessGroupTest.class, //
+    SchedulerTimeUtilsTest.class, //
+    GroupInfoTest.class, //
+    JobDetailProviderTest.class, //
+    ProcessMonitorTest.class, //
+    OBSchedulerTest.class, //
+
+    // ReportTaxPaymentJR
+    ReportTaxPaymentJRTest.class,
+
+    // RptC_Invoice
+    RptC_InvoiceTest.class,
+
+    // RptC_Order Test
+    RptC_OrderTest.class,
+
+    // RptC_ProposalJr
+    RptC_ProposalJrTest.class,
+
+    // RptC_Remittance
+    RptC_RemittanceTest.class,
+
+    // RptM_Requisition
+    RptM_RequisitionTest.class,
+
+    // RptMA_ProcessPlan
+    RptMA_ProcessPlanTest.class,
+})
+@SelectPackages({"org.openbravo.service.centralrepository",
+    "org.openbravo.service.db",
+    "org.openbravo.erpCommon.ad_process",
+    "org.openbravo.common.actionhandler",
+    "org.openbravo.common.filterexpression",
+    "org.openbravo.common.datasource",
+    "org.openbravo.portal",
+    "org.openbravo.costing",
+    "org.openbravo.cluster",
+    "org.openbravo.role.inheritance",
+    "org.openbravo.base.secureApp",
+
 })
 public class StandaloneTestSuite {
 }
