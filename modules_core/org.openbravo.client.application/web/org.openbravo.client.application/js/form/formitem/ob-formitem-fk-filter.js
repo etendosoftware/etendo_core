@@ -415,6 +415,17 @@ isc.OBFKFilterTextItem.addProperties({
         me.grid.parentElement.getClassName() === 'OBPickAndExecuteGrid'
       );
     }
+    /**
+     * Checks if the current object is an instance of OBSelectorFilterSelectItem.
+     *
+     * @returns {boolean} True if the current object is an instance of OBSelectorFilterSelectItem, otherwise false.
+     */
+    function isOBSelectorFilterSelectItem() {
+      return (
+        me &&
+        me.getClassName() === 'OBSelectorFilterSelectItem'
+      );
+    }
 
     function cleanCriteria(crit, fkItem) {
       var i, criterion, fkFilterOnThisField;
@@ -433,7 +444,7 @@ isc.OBFKFilterTextItem.addProperties({
           crit.removeAt(i);
         }
 
-        if (isInPickAndExecuteGrid() && criterion.fieldName === 'id') {
+        if ((isInPickAndExecuteGrid() || isOBSelectorFilterSelectItem()) && criterion.fieldName === 'id') {
           // we're in a P&E grid, selected ids should also be removed from criteria
           crit.removeAt(i);
         }
@@ -441,7 +452,7 @@ isc.OBFKFilterTextItem.addProperties({
     }
 
     function cleanOrCriterion() {
-      if (isInPickAndExecuteGrid() && gridCriteria._OrExpression) {
+      if ((isInPickAndExecuteGrid() || isOBSelectorFilterSelectItem()) && gridCriteria._OrExpression) {
         // we're in a P&E grid, _OrExpression parameter should also be removed as it is used as part of the selection criteria
         if (gridCriteria.criteria.length > 0) {
           gridCriteria = {

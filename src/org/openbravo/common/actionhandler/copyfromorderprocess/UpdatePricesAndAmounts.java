@@ -113,6 +113,9 @@ class UpdatePricesAndAmounts implements CopyFromOrdersProcessImplementationInter
     priceInformation.setStandardPrice(priceActual);
     priceInformation.setListPrice(priceList);
 
+    priceInformation.setTaxableAmount(qtyOrdered.multiply(priceActual)
+        .setScale(stdPrecision, RoundingMode.HALF_UP));
+
     priceInformation.setDiscount(discount);
     priceInformation.setPriceLimit(priceLimit);
 
@@ -130,6 +133,7 @@ class UpdatePricesAndAmounts implements CopyFromOrdersProcessImplementationInter
     newOrderLine.setUnitPrice(priceInformation.getUnitPrice());
     newOrderLine.setListPrice(priceInformation.getListPrice());
     newOrderLine.setStandardPrice(priceInformation.getStandardPrice());
+    newOrderLine.setTaxableAmount(priceInformation.getTaxableAmount());
     // Gross Prices
     newOrderLine.setGrossUnitPrice(priceInformation.getGrossUnitPrice());
     newOrderLine.setGrossListPrice(priceInformation.getGrossListPrice());
@@ -177,6 +181,8 @@ class UpdatePricesAndAmounts implements CopyFromOrdersProcessImplementationInter
     BigDecimal unitPrice;
     BigDecimal standardPrice;
     BigDecimal listPrice;
+    // Taxable Amount
+    BigDecimal taxableAmount;
     // Gross Prices
     BigDecimal grossUnitPrice;
     BigDecimal grossBaseUnitPrice;
@@ -192,6 +198,7 @@ class UpdatePricesAndAmounts implements CopyFromOrdersProcessImplementationInter
       this.unitPrice = BigDecimal.ZERO;
       this.standardPrice = BigDecimal.ZERO;
       this.listPrice = BigDecimal.ZERO;
+      this.taxableAmount = BigDecimal.ZERO;
       this.grossUnitPrice = BigDecimal.ZERO;
       this.grossBaseUnitPrice = BigDecimal.ZERO;
       this.grossListPrice = BigDecimal.ZERO;
@@ -236,6 +243,14 @@ class UpdatePricesAndAmounts implements CopyFromOrdersProcessImplementationInter
 
     private void setListPrice(final BigDecimal listPrice) {
       this.listPrice = listPrice;
+    }
+
+    private BigDecimal getTaxableAmount() {
+      return taxableAmount;
+    }
+
+    private void setTaxableAmount(final BigDecimal taxableAmount) {
+      this.taxableAmount = taxableAmount;
     }
 
     private BigDecimal getGrossUnitPrice() {

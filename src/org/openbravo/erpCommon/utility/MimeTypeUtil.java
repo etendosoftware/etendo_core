@@ -18,18 +18,12 @@
  */
 package org.openbravo.erpCommon.utility;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URLConnection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dom4j.Element;
-import org.openbravo.dal.xml.XMLUtil;
+import org.apache.tika.Tika;
 
 /**
  * Utility class to detect MIME type based on data array.
@@ -44,6 +38,9 @@ public class MimeTypeUtil {
   // MIME type to be returned instead of null
   private static final String NULL_MIME_TYPE = "application/octet-stream";
 
+  // Apache Tika instance (thread-safe)
+  private static final Tika tika = new Tika();
+
   /**
    * Returns the instance of the MimeTypeUtil class
    * 
@@ -54,64 +51,44 @@ public class MimeTypeUtil {
   }
 
   /**
-   * Returns the MIME type name, (e.g. image/png) based on the byte array passed as parameter.
-   * Returns application/octet-stream if no better match is found.
-   * 
+   * Detects the MIME type of the given byte array using Apache Tika.
+   * <p>
+   * This method analyzes the content of the byte array to determine the most accurate
+   * MIME type (e.g. {@code image/png}, {@code image/jpeg}, {@code image/x-ms-bmp}).
+   * It does not rely on file extensions, making it useful for validating uploaded
+   * file content.
+   * </p>
+   *
    * @param data
-   *          byte array from which we want to detect the MIME type
-   * @return MIME Type Name detected or application/octet-stream
+   *     the byte array representing the file content
+   * @return the detected MIME type, or {@code application/octet-stream} if detection fails
    */
   public String getMimeTypeName(byte[] data) {
-    try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        BufferedInputStream bis = new BufferedInputStream(bais)) {
-      return getMimeTypeName(bis);
-    } catch (IOException ex) {
-      logger.error("Failed to retrieve Mime Type.", ex);
+    try {
+      return tika.detect(data);
+    } catch (Exception ex) {
+      logger.error("Failed to detect MIME type from byte array", ex);
       return NULL_MIME_TYPE;
     }
   }
 
   /**
-   * Returns the MIME type name, (e.g. image/png) based on the file content passed as parameter.
-   * Returns application/octet-stream if no better match is found.
+   * Detects the MIME type of the given file using Apache Tika.
+   * <p>
+   * This method analyzes the file's content to determine its MIME type. It may also use
+   * the file's extension as a secondary hint when needed. Useful for validating or processing
+   * uploaded or temporary files.
+   * </p>
    *
    * @param file
-   *          file from which we want to detect the MIME type
-   * @return MIME Type Name detected or application/octet-stream
+   *     the file to analyze
+   * @return the detected MIME type, or {@code application/octet-stream} if detection fails
    */
   public String getMimeTypeName(File file) {
-    try (FileInputStream fis = new FileInputStream(file);
-        BufferedInputStream bis = new BufferedInputStream(fis)) {
-      return getMimeTypeName(bis);
-    } catch (IOException ex) {
-      logger.error("File {} has not been found on Mime Type detection.", file.getName(), ex);
-      return NULL_MIME_TYPE;
-    }
-  }
-
-  /**
-   * Returns the MIME type name, (e.g. image/png) based on the InputStream passed as parameter.
-   * Returns application/octet-stream if no match is found.
-   *
-   * @param is
-   *          InputStream used to determine MIME type
-   * @return MIME Type Name detected or application/octet-stream
-   */
-  private String getMimeTypeName(InputStream is) {
     try {
-      String mimeType = URLConnection.guessContentTypeFromStream(is);
-      if (mimeType == null) {
-        return NULL_MIME_TYPE;
-      }
-      if ("application/xml".equals(mimeType)) {
-        Element xmlRootElement = XMLUtil.getInstance().getRootElement(is);
-        if (xmlRootElement != null && "svg".equals(xmlRootElement.getName())) {
-          return "image/svg+xml";
-        }
-      }
-      return mimeType;
+      return tika.detect(file);
     } catch (IOException ex) {
-      logger.error("Failed to detect MimeType.", ex);
+      logger.error("Failed to detect MIME type from file: {}", file.getName(), ex);
       return NULL_MIME_TYPE;
     }
   }

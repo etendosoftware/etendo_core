@@ -29,7 +29,6 @@ public class TestConstants {
     public static final String US = "2E60544D37534C0B89E765FE29BC0B43";
     public static final String US_EST = "7BABA5FF80494CAFA54DEBD22EC46F01";
     public static final String US_WEST = "BAE22373FEBE4CCCA24517E23F0C8A48";
-
     public static final String ESP = "B843C30461EA4501935CB1D125C9C25A";
     public static final String ESP_SUR = "DC206C91AA6A4897B44DA897936E0EC3";
     public static final String ESP_NORTE = "E443A31992CB4635AFCAEABE7183CE85";

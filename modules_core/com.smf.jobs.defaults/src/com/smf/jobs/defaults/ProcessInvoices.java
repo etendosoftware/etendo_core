@@ -6,9 +6,9 @@ import com.smf.jobs.Result;
 import com.smf.jobs.Action;
 import com.smf.jobs.defaults.Utils.ProcessUtils;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.mutable.MutableBoolean;
-import org.apache.commons.lang.mutable.MutableInt;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -35,6 +35,8 @@ public class ProcessInvoices extends Action {
     Logger log = LogManager.getLogger();
     private static final String VOIDDATE = "VoidDate";
     private static final String VOIDACCOUNTINGDATE = "VoidAccountingDate";
+    private static final String SUPPLIERREFERENCE = "POReference";
+
     @Inject
     private WeldUtils weldUtils;
 
@@ -47,6 +49,12 @@ public class ProcessInvoices extends Action {
             var documentAction = parameters.getString("DocAction");
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
+            String supplierReference;
+            if (input.size() > 1) {
+                supplierReference = null;
+            } else {
+                supplierReference = parameters.optString(SUPPLIERREFERENCE, "");
+            }
             var errors = new MutableInt(0);
             var success = new MutableInt(0);
             OBError message = new OBError();
@@ -54,9 +62,8 @@ public class ProcessInvoices extends Action {
 
             log.debug("Process Invoice Action Parameters:");
             log.debug(parameters.toString());
-
             for (Invoice invoice : input) {
-                message = processInvoice(invoice, documentAction, voidDate, voidAcctDate);
+                message = processInvoice(invoice, documentAction, voidDate, voidAcctDate, supplierReference);
                 ProcessUtils.updateResult(message, errors, success);
             }
 
@@ -70,11 +77,12 @@ public class ProcessInvoices extends Action {
         return result;
     }
 
-    private OBError processInvoice(Invoice invoice, String docAction, String _strVoidDate, String _strVoidAcctDate) throws ParseException {
+    private OBError processInvoice(Invoice invoice, String docAction, String _strVoidDate, String _strVoidAcctDate,
+        String _strSupplierReference) throws ParseException {
 
         var processor = weldUtils.getInstance(ProcessInvoiceUtil.class);
-        var strVoidDate = "";
-        var strVoidAcctDate = "";
+        var strVoidDate = StringUtils.EMPTY;
+        var strVoidAcctDate = StringUtils.EMPTY;
 
         if (_strVoidDate != null && _strVoidAcctDate != null) {
             // Convert from the JSON date format to the OBProperties date format
@@ -86,12 +94,13 @@ public class ProcessInvoices extends Action {
         }
 
         return processor.process(
-                invoice.getId(),
-                docAction,
-                strVoidDate,
-                strVoidAcctDate,
-                RequestContext.get().getVariablesSecureApp(),
-                new DalConnectionProvider(false)
+            invoice.getId(),
+            docAction,
+            strVoidDate,
+            strVoidAcctDate,
+            _strSupplierReference,
+            RequestContext.get().getVariablesSecureApp(),
+            new DalConnectionProvider(false)
         );
     }
 
@@ -103,6 +112,8 @@ public class ProcessInvoices extends Action {
             var input = getInputContents(getInputClass());
             var voidDate = parameters.isNull(VOIDDATE) ? null : parameters.getString(VOIDDATE);
             var voidAcctDate = parameters.isNull(VOIDACCOUNTINGDATE) ? null : parameters.getString(VOIDACCOUNTINGDATE);
+            var supplierReference = parameters.getString(SUPPLIERREFERENCE);
+
             log.debug("Process Invoice preRun Parameters:");
             log.debug(parameters.toString());
 
@@ -113,7 +124,7 @@ public class ProcessInvoices extends Action {
                     continue;
                 }
                 // In case of a locked record, the docAction will be forced to XL, this will unlock the record and proceed to complete
-                var message = processInvoice(invoice, "XL", voidDate, voidAcctDate);
+                var message = processInvoice(invoice, "XL", voidDate, voidAcctDate, supplierReference);
                 if (!StringUtils.equals("Error", message.getType())){
                     invoice.setAPRMProcessinvoice("--");
                     OBDal.getInstance().save(invoice);

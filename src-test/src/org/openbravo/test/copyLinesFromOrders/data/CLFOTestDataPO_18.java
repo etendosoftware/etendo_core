@@ -23,7 +23,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.UUID;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBDal;

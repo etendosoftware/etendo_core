@@ -2,6 +2,7 @@
 <!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
 <!-- 2016-03-11T16:07:53 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PaymentReportExcel" pageWidth="2000" pageHeight="595" orientation="Landscape" whenNoDataType="NoDataSection" columnWidth="1940" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="bd54446c-5f03-492f-9be8-1942e896464a">
+	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="2.0"/>

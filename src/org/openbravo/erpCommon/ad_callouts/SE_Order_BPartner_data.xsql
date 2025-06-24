@@ -58,11 +58,13 @@
     <SqlMethodComment></SqlMethodComment>
     <Sql>
       <![CDATA[
-        select m_warehouse_id AS ID from ad_org_warehouse
-        where ad_org_id = ?
-        and (select isactive from m_warehouse where m_warehouse_id=ad_org_warehouse.m_warehouse_id)='Y'
-        group by m_warehouse_id, priority
-        having min(priority) = priority
+        SELECT org_wh.m_warehouse_id AS ID
+        FROM ad_org_warehouse org_wh
+        JOIN m_warehouse wh ON org_wh.m_warehouse_id = wh.m_warehouse_id
+        WHERE org_wh.ad_org_id = ?
+        AND wh.isactive = 'Y'
+        AND org_wh.isactive = 'Y'
+        ORDER BY org_wh.priority ASC
       ]]>
     </Sql>
     <Parameter name="adOrgId"/>

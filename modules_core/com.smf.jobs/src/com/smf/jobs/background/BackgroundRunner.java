@@ -2,7 +2,7 @@ package com.smf.jobs.background;
 
 import com.smf.jobs.JobManager;
 import com.smf.jobs.Runner;
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.openbravo.scheduling.KillableProcess;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalBaseProcess;

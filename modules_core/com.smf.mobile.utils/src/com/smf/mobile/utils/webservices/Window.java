@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -408,7 +408,7 @@ public class Window implements WebService {
             || ALWAYS_DISPLAYED_COLUMNS.contains(field.getColumn().getDBColumnName()));
   }
 
-  private JSONObject getSelectorInfo(String fieldId, Reference ref) throws JSONException {
+  protected JSONObject getSelectorInfo(String fieldId, Reference ref) throws JSONException {
     JSONObject selectorInfo = new JSONObject();
 
     Selector selector = null;
@@ -482,7 +482,7 @@ public class Window implements WebService {
     return selectorInfo;
   }
 
-  private void setSelectorProperties(List<SelectorField> fields, SelectorField displayField, SelectorField valueField, JSONObject selectorInfo) throws JSONException {
+  protected void setSelectorProperties(List<SelectorField> fields, SelectorField displayField, SelectorField valueField, JSONObject selectorInfo) throws JSONException {
     String valueFieldProperty = valueField != null ? getValueField(valueField.getObuiselSelector()) : JsonConstants.IDENTIFIER;
     String displayFieldProperty = displayField != null ? getDisplayField(displayField.getObuiselSelector()) : JsonConstants.IDENTIFIER;
 
@@ -553,7 +553,7 @@ public class Window implements WebService {
     return sb.toString();
   }
 
-  private static DomainType getDomainType(SelectorField selectorField) {
+  protected static DomainType getDomainType(SelectorField selectorField) {
     if (selectorField.getObuiselSelector().getTable() != null
             && selectorField.getProperty() != null) {
       final String entityName = selectorField.getObuiselSelector().getTable().getName();
@@ -572,7 +572,7 @@ public class Window implements WebService {
     return null;
   }
 
-  private static DomainType getDomainType(String referenceId) {
+  protected static DomainType getDomainType(String referenceId) {
     final org.openbravo.base.model.Reference reference = ModelProvider.getInstance().getReference(referenceId);
     Check.isNotNull(reference, "No reference found for referenceid " + referenceId);
     return reference.getDomainType();
@@ -623,7 +623,7 @@ public class Window implements WebService {
     return JsonConstants.ID;
   }
 
-  private boolean isBoolean(SelectorField selectorField) {
+  protected boolean isBoolean(SelectorField selectorField) {
     final DomainType domainType = getDomainType(selectorField);
     if (domainType instanceof PrimitiveDomainType) {
       final PrimitiveDomainType primitiveDomainType = (PrimitiveDomainType) domainType;
@@ -633,7 +633,7 @@ public class Window implements WebService {
     return false;
   }
 
-  private static String getPropertyOrDataSourceField(SelectorField selectorField) {
+  protected static String getPropertyOrDataSourceField(SelectorField selectorField) {
     final String result;
     if (selectorField.getProperty() != null) {
       result = selectorField.getProperty();
@@ -648,18 +648,18 @@ public class Window implements WebService {
     return result.replace(DalUtil.DOT, DalUtil.FIELDSEPARATOR);
   }
 
-  private String getEntityColumnName(Column column) {
+  protected String getEntityColumnName(Column column) {
     String tableName = column.getTable().getName();
     String columnName = column.getDBColumnName();
 
     return ModelProvider.getInstance().getEntity(tableName).getPropertyByColumnName(columnName).getName();
   }
 
-  private String getTabEntityName(Tab tab) {
+  protected String getTabEntityName(Tab tab) {
     return tab.getTable().getName();
   }
 
-  private String getTabWhereClause(Tab tab) {
+  protected String getTabWhereClause(Tab tab) {
     List<Column> columns = tab.getTable().getADColumnList().stream().filter(column -> tab.getTabLevel() > 0 && column.isLinkToParentColumn()).collect(Collectors.toList());
 
     String whereClause = "";

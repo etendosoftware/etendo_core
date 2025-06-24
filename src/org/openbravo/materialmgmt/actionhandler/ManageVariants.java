@@ -107,7 +107,7 @@ public class ManageVariants extends BaseProcessActionHandler {
     return jsonRequest;
   }
 
-  private void createVariant(JSONObject variantProperties, Product generic) throws JSONException {
+  protected void createVariant(JSONObject variantProperties, Product generic) throws JSONException {
     Product variant = (Product) DalUtil.copy(generic);
     if (generic.getClient().isMultilingualDocuments()) {
       variant.getProductTrlList().clear();

@@ -85,7 +85,7 @@ public class ProcessOrdersTest {
     String orderId = "test-order-id";
     String docAction = Utility.COMPLETE;
     OBError expectedResult = new OBError();
-    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setType(Utility.SUCCESS_CAPITALIZED);
     expectedResult.setMessage("Order processed successfully");
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -106,7 +106,7 @@ public class ProcessOrdersTest {
           docAction
       );
 
-      assertEquals("Should return success type", Utility.SUCCESS, result.getType());
+      assertEquals("Should return success type", Utility.SUCCESS_CAPITALIZED, result.getType());
       assertEquals(
           "Should return correct message",
           "Order processed successfully",

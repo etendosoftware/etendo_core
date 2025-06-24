@@ -316,7 +316,7 @@ public class RecordID2Filling extends DalBaseProcess {
     OBDal.getInstance().flush();
   }
 
-  private Set<AcctSchema> getSchemas() {
+  protected Set<AcctSchema> getSchemas() {
     OBCriteria<AcctSchema> obc = OBDal.getInstance().createCriteria(AcctSchema.class);
     return new HashSet<AcctSchema>(obc.list());
   }
@@ -358,7 +358,7 @@ public class RecordID2Filling extends DalBaseProcess {
     return query.list();
   }
 
-  private Set<String> getBPAccountList(boolean isReceipt, String acctSchemaId) {
+  protected Set<String> getBPAccountList(boolean isReceipt, String acctSchemaId) {
     Set<String> result = new HashSet<>();
     //@formatter:off
     String hqlString = "";
@@ -387,7 +387,7 @@ public class RecordID2Filling extends DalBaseProcess {
     return result;
   }
 
-  private Set<String> getFAAccountList(boolean isReceipt, String acctSchemaId) {
+  protected Set<String> getFAAccountList(boolean isReceipt, String acctSchemaId) {
     Set<String> result = new HashSet<>();
     //@formatter:off
     String hqlString = "";

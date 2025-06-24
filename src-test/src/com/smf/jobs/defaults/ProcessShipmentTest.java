@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang.mutable.MutableBoolean;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -133,7 +133,7 @@ public class ProcessShipmentTest {
     String shipmentId = "test-shipment-id";
     String docAction = Utility.COMPLETE;
     OBError expectedResult = new OBError();
-    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setType(Utility.SUCCESS_CAPITALIZED);
     expectedResult.setMessage(Utility.SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -155,7 +155,7 @@ public class ProcessShipmentTest {
       );
 
       assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
-      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS_CAPITALIZED, result.getType());
       assertEquals(
           "Should return correct message",
           Utility.SHIPMENT_PROCESSED_SUCCESSFULLY,
@@ -177,7 +177,7 @@ public class ProcessShipmentTest {
 
     List<ShipmentInOut> mockShipments = List.of(mockShipment);
     OBError successResult = new OBError();
-    successResult.setType(Utility.SUCCESS);
+    successResult.setType(Utility.SUCCESS_CAPITALIZED);
     successResult.setMessage(Utility.SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -265,7 +265,7 @@ public class ProcessShipmentTest {
     String shipmentId = "test-shipment-id";
     String docAction = Utility.COMPLETE;
     OBError expectedResult = new OBError();
-    expectedResult.setType(Utility.SUCCESS);
+    expectedResult.setType(Utility.SUCCESS_CAPITALIZED);
     expectedResult.setMessage(Utility.SHIPMENT_PROCESSED_SUCCESSFULLY);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class)) {
@@ -287,7 +287,7 @@ public class ProcessShipmentTest {
       );
 
       assertNotNull(Utility.RESULT_SHOULD_NOT_BE_NULL, result);
-      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS, result.getType());
+      assertEquals(Utility.SHOULD_RETURN_SUCCESS_TYPE, Utility.SUCCESS_CAPITALIZED, result.getType());
     }
   }
 
@@ -371,7 +371,7 @@ public class ProcessShipmentTest {
     List<ShipmentInOut> multipleShipments = Arrays.asList(mockShipment, mockShipment2, mockShipment3);
 
     OBError successResult = new OBError();
-    successResult.setType(Utility.SUCCESS);
+    successResult.setType(Utility.SUCCESS_CAPITALIZED);
 
     try (MockedStatic<RequestContext> requestContextMock = mockStatic(RequestContext.class);
          MockedStatic<OBMessageUtils> messageMock = mockStatic(OBMessageUtils.class)) {

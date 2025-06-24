@@ -46,7 +46,7 @@ public class RptC_Remittance extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    VariablesSecureApp vars = new VariablesSecureApp(request);
+    VariablesSecureApp vars = createVars(request);
 
     if (vars.commandIn("DEFAULT")) {
       String strcRemittanceId = vars.getSessionValue("RptC_Remittance.inpcRemittanceId_R");
@@ -59,7 +59,7 @@ public class RptC_Remittance extends HttpSecureAppServlet {
     }
   }
 
-  private void printPagePDF(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPagePDF(HttpServletResponse response, VariablesSecureApp vars,
       String strcRemittanceId, String language) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: pdf");
@@ -101,4 +101,14 @@ public class RptC_Remittance extends HttpSecureAppServlet {
   public String getServletInfo() {
     return "Servlet that presents the RptCOrders seeker";
   } // End of getServletInfo() method
+
+  /**
+   * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
+   *
+   * @param request the HTTP request
+   * @return the initialized secure variables
+   */
+  protected VariablesSecureApp createVars(HttpServletRequest request) {
+    return new VariablesSecureApp(request);
+  }
 }

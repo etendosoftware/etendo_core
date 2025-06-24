@@ -35,6 +35,7 @@ import org.openbravo.test.base.OBBaseTest;
 
 public class FinancialAccountTest extends OBBaseTest {
 
+
   private static final String BANK = "B";
   private static final String CASH = "C";
   private static final String STANDARD_DESCRIPTION = "JUnit Test";

@@ -45,7 +45,7 @@ public class ReportTaxPaymentJR extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    VariablesSecureApp vars = new VariablesSecureApp(request);
+    VariablesSecureApp vars = createVars(request);
 
     if (vars.commandIn("DEFAULT")) {
       String strTaxPayId = vars.getSessionValue("JR_ReportTaxPayment.inpcTaxpaymentId");
@@ -79,7 +79,7 @@ public class ReportTaxPaymentJR extends HttpSecureAppServlet {
     }
   }
 
-  private void printPageDataSheet(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPageDataSheet(HttpServletResponse response, VariablesSecureApp vars,
       String strDateFrom, String strDateTo) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: dataSheet");
@@ -142,7 +142,7 @@ public class ReportTaxPaymentJR extends HttpSecureAppServlet {
     out.close();
   }
 
-  private void printReportJRRegisterByVat(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printReportJRRegisterByVat(HttpServletResponse response, VariablesSecureApp vars,
       String strDateFrom, String strDateTo, String strTypeReport)
       throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
@@ -168,6 +168,15 @@ public class ReportTaxPaymentJR extends HttpSecureAppServlet {
     return "Servlet ReportVatRegisterJR.";
   } // end of getServletInfo() method
 
+  /**
+   * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
+   *
+   * @param request the HTTP request
+   * @return the initialized secure variables
+   */
+  protected VariablesSecureApp createVars(HttpServletRequest request) {
+    return new VariablesSecureApp(request);
+  }
 }
 
 @SuppressWarnings("serial")

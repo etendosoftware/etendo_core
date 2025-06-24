@@ -1,10 +1,11 @@
 package com.etendoerp.reportvaluationstock.handler;
 
 import net.sf.jasperreports.engine.JRDataSource;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.domaintype.DateDomainType;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -14,9 +15,12 @@ import org.openbravo.client.application.ReportDefinition;
 import org.openbravo.client.application.report.BaseReportActionHandler;
 import org.openbravo.client.kernel.RequestContext;
 
+import org.openbravo.costing.AverageAlgorithm;
 import org.openbravo.costing.CostingUtils;
+import org.openbravo.costing.StandardAlgorithm;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
+import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -27,9 +31,12 @@ import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
+import org.openbravo.model.common.enterprise.Locator;
 import org.openbravo.model.common.enterprise.Organization;
+import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.materialmgmt.cost.CostingAlgorithm;
 import org.openbravo.model.materialmgmt.cost.CostingRule;
+import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.db.DalConnectionProvider;
 
 import javax.servlet.ServletException;
@@ -56,6 +63,10 @@ public class ReportValuationStock extends BaseReportActionHandler {
   private static final String DATE_FORMAT_SQL = "dateTimeFormat.sql";
   private static final String CATEGORY = "category";
   private static final Logger log4j = Logger.getLogger(ReportValuationStock.class);
+  private static final String WARNING = "warning";
+  private static final String TRX_WITH_NO_COST = "TrxWithNoCost";
+  private static final String ID = ".id";
+  private static final String POST_ACTION = "postAction";
 
   @Override
   protected ConnectionProvider getReportConnectionProvider() {
@@ -69,7 +80,6 @@ public class ReportValuationStock extends BaseReportActionHandler {
 
     try {
       JSONObject params = jsonContent.getJSONObject(PARAMS);
-
       String strOrg = params.getString("AD_Org_ID");
       String strWarehouse = StringUtils.equals(params.getString("M_Warehouse_ID"), "null") ? null : params.getString(
           "M_Warehouse_ID");
@@ -187,6 +197,13 @@ public class ReportValuationStock extends BaseReportActionHandler {
       throw new ServletException(myMessage.getMessage());
     }
 
+    boolean hasTrxWithNoCost = hasTrxWithNoCost(strDate, orgs, strWarehouse, strCategoryProduct);
+    if (hasTrxWithNoCost) {
+      OBError msg = new OBError();
+      msg.setType(WARNING);
+      msg.setMessage(OBMessageUtils.messageBD(TRX_WITH_NO_COST));
+      parameters.put(POST_ACTION, msg);
+    }
     printReport(vars, strDate, data, strCostType, costingAlgorithm, parameters);
   }
 
@@ -233,7 +250,6 @@ public class ReportValuationStock extends BaseReportActionHandler {
       strValuationHeader = OBMessageUtils
           .parseTranslation(OBMessageUtils.messageBD("ValuedStockReport_ValuationHeader"), params);
     }
-    parameters.clear();
     parameters.put("ALG_COST", strCostHeader);
     parameters.put("SUM_ALG_COST", strValuationHeader);
     parameters.put("COSTFORMAT", Utility.getFormat(vars, "generalQtyExcel"));
@@ -272,9 +288,9 @@ public class ReportValuationStock extends BaseReportActionHandler {
     String strCostType = null;
     try {
       algorithm = Class.forName(costingAlgorithm.getJavaClassName());
-      if (org.openbravo.costing.AverageAlgorithm.class.isAssignableFrom(algorithm)) {
+      if (AverageAlgorithm.class.isAssignableFrom(algorithm)) {
         strCostType = "'AVA'";
-      } else if (org.openbravo.costing.StandardAlgorithm.class.isAssignableFrom(algorithm)) {
+      } else if (StandardAlgorithm.class.isAssignableFrom(algorithm)) {
         strCostType = "'STA'";
       }
     } catch (ClassNotFoundException e) {
@@ -284,7 +300,7 @@ public class ReportValuationStock extends BaseReportActionHandler {
     return strCostType;
   }
 
-  private List<String> getWarehouses(String clientId, String orgId) {
+  protected List<String> getWarehouses(String clientId, String orgId) {
     final OrganizationStructureProvider osp = OBContext.getOBContext()
         .getOrganizationStructureProvider(clientId);
     StringBuilder hql = new StringBuilder();
@@ -335,4 +351,54 @@ public class ReportValuationStock extends BaseReportActionHandler {
         summaryData -> StringUtils.equals(summaryData.get(CATEGORY), categoryName)).findFirst().orElse(null);
   }
 
+  /**
+   * Checks if there is at least one material transaction without calculated cost
+   * before the given date, optionally filtered by warehouse and product category.
+   *
+   * @param strDate
+   *     Base date (format: yyyy-MM-dd). Transactions before this date + 1 day are considered.
+   * @param orgs
+   *     Set of organization IDs to filter by.
+   * @param strWarehouse
+   *     (Optional) Warehouse ID to filter by.
+   * @param strCategoryProduct
+   *     (Optional) Product category ID to filter by.
+   * @return {@code true} if at least one matching transaction exists; {@code false} otherwise.
+   */
+  protected boolean hasTrxWithNoCost(String strDate, Set<String> orgs, String strWarehouse, String strCategoryProduct) {
+    try {
+      final OBCriteria<MaterialTransaction> criteria = OBDal.getReadOnlyInstance().createCriteria(
+          MaterialTransaction.class);
+      criteria.setFilterOnReadableClients(false);
+      criteria.setFilterOnReadableOrganization(false);
+
+      try {
+        ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
+        Date maxDate = OBDateUtils.getDate(DateTimeData.nDaysAfter(readOnlyCP, strDate, "1"));
+        criteria.add(Restrictions.lt(MaterialTransaction.PROPERTY_MOVEMENTDATE, maxDate));
+      } catch (Exception e) {
+        log4j.error("Error parsing date: " + strDate, e);
+      }
+
+      criteria.add(Restrictions.eq(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, false));
+      criteria.add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + ID, orgs));
+      criteria.createAlias(MaterialTransaction.PROPERTY_PRODUCT, "p");
+      criteria.add(Restrictions.eq("p." + Product.PROPERTY_STOCKED, true));
+
+      if (StringUtils.isNotBlank(strWarehouse)) {
+        criteria.createAlias(MaterialTransaction.PROPERTY_STORAGEBIN, "loc");
+        criteria.add(Restrictions.eq("loc." + Locator.PROPERTY_WAREHOUSE + ID, strWarehouse));
+      }
+
+      if (StringUtils.isNotBlank(strCategoryProduct)) {
+        criteria.add(Restrictions.eq("p." + Product.PROPERTY_PRODUCTCATEGORY + ID, strCategoryProduct));
+      }
+
+      criteria.setMaxResults(1);
+      return criteria.uniqueResult() != null;
+    } catch (Exception e) {
+      log4j.error("Error in hasTrxWithNoCost", e);
+      return false;
+    }
+  }
 }

@@ -50,3 +50,14 @@ This task deploying the webContent folder into the tomcat/webapps directory, for
 
 ### Documentation
 For  more information you can read documentation in [Etendo Docs](https://docs.etendo.software) .
+
+### License
+
+This project includes components licensed under different terms. For full license texts and third-party license disclosures, please refer to [LICENSE.md](LICENSE.md)
+
+For any legal or licensing inquiries, please contact:
+
+FUTIT SERVICES, S.L.
+Calle Eustasio Amilibia, 10 - piso 7 pta 420011 <br>
+Donostia - San Sebastián, Spain  <br>
+legal@etendo.software

@@ -3,14 +3,14 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven {
-            url 'https://maven.pkg.github.com/etendosoftware/com.etendoerp.gradleplugin'
+            url = 'https://maven.pkg.github.com/etendosoftware/com.etendoerp.gradleplugin'
             credentials {
-                username "${githubUser}"
-                password "${githubToken}"
+                username = "${githubUser}"
+                password = "${githubToken}"
             }
         }
         maven {
-            url 'https://repo.futit.cloud/repository/maven-public-snapshots'
+            url = 'https://repo.futit.cloud/repository/maven-public-snapshots'
         }
     }
 }

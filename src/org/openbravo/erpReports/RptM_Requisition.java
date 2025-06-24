@@ -8,11 +8,11 @@
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2001-2018 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2001-2018 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -41,7 +41,7 @@ public class RptM_Requisition extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    VariablesSecureApp vars = new VariablesSecureApp(request);
+    VariablesSecureApp vars = createVars(request);
 
     if (vars.commandIn("DEFAULT")) {
       String strmRequisitionId = vars.getSessionValue("RptM_Requisition.inpmRequisitionId_R");
@@ -57,7 +57,7 @@ public class RptM_Requisition extends HttpSecureAppServlet {
     }
   }
 
-  private void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
       String strmRequisitionId) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: pdf");
@@ -71,4 +71,14 @@ public class RptM_Requisition extends HttpSecureAppServlet {
   public String getServletInfo() {
     return "Servlet that presents the RptMRequisitions seeker";
   } // End of getServletInfo() method
+
+  /**
+   * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
+   *
+   * @param request the HTTP request
+   * @return the initialized secure variables
+   */
+  protected VariablesSecureApp createVars(HttpServletRequest request) {
+    return new VariablesSecureApp(request);
+  }
 }

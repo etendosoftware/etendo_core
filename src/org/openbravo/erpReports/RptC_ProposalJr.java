@@ -46,7 +46,7 @@ public class RptC_ProposalJr extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
-    VariablesSecureApp vars = new VariablesSecureApp(request);
+    VariablesSecureApp vars = createVars(request);
 
     if (vars.commandIn("DEFAULT")) {
       String strClave = vars.getSessionValue("RptC_ProposalJr.inpcProjectproposalId_R");
@@ -59,7 +59,7 @@ public class RptC_ProposalJr extends HttpSecureAppServlet {
     }
   }
 
-  private void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
+  protected void printPagePartePDF(HttpServletResponse response, VariablesSecureApp vars,
       String strClave) throws IOException, ServletException {
     if (log4j.isDebugEnabled()) {
       log4j.debug("Output: pdf - ID:" + strClave);
@@ -90,4 +90,14 @@ public class RptC_ProposalJr extends HttpSecureAppServlet {
   public String getServletInfo() {
     return "Servlet that presents the RptCOrders seeker";
   } // End of getServletInfo() method
+
+  /**
+   * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
+   *
+   * @param request the HTTP request
+   * @return the initialized secure variables
+   */
+  protected VariablesSecureApp createVars(HttpServletRequest request) {
+    return new VariablesSecureApp(request);
+  }
 }

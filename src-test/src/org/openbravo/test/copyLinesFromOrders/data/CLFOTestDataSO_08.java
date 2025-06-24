@@ -22,7 +22,7 @@ package org.openbravo.test.copyLinesFromOrders.data;
 import java.math.BigDecimal;
 import java.util.HashMap;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.plm.Product;

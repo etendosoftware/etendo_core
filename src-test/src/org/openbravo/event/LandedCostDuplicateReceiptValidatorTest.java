@@ -11,12 +11,12 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -35,7 +35,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
  * when handling new and update events for {@link LCReceipt} entities.
  * It ensures that duplicate receipt lines in the Landed Cost window are detected correctly.
  */
-@ExtendWith(MockitoExtension.class)
+@RunWith(MockitoJUnitRunner.class)
 public class LandedCostDuplicateReceiptValidatorTest {
 
   public static final String ID = "12345";
@@ -68,7 +68,7 @@ public class LandedCostDuplicateReceiptValidatorTest {
    * Sets up the test environment before each test execution.
    * Initializes the validator and configures lenient stubbing for common mock interactions.
    */
-  @BeforeEach
+  @Before
   public void setUp() {
     validator = new LandedCostDuplicateReceiptValidator() {
       @Override

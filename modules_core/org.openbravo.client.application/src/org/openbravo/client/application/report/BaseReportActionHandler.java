@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ import javax.mail.internet.MimeUtility;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -70,10 +71,13 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.SessionInfo;
+import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.userinterface.selector.reference.FKMultiSelectorUIDefinition;
 import org.openbravo.utils.FileUtility;
+
+import com.smf.jobs.Action;
 
 import net.sf.jasperreports.engine.JRDataSource;
 
@@ -86,6 +90,13 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String JASPER_PARAM_PROCESS = "jasper_process";
   protected static final String JASPER_REPORT_PARAMETERS = "JASPER_REPORT_PARAMETERS";
+  private static final String RESPONSE_ACTIONS = "responseActions";
+  private static final String MSG_TYPE = "msgType";
+  private static final String MSG_TEXT = "msgText";
+  private static final String SUCCESS = "success";
+  private static final String SHOW_MSG_IN_PROCESS_VIEW = "showMsgInProcessView";
+  private static final String REPORT_GENERATED = "ReportGenerated";
+  private static final String POST_ACTION = "postAction";
 
   /**
    * execute() method overridden to add the logic to download or display the report file stored in
@@ -120,13 +131,16 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
 
   @Override
   protected JSONObject doExecute(Map<String, Object> parameters, String content) {
-
     try {
       JSONObject result = getResponseBuilder().retryExecution().build();
-
       final JSONObject jsonContent = new JSONObject(content);
       final String action = jsonContent.getString(ApplicationConstants.BUTTON_VALUE);
-      doGenerateReport(result, parameters, jsonContent, action);
+
+      if (isCustomAction(action)) {
+        handleCustomAction(result, parameters, jsonContent, action);
+      } else {
+        doGenerateReport(result, parameters, jsonContent, action);
+      }
 
       return result;
     } catch (Exception e) {
@@ -137,6 +151,73 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
               OBMessageUtils.translateError(uiException.getMessage()).getMessage())
           .build();
     }
+  }
+
+  /**
+   * Determines if the given action is a custom action that is not related to
+   * report export. It attempts to obtain the export type of the action; if
+   * successful, it identifies the action as a reporting action. If an
+   * exception is thrown, the action is considered a custom action.
+   *
+   * @param action a string representing the action to be checked
+   * @return true if the action is a custom action; false if it is a reporting action
+   */
+  private boolean isCustomAction(String action) {
+    try {
+      // Attempt to obtain the export type
+      getExportType(action);
+      // If no exception is thrown, it is a reporting action.
+      return false;
+    } catch (OBException e) {
+      // Log the exception for debugging purposes
+      log.debug(String.format(OBMessageUtils.messageBD("CustomActionDetected"), action));
+      // If getExportType throws exception, assume it is a custom action.
+      return true;
+    }
+  }
+
+  /**
+   * Handles custom actions that are not report export actions.
+   *
+   * This method provides a default implementation that throws an exception
+   * indicating an unsupported action. Subclasses can override this method to
+   * implement specific logic for handling custom actions.
+   *
+   * When overridden, the expected response format should be a "message" JSONObject
+   * stored in the provided <code>result</code> parameter. The message object should
+   * include a "severity" field with one of the following values: "success", "error",
+   * or "warning". Optional fields "title" and "text" can be included to provide
+   * additional context to the user, though their presence is strongly recommended
+   * for clarity. It is the responsibility of the developer to construct and set
+   * this response appropriately.
+   *
+   * Example of a successful response:
+   * <pre>
+   * result.put("message", new JSONObject()
+   *     .put("severity", "success")
+   *     .put("title", "Operation Completed")
+   *     .put("text", "The custom action was executed successfully."));
+   * </pre>
+   *
+   * Example of an error response:
+   * <pre>
+   * result.put("message", new JSONObject()
+   *     .put("severity", "error")
+   *     .put("text", "Failed to process the request."));
+   * </pre>
+   *
+   * @param result the JSONObject to store the result of the action
+   * @param parameters a map containing the parameters for the custom action
+   * @param jsonContent the JSON content containing additional data for the action
+   * @param action a string representing the custom action to be handled
+   * @throws JSONException if there is an error processing the JSON content
+   * @throws OBException if the action is unsupported
+   */
+  protected void handleCustomAction(JSONObject result, Map<String, Object> parameters,
+      JSONObject jsonContent, String action) throws JSONException {
+    // Default implementation: throws an exception to maintain the original behavior
+    throw new OBException(
+        OBMessageUtils.getI18NMessage("OBUIAPP_UnsupportedAction", new String[] { action }));
   }
 
   /**
@@ -354,9 +435,58 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
       reportAction.put("OBUIAPP_downloadReport", recordInfo);
     }
 
-    final JSONArray actions = new JSONArray();
-    actions.put(0, reportAction);
-    result.put("responseActions", actions);
+    postActions(jrParams, result);
+    JSONArray existingActions = result.optJSONArray(RESPONSE_ACTIONS);
+    if (existingActions == null) {
+      existingActions = new JSONArray();
+    }
+
+    if (reportAction instanceof JSONObject) {
+      existingActions.put(reportAction);
+    }
+
+    result.put(RESPONSE_ACTIONS, existingActions);
+  }
+
+  /**
+   * Adds response actions to the result JSON object in order to display a message
+   * in the process view after the report execution.
+   *
+   * <p>By default, it generates a success message using the translated message key
+   * {@code REPORT_GENERATED}. If the {@code POST_ACTION} parameter is present in {@code jrParams}
+   * and not null, it overrides the default success message with the one provided
+   * in the {@link OBError} object.
+   *
+   * <p>The message is wrapped in a JSON object under the key {@code SHOW_MSG_IN_PROCESS_VIEW},
+   * which is then added to a JSON array and placed under the {@code RESPONSE_ACTIONS} field
+   * in the {@code result} object.
+   *
+   * @param jrParams
+   *     A map of parameters used during the report execution; it may contain a value
+   *     under the {@code POST_ACTION} key with a custom message.
+   * @param result
+   *     The JSON object where the response actions to be shown to the user will be added.
+   * @throws JSONException
+   *     If an error occurs while manipulating JSON structures.
+   */
+  protected void postActions(Map<String, Object> jrParams, JSONObject result) throws JSONException {
+    JSONObject showMsg = new JSONObject();
+    showMsg.put(MSG_TYPE, SUCCESS);
+    showMsg.put(MSG_TEXT, OBMessageUtils.messageBD(REPORT_GENERATED));
+
+    if (jrParams.containsKey(POST_ACTION) && jrParams.get(POST_ACTION) != null) {
+      OBError msg = (OBError) jrParams.get(POST_ACTION);
+      showMsg.put(MSG_TYPE, msg.getType());
+      showMsg.put(MSG_TEXT, msg.getMessage());
+    }
+
+    JSONObject wrappedMsg = new JSONObject();
+    wrappedMsg.put(SHOW_MSG_IN_PROCESS_VIEW, showMsg);
+
+    JSONArray responseActions = new JSONArray();
+    responseActions.put(wrappedMsg);
+
+    result.put(RESPONSE_ACTIONS, responseActions);
   }
 
   private ExportType getExportType(String action) {
@@ -498,13 +628,13 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
    * Method to load the generic parameters that are sent to Jasper Reports.
    * 
    * @param jrParams
-   *          the Map instance with all the parameters to be sent to Jasper Reports.
+   *     the Map instance with all the parameters to be sent to Jasper Reports.
    * @param report
-   *          the Report Definition.
+   *     the Report Definition.
    * @param jrTemplatePath
-   *          String with the path where the jr template is stored in the server.
+   *     String with the path where the jr template is stored in the server.
    * @param jsonContent
-   *          JSONObject with the values set in the filter parameters.
+   *     JSONObject with the values set in the filter parameters.
    */
   private void loadReportParams(Map<String, Object> jrParams, ReportDefinition report,
       String jrTemplatePath, JSONObject jsonContent) {

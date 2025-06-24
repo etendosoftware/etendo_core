@@ -25,7 +25,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -43,6 +43,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.domain.Validation;
 import org.openbravo.model.ad.ui.Window;
+import org.openbravo.client.application.process.dto.TrlButtonDTO;
 
 /**
  * The component which takes care of creating a class for a specific paramter window.
@@ -129,7 +130,8 @@ public class ParameterWindowComponent extends BaseTemplateComponent {
     return process.getRefreshFunction();
   }
 
-  public List<org.openbravo.model.ad.domain.List> getButtonList() {
+  public List<TrlButtonDTO> getButtonList() {
+    List<TrlButtonDTO> result = new ArrayList<>();
     for (Parameter p : process.getOBUIAPPParameterList()) {
       if (p.isActive() && p.getReference().getId().equals(BUTTON_LIST_REFERENCE_ID)) {
         OBCriteria<org.openbravo.model.ad.domain.List> qList = OBDal.getInstance()
@@ -139,10 +141,15 @@ public class ParameterWindowComponent extends BaseTemplateComponent {
         qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_ACTIVE, true));
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEQUENCENUMBER, true);
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, true);
-        return qList.list();
+        List<org.openbravo.model.ad.domain.List> buttonList = qList.list();
+        for (org.openbravo.model.ad.domain.List refButton : buttonList) {
+          String translatedName = OBViewUtil.getLabel(refButton, refButton.getADListTrlList());
+          result.add(new TrlButtonDTO(refButton.getSearchKey(), translatedName));
+        }
+        return result;
       }
     }
-    return new ArrayList<org.openbravo.model.ad.domain.List>();
+    return result;
   }
 
   public boolean isReport() {

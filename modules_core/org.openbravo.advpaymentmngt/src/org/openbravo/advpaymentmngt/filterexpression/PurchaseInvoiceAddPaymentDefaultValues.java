@@ -54,7 +54,7 @@ public class PurchaseInvoiceAddPaymentDefaultValues extends AddPaymentDefaultVal
     return pendingAmt.toPlainString();
   }
 
-  private BigDecimal getPendingAmount(Map<String, String> requestMap) throws JSONException {
+  protected BigDecimal getPendingAmount(Map<String, String> requestMap) throws JSONException {
     Invoice invoice = OBDal.getInstance().get(Invoice.class, getDefaultInvoiceType(requestMap));
     BigDecimal pendingAmt = getPendingAmt(invoice.getFINPaymentScheduleList());
     return pendingAmt;

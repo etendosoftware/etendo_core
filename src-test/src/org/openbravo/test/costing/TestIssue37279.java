@@ -359,7 +359,7 @@ public class TestIssue37279 extends TestCostingBase {
           new BigDecimal("3.00"), new BigDecimal("1"));
       TestCostingUtils.runCostingBackground();
       // Add sleep to avoid assert errors
-      Thread.sleep(1000);
+      Thread.sleep(2000);
       InventoryCount physicalInventory = TestCostingUtils.createPhysicalInventory(
           "physicalInv37279-F", results.getProduct(), new BigDecimal("11"), INVENTORY_OPENING, 0);
       TestCostingUtils.proessInventoryCount(physicalInventory);

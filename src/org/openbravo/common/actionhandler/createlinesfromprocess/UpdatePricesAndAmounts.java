@@ -26,7 +26,7 @@ import java.util.List;
 
 import javax.enterprise.context.Dependent;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.currency.Currency;

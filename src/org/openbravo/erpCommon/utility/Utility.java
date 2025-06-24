@@ -58,8 +58,8 @@ import java.util.Vector;
 import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.query.Query;
@@ -1969,7 +1969,7 @@ public class Utility {
     strArray = strArray + "new Array(";
     for (int i = 0; i < data.length; i++) {
       strArray = strArray + "\nnew Array(\""
-          + StringEscapeUtils.escapeHtml(data[i].getField("padre")) + "\", \""
+          + StringEscapeUtils.escapeHtml4(data[i].getField("padre")) + "\", \""
           + data[i].getField("id") + "\", \"" + FormatUtilities.replaceJS(data[i].getField("name"))
           + "\")";
       if (i < data.length - 1) {
