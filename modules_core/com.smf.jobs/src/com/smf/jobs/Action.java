@@ -70,8 +70,8 @@ public abstract class Action extends BaseProcessActionHandler {
       if (jsonContent.has("_buttonValue")) {
         allParams.put("_buttonValue", jsonContent.get("_buttonValue"));
       }
-      for (Iterator it = allParams.keys(); it.hasNext(); ) {
-        String key = (String) it.next();
+      for (Iterator<String> it = allParams.keys(); it.hasNext(); ) {
+        String key = it.next();
         jsonContent.put(key, parameters.get(key));
       }
       runPreActionHooks(jsonContent);
