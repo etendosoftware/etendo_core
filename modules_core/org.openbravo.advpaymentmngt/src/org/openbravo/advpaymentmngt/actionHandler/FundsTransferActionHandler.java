@@ -41,6 +41,8 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.financial.FinancialUtils;
+import org.openbravo.model.common.currency.ConversionRateDoc;
+import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
@@ -212,9 +214,9 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
       }
 
       // Target Account
-      newTrx = createTransaction(accountTo, BP_DEPOSIT, trxDate, glitem, targetAmount, lineNoUtil,
+      FIN_FinaccTransaction targetTrx = createTransaction(accountTo, BP_DEPOSIT, trxDate, glitem, targetAmount, lineNoUtil,
           sourceTrx, description);
-      transactions.add(newTrx);
+      transactions.add(targetTrx);
 
       if (bankFeeTo != null && BigDecimal.ZERO.compareTo(bankFeeTo) != 0) {
         newTrx = createTransaction(accountTo, BANK_FEE, trxDate, glitem, bankFeeTo, lineNoUtil,
@@ -223,6 +225,14 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
       }
 
       OBDal.getInstance().flush();
+
+      if (manualConversionRate != null && manualConversionRate.compareTo(BigDecimal.ONE) != 0) {
+        Currency fromCurrency = accountFrom.getCurrency();
+        Currency toCurrency = accountTo.getCurrency();
+        createConversionRateDoc(sourceTrx, fromCurrency, toCurrency, manualConversionRate, true);
+        createConversionRateDoc(targetTrx, toCurrency, fromCurrency, manualConversionRate, false);
+      }
+
       processTransactions(transactions);
 
       WeldUtils.getInstanceFromStaticBeanManager(FundsTransferHookCaller.class)
@@ -232,6 +242,49 @@ public class FundsTransferActionHandler extends BaseProcessActionHandler {
       String message = OBMessageUtils.parseTranslation(e.getMessage());
       throw new OBException(message, e);
     }
+  }
+
+  /**
+   * Creates a conversion rate document for a given financial account transaction.
+   * <p>
+   * If the transaction is not the source of the transfer, the given rate is inverted (1/rate) to
+   * correctly represent the exchange direction from the target currency's perspective.
+   *
+   * @param transaction
+   *          the financial account transaction to associate with the conversion rate document.
+   * @param fromCurrency
+   *          the currency from which the amount is being converted.
+   * @param toCurrency
+   *          the currency to which the amount is being converted.
+   * @param rate
+   *          the multiply rate to convert from the source to the target currency.
+   * @param isSourceTransaction
+   *          flag indicating if the transaction is the source transaction in the transfer.
+   */
+  private static void createConversionRateDoc(FIN_FinaccTransaction transaction, Currency fromCurrency,
+                                              Currency toCurrency, BigDecimal rate, boolean isSourceTransaction) {
+    ConversionRateDoc convRateDoc = OBProvider.getInstance().get(ConversionRateDoc.class);
+
+    convRateDoc.setClient(transaction.getClient());
+    convRateDoc.setOrganization(transaction.getOrganization());
+
+    convRateDoc.setCurrency(fromCurrency);
+    convRateDoc.setToCurrency(toCurrency);
+
+    BigDecimal appliedRate = rate;
+
+    if (!isSourceTransaction) {
+      appliedRate = BigDecimal.ONE.divide(rate, 12, RoundingMode.HALF_UP);
+    }
+
+    convRateDoc.setRate(appliedRate);
+    convRateDoc.setFINFinancialAccountTransaction(transaction);
+
+    BigDecimal baseAmount = transaction.getDepositAmount().subtract(transaction.getPaymentAmount());
+    BigDecimal foreignAmount = baseAmount.multiply(appliedRate);
+    convRateDoc.setForeignAmount(foreignAmount);
+
+    OBDal.getInstance().save(convRateDoc);
   }
 
   private static BigDecimal convertAmount(BigDecimal amount, FIN_FinancialAccount accountFrom,
