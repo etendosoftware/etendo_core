@@ -77,7 +77,7 @@ public class TestIssue37279 extends TestCostingBase {
           new BigDecimal("3.00"), new BigDecimal("1"));
       TestCostingUtils.runCostingBackground();
       // Add sleep to avoid assert errors
-      Thread.sleep(1000);
+      Thread.sleep(2000);
       ShipmentInOut goodsReceipt = TestCostingUtils.cloneMovement(results.getProduct().getId(),
           false, new BigDecimal("10"), TestCostingConstants.LOCATOR_L01_ID, 0);
       TestCostingUtils.completeDocument(goodsReceipt);
@@ -133,7 +133,7 @@ public class TestIssue37279 extends TestCostingBase {
           new BigDecimal("3.00"), new BigDecimal("1"));
       TestCostingUtils.runCostingBackground();
       // Add sleep to avoid assert errors
-      Thread.sleep(1000);
+      Thread.sleep(2000);
       ShipmentInOut goodsReceipt = TestCostingUtils.cloneMovement(results.getProduct().getId(),
           true, new BigDecimal("-10"), TestCostingConstants.LOCATOR_L01_ID, 0);
       TestCostingUtils.completeDocument(goodsReceipt);
@@ -188,7 +188,7 @@ public class TestIssue37279 extends TestCostingBase {
           new BigDecimal("3.00"), new BigDecimal("1"));
       TestCostingUtils.runCostingBackground();
       // Add sleep to avoid assert errors
-      Thread.sleep(1000);
+      Thread.sleep(2000);
       ShipmentInOut returnToVendorShipment = TestCostingUtils.cloneMovement(
           results.getProduct().getId(), false, new BigDecimal("10"),
           TestCostingConstants.LOCATOR_L01_ID, 0);
@@ -246,7 +246,7 @@ public class TestIssue37279 extends TestCostingBase {
           new BigDecimal("3.00"), new BigDecimal("1"));
       TestCostingUtils.runCostingBackground();
       // Add sleep to avoid assert errors
-      Thread.sleep(1000);
+      Thread.sleep(2000);
       InternalConsumption internalConsumption = TestCostingUtils.createInternalConsumption(
           results.getProduct().getId(), new BigDecimal("-10"), TestCostingConstants.LOCATOR_L01_ID,
           0);
@@ -303,7 +303,7 @@ public class TestIssue37279 extends TestCostingBase {
           new BigDecimal("3.00"), new BigDecimal("1"));
       TestCostingUtils.runCostingBackground();
       // Add sleep to avoid assert errors
-      Thread.sleep(1000);
+      Thread.sleep(2000);
       InventoryCount physicalInventory = TestCostingUtils.createPhysicalInventory(
           "physicalInv37279-E", results.getProduct(), new BigDecimal("11"), INVENTORY_NORMAL, 0);
       TestCostingUtils.proessInventoryCount(physicalInventory);
@@ -359,7 +359,7 @@ public class TestIssue37279 extends TestCostingBase {
           new BigDecimal("3.00"), new BigDecimal("1"));
       TestCostingUtils.runCostingBackground();
       // Add sleep to avoid assert errors
-      Thread.sleep(1000);
+      Thread.sleep(2000);
       InventoryCount physicalInventory = TestCostingUtils.createPhysicalInventory(
           "physicalInv37279-F", results.getProduct(), new BigDecimal("11"), INVENTORY_OPENING, 0);
       TestCostingUtils.proessInventoryCount(physicalInventory);
