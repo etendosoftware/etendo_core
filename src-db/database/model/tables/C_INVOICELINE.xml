@@ -304,6 +304,11 @@
       <foreign-key foreignTable="USER2" name="C_INVOICELINE_USER2">
         <reference local="USER2_ID" foreign="USER2_ID"/>
       </foreign-key>
+      <index name="C_INVLINE_INOLINE_ORDLINE_INV" unique="false">
+        <index-column name="M_INOUTLINE_ID"/>
+        <index-column name="C_ORDERLINE_ID"/>
+        <index-column name="C_INVOICE_ID"/>
+      </index>
       <index name="C_INVOICELINE_ACCOUNT" unique="false">
         <index-column name="ACCOUNT_ID"/>
         <whereClause><![CDATA[ACCOUNT_ID IS NOT NULL]]></whereClause>

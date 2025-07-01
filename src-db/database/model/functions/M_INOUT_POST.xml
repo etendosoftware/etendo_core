@@ -1087,32 +1087,22 @@
           -- associated with invoice line is completely invoiced. This flag is
           -- used only in sales flow and shown in Goods Shipment Header.
           IF(Cur_InOut.IsSOTrx='Y') THEN
-            UPDATE M_InOut
+            UPDATE m_inout m
             SET iscompletelyinvoiced = 'Y'
             WHERE iscompletelyinvoiced = 'N'
+              AND m.m_inout_id = Cur_InOut.M_INOUT_ID
               AND NOT EXISTS (
                 SELECT 1
-                FROM M_InOutLine l
-                LEFT JOIN c_orderline ol ON l.c_orderline_id = ol.c_orderline_id
-                WHERE l.M_INOUT_ID = M_InOut.M_INOUT_ID
+                FROM m_inoutline l
+                LEFT JOIN m_inoutline_totalinvoiced_v v
+                  ON l.m_inoutline_id = v.m_inoutline_id
+                WHERE l.m_inout_id = m.m_inout_id
                   AND (
-                    -- Check orderline
-                    (l.c_orderline_id IS NOT NULL AND (ol.qtyinvoiced IS NULL OR l.movementqty > ol.qtyinvoiced))
-                    -- Check invoiceline
-                    OR (
-                      l.c_orderline_id IS NULL AND 
-                      (
-                        SELECT COALESCE(SUM(il.qtyinvoiced), 0)
-                        FROM c_invoiceline il
-                        JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id
-                        WHERE il.m_inoutline_id = l.m_inoutline_id
-                          AND i.processed = 'Y'
-                          AND i.docstatus <> 'VO'
-                      ) < l.movementqty
-                    )
+                    (l.movementqty >= 0 AND l.movementqty > COALESCE(v.totalinvoiced, 0))
+                    OR
+                    (l.movementqty < 0 AND l.movementqty < COALESCE(v.totalinvoiced, 0))
                   )
-              )
-			  AND M_INOUT_ID = Cur_InOut.M_INOUT_ID;
+              );
           END IF;
          
           -- Not Processed + Complete --
