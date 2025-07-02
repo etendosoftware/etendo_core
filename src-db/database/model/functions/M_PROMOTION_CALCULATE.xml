@@ -321,10 +321,7 @@ BEGIN
             AND O.AD_ORG_ID = Cur_Order.AD_Org_ID
             AND O.ISACTIVE = 'Y'
           )))
-          AND ((CHARACTERISTICS_SELECTION = 'Y'
-          AND EXISTS (SELECT 1
-          FROM M_PRODUCT_CH_VALUE V
-          WHERE V.M_PRODUCT_ID = Cur_Order.M_Product_ID))
+          AND ((CHARACTERISTICS_SELECTION = 'Y')
           OR (CHARACTERISTICS_SELECTION = 'A'
           AND (SELECT COUNT(C.M_OFFER_CHARACTERISTIC_ID)
           FROM M_OFFER_CHARACTERISTIC C
