@@ -342,11 +342,7 @@ public class PriceAdjustment {
             "   ))" +
             // Product characteristic
             "   and (" +
-            "     (includedCharacteristics = 'Y' and exists (" +
-            "       select 1" +
-            "         from ProductCharacteristicValue pcv" +
-            "        where pcv.product.id = :productId" +
-            "     ))" +
+            "     (includedCharacteristics = 'Y')" +
             "     or (includedCharacteristics = 'N' and exists (" +
             "       select 1" +
             "         from PricingAdjustmentCharacteristic pac" +
