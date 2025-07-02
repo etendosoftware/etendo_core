@@ -104,7 +104,7 @@
       )
     LOOP
       IF (v_Names IS NOT NULL) THEN
-        v_Names := v_Names||'<br/>&nbsp;';
+        v_Names := v_Names||'; ';
       END IF;
       v_Names := COALESCE(v_Names, '') || Cur_Offer.name;
     END LOOP;
