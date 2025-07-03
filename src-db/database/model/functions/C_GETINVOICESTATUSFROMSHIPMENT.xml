@@ -26,8 +26,8 @@ BEGIN
 
   SELECT 
   CASE 
-    WHEN SUM(COALESCE(del.movementqty, 0)) = 0 THEN 0 
-    ELSE ROUND(SUM(COALESCE(inv.qtyinvoiced, 0)) / SUM(COALESCE(del.movementqty, 0)) * 100, 0) 
+    WHEN SUM(ABS(COALESCE(del.movementqty, 0))) = 0 THEN 0 
+    ELSE ROUND(SUM(ABS(COALESCE(inv.qtyinvoiced, 0))) / SUM(ABS(COALESCE(del.movementqty, 0))) * 100, 0) 
   END AS invoiced_percentage
   into v_percent
 FROM m_inoutline del
