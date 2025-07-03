@@ -67,36 +67,48 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
   public String getHeartBeatRegistrationFunction() {
     try {
       if (isUpgrading()) {
-        if (!isSystemAdmin()) {
-          return "OB.Layout.ClassicOBCompatibility.Popup.standardUpgrading()";
-        } else {
-          boolean usingAprm = true;
-          if (OBDal.getInstance().exists(Module.ENTITY_NAME, APRM_MIGRATION_TOOL_ID)) {
-            usingAprm = new AdvPaymentMngtDao().existsAPRMReadyPreference();
-          }
-          if (!usingAprm) {
-            return "OB.Layout.ClassicOBCompatibility.Popup.openAPRMPopup()";
-          }
-          String oldScripts = getConfigScriptsNotExported();
-          if (!oldScripts.isEmpty()) {
-            return "OB.Layout.ClassicOBCompatibility.Popup.openConfigScriptPopup(" + oldScripts
-                + ")";
-          } else {
-            return "OB.Layout.ClassicOBCompatibility.Popup.openSuccessUpgradePopup()";
-          }
-        }
+        return handleUpgradePopup();
       }
 
-      switch (getPopUpToShow()) {
-        case InstancePurpose:
-          return "OB.Layout.ClassicOBCompatibility.Popup.openInstancePurpose()";
-        case HeartBeat:
-          return "OB.Layout.ClassicOBCompatibility.Popup.openHeartbeat()";
-        default:
-          return "return";
-      }
+      return handleStandardPopup();
+
     } catch (Exception e) {
       throw new OBException(e);
+    }
+  }
+
+  private String handleUpgradePopup() {
+    if (!isSystemAdmin()) {
+      return "OB.Layout.ClassicOBCompatibility.Popup.standardUpgrading()";
+    }
+
+    if (!isUsingAprm()) {
+      return "OB.Layout.ClassicOBCompatibility.Popup.openAPRMPopup()";
+    }
+
+    String oldScripts = getConfigScriptsNotExported();
+    if (!oldScripts.isEmpty()) {
+      return "OB.Layout.ClassicOBCompatibility.Popup.openConfigScriptPopup(" + oldScripts + ")";
+    }
+
+    return "OB.Layout.ClassicOBCompatibility.Popup.openSuccessUpgradePopup()";
+  }
+
+  private boolean isUsingAprm() {
+    if (OBDal.getInstance().exists(Module.ENTITY_NAME, APRM_MIGRATION_TOOL_ID)) {
+      return new AdvPaymentMngtDao().existsAPRMReadyPreference();
+    }
+    return true; // si no existe el módulo APRM, asumimos que sí lo usa
+  }
+
+  private String handleStandardPopup() throws ServletException {
+    switch (getPopUpToShow()) {
+      case InstancePurpose:
+        return "OB.Layout.ClassicOBCompatibility.Popup.openInstancePurpose()";
+      case HeartBeat:
+        return "OB.Layout.ClassicOBCompatibility.Popup.openHeartbeat()";
+      default:
+        return "return";
     }
   }
 

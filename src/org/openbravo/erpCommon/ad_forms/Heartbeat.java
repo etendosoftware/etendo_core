@@ -35,9 +35,21 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessRunner;
 import org.openbravo.utils.Replace;
 import org.openbravo.xmlEngine.XmlDocument;
-
+/**
+ * Servlet responsible for managing the Heartbeat pop-up in Etendo ERP.
+ * <p>
+ * This class handles different commands related to heartbeat functionality, such as:
+ * - Showing the heartbeat configuration screen
+ * - Redirecting to the heartbeat test process
+ * - Sending "DEFER" or "DECLINE" responses for heartbeat
+ * <p>
+ * It interacts with the System Information entity to update the postpone date
+ * and executes the HeartbeatProcess when needed.
+ */
 public class Heartbeat extends HttpSecureAppServlet {
   private static final long serialVersionUID = 1L;
+  public static final String DEFAULT = "DEFAULT";
+  public static final String VERSION = "version";
 
   @Override
   public void init(ServletConfig config) {
@@ -50,14 +62,14 @@ public class Heartbeat extends HttpSecureAppServlet {
       throws IOException, ServletException {
     final VariablesSecureApp vars = new VariablesSecureApp(request);
 
-    if (vars.commandIn("DEFAULT", "DEFAULT_MODULE", "UPDATE_MODULE", "UPGRADE_MODULE")) {
+    if (vars.commandIn(DEFAULT, "DEFAULT_MODULE", "UPDATE_MODULE", "UPGRADE_MODULE")) {
       printPageDataSheet(response, vars);
     } else if (vars.commandIn("CONFIGURE", "CONFIGURE_MODULE_UPDATE", "CONFIGURE_MODULE_INSTALL",
         "CONFIGURE_MODULE_UPGRADE")) {
       response
           .sendRedirect(strDireccion + "/ad_process/TestHeartbeat.html?Command=" + vars.getCommand()
               + "&inpcRecordId=" + vars.getStringParameter("inpcRecordId", IsIDFilter.instance)
-              + "&version=" + vars.getStringParameter("version"));
+              + "&version=" + vars.getStringParameter(VERSION));
     } else if (vars.commandIn("DEFER")) {
       setPostponeDate();
       sendBeat(vars, "DEFER");
@@ -76,7 +88,7 @@ public class Heartbeat extends HttpSecureAppServlet {
 
     XmlDocument xmlDocument = null;
     String[] discard = { "" };
-    if (!vars.commandIn("DEFAULT")) {
+    if (!vars.commandIn(DEFAULT)) {
       discard[0] = "deferButton";
     }
     xmlDocument = xmlEngine.readXmlTemplate("org/openbravo/erpCommon/ad_forms/Heartbeat", discard)
@@ -93,14 +105,20 @@ public class Heartbeat extends HttpSecureAppServlet {
 
     xmlDocument.setParameter("recordId",
         vars.getStringParameter("inpcRecordId", IsIDFilter.instance));
-    xmlDocument.setParameter("version", vars.getStringParameter("version"));
+    xmlDocument.setParameter(VERSION, vars.getStringParameter(VERSION));
 
     String jsCommand = "var cmd='";
-    if (vars.commandIn("DEFAULT")) {
+    if (vars.commandIn(DEFAULT)) {
       jsCommand += "CONFIGURE";
     } else {
-      String moduleAction = vars.getCommand().equals("UPDATE_MODULE") ? "UPDATE"
-          : vars.getCommand().equals("UPGRADE_MODULE") ? "UPGRADE" : "INSTALL";
+      String moduleAction;
+      if (vars.getCommand().equals("UPDATE_MODULE")) {
+        moduleAction = "UPDATE";
+      } else if (vars.getCommand().equals("UPGRADE_MODULE")) {
+        moduleAction = "UPGRADE";
+      } else {
+        moduleAction = "INSTALL";
+      }
       jsCommand += "CONFIGURE_MODULE_" + moduleAction;
     }
     jsCommand += "';";
