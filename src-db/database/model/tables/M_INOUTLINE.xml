@@ -205,6 +205,11 @@
       <index name="M_INOUTLINE_INOUT" unique="false">
         <index-column name="M_INOUT_ID"/>
       </index>
+      <index name="M_INOUTLINE_INOUT_ORDLINE" unique="false">
+        <index-column name="M_INOUT_ID"/>
+        <index-column name="M_INOUTLINE_ID"/>
+        <index-column name="C_ORDERLINE_ID"/>
+      </index>
       <index name="M_INOUTLINE_ORDERLINE" unique="false">
         <index-column name="C_ORDERLINE_ID"/>
       </index>
