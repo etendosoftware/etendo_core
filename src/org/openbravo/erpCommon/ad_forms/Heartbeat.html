@@ -84,11 +84,14 @@
 <table>
   <tr>
     <td>
-      <table class="Popup_ContentPane_NavBar">
-        <tr class="Popup_NavBar_bg"><td></td>
+      <table class="Popup_ContentPane_NavBar" role="presentation">
+        <tr class="Popup_NavBar_bg">
+          <th scope="col"></th>
           <td class="Popup_NavBar_separator_cell"></td>
           <td class="Popup_NavBar_bg_logo_left"></td>
-          <td class="Popup_NavBar_bg_logo" onclick="openNewBrowser('http://www.openbravo.com', 'Openbravo');return false;"><img src="../../../../../web/images/blank.gif" alt="Openbravo" title="Openbravo" id="openbravoLogo" class="Popup_NavBar_logo" /></td>
+          <td class="Popup_NavBar_bg_logo" onclick="openNewBrowser('http://www.openbravo.com', 'Openbravo');return false;">
+            <img src="../../../../../web/images/blank.gif" alt="Openbravo" title="Openbravo" id="openbravoLogo" class="Popup_NavBar_logo" />
+          </td>
           <td class="Popup_NavBar_bg_logo_right"></td>
           <td class="Popup_NavBar_Popup_title_cell"><span>Heartbeat Configuration</span></td>
           <td class="Popup_NavBar_separator_cell"></td>
@@ -98,9 +101,9 @@
   </tr>
   <tr>
     <td>
-      <table class="Popup_ContentPane_SeparatorBar">
+      <table class="Popup_ContentPane_SeparatorBar" role="presentation">
         <tr>
-          <td class="Popup_SeparatorBar_bg"></td>
+          <th class="Popup_SeparatorBar_bg" scope="col"></th>
         </tr>
       </table>
     </td>
@@ -108,13 +111,9 @@
   <tr>
     <td>
       <div class="Popup_ContentPane_Client" style="overflow: auto; background: none !important;">
-        <table class="Popup_Client_TablePopup" style="background: none !important;">
-          <tr>
-            <td>
-              <p class="Wide_Paragraph" id="paramWelcome">xxWelcome to Etendo ERP</p>
-            </td>
-          </tr>
-        </table>
+        <div class="Popup_Client_TablePopup" style="background: none !important;">
+          <p class="Wide_Paragraph" id="paramWelcome">xxWelcome to Etendo ERP</p>
+        </div>
       </div>
     </td>
   </tr>
