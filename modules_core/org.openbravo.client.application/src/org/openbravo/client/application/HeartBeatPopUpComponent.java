@@ -86,10 +86,11 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
       return "OB.Layout.ClassicOBCompatibility.Popup.openAPRMPopup()";
     }
 
-    String oldScripts = getConfigScriptsNotExported();
-    if (!oldScripts.isEmpty()) {
+    StringBuilder oldScripts = getConfigScriptsNotExported();
+    if (oldScripts.length() > 0) {
       return "OB.Layout.ClassicOBCompatibility.Popup.openConfigScriptPopup(" + oldScripts + ")";
     }
+
 
     return "OB.Layout.ClassicOBCompatibility.Popup.openSuccessUpgradePopup()";
   }
@@ -127,29 +128,34 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
     return "S".equals(OBContext.getOBContext().getRole().getUserLevel());
   }
 
-  private String getConfigScriptsNotExported() {
-    // Get all applied configuration scripts which are not exported in 3.0
+  private StringBuilder getConfigScriptsNotExported() {
     OBCriteria<Module> qMod = OBDal.getInstance().createCriteria(Module.class);
     qMod.add(Restrictions.eq(Module.PROPERTY_TYPE, "T"));
     qMod.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
     qMod.add(Restrictions.eq(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true));
+
     String obDir = OBPropertiesProvider.getInstance()
-        .getOpenbravoProperties()
-        .getProperty("source.path");
-    String oldScripts = "";
+            .getOpenbravoProperties()
+            .getProperty("source.path");
+
+    StringBuilder oldScripts = new StringBuilder();
+
     for (Module mod : qMod.list()) {
       File cfScript = new File(obDir + "/modules/" + mod.getJavaPackage() + "/src-db/database",
-          "configScript.xml");
+              "configScript.xml");
+
       if (cfScript.exists() && DBSMOBUtil.isOldConfigScript(cfScript)) {
-        if (!oldScripts.isEmpty()) {
-          oldScripts += ", ";
+        if (oldScripts.length() > 0) {
+          oldScripts.append(", ");
         }
-        oldScripts += "'" + mod.getName() + "'";
+        oldScripts.append("'").append(mod.getName()).append("'");
         log.info(mod.getName() + " config script is not exported in 3.0");
       }
     }
+
     return oldScripts;
   }
+
 
   private HeartBeatOrRegistration getPopUpToShow() throws ServletException {
     Object sessionObject = getParameters().get(KernelConstants.HTTP_SESSION);
