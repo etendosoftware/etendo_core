@@ -81,7 +81,7 @@
   </div>
 </div>
 
-<table>
+<table aria-label="Popup layout table for Heartbeat configuration">
   <thead style="display: none;">
   <tr>
     <th scope="col"></th>
@@ -125,7 +125,7 @@
   <tr>
     <td>
       <div class="Popup_ContentPane_Client" style="overflow: auto; background: none !important;" id="client">
-        <table class="Popup_Client_TablePopup" style="background: none !important;">
+        <table class="Popup_Client_TablePopup" style="background: none !important;" aria-label="Layout table for popup action buttons">
           <thead style="display: none;">
           <tr>
             <th scope="col"></th>
@@ -160,7 +160,7 @@
                   onmousedown="buttonEvent('onmousedown', this);"
                   onmouseover="buttonEvent('onmouseover', this); window.status='Accept'; return true;"
                   onmouseout="buttonEvent('onmouseout', this);">
-                  <table class="Button">
+                  <table class="Button" aria-label="Visual layout of Accept button">
                     <thead style="display: none;">
                     <tr>
                       <th scope="col">Icon</th>
@@ -194,7 +194,7 @@
                   onmousedown="buttonEvent('onmousedown', this);"
                   onmouseover="buttonEvent('onmouseover', this); window.status='Decline'; return true;"
                   onmouseout="buttonEvent('onmouseout', this);">
-                  <table class="Button">
+                  <table class="Button" aria-label="Visual layout of Decline button">
                     <thead style="display: none;">
                     <tr>
                       <th scope="col">Icon</th>
@@ -228,7 +228,7 @@
                   onmousedown="buttonEvent('onmousedown', this);"
                   onmouseover="buttonEvent('onmouseover', this); window.status='Later'; return true;"
                   onmouseout="buttonEvent('onmouseout', this);">
-                  <table class="Button">
+                  <table class="Button" aria-label="Visual layout of Later button">
                     <thead style="display: none;">
                     <tr>
                       <th scope="col">Icon</th>
