@@ -3594,6 +3594,10 @@ public abstract class AcctServer {
     // This value indicates that the current payment detail amount must be added to the previous one
     amountAndWriteOff.put("merged", BigDecimal.ZERO);
 
+    if (BigDecimal.ZERO.compareTo(paymentDetail.getFinPayment().getAmount()) == 0 ) {
+      return amountAndWriteOff;
+    }
+
     // If the Payment Detail has either an Invoice or an Order associated to it
     if (psi != null || pso != null) {
       // If the Payment Detail has no Order associated to it, or it has an Invoice associated and is
