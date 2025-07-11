@@ -85,7 +85,8 @@ BEGIN
 				set gross_unit_price = v_newUnitPrice,
 						line_gross_amount = v_newGrossAmt,
 						priceactual = p_newnetprice,
-						linenetamt = p_newNetAmt
+						linenetamt = p_newNetAmt,
+						taxbaseamt = p_newNetAmt
       where c_orderline_id = p_line_id;
 
     if (p_taxIncluded = 'Y') then
@@ -125,12 +126,12 @@ BEGIN
 			into v_client, v_org
 			from c_invoiceline
 		 where c_invoiceline_id = p_line_id;
-
 		 update c_invoiceline 
 				set gross_unit_price = v_newUnitPrice,
 						line_gross_amount = v_newGrossAmt,
 						priceactual = p_newnetprice,
-						linenetamt = p_newNetAmt
+						linenetamt = p_newNetAmt,
+						taxbaseamt = p_newNetAmt
 			where c_invoiceline_id = p_line_id;
 
     if (p_taxIncluded = 'Y') then
