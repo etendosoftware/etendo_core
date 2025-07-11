@@ -112,12 +112,14 @@ BEGIN
 				if (v_taxIncluded = 'Y') then
 					update c_orderline set
 						gross_unit_price = grosspricestd,
-						line_gross_amount = round(grosspricestd * qtyordered, v_stdPrecision)
+						line_gross_amount = round(grosspricestd * qtyordered, v_stdPrecision),
+						taxbaseamt = round(grosspricestd * qtyordered, v_stdPrecision)
 					where c_orderline_id = Cur_Order.id;
 				else
 					update c_orderline
 						 set priceactual = pricestd,
-								 linenetamt = round(pricestd * qtyordered, v_stdPrecision)
+								 linenetamt = round(pricestd * qtyordered, v_stdPrecision),
+								 taxbaseamt = round(pricestd * qtyordered, v_stdPrecision)
 					 where c_orderline_id = Cur_Order.id;
 				end if;
 				
@@ -148,7 +150,8 @@ BEGIN
 					if (v_taxIncluded = 'Y') then
 						update c_invoiceline set
 							gross_unit_price = grosspricestd,
-							line_gross_amount = round(grosspricestd * qtyinvoiced, v_stdPrecision)
+							line_gross_amount = round(grosspricestd * qtyinvoiced, v_stdPrecision),
+							taxbaseamt = round(grosspricestd * qtyinvoiced, v_stdPrecision)
 						where c_invoiceline_id = Cur_Order.id
 						  and c_invoiceline.c_invoice_discount_id is null
 						  and not exists(
@@ -159,7 +162,8 @@ BEGIN
 					else
 						update c_invoiceline
 							 set priceactual = pricestd,
-									 linenetamt = round(pricestd * qtyinvoiced, v_stdPrecision)
+									 linenetamt = round(pricestd * qtyinvoiced, v_stdPrecision),
+									 taxbaseamt = round(pricestd * qtyinvoiced, v_stdPrecision)
 						where c_invoiceline_id = Cur_Order.id
 						  and c_invoiceline.c_invoice_discount_id is null
 						  and not exists(
