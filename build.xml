@@ -62,7 +62,9 @@ export.database: exports database structure and data to xml files.
   <property name="jar.module.location" location="build/etendo/modules" />
   <property name="source.module.location" location="../../modules" />
 
-  <property name="extra.modules.location" location="${jar.module.location}"/>
+  <condition property="extra.modules.location" value="${jar.module.location}" else="${source.module.location}">
+    <istrue value="${isSourceJar}" />
+  </condition>
 
   <property name="base.config" location="${base.config.location}" />
   <property file="${base.config}/Openbravo.properties" />
