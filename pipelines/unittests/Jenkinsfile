@@ -544,7 +544,6 @@ spec:
         allOf {
           anyOf {
             branch 'develop'
-            branch 'epic/ETP-1004'
           }
           expression {
               env.STATUSTEST == "1"
