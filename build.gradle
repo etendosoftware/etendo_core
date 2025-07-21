@@ -102,9 +102,17 @@ jacoco {
 }
 
 task jacocoRootReport(type: JacocoReport) {
-    executionData fileTree(dir: "$buildDir/jacoco", include: "*.exec")
-    sourceDirectories.setFrom(fileTree(dir: 'src, modules_core', include: '**/*.java'))
-    classDirectories.setFrom(fileTree(dir: "$buildDir/classes", include: '**/*.class'))
+    group = "Verification"
+    description = "Generates a JaCoCo report including core and modules"
+
+    outputs.upToDateWhen { false }
+
+    sourceDirectories.setFrom(files([
+        "src", "modules_core", "modules"
+    ].collect { fileTree(dir: it, include: "**/*.java") }))
+    classDirectories.setFrom(fileTree(dir: "$buildDir/classes", include: "**/*.class"))
+
+    executionData.setFrom(fileTree(dir: "$buildDir/jacoco", include: "**/*.exec"))
 
     reports {
         xml.required = true
@@ -132,7 +140,7 @@ task exportProjectVersion doLast {
 sonar {
     properties {
         property "sonar.host.url", "$sonarHostUrl"
-        property "sonar.login", "$sonarToken"
+        property "sonar.token", "$sonarToken"
         property "sonar.projectBaseDir", "$sonarProjectBaseDir"
         property "sonar.projectName", "$sonarProjectName"
         property "sonar.projectKey", "$sonarProjectKey"
