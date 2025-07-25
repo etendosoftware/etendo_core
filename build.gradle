@@ -6,7 +6,7 @@ plugins {
     id 'idea'
     id 'groovy'
     id 'jacoco'
-    id 'com.etendoerp.gradleplugin' version '2.0.3'
+    id 'com.etendoerp.gradleplugin' version '2.0.4'
     id 'com.etendoerp.testing.gradleplugin' version '2.1.0'
 }
 compileJava.options.encoding = "UTF-8"
@@ -376,8 +376,4 @@ dependencies {
     } else {
         throw new GradleException("Does not have dependencies to load.")
     }
-}
-
-etendo {
-    forceResolution = true
 }
