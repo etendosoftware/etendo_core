@@ -69,16 +69,21 @@ isc.OBPickAndExecuteGrid.addProperties({
     return true;
   },
 
-  //** {{{ dataPageSize }}} **
-  // The data page size used for loading paged data from the server.
-  dataPageSize: 100,
-
   initWidget: function() {
     var i,
       len = this.fields.length,
       me = this,
       filterableProperties,
       canFilter;
+
+    var windowId = this.viewProperties &&
+      this.viewProperties.standardProperties &&
+      this.viewProperties.standardProperties.inpwindowId;
+
+    //** {{{ dataPageSize }}} **
+    // The data page size used for loading paged data from the server.
+    this.dataPageSize = OB.PropertyStore.get('dataPageSize', windowId) ||
+      OB.PropertyStore.get('dataPageSize') || 100;
 
     this.selectedIds = [];
     this.deselectedIds = [];
