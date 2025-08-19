@@ -421,6 +421,28 @@ BEGIN
   END IF;
 
   IF (v_resaction = 'PR') THEN
+
+    --Stock Reservation – AUM/RefInventory
+    SELECT count(*) INTO v_count
+    FROM DUAL
+    where exists (select 1 from ad_ep_procedures where ad_extension_points_id = '7DCC2F8B961348E9A9CAC360DC1DCFE7');
+    IF (v_count=1) THEN
+      DECLARE
+        v_ep_instance VARCHAR(32);
+        v_extension_point_id VARCHAR(32) := '7DCC2F8B961348E9A9CAC360DC1DCFE7';
+      BEGIN
+        v_ep_instance := get_uuid();
+        AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Reservation_ID',
+          v_reservation_id, NULL, NULL, NULL, NULL, NULL, NULL);
+        AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'User',
+          v_user_id, NULL, NULL, NULL, NULL, NULL, NULL);
+        AD_EXTENSION_POINT_HANDLER(v_ep_instance, v_extension_point_id);
+
+        DELETE FROM ad_ep_instance_para
+        WHERE ad_ep_instance_id = v_ep_instance;
+      END;
+    END IF;
+
     -- ADD RESERVED STOCK
     M_RESERVE_STOCK_AUTO(v_reservation_id, v_user_id, v_message);
   END IF;
