@@ -38,6 +38,7 @@
   v_resstatus       VARCHAR2(60);
   v_newstatus       VARCHAR2(60);
   v_newaction       VARCHAR2(60);
+  v_uom_mgmt        VARCHAR2(60);
   v_orderline_id    VARCHAR2(32);
   v_product_id      VARCHAR2(32);
   v_uom_id          VARCHAR2(32);
@@ -426,7 +427,11 @@ BEGIN
     SELECT count(*) INTO v_count
     FROM DUAL
     where exists (select 1 from ad_ep_procedures where ad_extension_points_id = '7DCC2F8B961348E9A9CAC360DC1DCFE7');
-    IF (v_count=1) THEN
+	  
+    SELECT AD_GET_PREFERENCE_VALUE('UomManagement', 'Y', v_client_id, v_org_id, p_user_id, NULL, NULL) INTO v_uom_mgmt
+	  FROM DUAL;
+  
+    IF (v_count=1 AND v_uom_mgmt = 'Y') THEN
       DECLARE
         v_ep_instance VARCHAR(32);
         v_extension_point_id VARCHAR(32) := '7DCC2F8B961348E9A9CAC360DC1DCFE7';
@@ -441,10 +446,10 @@ BEGIN
         DELETE FROM ad_ep_instance_para
         WHERE ad_ep_instance_id = v_ep_instance;
       END;
+	  ELSE
+	    -- ADD RESERVED STOCK
+    	M_RESERVE_STOCK_AUTO(v_reservation_id, v_user_id, v_message);
     END IF;
-
-    -- ADD RESERVED STOCK
-    M_RESERVE_STOCK_AUTO(v_reservation_id, v_user_id, v_message);
   END IF;
 
   /* Do not process reservation's with no lines

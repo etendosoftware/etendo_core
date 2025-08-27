@@ -60,6 +60,7 @@
   v_DateDelivered C_OrderLine.DateDelivered%TYPE;
   v_isacctle AD_OrgType.IsAcctLegalEntity%TYPE;
   v_org_bule_id AD_Org.AD_Org_ID%TYPE;
+  v_uom_mgmt VARCHAR2(60);
   -- Parameter
   TYPE RECORD IS REF CURSOR;
     Cur_Parameter RECORD;
@@ -585,8 +586,37 @@
                 IF (v_aux > 1) THEN
                   RAISE_APPLICATION_ERROR(-20000, '@SOLineWithMoreThanOneOpenReservation@');
                 ELSIF (v_aux = 1) THEN
-                  M_RESERVATION_CONSUMPTION(v_reservation_id, cur_inoutline.m_locator_id, cur_inoutline.m_attributesetinstance_id, cur_inoutline.movementqty, v_user, v_result, v_message);
-                END IF;
+                  -- M_Inout_Post - Logistic Unit Consumption
+                  SELECT count(*) INTO v_count
+                  FROM DUAL
+                  where exists (select 1 from ad_ep_procedures where ad_extension_points_id = 'D9F1EFF491EA4E05974E296C5B5F338A');
+                    
+                  SELECT AD_GET_PREFERENCE_VALUE('UomManagement', 'Y', v_AD_Client_ID, v_AD_Org_ID, v_User, NULL, NULL) INTO v_uom_mgmt
+                  FROM DUAL;
+                
+                  IF (v_count=1 AND v_uom_mgmt = 'Y') THEN
+                    DECLARE
+                      v_ep_instance VARCHAR(32);
+                      v_extension_point_id VARCHAR(32) := 'D9F1EFF491EA4E05974E296C5B5F338A';
+                    BEGIN
+                      v_ep_instance := get_uuid();
+                      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'InOutLine_ID',
+                        Cur_InOutLine.M_InOutLine_ID, NULL, NULL, NULL, NULL, NULL, NULL);
+                      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'Reservation_ID',
+                        v_reservation_id, NULL, NULL, NULL, NULL, NULL, NULL);
+                      AD_EP_INSTANCE_PARA_INSERT(v_ep_instance, v_extension_point_id, 'User',
+                        v_User, NULL, NULL, NULL, NULL, NULL, NULL);
+                      AD_EXTENSION_POINT_HANDLER(v_ep_instance, v_extension_point_id);
+
+                      DELETE FROM ad_ep_instance_para
+                      WHERE ad_ep_instance_id = v_ep_instance;
+                      
+					            CONTINUE;
+                    END;
+                  ELSE
+                    M_RESERVATION_CONSUMPTION(v_reservation_id, cur_inoutline.m_locator_id, cur_inoutline.m_attributesetinstance_id, cur_inoutline.movementqty, v_user, v_result, v_message);
+                  END IF;
+              	END IF;
               ELSIF (cur_inout.issotrx = 'Y' AND cur_inoutline.c_orderline_id IS NOT NULL AND v_qty > 0 AND cur_inoutline.canceled_inoutline_id IS NOT NULL) THEN
                 -- Undo reservation is done when voiding shipment
                 SELECT count(*), max(m_reservation_id)
