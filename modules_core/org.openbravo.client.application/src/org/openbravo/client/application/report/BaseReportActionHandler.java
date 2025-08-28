@@ -470,6 +470,10 @@ public class BaseReportActionHandler extends BaseProcessActionHandler {
    *     If an error occurs while manipulating JSON structures.
    */
   protected void postActions(Map<String, Object> jrParams, JSONObject result) throws JSONException {
+    if (jrParams.containsKey("record_id")) { //must no return showMsgInProcessView
+      result.put(RESPONSE_ACTIONS, new JSONArray());
+      return;
+    }
     JSONObject showMsg = new JSONObject();
     showMsg.put(MSG_TYPE, SUCCESS);
     showMsg.put(MSG_TEXT, OBMessageUtils.messageBD(REPORT_GENERATED));
