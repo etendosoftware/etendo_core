@@ -38,7 +38,6 @@
   v_resstatus       VARCHAR2(60);
   v_newstatus       VARCHAR2(60);
   v_newaction       VARCHAR2(60);
-  v_uom_mgmt        VARCHAR2(60);
   v_orderline_id    VARCHAR2(32);
   v_product_id      VARCHAR2(32);
   v_uom_id          VARCHAR2(32);
@@ -49,6 +48,7 @@
   v_reservedqty     NUMBER;
   v_productname     m_product.name%TYPE;
   v_countlines      NUMBER;
+  v_uom_mgmt        AD_PREFERENCE.VALUE%TYPE;
 
 TYPE RECORD IS REF CURSOR;
   Cur_Parameter RECORD;
@@ -427,9 +427,16 @@ BEGIN
     SELECT count(*) INTO v_count
     FROM DUAL
     where exists (select 1 from ad_ep_procedures where ad_extension_points_id = '7DCC2F8B961348E9A9CAC360DC1DCFE7');
-	  
-    SELECT AD_GET_PREFERENCE_VALUE('UomManagement', 'Y', v_client_id, v_org_id, p_user_id, NULL, NULL) INTO v_uom_mgmt
-	  FROM DUAL;
+
+    -- Get AUM 
+    v_uom_mgmt := 'N';      
+    BEGIN
+      v_uom_mgmt := AD_GET_PREFERENCE_VALUE('UomManagement', 'Y', NULL, NULL, NULL, NULL, NULL);
+    EXCEPTION
+      WHEN OTHERS THEN
+      -- Nothing to do, v_uom_preference = 'N'
+      DBMS_OUTPUT.PUT_LINE('The preference UomManagement was not found') ;
+    END;
   
     IF (v_count=1 AND v_uom_mgmt = 'Y') THEN
       DECLARE

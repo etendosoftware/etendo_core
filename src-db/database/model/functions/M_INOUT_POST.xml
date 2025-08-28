@@ -60,7 +60,6 @@
   v_DateDelivered C_OrderLine.DateDelivered%TYPE;
   v_isacctle AD_OrgType.IsAcctLegalEntity%TYPE;
   v_org_bule_id AD_Org.AD_Org_ID%TYPE;
-  v_uom_mgmt VARCHAR2(60);
   -- Parameter
   TYPE RECORD IS REF CURSOR;
     Cur_Parameter RECORD;
@@ -118,6 +117,8 @@
     v_RS_Quantity NUMBER;
     v_RS_Releasedqty NUMBER;
     v_bpartnerExtref C_Order.bpartner_extref%TYPE:=null;
+
+	  v_uom_mgmt AD_PREFERENCE.VALUE%TYPE;
 
   BEGIN
   
@@ -591,8 +592,15 @@
                   FROM DUAL
                   where exists (select 1 from ad_ep_procedures where ad_extension_points_id = 'D9F1EFF491EA4E05974E296C5B5F338A');
                     
-                  SELECT AD_GET_PREFERENCE_VALUE('UomManagement', 'Y', v_AD_Client_ID, v_AD_Org_ID, v_User, NULL, NULL) INTO v_uom_mgmt
-                  FROM DUAL;
+                  -- Get AUM
+                  v_uom_mgmt := 'N';      
+                  BEGIN
+                    v_uom_mgmt := AD_GET_PREFERENCE_VALUE('UomManagement', 'Y', NULL, NULL, NULL, NULL, NULL);
+                  EXCEPTION
+                    WHEN OTHERS THEN
+                    -- Nothing to do, v_uom_mgmt = 'N'
+                    DBMS_OUTPUT.PUT_LINE('The preference UomManagement was not found') ;
+                  END;
                 
                   IF (v_count=1 AND v_uom_mgmt = 'Y') THEN
                     DECLARE
