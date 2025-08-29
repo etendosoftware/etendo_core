@@ -17,9 +17,9 @@ repositories {
     mavenCentral()
 }
 
-final String CURRENT_VERSION = "25.2.5"
+final String CURRENT_VERSION = "25.2.6"
 final String NEXT_RELEASE = "25.3.0"
-final String NEXT_HOTFIX = "25.2.6"
+final String NEXT_HOTFIX = "25.2.7"
 final String PUBLICATION_TYPE = "-rc"
 
 final String DEV_URL = "https://repo.futit.cloud/repository/maven-snapshots/"
