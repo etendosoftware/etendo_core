@@ -25,19 +25,25 @@ import java.math.RoundingMode;
 import java.sql.Connection;
 import java.util.StringTokenizer;
 
+import javax.enterprise.inject.Any;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.codehaus.jettison.json.JSONObject;
+import org.jboss.arquillian.core.api.annotation.Inject;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.SessionInfo;
+import org.openbravo.erpCommon.hook.ShipmentLinesFromReservationHookManager;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.erpCommon.utility.Utility;
@@ -49,6 +55,10 @@ public class CreateFrom extends HttpSecureAppServlet {
   private static final long serialVersionUID = 1L;
   private static final BigDecimal ZERO = BigDecimal.ZERO;
 
+  @Inject
+  @Any
+  ShipmentLinesFromReservationHookManager hook;
+
   @Override
   public void init(ServletConfig config) {
     super.init(config);
@@ -58,6 +68,7 @@ public class CreateFrom extends HttpSecureAppServlet {
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
+    hook = WeldUtils.getInstanceFromStaticBeanManager(ShipmentLinesFromReservationHookManager.class);
     final VariablesSecureApp vars = new VariablesSecureApp(request);
 
     if (vars.commandIn("DEFAULT")) {
@@ -1088,15 +1099,23 @@ public class CreateFrom extends HttpSecureAppServlet {
             } else {
               final String strSequence = SequenceIdData.getUUID();
               try {
-                CreateFromShipmentData.insert(conn, this, strSequence, strKey, vars.getClient(),
-                    data[i].adOrgId, vars.getUser(), data[i].description, data[i].mProductId,
-                    data[i].cUomId, data[i].id, data[i].aumqty, data[i].cAum, data[i].cOrderlineId,
-                    strLocator,
-                    CreateFromShipmentData.isInvoiced(conn, this, data[i].cInvoicelineId),
-                    data[i].quantityorder, data[i].mProductUomId, data[i].mAttributesetinstanceId,
-                    data[i].aAssetId, data[i].cProjectId, data[i].cCostcenterId, data[i].user1Id,
-                    data[i].user2Id, data[i].cBpartnerId, data[i].explode, data[i].isorder);
+                MutableBoolean isStopped = new MutableBoolean(false);
+                JSONObject parameters = new JSONObject();
 
+                parameters.put("orderLineId", data[i].cOrderlineId);
+                parameters.put("inOutId", strKey);
+                hook.executeHooks(parameters, isStopped);
+
+                if (hook.sortHooksByPriority().isEmpty() || !isStopped.booleanValue()) {
+                  CreateFromShipmentData.insert(conn, this, strSequence, strKey, vars.getClient(),
+                      data[i].adOrgId, vars.getUser(), data[i].description, data[i].mProductId,
+                      data[i].cUomId, data[i].id, data[i].aumqty, data[i].cAum, data[i].cOrderlineId,
+                      strLocator,
+                      CreateFromShipmentData.isInvoiced(conn, this, data[i].cInvoicelineId),
+                      data[i].quantityorder, data[i].mProductUomId, data[i].mAttributesetinstanceId,
+                      data[i].aAssetId, data[i].cProjectId, data[i].cCostcenterId, data[i].user1Id,
+                      data[i].user2Id, data[i].cBpartnerId, data[i].explode, data[i].isorder);
+                }
                 if (strType.equals("INVOICE") && !data[i].cInvoicelineId.isEmpty()) {
                   CreateFromShipmentData.insertInvoiceAcctDimension(conn, this, strSequence,
                       vars.getClient(), data[i].adOrgId, vars.getUser(), data[i].cInvoicelineId);
