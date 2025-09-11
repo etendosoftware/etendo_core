@@ -31,11 +31,13 @@ import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.businessUtility.BpartnerMiscData;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.OrgWarehouse;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
@@ -44,6 +46,7 @@ public class SE_Order_BPartner extends SimpleCallout {
   private static final String WAREHOUSEID = "inpmWarehouseId";
   private static final String USER_CLIENT_PARAM = "#User_Client";
   private static final String SE_ORDER_B_PARTNER = "SEOrderBPartner";
+  private static final String INPDOCTYPETARGET = "inpcDoctypetargetId";
 
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
@@ -61,9 +64,27 @@ public class SE_Order_BPartner extends SimpleCallout {
     String strDeliveryViaRule = "";
     String strPaymentterm = "";
     String strDeliveryRule = "";
-    String strDocTypeTarget = info.vars.getStringParameter("inpcDoctypetargetId");
+    String strDocTypeTarget = info.vars.getStringParameter(INPDOCTYPETARGET);
     String docSubTypeSO = "";
 
+    String chosenDocTypeId = BpDocTypeUtils.findOrderDocTypeForBp(
+      strBPartner, strOrgId, StringUtils.equals("Y", strIsSOTrx));
+    if (StringUtils.isBlank(chosenDocTypeId)) {
+      chosenDocTypeId = BpDocTypeUtils.findDefaultOrderDocType(strOrgId, StringUtils.equals("Y", strIsSOTrx));
+    }
+    if (StringUtils.isNotBlank(chosenDocTypeId)) {
+      DocumentType dt = OBDal.getInstance().get(DocumentType.class, chosenDocTypeId);
+      if (dt != null) {
+        info.addResult(INPDOCTYPETARGET, dt.getId());
+        info.addResult("inpcDoctypetargetId_R", dt.getIdentifier());
+        strDocTypeTarget = dt.getId();
+        String docSubTypeSOFromDt = dt.getSOSubType();
+        if (StringUtils.isNotBlank(docSubTypeSOFromDt)) {
+          info.addResult("inpordertype", docSubTypeSOFromDt);
+        }
+      }
+    }
+    
     BpartnerMiscData[] data = BpartnerMiscData.select(this, strBPartner);
     if (data != null && data.length > 0) {
       strDeliveryRule = data[0].deliveryrule.equals("")

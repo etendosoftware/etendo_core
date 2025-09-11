@@ -34,6 +34,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.utility.CashVATUtil;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.Utility;
@@ -49,6 +50,7 @@ import java.util.List;
 public class SE_Order_Organization extends SimpleCallout {
     private static final RequestFilter filterYesNo = new ValueListFilter("Y", "N");
     private static final String WAREHOUSEID = "inpmWarehouseId";
+    private static final String INPDOCTYPETARGET = "inpcDoctypetargetId";
 
     @Override
     protected void execute(CalloutInfo info) throws ServletException {
@@ -62,6 +64,19 @@ public class SE_Order_Organization extends SimpleCallout {
         final String strBPartnerLocationId = info.getStringParameter(
                 "inpcBpartnerLocationId", IsIDFilter.instance);
 
+        if (StringUtils.isNotBlank(strBPartnerId)) {
+          String bpDocTypeId = BpDocTypeUtils.findOrderDocTypeForBp(
+            strBPartnerId, strOrgId, StringUtils.equals("Y", strinpissotrx));
+          if (StringUtils.isNotEmpty(bpDocTypeId)) {
+            info.addResult(INPDOCTYPETARGET, bpDocTypeId);
+          } else {
+            String orgDefaultId = BpDocTypeUtils.findDefaultOrderDocType(strOrgId,
+              StringUtils.equals("Y", strinpissotrx));
+            if (StringUtils.isNotEmpty(orgDefaultId)) {
+              info.addResult(INPDOCTYPETARGET, orgDefaultId);
+            }
+          }
+        }
         info.addResult("inpiscashvat",
                 CashVATUtil.isCashVAT(strinpissotrx, strOrgId, strBPartnerId,
                         strBPartnerLocationId));
