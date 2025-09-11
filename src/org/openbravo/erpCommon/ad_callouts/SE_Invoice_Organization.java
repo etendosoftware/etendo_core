@@ -32,9 +32,11 @@ import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.utility.CashVATUtil;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.Tab;
+import org.openbravo.model.common.enterprise.DocumentType;
 
 import java.util.List;
 
@@ -67,5 +69,22 @@ public class SE_Invoice_Organization extends SimpleCallout {
                 }
             }
         }
+
+      if (StringUtils.isNotBlank(strBPartnerId)) {
+        String docTypeID = BpDocTypeUtils.findInvoiceDocTypeForBp(
+          strBPartnerId, strOrgId, StringUtils.equals("Y", strinpissotrx));
+        if (StringUtils.isBlank(docTypeID)) {
+          docTypeID = BpDocTypeUtils.findDefaultInvoiceDocType(
+            strOrgId, StringUtils.equals("Y", strinpissotrx));
+        }
+        if (StringUtils.isNotBlank(docTypeID)) {
+          DocumentType documentType = OBDal.getInstance().get(DocumentType.class, docTypeID);
+          if (documentType != null) {
+            info.addResult("inpcDoctypetargetId", documentType.getId());
+            info.addResult("inpcDoctypetargetId_R", documentType.getIdentifier());
+          }
+        }
+      }
+
     }
 }

@@ -103,20 +103,47 @@ public final class BpDocTypeUtils {
     final String docBaseType = isSO ? "SOO" : "POO";
     String sql =
       "select dt.c_doctype_id " +
-        "from c_doctype dt " +
-        "where dt.isactive='Y' " +
-        " and dt.isdefault='Y' " +
-        " and dt.isSotrx = :isSO " +
-        " and dt.docbasetype = :dbt " +
-        " and AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) <> -1 " +
-        "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc ";
+      "from c_doctype dt " +
+      "where dt.isactive='Y' " +
+      " and dt.isdefault='Y' " +
+      " and dt.isSotrx = :isSO " +
+      " and dt.docbasetype = :dbt " +
+      " and AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) <> -1 " +
+      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc ";
     Query q = OBDal.getInstance().getSession()
       .createNativeQuery(sql)
       .setParameter("isSO", isSO ? "Y" : "N")
       .setParameter("dbt", docBaseType)
       .setParameter("orgId", orgId)
       .setMaxResults(1);
+    Object id = q.uniqueResult();
+    return id == null ? null : id.toString();
+  }
 
+  /**
+   * Returns the organization-level default Invoice document type (C_DocType_ID)
+   * for the given Organization and flow (Sales/Purchase).
+   * @param orgId AD_Org_ID
+   * @param isSO true = ARI (sales), false = API (purchase)
+   * @return C_DocType_ID or null if none matches
+   */
+  public static String findDefaultInvoiceDocType(String orgId, boolean isSO) {
+    final String dbt = isSO ? "ARI" : "API";
+    String sql =
+      "select dt.c_doctype_id " +
+      "from c_doctype dt " +
+      "where dt.isactive='Y' " +
+      "  and dt.isdefault='Y' " +
+      "  and dt.issotrx = :isSO " +
+      "  and dt.docbasetype = :dbt " +
+      "  and AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) <> -1 " +
+      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc";
+    Query q = OBDal.getInstance().getSession()
+      .createNativeQuery(sql)
+      .setParameter("isSO", isSO ? "Y" : "N")
+      .setParameter("dbt", dbt)
+      .setParameter("orgId", orgId)
+      .setMaxResults(1);
     Object id = q.uniqueResult();
     return id == null ? null : id.toString();
   }
