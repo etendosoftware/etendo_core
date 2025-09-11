@@ -37,7 +37,6 @@ import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
-import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
@@ -61,21 +60,11 @@ public class SE_Invoice_BPartner extends SimpleCallout {
     String strfinPaymentmethodId = info.getStringParameter("inpfinPaymentmethodId",
         IsIDFilter.instance);
     String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
-    boolean isSales = StringUtils.equals(strIsSOTrx, "Y");
 
-    String docTypeID = BpDocTypeUtils.findInvoiceDocTypeForBp(
-      strBPartner, strOrgId, StringUtils.equals("Y", strIsSOTrx));
-    if (StringUtils.isBlank(docTypeID)) {
-      docTypeID = BpDocTypeUtils.findDefaultInvoiceDocType(
-        strOrgId, StringUtils.equals("Y", strIsSOTrx));
-    }
-    if (StringUtils.isNotBlank(docTypeID)) {
-      DocumentType documentType = OBDal.getInstance().get(DocumentType.class, docTypeID);
-      if (documentType != null) {
-        info.addResult("inpcDoctypetargetId", documentType.getId());
-        info.addResult("inpcDoctypetargetId_R", documentType.getIdentifier());
-        strDocType = documentType.getId();
-      }
+    boolean isSales = StringUtils.equals("Y", strIsSOTrx);
+    String applied = BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartner, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+    if (StringUtils.isNotBlank(applied)) {
+      strDocType = applied;
     }
 
     // Payment Method changed
