@@ -5,111 +5,163 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 import org.openbravo.model.common.businesspartner.BusinessPartnerDocType;
+import org.openbravo.model.common.enterprise.DocumentType;
 
 /**
- * Utility methods to resolve the preferred Document Type (C_DocType) for a
- * given Business Partner within a specific Organization and flow (Sales/Purchase).
+ * Utility methods to resolve the preferred Document Type (C_DocType)
+ * for a given Business Partner within a specific Organization and flow (Sales/Purchase).
  */
 public final class BpDocTypeUtils {
+
+  private BpDocTypeUtils() {}
+
   public static final String ORG_ZERO_ID = "0";
-  public static final String CATEGORY_ORDER = "ORD";
-  public static final String CATEGORY_INVOICE = "INV";
-  public static final String CATEGORY_SHIPMENT = "SHIP";
-  public static final String ID = ".id";
+  private static final String ID_SUFFIX = ".id";
+
+  /** Supported categories for BP default doc type mapping. */
+  public enum Category {
+    ORDER("ORD", "SOO", "POO"),
+    INVOICE("INV", "ARI", "API"),
+    SHIPMENT("SHIP", "MMS", "MMR");
+
+    private final String code;
+    private final String salesDocBaseType;
+    private final String purchaseDocBaseType;
+
+    /**
+     * Creates a new category with its associated code and document base types
+     * for both sales and purchase transactions.
+     * @param code the unique identifier for the category (e.g., "ORD", "INV", "SHIP")
+     * @param salesDBT the document base type used for sales transactions
+     * @param purchaseDBT the document base type used for purchase transactions
+     */
+    Category(String code, String salesDBT, String purchaseDBT) {
+      this.code = code;
+      this.salesDocBaseType = salesDBT;
+      this.purchaseDocBaseType = purchaseDBT;
+    }
+
+    /**
+     * Returns the unique code associated with the category.
+     * @return the category code as a {@link String}
+     */
+    public String code() { 
+      return code; 
+    }
+
+    /**
+     * Returns the document base type associated with this category,
+     * depending on whether it is a sales or purchase transaction.
+     * @param isSO {@code true} if the document is a sales order/invoice/shipment;
+     *             {@code false} if it is a purchase transaction
+     * @return the document base type as a {@link String}
+     */
+    public String docBaseType(boolean isSO) { 
+      return isSO ? salesDocBaseType : purchaseDocBaseType; 
+    }
+  }
 
   /**
-   * Resolves the preferred <strong>Order</strong> document type for the given Business Partner.
-   * @param bpId  Business Partner ID (C_BPartner_ID)
-   * @param orgId Organization ID (AD_Org_ID)
-   * @param isSO  {@code true} for Sales flow, {@code false} for Purchase flow
-   * @return the C_DocType_ID to use for Orders, or {@code null} if not configured
+   * Resolves the Business Partner–specific <strong>Order</strong> document type.
+   * @param bpId  Business Partner ID ({@code C_BPartner_ID}); must not be blank.
+   * @param orgId Organization ID ({@code AD_Org_ID}); must not be blank.
+   * @param isSO  {@code true} for Sales flow, {@code false} for Purchase flow.
+   * @return the resolved {@code C_DocType_ID} for Orders, or {@code null} if none is configured.
    */
   public static String findOrderDocTypeForBp(String bpId, String orgId, boolean isSO) {
-    return findWithFallback(bpId, orgId, isSO, CATEGORY_ORDER);
+    return findDocTypeForBp(bpId, orgId, isSO, Category.ORDER);
   }
 
   /**
-   * Resolves the preferred <strong>Invoice</strong> document type for the given Business Partner.
-   * @param bpId  Business Partner ID (C_BPartner_ID)
-   * @param orgId Organization ID (AD_Org_ID)
-   * @param isSO  {@code true} for Sales flow, {@code false} for Purchase flow
-   * @return the C_DocType_ID to use for Invoices, or {@code null} if not configured
+   * Resolves the Business Partner–specific <strong>Invoice</strong> document type.
+   * @param bpId  Business Partner ID ({@code C_BPartner_ID}); must not be blank.
+   * @param orgId Organization ID ({@code AD_Org_ID}); must not be blank.
+   * @param isSO  {@code true} for Sales (AR) flow, {@code false} for Purchase (AP) flow.
+   * @return the resolved {@code C_DocType_ID} for Invoices, or {@code null} if none is configured.
    */
   public static String findInvoiceDocTypeForBp(String bpId, String orgId, boolean isSO) {
-    return findWithFallback(bpId, orgId, isSO, CATEGORY_INVOICE);
+    return findDocTypeForBp(bpId, orgId, isSO, Category.INVOICE);
   }
 
   /**
-   * Resolves the preferred <strong>Shipment</strong> document type for the given Business Partner.
-   * @param bpId  Business Partner ID (C_BPartner_ID)
-   * @param orgId Organization ID (AD_Org_ID)
-   * @param isSO  {@code true} for Sales flow (Goods Shipment), {@code false} for Purchase flow (Material Receipt)
-   * @return the C_DocType_ID to use for Shipments, or {@code null} if not configured
+   * Resolves the Business Partner–specific <strong>Shipment/Receipt</strong> document type.
+   * @param bpId  Business Partner ID ({@code C_BPartner_ID}); must not be blank.
+   * @param orgId Organization ID ({@code AD_Org_ID}); must not be blank.
+   * @param isSO  {@code true} for Sales shipments, {@code false} for Purchase receipts.
+   * @return the resolved {@code C_DocType_ID} for Shipments/Receipts, or {@code null} if none is configured.
    */
   public static String findShipmentDocTypeForBp(String bpId, String orgId, boolean isSO) {
-    return findWithFallback(bpId, orgId, isSO, CATEGORY_SHIPMENT);
+    return findDocTypeForBp(bpId, orgId, isSO, Category.SHIPMENT);
   }
 
   /**
-   * Generic resolver for any supported category. It first searches a record in
-   * {@code C_BPartner_DocType} for the exact {@code orgId}. If not found, it tries again
-   * with {@link #ORG_ZERO_ID} to apply a global fallback.
-   * @param bpId Business Partner ID (C_BPartner_ID)
-   * @param orgId Organization ID (AD_Org_ID)
-   * @param isSO {@code true} for Sales flow, {@code false} for Purchase flow
-   * @param category One of {@link #CATEGORY_ORDER}, {@link #CATEGORY_INVOICE}, {@link #CATEGORY_SHIPMENT}
-   * @return the C_DocType_ID matching the criteria, or {@code null} if none is found
+   * Finds the document type ID for a given Business Partner and Organization,
+   * based on the specified category (Order, Invoice, or Shipment).
+   * @param bpId the Business Partner ID
+   * @param orgId the Organization ID
+   * @param isSO {@code true} if the document type is for a sales transaction;
+   *                 {@code false} for a purchase transaction
+   * @param category the document type category (Order, Invoice, or Shipment)
+   * @return the document type ID as a {@link String}, or {@code null} if none is found
    */
-  public static String findWithFallback(String bpId, String orgId, boolean isSO, String category) {
-    if (StringUtils.isBlank(bpId) || StringUtils.isBlank(orgId) || StringUtils.isBlank(category)) {
+  public static String findDocTypeForBp(String bpId, String orgId, boolean isSO, Category category) {
+    if (StringUtils.isAnyBlank(bpId, orgId) || category == null) {
       return null;
     }
-    String id = findSingle(bpId, orgId, isSO, category);
-    if (id != null) {
-      return id;
+    String id = findSingle(bpId, orgId, isSO, category.code());
+    return (id != null) ? id : findSingle(bpId, ORG_ZERO_ID, isSO, category.code());
+  }
+
+  /**
+   * Returns the organization-level default C_DocType_ID for a given category.
+   * Under the hood it resolves the category's DocBaseType by flow (isSO) and queries C_DocType.
+   * @param orgId AD_Org_ID
+   * @param isSO true for sales flow, false for purchase flow
+   * @param category {@link Category}
+   * @return C_DocType_ID or null if none matches
+   */
+  public static String findDefaultDocType(String orgId, boolean isSO, Category category) {
+    if (StringUtils.isBlank(orgId) || category == null) {
+      return null;
     }
-    return findSingle(bpId, ORG_ZERO_ID, isSO, category);
+    return runDefaultDocTypeQuery(orgId, isSO, category.docBaseType(isSO));
   }
 
   /**
-   * Executes the actual DAL query against {@code C_BPartner_DocType} using the provided filters.
-   * @param bpId Business Partner ID
-   * @param orgId Organization ID
-   * @param isSO Sales/Purchase flag
-   * @param category Category code (ORD/INV/SHIP)
-   * @return the C_DocType_ID, or {@code null} if not found
+   * Finds a single BP-specific document type (C_DocType_ID) for the exact organization and category.
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); must not be blank.
+   * @param orgId Organization ID ({@code AD_Org_ID}); must not be blank.
+   * @param isSO {@code true} for sales flow, {@code false} for purchase flow.
+   * @param categoryCode Document category code to match (e.g., {@code "ORD"}, {@code "INV"}, {@code "SHIP"}).
+   * @return the matched {@code C_DocType_ID}, or {@code null} when not found or not linked.
    */
-  private static String findSingle(String bpId, String orgId, boolean isSO, String category) {
-    OBCriteria<BusinessPartnerDocType> businessPartnerDocTypeCriteria = OBDal.getInstance()
-      .createCriteria(BusinessPartnerDocType.class);
-    businessPartnerDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_BUSINESSPARTNER + ID, bpId));
-    businessPartnerDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ORGANIZATION + ID, orgId));
-    businessPartnerDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ISSOTRX, isSO));
-    businessPartnerDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_DOCUMENTCATEGORY, category));
-    businessPartnerDocTypeCriteria.setMaxResults(1);
-    BusinessPartnerDocType businessPartnerDocType = (BusinessPartnerDocType) businessPartnerDocTypeCriteria.uniqueResult();
-    return (businessPartnerDocType != null && businessPartnerDocType.getDoctype() != null) ? businessPartnerDocType.getDoctype().getId() : null;
+  private static String findSingle(String bpId, String orgId, boolean isSO, String categoryCode) {
+    OBCriteria<BusinessPartnerDocType> bPDocTypeCriteria = OBDal.getInstance().createCriteria(BusinessPartnerDocType.class);
+    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_BUSINESSPARTNER + ID_SUFFIX, bpId));
+    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ORGANIZATION + ID_SUFFIX, orgId));
+    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ISSOTRX, isSO));
+    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_DOCUMENTCATEGORY, categoryCode));
+    bPDocTypeCriteria.setMaxResults(1);
+    BusinessPartnerDocType bPDocType = (BusinessPartnerDocType) bPDocTypeCriteria.uniqueResult();
+    return (bPDocType != null && bPDocType.getDoctype() != null) ? bPDocType.getDoctype().getId() : null;
   }
 
   /**
-   * Returns the organization-level default Order document type (C_DocType_ID) for the
-   * given Organization and flow (Sales/Purchase).
-   * @param orgId the Organization ID ({@code AD_Org_ID}) to resolve the default for; must be non-null
-   * @param isSO {@code true} for sales flow (DocBaseType {@code SOO}); {@code false} for purchase flow (DocBaseType {@code POO})
-   * @return the {@code C_DocType_ID} of the default Order document type, or {@code null} if none matches
+   * Runs a single native query to get the default org-level DocType by DocBaseType and flow.
+   * Keeps AD_ISORGINCLUDED in filter & ordering to respect org trees.
    */
-  public static String findDefaultOrderDocType(String orgId, boolean isSO) {
-    final String docBaseType = isSO ? "SOO" : "POO";
-    String sql =
+  private static String runDefaultDocTypeQuery(String orgId, boolean isSO, String docBaseType) {
+    final String sql =
       "select dt.c_doctype_id " +
       "from c_doctype dt " +
-      "where dt.isactive='Y' " +
-      " and dt.isdefault='Y' " +
-      " and dt.isSotrx = :isSO " +
+      "where dt.isactive = 'Y' " +
+      " and dt.isdefault = 'Y' " +
+      " and dt.issotrx  = :isSO " +
       " and dt.docbasetype = :dbt " +
       " and AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) <> -1 " +
-      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc ";
+      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc";
     Query q = OBDal.getInstance().getSession()
       .createNativeQuery(sql)
       .setParameter("isSO", isSO ? "Y" : "N")
@@ -121,31 +173,101 @@ public final class BpDocTypeUtils {
   }
 
   /**
-   * Returns the organization-level default Invoice document type (C_DocType_ID)
-   * for the given Organization and flow (Sales/Purchase).
-   * @param orgId AD_Org_ID
-   * @param isSO true = ARI (sales), false = API (purchase)
-   * @return C_DocType_ID or null if none matches
+   * Resolves the most appropriate {@code C_DocType_ID} for the given context.
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}). May be {@code null} or blank; if so,
+   *  the method skips BP-specific lookup and jumps to the organization default.
+   * @param orgId Organization ID ({@code AD_Org_ID}). Must not be blank.
+   * @param isSO {@code true} for sales flow, {@code false} for purchase flow.
+   * @param category Document category to resolve (ORDER/INVOICE/SHIPMENT).
+   * @return The resolved {@code C_DocType_ID}, or {@code null} if none can be determined.
    */
-  public static String findDefaultInvoiceDocType(String orgId, boolean isSO) {
-    final String dbt = isSO ? "ARI" : "API";
-    String sql =
-      "select dt.c_doctype_id " +
-      "from c_doctype dt " +
-      "where dt.isactive='Y' " +
-      "  and dt.isdefault='Y' " +
-      "  and dt.issotrx = :isSO " +
-      "  and dt.docbasetype = :dbt " +
-      "  and AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) <> -1 " +
-      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc";
-    Query q = OBDal.getInstance().getSession()
-      .createNativeQuery(sql)
-      .setParameter("isSO", isSO ? "Y" : "N")
-      .setParameter("dbt", dbt)
-      .setParameter("orgId", orgId)
-      .setMaxResults(1);
-    Object id = q.uniqueResult();
-    return id == null ? null : id.toString();
+  public static String resolveDocTypeId(String bpId, String orgId, boolean isSO, Category category) {
+    if (StringUtils.isBlank(orgId) || category == null) {
+      return null;
+    }
+    String id = StringUtils.isNotBlank(bpId) ? findDocTypeForBp(bpId, orgId, isSO, category) : null;
+    return id != null ? id : findDefaultDocType(orgId, isSO, category);
   }
 
+  /**
+   * Resolves and applies the Order document type to the UI in an Order window callout.
+   * @param info The current {@link SimpleCallout.CalloutInfo} used to push values to the client.
+   * @param orgId Organization ID ({@code AD_Org_ID}).
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
+   * @param isSO {@code true} for sales flow, {@code false} for purchase flow.
+   * @param idField Name of the target field to receive the DocType ID (mandatory).
+   * @param idRefField Name of the companion “_R” field to receive the DocType identifier (optional; pass {@code null} or blank to skip).
+   * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
+   */
+  public static String applyOrderDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField) {
+    String id = resolveDocTypeId(bpId, orgId, isSO, Category.ORDER);
+    if (StringUtils.isBlank(id)) {
+      return null;
+    }
+    DocumentType dt = OBDal.getInstance().get(DocumentType.class, id);
+    if (dt == null) {
+      return null;
+    }
+    info.addResult(idField, dt.getId());
+    if (StringUtils.isNotBlank(idRefField)) {
+      info.addResult(idRefField, dt.getIdentifier());
+    }
+    if (StringUtils.isNotBlank(dt.getSOSubType())) {
+      info.addResult("inpordertype", dt.getSOSubType());
+    }
+    return dt.getId();
+  }
+
+  /**
+   * Resolves and applies the Invoice document type to the UI in an Invoice window callout.
+   * @param info The current {@link SimpleCallout.CalloutInfo}.
+   * @param orgId Organization ID ({@code AD_Org_ID}).
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
+   * @param isSO {@code true} for sales (AR) invoices, {@code false} for purchase (AP) invoices.
+   * @param idField Name of the target field to receive the DocType ID (mandatory).
+   * @param idRefField Name of the companion “_R” field to receive the DocType identifier (optional; pass {@code null} or blank to skip).
+   * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
+   */
+  public static String applyInvoiceDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField) {
+    String id = resolveDocTypeId(bpId, orgId, isSO, Category.INVOICE);
+    if (StringUtils.isBlank(id)) {
+      return null;
+    }
+    DocumentType dt = OBDal.getInstance().get(DocumentType.class, id);
+    if (dt == null) {
+      return null;
+    }
+    info.addResult(idField, dt.getId());
+    if (StringUtils.isNotBlank(idRefField)) {
+      info.addResult(idRefField, dt.getIdentifier());
+    }
+    return dt.getId();
+  }
+
+  /**
+   * Resolves and applies the Shipment/Receipt document type to the UI in a Shipment (In/Out) window callout.
+   * @param info The current {@link SimpleCallout.CalloutInfo}.
+   * @param orgId Organization ID ({@code AD_Org_ID}).
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); may be {@code null}/blank.
+   * @param isSO {@code true} for sales shipments (MMS), {@code false} for purchase receipts (MMR).
+   * @param idField Name of the target field to receive the DocType ID (mandatory).
+   * @param idRefField Name of the companion “_R” field to receive the DocType identifier (optional; pass {@code null} or blank to skip).
+   * @return The applied {@code C_DocType_ID}, or {@code null} if resolution failed or the DocType could not be loaded.
+   */
+  public static String applyShipmentDocType(SimpleCallout.CalloutInfo info, String orgId, String bpId, boolean isSO, String idField, String idRefField) {
+    String id = resolveDocTypeId(bpId, orgId, isSO, Category.SHIPMENT);
+    if (StringUtils.isBlank(id)) {
+      return null;
+    }
+    DocumentType dt = OBDal.getInstance().get(DocumentType.class, id);
+    if (dt == null) {
+      return null;
+    }
+    info.addResult(idField, dt.getId());
+    if (StringUtils.isNotBlank(idRefField)) {
+      info.addResult(idRefField, dt.getIdentifier());
+    }
+    info.addResult("inpmovementtype", isSO ? "C-" : "V+");
+    return dt.getId();
+  }
 }

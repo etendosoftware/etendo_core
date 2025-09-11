@@ -24,7 +24,6 @@ import javax.servlet.ServletException;
 import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.filter.IsIDFilter;
@@ -39,7 +38,6 @@ import org.openbravo.erpCommon.utility.CashVATUtil;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.ui.Field;
-import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.common.enterprise.OrgWarehouse;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
@@ -50,7 +48,6 @@ import java.util.List;
 public class SE_Order_Organization extends SimpleCallout {
     private static final RequestFilter filterYesNo = new ValueListFilter("Y", "N");
     private static final String WAREHOUSEID = "inpmWarehouseId";
-    private static final String INPDOCTYPETARGET = "inpcDoctypetargetId";
 
     @Override
     protected void execute(CalloutInfo info) throws ServletException {
@@ -63,20 +60,12 @@ public class SE_Order_Organization extends SimpleCallout {
                 IsIDFilter.instance);
         final String strBPartnerLocationId = info.getStringParameter(
                 "inpcBpartnerLocationId", IsIDFilter.instance);
-
+        
+        boolean isSales = StringUtils.equals("Y", strinpissotrx);
         if (StringUtils.isNotBlank(strBPartnerId)) {
-          String bpDocTypeId = BpDocTypeUtils.findOrderDocTypeForBp(
-            strBPartnerId, strOrgId, StringUtils.equals("Y", strinpissotrx));
-          if (StringUtils.isNotEmpty(bpDocTypeId)) {
-            info.addResult(INPDOCTYPETARGET, bpDocTypeId);
-          } else {
-            String orgDefaultId = BpDocTypeUtils.findDefaultOrderDocType(strOrgId,
-              StringUtils.equals("Y", strinpissotrx));
-            if (StringUtils.isNotEmpty(orgDefaultId)) {
-              info.addResult(INPDOCTYPETARGET, orgDefaultId);
-            }
-          }
+          BpDocTypeUtils.applyOrderDocType(info, strOrgId, strBPartnerId, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
         }
+        
         info.addResult("inpiscashvat",
                 CashVATUtil.isCashVAT(strinpissotrx, strOrgId, strBPartnerId,
                         strBPartnerLocationId));
