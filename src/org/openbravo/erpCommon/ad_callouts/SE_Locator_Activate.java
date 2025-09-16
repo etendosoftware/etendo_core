@@ -81,12 +81,14 @@ public class SE_Locator_Activate extends SimpleCallout {
   private boolean storageIsNotEmpty(final String strLocator) {
     //@formatter:off
     final String hql =
-                  "as sd " +
-                  " where sd.storageBin.id = :storageBinId " +
-                  "   and (coalesce (sd.quantityOnHand,0) <> 0)" +
-                  "   or (coalesce (sd.onHandOrderQuanity,0) <> 0)" +
-                  "   or (coalesce (sd.quantityInDraftTransactions,0) <> 0)" +
-                  "   or (coalesce (sd.quantityOrderInDraftTransactions,0) <> 0)";
+        "as sd " +
+            " where sd.storageBin.id = :storageBinId " +
+            "   and (" +
+            "     (coalesce (sd.quantityOnHand,0) <> 0)" +
+            "     or (coalesce (sd.onHandOrderQuanity,0) <> 0)" +
+            "     or (coalesce (sd.quantityInDraftTransactions,0) <> 0)" +
+            "     or (coalesce (sd.quantityOrderInDraftTransactions,0) <> 0)" +
+            "   )";
     //@formatter:on
   
     return OBDal.getInstance()
