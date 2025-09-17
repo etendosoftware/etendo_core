@@ -110,8 +110,8 @@ public final class BpDocTypeUtils {
     if (StringUtils.isAnyBlank(bpId, orgId) || category == null) {
       return null;
     }
-    String id = findSingle(bpId, orgId, isSO, category.code());
-    return (id != null) ? id : findSingle(bpId, ORG_ZERO_ID, isSO, category.code());
+    String id = runBpDocTypeQueryHierarchy(bpId, orgId, isSO, category.code());
+    return (id != null) ? id : runBpDocTypeQueryHierarchy(bpId, ORG_ZERO_ID, isSO, category.code());
   }
 
   /**
@@ -127,25 +127,6 @@ public final class BpDocTypeUtils {
       return null;
     }
     return runDefaultDocTypeQuery(orgId, isSO, category.docBaseType(isSO));
-  }
-
-  /**
-   * Finds a single BP-specific document type (C_DocType_ID) for the exact organization and category.
-   * @param bpId Business Partner ID ({@code C_BPartner_ID}); must not be blank.
-   * @param orgId Organization ID ({@code AD_Org_ID}); must not be blank.
-   * @param isSO {@code true} for sales flow, {@code false} for purchase flow.
-   * @param categoryCode Document category code to match (e.g., {@code "ORD"}, {@code "INV"}, {@code "SHIP"}).
-   * @return the matched {@code C_DocType_ID}, or {@code null} when not found or not linked.
-   */
-  private static String findSingle(String bpId, String orgId, boolean isSO, String categoryCode) {
-    OBCriteria<BusinessPartnerDocType> bPDocTypeCriteria = OBDal.getInstance().createCriteria(BusinessPartnerDocType.class);
-    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_BUSINESSPARTNER + ID_SUFFIX, bpId));
-    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ORGANIZATION + ID_SUFFIX, orgId));
-    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ISSOTRX, isSO));
-    bPDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_DOCUMENTCATEGORY, categoryCode));
-    bPDocTypeCriteria.setMaxResults(1);
-    BusinessPartnerDocType bPDocType = (BusinessPartnerDocType) bPDocTypeCriteria.uniqueResult();
-    return (bPDocType != null && bPDocType.getDoctype() != null) ? bPDocType.getDoctype().getId() : null;
   }
 
   /**
@@ -166,6 +147,39 @@ public final class BpDocTypeUtils {
       .createNativeQuery(sql)
       .setParameter("isSO", isSO ? "Y" : "N")
       .setParameter("dbt", docBaseType)
+      .setParameter("orgId", orgId)
+      .setMaxResults(1);
+    Object id = q.uniqueResult();
+    return id == null ? null : id.toString();
+  }
+
+  /**
+   * Resolves the Business Partner–specific document type by walking the organization
+   * hierarchy, using {@code AD_ISORGINCLUDED} to prefer the closest applicable record.
+   * @param bpId Business Partner ID ({@code C_BPartner_ID}); must not be blank.
+   * @param orgId Context Organization ID ({@code AD_Org_ID}) from which the hierarchy
+   * resolution is performed; must not be blank.
+   * @param isSO {@code true} for sales flow, {@code false} for purchase flow.
+   * @param categoryCode Document category code to match (e.g., {@code "ORD"}, {@code "INV"}, {@code "SHIP"}).
+   * @return The resolved {@code C_DocType_ID} as a string, or {@code null} if no applicable row is found.
+   */
+  private static String runBpDocTypeQueryHierarchy(String bpId, String orgId, boolean isSO, String categoryCode) {
+    final String sql =
+      "select bpd.c_doctype_id " +
+      "  from c_bpartner_doctype bpd " +
+      "  where bpd.isactive = 'Y' " +
+      "    and bpd.c_bpartner_id = :bpId " +
+      "    and bpd.issotrx = :isSO " +
+      "    and bpd.documentcategory = :cat " +
+      "    and bpd.c_doctype_id is not null " +
+      "    and AD_ISORGINCLUDED(bpd.ad_org_id, :orgId, bpd.ad_client_id) <> -1 " +
+      "  order by AD_ISORGINCLUDED(bpd.ad_org_id, :orgId, bpd.ad_client_id) asc";
+
+    Query q = OBDal.getInstance().getSession()
+      .createNativeQuery(sql)
+      .setParameter("bpId", bpId)
+      .setParameter("isSO", isSO ? "Y" : "N")
+      .setParameter("cat", categoryCode)
       .setParameter("orgId", orgId)
       .setMaxResults(1);
     Object id = q.uniqueResult();
