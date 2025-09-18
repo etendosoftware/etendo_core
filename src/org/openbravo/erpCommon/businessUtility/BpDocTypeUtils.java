@@ -1,12 +1,9 @@
 package org.openbravo.erpCommon.businessUtility;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
-import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
-import org.openbravo.model.common.businesspartner.BusinessPartnerDocType;
 import org.openbravo.model.common.enterprise.DocumentType;
 
 /**
@@ -18,7 +15,6 @@ public final class BpDocTypeUtils {
   private BpDocTypeUtils() {}
 
   public static final String ORG_ZERO_ID = "0";
-  private static final String ID_SUFFIX = ".id";
 
   /** Supported categories for BP default doc type mapping. */
   public enum Category {
