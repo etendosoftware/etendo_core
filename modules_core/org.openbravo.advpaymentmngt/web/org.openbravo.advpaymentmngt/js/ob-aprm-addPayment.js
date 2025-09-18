@@ -404,6 +404,7 @@ OB.APRM.AddPayment.actualPaymentOnChange = function(item, view, form, grid) {
     OB.APRM.AddPayment.distributeAmount(view, form, true);
     OB.APRM.AddPayment.updateConvertedAmount(view, form, false);
   }
+  OB.APRM.AddPayment.applyBankAmountToConverted(form);
 };
 
 OB.APRM.AddPayment.orderInvoiceOnLoadGrid = function(grid) {
@@ -892,6 +893,7 @@ OB.APRM.AddPayment.doSelectionChanged = function(record, state, view) {
     OB.APRM.AddPayment.updateInvOrderTotal(view.theForm, orderInvoice);
     OB.APRM.AddPayment.updateActualExpected(view.theForm);
     OB.APRM.AddPayment.updateDifference(view.theForm);
+    OB.APRM.AddPayment.applyBankAmountToConverted(view.theForm);
     if (orderInvoice.obaprmAllRecordsSelectedByUser) {
       delete orderInvoice.obaprmAllRecordsSelectedByUser;
     }
@@ -994,6 +996,7 @@ OB.APRM.AddPayment.updateActualExpected = function(form) {
 
   // force redraw to ensure display logic is properly executed
   form.redraw();
+  OB.APRM.AddPayment.applyBankAmountToConverted(form);
 };
 
 OB.APRM.AddPayment.getConvertedAmount = function(
@@ -1016,6 +1019,15 @@ OB.APRM.AddPayment.getConvertedAmount = function(
       BigDecimal.prototype.ROUND_HALF_UP
     );
   }
+};
+
+OB.APRM.AddPayment.applyBankAmountToConverted = function(form) {
+  var bsl = new BigDecimal(String(form.getItem('bslamount').getValue() || 0));
+  var conv = form.getItem('converted_amount');
+  if (!conv) return;
+  if (bsl.compareTo(BigDecimal.prototype.ZERO) === 0) return;
+  conv.setValue(Number(bsl.abs().toString()));
+  OB.APRM.AddPayment.updateConvertedAmount(null, form, true);
 };
 
 OB.APRM.AddPayment.removeRecordClick = function(rowNum, record) {

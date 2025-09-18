@@ -30,6 +30,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.ui.Field;
@@ -49,8 +50,14 @@ public class SE_InOut_Organization extends SimpleCallout {
         String strMWarehouseId = info.vars.getStringParameter(WAREHOUSEID);
         String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
         String strInOut = info.getStringParameter("M_InOut_ID", IsIDFilter.instance);
+        String strBPId = info.getStringParameter("inpcBpartnerId", IsIDFilter.instance);
         FieldProvider[] td = null;
 
+        final boolean isSales = StringUtils.equals("Y", strIsSOTrx);
+        if (StringUtils.isNotBlank(strBPId)) {
+          BpDocTypeUtils.applyShipmentDocType(info, strOrgId, strBPId, isSales, "inpcDoctypeId", "inpcDoctypeId_R");
+        }
+        
         /* Warehouse */
         OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
         orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId)));
