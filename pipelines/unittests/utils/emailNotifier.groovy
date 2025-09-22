@@ -8,7 +8,7 @@
   * @param status The status of the build ('Unstable' or 'Failed').
   * @param message Optional additional message to include in the email body.
   */
-  
+
 def sendParameterizedEmail(String subject, String icon, String status, String message = "") {
   def emailSubject = "${icon} ${subject} - ${currentBuild.fullDisplayName}"
   def timestamp = new Date().format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("America/Argentina/Buenos_Aires"))

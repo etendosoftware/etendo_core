@@ -172,12 +172,20 @@ spec:
                 echo "--------------- Getting Backport Branch Information ---------------"
                 def pattern = /-Y\d{2}$/
                 env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
-                def matcher = (env.GIT_BRANCH =~ /-Y(\d{2})(\d{2})$/)
-                if (matcher.matches()) {
-                  def num1 = matcher[0][1]
-                  def num2 = matcher[0][2]
-                  env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
-                  echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"
+                
+                // Extract backport branch information without using Matcher object
+                if (env.CONTAINS_Y_SUFFIX == TRUE) {
+                  def branchParts = env.GIT_BRANCH.split('-Y')
+                  if (branchParts.length == 2 && branchParts[1].length() == 4) {
+                    def yearMonth = branchParts[1]
+                    def num1 = yearMonth.s  ubstring(0, 2)
+                    def num2 = yearMonth.substring(2, 4)
+                    env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
+                    echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"
+                  } else {
+                    env.BACKPORT_BRANCH = ""
+                    echo "No valid backport branch pattern matched."
+                  }
                 } else {
                   env.BACKPORT_BRANCH = ""
                   echo "No backport branch pattern matched."
@@ -565,8 +573,8 @@ spec:
     stage('Compare Coverage Results') { // MARK: - Compare Coverage Results
       when {
         expression {
-          currentBuild.result == SUCCESS && env.TESTS_EXIST == TRUE && PUSH_TYPE == IS_PUSH_BRANCH && 
-          env.JACOCO_REPORT_EXISTS == TRUE && !(env.COMMIT_BRANCH == env.MAIN_BRANCH || env.COMMIT_BRANCH.startsWith("release/"))
+          currentBuild.result == SUCCESS && env.TESTS_EXIST == TRUE && PUSH_TYPE == IS_PUSH_BRANCH &&
+          env.JACOCO_REPORT_EXISTS == TRUE && !(env.GIT_BRANCH == env.MAIN_BRANCH || env.GIT_BRANCH.startsWith("release/"))
         }
       }
       steps {
@@ -689,30 +697,34 @@ spec:
         def mailSubject = ""
         def bodyMessageError = ""
         def icon = "❗"
+        
         if (env.STATUS_TEST == FAILED) {
           mailSubject = "Tests Failed"
           bodyMessageError = "Tests have been detected that have failed in Etendo Core."
           icon = "⚠️"
+        } else if (env.COMPARE_COVERAGE_STATUS == FAILED) {
+          mailSubject = "Coverage Decreased"
+          bodyMessageError = env.ERROR_MESSAGE ?: "Coverage has decreased compared to the base branch."
+          icon = "📉"
         } else {
-          if (env.COMPARE_COVERAGE_STATUS == FAILED) {
-            mailSubject = "Coverage Decreased"
-            bodyMessageError = env.ERROR_MESSAGE
-            icon = "📉"
-          }
+          mailSubject = "Build Unstable"
+          bodyMessageError = "The build is unstable. Please check the logs for more information."
+          icon = "❗"
         }
-        emailNotifier.sendParameterizedEmail(
-            mailSubject,
-            icon,
-            'Unstable',
-            bodyMessageError
-          )
         
+        emailNotifier.sendParameterizedEmail(
+          mailSubject,
+          icon,
+          'Unstable',
+          bodyMessageError
+        )
       }
     }
     failure {
       script {
         sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         echo "--------------- FAILURE ---------------"
+        
         def rootDir = pwd()
         def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
 
@@ -720,7 +732,7 @@ spec:
           env.ERROR_MESSAGE,
           '⛔',
           'Failed',
-          env.ERROR_MESSAGE,
+          env.ERROR_MESSAGE
         )
       }
     }
