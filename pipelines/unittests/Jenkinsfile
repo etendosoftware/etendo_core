@@ -41,11 +41,13 @@ pipeline {
     COMMIT_SUCCESS_STATUS    = "success"
     COMMIT_FAILED_STATUS     = "failure"
 
-    SONAR_SERVER    = "https://sonar.etendo.cloud"
-    SONAR_TOKEN     = credentials('sonar-token')
+    SONAR_SERVER = "https://sonar.etendo.cloud"
+    SONAR_TOKEN  = credentials('sonar-token')
 
-    TRUE            = "TRUE"
-    FALSE           = "FALSE"
+    TRUE  = "TRUE"
+    FALSE = "FALSE"
+
+    MAIN_BRANCH = "main"
   }
 
   agent { // MARK: Agent
@@ -134,9 +136,9 @@ spec:
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
 
               echo "---------------------- Setting up Environment Variables ----------------------"
-              env.EXIST_JACOCO_REPORT = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
-              env.STATUSTEST = "1" // Variable to track the status of the test execution. "1" indicates success, "0" indicates failure.
-              env.STATUSBUILD = "1" // Variable to track the status of the build. "1" indicates success, "0" indicates failure.
+              env.JACOCO_REPORT_EXISTS = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
+              env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution. 
+              env.STATUSBUILD = SUCCESS // Variable to track the status of the build. 
               sh "printenv"
 
               echo "---------------- Stack Configuration ----------------"
@@ -167,6 +169,20 @@ spec:
                 def infoCommit = load "${rootDir}/pipelines/unittests/utils/infoCommit.groovy"
                 env.COMMIT_INFO = infoCommit.generateCommitInfo(env.URL_REPO)
 
+                echo "--------------- Getting Backport Branch Information ---------------"
+                def pattern = /-Y\d{2}$/
+                env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
+                def matcher = (env.GIT_BRANCH =~ /-Y(\d{2})(\d{2})$/)
+                if (matcher.matches()) {
+                  def num1 = matcher[0][1]
+                  def num2 = matcher[0][2]
+                  env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
+                  echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"
+                } else {
+                  env.BACKPORT_BRANCH = ""
+                  echo "No backport branch pattern matched."
+                }
+
                 echo "--------------- Getting Sonar projectKey of ${REPO_NAME} ---------------"
                 def propertiesContent = readFile "sonar-project.properties"
                 def lines = propertiesContent.split('\n')
@@ -182,34 +198,21 @@ spec:
                 echo "--------------- Configure gradle.properties ---------------"
                 sh """
                 echo "\n
-                context.name=${CONTEXT_NAME}\n
-                bbdd.sid=${BBDD_SID}\n
-                bbdd.port=${BBDD_PORT}\n
-                bbdd.systemUser=${BBDD_SYSTEMUSER}\n
-                bbdd.systemPassword=${BBDD_SYSTEMPASS}\n
-                bbdd.user=${BBDD_USER}\n
-                bbdd.password=${BBDD_PASSWORD}\n
-                nexusUser=${NEXUS_USER}\n
-                nexusPassword=${NEXUS_PASSWORD}\n
-                githubUser=${GITHUB_USER}\n
-                githubToken=${GITHUB_TOKEN}\n
-                allow.root=true\n
-                org.gradle.jvmargs=-Dfile.encoding=UTF-8\n
+                context.name=${CONTEXT_NAME}
+                bbdd.sid=${BBDD_SID}
+                bbdd.port=${BBDD_PORT}
+                bbdd.systemUser=${BBDD_SYSTEMUSER}
+                bbdd.systemPassword=${BBDD_SYSTEMPASS}
+                bbdd.user=${BBDD_USER}
+                bbdd.password=${BBDD_PASSWORD}
+                nexusUser=${NEXUS_USER}
+                nexusPassword=${NEXUS_PASSWORD}
+                githubUser=${GITHUB_USER}
+                githubToken=${GITHUB_TOKEN}
+                allow.root=true
+                org.gradle.jvmargs=-Dfile.encoding=UTF-8
                 org.gradle.daemon=false
-                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g
-
-                sonarHostUrl=${SONAR_SERVER}
-                sonarToken=${SONAR_TOKEN}
-                sonarProjectBaseDir=${WORKDIR_ETENDO}
-                sonarProjectName=${REPO_NAME}
-                sonarProjectKey=${PROJECT_KEY}
-                sonarBranchName=${GIT_BRANCH}
-                sonarVersion=${GIT_COMMIT}" > gradle.properties
-                """
-
-                def modules_src_dirs = sh(script: "cd modules_core && find . -type d -name 'src' | grep -v 'src-util' | sed 's|./|modules_core/|' | tr '\n' ','", returnStdout: true).trim()
-                sh """
-                echo "sonarSources=${modules_src_dirs}src" >> gradle.properties
+                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g" > gradle.properties
                 """
 
                 sh """
@@ -231,8 +234,8 @@ spec:
               echo "Exception occurred: " + e.toString()
               currentBuild.result = FAILED
               error(env.ERROR_MESSAGE)
-              env.STATUSBUILD = "0"
-              env.STATUSTEST = "0"
+              env.STATUSBUILD = FAILED
+              env.STATUS_TEST = FAILED
             }
           }
         }
@@ -262,7 +265,7 @@ spec:
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
                 unstable('WebservicesTestSuite Failed')
-                env.STATUSTEST = "0"
+                env.STATUS_TEST = FAILED
               } finally {
                 if (fileExists("build/reports/tests/test/")) {
                   publishHTML([
@@ -291,7 +294,7 @@ spec:
     stage ('Core Test Suite') { // MARK: CoreTestSuite Test Suite
       when {
         expression {
-          env.STATUSBUILD == "1"
+          env.STATUSBUILD == SUCCESS
         }
       }
       steps {
@@ -309,7 +312,7 @@ spec:
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
                 unstable('CoreTestSuite Failed')
-                env.STATUSTEST = "0"
+                env.STATUS_TEST = FAILED
               } finally {
                 if (fileExists("build/reports/tests/test/")) {
                   publishHTML([
@@ -337,7 +340,7 @@ spec:
     stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
       when {
         expression {
-          env.STATUSBUILD == "1"
+          env.STATUSBUILD == SUCCESS
         }
       }
       steps {
@@ -355,7 +358,7 @@ spec:
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
                 unstable('StandaloneTestSuite Failed')
-                env.STATUSTEST = "0"
+                env.STATUS_TEST = FAILED
               } finally {
                 if (fileExists("build/reports/tests/test/")) {
                   publishHTML([
@@ -382,7 +385,7 @@ spec:
     stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Test
       when {
         expression {
-          env.STATUSBUILD == "1"
+          env.STATUSBUILD == SUCCESS
         }
       }
       steps {
@@ -401,7 +404,7 @@ spec:
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
                 unstable('com.etendoerp.* Tests failed!')
-                env.STATUSTEST = "0"
+                env.STATUS_TEST = FAILED
               } finally {
                 if (fileExists('build/spock-reports/')) {
                   publishHTML([
@@ -443,7 +446,7 @@ spec:
     stage('Generate Coverage Report') { // MARK: Generate Coverage Report
       when {
         expression {
-          env.STATUSTEST == "1"
+          env.STATUS_TEST == SUCCESS
         }
       }
       steps {
@@ -461,7 +464,7 @@ spec:
 
             if (fileExists("${JACOCO_REPORT}")) {
               echo "---------------------- Jacoco Report Found ----------------------"
-              env.EXIST_JACOCO_REPORT = TRUE
+              env.JACOCO_REPORT_EXISTS = TRUE
             }
           }
         }
@@ -472,7 +475,7 @@ spec:
     stage('SonarQube Analysis') { // MARK: SonarQube Analysis
       when {
         expression {
-          EXIST_JACOCO_REPORT == TRUE
+          JACOCO_REPORT_EXISTS == TRUE
         }
       }
       steps {
@@ -511,12 +514,32 @@ spec:
               sourceExclusions = "${sourceExclusions},${deprecatedExclusions}"
 
               echo "Sources to exclusions: ${sourceExclusions}"
+              def modules_src_dirs = sh(script: "cd ${REPO_NAME}/modules_core && find . -type d -name 'src' | grep -v 'src-util' | sed 's|./|modules_core/|' | tr '\n' ','", returnStdout: true).trim()
+              echo "Modules with src directories: ${modules_src_dirs}"
 
-              echo "--------------- Running SonarQube ---------------"
+               echo "--------------- Installing SonarQube ---------------"
+              env.JAVA_HOME = "/usr/lib/jvm/jdk-17.0.13"
               sh """
-              su etendo
-              cd ${REPO_NAME}
-              ./gradlew sonar -Dsonar.inclusions=**/*.java -Dsonar.exclusions=${sourceExclusions} --stacktrace --info
+                apt-get update && apt-get install -y wget unzip
+                wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}-linux.zip
+                unzip sonar-scanner-cli-${SONAR_VERSION}-linux.zip
+                export PATH=\$PATH:\${WORKSPACE}/sonar-scanner-${SONAR_VERSION}-linux/bin
+              """
+
+              echo '-------------------------- Executing SonarQube Analysis --------------------------'
+              sh """
+                cd ${REPO_NAME}
+                ${WORKSPACE}/sonar-scanner-${SONAR_VERSION}-linux/bin/sonar-scanner -X \
+                    -Dsonar.projectKey=${env.PROJECT_KEY} \
+                    -Dsonar.sources=${modules_src_dirs}src \
+                    -Dsonar.host.url=${SONAR_SERVER} \
+                    -Dsonar.token=${SONAR_TOKEN} \
+                    -Dsonar.branch.name=${GIT_BRANCH} \
+                    -Dsonar.projectVersion=${GIT_COMMIT} \
+                    -Dsonar.java.coveragePlugin=jacoco \
+                    -Dsonar.coverage.jacoco.xmlReportPaths=${JACOCO_REPORT} \
+                    -Dsonar.inclusions=**/*.java \
+                    -Dsonar.exclusions=${sourceExclusions}
               """
               echo "---------------------- Getting SonarQube Report URL ----------------------"
               def branchName = URLEncoder.encode(GIT_BRANCH, 'UTF-8')
@@ -538,6 +561,73 @@ spec:
     }
 
 // __________________________________________________________________________________________
+// ------------------------------ COMPARE COVERAGE RESULTS ----------------------------------
+    stage('Compare Coverage Results') { // MARK: - Compare Coverage Results
+      when {
+        expression {
+          currentBuild.result == SUCCESS && env.TESTS_EXIST == TRUE && PUSH_TYPE == IS_PUSH_BRANCH && 
+          env.JACOCO_REPORT_EXISTS == TRUE && !(env.COMMIT_BRANCH == env.MAIN_BRANCH || env.COMMIT_BRANCH.startsWith("release/"))
+        }
+      }
+      steps {
+        script {
+          try {
+            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Comparing Coverage Results\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+            def branchCurrent = URLEncoder.encode(GIT_BRANCH, 'UTF-8')
+            def branchCompare = env.MAIN_BRANCH
+            env.COMPARE_COVERAGE_STATUS = SUCCESS
+            if (CONTAINS_Y_SUFFIX == TRUE) {
+              branchCompare = env.BACKPORT_BRANCH
+            }
+            echo "-------------------------- Comparing Coverage with ${branchCompare} Branch --------------------------"
+
+            def rootDir = pwd()
+            def sonarUtils = load "${rootDir}/pipelines/sonarUtils.groovy"
+
+            // Only check commit on PR branches
+            def prBranchPattern = /^(feature|hotfix)\//
+            def checkCommitCurrent = branchCurrent ==~ prBranchPattern
+            def coverageCurrent = sonarUtils.getCoverageWithRetry(
+              branchCurrent,
+              checkCommitCurrent,
+              env.PROJECT_KEY,
+              SONAR_TOKEN,
+              SONAR_SERVER,
+              env.GIT_COMMIT
+            )
+            def coverageOriginBranch = sonarUtils.getCoverageWithRetry(
+              branchCompare,
+              false,
+              env.PROJECT_KEY,
+              SONAR_TOKEN,
+              SONAR_SERVER,
+              null
+            )
+
+            echo "Current branch (${env.GIT_COMMIT}) coverage: ${coverageCurrent}%"
+            echo "${branchCompare} branch coverage: ${coverageOriginBranch}%"
+            if (coverageCurrent < coverageOriginBranch) {
+              env.ERROR_MESSAGE = "Coverage (${coverageCurrent}%) is lower than ${branchCompare} branch (${coverageOriginBranch}%)"
+              echo "-------------------------- ${env.ERROR_MESSAGE} --------------------------"
+              currentBuild.result = UNSTABLE
+              env.COMPARE_COVERAGE_STATUS = FAILED
+              unstable(env.ERROR_MESSAGE)
+            } else {
+              echo "-------------------------- Coverage is OK --------------------------"
+              currentBuild.result = SUCCESS
+            }
+          } catch (Exception e) {
+            echo "Exception occurred: " + e.toString()
+            env.ERROR_MESSAGE = "Comparing Coverage Results Failed"
+            echo "-------------------------- ${env.ERROR_MESSAGE} --------------------------"
+            currentBuild.result = UNSTABLE
+            error(env.ERROR_MESSAGE)
+          }
+        }
+      }
+    }
+
+// __________________________________________________________________________________________
 // ----------------------------------- DEPLOY SNAPSHOT --------------------------------------
     stage('Run Deploy Snapshot') { // MARK: Run Deploy Snapshot
       when {
@@ -546,7 +636,7 @@ spec:
             branch 'develop'
           }
           expression {
-              env.STATUSTEST == "1"
+              env.STATUS_TEST == SUCCESS && env.STATUSBUILD == SUCCESS && env.JACOCO_REPORT_EXISTS == TRUE && env.COMPARE_COVERAGE_STATUS == SUCCESS
           }
         }
       }
@@ -589,104 +679,50 @@ spec:
             echo "--------------- DONE ---------------"
         }
     }
-    fixed {
-      mail to: EMAIL_ADDRESS,
-      subject: "✅ FIXED - ${currentBuild.fullDisplayName}",
-      mimeType: "text/html",
-      body:  """
-        <html>
-          <head>
-              <style>
-                  body { font-family: 'Arial', sans-serif; }
-                  .header { font-size: 16px; font-weight: bold; color: #333; }
-              </style>
-          </head>
-          <body>
-            <p><em>${new Date()}</em></p>
-            <p>__________________________________________________________</p>
-
-            <h2 class="header">✅ ERRORS FIXED ✅</h2>
-
-            ${env.COMMIT_INFO}
-
-            ${env.STACK_INFO}
-
-            <p>The problems found in the previous run/s have been fixed! 💪<br>Check out the output in the following link: ${env.BUILD_URL}</p>
-
-            <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-            <p>__________________________________________________________</p>
-          </body>
-        </html>
-      """
-    }
     unstable {
+      sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"Unstable Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
       script {
-        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"Unstable Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-            echo "--------------- UNSTABLE ---------------"
+        def rootDir = pwd()
+        def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
+        
+        echo "--------------- UNSTABLE ---------------"
+        def mailSubject = ""
+        def bodyMessageError = ""
+        def icon = "❗"
+        if (env.STATUS_TEST == FAILED) {
+          mailSubject = "Tests Failed"
+          bodyMessageError = "Tests have been detected that have failed in Etendo Core."
+          icon = "⚠️"
+        } else {
+          if (env.COMPARE_COVERAGE_STATUS == FAILED) {
+            mailSubject = "Coverage Decreased"
+            bodyMessageError = env.ERROR_MESSAGE
+            icon = "📉"
+          }
+        }
+        emailNotifier.sendParameterizedEmail(
+            mailSubject,
+            icon,
+            'Unstable',
+            bodyMessageError
+          )
+        
       }
-      mail to: EMAIL_ADDRESS,
-      subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
-      mimeType: "text/html",
-      body:  """
-        <html>
-          <head>
-              <style>
-                  body { font-family: 'Arial', sans-serif; }
-                  .header { font-size: 16px; font-weight: bold; color: #333; }
-              </style>
-          </head>
-          <body>
-            <p><em>${new Date()}</em></p>
-            <p>__________________________________________________________</p>
-
-            <h2 class="header">⚠️ BUILD UNSTABLE ⚠️</h2>
-
-            ${env.COMMIT_INFO}
-
-            ${env.STACK_INFO}
-
-            <p>Tests have been detected that have failed in Etendo Core.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
-
-            <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-            <p>__________________________________________________________</p>
-          </body>
-        </html>
-      """
     }
     failure {
       script {
         sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         echo "--------------- FAILURE ---------------"
+        def rootDir = pwd()
+        def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
+
+        emailNotifier.sendParameterizedEmail(
+          env.ERROR_MESSAGE,
+          '⛔',
+          'Failed',
+          env.ERROR_MESSAGE,
+        )
       }
-      mail to: EMAIL_ADDRESS,
-      subject: "⛔ ERROR - ${currentBuild.fullDisplayName}",
-      mimeType: "text/html",
-      body:  """
-        <html>
-          <head>
-              <style>
-                  body { font-family: 'Arial', sans-serif; }
-                  .header { font-size: 16px; font-weight: bold; color: #333; }
-              </style>
-          </head>
-          <body>
-            <p><em>${new Date()}</em></p>
-            <p>__________________________________________________________</p>
-
-            <h2 class="header">🚫 BUILD FAILED 🚫</h2>
-
-            ${env.COMMIT_INFO}
-
-            ${env.STACK_INFO}
-
-            <p><strong>⇢ Reasons:</strong> <em>${env.ERROR_MESSAGE}</em></p>
-            <p>To more information on the failing run visit: ${env.BUILD_URL}</p>
-
-            <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-            <p>__________________________________________________________</p>
-          </body>
-        </html>
-      """
     }
   }
 }
