@@ -135,7 +135,7 @@ spec:
               echo "---------------------- Setting up Environment Variables ----------------------"
               env.JACOCO_REPORT_EXISTS = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
               env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution. 
-              env.STATUSBUILD = SUCCESS // Variable to track the status of the build. 
+              env.STATUS_BUILD = SUCCESS // Variable to track the status of the build. 
               sh "printenv"
 
               echo "---------------- Stack Configuration ----------------"
@@ -239,7 +239,7 @@ spec:
               echo "Exception occurred: " + e.toString()
               currentBuild.result = FAILED
               error(env.ERROR_MESSAGE)
-              env.STATUSBUILD = FAILED
+              env.STATUS_BUILD = FAILED
               env.STATUS_TEST = FAILED
             }
           }
@@ -251,7 +251,7 @@ spec:
     stage ('Web Service Test Suite') { // MARK: Web Service Test Suite
       when {
         expression {
-          env.STATUSBUILD == "1"
+          env.STATUS_BUILD == SUCCESS
         }
       }
       steps {
@@ -299,7 +299,7 @@ spec:
     stage ('Core Test Suite') { // MARK: CoreTestSuite Test Suite
       when {
         expression {
-          env.STATUSBUILD == SUCCESS
+          env.STATUS_BUILD == SUCCESS
         }
       }
       steps {
@@ -345,7 +345,7 @@ spec:
     stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
       when {
         expression {
-          env.STATUSBUILD == SUCCESS
+          env.STATUS_BUILD == SUCCESS
         }
       }
       steps {
@@ -390,7 +390,7 @@ spec:
     stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Test
       when {
         expression {
-          env.STATUSBUILD == SUCCESS
+          env.STATUS_BUILD == SUCCESS
         }
       }
       steps {
@@ -641,7 +641,7 @@ spec:
             branch 'develop'
           }
           expression {
-              env.STATUS_TEST == SUCCESS && env.STATUSBUILD == SUCCESS && env.JACOCO_REPORT_EXISTS == TRUE && env.COMPARE_COVERAGE_STATUS == SUCCESS
+              env.STATUS_TEST == SUCCESS && env.STATUS_BUILD == SUCCESS && env.JACOCO_REPORT_EXISTS == TRUE && env.COMPARE_COVERAGE_STATUS == SUCCESS
           }
         }
       }

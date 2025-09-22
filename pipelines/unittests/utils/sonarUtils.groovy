@@ -35,6 +35,82 @@ def isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
 }
 
 /**
+ * Gets coverage for a specific commit analysis
+ * @param branch Branch name
+ * @param commitSha Specific commit SHA
+ * @param sonarProjectKey SonarQube project key
+ * @param sonarToken SonarQube API token
+ * @param sonarServer SonarQube server URL
+ * @return Coverage value as float, or -1 if not found
+ */
+def getCoverageForSpecificCommit(branch, commitSha, sonarProjectKey, sonarToken, sonarServer) {
+  try {
+    echo "🎯 Searching for coverage of specific commit ${commitSha} on branch '${branch}'"
+    
+    // Buscar análisis específico por commit
+    def analysisResp = sh(
+      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=50\"",
+      returnStdout: true
+    ).trim()
+    
+    def analysisJson = readJSON text: analysisResp
+    def analyses = analysisJson?.analyses ?: []
+    
+    def targetAnalysis = analyses.find { it.revision == commitSha }
+    
+    if (!targetAnalysis) {
+      echo "❌ No analysis found for commit ${commitSha} on branch '${branch}'"
+      return -1
+    }
+    
+    echo "✅ Found analysis for commit ${commitSha}: ${targetAnalysis.key} (date: ${targetAnalysis.date})"
+    
+    // Usar API de medidas históricas para obtener cobertura del análisis específico
+    def response = sh(
+      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/search_history?component=${sonarProjectKey}&metrics=coverage&from=${targetAnalysis.date}&to=${targetAnalysis.date}&ps=1\"",
+      returnStdout: true
+    ).trim()
+    
+    echo "📊 Historical measures response: ${response}"
+    def historyJson = readJSON text: response
+    
+    if (historyJson.measures && historyJson.measures.size() > 0) {
+      def coverageHistory = historyJson.measures.find { it.metric == 'coverage' }
+      if (coverageHistory && coverageHistory.history && coverageHistory.history.size() > 0) {
+        def historyEntry = coverageHistory.history[0]
+        def coverage = historyEntry.value.toFloat()
+        echo "📊 Coverage for commit ${commitSha}: ${coverage}% (from historical data)"
+        return coverage
+      }
+    }
+    
+    // Fallback: usar API normal pero advertir que puede no corresponder al commit específico
+    echo "⚠️ No historical data available, using current branch coverage (may not match specific commit)"
+    response = sh(
+      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
+      returnStdout: true
+    ).trim()
+    
+    def json = readJSON text: response
+    def measures = json?.component?.measures ?: []
+    def coverageMeasure = measures.find { it.metric == 'coverage' }
+    
+    if (coverageMeasure && coverageMeasure.value) {
+      def coverage = coverageMeasure.value.toFloat()
+      echo "📊 Coverage for commit ${commitSha}: ${coverage}%"
+      return coverage
+    }
+    
+    echo "❌ No coverage data found for commit ${commitSha}"
+    return -1
+    
+  } catch (Exception e) {
+    echo "❌ Error getting coverage for commit ${commitSha}: ${e.getMessage()}"
+    return -1
+  }
+}
+
+/**
  * Gets the total number of analyses for a branch
  * @param branch Branch name to check
  * @param sonarProjectKey SonarQube project key
@@ -84,37 +160,167 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
   }
   
   for (int attempt = 0; attempt < maxRetries; attempt++) {
+    echo "🔍 Attempt ${attempt + 1}/${maxRetries} - Retrieving analysis data for branch '${branch}'..."
+    
     def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}\"",
+      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=5\"",
       returnStdout: true
     ).trim()
-    def analysisJson = readJSON text: analysisResp
-    def lastAnalysis = analysisJson?.analyses ? analysisJson.analyses[0] : null
-    def lastRevision = lastAnalysis?.revision ?: null
-    echo "Last analysis revision for branch '${branch}': ${lastRevision}"
-    echo "Current git commit: ${gitCommit}"
     
-    if (!checkCommit || (lastRevision && lastRevision == gitCommit)) {
-      def response = sh(
+    echo "📊 Analysis API response: ${analysisResp}"
+    def analysisJson = readJSON text: analysisResp
+    def analyses = analysisJson?.analyses ?: []
+    
+    if (analyses.size() == 0) {
+      echo "❌ No analyses found for branch '${branch}' on attempt ${attempt + 1}"
+      if (isFirstAnalysis) {
+        echo "⏳ First analysis - waiting 2 minutes before retry..."
+        sleep(time: 2, unit: 'MINUTES')
+      } else {
+        echo "⏳ Waiting 40 seconds before retry..."
+        sleep(time: 40, unit: 'SECONDS')
+      }
+      continue
+    }
+    
+    // Mostrar información de todos los análisis recientes para debugging
+    echo "📋 Recent analyses for branch '${branch}':"
+    analyses.eachWithIndex { analysis, index ->
+      def analysisDate = analysis.date ?: 'N/A'
+      def analysisRevision = analysis.revision ?: 'N/A'
+      def analysisKey = analysis.key ?: 'N/A'
+      echo "  ${index + 1}. Date: ${analysisDate}, Revision: ${analysisRevision}, Key: ${analysisKey}"
+    }
+    
+    def targetAnalysis = null
+    
+    if (checkCommit && gitCommit) {
+      // Buscar análisis específico por commit
+      targetAnalysis = analyses.find { it.revision == gitCommit }
+      if (targetAnalysis) {
+        echo "✅ Found analysis matching commit ${gitCommit}: ${targetAnalysis.key}"
+      } else {
+        echo "❌ No analysis found matching commit ${gitCommit}"
+        echo "🔍 Available commits in recent analyses: ${analyses.collect { it.revision }.join(', ')}"
+        
+        if (isFirstAnalysis) {
+          echo "⏳ First analysis - commit might still be processing. Waiting 2 minutes..."
+          sleep(time: 2, unit: 'MINUTES')
+        } else {
+          echo "⏳ Waiting 40 seconds for analysis to process..."
+          sleep(time: 40, unit: 'SECONDS')
+        }
+        continue
+      }
+    } else {
+      // Usar el análisis más reciente
+      targetAnalysis = analyses[0]
+      echo "🎯 Using most recent analysis: ${targetAnalysis.key} (revision: ${targetAnalysis.revision})"
+    }
+    
+    // Obtener cobertura usando el análisis específico
+    def response
+    
+    if (checkCommit && targetAnalysis) {
+      // Para análisis específico, usar la API de medidas históricas con el analysis key
+      echo "📊 Getting coverage for specific analysis: ${targetAnalysis.key}"
+      response = sh(
+        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/search_history?component=${sonarProjectKey}&metrics=coverage&from=${targetAnalysis.date}&to=${targetAnalysis.date}&ps=1\"",
+        returnStdout: true
+      ).trim()
+      
+      echo "📈 Historical coverage API response for analysis '${targetAnalysis.key}': ${response}"
+      def historyJson = readJSON text: response
+      
+      // Si no funciona la API histórica, intentar con measures/component pero verificando que coincida
+      if (!historyJson.measures || historyJson.measures.size() == 0) {
+        echo "⚠️ No historical data found, trying component measures API..."
+        response = sh(
+          script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
+          returnStdout: true
+        ).trim()
+        echo "📈 Fallback coverage API response: ${response}"
+      } else {
+        // Procesar respuesta histórica
+        def coverageHistory = historyJson.measures.find { it.metric == 'coverage' }
+        if (coverageHistory && coverageHistory.history && coverageHistory.history.size() > 0) {
+          def historyEntry = coverageHistory.history[0]
+          def covStr = historyEntry.value
+          echo "📊 Historical coverage value: '${covStr}' for date ${historyEntry.date}"
+          
+          if (covStr && covStr != "0" && covStr != "0.0") {
+            coverage = covStr.toFloat()
+            echo "✅ Coverage successfully retrieved from history for commit ${gitCommit}: ${coverage}%"
+            break
+          }
+        }
+        // Si no hay datos históricos válidos, continuar con el flujo normal
+        echo "⚠️ No valid historical coverage data, falling back to component API"
+        response = sh(
+          script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
+          returnStdout: true
+        ).trim()
+      }
+    } else {
+      // Para análisis más reciente, usar la API normal
+      echo "📊 Getting coverage for most recent analysis"
+      response = sh(
         script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
         returnStdout: true
       ).trim()
-      echo "SonarQube coverage API response for branch '${branch}': ${response}"
-      def json = readJSON text: response
-      def measures = json?.component?.measures ?: []
-      def covStr = measures.find { it.metric == 'coverage' }?.value
-      
-      if (covStr && covStr != "0" && covStr != "0.0") {
-        coverage = covStr.toFloat()
-        echo "✅ Coverage found for branch '${branch}': ${coverage}%"
-        break
+    }
+    
+    echo "📈 Coverage API response for branch '${branch}': ${response}"
+    def json = readJSON text: response
+    
+    // Verificar si la respuesta contiene el componente esperado
+    if (!json.component) {
+      echo "❌ No component data found in coverage response"
+      if (isFirstAnalysis) {
+        echo "⏳ First analysis - component might still be processing. Waiting 2 minutes..."
+        sleep(time: 2, unit: 'MINUTES')
       } else {
-        echo "Coverage is 0 or not available for branch '${branch}' (attempt ${attempt + 1}/${maxRetries}), waiting 40 seconds before retrying..."
+        echo "⏳ Waiting 40 seconds before retry..."
         sleep(time: 40, unit: 'SECONDS')
       }
-    } else if (checkCommit) {
-      echo "Latest analysis for branch '${branch}' does not match current commit (expected: ${gitCommit}, got: ${lastRevision}). Waiting 40 seconds before retrying..."
-      sleep(time: 40, unit: 'SECONDS')
+      continue
+    }
+    
+    def measures = json.component.measures ?: []
+    def coverageMeasure = measures.find { it.metric == 'coverage' }
+    
+    if (!coverageMeasure) {
+      echo "❌ No coverage metric found in measures"
+      echo "📊 Available metrics: ${measures.collect { it.metric }.join(', ')}"
+      if (isFirstAnalysis) {
+        echo "⏳ First analysis - coverage metric might still be calculating. Waiting 2 minutes..."
+        sleep(time: 2, unit: 'MINUTES')
+      } else {
+        echo "⏳ Waiting 40 seconds before retry..."
+        sleep(time: 40, unit: 'SECONDS')
+      }
+      continue
+    }
+    
+    def covStr = coverageMeasure.value
+    echo "📊 Raw coverage value: '${covStr}' (type: ${covStr?.class?.simpleName})"
+    
+    if (covStr && covStr != "0" && covStr != "0.0") {
+      coverage = covStr.toFloat()
+      echo "✅ Coverage successfully retrieved for branch '${branch}': ${coverage}%"
+      if (checkCommit) {
+        echo "🎯 Coverage corresponds to commit: ${gitCommit}"
+      }
+      break
+    } else {
+      echo "⚠️ Coverage is 0 or empty for branch '${branch}' (attempt ${attempt + 1}/${maxRetries})"
+      if (isFirstAnalysis) {
+        echo "⏳ First analysis - waiting 2 minutes before retry..."
+        sleep(time: 2, unit: 'MINUTES')
+      } else {
+        echo "⏳ Waiting 40 seconds before retry..."
+        sleep(time: 40, unit: 'SECONDS')
+      }
     }
   }
   if (coverage == -1) {
