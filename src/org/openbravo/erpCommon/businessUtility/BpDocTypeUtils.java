@@ -136,9 +136,9 @@ public final class BpDocTypeUtils {
       "where dt.isactive = 'Y' " +
       " and dt.isdefault = 'Y' " +
       " and dt.issotrx  = :isSO " +
-      " and dt.docbasetype = :dbt " +
-      " and AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) <> -1 " +
-      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc";
+      " and dt.docbasetype = :dbt " + 
+      "  and AD_ISORGINCLUDED(:orgId, dt.ad_org_id, dt.ad_client_id) <> -1 " +
+      "order by AD_ISORGINCLUDED(:orgId, dt.ad_org_id, dt.ad_client_id) asc";
     Query q = OBDal.getInstance().getSession()
       .createNativeQuery(sql)
       .setParameter("isSO", isSO ? "Y" : "N")
@@ -168,8 +168,8 @@ public final class BpDocTypeUtils {
       "    and bpd.issotrx = :isSO " +
       "    and bpd.documentcategory = :cat " +
       "    and bpd.c_doctype_id is not null " +
-      "    and AD_ISORGINCLUDED(bpd.ad_org_id, :orgId, bpd.ad_client_id) <> -1 " +
-      "  order by AD_ISORGINCLUDED(bpd.ad_org_id, :orgId, bpd.ad_client_id) asc";
+      "  and AD_ISORGINCLUDED(:orgId, bpd.ad_org_id, bpd.ad_client_id) <> -1 " +
+      "  order by AD_ISORGINCLUDED(:orgId, bpd.ad_org_id, bpd.ad_client_id) asc";
 
     Query q = OBDal.getInstance().getSession()
       .createNativeQuery(sql)
