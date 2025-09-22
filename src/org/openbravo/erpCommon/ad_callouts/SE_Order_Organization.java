@@ -24,7 +24,6 @@ import javax.servlet.ServletException;
 import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.filter.IsIDFilter;
@@ -34,11 +33,11 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.utility.CashVATUtil;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.ui.Field;
-import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.common.enterprise.OrgWarehouse;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
@@ -61,7 +60,12 @@ public class SE_Order_Organization extends SimpleCallout {
                 IsIDFilter.instance);
         final String strBPartnerLocationId = info.getStringParameter(
                 "inpcBpartnerLocationId", IsIDFilter.instance);
-
+        
+        boolean isSales = StringUtils.equals("Y", strinpissotrx);
+        if (StringUtils.isNotBlank(strBPartnerId)) {
+          BpDocTypeUtils.applyOrderDocType(info, strOrgId, strBPartnerId, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+        }
+        
         info.addResult("inpiscashvat",
                 CashVATUtil.isCashVAT(strinpissotrx, strOrgId, strBPartnerId,
                         strBPartnerLocationId));
