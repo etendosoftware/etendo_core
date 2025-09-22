@@ -91,6 +91,9 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
     def analysisJson = readJSON text: analysisResp
     def lastAnalysis = analysisJson?.analyses ? analysisJson.analyses[0] : null
     def lastRevision = lastAnalysis?.revision ?: null
+    echo "Last analysis revision for branch '${branch}': ${lastRevision}"
+    echo "Current git commit: ${gitCommit}"
+    
     if (!checkCommit || (lastRevision && lastRevision == gitCommit)) {
       def response = sh(
         script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",

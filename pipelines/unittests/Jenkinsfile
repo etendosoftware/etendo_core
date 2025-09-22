@@ -1,7 +1,4 @@
 pipeline {
-  options {
-    disableConcurrentBuilds()
-  }
 
   environment { // MARK: Environment variables
     // gradle.properties variables
