@@ -58,8 +58,9 @@
       <foreign-key foreignTable="AD_ORG" name="C_BPARTNER_DOCTYPE_ORG">
         <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
       </foreign-key>
-      <index name="CBPDOCTYPE_UNIQ_ACTIVE" unique="true">
+      <index name="CBPDOCTYPE_UNIQ_ACTIVE_ORG" unique="true">
         <index-column name="AD_CLIENT_ID"/>
+        <index-column name="AD_ORG_ID"/>
         <index-column name="C_BPARTNER_ID"/>
         <index-column name="DOCUMENTCATEGORY"/>
         <index-column name="ISSOTRX"/>
