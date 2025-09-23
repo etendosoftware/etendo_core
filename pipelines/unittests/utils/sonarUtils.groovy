@@ -29,7 +29,7 @@ def isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
     }
   } catch (Exception e) {
     echo "Error checking first analysis status for branch '${branch}': ${e.getMessage()}"
-    // En caso de error, asumimos que no es el primer análisis para ser conservadores
+    // In case of error, we assume it's not the first analysis to be conservative
     return false
   }
 }
@@ -47,7 +47,7 @@ def getCoverageForSpecificCommit(branch, commitSha, sonarProjectKey, sonarToken,
   try {
     echo "🎯 Searching for coverage of specific commit ${commitSha} on branch '${branch}'"
     
-    // Buscar análisis específico por commit
+    // Search for specific analysis by commit
     def analysisResp = sh(
       script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=50\"",
       returnStdout: true
@@ -65,7 +65,7 @@ def getCoverageForSpecificCommit(branch, commitSha, sonarProjectKey, sonarToken,
     
     echo "✅ Found analysis for commit ${commitSha}: ${targetAnalysis.key} (date: ${targetAnalysis.date})"
     
-    // Usar API de medidas históricas para obtener cobertura del análisis específico
+    // Use historical measures API to get coverage for the specific analysis
     def response = sh(
       script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/search_history?component=${sonarProjectKey}&metrics=coverage&from=${targetAnalysis.date}&to=${targetAnalysis.date}&ps=1\"",
       returnStdout: true
@@ -84,7 +84,7 @@ def getCoverageForSpecificCommit(branch, commitSha, sonarProjectKey, sonarToken,
       }
     }
     
-    // Fallback: usar API normal pero advertir que puede no corresponder al commit específico
+    // Fallback: use normal API but warn that it may not correspond to the specific commit
     echo "⚠️ No historical data available, using current branch coverage (may not match specific commit)"
     response = sh(
       script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
@@ -151,12 +151,18 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
   int maxRetries = 4
   float coverage = -1
   
-  def isFirstAnalysis = isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer)
-  
-  if (isFirstAnalysis) {
-    echo "🆕 This is the FIRST analysis for branch '${branch}' - waiting 10 minutes for SonarQube to process the analysis..."
-    sleep(time: 10, unit: 'MINUTES')
-    echo "⏰ 10-minute wait completed. Proceeding with coverage retrieval..."
+  // Only check if it's the first analysis when we need a specific commit
+  def isFirstAnalysis = false
+  if (checkCommit) {
+    isFirstAnalysis = isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer)
+    
+    if (isFirstAnalysis) {
+      echo "🆕 This is the FIRST analysis for branch '${branch}' - waiting 10 minutes for SonarQube to process the analysis..."
+      sleep(time: 10, unit: 'MINUTES')
+      echo "⏰ 10-minute wait completed. Proceeding with coverage retrieval..."
+    }
+  } else {
+    echo "📊 Getting most recent coverage for branch '${branch}' (no commit verification needed)"
   }
   
   for (int attempt = 0; attempt < maxRetries; attempt++) {
@@ -173,7 +179,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
     
     if (analyses.size() == 0) {
       echo "❌ No analyses found for branch '${branch}' on attempt ${attempt + 1}"
-      if (isFirstAnalysis) {
+      if (checkCommit && isFirstAnalysis) {
         echo "⏳ First analysis - waiting 2 minutes before retry..."
         sleep(time: 2, unit: 'MINUTES')
       } else {
@@ -183,7 +189,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
       continue
     }
     
-    // Mostrar información de todos los análisis recientes para debugging
+    // Show information of all recent analyses for debugging
     echo "📋 Recent analyses for branch '${branch}':"
     analyses.eachWithIndex { analysis, index ->
       def analysisDate = analysis.date ?: 'N/A'
@@ -195,7 +201,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
     def targetAnalysis = null
     
     if (checkCommit && gitCommit) {
-      // Buscar análisis específico por commit
+      // Search for specific analysis by commit
       targetAnalysis = analyses.find { it.revision == gitCommit }
       if (targetAnalysis) {
         echo "✅ Found analysis matching commit ${gitCommit}: ${targetAnalysis.key}"
@@ -213,16 +219,16 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
         continue
       }
     } else {
-      // Usar el análisis más reciente
+      // Use the most recent analysis
       targetAnalysis = analyses[0]
       echo "🎯 Using most recent analysis: ${targetAnalysis.key} (revision: ${targetAnalysis.revision})"
     }
     
-    // Obtener cobertura usando el análisis específico
+    // Get coverage using the specific analysis
     def response
     
     if (checkCommit && targetAnalysis) {
-      // Para análisis específico, usar la API de medidas históricas con el analysis key
+      // For specific analysis, use historical measures API with the analysis key
       echo "📊 Getting coverage for specific analysis: ${targetAnalysis.key}"
       response = sh(
         script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/search_history?component=${sonarProjectKey}&metrics=coverage&from=${targetAnalysis.date}&to=${targetAnalysis.date}&ps=1\"",
@@ -232,7 +238,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
       echo "📈 Historical coverage API response for analysis '${targetAnalysis.key}': ${response}"
       def historyJson = readJSON text: response
       
-      // Si no funciona la API histórica, intentar con measures/component pero verificando que coincida
+      // If historical API doesn't work, try with measures/component but verify it matches
       if (!historyJson.measures || historyJson.measures.size() == 0) {
         echo "⚠️ No historical data found, trying component measures API..."
         response = sh(
@@ -241,7 +247,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
         ).trim()
         echo "📈 Fallback coverage API response: ${response}"
       } else {
-        // Procesar respuesta histórica
+        // Process historical response
         def coverageHistory = historyJson.measures.find { it.metric == 'coverage' }
         if (coverageHistory && coverageHistory.history && coverageHistory.history.size() > 0) {
           def historyEntry = coverageHistory.history[0]
@@ -254,7 +260,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
             break
           }
         }
-        // Si no hay datos históricos válidos, continuar con el flujo normal
+        // If there's no valid historical data, continue with normal flow
         echo "⚠️ No valid historical coverage data, falling back to component API"
         response = sh(
           script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
@@ -262,7 +268,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
         ).trim()
       }
     } else {
-      // Para análisis más reciente, usar la API normal
+      // For most recent analysis, use normal API
       echo "📊 Getting coverage for most recent analysis"
       response = sh(
         script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
@@ -273,7 +279,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
     echo "📈 Coverage API response for branch '${branch}': ${response}"
     def json = readJSON text: response
     
-    // Verificar si la respuesta contiene el componente esperado
+    // Verify if the response contains the expected component
     if (!json.component) {
       echo "❌ No component data found in coverage response"
       if (isFirstAnalysis) {

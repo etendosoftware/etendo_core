@@ -136,14 +136,15 @@ spec:
               env.JACOCO_REPORT_EXISTS = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
               env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution. 
               env.STATUS_BUILD = SUCCESS // Variable to track the status of the build. 
+              env.ERROR_MESSAGE = "Build failed"
               sh "printenv"
 
               echo "---------------- Stack Configuration ----------------"
               def rootDir = pwd()
               def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
 
-              sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
-              sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
+              sh "wget -O apache-tomcat.tar.gz ${TOMCAT_URL}"
+              sh "tar -xvf apache-tomcat.tar.gz -C ${WORKSPACE}"
 
               env.TOMCAT_FOLDER = stackConfig.getTomcatFolder()
               env.CATALINA_HOME = "${WORKSPACE}/${TOMCAT_FOLDER}"
@@ -231,7 +232,7 @@ spec:
                 """
               }
               sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh start"
-              sh "sleep 1m"
+              sleep(time: 1, unit: 'MINUTES')
               echo "--------------- Build Environment Successful ---------------"
             } catch (Exception e) {
               env.ERROR_MESSAGE = "Build Environment Failed"
@@ -465,9 +466,9 @@ spec:
             ./gradlew jacocoRootReport --info
             """
 
-            env.JACOCO_REPORT = "${REPO_NAME}/build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+            env.JACOCO_REPORT = "build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
 
-            if (fileExists("${JACOCO_REPORT}")) {
+            if (fileExists("${REPO_NAME}/${JACOCO_REPORT}")) {
               echo "---------------------- Jacoco Report Found ----------------------"
               env.JACOCO_REPORT_EXISTS = TRUE
             }
@@ -522,7 +523,7 @@ spec:
               def modules_src_dirs = sh(script: "cd ${REPO_NAME}/modules_core && find . -type d -name 'src' | grep -v 'src-util' | sed 's|./|modules_core/|' | tr '\n' ','", returnStdout: true).trim()
               echo "Modules with src directories: ${modules_src_dirs}"
 
-               echo "--------------- Installing SonarQube ---------------"
+              echo "--------------- Installing SonarQube ---------------"
               env.JAVA_HOME = "/usr/lib/jvm/jdk-17.0.13"
               sh """
                 apt-get update && apt-get install -y wget unzip
@@ -570,8 +571,7 @@ spec:
     stage('Compare Coverage Results') { // MARK: - Compare Coverage Results
       when {
         expression {
-          currentBuild.result == SUCCESS && env.TESTS_EXIST == TRUE && PUSH_TYPE == IS_PUSH_BRANCH &&
-          env.JACOCO_REPORT_EXISTS == TRUE && !(env.GIT_BRANCH == env.MAIN_BRANCH || env.GIT_BRANCH.startsWith("release/"))
+          currentBuild.result == SUCCESS && env.JACOCO_REPORT_EXISTS == TRUE && !(env.GIT_BRANCH == env.MAIN_BRANCH || env.GIT_BRANCH.startsWith("release/"))
         }
       }
       steps {
@@ -587,7 +587,7 @@ spec:
             echo "-------------------------- Comparing Coverage with ${branchCompare} Branch --------------------------"
 
             def rootDir = pwd()
-            def sonarUtils = load "${rootDir}/pipelines/sonarUtils.groovy"
+            def sonarUtils = load "${rootDir}/pipelines/unittests/utils/sonarUtils.groovy"
 
             // Only check commit on PR branches
             def prBranchPattern = /^(feature|hotfix)\//
@@ -685,7 +685,6 @@ spec:
         }
     }
     unstable {
-      sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"Unstable Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
       script {
         def rootDir = pwd()
         def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
@@ -708,7 +707,8 @@ spec:
           bodyMessageError = "The build is unstable. Please check the logs for more information."
           icon = "❗"
         }
-        
+        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${mailSubject}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+
         emailNotifier.sendParameterizedEmail(
           mailSubject,
           icon,
