@@ -3,7 +3,13 @@
 /**
  * Checks if this is the first analysis for a given branch
  * @param branch Branch name to check
- * @param sonarProjectKey SonarQube project key
+      // Use the analysis-specific API to get measures for this exact analysis
+      response = sh(
+        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&metricKeys=coverage&analysisId=${targetAnalysis.key}\"",
+        returnStdout: true
+      ).trim()
+      
+      echo "📈 Analysis-specific measures API response for ${targetAnalysis.key}: ${response}"am sonarProjectKey SonarQube project key
  * @param sonarToken SonarQube API token
  * @param sonarServer SonarQube server URL
  * @return true if this is the first analysis, false otherwise
@@ -11,7 +17,7 @@
 def isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
   try {
     def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=1\"",
+      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${encodedBranch}&ps=1\"",
       returnStdout: true
     ).trim()
     
@@ -35,108 +41,6 @@ def isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
 }
 
 /**
- * Gets coverage for a specific commit analysis
- * @param branch Branch name
- * @param commitSha Specific commit SHA
- * @param sonarProjectKey SonarQube project key
- * @param sonarToken SonarQube API token
- * @param sonarServer SonarQube server URL
- * @return Coverage value as float, or -1 if not found
- */
-def getCoverageForSpecificCommit(branch, commitSha, sonarProjectKey, sonarToken, sonarServer) {
-  try {
-    echo "🎯 Searching for coverage of specific commit ${commitSha} on branch '${branch}'"
-    
-    // Search for specific analysis by commit
-    def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=50\"",
-      returnStdout: true
-    ).trim()
-    
-    def analysisJson = readJSON text: analysisResp
-    def analyses = analysisJson?.analyses ?: []
-    
-    def targetAnalysis = analyses.find { it.revision == commitSha }
-    
-    if (!targetAnalysis) {
-      echo "❌ No analysis found for commit ${commitSha} on branch '${branch}'"
-      return -1
-    }
-    
-    echo "✅ Found analysis for commit ${commitSha}: ${targetAnalysis.key} (date: ${targetAnalysis.date})"
-    
-    // Use historical measures API to get coverage for the specific analysis
-    def response = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/search_history?component=${sonarProjectKey}&metrics=coverage&from=${targetAnalysis.date}&to=${targetAnalysis.date}&ps=1\"",
-      returnStdout: true
-    ).trim()
-    
-    echo "📊 Historical measures response: ${response}"
-    def historyJson = readJSON text: response
-    
-    if (historyJson.measures && historyJson.measures.size() > 0) {
-      def coverageHistory = historyJson.measures.find { it.metric == 'coverage' }
-      if (coverageHistory && coverageHistory.history && coverageHistory.history.size() > 0) {
-        def historyEntry = coverageHistory.history[0]
-        def coverage = historyEntry.value.toFloat()
-        echo "📊 Coverage for commit ${commitSha}: ${coverage}% (from historical data)"
-        return coverage
-      }
-    }
-    
-    // Fallback: use normal API but warn that it may not correspond to the specific commit
-    echo "⚠️ No historical data available, using current branch coverage (may not match specific commit)"
-    response = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
-      returnStdout: true
-    ).trim()
-    
-    def json = readJSON text: response
-    def measures = json?.component?.measures ?: []
-    def coverageMeasure = measures.find { it.metric == 'coverage' }
-    
-    if (coverageMeasure && coverageMeasure.value) {
-      def coverage = coverageMeasure.value.toFloat()
-      echo "📊 Coverage for commit ${commitSha}: ${coverage}%"
-      return coverage
-    }
-    
-    echo "❌ No coverage data found for commit ${commitSha}"
-    return -1
-    
-  } catch (Exception e) {
-    echo "❌ Error getting coverage for commit ${commitSha}: ${e.getMessage()}"
-    return -1
-  }
-}
-
-/**
- * Gets the total number of analyses for a branch
- * @param branch Branch name to check
- * @param sonarProjectKey SonarQube project key
- * @param sonarToken SonarQube API token
- * @param sonarServer SonarQube server URL
- * @return Number of analyses for the branch
- */
-def getAnalysisCountForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
-  try {
-    def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=500\"",
-      returnStdout: true
-    ).trim()
-    
-    def analysisJson = readJSON text: analysisResp
-    def totalCount = analysisJson?.paging?.total ?: 0
-    
-    echo "Branch '${branch}' has ${totalCount} total analyses"
-    return totalCount
-  } catch (Exception e) {
-    echo "Error getting analysis count for branch '${branch}': ${e.getMessage()}"
-    return 0
-  }
-}
-
-/**
  * Utility function to retrieve SonarQube coverage for a branch, with retry logic and commit verification.
  * @param branch Branch name to query coverage for
  * @param checkCommit Whether to verify the latest analysis matches the current commit
@@ -148,13 +52,14 @@ def getAnalysisCountForBranch(branch, sonarProjectKey, sonarToken, sonarServer) 
  * @throws error if coverage cannot be retrieved after max retries
  */
 def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonarServer, gitCommit) {
-  int maxRetries = 4
+  int maxRetries = 5
   float coverage = -1
-  
+  def encodedBranch = URLEncoder.encode(branch, "UTF-8")
+
   // Only check if it's the first analysis when we need a specific commit
   def isFirstAnalysis = false
   if (checkCommit) {
-    isFirstAnalysis = isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer)
+    isFirstAnalysis = isFirstAnalysisForBranch(encodedBranch, sonarProjectKey, sonarToken, sonarServer)
     
     if (isFirstAnalysis) {
       echo "🆕 This is the FIRST analysis for branch '${branch}' - waiting 10 minutes for SonarQube to process the analysis..."
@@ -169,7 +74,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
     echo "🔍 Attempt ${attempt + 1}/${maxRetries} - Retrieving analysis data for branch '${branch}'..."
     
     def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=5\"",
+      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${encodedBranch}&ps=5\"",
       returnStdout: true
     ).trim()
     
@@ -228,50 +133,55 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
     def response
     
     if (checkCommit && targetAnalysis) {
-      // For specific analysis, use historical measures API with the analysis key
+      // Method 1: Try to get measures directly from the specific analysis using its key
       echo "📊 Getting coverage for specific analysis: ${targetAnalysis.key}"
+      echo "🎯 Target analysis details: Date=${targetAnalysis.date}, Revision=${targetAnalysis.revision}"
+      
+      // First try: Get measures directly from analysis key (if API supports it)
       response = sh(
-        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/search_history?component=${sonarProjectKey}&metrics=coverage&from=${targetAnalysis.date}&to=${targetAnalysis.date}&ps=1\"",
+        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
         returnStdout: true
       ).trim()
       
-      echo "📈 Historical coverage API response for analysis '${targetAnalysis.key}': ${response}"
-      def historyJson = readJSON text: response
+      echo "� Component measures API response: ${response}"
+      def json = readJSON text: response
       
-      // If historical API doesn't work, try with measures/component but verify it matches
-      if (!historyJson.measures || historyJson.measures.size() == 0) {
-        echo "⚠️ No historical data found, trying component measures API..."
-        response = sh(
-          script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
-          returnStdout: true
-        ).trim()
-        echo "📈 Fallback coverage API response: ${response}"
-      } else {
-        // Process historical response
-        def coverageHistory = historyJson.measures.find { it.metric == 'coverage' }
-        if (coverageHistory && coverageHistory.history && coverageHistory.history.size() > 0) {
-          def historyEntry = coverageHistory.history[0]
-          def covStr = historyEntry.value
-          echo "📊 Historical coverage value: '${covStr}' for date ${historyEntry.date}"
+      // Check if we got valid data from the specific analysis
+      if (json.component && json.component.measures) {
+        def measures = json.component.measures
+        def coverageMeasure = measures.find { it.metric == 'coverage' }
+        
+        if (coverageMeasure) {
+          def covStr = coverageMeasure.value
+          echo "📊 Coverage from specific analysis ${targetAnalysis.key}: '${covStr}'"
           
           if (covStr && covStr != "0" && covStr != "0.0") {
             coverage = covStr.toFloat()
-            echo "✅ Coverage successfully retrieved from history for commit ${gitCommit}: ${coverage}%"
+            echo "✅ Coverage successfully retrieved from specific analysis ${targetAnalysis.key} for commit ${gitCommit}: ${coverage}%"
             break
+          } else {
+            echo "⚠️ Coverage is 0 for specific analysis ${targetAnalysis.key}"
           }
+        } else {
+          echo "❌ No coverage metric found in specific analysis ${targetAnalysis.key}"
+          echo "📊 Available metrics: ${measures.collect { it.metric }.join(', ')}"
         }
-        // If there's no valid historical data, continue with normal flow
-        echo "⚠️ No valid historical coverage data, falling back to component API"
+      } else {
+        echo "❌ No component data found for specific analysis ${targetAnalysis.key}"
+        echo "🔄 Falling back to branch-level measures..."
+        
+        // Fallback to normal branch API if analysis-specific fails
         response = sh(
-          script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
+          script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
           returnStdout: true
         ).trim()
+        echo "📈 Fallback branch measures API response: ${response}"
       }
     } else {
       // For most recent analysis, use normal API
       echo "📊 Getting coverage for most recent analysis"
       response = sh(
-        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
+        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
         returnStdout: true
       ).trim()
     }
@@ -333,7 +243,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
     if (!checkCommit) {
       // If it is the main branch and after the attempts the coverage is 0, return 0
       def response = sh(
-        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${branch}&metricKeys=coverage\"",
+        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&branch=${encodedBranch}&metricKeys=coverage\"",
         returnStdout: true
       ).trim()
       def json = readJSON text: response

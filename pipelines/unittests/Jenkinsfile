@@ -23,28 +23,26 @@ pipeline {
 
     REPO_NAME           = 'etendo_core'
 
-    SUCCESS             = "SUCCESS"
-    FAILED              = "FAILED"
-    UNSTABLE            = "UNSTABLE"
+    SUCCESS             = 'SUCCESS'
+    FAILED              = 'FAILED'
+    UNSTABLE            = 'UNSTABLE'
+    ABORTED             = 'ABORTED'
 
     // Stack
-    JAVA_HOME           = "/usr/lib/jvm/jdk-17.0.13"
-    TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz"
-    POSTGRES_VERSION    = "16"
+    JAVA_HOME           = '/usr/lib/jvm/jdk-17.0.13'
+    TOMCAT_URL          = 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz'
+    POSTGRES_VERSION    = '16'
 
-    CONTEXT_BUILD       = "Unit Tests with Postgres Database"
+    CONTEXT_BUILD       = 'Unit Tests with Postgres Database'
 
-    COMMIT_INPROGRESS_STATUS = "pending"
-    COMMIT_SUCCESS_STATUS    = "success"
-    COMMIT_FAILED_STATUS     = "failure"
+    COMMIT_INPROGRESS_STATUS = 'pending'
+    COMMIT_SUCCESS_STATUS    = 'success'
+    COMMIT_FAILED_STATUS     = 'failure'
 
-    SONAR_SERVER = "https://sonar.etendo.cloud"
-    SONAR_TOKEN  = credentials('sonar-token')
+    TRUE  = 'TRUE'
+    FALSE = 'FALSE'
 
-    TRUE  = "TRUE"
-    FALSE = "FALSE"
-
-    MAIN_BRANCH = "main"
+    MAIN_BRANCH = 'main'
   }
 
   agent { // MARK: Agent
@@ -81,10 +79,10 @@ spec:
           protocol: TCP
       resources:
         requests:
-          cpu: 1072m
+          cpu: 3072m
           memory: 4000Mi
         limits:
-          cpu: 2072m
+          cpu: 3072m
           memory: 6000Mi
       volumeMounts:
         - name: rsa-keys
@@ -125,7 +123,52 @@ spec:
   }
 
   stages { // MARK: Stages
+    stage('Check Pipeline Skip Condition') { // MARK: Check Pipeline Skip Condition
+      steps {
+        script {
+          try {
+            echo "--------------- Checking if pipeline should be skipped ---------------"
+            def changedFiles = sh(
+              script: "git diff --name-only HEAD~1 HEAD",
+              returnStdout: true
+            ).trim()
+            
+            echo "Files changed in last commit: ${changedFiles}"
+            
+            // Check if only JenkinsfileOracle was changed
+            def filesList = changedFiles.split('\n')
+            def onlyOracleJenkinsfile = filesList.size() == 1 && filesList[0] == "pipelines/unittests/JenkinsfileOracle"
+
+            if (onlyOracleJenkinsfile) {
+              echo "⏭️ Only pipelines/unittests/JenkinsfileOracle was changed. Skipping pipeline execution."
+
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+              
+              echo "✅ Pipeline execution aborted successfully. Commit marked as success."
+              currentBuild.result = ABORTED
+              return
+            } else {
+              echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
+              currentBuild.result = SUCCESS
+            }
+            
+          } catch (Exception e) {
+            echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
+            env.ERROR_MESSAGE = "Pipeline Check Failed"
+            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${env.ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+            currentBuild.result = FAILED
+            error("Failed to check pipeline skip condition: ${e.getMessage()}")
+          }
+        }
+      }
+    }
+    
     stage ('Build Environment') { // MARK: Build Environment
+      when {
+        expression {
+          currentBuild.result == SUCCESS
+        }
+      }
       steps {
         container('compiler') {
           script {
@@ -137,6 +180,8 @@ spec:
               env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution. 
               env.STATUS_BUILD = SUCCESS // Variable to track the status of the build. 
               env.ERROR_MESSAGE = "Build failed"
+              env.FAILED_SUITES = "" // List to collect failed test suites
+
               sh "printenv"
 
               echo "---------------- Stack Configuration ----------------"
@@ -261,17 +306,22 @@ spec:
           script {
             dir(REPO_NAME) {
               try {
-                echo "--------------- Running WebserviceTestSuite ---------------"
-                sh "./gradlew test --tests org.openbravo.test.WebserviceTestSuite --info"
+                def suiteName = "org.openbravo.test.WebserviceTestSuite"
+                echo "--------------- Running ${suiteName} ---------------"
+                sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test0.exec"
-                echo "--------------- WebserviceTestSuite Successful ---------------"
+                echo "--------------- ${suiteName} Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo "--------------- WebserviceTestSuite Failed ---------------"
+                env.ERROR_MESSAGE = "${suiteName} Failed"
+                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('WebservicesTestSuite Failed')
+                unstable(env.ERROR_MESSAGE)
                 env.STATUS_TEST = FAILED
+
+                def currentFailed = env.FAILED_SUITES ?: ""
+                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
               } finally {
                 if (fileExists("build/reports/tests/test/")) {
                   publishHTML([
@@ -308,17 +358,22 @@ spec:
           script {
             dir(REPO_NAME) {
               try {
-                echo "--------------- Running CoreTestSuite ---------------"
-                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
+                def suiteName = "com.smf.test.CoreTestSuite"
+                echo "--------------- Running ${suiteName} ---------------"
+                sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
-                echo "--------------- CoreTestSuite Successful ---------------"
+                echo "--------------- ${suiteName} Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo "--------------- CoreTestSuite Failed ---------------"
+                env.ERROR_MESSAGE = "${suiteName} Failed"
+                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('CoreTestSuite Failed')
+                unstable(env.ERROR_MESSAGE)
                 env.STATUS_TEST = FAILED
+
+                def currentFailed = env.FAILED_SUITES ?: ""
+                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
               } finally {
                 if (fileExists("build/reports/tests/test/")) {
                   publishHTML([
@@ -354,17 +409,22 @@ spec:
           script {
             dir(REPO_NAME) {
               try {
-                echo "--------------- Running StandaloneTestSuite ---------------"
-                sh "./gradlew test --tests org.openbravo.test.StandaloneTestSuite --info"
+                def suiteName = "org.openbravo.test.StandaloneTestSuite"
+                echo "--------------- Running ${suiteName} ---------------"
+                sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test2.exec"
-                echo "--------------- StandaloneTestSuite Successful ---------------"
+                echo "--------------- ${suiteName} Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo "--------------- StandaloneTestSuite Failed ---------------"
+                env.ERROR_MESSAGE = "${suiteName} Failed"
+                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('StandaloneTestSuite Failed')
+                unstable(env.ERROR_MESSAGE)
                 env.STATUS_TEST = FAILED
+                
+                def currentFailed = env.FAILED_SUITES ?: ""
+                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
               } finally {
                 if (fileExists("build/reports/tests/test/")) {
                   publishHTML([
@@ -399,18 +459,23 @@ spec:
           script {
             dir(REPO_NAME) {
               try {
-                echo "--------------- Running com.etendoerp.* Tests ---------------"
+                def suiteName = "com.etendoerp.*"
+                echo "--------------- Running ${suiteName} Tests ---------------"
                 sh "./gradlew test --tests \"com.etendoerp.*\" --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test3.exec"
                 sh "./gradlew --stop"
-                echo "--------------- com.etendoerp.* Tests Successful ---------------"
+                echo "--------------- ${suiteName} Tests Successful ---------------"
                 currentBuild.result = SUCCESS
               } catch (Exception e) {
-                echo "--------------- com.etendoerp.* Tests Failed ---------------"
+                env.ERROR_MESSAGE = "${suiteName} Tests Failed"
+                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                 echo 'Exception occurred: ' + e.toString()
                 currentBuild.result = UNSTABLE
-                unstable('com.etendoerp.* Tests failed!')
+                unstable(env.ERROR_MESSAGE)
                 env.STATUS_TEST = FAILED
+
+                def currentFailed = env.FAILED_SUITES ?: ""
+                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName} Tests" : "${currentFailed}, ${suiteName} Tests"
               } finally {
                 if (fileExists('build/spock-reports/')) {
                   publishHTML([
@@ -578,7 +643,6 @@ spec:
         script {
           try {
             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Comparing Coverage Results\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-            def branchCurrent = URLEncoder.encode(GIT_BRANCH, 'UTF-8')
             def branchCompare = env.MAIN_BRANCH
             env.COMPARE_COVERAGE_STATUS = SUCCESS
             if (CONTAINS_Y_SUFFIX == TRUE) {
@@ -590,10 +654,12 @@ spec:
             def sonarUtils = load "${rootDir}/pipelines/unittests/utils/sonarUtils.groovy"
 
             // Only check commit on PR branches
-            def prBranchPattern = /^(feature|hotfix)\//
-            def checkCommitCurrent = branchCurrent ==~ prBranchPattern
+            def checkCommitCurrent = GIT_BRANCH.startsWith('feature/') || 
+                                     GIT_BRANCH.startsWith('hotfix/') || 
+                                     GIT_BRANCH.startsWith('epic/')
+            echo "Check commit for current branch (${GIT_BRANCH}): ${checkCommitCurrent}"
             def coverageCurrent = sonarUtils.getCoverageWithRetry(
-              branchCurrent,
+              GIT_BRANCH,
               checkCommitCurrent,
               env.PROJECT_KEY,
               SONAR_TOKEN,
@@ -696,7 +762,11 @@ spec:
         
         if (env.STATUS_TEST == FAILED) {
           mailSubject = "Tests Failed"
-          bodyMessageError = "Tests have been detected that have failed in Etendo Core."
+          if (env.FAILED_SUITES && !env.FAILED_SUITES.isEmpty()) {
+              bodyMessageError = "Failed Test Suites: ${env.FAILED_SUITES}"
+          } else {
+              bodyMessageError = "Tests have been detected that have failed in Etendo Core."
+          }
           icon = "⚠️"
         } else if (env.COMPARE_COVERAGE_STATUS == FAILED) {
           mailSubject = "Coverage Decreased"
@@ -712,7 +782,7 @@ spec:
         emailNotifier.sendParameterizedEmail(
           mailSubject,
           icon,
-          'Unstable',
+          UNSTABLE,
           bodyMessageError
         )
       }
@@ -728,7 +798,7 @@ spec:
         emailNotifier.sendParameterizedEmail(
           env.ERROR_MESSAGE,
           '⛔',
-          'Failed',
+          FAILED,
           env.ERROR_MESSAGE
         )
       }

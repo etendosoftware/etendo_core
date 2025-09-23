@@ -14,9 +14,9 @@ def sendParameterizedEmail(String subject, String icon, String status, String me
   def timestamp = new Date().format("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("America/Argentina/Buenos_Aires"))
   
   def statusColors = [
-    'Unstable': '#FFA500', // Orange
-    'Failed':   '#FF0000'  // Red
-  ]  
+    'UNSTABLE': '#FFA500', // Orange
+    'FAILED':   '#FF0000'  // Red
+  ]
   def statusColor = statusColors[status] ?: '#333'
   
   def emailBody = """
