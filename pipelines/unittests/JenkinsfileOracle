@@ -134,6 +134,12 @@ spec:
             steps {
                 script {
                     try {
+                        echo "---------------------- Setting up Environment Variables ----------------------"
+                        env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution.
+                        env.STATUS_BUILD = SUCCESS // Variable to track the status of the build.
+                        env.FAILED_SUITES = "" // List to collect failed test suites
+                        sh 'printenv'
+
                         echo "--------------- Checking if pipeline should be skipped ---------------"
                         def changedFiles = sh(
                         script: "git diff --name-only HEAD~1 HEAD",
@@ -201,11 +207,6 @@ spec:
                     script {
                         try {
                             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build Environment\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-
-                            sh 'printenv'
-                            env.STATUS_TEST = SUCCESS // flag to indicate if any test failed
-                            env.STATUS_BUILD = SUCCESS
-                            env.FAILED_SUITES = "" // List to collect failed test suites
 
                             echo "---------------- Stack Configuration ----------------"
                             def rootDir = pwd()
