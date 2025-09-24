@@ -130,7 +130,7 @@ spec:
             echo "---------------------- Setting up Environment Variables ----------------------"
             env.JACOCO_REPORT_EXISTS = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
             env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution. 
-            env.STATUS_BUILD = SUCCESS // Variable to track the status of the build. 
+            env.STATUS_BUILD = FAILED // Variable to track the status of the build. 
             env.ERROR_MESSAGE = "Build Failed"
             env.FAILED_SUITES = "" // List to collect failed test suites
             sh "printenv"
