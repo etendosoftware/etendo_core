@@ -142,21 +142,36 @@ spec:
                         
                         echo "Files changed in last commit: ${changedFiles}"
                         
-                        // Check if only JenkinsfileOracle was changed
+                        // Check if only Jenkinsfile and/or sonarUtils.groovy were changed
                         def filesList = changedFiles.split('\n')
-                        def onlyJenkinsfile = filesList.size() == 1 && filesList[0] == "pipelines/unittests/Jenkinsfile"
-
-                        if (onlyJenkinsfile) {
-                        echo "⏭️ Only pipelines/unittests/Jenkinsfile was changed. Skipping pipeline execution."
-
-                        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                        def allowedFiles = [
+                            "pipelines/unittests/Jenkinsfile",
+                            "pipelines/unittests/utils/sonarUtils.groovy"
+                        ]
                         
-                        echo "✅ Pipeline execution aborted successfully. Commit marked as success."
-                        currentBuild.result = ABORTED
-                        return
+                        // Check if all changed files are in the allowed list
+                        def onlyAllowedFiles = filesList.every { file -> 
+                            allowedFiles.contains(file)
+                        }
+                        
+                        // Additionally check that at least one of the allowed files was changed
+                        def hasAllowedFiles = filesList.any { file -> 
+                            allowedFiles.contains(file)
+                        }
+
+                        if (onlyAllowedFiles && hasAllowedFiles) {
+                            echo "⏭️ Only Jenkinsfile and/or sonarUtils.groovy were changed. Skipping pipeline execution."
+                            echo "📋 Changed files: ${changedFiles}"
+
+                            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped - Only pipeline config files changed\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                            
+                            echo "✅ Pipeline execution aborted successfully. Commit marked as success."
+                            currentBuild.result = ABORTED
+                            return
                         } else {
-                        echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
-                        currentBuild.result = SUCCESS
+                            echo "✅ Pipeline will continue - Changes detected in other files."
+                            echo "📋 Changed files: ${changedFiles}"
+                            currentBuild.result = SUCCESS
                         }
                         
                     } catch (Exception e) {

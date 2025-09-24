@@ -143,7 +143,7 @@ def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonar
         returnStdout: true
       ).trim()
       
-      echo "� Component measures API response: ${response}"
+      echo "📈 Component measures API response: ${response}"
       def json = readJSON text: response
       
       // Check if we got valid data from the specific analysis
