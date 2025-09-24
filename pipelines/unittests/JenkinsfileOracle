@@ -136,7 +136,7 @@ spec:
                     try {
                         echo "---------------------- Setting up Environment Variables ----------------------"
                         env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution.
-                        env.STATUS_BUILD = SUCCESS // Variable to track the status of the build.
+                        env.STATUS_BUILD = FAILED // Variable to track the status of the build.
                         env.FAILED_SUITES = "" // List to collect failed test suites
                         sh 'printenv'
 
@@ -202,6 +202,11 @@ spec:
             }
         }
         stage('Build Environment') { // MARK: Build Environment
+            when {
+                expression {
+                    currentBuild.result == SUCCESS
+                }
+            }
             steps {
                 container('compiler') {
                     script {
@@ -256,6 +261,8 @@ spec:
                             sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh start"
                             sleep( time: 1, unit: 'MINUTES' ) // Wait additional 2 minutes to ensure Tomcat is fully started
                             echo 'Build of Etendo Core Finished'
+                            currentBuild.result = SUCCESS
+                            env.STATUS_BUILD = SUCCESS
                         } catch (Exception e) {
                             env.ERROR_MESSAGE = 'Build Environment Failed'
                             echo "Exception occurred: " + e.toString()
