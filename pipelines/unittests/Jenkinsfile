@@ -220,7 +220,7 @@ spec:
                   def branchParts = env.GIT_BRANCH.split('-Y')
                   if (branchParts.length == 2 && branchParts[1].length() == 4) {
                     def yearMonth = branchParts[1]
-                    def num1 = yearMonth.s  ubstring(0, 2)
+                    def num1 = yearMonth.substring(0, 2)
                     def num2 = yearMonth.substring(2, 4)
                     env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
                     echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"

@@ -1,9 +1,5 @@
 pipeline {
 
-    options {
-        disableConcurrentBuilds()
-    }
-
     environment {
         // gradle.properties variables
         CONTEXT_NAME        = 'etendo'
