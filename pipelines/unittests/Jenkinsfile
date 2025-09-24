@@ -277,6 +277,8 @@ spec:
               }
               sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh start"
               sleep(time: 1, unit: 'MINUTES')
+              currentBuild.result = SUCCESS
+              env.STATUS_BUILD = SUCCESS
               echo "--------------- Build Environment Successful ---------------"
             } catch (Exception e) {
               env.ERROR_MESSAGE = "Build Environment Failed"
@@ -516,7 +518,7 @@ spec:
     stage('Generate Coverage Report') { // MARK: Generate Coverage Report
       when {
         expression {
-          env.STATUS_TEST == SUCCESS
+          env.STATUS_TEST == SUCCESS && env.STATUS_BUILD == SUCCESS
         }
       }
       steps {
