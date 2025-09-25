@@ -137,6 +137,9 @@ OB.APRM.AddPayment.onLoad = function(view) {
     orgParam = null,
     bankStatementLineAmount = null,
     bankStatementLineId;
+    
+    form._mcShownPrev = false;
+    form._mcSyncedOnce = false;
   if (
     view &&
     view.callerField &&
@@ -265,6 +268,18 @@ OB.APRM.AddPayment.paymentMethodMulticurrency = function(
     form.getItem('converted_amount').visible = isShown;
     form.getItem('c_currency_to_id').visible = isShown;
     form.redraw();
+    
+    var becameVisible = isShown && !form._mcShownPrev;
+    if (!isShown) {
+      form._mcSyncedOnce = false;
+      form._mcPendingSyncMC = false;
+    }
+    currencyId = form.getItem('c_currency_id').getValue();
+    if (becameVisible) {
+      form._mcPendingSyncMC = true;
+      form._mcSyncedOnce = false;
+    }
+    form._mcShownPrev = isShown;
   };
 
   OB.RemoteCallManager.call(
@@ -399,13 +414,25 @@ OB.APRM.AddPayment.transactionTypeOnChangeFunction = function(
 };
 
 OB.APRM.AddPayment.actualPaymentOnChange = function(item, view, form, grid) {
+  form._mcActualTouched = true;
   var issotrx = form.getItem('issotrx').getValue();
   if (issotrx) {
     OB.APRM.AddPayment.distributeAmount(view, form, true);
     OB.APRM.AddPayment.updateConvertedAmount(view, form, false);
   }
+  if (form._pendingRecalcRateFromBSL) {
+    var act = new BigDecimal(String(form.getItem('actual_payment').getValue() || 0));
+    if (act.compareTo(BigDecimal.prototype.ZERO) > 0) {
+      form._bslApplying = true;
+      OB.APRM.AddPayment.updateConvertedAmount(null, form, true);
+      form._bslApplying = false;
+      form._pendingRecalcRateFromBSL = false;
+    }
+  }
+
   OB.APRM.AddPayment.applyBankAmountToConverted(form);
 };
+
 
 OB.APRM.AddPayment.orderInvoiceOnLoadGrid = function(grid) {
   var issotrx = this.view.theForm.getItem('issotrx').getValue(),
@@ -570,6 +597,14 @@ OB.APRM.AddPayment.distributeAmount = function(
     amount = amount.subtract(glitemamt);
     // add credit amount
     amount = amount.add(creditamt);
+    if (issotrx && OB.APRM.AddPayment.isMultiCurrency(form)) {
+      if (amount.compareTo(BigDecimal.prototype.ZERO) === 0) {
+        var exp = new BigDecimal(String(form.getItem('expected_payment').getValue() || 0));
+        if (exp.compareTo(BigDecimal.prototype.ZERO) > 0) {
+          amount = exp; 
+        }
+      }
+    }
 
     for (i = 0; i < total; i++) {
       if (
@@ -993,6 +1028,18 @@ OB.APRM.AddPayment.updateActualExpected = function(form) {
     OB.APRM.AddPayment.updateDifference(form);
     OB.APRM.AddPayment.updateConvertedAmount(null, form, false);
   }
+  if (form._mcSyncInProgress) {
+  } else if (form._mcPendingSyncMC && OB.APRM.AddPayment.isMultiCurrency(form)) {
+    var expNow = Number(form.getItem('expected_payment').getValue() || 0);
+    var actNow = Number(form.getItem('actual_payment').getValue() || 0);
+    if (expNow > 0 && (actNow === 0 || !form._mcActualTouched)) {
+      form._mcPendingSyncMC = false;
+      form._mcSyncInProgress = true;
+      OB.APRM.AddPayment.syncActualWithExpectedIfMC(form);
+      form._mcSyncInProgress = false;
+      form._mcSyncedOnce = true;
+    }
+  }
 
   // force redraw to ensure display logic is properly executed
   form.redraw();
@@ -1022,12 +1069,56 @@ OB.APRM.AddPayment.getConvertedAmount = function(
 };
 
 OB.APRM.AddPayment.applyBankAmountToConverted = function(form) {
+  if (!OB.APRM.AddPayment.hasBslAmount(form)) return;
   var bsl = new BigDecimal(String(form.getItem('bslamount').getValue() || 0));
-  var conv = form.getItem('converted_amount');
-  if (!conv) return;
+  var convItem = form.getItem('converted_amount');
+  if (!convItem) return;
   if (bsl.compareTo(BigDecimal.prototype.ZERO) === 0) return;
-  conv.setValue(Number(bsl.abs().toString()));
-  OB.APRM.AddPayment.updateConvertedAmount(null, form, true);
+  form._bslApplying = true;
+  convItem.setValue(Number(bsl.abs().toString()));
+  var act = new BigDecimal(String(form.getItem('actual_payment').getValue() || 0));
+  if (act.compareTo(BigDecimal.prototype.ZERO) > 0) {
+    OB.APRM.AddPayment.updateConvertedAmount(null, form, true);
+    form._pendingRecalcRateFromBSL = false;
+  } else {
+    form._pendingRecalcRateFromBSL = true;
+  }
+  form._bslApplying = false;
+};
+
+
+OB.APRM.AddPayment.hasBslAmount = function(form) {
+  var item = form.getItem('bslamount');
+  if (!item) {
+    return false;
+  }
+  var val = item.getValue();
+  if (val === null || val === undefined || val === '') {
+    return false;
+  }
+  var bd = new BigDecimal(String(val));
+  return bd.compareTo(BigDecimal.prototype.ZERO) !== 0;
+};
+
+OB.APRM.AddPayment.isMultiCurrency = function(form) {
+  var fromId = form.getItem('c_currency_id')?.getValue();
+  var toId   = form.getItem('c_currency_to_id')?.getValue();
+  return !!fromId && !!toId && fromId !== toId;
+};
+
+OB.APRM.AddPayment.syncActualWithExpectedIfMC = function(form) {
+  if (!OB.APRM.AddPayment.isMultiCurrency(form)) return;
+  var expected = Number(form.getItem('expected_payment').getValue() || 0);
+  form._mcAutoSync = true;
+  form.getItem('actual_payment').setValue(expected);
+  form._mcAutoSync = false;
+  form._mcActualTouched = false;
+  if (form.getItem('issotrx').getValue()) {
+    OB.APRM.AddPayment.distributeAmount(null, form, true);
+  }
+  OB.APRM.AddPayment.updateDifference(form);
+  OB.APRM.AddPayment.updateConvertedAmount(null, form, false);
+  OB.APRM.AddPayment.applyBankAmountToConverted(form);
 };
 
 OB.APRM.AddPayment.removeRecordClick = function(rowNum, record) {
@@ -1265,6 +1356,7 @@ OB.APRM.AddPayment.doSelectionChangedCredit = function(record, state, view) {
 };
 
 OB.APRM.AddPayment.conversionRateOnChange = function(item, view, form, grid) {
+  if (form._bslApplying) return;
   OB.APRM.AddPayment.updateConvertedAmount(view, form, false);
 };
 
