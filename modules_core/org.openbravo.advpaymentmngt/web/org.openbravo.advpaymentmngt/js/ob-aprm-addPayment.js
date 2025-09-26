@@ -1707,6 +1707,9 @@ OB.APRM.AddPayment.onProcess = function(
     amountInvOrds = new BigDecimal(
       String(view.theForm.getItem('amount_inv_ords').getValue() || 0)
     ),
+    amountGLItem = new BigDecimal(
+      String(view.theForm.getItem('amount_gl_items').getValue() || 0)
+    ),
     total = new BigDecimal(
       String(view.theForm.getItem('total').getValue() || 0)
     ),
@@ -1824,6 +1827,7 @@ OB.APRM.AddPayment.onProcess = function(
         actualPayment.compareTo(BigDecimal.prototype.ZERO) === 0 ||
         totalOustandingAmount.compareTo(BigDecimal.prototype.ZERO) === 0
     ) &&
+    amountGLItem.compareTo(BigDecimal.prototype.ZERO) === 0 &&
     view.parentWindow &&
     view.parentWindow.windowId &&
     !overpaymentAction

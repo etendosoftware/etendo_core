@@ -1,9 +1,5 @@
 pipeline {
 
-    options {
-        disableConcurrentBuilds()
-    }
-
     environment {
         // gradle.properties variables
         CONTEXT_NAME        = 'etendo'
@@ -24,21 +20,22 @@ pipeline {
         REPO_URL            = 'https://github.com/etendosoftware/etendo_core'
         REPO_NAME           = 'etendo_core'
 
-        SUCCESS             = "SUCCESS"
-        FAILED              = "FAILED"
-        UNSTABLE            = "UNSTABLE"
+        SUCCESS             = 'SUCCESS'
+        FAILED              = 'FAILED'
+        UNSTABLE            = 'UNSTABLE'
+        ABORTED             = 'ABORTED'
 
         // Stack
-        JAVA_HOME           = "/usr/lib/jvm/jdk-17.0.13"
-        TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz"
-        ORCL_VERSION        = "19c"
+        JAVA_HOME           = '/usr/lib/jvm/jdk-17.0.13'
+        TOMCAT_URL          = 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz'
+        ORCL_VERSION        = '19c'
 
-        CONTEXT_BUILD       = "Unit Tests with Oracle Database"
+        CONTEXT_BUILD       = 'Unit Tests with Oracle Database'
         ACCESS_TOKEN        = credentials('access_token_github')
 
-        COMMIT_INPROGRESS_STATUS = "pending"
-        COMMIT_SUCCESS_STATUS    = "success"
-        COMMIT_FAILED_STATUS     = "failure"
+        COMMIT_INPROGRESS_STATUS = 'pending'
+        COMMIT_SUCCESS_STATUS    = 'success'
+        COMMIT_FAILED_STATUS     = 'failure'
     }
 
     agent {
@@ -129,28 +126,95 @@ spec:
     }
 
     stages {
+        stage('Check Pipeline Skip Condition') { // MARK: Check Pipeline Skip Condition
+            steps {
+                script {
+                    try {
+                        echo "---------------------- Setting up Environment Variables ----------------------"
+                        env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution.
+                        env.STATUS_BUILD = FAILED // Variable to track the status of the build.
+                        env.FAILED_SUITES = "" // List to collect failed test suites
+                        sh 'printenv'
+
+                        echo "--------------- Checking if pipeline should be skipped ---------------"
+                        def changedFiles = sh(
+                        script: "git diff --name-only HEAD~1 HEAD",
+                        returnStdout: true
+                        ).trim()
+                        
+                        echo "Files changed in last commit: ${changedFiles}"
+                        
+                        // Check if only Jenkinsfile and/or sonarUtils.groovy were changed
+                        def filesList = changedFiles.split('\n')
+                        def allowedFiles = [
+                            "pipelines/unittests/Jenkinsfile",
+                            "pipelines/unittests/utils/sonarUtils.groovy"
+                        ]
+                        
+                        // Check if all changed files are in the allowed list
+                        def onlyAllowedFiles = filesList.every { file -> 
+                            allowedFiles.contains(file)
+                        }
+                        
+                        // Additionally check that at least one of the allowed files was changed
+                        def hasAllowedFiles = filesList.any { file -> 
+                            allowedFiles.contains(file)
+                        }
+
+                        if (onlyAllowedFiles && hasAllowedFiles) {
+                            echo "⏭️ Only Jenkinsfile and/or sonarUtils.groovy were changed. Skipping pipeline execution."
+                            echo "📋 Changed files: ${changedFiles}"
+
+                            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped - Only pipeline config files changed\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                            
+                            echo "✅ Pipeline execution aborted successfully. Commit marked as success."
+                            currentBuild.result = ABORTED
+                            return
+                        } else {
+                            echo "✅ Pipeline will continue - Changes detected in other files."
+                            echo "📋 Changed files: ${changedFiles}"
+                            currentBuild.result = SUCCESS
+                        }
+                        
+                    } catch (Exception e) {
+                        echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
+                        env.ERROR_MESSAGE = "Pipeline Check Failed"
+                        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${env.ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                        currentBuild.result = FAILED
+                        error("Failed to check pipeline skip condition: ${e.getMessage()}")
+                    }
+                }
+            }
+        }
         stage('Build Oracle DB (temporary stage) ') {
+            when {
+                expression {
+                  currentBuild.result == SUCCESS
+                }
+            }
             steps {
                 echo "--------------- Building Oracle DB ---------------"
-                sh "sleep 25m"
+                sleep( time: 25, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
             }
         }
         stage('Build Environment') { // MARK: Build Environment
+            when {
+                expression {
+                    currentBuild.result == SUCCESS
+                }
+            }
             steps {
                 container('compiler') {
                     script {
                         try {
-                            sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Starting Build Environment" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-
-                            sh 'printenv'
-                            echo 'Building Etendo Core'
+                            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build Environment\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
 
                             echo "---------------- Stack Configuration ----------------"
                             def rootDir = pwd()
                             def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
 
-                            sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
-                            sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
+                            sh "wget -O apache-tomcat.tar.gz ${TOMCAT_URL}"
+                            sh "tar -xvf apache-tomcat.tar.gz -C ${WORKSPACE}"
 
                             env.TOMCAT_FOLDER = stackConfig.getTomcatFolder()
                             env.CATALINA_HOME = "${WORKSPACE}/${TOMCAT_FOLDER}"
@@ -190,17 +254,17 @@ spec:
                                 ./gradlew smartbuild --info
                                 """
                             }
-                            sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
-                            sh "sleep 1m"
+                            sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh start"
+                            sleep( time: 1, unit: 'MINUTES' ) // Wait additional 2 minutes to ensure Tomcat is fully started
                             echo 'Build of Etendo Core Finished'
-                            env.STATUSTEST = "1" // flag to indicate if any test failed
-                            env.STATUSBUILD = "1"
+                            currentBuild.result = SUCCESS
+                            env.STATUS_BUILD = SUCCESS
                         } catch (Exception e) {
-                            echo 'Build of Etendo Core FAILED'
+                            env.ERROR_MESSAGE = 'Build Environment Failed'
                             echo "Exception occurred: " + e.toString()
                             currentBuild.result = FAILED
-                            error('Build Etendo Core FAILED!')
-                            env.STATUSBUILD = "0"
+                            error(env.ERROR_MESSAGE)
+                            env.STATUS_BUILD = FAILED
                         }
                     }
                 }
@@ -211,7 +275,7 @@ spec:
         stage ('Web Service Test Suite'){ // MARK: Web Service Test Suite
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
@@ -219,14 +283,20 @@ spec:
                     script {
                         dir(REPO_NAME) {
                             try {
-                                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-                                sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
+                                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                                def suiteName = "org.openbravo.test.WebserviceTestSuite"
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests ${suiteName} --info"
                             } catch (Exception e) {
-                                echo '....WEB SERVICES TESTS FAILED....'
+                                env.ERROR_MESSAGE = "${suiteName} Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Web Service Tests Failed')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
                             } finally {
                                 if (fileExists('build/reports/tests/test/')) {
                                     publishHTML([
@@ -242,7 +312,7 @@ spec:
                                 } else {
                                     echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
                                 }
-                                sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
+                                sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
                                 sh './gradlew --stop'
                             }
                         }
@@ -255,7 +325,7 @@ spec:
         stage ('Core Test Suite') { // MARK: com.smf.* Test Suite
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
@@ -263,15 +333,20 @@ spec:
                     script {
                         dir(REPO_NAME) {
                             try {
-                                echo "--------------- Running CoreTestSuite ---------------"
-                                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
-                                echo "--------------- CoreTestSuite Successful ---------------"
+                                def suiteName = "com.smf.test.CoreTestSuite"
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests ${suiteName} --info"
+                                echo "--------------- ${suiteName} Successful ---------------"
                             } catch (Exception e) {
-                                echo "--------------- CoreTestSuite Failed ---------------"
+                                env.ERROR_MESSAGE = "${suiteName} Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('CoreTestSuite Failed')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
                             } finally {
                                 if (fileExists("build/reports/tests/test/")) {
                                     publishHTML([
@@ -298,7 +373,7 @@ spec:
         stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
@@ -306,13 +381,19 @@ spec:
                     script {
                         dir(REPO_NAME) {
                             try {
-                                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info'
+                                def suiteName = "org.openbravo.test.StandaloneTestSuite"
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests \"${suiteName}\" --info"
                             } catch (Exception e) {
-                                echo '....STANDALONE TESTS FAILED....'
+                                env.ERROR_MESSAGE = "${suiteName} Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Standalone Tests Failed!')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
                             }  finally {
                                 if (fileExists('build/reports/tests/test/')) {
                                     publishHTML([
@@ -339,7 +420,7 @@ spec:
         stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Tests
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
@@ -347,13 +428,19 @@ spec:
                     script {
                         dir(REPO_NAME) {
                             try {
-                                sh './gradlew test --tests "com.etendoerp.*" --info'
+                                def suiteName = "com.etendoerp.*"
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests \"${suiteName}\" --info"
                             } catch (Exception e) {
-                                echo '....com.etendoerp.* TESTS FAILED....'
+                                env.ERROR_MESSAGE = "${suiteName} Tests Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('com.etendoerp.* Tests failed!')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName} Tests" : "${currentFailed}, ${suiteName} Tests"
                             }  finally {
                                 if (fileExists('build/spock-reports/')) {
                                     publishHTML([
@@ -408,104 +495,46 @@ spec:
         }
         success {
             script {
-                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_SUCCESS_STATUS "Successful Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Successful Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
             }
-        }
-        fixed {
-            mail to: EMAIL_ADDRESS,
-            subject: "✅ FIXED - ${currentBuild.fullDisplayName}",
-            mimeType: "text/html",
-            body:  """
-              <html>
-                <head>
-                    <style>
-                        body { font-family: 'Arial', sans-serif; }
-                        .header { font-size: 16px; font-weight: bold; color: #333; }
-                    </style>
-                </head>
-                <body>
-                  <p><em>${new Date()}</em></p>
-                  <p>__________________________________________________________</p>
-
-                  <h2 class="header">✅ ERRORS FIXED ✅</h2>
-
-                  ${env.COMMIT_INFO}
-
-                  ${env.STACK_INFO}
-
-                  <p>The problems found in the previous run/s have been fixed! 💪<br>Check out the output in the following link: ${env.BUILD_URL}</p>
-
-                  <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-                  <p>__________________________________________________________</p>
-                </body>
-              </html>
-            """
         }
         unstable {
             script {
-                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Failed Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+                env.ERROR_MESSAGE = "Tests Suites Failed"
+                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"Failed Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                def rootDir = pwd()
+                def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
+
+                def failedSuitesMessage = ""
+                if (env.FAILED_SUITES && !env.FAILED_SUITES.isEmpty()) {
+                    failedSuitesMessage = "Failed Test Suites: ${env.FAILED_SUITES}"
+                } else {
+                    failedSuitesMessage = "Tests have been detected that have failed in Etendo Core."
+                }
+
+                emailNotifier.sendParameterizedEmail(
+                    env.ERROR_MESSAGE,
+                    '⚠️',
+                    UNSTABLE,
+                    failedSuitesMessage
+                )
             }
-            mail to: EMAIL_ADDRESS,
-            subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
-            mimeType: "text/html",
-            body:  """
-              <html>
-                <head>
-                    <style>
-                        body { font-family: 'Arial', sans-serif; }
-                        .header { font-size: 16px; font-weight: bold; color: #333; }
-                    </style>
-                </head>
-                <body>
-                  <p><em>${new Date()}</em></p>
-                  <p>__________________________________________________________</p>
-
-                  <h2 class="header">⚠️ BUILD UNSTABLE ⚠️</h2>
-
-                  ${env.COMMIT_INFO}
-
-                  ${env.STACK_INFO}
-
-                  <p>Tests have been detected that have failed in Etendo Core.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
-
-                  <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-                  <p>__________________________________________________________</p>
-                </body>
-              </html>
-            """
         }
         failure {
             script {
-                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Build Failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${env.ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                echo "--------------- FAILURE ---------------"
+        
+                def rootDir = pwd()
+                def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
+
+                emailNotifier.sendParameterizedEmail(
+                    env.ERROR_MESSAGE,
+                    '🚫',
+                    FAILED,
+                    env.ERROR_MESSAGE
+                )
             }
-            mail to: EMAIL_ADDRESS,
-            subject: "🚫 ERROR IN ${currentBuild.fullDisplayName}",
-            mimeType: "text/html",
-            body:  """
-              <html>
-                <head>
-                    <style>
-                        body { font-family: 'Arial', sans-serif; }
-                        .header { font-size: 16px; font-weight: bold; color: #333; }
-                    </style>
-                </head>
-                <body>
-                  <p><em>${new Date()}</em></p>
-                  <p>__________________________________________________________</p>
-
-                  <h2 class="header">🚫 BUILD FAILED 🚫</h2>
-
-                  ${env.COMMIT_INFO}
-
-                  ${env.STACK_INFO}
-
-                  <p>The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
-
-                  <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-                  <p>__________________________________________________________</p>
-                </body>
-              </html>
-            """
         }
     }
 }
