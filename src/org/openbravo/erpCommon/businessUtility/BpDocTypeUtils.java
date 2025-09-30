@@ -11,6 +11,9 @@ import org.openbravo.model.common.enterprise.DocumentType;
  * for a given Business Partner within a specific Organization and flow (Sales/Purchase).
  */
 public final class BpDocTypeUtils {
+  private static final String ORG = "orgId";
+  private static final String ISSO = "isSO";
+  private static final String DBT = "dbt";
 
   private BpDocTypeUtils() {}
 
@@ -122,7 +125,12 @@ public final class BpDocTypeUtils {
     if (StringUtils.isBlank(orgId) || category == null) {
       return null;
     }
-    return runDefaultDocTypeQuery(orgId, isSO, category.docBaseType(isSO));
+    final String dbt = category.docBaseType(isSO);
+    String id = runDefaultDocTypeQuery(orgId, isSO, dbt);
+    if (id != null) {
+      return id;
+    }
+    return runFirstMatchingDocTypeQuery(orgId, isSO, dbt);
   }
 
   /**
@@ -136,19 +144,52 @@ public final class BpDocTypeUtils {
       "where dt.isactive = 'Y' " +
       " and dt.isdefault = 'Y' " +
       " and dt.issotrx  = :isSO " +
-      " and dt.docbasetype = :dbt " +
-      " and AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) <> -1 " +
-      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc";
+      " and dt.docbasetype = :dbt " + 
+      "  and AD_ISORGINCLUDED(:orgId, dt.ad_org_id, dt.ad_client_id) <> -1 " +
+      "order by AD_ISORGINCLUDED(:orgId, dt.ad_org_id, dt.ad_client_id) asc";
     Query q = OBDal.getInstance().getSession()
       .createNativeQuery(sql)
-      .setParameter("isSO", isSO ? "Y" : "N")
-      .setParameter("dbt", docBaseType)
-      .setParameter("orgId", orgId)
+      .setParameter(ISSO, isSO ? "Y" : "N")
+      .setParameter(DBT, docBaseType)
+      .setParameter(ORG, orgId)
       .setMaxResults(1);
     Object id = q.uniqueResult();
     return id == null ? null : id.toString();
   }
 
+  /**
+   * Returns the first active {@code C_DocType_ID} that matches the given flow and DocBaseType,
+   * walking the organization tree from the given context organization and prioritizing:
+   * @param orgId context Organization ID ({@code AD_Org_ID}) used to evaluate org hierarchy;
+   *   must not be blank.
+   * @param isSO {@code true} for sales flow, {@code false} for purchase flow; filters
+   *   by {@code dt.issotrx}.
+   * @param docBaseType target DocBaseType (e.g., {@code "SOO"}, {@code "POO"}, {@code "ARI"}, {@code "API"},
+   *   {@code "MMS"}, {@code "MMR"}); filters by {@code dt.docbasetype}.
+   * @return the selected {@code C_DocType_ID} as a String, or {@code null} if none matches
+   */
+  protected static String runFirstMatchingDocTypeQuery(String orgId, boolean isSO, String docBaseType) {
+    final String sql =
+      "select dt.c_doctype_id " +
+      "from c_doctype dt " +
+      "where dt.isactive = 'Y' " +
+      "  and dt.issotrx = :isSO " +
+      "  and dt.docbasetype = :dbt " +
+      "  and AD_ISORGINCLUDED(:orgId, dt.ad_org_id, dt.ad_client_id) <> -1 " +
+      "order by AD_ISORGINCLUDED(dt.ad_org_id, :orgId, dt.ad_client_id) asc, " +
+      "  lower(trim(dt.name)) asc, " +
+      "  coalesce(dt.isdefault,'N') desc, " +
+      "  dt.c_doctype_id asc";
+    Query q = OBDal.getInstance().getSession()
+      .createNativeQuery(sql)
+      .setParameter(ISSO, isSO ? "Y" : "N")
+      .setParameter(DBT, docBaseType)
+      .setParameter(ORG, orgId)
+      .setMaxResults(1);
+    Object id = q.uniqueResult();
+    return id == null ? null : id.toString();
+  }
+  
   /**
    * Resolves the Business Partner–specific document type by walking the organization
    * hierarchy, using {@code AD_ISORGINCLUDED} to prefer the closest applicable record.
@@ -168,15 +209,15 @@ public final class BpDocTypeUtils {
       "    and bpd.issotrx = :isSO " +
       "    and bpd.documentcategory = :cat " +
       "    and bpd.c_doctype_id is not null " +
-      "    and AD_ISORGINCLUDED(bpd.ad_org_id, :orgId, bpd.ad_client_id) <> -1 " +
-      "  order by AD_ISORGINCLUDED(bpd.ad_org_id, :orgId, bpd.ad_client_id) asc";
+      "  and AD_ISORGINCLUDED(:orgId, bpd.ad_org_id, bpd.ad_client_id) <> -1 " +
+      "  order by AD_ISORGINCLUDED(:orgId, bpd.ad_org_id, bpd.ad_client_id) asc";
 
     Query q = OBDal.getInstance().getSession()
       .createNativeQuery(sql)
       .setParameter("bpId", bpId)
-      .setParameter("isSO", isSO ? "Y" : "N")
+      .setParameter(ISSO, isSO ? "Y" : "N")
       .setParameter("cat", categoryCode)
-      .setParameter("orgId", orgId)
+      .setParameter(ORG, orgId)
       .setMaxResults(1);
     Object id = q.uniqueResult();
     return id == null ? null : id.toString();

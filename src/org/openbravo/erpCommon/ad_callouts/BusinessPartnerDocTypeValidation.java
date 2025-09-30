@@ -16,6 +16,9 @@ public class BusinessPartnerDocTypeValidation extends SimpleCallout {
   private static final String DOCUMENTCATEGORY = "inpdocumentcategory";
   // Input name for the Sales Transaction.
   private static final String ISSOTRX = "inpissotrx";
+  // Input name for the Organization.
+  private static final String ORG = "inpadOrgId"; 
+
 
   /**
    * Handles the on-change event for the bound fields and clears the target selector.
@@ -25,7 +28,7 @@ public class BusinessPartnerDocTypeValidation extends SimpleCallout {
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
     String last = info.getLastFieldChanged();
-    if (StringUtils.equals(ISSOTRX, last) || StringUtils.equals(DOCUMENTCATEGORY, last)) {
+    if (StringUtils.equals(ISSOTRX, last) || StringUtils.equals(DOCUMENTCATEGORY, last) || StringUtils.equals(ORG, last)) {
       info.addResult(DOCTYPE, "");
       info.addResult(DOCTYPE + "_R", "");
     }
