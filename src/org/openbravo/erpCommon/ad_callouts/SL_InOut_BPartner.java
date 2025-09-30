@@ -27,6 +27,7 @@ import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.businessUtility.BpartnerMiscData;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -63,6 +64,9 @@ public class SL_InOut_BPartner extends SimpleCallout {
       }
     }
 
+    boolean isSales = StringUtils.equals("Y", strIsSOTrx);
+    BpDocTypeUtils.applyShipmentDocType(info, strOrgId, strBPartner, isSales, "inpcDoctypeId", "inpcDoctypeId_R");
+    
     // Business Partner Location
     FieldProvider[] tdv = null;
     try {
