@@ -49,6 +49,10 @@
         <default/>
         <onCreateDefault/>
       </column>
+      <column name="ISFORCEAUTOMATION" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
       <foreign-key foreignTable="C_BPARTNER" name="C_BPARTNER_DOCTYPE_BPARTNER">
         <reference local="C_BPARTNER_ID" foreign="C_BPARTNER_ID"/>
       </foreign-key>
@@ -66,6 +70,7 @@
         <index-column name="ISSOTRX"/>
         <whereClause><![CDATA[ISACTIVE='Y']]></whereClause>
       </index>
+      <check name="ISFORCEAUTOMATION"><![CDATA[ISFORCEAUTOMATION IN ('Y', 'N')]]></check>
       <check name="ISSOTRX"><![CDATA[ISSOTRX IN ('Y', 'N')]]></check>
     </table>
   </database>
