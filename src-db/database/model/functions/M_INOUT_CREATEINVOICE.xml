@@ -209,8 +209,16 @@
           WHERE C_CURRENCY_ID = v_C_Currency_ID;
           
           v_ResultStr:='GetDocTypeInfo';
-          v_DocType_ID:=Ad_Get_Doctype(CUR_Shipment.AD_Client_ID, CUR_Shipment.AD_Org_ID, 'API') ;
-          --
+		  v_DocType_ID := public.c_bp_get_doctype(
+		    CUR_Shipment.AD_Client_ID,
+		    CUR_Shipment.AD_Org_ID,
+		    CUR_Shipment.C_BPartner_ID,
+		    'API',
+		    'Y'
+		  );
+          IF v_DocType_ID IS NULL THEN
+            v_DocType_ID := Ad_Get_Doctype(CUR_Shipment.AD_Client_ID, CUR_Shipment.AD_Org_ID, 'API');
+          END IF;          --
           Ad_Sequence_Next('C_Invoice', CUR_Shipment.AD_Client_ID, v_Invoice_ID) ;
           Ad_Sequence_Doctype(v_DocType_ID, CUR_Shipment.AD_Client_ID, 'Y', v_DocumentNo) ;
           IF(v_DocumentNo IS NULL) THEN
