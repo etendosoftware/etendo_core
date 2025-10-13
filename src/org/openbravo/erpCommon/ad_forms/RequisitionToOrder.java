@@ -829,7 +829,7 @@ public class RequisitionToOrder extends HttpSecureAppServlet {
    */
   private String resolvePurchaseDocTypeSafe(String orgId, String bpId) {
     try {
-      return new BpDocTypeResolver().resolveId(orgId, bpId, "POO", false);
+      return new BpDocTypeResolver().resolveId(orgId, bpId, "POO", true);
     } catch (Exception e) {
       log4j.warn("Could not resolve C_DocType for purchase order; falling back to org default. "
         + "org=" + orgId + ", bp=" + bpId, e);
