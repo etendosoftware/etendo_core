@@ -32,7 +32,6 @@ import java.util.List;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.type.YesNoType;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -284,7 +283,8 @@ public class DalMappingGenerator implements OBSingleton {
       type = p.getHibernateType().getName();
     }
     if (p.isBoolean()) {
-      type = YesNoType.class.getName();
+      // Hibernate 6 uses logical type name "yes_no" instead of YesNoType class
+      type = "yes_no";
     }
     sb.append(" type=\"" + type + "\"");
 

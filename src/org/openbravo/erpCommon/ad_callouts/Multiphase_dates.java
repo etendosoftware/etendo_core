@@ -22,7 +22,7 @@ package org.openbravo.erpCommon.ad_callouts;
 import java.text.ParseException;
 import java.util.Date;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;

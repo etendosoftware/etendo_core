@@ -252,7 +252,7 @@ public class EntityXMLConverter implements OBNotSingleton {
       if (dataScroller != null) {
         int cnt = 0;
         while (dataScroller.next()) {
-          export((BaseOBObject) dataScroller.get(0), false);
+          export((BaseOBObject) dataScroller.get(), false);
           getOutput().flush();
           if ((cnt++ % 100) == 0) {
             // before clearing the session make sure that all added

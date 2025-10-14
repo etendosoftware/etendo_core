@@ -21,14 +21,14 @@ package org.openbravo.event;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -105,8 +105,8 @@ class RoleEventHandler extends EntityPersistenceEventObserver {
 
       OBCriteria<Organization> criteria = OBDal.getInstance().createCriteria(Organization.class);
       criteria.setFilterOnActive(false);
-      criteria.add(Restrictions.eq(Organization.PROPERTY_CLIENT, role.getClient()));
-      criteria.add(Restrictions.ne(Organization.PROPERTY_ID, "0"));
+      criteria.addEqual(Organization.PROPERTY_CLIENT, role.getClient());
+      criteria.addNotEqual(Organization.PROPERTY_ID, "0");
       ScrollableResults scroll = criteria.scroll(ScrollMode.FORWARD_ONLY);
       try {
         while (scroll.next()) {
@@ -123,7 +123,7 @@ class RoleEventHandler extends EntityPersistenceEventObserver {
     // Organization level: Orgs (but *) [isOrgAdmin=Y]
     else if (StringUtils.equals(role.getUserLevel(), "  O")) {
       OBCriteria<Organization> criteria = OBDal.getInstance().createCriteria(Organization.class);
-      criteria.add(Restrictions.eq(Organization.PROPERTY_CLIENT, role.getClient()));
+      criteria.addEqual(Organization.PROPERTY_CLIENT, role.getClient());
       criteria.setFilterOnActive(false);
       ScrollableResults scroll = criteria.scroll(ScrollMode.FORWARD_ONLY);
       try {

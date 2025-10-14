@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import com.etendoerp.redis.interfaces.CachedConcurrentMap;
 import org.apache.logging.log4j.LogManager;

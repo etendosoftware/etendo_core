@@ -18,7 +18,7 @@
  */
 package org.openbravo.erpCommon.modules;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

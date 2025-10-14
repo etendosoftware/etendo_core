@@ -20,7 +20,7 @@ package org.openbravo.service.datasource;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Defines the method to be executed if a fetch request contains a filterClass parameter. The class

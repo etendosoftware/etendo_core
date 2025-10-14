@@ -1,11 +1,19 @@
 package com.etendoerp.reportvaluationstock.handler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import net.sf.jasperreports.engine.JRDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.domaintype.DateDomainType;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -39,7 +47,7 @@ import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.DecimalFormat;

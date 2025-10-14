@@ -19,9 +19,9 @@ package org.openbravo.role.inheritance.access;
 
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.structure.InheritedAccessEnabled;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -90,13 +90,12 @@ public class AlertRecipientAccessInjector extends AccessTypeInjector {
     final OBCriteria<AlertRecipient> obCriteria = OBDal.getInstance()
         .createCriteria(AlertRecipient.class);
     obCriteria
-        .add(Restrictions.eq(AlertRecipient.PROPERTY_ALERTRULE, alertRecipient.getAlertRule()));
-    obCriteria.add(Restrictions.eq(AlertRecipient.PROPERTY_ROLE, alertRecipient.getRole()));
+        .addEqual(AlertRecipient.PROPERTY_ALERTRULE, alertRecipient.getAlertRule());
+    obCriteria.addEqual(AlertRecipient.PROPERTY_ROLE, alertRecipient.getRole());
     if (alertRecipient.getUserContact() == null) {
-      obCriteria.add(Restrictions.isNull(AlertRecipient.PROPERTY_USERCONTACT));
+      obCriteria.addIsNull(AlertRecipient.PROPERTY_USERCONTACT);
     } else {
-      obCriteria.add(
-          Restrictions.eq(AlertRecipient.PROPERTY_USERCONTACT, alertRecipient.getUserContact()));
+      obCriteria.addEqual(AlertRecipient.PROPERTY_USERCONTACT, alertRecipient.getUserContact());
     }
     obCriteria.setMaxResults(1);
     return (obCriteria.list().size() > 0);

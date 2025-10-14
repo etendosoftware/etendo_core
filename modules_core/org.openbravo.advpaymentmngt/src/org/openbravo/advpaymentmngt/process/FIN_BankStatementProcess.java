@@ -19,12 +19,20 @@
 
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Date;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.secureApp.VariablesSecureApp;

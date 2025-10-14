@@ -19,6 +19,14 @@
 
 package org.openbravo.erpCommon.utility;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -26,12 +34,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;

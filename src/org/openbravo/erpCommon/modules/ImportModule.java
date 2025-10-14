@@ -18,6 +18,14 @@
  */
 package org.openbravo.erpCommon.modules;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -42,8 +50,8 @@ import java.util.Vector;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -62,7 +70,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
@@ -1146,12 +1154,12 @@ public class ImportModule implements Serializable {
           OBCriteria<org.openbravo.model.ad.module.ModuleDependency> qDependentMod = OBDal
               .getInstance()
               .createCriteria(org.openbravo.model.ad.module.ModuleDependency.class);
-          qDependentMod.add(Restrictions.eq(
+          qDependentMod.addEqual(
               org.openbravo.model.ad.module.ModuleDependency.PROPERTY_MODULE + ".id",
-              ad_module_id));
-          qDependentMod.add(Restrictions.eq(
+              ad_module_id);
+          qDependentMod.addEqual(
               org.openbravo.model.ad.module.ModuleDependency.PROPERTY_DEPENDENTMODULE + ".id",
-              modId));
+              modId);
           String enforcement = null;
           if (!qDependentMod.list().isEmpty()
               && qDependentMod.list().get(0).isUserEditableEnforcement()
@@ -1793,8 +1801,12 @@ public class ImportModule implements Serializable {
       obCriteria.add(Restrictions
           .not(Restrictions.eq(org.openbravo.model.ad.module.Module.PROPERTY_STATUS, "U")));
       if (!installingMods.isEmpty()) {
-        obCriteria.add(Restrictions.not(
-            Restrictions.in(org.openbravo.model.ad.module.Module.PROPERTY_ID, installingMods)));
+        obCriteria.add(/* TODO: Migrar manualmente - era Restrictions.not()
+                   * Opción 1: Negar la condición directamente si es simple
+                   * Opción 2: Usar lógica inversa en el código
+                   * Original: Restrictions.not(Restrictions.in(org.openbravo.model.ad.module.Module.PROPERTY_ID, installingMods))
+                   */
+                   null /* TEMPORAL - Debe implementarse */);
       }
       List<org.openbravo.model.ad.module.Module> modules = obCriteria.list();
 

@@ -20,7 +20,7 @@ package org.openbravo.client.application.window;
 
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

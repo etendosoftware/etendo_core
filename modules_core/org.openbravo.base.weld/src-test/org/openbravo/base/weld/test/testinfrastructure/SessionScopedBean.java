@@ -21,7 +21,7 @@ package org.openbravo.base.weld.test.testinfrastructure;
 
 import java.io.Serializable;
 
-import javax.enterprise.context.SessionScoped;
+import jakarta.enterprise.context.SessionScoped;
 
 /** Simple session scoped bean */
 @SuppressWarnings("serial")

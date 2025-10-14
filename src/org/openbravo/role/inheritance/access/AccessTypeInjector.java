@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.util.AnnotationLiteral;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.util.AnnotationLiteral;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -341,7 +341,7 @@ public abstract class AccessTypeInjector implements Comparable<AccessTypeInjecto
   /**
    * Defines the qualifier used to register an access type.
    */
-  @javax.inject.Qualifier
+  @jakarta.inject.Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.TYPE })
   public @interface Qualifier {

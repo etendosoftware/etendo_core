@@ -18,7 +18,7 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;

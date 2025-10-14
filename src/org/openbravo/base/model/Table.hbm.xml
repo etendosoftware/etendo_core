@@ -26,15 +26,15 @@
             <generator class="org.openbravo.base.session.DalUUIDGenerator" />
 		</id>
 		
-		<property name="active" type="org.openbravo.base.session.OBYesNoType" not-null="true" column="isactive"/>				
+		<property name="active" type="yes_no" not-null="true" column="isactive"/>				
 		<property name="name" not-null="true"/>
 
 		<property name="className"/>
 		
         <property name="dataOrigin" type="string" not-null="true" column="dataorigintype"/>
 		<property name="tableName"/>
-		<property name="view" type="org.openbravo.base.session.OBYesNoType" column="isview"/>
-		<property name="deletable" type="org.openbravo.base.session.OBYesNoType" column="isdeleteable"/>
+		<property name="view" type="yes_no" column="isview"/>
+		<property name="deletable" type="yes_no" column="isdeleteable"/>
 		<property name="accessLevel" column="accesslevel"/>
                 		
 		<many-to-one name="thePackage" not-null="true" class="org.openbravo.base.model.Package" column="ad_package_id"/>

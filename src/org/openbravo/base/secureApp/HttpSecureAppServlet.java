@@ -22,16 +22,16 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationManager;
 import org.openbravo.base.HttpBaseServlet;
@@ -607,7 +607,7 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
     HttpSession session = request.getSession(false);
     if (session != null) {
       // finally invalidate the session (this event will be caught by the session listener
-      session.invalidate();
+      request.logout();
     }
   }
 
@@ -627,7 +627,7 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
     HttpSession session = request.getSession(false);
     if (session != null) {
       // finally invalidate the session (this event will be caught by the session listener
-      session.invalidate();
+      request.logout();
     }
     OBContext.setOBContext((OBContext) null);
 
@@ -938,8 +938,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         Tab tab = OBDal.getInstance().get(Tab.class, id);
         if (tab != null) {
           OBCriteria<WindowTrl> qtTrl = OBDal.getInstance().createCriteria(WindowTrl.class);
-          qtTrl.add(Restrictions.eq(WindowTrl.PROPERTY_WINDOW, tab.getWindow()));
-          qtTrl.add(Restrictions.eq(WindowTrl.PROPERTY_LANGUAGE + ".language", language));
+          qtTrl.addEqual(WindowTrl.PROPERTY_WINDOW, tab.getWindow());
+          qtTrl.addEqual(WindowTrl.PROPERTY_LANGUAGE + ".language", language);
           if (qtTrl.list().size() != 0) {
             return qtTrl.list().get(0).getName();
           } else {
@@ -948,8 +948,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         }
       } else if ("X".equals(type)) {
         OBCriteria<FormTrl> qfTrl = OBDal.getInstance().createCriteria(FormTrl.class);
-        qfTrl.add(Restrictions.eq(FormTrl.PROPERTY_SPECIALFORM + ".id", id));
-        qfTrl.add(Restrictions.eq(FormTrl.PROPERTY_LANGUAGE + ".language", language));
+        qfTrl.addEqual(FormTrl.PROPERTY_SPECIALFORM + ".id", id);
+        qfTrl.addEqual(FormTrl.PROPERTY_LANGUAGE + ".language", language);
         if (qfTrl.list().size() != 0) {
           return qfTrl.list().get(0).getName();
         }
@@ -960,8 +960,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         }
       } else if ("R".endsWith(type) || "P".equals(type)) {
         OBCriteria<ProcessTrl> qfTrl = OBDal.getInstance().createCriteria(ProcessTrl.class);
-        qfTrl.add(Restrictions.eq(ProcessTrl.PROPERTY_PROCESS + ".id", id));
-        qfTrl.add(Restrictions.eq(ProcessTrl.PROPERTY_LANGUAGE + ".language", language));
+        qfTrl.addEqual(ProcessTrl.PROPERTY_PROCESS + ".id", id);
+        qfTrl.addEqual(ProcessTrl.PROPERTY_LANGUAGE + ".language", language);
         if (qfTrl.list().size() != 0) {
           return qfTrl.list().get(0).getName();
         }

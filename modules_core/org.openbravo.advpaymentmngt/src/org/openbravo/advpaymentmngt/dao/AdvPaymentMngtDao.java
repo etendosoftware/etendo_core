@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.dao;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,10 +39,13 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
+import jakarta.persistence.criteria.Predicate;
+import org.hibernate.criterion.// TODO: Migrar // TODO: Migrar 
+ DetachedCriteria a subquery con CriteriaBuilder manualmente
+ DetachedCriteria a subquery con CriteriaBuilder manualmente
+DetachedCriteria;
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.APRMPendingPaymentFromInvoice;
@@ -733,8 +744,7 @@ public class AdvPaymentMngtDao {
       PaymentDirection paymentDirection) {
     final OBCriteria<FIN_PaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FIN_PaymentMethod.class);
-    obc.add(Restrictions.in("organization.id",
-        OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
+    obc.add(root.get("organization.id").in(OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
     obc.setFilterOnReadableOrganization(false);
 
     Set<String> payMethods = new HashSet<>();
@@ -760,8 +770,7 @@ public class AdvPaymentMngtDao {
         final OBCriteria<FinAccPaymentMethod> obcExc = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
         obcExc.createAlias(FinAccPaymentMethod.PROPERTY_ACCOUNT, "acc");
-        obcExc.add(Restrictions.in("acc.organization.id",
-            OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
+        obcExc.add(root.get("acc.organization.id").in(OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
         obcExc.setFilterOnReadableOrganization(false);
         for (FinAccPaymentMethod fapm : obcExc.list()) {
           payMethods.add(fapm.getPaymentMethod().getId());
@@ -818,9 +827,10 @@ public class AdvPaymentMngtDao {
       List<String> paymentMethodsToRemove = paymentMethods.subList(batchIni,
           Math.min(batchIni + batchSize, paymentMethodsSize));
       if (compoundExp == null) {
-        compoundExp = Restrictions.in("id", paymentMethodsToRemove);
+        compoundExp = root.get("id").in(paymentMethodsToRemove);
       } else {
-        compoundExp = Restrictions.or(compoundExp, Restrictions.in("id", paymentMethodsToRemove));
+        // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
+compoundExp = Restrictions.or(compoundExp, root.get("id").in(paymentMethodsToRemove));
       }
       batchIni += batchSize;
     }
@@ -833,8 +843,7 @@ public class AdvPaymentMngtDao {
       String strOrgId, String strCurrencyId, PaymentDirection paymentDirection) {
     final OBCriteria<FIN_FinancialAccount> obc = OBDal.getInstance()
         .createCriteria(FIN_FinancialAccount.class, "acc");
-    obc.add(Restrictions.in("organization.id",
-        OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
+    obc.add(root.get("organization.id").in(OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
     obc.setFilterOnReadableOrganization(false);
 
     Currency requiredCurrency = null;
@@ -853,7 +862,8 @@ public class AdvPaymentMngtDao {
       requiredCurrency = OBDal.getInstance().get(Currency.class, strCurrencyId);
       obc.add(
           Restrictions.or(Restrictions.eq(FIN_FinancialAccount.PROPERTY_CURRENCY, requiredCurrency),
-              Subqueries.exists(multiCurrAllowed.setProjection(Projections.id()))));
+              Subqueries.exists(multiCurrAllowed.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+Projections.id()))));
     }
 
     if (strPaymentMethodId != null && !strPaymentMethodId.isEmpty()) {
@@ -929,9 +939,9 @@ public class AdvPaymentMngtDao {
     private void refresh() {
       // finAccs size must be > 0
       if (compoundexp == null) {
-        compoundexp = Restrictions.in("id", finAccs);
+        compoundexp = root.get("id").in(finAccs);
       } else {
-        compoundexp = Restrictions.or(compoundexp, Restrictions.in("id", finAccs));
+        compoundexp = Restrictions.or(compoundexp, root.get("id").in(finAccs));
       }
       finAccs = new ArrayList<>();
     }
@@ -1075,8 +1085,7 @@ public class AdvPaymentMngtDao {
           .get(FIN_FinancialAccount.class, financialAccountId);
 
       OBCriteria<FIN_Payment> obcPayment = OBDal.getInstance().createCriteria(FIN_Payment.class);
-      obcPayment.add(Restrictions.in("organization.id",
-          OBContext.getOBContext()
+      obcPayment.add(root.get("organization.id").in(OBContext.getOBContext()
               .getOrganizationStructureProvider()
               .getParentTree(organizationId, true)));
       obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_STATUS, "RPAE"));
@@ -1322,8 +1331,7 @@ public class AdvPaymentMngtDao {
       obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_CURRENCY, currency));
       obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_RECEIPT, isReceipt));
       obcFinPayment.add(Restrictions.le(FIN_Payment.PROPERTY_PAYMENTDATE, toDate));
-      obcFinPayment.add(Restrictions.in("organization.id",
-          OBContext.getOBContext()
+      obcFinPayment.add(root.get("organization.id").in(OBContext.getOBContext()
               .getOrganizationStructureProvider()
               .getNaturalTree(organization.getId())));
       obcFinPayment.addOrderBy(FIN_Payment.PROPERTY_PAYMENTDATE, true);

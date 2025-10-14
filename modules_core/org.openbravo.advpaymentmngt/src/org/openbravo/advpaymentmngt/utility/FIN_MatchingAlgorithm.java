@@ -21,7 +21,7 @@ package org.openbravo.advpaymentmngt.utility;
 
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;

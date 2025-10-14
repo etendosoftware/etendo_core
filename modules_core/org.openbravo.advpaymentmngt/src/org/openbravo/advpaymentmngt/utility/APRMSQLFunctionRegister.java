@@ -22,7 +22,7 @@ package org.openbravo.advpaymentmngt.utility;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;

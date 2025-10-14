@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
@@ -96,8 +96,8 @@ public class ManageVariantsDS extends ReadOnlyDataSourceService {
 
       OBCriteria<ProductCharacteristic> prChCrit = OBDal.getInstance()
           .createCriteria(ProductCharacteristic.class);
-      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, product));
-      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_VARIANT, true));
+      prChCrit.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, product);
+      prChCrit.addEqual(ProductCharacteristic.PROPERTY_VARIANT, true);
       prChCrit.addOrderBy(ProductCharacteristic.PROPERTY_SEQUENCENUMBER, true);
       List<ProductCharacteristic> prChs = prChCrit.list();
       int chNumber = prChs.size();
@@ -112,7 +112,7 @@ public class ManageVariantsDS extends ReadOnlyDataSourceService {
         OBCriteria<ProductCharacteristicConf> prChConfCrit = OBDal.getInstance()
             .createCriteria(ProductCharacteristicConf.class);
         prChConfCrit
-            .add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh));
+            .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh);
         List<ProductCharacteristicConf> prChConfs = prChConfCrit.list();
         long valuesCount = prChConfs.size();
 

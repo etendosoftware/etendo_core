@@ -25,11 +25,11 @@ import java.io.Writer;
 import java.net.URLEncoder;
 import java.util.Map;
 
-import javax.mail.internet.MimeUtility;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.mail.internet.MimeUtility;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;

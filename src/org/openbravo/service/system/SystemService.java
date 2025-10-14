@@ -37,7 +37,7 @@ import org.apache.ddlutils.model.Database;
 import org.apache.ddlutils.platform.ExcludeFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -91,7 +91,7 @@ public class SystemService implements OBSingleton {
     for (Class<?> clz : clzs) {
       @SuppressWarnings("unchecked")
       final OBCriteria<?> obc = OBDal.getInstance().createCriteria((Class<BaseOBObject>) clz);
-      obc.add(Restrictions.gt(Organization.PROPERTY_UPDATED, afterDate));
+      obc.addGreaterThan(Organization.PROPERTY_UPDATED, afterDate);
       // todo: count is slower than exists, is exists possible?
       if (obc.count() > 0) {
         return true;

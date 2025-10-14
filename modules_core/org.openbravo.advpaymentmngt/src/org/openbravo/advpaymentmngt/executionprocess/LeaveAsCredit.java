@@ -20,7 +20,7 @@ package org.openbravo.advpaymentmngt.executionprocess;
 
 import java.math.BigDecimal;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.FIN_PaymentExecutionProcess;

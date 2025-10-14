@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.utility;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -39,7 +47,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
@@ -81,9 +89,9 @@ import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.utils.Replace;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 
 public class FIN_Utility {
@@ -1092,7 +1100,7 @@ public class FIN_Utility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obCriteria.add(Restrictions.eq("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7"));
+      obCriteria.add(cb.equal(root.get("reference.id"), "575BCB88A4694C27BC013DE9C73E6FE7"));
       List<org.openbravo.model.ad.domain.List> adRefList = obCriteria.list();
       for (org.openbravo.model.ad.domain.List adRef : adRefList) {
         if (isConfirmed.equals(isPaymentConfirmed(adRef.getSearchKey(), null))) {
@@ -1121,7 +1129,7 @@ public class FIN_Utility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obCriteria.add(Restrictions.eq("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7"));
+      obCriteria.add(cb.equal(root.get("reference.id"), "575BCB88A4694C27BC013DE9C73E6FE7"));
       List<org.openbravo.model.ad.domain.List> adRefList = obCriteria.list();
       for (org.openbravo.model.ad.domain.List adRef : adRefList) {
         if (isConfirmed.equals(isPaymentConfirmed(adRef.getSearchKey(), psd))) {

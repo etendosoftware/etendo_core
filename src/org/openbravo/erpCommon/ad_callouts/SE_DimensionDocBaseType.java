@@ -20,9 +20,9 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -78,9 +78,9 @@ public class SE_DimensionDocBaseType extends SimpleCallout {
 
   private List<DimensionMapping> getMapping(String docbaseType, String dimension, String level) {
     OBCriteria<DimensionMapping> odm = OBDal.getInstance().createCriteria(DimensionMapping.class);
-    odm.add(Restrictions.eq(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, docbaseType));
-    odm.add(Restrictions.eq(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension));
-    odm.add(Restrictions.eq(DimensionMapping.PROPERTY_LEVEL, level));
+    odm.addEqual(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, docbaseType);
+    odm.addEqual(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension);
+    odm.addEqual(DimensionMapping.PROPERTY_LEVEL, level);
     odm.setFilterOnReadableClients(false);
     odm.setFilterOnReadableOrganization(false);
     return odm.list();

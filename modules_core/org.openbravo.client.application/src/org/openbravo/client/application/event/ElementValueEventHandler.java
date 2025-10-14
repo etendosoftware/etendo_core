@@ -19,15 +19,23 @@
 
 package org.openbravo.client.application.event;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;

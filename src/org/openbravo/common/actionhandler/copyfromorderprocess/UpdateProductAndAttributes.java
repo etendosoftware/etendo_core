@@ -21,7 +21,7 @@ package org.openbravo.common.actionhandler.copyfromorderprocess;
 
 import java.util.List;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;

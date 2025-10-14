@@ -27,9 +27,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;

@@ -24,14 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -304,12 +304,12 @@ public class ReferencedLink extends HttpSecureAppServlet {
       String strKeyReferenceId, boolean fieldRules, boolean hasKeyReferenceId) {
     OBCriteria<TableNavigation> tableNavigationCriteria = OBDal.getInstance()
         .createCriteria(TableNavigation.class);
-    tableNavigationCriteria.add(Restrictions.eq("table.id", strTableReferenceId));
+    tableNavigationCriteria.addEqual("table.id", strTableReferenceId);
     if (fieldRules) {
       Field field = OBDal.getInstance().get(Field.class, fieldId);
-      tableNavigationCriteria.add(Restrictions.eq(TableNavigation.PROPERTY_FIELD, field));
+      tableNavigationCriteria.addEqual(TableNavigation.PROPERTY_FIELD, field);
     } else {
-      tableNavigationCriteria.add(Restrictions.isNull(TableNavigation.PROPERTY_FIELD));
+      tableNavigationCriteria.addIsNull(TableNavigation.PROPERTY_FIELD);
     }
     tableNavigationCriteria.addOrderBy(TableNavigation.PROPERTY_SEQUENCENUMBER, true);
     List<TableNavigation> tableNavigationList = tableNavigationCriteria.list();

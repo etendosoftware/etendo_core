@@ -19,6 +19,14 @@
 
 package org.openbravo.erpCommon.ad_process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -37,13 +45,13 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
@@ -638,7 +646,10 @@ public class HeartbeatProcess implements Process {
 
     final OBCriteria<ProcessRequest> prCriteria = OBDal.getInstance()
         .createCriteria(ProcessRequest.class);
+    // TODO: Migrar 
+ Restrictions.and() a CriteriaBuilder.and() manualmente
     prCriteria.add(Restrictions.and(Restrictions.eq(ProcessRequest.PROPERTY_PROCESS, HBProcess),
+        // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
         Restrictions.or(
             Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
                 org.openbravo.scheduling.Process.SCHEDULED),

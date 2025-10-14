@@ -18,7 +18,7 @@
  */
 package org.openbravo.client.application.attachment;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

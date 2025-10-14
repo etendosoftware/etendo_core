@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

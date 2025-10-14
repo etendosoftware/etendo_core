@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;

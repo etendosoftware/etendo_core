@@ -18,7 +18,7 @@
  */
 package org.openbravo.client.kernel.event;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * The event object send out when an entity gets deleted.

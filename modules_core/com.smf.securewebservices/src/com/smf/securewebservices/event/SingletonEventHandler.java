@@ -9,7 +9,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.model.ad.datamodel.Table;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 import java.util.Arrays;
 import java.util.Iterator;
 

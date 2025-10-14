@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.model.NamingUtil;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.structure.BaseOBObject;
@@ -199,7 +199,7 @@ public class ModuleValidator implements SystemValidator {
 
   private <T extends BaseOBObject> boolean hasArtifact(Class<T> clz, Module module) {
     final OBCriteria<T> obc = OBDal.getInstance().createCriteria(clz);
-    obc.add(Restrictions.eq("module", module));
+    obc.addEqual("module", module);
     return obc.count() > 0;
   }
 
@@ -326,7 +326,7 @@ public class ModuleValidator implements SystemValidator {
   private void checkTableName(Module module, SystemValidationResult result) {
     for (org.openbravo.model.ad.module.DataPackage pckg : module.getDataPackageList()) {
       OBCriteria<Table> tablesCriteria = OBDal.getInstance().createCriteria(Table.class);
-      tablesCriteria.add(Restrictions.eq(Table.PROPERTY_DATAPACKAGE, pckg));
+      tablesCriteria.addEqual(Table.PROPERTY_DATAPACKAGE, pckg);
       final List<Table> tables = tablesCriteria.list();
       for (Table table : tables) {
         final String name = table.getName();
@@ -344,7 +344,7 @@ public class ModuleValidator implements SystemValidator {
 
   private void checkHasReferenceData(Module module, SystemValidationResult result) {
     OBCriteria<DataSet> datasetsCriteria = OBDal.getInstance().createCriteria(DataSet.class);
-    datasetsCriteria.add(Restrictions.eq(DataSet.PROPERTY_MODULE, module));
+    datasetsCriteria.addEqual(DataSet.PROPERTY_MODULE, module);
     int numDatasets = datasetsCriteria.count();
 
     if (module.isHasReferenceData() && numDatasets == 0) {

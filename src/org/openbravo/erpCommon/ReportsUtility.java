@@ -19,14 +19,22 @@
 
 package org.openbravo.erpCommon;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -117,32 +125,35 @@ public class ReportsUtility {
 
     final OBCriteria<AccountingFact> initialBalanceQuery = OBDal.getInstance()
         .createCriteria(AccountingFact.class);
-    initialBalanceQuery.add(Restrictions.eq(AccountingFact.PROPERTY_ACCOUNTINGSCHEMA,
-        OBDal.getInstance().get(AcctSchema.class, acctSchemaId)));
-    initialBalanceQuery.add(Restrictions.eq(AccountingFact.PROPERTY_BUSINESSPARTNER,
-        OBDal.getInstance().get(BusinessPartner.class, bpartnerId)));
+    initialBalanceQuery.addEqual(AccountingFact.PROPERTY_ACCOUNTINGSCHEMA,
+        OBDal.getInstance().get(AcctSchema.class, acctSchemaId));
+    initialBalanceQuery.addEqual(AccountingFact.PROPERTY_BUSINESSPARTNER,
+        OBDal.getInstance().get(BusinessPartner.class, bpartnerId));
     initialBalanceQuery
-        .add(Restrictions.in(AccountingFact.PROPERTY_ORGANIZATION, getOrgList(orgId)));
+        .addInIds(AccountingFact.PROPERTY_ORGANIZATION, getOrgList(orgId));
     try {
-      initialBalanceQuery.add(
-          Restrictions.lt(AccountingFact.PROPERTY_ACCOUNTINGDATE, OBDateUtils.getDate(dateFrom)));
+      initialBalanceQuery.addLessThan(AccountingFact.PROPERTY_ACCOUNTINGDATE, OBDateUtils.getDate(dateFrom));
     } catch (ParseException pe) {
       // do nothing
     }
     if (currency != null) {
-      initialBalanceQuery.add(Restrictions.eq(AccountingFact.PROPERTY_CURRENCY,
-          OBDal.getInstance().getProxy(Currency.class, currency)));
+      initialBalanceQuery.addEqual(AccountingFact.PROPERTY_CURRENCY,
+          OBDal.getInstance().getProxy(Currency.class, currency));
     }
 
     final List<ElementValue> validAccountsList = getValidAccounts(acctSchemaId, bpartnerId,
         isCustomer);
     if (!validAccountsList.isEmpty()) {
-      initialBalanceQuery.add(Restrictions.in(AccountingFact.PROPERTY_ACCOUNT, validAccountsList));
+      initialBalanceQuery.addInIds(AccountingFact.PROPERTY_ACCOUNT, validAccountsList);
     }
 
     initialBalanceQuery.setFilterOnReadableOrganization(false);
 
-    final ProjectionList projections = Projections.projectionList();
+    final // TODO: Migrar
+ ProjectionList a CriteriaBuilder con multiselect manualmente
+ ProjectionList projections = // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ Projections.projectionList();
     projections.add(Projections.sum(currency == null ? AccountingFact.PROPERTY_DEBIT
         : AccountingFact.PROPERTY_FOREIGNCURRENCYDEBIT));
     projections.add(Projections.sum(currency == null ? AccountingFact.PROPERTY_CREDIT
@@ -167,10 +178,10 @@ public class ReportsUtility {
     final List<ElementValue> result = new ArrayList<ElementValue>();
     final OBCriteria<CustomerAccounts> obc = OBDal.getInstance()
         .createCriteria(CustomerAccounts.class);
-    obc.add(Restrictions.eq(CustomerAccounts.PROPERTY_BUSINESSPARTNER,
-        OBDal.getInstance().get(BusinessPartner.class, bpartnerId)));
-    obc.add(Restrictions.eq(AccountingFact.PROPERTY_ACCOUNTINGSCHEMA,
-        OBDal.getInstance().get(AcctSchema.class, acctSchemaId)));
+    obc.addEqual(CustomerAccounts.PROPERTY_BUSINESSPARTNER,
+        OBDal.getInstance().get(BusinessPartner.class, bpartnerId));
+    obc.addEqual(AccountingFact.PROPERTY_ACCOUNTINGSCHEMA,
+        OBDal.getInstance().get(AcctSchema.class, acctSchemaId));
     obc.setFilterOnReadableOrganization(false);
     obc.setFilterOnActive(false);
     for (final CustomerAccounts ca : obc.list()) {
@@ -188,10 +199,10 @@ public class ReportsUtility {
       final String bpartnerId) {
     final List<ElementValue> result = new ArrayList<ElementValue>();
     final OBCriteria<VendorAccounts> obc = OBDal.getInstance().createCriteria(VendorAccounts.class);
-    obc.add(Restrictions.eq(VendorAccounts.PROPERTY_BUSINESSPARTNER,
-        OBDal.getInstance().get(BusinessPartner.class, bpartnerId)));
-    obc.add(Restrictions.eq(VendorAccounts.PROPERTY_ACCOUNTINGSCHEMA,
-        OBDal.getInstance().get(AcctSchema.class, acctSchemaId)));
+    obc.addEqual(VendorAccounts.PROPERTY_BUSINESSPARTNER,
+        OBDal.getInstance().get(BusinessPartner.class, bpartnerId));
+    obc.addEqual(VendorAccounts.PROPERTY_ACCOUNTINGSCHEMA,
+        OBDal.getInstance().get(AcctSchema.class, acctSchemaId));
     obc.setFilterOnReadableOrganization(false);
     obc.setFilterOnActive(false);
     for (final VendorAccounts va : obc.list()) {

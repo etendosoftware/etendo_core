@@ -19,7 +19,7 @@
 
 package org.openbravo.erpCommon.businessUtility;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * This class allows PriceAdjustment discounts to be extended from external modules and to be

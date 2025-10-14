@@ -19,7 +19,15 @@
 
 package org.openbravo.client.application.test.event;
 
-import org.hibernate.criterion.Restrictions;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.openbravo.base.structure.BaseOBObject;

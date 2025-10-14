@@ -37,7 +37,7 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.DbUtility;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Action Handler to manage the Copy From Orders process

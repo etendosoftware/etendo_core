@@ -22,8 +22,6 @@ package org.openbravo.base.session;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
@@ -32,10 +30,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -172,7 +170,7 @@ public abstract class SessionFactoryController {
       // configuration.getProperties().setProperty(Environment.ISOLATION,
       // "" + Connection.TRANSACTION_READ_COMMITTED);
 
-      registerSqlFunctions();
+      //registerSqlFunctions();
 
       final DalSessionFactory dalSessionFactory = OBProvider.getInstance()
           .get(DalSessionFactory.class);
@@ -180,7 +178,14 @@ public abstract class SessionFactoryController {
       configuration.getStandardServiceRegistryBuilder().applySettings(configuration.getProperties());
       StandardServiceRegistry serviceRegistry = configuration.getStandardServiceRegistryBuilder().build();
       initializeServices(serviceRegistry);
+
+      // 🔧 Registrar el tipo personalizado ANTES de construir el SessionFactory
+      // Esto es crítico para que Hibernate 6 use el tipo correcto en los metadatos
+      configuration.registerTypeOverride(org.openbravo.base.session.OBYesNoType.INSTANCE);
+      log.info("✅ Registered OBYesNoType (Y/N boolean mapping) BEFORE building SessionFactory");
+
       SessionFactory delegateSessionFactory = configuration.buildSessionFactory(serviceRegistry);
+
       dalSessionFactory.setDelegateSessionFactory(delegateSessionFactory);
 
       sessionFactory = dalSessionFactory;
@@ -214,20 +219,22 @@ public abstract class SessionFactoryController {
     return Collections.emptyList();
   }
 
-  private void registerSqlFunctions() {
-    Map<String, SQLFunction> sqlFunctions = getSQLFunctions();
-    if (sqlFunctions == null || sqlFunctions.isEmpty()) {
-      return;
-    }
-    for (Entry<String, SQLFunction> entry : sqlFunctions.entrySet()) {
-      log.debug("Registering SQL function: {}", entry.getKey());
-      configuration.addSqlFunction(entry.getKey(), entry.getValue());
-    }
-  }
+//Ya en Hibernate 6 las funciones SQL se registran en el dialecto, no en Configuration.
+//Y como tú ya tienes OBOracle10gDialect, ahí mismo puedes registrarlas (por ejemplo, to_number, etc.).
+//  private void registerSqlFunctions() {
+//    Map<String, SQLFunction> sqlFunctions = getSQLFunctions();
+//    if (sqlFunctions == null || sqlFunctions.isEmpty()) {
+//      return;
+//    }
+//    for (Entry<String, SQLFunction> entry : sqlFunctions.entrySet()) {
+//      log.debug("Registering SQL function: {}", entry.getKey());
+//      configuration.addSqlFunction(entry.getKey(), entry.getValue());
+//    }
+//  }
 
-  protected Map<String, SQLFunction> getSQLFunctions() {
-    return Collections.emptyMap();
-  }
+//  protected Map<String, SQLFunction> getSQLFunctions() {
+//    return Collections.emptyMap();
+//  }
 
   public void closeHibernatePool() {
     ConnectionProvider hibernatePool = sessionFactory.getSessionFactoryOptions()
@@ -273,7 +280,7 @@ public abstract class SessionFactoryController {
   private Properties getPostgresHbProps(Properties obProps) {
     isPostgresDatabase = true;
     final Properties props = new Properties();
-    props.setProperty(AvailableSettings.DIALECT, PostgreSQL82Dialect.class.getName());
+    props.setProperty(AvailableSettings.DIALECT, PostgreSQLDialect.class.getName());
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {

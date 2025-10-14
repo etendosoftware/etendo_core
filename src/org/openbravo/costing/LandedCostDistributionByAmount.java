@@ -23,7 +23,7 @@ import java.math.RoundingMode;
 import java.util.Date;
 
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -61,7 +61,7 @@ public class LandedCostDistributionByAmount extends LandedCostDistributionAlgori
 
     // Loop to get all receipts amounts and calculate the total.
     final OBCriteria<LCReceipt> critLCRL = OBDal.getInstance().createCriteria(LCReceipt.class);
-    critLCRL.add(Restrictions.eq(LCReceipt.PROPERTY_LANDEDCOST, landedCost));
+    critLCRL.addEqual(LCReceipt.PROPERTY_LANDEDCOST, landedCost);
     ScrollableResults receiptCosts = getReceiptCosts(landedCost, false);
     int i = 0;
     try {

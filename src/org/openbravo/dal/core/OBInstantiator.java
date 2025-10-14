@@ -1,106 +1,112 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2010 Openbravo SLU 
- * All Rights Reserved. 
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
-
 package org.openbravo.dal.core;
 
 import java.io.Serializable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.tuple.Instantiator;
-import org.openbravo.base.model.Entity;
+import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.DynamicOBObject;
 import org.openbravo.base.structure.Identifiable;
 import org.openbravo.base.util.Check;
 
 /**
- * This class is used by Hibernate. Instantiates a Openbravo business object and sets the
- * {@link Entity} in this new instance. There is one OBInstantiator instance per {@link Entity} in
- * the system.
- * 
- * Its main use is to support dynamic business objects which can handle runtime model changes.
- * 
- * @author mtaal
+ * Hibernate 6.0 entity instantiator for Etendo DAL entities.
+ * Implements the EntityInstantiator SPI (Hibernate 6.0.x).
  */
-// TODO: support dynamic subclassing, this is currently not supported, see
-// hibernate DynamicMapInstantiator for ideas on how to accomplish this.
-public class OBInstantiator implements Instantiator {
+public class OBInstantiator implements EntityInstantiator {
+
   private static final long serialVersionUID = 1L;
   private static final Logger log = LogManager.getLogger();
 
-  private String entityName;
-  private Class<?> mappedClass;
-
-  public OBInstantiator() {
-    this.entityName = null;
-  }
+  private final String entityName;
+  private final Class<?> mappedClass;
 
   public OBInstantiator(PersistentClass mappingInfo) {
     this.entityName = mappingInfo.getEntityName();
-    mappedClass = mappingInfo.getMappedClass();
-    log.debug("Creating dynamic instantiator for " + entityName);
+    this.mappedClass = mappingInfo.getMappedClass();
+    log.debug("Creating OBInstantiator for {}", entityName);
   }
 
   /** Instantiate a new instance of the entity. */
   @Override
-  public Object instantiate() {
-    return OBProvider.getInstance().get(entityName);
+  public Object instantiate(SessionFactoryImplementor sessionFactory) {
+    if (mappedClass != null) {
+      final Identifiable obObject = (Identifiable) OBProvider.getInstance().get(mappedClass);
+      Check.isTrue(
+          obObject.getEntityName().equals(entityName),
+          "Entity name mismatch. Expected " + entityName + " but got " + obObject.getEntityName()
+      );
+      return obObject;
+    } else {
+      final DynamicOBObject dob = new DynamicOBObject();
+      dob.setEntityName(entityName);
+      return dob;
+    }
   }
 
   /**
    * Instantiate an instance and set its id using the parameter. Used by Hibernate when loading
    * existing instances from the database.
-   * 
+   *
    * @param id
    *          the id to set in the instance
    */
-  @Override
-  public Object instantiate(Serializable id) {
+  public Object instantiate(Object id, SessionFactoryImplementor sessionFactory) {
     if (mappedClass != null) {
       final Identifiable obObject = (Identifiable) OBProvider.getInstance().get(mappedClass);
-      obObject.setId(id);
-      Check.isTrue(obObject.getEntityName().equals(entityName),
-          "Entityname of instantiated object " + obObject.getEntityName()
-              + " and expected entityName: " + entityName + " is different.");
+      if (id != null) {
+        obObject.setId(id);
+      }
+      Check.isTrue(
+          obObject.getEntityName().equals(entityName),
+          "Entity name mismatch. Expected " + entityName + " but got " + obObject.getEntityName()
+      );
       return obObject;
     } else {
       final DynamicOBObject dob = new DynamicOBObject();
       dob.setEntityName(entityName);
-      dob.setId((String) id);
+      if (id instanceof String) {
+        dob.setId((String) id);
+      }
       return dob;
     }
   }
 
   /**
    * Returns true if the object is an instance of the Entity handled by the OBInstantiator.
-   * 
+   *
    * @param object
    *          the object to compare with the Entity managed here
    * @return true if the object is an Entity managed by this class
    */
   @Override
-  public boolean isInstance(Object object) {
+  public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
     if (object instanceof Identifiable) {
+      if (mappedClass != null) {
+        return mappedClass.isInstance(object);
+      }
       return entityName.equals(((Identifiable) object).getEntityName());
     }
+    return false;
+  }
+
+  /**
+   * Indica si el objeto es exactamente de la misma clase "mappedClass".
+   * (Requisito del SPI de Hibernate 6.0: org.hibernate.tuple.Instantiator)
+   */
+  @Override
+  public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+    if (object == null) {
+      return false;
+    }
+    if (mappedClass != null) {
+      return object.getClass() == mappedClass;
+    }
+    // Para el caso dinámico, como no hay mappedClass fija, devolvemos false.
+    // (Hibernate usa esto para optimizaciones de identidad)
     return false;
   }
 }

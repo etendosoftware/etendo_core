@@ -23,12 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
@@ -102,8 +102,8 @@ public class PeriodControlUtility {
     obc.setFilterOnActive(false);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.add(Restrictions.in(Period.PROPERTY_ID, periodIds));
-    obc.addOrder(Order.asc(Period.PROPERTY_STARTINGDATE));
+    obc.addInIds(Period.PROPERTY_ID, periodIds);
+    obc.addOrderBy(Period.PROPERTY_STARTINGDATE, true);
     return obc.list();
   }
 

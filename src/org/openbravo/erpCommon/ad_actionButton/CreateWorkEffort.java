@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -86,9 +86,9 @@ public class CreateWorkEffort implements org.openbravo.scheduling.Process {
       OBCriteria<WorkRequirementOperation> workReqOpCriteria = OBDal.getInstance()
           .createCriteria(WorkRequirementOperation.class);
       workReqOpCriteria
-          .add(Restrictions.eq(WorkRequirementOperation.PROPERTY_WORKREQUIREMENT, workReq));
-      workReqOpCriteria.add(Restrictions.le(WorkRequirementOperation.PROPERTY_STARTINGDATE, date));
-      workReqOpCriteria.add(Restrictions.eq(WorkRequirementOperation.PROPERTY_CLOSED, false));
+          .addEqual(WorkRequirementOperation.PROPERTY_WORKREQUIREMENT, workReq);
+      workReqOpCriteria.addLessOrEqualThan(WorkRequirementOperation.PROPERTY_STARTINGDATE, date);
+      workReqOpCriteria.addEqual(WorkRequirementOperation.PROPERTY_CLOSED, false);
       workReqOpCriteria.addOrderBy(WorkRequirementOperation.PROPERTY_SEQUENCENUMBER, true);
 
       List<WorkRequirementOperation> workReqOpList = workReqOpCriteria.list();
@@ -99,12 +99,12 @@ public class CreateWorkEffort implements org.openbravo.scheduling.Process {
 
         OBCriteria<ProductionPlan> productionPlanCriteria = OBDal.getInstance()
             .createCriteria(ProductionPlan.class);
-        productionPlanCriteria.add(Restrictions.eq(ProductionPlan.PROPERTY_WRPHASE, wrOp));
+        productionPlanCriteria.addEqual(ProductionPlan.PROPERTY_WRPHASE, wrOp);
         productionPlanCriteria.createAlias(ProductionPlan.PROPERTY_PRODUCTION, "pro");
         productionPlanCriteria
-            .add(Restrictions.eq("pro." + ProductionTransaction.PROPERTY_MOVEMENTDATE, date));
+            .addEqual("pro." + ProductionTransaction.PROPERTY_MOVEMENTDATE, date);
         productionPlanCriteria
-            .add(Restrictions.eq("pro." + ProductionTransaction.PROPERTY_PROCESSED, false));
+            .addEqual("pro." + ProductionTransaction.PROPERTY_PROCESSED, false);
         List<ProductionPlan> pplanList = productionPlanCriteria.list();
 
         if (pplanList.isEmpty()) {
@@ -169,10 +169,10 @@ public class CreateWorkEffort implements org.openbravo.scheduling.Process {
           // Get CostCenterVersion
           OBCriteria<CostcenterVersion> costcenterVersionCriteria = OBDal.getInstance()
               .createCriteria(CostcenterVersion.class);
-          costcenterVersionCriteria.add(Restrictions.eq(CostcenterVersion.PROPERTY_COSTCENTER,
-              wrOp.getActivity().getCostCenter()));
+          costcenterVersionCriteria.addEqual(CostcenterVersion.PROPERTY_COSTCENTER,
+              wrOp.getActivity().getCostCenter());
           costcenterVersionCriteria
-              .add(Restrictions.lt(CostcenterVersion.PROPERTY_VALIDFROMDATE, date));
+              .addLessThan(CostcenterVersion.PROPERTY_VALIDFROMDATE, date);
           costcenterVersionCriteria.addOrderBy(CostcenterVersion.PROPERTY_VALIDFROMDATE, false);
           List<CostcenterVersion> costcenterVersionList = costcenterVersionCriteria.list();
           if (!costcenterVersionList.isEmpty()) {

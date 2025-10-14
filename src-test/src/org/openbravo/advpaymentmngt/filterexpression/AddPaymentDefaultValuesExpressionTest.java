@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Instance;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;

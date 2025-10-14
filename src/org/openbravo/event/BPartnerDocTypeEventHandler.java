@@ -1,9 +1,9 @@
 package org.openbravo.event;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -70,14 +70,14 @@ public class BPartnerDocTypeEventHandler extends EntityPersistenceEventObserver 
       Organization org = bpDocType.getOrganization();
   
       OBCriteria<BusinessPartnerDocType> bpDocTypeCriteria = OBDal.getInstance().createCriteria(BusinessPartnerDocType.class);
-      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_CLIENT, client));
-      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ORGANIZATION, org));
-      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_BUSINESSPARTNER, bp));
-      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_DOCUMENTCATEGORY, documentCat));
-      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ISSOTRX, isSotrx));
-      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ACTIVE, true));
+      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_CLIENT, client);
+      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_ORGANIZATION, org);
+      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_BUSINESSPARTNER, bp);
+      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_DOCUMENTCATEGORY, documentCat);
+      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_ISSOTRX, isSotrx);
+      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_ACTIVE, true);
       if (id != null) {
-        bpDocTypeCriteria.add(Restrictions.ne(BusinessPartnerDocType.PROPERTY_ID, id));
+        bpDocTypeCriteria.addNotEqual(BusinessPartnerDocType.PROPERTY_ID, id);
       }
       bpDocTypeCriteria.setMaxResults(1);
       BusinessPartnerDocType bpDocTypeResult = (BusinessPartnerDocType) bpDocTypeCriteria.uniqueResult();

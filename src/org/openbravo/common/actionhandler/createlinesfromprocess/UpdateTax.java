@@ -24,8 +24,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 
-import javax.enterprise.context.Dependent;
-import javax.servlet.ServletException;
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;

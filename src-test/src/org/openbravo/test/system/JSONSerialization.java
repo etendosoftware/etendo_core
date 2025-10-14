@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.junit.Test;
 import org.openbravo.base.provider.OBProvider;

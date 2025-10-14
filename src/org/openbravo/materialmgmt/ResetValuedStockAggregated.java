@@ -19,6 +19,14 @@
 
 package org.openbravo.materialmgmt;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,14 +35,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import org.hibernate.query.Query;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
@@ -171,7 +179,7 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
   public static boolean noAggregatedDataForPeriod(final Period period) {
     final OBCriteria<ValuedStockAggregated> obc = OBDal.getInstance()
         .createCriteria(ValuedStockAggregated.class)
-        .add(Restrictions.eq(ValuedStockAggregated.PROPERTY_PERIOD, period));
+        .addEqual(ValuedStockAggregated.PROPERTY_PERIOD, period);
 
     return obc.list().isEmpty();
   }
@@ -323,8 +331,9 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
     try {
       dateTo = (Date) OBDal.getInstance()
           .createCriteria(ValuedStockAggregated.class)
-          .add(Restrictions.eq(ValuedStockAggregated.PROPERTY_ORGANIZATION, legalEntity))
-          .setProjection(Projections.max(ValuedStockAggregated.PROPERTY_ENDINGDATE))
+          .addEqual(ValuedStockAggregated.PROPERTY_ORGANIZATION, legalEntity)
+          .setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+Projections.max(ValuedStockAggregated.PROPERTY_ENDINGDATE))
           .uniqueResult();
       if (dateTo == null) {
         final DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");

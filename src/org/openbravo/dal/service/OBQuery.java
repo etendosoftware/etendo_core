@@ -144,7 +144,19 @@ public class OBQuery<E extends BaseOBObject> {
    */
   @Deprecated
   public Iterator<E> iterate() {
-    return createQuery().iterate();
+    // Hibernate 6: iterate() removed → use scroll() as an alternative
+    ScrollableResults<E> results = createQuery().scroll(ScrollMode.FORWARD_ONLY);
+    return new Iterator<E>() {
+      @Override
+      public boolean hasNext() {
+        return results.next();
+      }
+
+      @Override
+      public E next() {
+        return results.get();
+      }
+    };
   }
 
   /**
@@ -198,7 +210,7 @@ public class OBQuery<E extends BaseOBObject> {
 
     try (ScrollableResults results = qry.scroll(ScrollMode.FORWARD_ONLY)) {
       while (results.next()) {
-        final String id = results.getString(0);
+        final String id = (String) results.get();
         if (id.equals(targetId)) {
           return results.getRowNumber();
         }
@@ -237,18 +249,18 @@ public class OBQuery<E extends BaseOBObject> {
     StringBuilder deleteClause = new StringBuilder();
     try {
       deleteClause.append("DELETE FROM ");
-      deleteClause.append(getEntity().getName() + " ");
+      deleteClause.append(getEntity().getName()).append(" ");
       deleteClause.append(whereClause);
-      final Query qry = getSession().createQuery(deleteClause.toString());
+      final Query<?> qry = getSession().createQuery(deleteClause.toString(), Object.class);
       setParameters(qry);
       return qry;
     } catch (final Exception e) {
-      throw new OBException("Exception when creating delete query " + deleteClause.toString(), e);
+      throw new OBException("Exception when creating delete query " + deleteClause, e);
     }
   }
 
   /**
-   * Creates a Hibernate Query object using the whereclause and extra filters (for readable
+   * Creates a Hibernate Query object using the where clause and extra filters (for readable
    * organizations etc.).
    * 
    * @return a new Hibernate Query object
@@ -289,7 +301,7 @@ public class OBQuery<E extends BaseOBObject> {
         queryProfile = SessionInfo.getQueryProfile();
       }
       if (queryProfile != null) {
-        QueryTimeOutUtil.getInstance().setQueryTimeOut(qry, queryProfile);
+        QueryTimeOutUtil.getInstance().setQueryTimeOut((OBCriteria) qry, queryProfile);
       }
       return qry;
     } catch (final Exception e) {

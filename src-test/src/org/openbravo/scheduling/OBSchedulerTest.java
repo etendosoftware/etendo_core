@@ -15,7 +15,7 @@ import static org.openbravo.base.util.Check.fail;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.junit.After;
 import org.junit.Before;

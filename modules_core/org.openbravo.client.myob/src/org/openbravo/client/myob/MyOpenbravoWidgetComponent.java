@@ -18,7 +18,7 @@
  */
 package org.openbravo.client.myob;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;

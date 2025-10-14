@@ -19,6 +19,14 @@
 
 package org.openbravo.client.application.attachment;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,9 +41,9 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -43,7 +51,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.HibernateException;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
@@ -313,8 +321,8 @@ public class AttachImplementationManager {
       final ZipOutputStream dest = new ZipOutputStream(os);
       HashMap<String, Integer> writtenFiles = new HashMap<String, Integer>();
       OBCriteria<Attachment> attachmentFiles = OBDao.getFilteredCriteria(Attachment.class,
-          Restrictions.eq("table.id", tableId),
-          Restrictions.in("record", (Object[]) recordIds.split(",")));
+          cb.equal(root.get("table.id"), tableId),
+          root.get("record").in((Object[]) recordIds.split(",")));
       attachmentFiles.setFilterOnReadableOrganization(false);
       for (Attachment attachmentFile : attachmentFiles.list()) {
         checkReadableAccess(attachmentFile);

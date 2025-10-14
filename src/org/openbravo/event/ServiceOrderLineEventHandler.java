@@ -20,7 +20,7 @@ package org.openbravo.event;
 
 import java.math.BigDecimal;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;

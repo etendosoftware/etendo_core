@@ -21,8 +21,8 @@ package org.openbravo.client.application.window.servlet;
 
 import java.util.Enumeration;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
 
 public class CalloutServletConfig implements ServletConfig {
 

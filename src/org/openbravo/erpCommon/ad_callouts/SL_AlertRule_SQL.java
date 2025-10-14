@@ -23,7 +23,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.database.ConnectionProvider;

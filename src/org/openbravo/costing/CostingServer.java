@@ -24,7 +24,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;

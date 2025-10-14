@@ -23,15 +23,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.ConfigParameters;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -138,7 +138,7 @@ public class ClusterServiceManager {
       OBContext.setAdminMode(false); // allow to delete, the current context does not matter
       OBCriteria<ADClusterService> criteria = OBDal.getInstance()
           .createCriteria(ADClusterService.class);
-      criteria.add(Restrictions.eq(ADClusterService.PROPERTY_NODEID, nodeId));
+      criteria.addEqual(ADClusterService.PROPERTY_NODEID, nodeId);
       for (ADClusterService service : criteria.list()) {
         log.info("Deregistering node {} in charge of service {}", nodeId, service.getService());
         OBDal.getInstance().remove(service);
@@ -335,7 +335,7 @@ public class ClusterServiceManager {
     private ADClusterService getService(String serviceName) {
       OBCriteria<ADClusterService> criteria = OBDal.getInstance()
           .createCriteria(ADClusterService.class);
-      criteria.add(Restrictions.eq(ADClusterService.PROPERTY_SERVICE, serviceName));
+      criteria.addEqual(ADClusterService.PROPERTY_SERVICE, serviceName);
       return (ADClusterService) criteria.uniqueResult();
     }
 

@@ -20,7 +20,7 @@ package org.openbravo.event;
 
 import java.math.BigDecimal;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

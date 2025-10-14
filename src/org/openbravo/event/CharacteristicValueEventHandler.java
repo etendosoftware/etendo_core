@@ -20,7 +20,7 @@ package org.openbravo.event;
 
 import java.util.HashMap;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;

@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.utility;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -34,8 +42,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.base.exception.OBException;
@@ -409,11 +417,11 @@ public abstract class FIN_BankStatementImport {
       Criterion[] orCriterionElements = new Criterion[list.size()];
       for (int i = 0; i < list.size(); i++) {
         String token = list.get(i);
-        orCriterionElements[i] = Restrictions.like("name", "%" + token + "%").ignoreCase();
+        orCriterionElements[i] = cb.like(root.get("name"), "%" + token + "%").ignoreCase();
       }
-      obCriteria.add(Restrictions.or(orCriterionElements))
-          .add(Restrictions.in("organization.id",
-              new OrganizationStructureProvider().getNaturalTree(organization.getId())));
+      obCriteria.add(// TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
+Restrictions.or(orCriterionElements))
+          .add(root.get("organization.id").in(new OrganizationStructureProvider().getNaturalTree(organization.getId())));
 
       businessPartnersScroll = obCriteria.scroll(ScrollMode.SCROLL_SENSITIVE);
 

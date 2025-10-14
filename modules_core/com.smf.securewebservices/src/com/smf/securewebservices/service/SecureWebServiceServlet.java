@@ -21,9 +21,9 @@ package com.smf.securewebservices.service;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.openbravo.service.web.WebService;
 import org.openbravo.service.web.WebServiceUtil;
 import org.openbravo.base.exception.OBException;

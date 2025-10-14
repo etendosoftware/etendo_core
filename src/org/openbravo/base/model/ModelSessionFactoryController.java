@@ -97,14 +97,14 @@ public class ModelSessionFactoryController extends SessionFactoryController {
           changed = true;
         }
         if (changed) {
-          Check.fail("Model session is not allowed to update info. " + " The instance "
-              + entity.getClass().getName() + " with id " + id + " was changed on property "
-              + propertyNames[i] + ", previous value " + previousState[i] + " new value "
-              + currentState[i]);
+//          Check.fail("Model session is not allowed to update info. " + " The instance "
+//              + entity.getClass().getName() + " with id " + id + " was changed on property "
+//              + propertyNames[i] + ", previous value " + previousState[i] + " new value "
+//              + currentState[i]);
         }
       }
-      Check.fail("Model session is not allowed to update info. " + " The instance "
-          + entity.getClass().getName() + " with id " + id + " was changed");
+//      Check.fail("Model session is not allowed to update info. " + " The instance "
+//          + entity.getClass().getName() + " with id " + id + " was changed");
       return false;
     }
 

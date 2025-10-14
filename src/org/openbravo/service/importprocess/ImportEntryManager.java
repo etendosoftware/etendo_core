@@ -34,12 +34,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.enterprise.util.AnnotationLiteral;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.util.AnnotationLiteral;
+import jakarta.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -712,7 +712,7 @@ public class ImportEntryManager implements ImportEntryManagerMBean {
     }
   }
 
-  @javax.inject.Qualifier
+  @jakarta.inject.Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.TYPE })
   public @interface ImportEntryQualifier {

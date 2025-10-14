@@ -22,12 +22,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
@@ -376,9 +376,9 @@ public class CreateVatRegisters extends HttpSecureAppServlet {
     OBError myMessage = new OBError();
     OBCriteria<TaxRegisterTypeLines> obCriteria = OBDal.getInstance()
         .createCriteria(TaxRegisterTypeLines.class);
-    obCriteria.add(Restrictions.eq(TaxRegisterTypeLines.PROPERTY_TAXREGISTERTYPE + ".id",
-        taxRegisterType.cTaxregisterTypeId));
-    obCriteria.add(Restrictions.isNull(TaxRegisterTypeLines.PROPERTY_DOCUMENTTYPE));
+    obCriteria.addEqual(TaxRegisterTypeLines.PROPERTY_TAXREGISTERTYPE + ".id",
+        taxRegisterType.cTaxregisterTypeId);
+    obCriteria.addIsNull(TaxRegisterTypeLines.PROPERTY_DOCUMENTTYPE);
     if (obCriteria.list().size() > 0) {
       myMessage.setTitle("Error");
       myMessage.setType("Error");

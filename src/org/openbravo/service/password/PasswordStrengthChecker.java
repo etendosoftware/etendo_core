@@ -21,8 +21,8 @@ package org.openbravo.service.password;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Utility class used to check that passwords meets a minimum strength policy.

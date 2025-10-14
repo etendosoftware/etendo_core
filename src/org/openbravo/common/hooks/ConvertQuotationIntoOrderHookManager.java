@@ -24,10 +24,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.model.common.order.Order;

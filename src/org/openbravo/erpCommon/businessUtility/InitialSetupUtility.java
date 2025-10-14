@@ -18,6 +18,14 @@
  */
 package org.openbravo.erpCommon.businessUtility;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,8 +43,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -111,7 +119,7 @@ public class InitialSetupUtility {
    */
   public static boolean existsClientName(String strClient) throws Exception {
     final OBCriteria<Client> obcClient = OBDal.getInstance().createCriteria(Client.class);
-    obcClient.add(Restrictions.eq(Client.PROPERTY_NAME, strClient));
+    obcClient.addEqual(Client.PROPERTY_NAME, strClient);
     return obcClient.count() > 0;
   }
 
@@ -128,7 +136,7 @@ public class InitialSetupUtility {
       final OBCriteria<User> obcUser = OBDal.getInstance().createCriteria(User.class);
       obcUser.setFilterOnReadableClients(false);
       obcUser.setFilterOnReadableOrganization(false);
-      obcUser.add(Restrictions.eq(User.PROPERTY_USERNAME, strUser));
+      obcUser.addEqual(User.PROPERTY_USERNAME, strUser);
       return obcUser.count() > 0;
     } finally {
       OBContext.restorePreviousMode();
@@ -291,7 +299,7 @@ public class InitialSetupUtility {
    */
   public static Language getLanguage(String strLanguage) throws Exception {
     final OBCriteria<Language> obcLanguage = OBDal.getInstance().createCriteria(Language.class);
-    obcLanguage.add(Restrictions.eq(Language.PROPERTY_LANGUAGE, strLanguage));
+    obcLanguage.addEqual(Language.PROPERTY_LANGUAGE, strLanguage);
     // ad_language.ad_language is unique
     return (Language) obcLanguage.uniqueResult();
   }
@@ -310,8 +318,7 @@ public class InitialSetupUtility {
 
     final OBCriteria<org.openbravo.model.ad.domain.Reference> obcReference = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.Reference.class);
-    obcReference.add(
-        Restrictions.eq(org.openbravo.model.ad.domain.Reference.PROPERTY_NAME, "AD_TreeType Type"));
+    obcReference.addEqual(org.openbravo.model.ad.domain.Reference.PROPERTY_NAME, "AD_TreeType Type");
     List<org.openbravo.model.ad.domain.Reference> listReferences = obcReference.list();
     if (listReferences.size() != 1) {
       return null;
@@ -321,8 +328,8 @@ public class InitialSetupUtility {
     final OBCriteria<org.openbravo.model.ad.domain.List> obcRefTreeList = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.List.class);
     obcRefTreeList
-        .add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, referenceTree));
-    obcRefTreeList.addOrder(Order.asc("name"));
+        .addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, referenceTree);
+    obcRefTreeList.addOrderBy("name", true);
     return obcRefTreeList.list();
   }
 
@@ -340,11 +347,12 @@ public class InitialSetupUtility {
     // See issue https://issues.openbravo.com/view.php?id=31856
     DataSource accountTreeDatasource = OBDal.getInstance()
         .get(DataSource.class, "D2F94DC86DEC48D69E4BFCE59DC670CF");
+    // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
     obcTableTree.add(Restrictions.or(
         //
         Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, "ADTree"),
         Restrictions.eq(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource)));
-    obcTableTree.addOrder(Order.asc(TableTree.PROPERTY_NAME));
+    obcTableTree.addOrderBy(TableTree.PROPERTY_NAME, true);
     return obcTableTree.list();
   }
 
@@ -360,7 +368,7 @@ public class InitialSetupUtility {
     final String AD_MENU_ID = "116";
     Table menuTable = OBDal.getInstance().get(Table.class, AD_MENU_ID);
     final OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TABLE, menuTable));
+    obcTree.addEqual(Tree.PROPERTY_TABLE, menuTable);
     List<Tree> lTrees = obcTree.list();
     if (lTrees.size() != 1) {
       return null;
@@ -963,9 +971,9 @@ public class InitialSetupUtility {
     OBContext.setAdminMode();
     try {
       final OBCriteria<TreeNode> obcTreeNode = OBDal.getInstance().createCriteria(TreeNode.class);
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_TREE, accountTree));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_CLIENT, client));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_ORGANIZATION, organization));
+      obcTreeNode.addEqual(TreeNode.PROPERTY_TREE, accountTree);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_CLIENT, client);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_ORGANIZATION, organization);
       if (OBContext.getOBContext().isInAdministratorMode()) {
         obcTreeNode.setFilterOnReadableClients(false);
         obcTreeNode.setFilterOnReadableOrganization(false);
@@ -1086,8 +1094,8 @@ public class InitialSetupUtility {
       }
       obcEV.setFilterOnReadableClients(false);
       obcEV.setFilterOnReadableOrganization(false);
-      obcEV.add(Restrictions.eq(ElementValue.PROPERTY_SEARCHKEY, value));
-      obcEV.add(Restrictions.eq(ElementValue.PROPERTY_ACCOUNTINGELEMENT, element));
+      obcEV.addEqual(ElementValue.PROPERTY_SEARCHKEY, value);
+      obcEV.addEqual(ElementValue.PROPERTY_ACCOUNTINGELEMENT, element);
       List<ElementValue> l = obcEV.list();
       if (l.size() != 1) {
         return null;
@@ -1573,7 +1581,7 @@ public class InitialSetupUtility {
     try {
       OBCriteria<AccountingCombination> obc = OBDal.getInstance()
           .createCriteria(AccountingCombination.class);
-      obc.add(Restrictions.eq(AccountingCombination.PROPERTY_ACCOUNT, elementValue));
+      obc.addEqual(AccountingCombination.PROPERTY_ACCOUNT, elementValue);
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
       List<AccountingCombination> combinations = obc.list();
@@ -1790,8 +1798,8 @@ public class InitialSetupUtility {
     try {
       OBCriteria<ADClientModule> clientModules = OBDal.getInstance()
           .createCriteria(ADClientModule.class);
-      clientModules.add(Restrictions.eq(ADClientModule.PROPERTY_CLIENT, client));
-      clientModules.add(Restrictions.eq(ADClientModule.PROPERTY_MODULE, module));
+      clientModules.addEqual(ADClientModule.PROPERTY_CLIENT, client);
+      clientModules.addEqual(ADClientModule.PROPERTY_MODULE, module);
       clientModules.setFilterOnReadableOrganization(false);
       clientModules.setFilterOnReadableClients(false);
       return clientModules.list();
@@ -1805,9 +1813,9 @@ public class InitialSetupUtility {
     OBContext.setAdminMode();
     try {
       OBCriteria<ADOrgModule> orgModules = OBDal.getInstance().createCriteria(ADOrgModule.class);
-      orgModules.add(Restrictions.eq(ADOrgModule.PROPERTY_CLIENT, client));
-      orgModules.add(Restrictions.eq(ADOrgModule.PROPERTY_ORGANIZATION, organization));
-      orgModules.add(Restrictions.eq(ADOrgModule.PROPERTY_MODULE, module));
+      orgModules.addEqual(ADOrgModule.PROPERTY_CLIENT, client);
+      orgModules.addEqual(ADOrgModule.PROPERTY_ORGANIZATION, organization);
+      orgModules.addEqual(ADOrgModule.PROPERTY_MODULE, module);
       orgModules.setFilterOnReadableOrganization(false);
       orgModules.setFilterOnReadableClients(false);
       return orgModules.list();
@@ -1929,9 +1937,9 @@ public class InitialSetupUtility {
     OBContext.setAdminMode();
     try {
       final OBCriteria<DataSet> obcDataSets = OBDal.getInstance().createCriteria(DataSet.class);
-      obcDataSets.add(Restrictions.eq(DataSet.PROPERTY_MODULE, module));
-      obcDataSets.add(Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, accessLevel));
-      obcDataSets.addOrder(Order.asc(DataSet.PROPERTY_NAME));
+      obcDataSets.addEqual(DataSet.PROPERTY_MODULE, module);
+      obcDataSets.addInIds(DataSet.PROPERTY_DATAACCESSLEVEL, accessLevel);
+      obcDataSets.addOrderBy(DataSet.PROPERTY_NAME, true);
       List<DataSet> listDataSets = obcDataSets.list();
       if (!listDataSets.isEmpty()) {
         return listDataSets;
@@ -1956,8 +1964,8 @@ public class InitialSetupUtility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obcRefList = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obcRefList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
-          OBDal.getInstance().get(Reference.class, "181")));
+      obcRefList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
+          OBDal.getInstance().get(Reference.class, "181"));
       List<org.openbravo.model.ad.domain.List> listRefList = obcRefList.list();
       if (!listRefList.isEmpty()) {
         return listRefList;
@@ -2013,17 +2021,20 @@ public class InitialSetupUtility {
     try {
       OBCriteria<DataSet> obc = OBDal.getInstance().createCriteria(DataSet.class);
       obc.createAlias(DataSet.PROPERTY_MODULE, "m");
-      obc.add(Restrictions.eq(DataSet.PROPERTY_MODULE, module));
+      obc.addEqual(DataSet.PROPERTY_MODULE, module);
       Object[] organizationAccessLevel = { "3", "1" };
       Object[] systemAccessLevel = { "3", "6" };
+      // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
       obc.add(Restrictions.or(
+          // TODO: Migrar 
+ Restrictions.and() a CriteriaBuilder.and() manualmente
           Restrictions.and(Restrictions.ne(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
               Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, organizationAccessLevel)),
           Restrictions.and(Restrictions.eq(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
               Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, systemAccessLevel))));
-      obc.addOrder(Order.asc("m." + Module.PROPERTY_ID));
-      obc.addOrder(Order.asc(DataSet.PROPERTY_SEQUENCENUMBER));
-      obc.addOrder(Order.asc(DataSet.PROPERTY_ID));
+      obc.addOrderBy("m." + Module.PROPERTY_ID, true);
+      obc.addOrderBy(DataSet.PROPERTY_SEQUENCENUMBER, true);
+      obc.addOrderBy(DataSet.PROPERTY_ID, true);
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
       for (DataSet dataset : obc.list()) {
@@ -2067,8 +2078,8 @@ public class InitialSetupUtility {
       final OBCriteria<Organization> obcOrg = OBDal.getInstance()
           .createCriteria(Organization.class);
       obcOrg.setFilterOnReadableOrganization(false);
-      obcOrg.add(Restrictions.eq(Organization.PROPERTY_CLIENT, client));
-      obcOrg.add(Restrictions.eq(Organization.PROPERTY_NAME, strOrgName));
+      obcOrg.addEqual(Organization.PROPERTY_CLIENT, client);
+      obcOrg.addEqual(Organization.PROPERTY_NAME, strOrgName);
       return obcOrg.count() > 0;
     } finally {
       OBContext.restorePreviousMode();
@@ -2105,8 +2116,8 @@ public class InitialSetupUtility {
     OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
     final String AD_ORG_TABLE_ID = "155";
     Table table = OBDal.getInstance().get(Table.class, AD_ORG_TABLE_ID);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TABLE, table));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_CLIENT, client));
+    obcTree.addEqual(Tree.PROPERTY_TABLE, table);
+    obcTree.addEqual(Tree.PROPERTY_CLIENT, client);
     return obcTree.list().get(0);
   }
 
@@ -2115,9 +2126,9 @@ public class InitialSetupUtility {
     try {
       final OBCriteria<TreeNode> obcTreeNode = OBDal.getInstance().createCriteria(TreeNode.class);
       obcTreeNode.setFilterOnReadableOrganization(false);
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_CLIENT, client));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_NODE, org.getId()));
+      obcTreeNode.addEqual(TreeNode.PROPERTY_TREE, tree);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_CLIENT, client);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_NODE, org.getId());
       return obcTreeNode.list().get(0);
     } finally {
       OBContext.restorePreviousMode();
@@ -2133,8 +2144,8 @@ public class InitialSetupUtility {
       final OBCriteria<TreeNode> obcTreeNodes = OBDal.getInstance().createCriteria(TreeNode.class);
       obcTreeNodes.setFilterOnReadableClients(false);
       obcTreeNodes.setFilterOnReadableOrganization(false);
-      obcTreeNodes.add(Restrictions.eq(TreeNode.PROPERTY_REPORTSET, parentOrg.getId()));
-      obcTreeNodes.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
+      obcTreeNodes.addEqual(TreeNode.PROPERTY_REPORTSET, parentOrg.getId());
+      obcTreeNodes.addEqual(TreeNode.PROPERTY_TREE, tree);
       for (TreeNode treeNode : obcTreeNodes.list()) {
         if (treeNode.getSequenceNumber() > lSeqNo) {
           lSeqNo = treeNode.getSequenceNumber();
@@ -2165,8 +2176,8 @@ public class InitialSetupUtility {
       OBCriteria<MessageTrl> obcMsgTrl = OBDal.getInstance().createCriteria(MessageTrl.class);
       obcMsgTrl.setFilterOnReadableClients(false);
       obcMsgTrl.setFilterOnReadableOrganization(false);
-      obcMsgTrl.add(Restrictions.eq(MessageTrl.PROPERTY_MESSAGE, msg));
-      obcMsgTrl.add(Restrictions.eq(MessageTrl.PROPERTY_LANGUAGE, language));
+      obcMsgTrl.addEqual(MessageTrl.PROPERTY_MESSAGE, msg);
+      obcMsgTrl.addEqual(MessageTrl.PROPERTY_LANGUAGE, language);
       MessageTrl trl = (MessageTrl) obcMsgTrl.uniqueResult();
       if (trl == null) {
         return msg.getMessageText();
@@ -2189,19 +2200,18 @@ public class InitialSetupUtility {
           .createCriteria(org.openbravo.model.ad.ui.Element.class);
       obcElement.setFilterOnReadableClients(false);
       obcElement.setFilterOnReadableOrganization(false);
-      obcElement.add(
-          Restrictions.eq(org.openbravo.model.ad.ui.Element.PROPERTY_DBCOLUMNNAME, columnName));
+      obcElement.addEqual(org.openbravo.model.ad.ui.Element.PROPERTY_DBCOLUMNNAME, columnName);
       if (StringUtils.isNotEmpty(elementName)) {
         obcElement
-            .add(Restrictions.eq(org.openbravo.model.ad.ui.Element.PROPERTY_NAME, elementName));
+            .addEqual(org.openbravo.model.ad.ui.Element.PROPERTY_NAME, elementName);
       }
       obcElement.setMaxResults(1);
       org.openbravo.model.ad.ui.Element element = (org.openbravo.model.ad.ui.Element) obcElement
           .uniqueResult();
 
       OBCriteria<ElementTrl> obcElementTrl = OBDal.getInstance().createCriteria(ElementTrl.class);
-      obcElementTrl.add(Restrictions.eq(ElementTrl.PROPERTY_APPLICATIONELEMENT, element));
-      obcElementTrl.add(Restrictions.eq(ElementTrl.PROPERTY_LANGUAGE, language));
+      obcElementTrl.addEqual(ElementTrl.PROPERTY_APPLICATIONELEMENT, element);
+      obcElementTrl.addEqual(ElementTrl.PROPERTY_LANGUAGE, language);
       ElementTrl trl = (ElementTrl) obcElementTrl.uniqueResult();
       if (trl == null) {
         return element.getName();
@@ -2234,9 +2244,9 @@ public class InitialSetupUtility {
     }
 
     final OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TYPEAREA, strTreeTypeMenu));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_CLIENT, client));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_ORGANIZATION, organization));
+    obcTree.addEqual(Tree.PROPERTY_TYPEAREA, strTreeTypeMenu);
+    obcTree.addEqual(Tree.PROPERTY_CLIENT, client);
+    obcTree.addEqual(Tree.PROPERTY_ORGANIZATION, organization);
     List<Tree> lTrees = obcTree.list();
     if (lTrees.size() != 1) {
       return null;
@@ -2262,9 +2272,9 @@ public class InitialSetupUtility {
     }
 
     final OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TABLE, table));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_CLIENT, client));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_ORGANIZATION, organization));
+    obcTree.addEqual(Tree.PROPERTY_TABLE, table);
+    obcTree.addEqual(Tree.PROPERTY_CLIENT, client);
+    obcTree.addEqual(Tree.PROPERTY_ORGANIZATION, organization);
     List<Tree> lTrees = obcTree.list();
     if (lTrees.size() != 1) {
       return null;

@@ -18,6 +18,14 @@
  */
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -27,10 +35,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -1124,7 +1132,8 @@ public class FIN_AddPayment {
     OBContext.setAdminMode();
     try {
       obc.add(Restrictions.eq(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice));
-      obc.setProjection(Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
+      obc.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
       return (Date) obc.uniqueResult();
     } finally {
       OBContext.restorePreviousMode();

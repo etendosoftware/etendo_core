@@ -18,6 +18,14 @@
  */
 package org.openbravo.advpaymentmngt.ad_reports;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -25,15 +33,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.ProjectionList;
+import jakarta.persistence.criteria.Selection;
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.sql.JoinType;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -202,14 +210,25 @@ public class ReportReconciliation extends HttpSecureAppServlet {
       List<FIN_Reconciliation> afterReconciliations = MatchTransactionDao
           .getReconciliationListAfterDate(recon);
       if (!afterReconciliations.isEmpty()) {
-        obcTrans.add(Restrictions.or(
+        obcTrans.add(// TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
+Restrictions.or(
             Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION),
             Restrictions.in(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, afterReconciliations)));
       } else {
         obcTrans.add(Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION));
       }
 
-      ProjectionList projections = Projections.projectionList();
+      // TODO: Migrar // TODO: Migrar 
+ ProjectionList a CriteriaQuery multiselect() manualmente
+ ProjectionList a CriteriaQuery multiselect() manualmente
+      ProjectionList projections = // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ Projections.projectionList();
       projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT));
       projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT));
       obcTrans.setProjection(projections);

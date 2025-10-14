@@ -20,8 +20,8 @@ package org.openbravo.client.application;
 
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.client.kernel.BaseActionHandler;

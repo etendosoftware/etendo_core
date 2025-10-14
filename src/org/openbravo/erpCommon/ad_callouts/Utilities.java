@@ -1,9 +1,17 @@
 package org.openbravo.erpCommon.ad_callouts;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;
-import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -24,7 +32,7 @@ public class Utilities {
                 final OBCriteria<Field> criteria = OBDal.getInstance().createCriteria(Field.class);
                 criteria.setFilterOnReadableClients(false);
                 criteria.setFilterOnReadableOrganization(false);
-                criteria.add(Restrictions.eq(Field.PROPERTY_TAB, tab));
+                criteria.addEqual(Field.PROPERTY_TAB, tab);
                 criteria.add(Restrictions.ilike(Field.PROPERTY_NAME, "Document No.", MatchMode.ANYWHERE));
                 final List<Field> fields = criteria.list();
                 if (!fields.isEmpty()) {

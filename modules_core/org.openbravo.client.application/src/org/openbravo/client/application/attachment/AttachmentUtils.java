@@ -19,6 +19,14 @@
 
 package org.openbravo.client.application.attachment;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
@@ -167,7 +175,7 @@ public class AttachmentUtils {
   public static List<JSONObject> getTabAttachmentsForRows(Tab tab, String[] recordIds) {
     String tableId = tab.getTable().getId();
     OBCriteria<Attachment> attachmentFiles = OBDao.getFilteredCriteria(Attachment.class,
-        Restrictions.eq("table.id", tableId), Restrictions.in("record", (Object[]) recordIds));
+        cb.equal(root.get("table.id"), tableId), root.get("record").in((Object[]) recordIds));
     attachmentFiles.addOrderBy("creationDate", false);
     List<JSONObject> attachments = new ArrayList<>();
     // do not filter by the attachment's organization

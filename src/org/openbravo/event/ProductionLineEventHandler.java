@@ -20,9 +20,9 @@ package org.openbravo.event;
 
 import java.math.BigDecimal;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -78,8 +78,8 @@ class ProductionLineEventHandler extends EntityPersistenceEventObserver {
       OBCriteria<ProductionLine> productionLineCriteria = OBDal.getInstance()
           .createCriteria(ProductionLine.class);
       productionLineCriteria
-          .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan));
-      productionLineCriteria.add(Restrictions.gt(ProductionLine.PROPERTY_MOVEMENTQUANTITY, ZERO));
+          .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan);
+      productionLineCriteria.addGreaterThan(ProductionLine.PROPERTY_MOVEMENTQUANTITY, ZERO);
       if (productionLineCriteria.count() > 0 && previousMovementQty != currentMovementQty) {
         if (currentMovementQty.compareTo(ZERO) == 1 && previousMovementQty.compareTo(ZERO) != 1) {
           String language = OBContext.getOBContext().getLanguage().getLanguage();

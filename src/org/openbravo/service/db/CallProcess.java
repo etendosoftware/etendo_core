@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -85,7 +85,7 @@ public class CallProcess {
     final OBCriteria<org.openbravo.model.ad.ui.Process> processCriteria = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.ui.Process.class);
     processCriteria
-        .add(Restrictions.eq(org.openbravo.model.ad.ui.Process.PROPERTY_PROCEDURE, processName));
+        .addEqual(org.openbravo.model.ad.ui.Process.PROPERTY_PROCEDURE, processName);
     List<org.openbravo.model.ad.ui.Process> processList = processCriteria.list();
     if (processList.size() != 1) {
       throw new OBException(

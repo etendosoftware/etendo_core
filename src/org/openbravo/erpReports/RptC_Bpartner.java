@@ -19,17 +19,25 @@
 
 package org.openbravo.erpReports;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -355,10 +363,10 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
 
   public List<FIN_Payment> getCustomerPaymentsWithCredit(BusinessPartner bp, boolean isReceipt) {
     OBCriteria<FIN_Payment> obcPayment = OBDal.getInstance().createCriteria(FIN_Payment.class);
-    obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp));
-    obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_RECEIPT, isReceipt));
-    obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO));
-    obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_STATUS, "RPAP"));
+    obcPayment.addEqual(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp);
+    obcPayment.addEqual(FIN_Payment.PROPERTY_RECEIPT, isReceipt);
+    obcPayment.addNotEqual(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO);
+    obcPayment.addNotEqual(FIN_Payment.PROPERTY_STATUS, "RPAP");
     obcPayment.add(Restrictions.neProperty(FIN_Payment.PROPERTY_GENERATEDCREDIT,
         FIN_Payment.PROPERTY_USEDCREDIT));
     obcPayment.addOrderBy(FIN_Payment.PROPERTY_PAYMENTDATE, true);

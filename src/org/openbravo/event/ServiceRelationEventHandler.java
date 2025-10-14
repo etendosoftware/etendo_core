@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

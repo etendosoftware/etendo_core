@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.QueryTimeoutException;
+import jakarta.persistence.QueryTimeoutException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;

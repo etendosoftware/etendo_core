@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -54,9 +54,9 @@ public class EmailUtils {
         OBCriteria<EmailServerConfiguration> mailConfigCriteria = OBDal.getInstance()
             .createCriteria(EmailServerConfiguration.class);
         mailConfigCriteria
-            .add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ORGANIZATION, organization));
-        mailConfigCriteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
-            OBContext.getOBContext().getCurrentClient()));
+            .addEqual(EmailServerConfiguration.PROPERTY_ORGANIZATION, organization);
+        mailConfigCriteria.addEqual(EmailServerConfiguration.PROPERTY_CLIENT,
+            OBContext.getOBContext().getCurrentClient());
 
         List<EmailServerConfiguration> mailConfigList = null;
         mailConfigList = mailConfigCriteria.list();

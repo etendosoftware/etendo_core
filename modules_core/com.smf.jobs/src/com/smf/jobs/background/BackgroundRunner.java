@@ -7,8 +7,8 @@ import org.openbravo.scheduling.KillableProcess;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalBaseProcess;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Class used to execute a job in background.

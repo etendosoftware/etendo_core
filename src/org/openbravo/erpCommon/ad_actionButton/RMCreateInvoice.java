@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.APRMPendingPaymentFromInvoice;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_ExecutePayment;
@@ -120,9 +120,9 @@ public class RMCreateInvoice implements org.openbravo.scheduling.Process {
   private List<APRMPendingPaymentFromInvoice> getPendingPayments() {
     OBCriteria<APRMPendingPaymentFromInvoice> ppfiCriteria = OBDal.getInstance()
         .createCriteria(APRMPendingPaymentFromInvoice.class);
-    ppfiCriteria.add(Restrictions.eq(APRMPendingPaymentFromInvoice.PROPERTY_PROCESSNOW, false));
-    ppfiCriteria.add(Restrictions.in(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS,
-        getLeaveAsCreditProcesses()));
+    ppfiCriteria.addEqual(APRMPendingPaymentFromInvoice.PROPERTY_PROCESSNOW, false);
+    ppfiCriteria.addInIds(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS,
+        getLeaveAsCreditProcesses());
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS, false);
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_ORGANIZATION, false);
     return ppfiCriteria.list();
@@ -131,8 +131,8 @@ public class RMCreateInvoice implements org.openbravo.scheduling.Process {
   private List<PaymentExecutionProcess> getLeaveAsCreditProcesses() {
     OBCriteria<PaymentExecutionProcess> payExecProcCrit = OBDal.getInstance()
         .createCriteria(PaymentExecutionProcess.class);
-    payExecProcCrit.add(Restrictions.eq(PaymentExecutionProcess.PROPERTY_JAVACLASSNAME,
-        "org.openbravo.advpaymentmngt.executionprocess.LeaveAsCredit"));
+    payExecProcCrit.addEqual(PaymentExecutionProcess.PROPERTY_JAVACLASSNAME,
+        "org.openbravo.advpaymentmngt.executionprocess.LeaveAsCredit");
 
     return payExecProcCrit.list();
   }

@@ -22,7 +22,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.email.EmailEventContentGenerator;

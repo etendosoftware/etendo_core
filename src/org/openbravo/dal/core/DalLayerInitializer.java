@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBConfigFileProvider;
@@ -46,7 +46,7 @@ public class DalLayerInitializer implements OBSingleton {
 
   private static DalLayerInitializer instance;
 
-  private Map<String, SQLFunction> sqlFunctions;
+  private Map<String, SqmFunctionDescriptor> sqlFunctions;
 
   public static DalLayerInitializer getInstance() {
     if (instance == null) {
@@ -126,7 +126,7 @@ public class DalLayerInitializer implements OBSingleton {
    * @param sqlFunctions
    *          a Map with the SQL functions to be registered in Hibernate.
    */
-  public void setSQLFunctions(Map<String, SQLFunction> sqlFunctions) {
+  public void setSQLFunctions(Map<String, SqmFunctionDescriptor> sqlFunctions) {
     this.sqlFunctions = sqlFunctions;
   }
 

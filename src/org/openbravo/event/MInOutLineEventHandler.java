@@ -18,9 +18,9 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -77,8 +77,8 @@ class MInOutLineEventHandler extends EntityPersistenceEventObserver {
   private void checkShipmentOrderRelation(ShipmentInOutLine shipmentInOutLine) {
     OBCriteria<ShipmentInOutLine> criteria = OBDal.getInstance()
         .createCriteria(ShipmentInOutLine.class);
-    criteria.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT,
-        shipmentInOutLine.getShipmentReceipt()));
+    criteria.addEqual(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT,
+        shipmentInOutLine.getShipmentReceipt());
 
     if (criteria.count() == 1) {
       ShipmentInOut shipmentInOut = OBDal.getInstance()

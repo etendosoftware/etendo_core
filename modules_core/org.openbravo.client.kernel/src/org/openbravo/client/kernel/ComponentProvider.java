@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.util.AnnotationLiteral;
+import jakarta.enterprise.util.AnnotationLiteral;
 
 import org.openbravo.client.kernel.BaseComponentProvider.ComponentResource;
 import org.openbravo.model.ad.module.Module;
@@ -90,7 +90,7 @@ public interface ComponentProvider {
    * 
    * @author mtaal
    */
-  @javax.inject.Qualifier
+  @jakarta.inject.Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.TYPE })
   public @interface Qualifier {

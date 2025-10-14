@@ -18,11 +18,19 @@
  */
 package org.openbravo.client.application.attachment;
 
-import javax.servlet.ServletException;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.application.Parameter;
@@ -65,7 +73,8 @@ public class MetadataOnTab extends SimpleCallout {
     OBCriteria<Parameter> critParam = OBDal.getInstance().createCriteria(Parameter.class);
     critParam.add(Restrictions.eq(Parameter.PROPERTY_ATTACHMENTMETHOD, attMethod));
     critParam.add(Restrictions.eq(Parameter.PROPERTY_TAB, tab));
-    critParam.setProjection(Projections.max(Parameter.PROPERTY_SEQUENCENUMBER));
+    critParam.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+Projections.max(Parameter.PROPERTY_SEQUENCENUMBER));
 
     if (critParam.uniqueResult() == null) {
       return 10;
