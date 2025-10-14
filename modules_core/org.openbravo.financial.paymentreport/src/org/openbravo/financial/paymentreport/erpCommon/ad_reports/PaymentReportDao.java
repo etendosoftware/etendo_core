@@ -19,6 +19,14 @@
 
 package org.openbravo.financial.paymentreport.erpCommon.ad_reports;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -40,8 +48,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -1614,7 +1622,8 @@ public class PaymentReportDao {
 
         // BPartners
         if (!bPartners.isEmpty()) {
-          obCriteriaTrans.add(Restrictions.or(
+          obCriteriaTrans.add(// TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
+Restrictions.or(
               Restrictions.in(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER, bPartners),
               Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER)));
         }

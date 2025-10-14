@@ -1,6 +1,6 @@
 package org.openbravo.advpaymentmngt.hook;
 
-import javax.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Instance;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

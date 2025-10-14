@@ -29,7 +29,7 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collection;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

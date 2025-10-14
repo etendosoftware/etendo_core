@@ -27,7 +27,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.access.Color;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 import java.util.regex.Pattern;
 
 public class ColorEventHandler extends EntityPersistenceEventObserver {

@@ -39,7 +39,7 @@ import org.openbravo.erpCommon.utility.*;
 import org.openbravo.financial.ResetAccounting;
 import org.openbravo.model.ad.ui.Tab;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 public class ActionButtonUtility {
   static Logger log4j = LogManager.getLogger();

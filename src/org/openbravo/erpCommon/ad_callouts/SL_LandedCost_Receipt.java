@@ -18,7 +18,7 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 public class SL_LandedCost_Receipt extends SimpleCallout {
 

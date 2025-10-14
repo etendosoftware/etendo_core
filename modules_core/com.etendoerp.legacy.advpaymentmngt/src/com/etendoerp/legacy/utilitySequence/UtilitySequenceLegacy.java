@@ -7,9 +7,9 @@ import org.openbravo.erpCommon.utility.DocumentNoData;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.erpCommon.utilitySequence.UtilitySequenceActionInterface;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
-import javax.servlet.ServletException;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Default;
+import jakarta.servlet.ServletException;
 import java.sql.Connection;
 
 @ApplicationScoped

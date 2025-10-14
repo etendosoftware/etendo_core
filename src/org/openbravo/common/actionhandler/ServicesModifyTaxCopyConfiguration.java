@@ -25,7 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
@@ -112,7 +112,7 @@ public class ServicesModifyTaxCopyConfiguration extends BaseProcessActionHandler
     // Add new configuration
     OBCriteria<ProductServiceLinked> obc = OBDal.getInstance()
         .createCriteria(ProductServiceLinked.class);
-    obc.add(Restrictions.eq(ProductServiceLinked.PROPERTY_PRODUCT, sourceProduct));
+    obc.addEqual(ProductServiceLinked.PROPERTY_PRODUCT, sourceProduct);
     for (ProductServiceLinked sourceProductServiceLinked : obc.list()) {
       ProductServiceLinked targetProductServiceLinked = OBProvider.getInstance()
           .get(ProductServiceLinked.class);

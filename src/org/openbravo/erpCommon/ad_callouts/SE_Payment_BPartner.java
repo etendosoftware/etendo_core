@@ -18,10 +18,10 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
@@ -65,8 +65,8 @@ public class SE_Payment_BPartner extends SimpleCallout {
       if (paymentMethod != null && financialAccount != null) {
         final OBCriteria<FinAccPaymentMethod> apmCriteria = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
-        apmCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
-        apmCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount));
+        apmCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+        apmCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount);
         apmCriteria.setFilterOnActive(false);
         FinAccPaymentMethod accPaymentMethod = (FinAccPaymentMethod) apmCriteria.uniqueResult();
         if (accPaymentMethod != null) {

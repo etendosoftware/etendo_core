@@ -22,7 +22,7 @@ package org.openbravo.scheduling;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -50,7 +50,7 @@ public class ProcessGroup extends DalBaseProcess {
 
     OBCriteria<ProcessGroupList> processListcri = OBDal.getInstance()
         .createCriteria(ProcessGroupList.class);
-    processListcri.add(Restrictions.eq(ProcessGroupList.PROPERTY_PROCESSGROUP, group));
+    processListcri.addEqual(ProcessGroupList.PROPERTY_PROCESSGROUP, group);
     processListcri.addOrderBy(ProcessGroupList.PROPERTY_SEQUENCENUMBER, true);
     List<ProcessGroupList> processList = processListcri.list();
 

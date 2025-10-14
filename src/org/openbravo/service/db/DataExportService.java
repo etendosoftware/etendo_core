@@ -31,7 +31,7 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.provider.OBSingleton;
@@ -122,7 +122,7 @@ public class DataExportService implements OBSingleton {
     OBContext.setAdminMode();
     try {
       final OBCriteria<DataSet> obc = OBDal.getInstance().createCriteria(DataSet.class);
-      obc.add(Restrictions.eq("name", CLIENT_DATA_SET_NAME));
+      obc.addEqual("name", CLIENT_DATA_SET_NAME);
       if (obc.list().size() == 0) {
         throw new OBException("No dataset found with name " + CLIENT_DATA_SET_NAME);
       }

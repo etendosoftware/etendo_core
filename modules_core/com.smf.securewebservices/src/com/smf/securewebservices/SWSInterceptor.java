@@ -2,10 +2,10 @@ package com.smf.securewebservices;
 
 import org.openbravo.client.kernel.event.PersistenceEventOBInterceptor;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Event;
-import javax.enterprise.inject.Specializes;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.enterprise.inject.Specializes;
+import jakarta.inject.Inject;
 import java.util.Iterator;
 
 @ApplicationScoped

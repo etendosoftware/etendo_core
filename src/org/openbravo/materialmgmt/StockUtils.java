@@ -20,11 +20,11 @@ package org.openbravo.materialmgmt;
 
 import java.math.BigDecimal;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -89,7 +89,7 @@ public class StockUtils {
     }
     OBCriteria<StockProposed> stockProposed = OBDal.getInstance()
         .createCriteria(StockProposed.class);
-    stockProposed.add(Restrictions.eq(StockProposed.PROPERTY_PROCESSINSTANCE, orderLine.getId()));
+    stockProposed.addEqual(StockProposed.PROPERTY_PROCESSINSTANCE, orderLine.getId());
     stockProposed.addOrderBy(StockProposed.PROPERTY_PRIORITY, true);
     return stockProposed.scroll(ScrollMode.FORWARD_ONLY);
   }

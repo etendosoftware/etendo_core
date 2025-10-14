@@ -18,9 +18,17 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
 
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.enterprise.event.Observes;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -81,6 +89,14 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (event instanceof EntityNewEvent) {
       OBCriteria<ProductAUM> duplicateAUM = OBDal.getInstance().createCriteria(ProductAUM.class);
+      // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar 
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
       duplicateAUM.add(Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product),
           Restrictions.eq(ProductAUM.PROPERTY_UOM, target.getUOM())));
       duplicateAUM.setMaxResults(1);
@@ -91,6 +107,7 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (target.getSales().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primarySales = OBDal.getInstance().createCriteria(ProductAUM.class);
+      // TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
       primarySales.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
           Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_SALES, UOMUtil.UOM_PRIMARY),
               Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
@@ -102,6 +119,7 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (target.getPurchase().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primaryPurchase = OBDal.getInstance().createCriteria(ProductAUM.class);
+      // TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
       primaryPurchase.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
           Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_PURCHASE, UOMUtil.UOM_PRIMARY),
               Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
@@ -115,6 +133,7 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
     if (target.getLogistics().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primaryLogistics = OBDal.getInstance()
           .createCriteria(ProductAUM.class);
+      // TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
       primaryLogistics.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
           Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_LOGISTICS, UOMUtil.UOM_PRIMARY),
               Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));

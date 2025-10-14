@@ -7,7 +7,7 @@ import org.openbravo.erpCommon.calloutsSequence.SL_Invoice_SequenceActionInterfa
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.util.HashMap;
 
 public class SL_Invoice_Legacy implements SL_Invoice_SequenceActionInterface {

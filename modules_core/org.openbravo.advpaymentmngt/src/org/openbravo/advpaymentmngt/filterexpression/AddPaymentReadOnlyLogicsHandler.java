@@ -20,7 +20,7 @@ package org.openbravo.advpaymentmngt.filterexpression;
 
 import java.util.Map;
 
-import javax.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.RequestScoped;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;

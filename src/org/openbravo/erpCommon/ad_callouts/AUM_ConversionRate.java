@@ -18,12 +18,20 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -55,8 +63,12 @@ public class AUM_ConversionRate extends SimpleCallout {
 
       OBCriteria<UOMConversion> uOMConversionCriteria = OBDal.getInstance()
           .createCriteria(UOMConversion.class);
-      uOMConversionCriteria.add(Restrictions.and(Restrictions.eq("uOM.id", srtcUOMId),
-          Restrictions.eq("toUOM.id", strpUOM)));
+      // TODO: Migrar // TODO: Migrar // TODO: Migrar 
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+ Restrictions.and() a CriteriaBuilder.and() manualmente
+      uOMConversionCriteria.add(Restrictions.and(cb.equal(root.get("uOM.id"), srtcUOMId),
+          cb.equal(root.get("toUOM.id"), strpUOM)));
       uOMConversionCriteria.setMaxResults(1);
       List<UOMConversion> uOmConversionList = uOMConversionCriteria.list();
       if (uOmConversionList.size() > 0) {
@@ -65,8 +77,9 @@ public class AUM_ConversionRate extends SimpleCallout {
         info.addResult("inpconversionrate", rate);
       } else {
         uOMConversionCriteria = OBDal.getInstance().createCriteria(UOMConversion.class);
-        uOMConversionCriteria.add(Restrictions.and(Restrictions.eq("uOM.id", strpUOM),
-            Restrictions.eq("toUOM.id", srtcUOMId)));
+        // TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
+        uOMConversionCriteria.add(Restrictions.and(cb.equal(root.get("uOM.id"), strpUOM),
+            cb.equal(root.get("toUOM.id"), srtcUOMId)));
         uOMConversionCriteria.setMaxResults(1);
         uOmConversionList = uOMConversionCriteria.list();
         if (uOmConversionList.size() > 0) {

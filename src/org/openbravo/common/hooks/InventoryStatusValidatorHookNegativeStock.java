@@ -20,7 +20,7 @@ package org.openbravo.common.hooks;
 
 import java.math.BigDecimal;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.exception.OBException;

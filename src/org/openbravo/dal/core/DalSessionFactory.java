@@ -1,22 +1,3 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2018 Openbravo SLU
- * All Rights Reserved. 
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
-
 package org.openbravo.dal.core;
 
 import java.sql.Connection;
@@ -28,44 +9,35 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 import javax.naming.Reference;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.Query;
-import javax.persistence.SynchronizationType;
-import javax.persistence.criteria.CriteriaBuilder;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.metamodel.Metamodel; // ← IMPORT JPA, no org.hibernate.Metamodel
 
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
-import org.hibernate.Metamodel;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
-import org.hibernate.TypeHelper;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.*;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.internal.StatelessSessionImpl;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.relational.*;
 import org.hibernate.stat.Statistics;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder; // ← si querés el builder específico
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.database.SessionInfo;
 
-/**
- * The DalSessionFactory directly delegates all calls to a real SessionFactory except for the calls
- * to open a session in that case an extra action is done to set session information in the database
- * (and then the call is forwarded to the 'real' SessionFactory).
- * 
- * @author mtaal
- * @see SessionFactoryController
- */
-@SuppressWarnings({ "deprecation", "rawtypes", "unchecked" })
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DalSessionFactory implements SessionFactory {
 
   private static final long serialVersionUID = 1L;
@@ -73,12 +45,6 @@ public class DalSessionFactory implements SessionFactory {
   private SessionFactory delegateSessionFactory;
   private JdbcConnectionAccess jdbcConnectionAccess;
 
-  /**
-   * NOTE: Openbravo requires normal application code to use the DalSessionFactory and not the real
-   * underlying Hibernate SessionFactory.
-   * 
-   * @return the underlying real sessionfactory
-   */
   public SessionFactory getDelegateSessionFactory() {
     return delegateSessionFactory;
   }
@@ -92,30 +58,11 @@ public class DalSessionFactory implements SessionFactory {
     delegateSessionFactory.close();
   }
 
-  @Override
-  public Map getAllClassMetadata() throws HibernateException {
-    return delegateSessionFactory.getAllClassMetadata();
-  }
-
-  @Override
-  public Map getAllCollectionMetadata() throws HibernateException {
-    return delegateSessionFactory.getAllCollectionMetadata();
-  }
-
-  @Override
-  public ClassMetadata getClassMetadata(Class persistentClass) throws HibernateException {
-    return delegateSessionFactory.getClassMetadata(persistentClass);
-  }
-
-  @Override
-  public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
-    return delegateSessionFactory.getClassMetadata(entityName);
-  }
-
-  @Override
-  public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-    return delegateSessionFactory.getCollectionMetadata(roleName);
-  }
+  // ───────────────────────────────────────────────────────────────────────────
+  // Métodos ELIMINADOS en Hibernate 6: getAllClassMetadata / getAllCollectionMetadata /
+  // getClassMetadata / getCollectionMetadata / getTypeHelper
+  // Simplemente se quitan. Si tenías usos en otro lado, hay que migrarlos al Metamodel JPA.
+  // ───────────────────────────────────────────────────────────────────────────
 
   @Override
   public Session getCurrentSession() throws HibernateException {
@@ -123,13 +70,24 @@ public class DalSessionFactory implements SessionFactory {
   }
 
   @Override
-  public Set getDefinedFilterNames() {
+  public Set<String> getDefinedFilterNames() {
     return delegateSessionFactory.getDefinedFilterNames();
   }
 
   @Override
   public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
     return delegateSessionFactory.getFilterDefinition(filterName);
+  }
+
+  // Nuevo en Hibernate 6: nombre del método cambió
+  @Override
+  public Set<String> getDefinedFetchProfileNames() {
+    return delegateSessionFactory.getDefinedFetchProfileNames();
+  }
+
+  @Override
+  public boolean containsFetchProfileDefinition(String name) {
+    return delegateSessionFactory.containsFetchProfileDefinition(name);
   }
 
   @Override
@@ -143,18 +101,23 @@ public class DalSessionFactory implements SessionFactory {
   }
 
   @Override
+  public SchemaManager getSchemaManager() {
+    return delegateSessionFactory.getSchemaManager();
+  }
+
+  @Override
   public boolean isClosed() {
     return delegateSessionFactory.isClosed();
   }
 
   /**
-   * Note method sets user session information in the database and opens a connection for this.
+   * Abre sesión y ejecuta la inicialización en la MISMA conexión de la sesión
    */
   @Override
   public Session openSession() throws HibernateException {
     final Session session = delegateSessionFactory.openSession();
-    Connection conn = ((SessionImplementor) session).connection();
-    initConnection(conn);
+    // En Hibernate 6 NO uses SessionImplementor#connection(); usá doWork:
+    session.doWork(this::initConnection);
     return session;
   }
 
@@ -169,30 +132,20 @@ public class DalSessionFactory implements SessionFactory {
     }
   }
 
-  /**
-   * Note method sets user session information in the database and opens a connection for this.
-   */
   @Override
   public StatelessSession openStatelessSession() {
     final StatelessSession session = delegateSessionFactory.openStatelessSession();
-    initializeDBSessionInfo((StatelessSessionImpl) session);
+    // Igual que arriba, en la conexión de ESA sesión:
+    session.doWork(this::initConnection);
     return session;
   }
 
-  /**
-   * Note method sets user session information in the database and opens a connection for this.
-   */
   @Override
   public StatelessSession openStatelessSession(Connection connection) {
     final StatelessSession session = delegateSessionFactory.openStatelessSession(connection);
-    initializeDBSessionInfo((StatelessSessionImpl) session);
+    // Y también inicializamos la sesión para esta conexión provista:
+    session.doWork(this::initConnection);
     return session;
-  }
-
-  private void initializeDBSessionInfo(StatelessSessionImpl session) {
-    Connection conn = session.connection();
-    SessionInfo.initDB(conn,
-        OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("bbdd.rdbms"));
   }
 
   @Override
@@ -200,19 +153,10 @@ public class DalSessionFactory implements SessionFactory {
     return delegateSessionFactory.getCache();
   }
 
-  @Override
-  public boolean containsFetchProfileDefinition(String name) {
-    return delegateSessionFactory.containsFetchProfileDefinition(name);
-  }
-
-  @Override
-  public TypeHelper getTypeHelper() {
-    return delegateSessionFactory.getTypeHelper();
-  }
-
   JdbcConnectionAccess getJdbcConnectionAccess() {
     if (jdbcConnectionAccess == null) {
-      jdbcConnectionAccess = ((SessionFactoryImpl) delegateSessionFactory).getJdbcServices()
+      jdbcConnectionAccess = ((SessionFactoryImpl) delegateSessionFactory)
+          .getJdbcServices()
           .getBootstrapJdbcConnectionAccess();
     }
     return jdbcConnectionAccess;
@@ -227,6 +171,10 @@ public class DalSessionFactory implements SessionFactory {
   public void addNamedQuery(String name, Query query) {
     delegateSessionFactory.addNamedQuery(name, query);
   }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // EntityManagerFactory (JPA)
+  // ───────────────────────────────────────────────────────────────────────────
 
   @Override
   public EntityManager createEntityManager() {
@@ -248,10 +196,17 @@ public class DalSessionFactory implements SessionFactory {
     return delegateSessionFactory.createEntityManager(synchronizationType, map);
   }
 
+  // ⚠️ En Hibernate 6, el tipo de retorno “oficial” es HibernateCriteriaBuilder.
+  // Si tu interfaz importada es org.hibernate.SessionFactory, su método es:
+  //   HibernateCriteriaBuilder getCriteriaBuilder();
+  // Podés devolverlo con ese tipo, y si en tu código llamas por JPA, seguís usando CriteriaBuilder.
   @Override
-  public CriteriaBuilder getCriteriaBuilder() {
+  public HibernateCriteriaBuilder getCriteriaBuilder() {
     return delegateSessionFactory.getCriteriaBuilder();
   }
+  // Si preferís mantener la firma jakarta CriteriaBuilder en este wrapper,
+  // cambiá la import del SessionFactory que implementás (no recomendado).
+  // Dejarlo como arriba evita el error de incompatibilidad que viste.
 
   @Override
   public PersistenceUnitUtil getPersistenceUnitUtil() {
@@ -279,6 +234,12 @@ public class DalSessionFactory implements SessionFactory {
   }
 
   @Override
+  public RootGraph<?> findEntityGraphByName(String name) {
+    return delegateSessionFactory.findEntityGraphByName(name);
+  }
+
+  // IMPORTANTE: usar el Metamodel de JPA (jakarta), no el de Hibernate viejo
+  @Override
   public Metamodel getMetamodel() {
     return delegateSessionFactory.getMetamodel();
   }
@@ -297,5 +258,4 @@ public class DalSessionFactory implements SessionFactory {
   public StatelessSessionBuilder withStatelessOptions() {
     return delegateSessionFactory.withStatelessOptions();
   }
-
 }

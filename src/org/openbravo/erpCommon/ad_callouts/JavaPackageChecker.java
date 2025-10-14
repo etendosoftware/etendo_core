@@ -19,7 +19,7 @@
 package org.openbravo.erpCommon.ad_callouts;
 
 import javax.lang.model.SourceVersion;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.Utility;

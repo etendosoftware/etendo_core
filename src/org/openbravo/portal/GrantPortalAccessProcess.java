@@ -21,14 +21,14 @@ package org.openbravo.portal;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
@@ -79,8 +79,8 @@ public class GrantPortalAccessProcess extends BaseProcessActionHandler {
 
       OBCriteria<UserRoles> checkRoleIsPresent = OBDal.getInstance()
           .createCriteria(UserRoles.class);
-      checkRoleIsPresent.add(Restrictions.eq(UserRoles.PROPERTY_USERCONTACT, user));
-      checkRoleIsPresent.add(Restrictions.eq(UserRoles.PROPERTY_ROLE, role));
+      checkRoleIsPresent.addEqual(UserRoles.PROPERTY_USERCONTACT, user);
+      checkRoleIsPresent.addEqual(UserRoles.PROPERTY_ROLE, role);
       if (checkRoleIsPresent.count() == 0) {
         UserRoles newUserRole = OBProvider.getInstance().get(UserRoles.class);
         newUserRole.setUserContact(user);

@@ -19,7 +19,7 @@
 
 package org.openbravo.common.actionhandler.createlinesfromprocess;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.model.common.plm.AttributeSetInstance;

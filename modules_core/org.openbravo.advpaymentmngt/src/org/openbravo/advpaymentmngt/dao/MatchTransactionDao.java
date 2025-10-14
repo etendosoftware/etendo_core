@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.dao;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,10 +35,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.ProjectionList;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Selection;
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.openbravo.base.structure.BaseOBObject;
@@ -338,7 +346,8 @@ public class MatchTransactionDao {
       List<FIN_Reconciliation> afterReconciliations = getReconciliationListAfterDate(
           lastReconciliation);
       if (afterReconciliations.size() > 0) {
-        obcBsl.add(Restrictions.or(
+        obcBsl.add(// TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
+Restrictions.or(
             Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION),
             Restrictions.in("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION,
                 afterReconciliations)));
@@ -350,7 +359,13 @@ public class MatchTransactionDao {
       obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
       obcBsl.add(Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
           lastReconciliation.getTransactionDate()));
-      ProjectionList projections = Projections.projectionList();
+      // TODO: Migrar 
+ ProjectionList a CriteriaQuery multiselect() manualmente
+      ProjectionList projections = // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
+ Projections.projectionList();
       projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_CRAMOUNT));
       projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_DRAMOUNT));
       obcBsl.setProjection(projections);

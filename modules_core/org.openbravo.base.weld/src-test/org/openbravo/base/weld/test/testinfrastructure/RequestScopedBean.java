@@ -19,7 +19,7 @@
 
 package org.openbravo.base.weld.test.testinfrastructure;
 
-import javax.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.RequestScoped;
 
 /** Simple request scoped bean */
 @RequestScoped

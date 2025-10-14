@@ -18,10 +18,10 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.Utility;
@@ -36,8 +36,8 @@ public class SL_Column extends SimpleCallout {
 
     if (StringUtils.equals(strIsKey, "Y")) {
       OBCriteria<Column> keyCriteria = OBDal.getInstance().createCriteria(Column.class);
-      keyCriteria.add(Restrictions.eq(Column.PROPERTY_TABLE + ".id", strTableId));
-      keyCriteria.add(Restrictions.eq(Column.PROPERTY_KEYCOLUMN, true));
+      keyCriteria.addEqual(Column.PROPERTY_TABLE + ".id", strTableId);
+      keyCriteria.addEqual(Column.PROPERTY_KEYCOLUMN, true);
       if (keyCriteria.count() != 0) {
         info.addResult("inpiskey", "N");
         info.showWarning(Utility.messageBD(this, "MultipleKeyColumns", info.vars.getLanguage())

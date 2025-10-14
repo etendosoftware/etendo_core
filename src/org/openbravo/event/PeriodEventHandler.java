@@ -18,11 +18,11 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -73,14 +73,14 @@ class PeriodEventHandler extends EntityPersistenceEventObserver {
     ConnectionProvider conn = new DalConnectionProvider(false);
     String language = OBContext.getOBContext().getLanguage().getLanguage();
     OBCriteria<Period> criteria = OBDal.getInstance().createCriteria(Period.class);
-    criteria.add(Restrictions.eq(Period.PROPERTY_ORGANIZATION, period.getOrganization()));
-    criteria.add(Restrictions.eq(Period.PROPERTY_CLIENT, period.getClient()));
-    criteria.add(Restrictions.ne(Period.PROPERTY_ID, period.getId()));
-    criteria.add(Restrictions.ge(Period.PROPERTY_ENDINGDATE, period.getStartingDate()));
-    criteria.add(Restrictions.le(Period.PROPERTY_STARTINGDATE, period.getEndingDate()));
-    criteria.add(Restrictions.eq(Period.PROPERTY_PERIODTYPE, "S"));
+    criteria.addEqual(Period.PROPERTY_ORGANIZATION, period.getOrganization());
+    criteria.addEqual(Period.PROPERTY_CLIENT, period.getClient());
+    criteria.addNotEqual(Period.PROPERTY_ID, period.getId());
+    criteria.addGreaterOrEqualThan(Period.PROPERTY_ENDINGDATE, period.getStartingDate());
+    criteria.addLessOrEqualThan(Period.PROPERTY_STARTINGDATE, period.getEndingDate());
+    criteria.addEqual(Period.PROPERTY_PERIODTYPE, "S");
     criteria.createAlias(Period.PROPERTY_YEAR, "y");
-    criteria.add(Restrictions.eq("y." + Year.PROPERTY_CALENDAR, period.getYear().getCalendar()));
+    criteria.addEqual("y." + Year.PROPERTY_CALENDAR, period.getYear().getCalendar());
     criteria.setMaxResults(1);
 
     if (criteria.uniqueResult() != null) {

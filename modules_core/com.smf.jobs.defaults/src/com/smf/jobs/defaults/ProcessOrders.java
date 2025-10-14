@@ -2,7 +2,7 @@ package com.smf.jobs.defaults;
 
 import java.text.ParseException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;

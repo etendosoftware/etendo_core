@@ -36,7 +36,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentProcess;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -320,7 +320,7 @@ public class CancelAndReplaceUtils {
    */
   private static List<Order> findChildOrders(Order parentOrder) {
     final OBCriteria<Order> criteria = OBDal.getInstance().createCriteria(Order.class);
-    criteria.add(Restrictions.eq(Order.PROPERTY_REPLACEDORDER, parentOrder));
+    criteria.addEqual(Order.PROPERTY_REPLACEDORDER, parentOrder);
 
     return criteria.list();
   }
@@ -417,7 +417,7 @@ public class CancelAndReplaceUtils {
   static Reservation getReservationForOrderLine(final OrderLine line) {
     return (Reservation) OBDal.getInstance()
         .createCriteria(Reservation.class)
-        .add(Restrictions.eq(Reservation.PROPERTY_SALESORDERLINE, line))
+        .addEqual(Reservation.PROPERTY_SALESORDERLINE, line)
         .setMaxResults(1)
         .uniqueResult();
   }
@@ -425,7 +425,7 @@ public class CancelAndReplaceUtils {
   static ScrollableResults getOrderLineList(final Order order) {
     return OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, order))
+        .addEqual(OrderLine.PROPERTY_SALESORDER, order)
         .setFilterOnReadableOrganization(false)
         .scroll(ScrollMode.FORWARD_ONLY);
   }
@@ -586,7 +586,7 @@ public class CancelAndReplaceUtils {
           .eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE, paymentSchedule));
       // There should be only one with null paymentDetails
       paymentScheduleDetailCriteria
-          .add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
+          .addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
       paymentScheduleDetailCriteria.add(Restrictions
           .eq(FIN_PaymentScheduleDetail.PROPERTY_ORGANIZATION, paymentSchedule.getOrganization()));
       paymentScheduleDetailCriteria.setFilterOnReadableOrganization(false);
@@ -699,9 +699,9 @@ public class CancelAndReplaceUtils {
   static FIN_PaymentSchedule getPaymentScheduleOfOrder(final Order order) {
     final OBCriteria<FIN_PaymentSchedule> paymentScheduleCriteria = OBDal.getInstance()
         .createCriteria(FIN_PaymentSchedule.class);
-    paymentScheduleCriteria.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_ORDER, order));
+    paymentScheduleCriteria.addEqual(FIN_PaymentSchedule.PROPERTY_ORDER, order);
     paymentScheduleCriteria
-        .add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_ORGANIZATION, order.getOrganization()));
+        .addEqual(FIN_PaymentSchedule.PROPERTY_ORGANIZATION, order.getOrganization());
     paymentScheduleCriteria.setFilterOnReadableOrganization(false);
     paymentScheduleCriteria.setMaxResults(1);
     return (FIN_PaymentSchedule) paymentScheduleCriteria.uniqueResult();

@@ -20,7 +20,7 @@ package org.openbravo.advpaymentmngt.event;
 
 import java.math.BigDecimal;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

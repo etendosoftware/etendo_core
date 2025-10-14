@@ -1,6 +1,6 @@
 package com.etendoerp.sequences.annotations;
 
-import javax.enterprise.util.AnnotationLiteral;
+import jakarta.enterprise.util.AnnotationLiteral;
 
 public class SequenceQualifier extends AnnotationLiteral<SequenceFilter> implements SequenceFilter {
 

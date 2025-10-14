@@ -29,7 +29,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
@@ -151,7 +151,7 @@ public class LCCostMatchFromInvoiceHandler extends BaseProcessActionHandler {
       final OBCriteria<ConversionRateDoc> conversionRateDoc = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
       conversionRateDoc
-          .add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE, localIl.getInvoice()));
+          .addEqual(ConversionRateDoc.PROPERTY_INVOICE, localIl.getInvoice());
       ConversionRateDoc invoiceconversionrate = (ConversionRateDoc) conversionRateDoc
           .uniqueResult();
 

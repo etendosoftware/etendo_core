@@ -20,7 +20,7 @@ package org.openbravo.dal.core;
 
 import java.util.Map;
 
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 
 /**
  * An interface that must be implemented by those classes intended to register SQL functions which
@@ -34,6 +34,6 @@ public interface SQLFunctionRegister {
    * 
    * @return A Map with SQL functions to be registered in Hibernate.
    */
-  public Map<String, SQLFunction> getSQLFunctions();
+  public Map<String, SqmFunctionDescriptor> getSQLFunctions();
 
 }

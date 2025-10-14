@@ -21,7 +21,7 @@ package org.openbravo.erpCommon.info;
 
 import java.util.Map;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.application.FilterExpression;

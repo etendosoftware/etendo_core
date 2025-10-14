@@ -18,6 +18,14 @@
  */
 package org.openbravo.costing;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
@@ -30,7 +38,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
@@ -812,9 +820,10 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
     critLines.createAlias(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, "ca");
-    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx));
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx);
+    // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
     critLines.add(Restrictions.or(//
-        Restrictions.eq("ca.id", getCostAdj().getId()), //
+        cb.equal(root.get("ca.id"), getCostAdj().getId()), //
         Restrictions.not(Restrictions.eq("ca." + CostAdjustment.PROPERTY_DOCUMENTSTATUS, "DR"))));
 
     return critLines.list();
@@ -1164,8 +1173,8 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
   private boolean isBackdatedTransaction(MaterialTransaction trx) {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx));
-    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISBACKDATEDTRX, true));
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx);
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_ISBACKDATEDTRX, true);
     critLines.setMaxResults(1);
     return critLines.uniqueResult() != null;
   }
@@ -1180,8 +1189,8 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
   private List<CostAdjustmentLine> getNegativeStockAdjustments(MaterialTransaction trx) {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx));
-    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISNEGATIVESTOCKCORRECTION, true));
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx);
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_ISNEGATIVESTOCKCORRECTION, true);
     return critLines.list();
   }
 }

@@ -19,8 +19,8 @@
 
 package org.openbravo.client.kernel;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
 
 import org.openbravo.base.weld.WeldUtils;
 

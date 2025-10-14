@@ -24,11 +24,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
@@ -135,11 +135,11 @@ public class SE_Payment_MultiCurrency extends SimpleCallout {
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getInstance()
           .createCriteria(ConversionRate.class);
       obcConvRate.setFilterOnReadableOrganization(false);
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_ORGANIZATION, org));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, fromCurrency));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, toCurrency));
-      obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate));
-      obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, conversionDate));
+      obcConvRate.addEqual(ConversionRate.PROPERTY_ORGANIZATION, org);
+      obcConvRate.addEqual(ConversionRate.PROPERTY_CURRENCY, fromCurrency);
+      obcConvRate.addEqual(ConversionRate.PROPERTY_TOCURRENCY, toCurrency);
+      obcConvRate.addLessOrEqualThan(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate);
+      obcConvRate.addGreaterOrEqualThan(ConversionRate.PROPERTY_VALIDTODATE, conversionDate);
       conversionRateList = obcConvRate.list();
       if ((conversionRateList != null) && (conversionRateList.size() != 0)) {
         conversionRate = conversionRateList.get(0);

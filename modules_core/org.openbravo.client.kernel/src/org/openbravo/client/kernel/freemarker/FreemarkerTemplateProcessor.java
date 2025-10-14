@@ -23,7 +23,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

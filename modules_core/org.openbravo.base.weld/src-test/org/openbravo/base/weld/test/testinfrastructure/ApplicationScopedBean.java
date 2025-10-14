@@ -19,7 +19,7 @@
 
 package org.openbravo.base.weld.test.testinfrastructure;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /** Simple application scoped bean */
 @ApplicationScoped

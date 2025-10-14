@@ -440,7 +440,9 @@ public class DalUtil {
   @Deprecated
   public static Serializable getId(Object o) {
     if (o instanceof HibernateProxy) {
-      return ((HibernateProxy) o).getHibernateLazyInitializer().getIdentifier();
+      return (Serializable) ((HibernateProxy) o)
+          .getHibernateLazyInitializer()
+          .getIdentifier();
     }
     if (o instanceof BaseOBObject) {
       return (Serializable) ((BaseOBObject) o).getId();
@@ -505,7 +507,9 @@ public class DalUtil {
     final Property referencedProperty = referencingProperty.getReferencedProperty();
     if (referencedProperty.isId()) {
       if (referedObject instanceof HibernateProxy) {
-        return ((HibernateProxy) referedObject).getHibernateLazyInitializer().getIdentifier();
+        return (Serializable) ((HibernateProxy) referedObject)
+            .getHibernateLazyInitializer()
+            .getIdentifier();
       }
       if (referedObject instanceof BaseOBObject) {
         return (Serializable) ((BaseOBObject) referedObject).getId();

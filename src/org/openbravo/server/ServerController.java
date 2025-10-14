@@ -18,7 +18,7 @@
 
 package org.openbravo.server;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Abstract class to be extended by implementations of the server controller

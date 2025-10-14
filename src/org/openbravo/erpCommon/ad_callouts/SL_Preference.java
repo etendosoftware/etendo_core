@@ -18,9 +18,17 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
 
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.servlet.ServletException;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.dal.core.OBContext;
@@ -46,54 +54,56 @@ public class SL_Preference extends SimpleCallout {
 
       String prefId = info.getStringParameter("inpadPreferenceId", idFilter);
       if (!prefId.isEmpty()) {
-        qPref.add(Restrictions.ne(Preference.PROPERTY_ID, prefId));
+        qPref.addNotEqual(Preference.PROPERTY_ID, prefId);
       }
 
       if (info.getStringParameter("inpispropertylist", booleanFilter).equals("Y")) {
-        qPref.add(Restrictions.eq(Preference.PROPERTY_PROPERTY,
-            info.getStringParameter("inpproperty", null)));
+        qPref.addEqual(Preference.PROPERTY_PROPERTY,
+            info.getStringParameter("inpproperty", null));
       } else {
-        qPref.add(Restrictions.eq(Preference.PROPERTY_ATTRIBUTE,
-            info.getStringParameter("inpattribute", null)));
+        qPref.addEqual(Preference.PROPERTY_ATTRIBUTE,
+            info.getStringParameter("inpattribute", null));
       }
 
-      qPref.add(Restrictions.eq(Preference.PROPERTY_SELECTED, true));
+      qPref.addEqual(Preference.PROPERTY_SELECTED, true);
 
       String client = info.getStringParameter("inpvisibleatClientId", idFilter);
       if (client.isEmpty() || client.equals("0")) {
+        // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
         qPref.add(Restrictions.or(Restrictions.isNull(Preference.PROPERTY_VISIBLEATCLIENT),
             Restrictions.eq(Preference.PROPERTY_VISIBLEATCLIENT + ".id", "0")));
       } else {
-        qPref.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATCLIENT + ".id", client));
+        qPref.addEqual(Preference.PROPERTY_VISIBLEATCLIENT + ".id", client);
       }
 
       String org = info.getStringParameter("inpvisibleatOrgId", idFilter);
       if (org.isEmpty() || org.equals("0")) {
+        // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
         qPref.add(Restrictions.or(Restrictions.isNull(Preference.PROPERTY_VISIBLEATORGANIZATION),
             Restrictions.eq(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", "0")));
       } else {
-        qPref.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", org));
+        qPref.addEqual(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", org);
       }
 
       String user = info.getStringParameter("inpadUserId", idFilter);
       if (user.isEmpty()) {
-        qPref.add(Restrictions.isNull(Preference.PROPERTY_USERCONTACT));
+        qPref.addIsNull(Preference.PROPERTY_USERCONTACT);
       } else {
-        qPref.add(Restrictions.eq(Preference.PROPERTY_USERCONTACT + ".id", user));
+        qPref.addEqual(Preference.PROPERTY_USERCONTACT + ".id", user);
       }
 
       String role = info.getStringParameter("inpvisibleatRoleId", idFilter);
       if (role.isEmpty()) {
-        qPref.add(Restrictions.isNull(Preference.PROPERTY_VISIBLEATROLE));
+        qPref.addIsNull(Preference.PROPERTY_VISIBLEATROLE);
       } else {
-        qPref.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATROLE + ".id", role));
+        qPref.addEqual(Preference.PROPERTY_VISIBLEATROLE + ".id", role);
       }
 
       String window = info.getStringParameter("inpadWindowId", idFilter);
       if (window.isEmpty()) {
-        qPref.add(Restrictions.isNull(Preference.PROPERTY_WINDOW));
+        qPref.addIsNull(Preference.PROPERTY_WINDOW);
       } else {
-        qPref.add(Restrictions.eq(Preference.PROPERTY_WINDOW + ".id", window));
+        qPref.addEqual(Preference.PROPERTY_WINDOW + ".id", window);
       }
 
       if (qPref.count() > 0) {

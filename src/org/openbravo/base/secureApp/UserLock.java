@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
@@ -157,7 +157,7 @@ public class UserLock {
     OBContext.setAdminMode();
     try {
       OBCriteria<User> obCriteria = OBDal.getInstance().createCriteria(User.class);
-      obCriteria.add(Restrictions.eq(User.PROPERTY_USERNAME, userName));
+      obCriteria.addEqual(User.PROPERTY_USERNAME, userName);
       obCriteria.setFilterOnReadableClients(false);
       obCriteria.setFilterOnReadableOrganization(false);
 

@@ -18,7 +18,7 @@
  */
 package org.openbravo.advpaymentmngt.executionprocess;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.advpaymentmngt.utility.FIN_PaymentExecutionProcess;
 import org.openbravo.dal.service.OBDal;

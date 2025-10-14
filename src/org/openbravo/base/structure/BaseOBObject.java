@@ -23,7 +23,6 @@ import java.io.Serializable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.BaseOBObjectDef;
 import org.openbravo.base.model.Entity;
@@ -150,8 +149,8 @@ public abstract class BaseOBObject
   private BaseOBObject getTranslation(Property trlParentProperty, Language language, String id) {
     OBCriteria<BaseOBObject> obCriteria = OBDal.getInstance()
         .createCriteria(trlParentProperty.getEntity().getName())
-        .add(Restrictions.eq(trlParentProperty.getName() + ".id", id))
-        .add(Restrictions.eq("language", language))
+        .addEqual(trlParentProperty.getName() + ".id", id)
+        .addEqual("language", language)
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setMaxResults(1);

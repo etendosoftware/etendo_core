@@ -20,7 +20,7 @@ package org.openbravo.client.application.test;
 
 import java.util.HashMap;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.Test;
 import org.openbravo.base.weld.test.WeldBaseTest;

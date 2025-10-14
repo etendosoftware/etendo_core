@@ -19,7 +19,7 @@ package org.openbravo.erpCommon.ad_forms;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

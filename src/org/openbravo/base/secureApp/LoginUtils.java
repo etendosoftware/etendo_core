@@ -18,15 +18,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.HttpBaseUtils;
 import org.openbravo.base.exception.OBException;
@@ -422,7 +422,7 @@ public class LoginUtils {
 
   private static boolean existsAnyOrgWithLedgerConfigured() {
     OBCriteria<Organization> orgCriteria = OBDal.getInstance().createCriteria(Organization.class);
-    orgCriteria.add(Restrictions.isNotNull(Organization.PROPERTY_GENERALLEDGER));
+    orgCriteria.addIsNotNull(Organization.PROPERTY_GENERALLEDGER);
     orgCriteria.setMaxResults(1);
     return orgCriteria.uniqueResult() != null;
   }

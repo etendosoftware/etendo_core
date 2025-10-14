@@ -1,56 +1,64 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2011 Openbravo SLU 
- * All Rights Reserved. 
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
-
 package org.openbravo.base.session;
 
 import java.sql.Types;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * Extends the Oracle10Dialect to replace some java-oracle type mappings to support the current rdb
- * schema of OpenBravo. Is used in the {@link SessionFactoryController}.
- * 
- * @author mtaal
+ * Adaptación del Oracle10gDialect para Hibernate 6.x.
+ * Mantiene compatibilidad con el esquema Openbravo.
  */
+public class OBOracle10gDialect extends OracleDialect {
 
-public class OBOracle10gDialect extends Oracle10gDialect {
   private static final Logger log = LogManager.getLogger();
 
   public OBOracle10gDialect() {
     super();
-
-    registerHibernateType(Types.NUMERIC, StandardBasicTypes.LONG.getName());
-    registerHibernateType(Types.NVARCHAR, StandardBasicTypes.STRING.getName());
-    registerHibernateType(Types.NCHAR, StandardBasicTypes.STRING.getName());
-
-    registerColumnType(Types.VARCHAR, 4000, "nvarchar2($l)");
-    registerColumnType(Types.VARCHAR, 100, "varchar2($l)");
-    registerColumnType(Types.VARCHAR, 5, "char($l)");
-    registerFunction("to_number",
-        new StandardSQLFunction("to_number", StandardBasicTypes.BIG_DECIMAL));
-
-    log.debug("Created Openbravo specific Oracle DIalect");
+    log.debug("Created Openbravo specific Oracle Dialect (Hibernate 6)");
   }
 
+  public OBOracle10gDialect(DialectResolutionInfo info) {
+    super(info);
+    log.debug("Created Openbravo specific Oracle Dialect (Hibernate 6)");
+  }
+
+  /**
+   * Registro de funciones SQL personalizadas.
+   */
+  @Override
+  public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+    super.initializeFunctionRegistry(functionContributions);
+
+    SqmFunctionRegistry registry = functionContributions.getFunctionRegistry();
+
+    registry.namedDescriptorBuilder("to_number")
+        .setInvariantType(functionContributions.getTypeConfiguration()
+            .getBasicTypeRegistry()
+            .resolve(StandardBasicTypes.BIG_DECIMAL))
+        .register();
+  }
+
+  /**
+   * Personaliza los tipos de columna para VARCHAR y NVARCHAR.
+   */
+  @Override
+  protected String columnType(int sqlTypeCode) {
+    switch (sqlTypeCode) {
+      case Types.VARCHAR:
+        // Por defecto usaremos NVARCHAR2 para campos grandes
+        return "nvarchar2";
+      case Types.NVARCHAR:
+        return "nvarchar2";
+      case Types.NCHAR:
+        return "nchar";
+      default:
+        return super.columnType(sqlTypeCode);
+    }
+  }
 }

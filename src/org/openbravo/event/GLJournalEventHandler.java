@@ -18,11 +18,11 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -55,7 +55,7 @@ class GLJournalEventHandler extends EntityPersistenceEventObserver {
         || !event.getCurrentState(currencyRate).equals(event.getPreviousState(currencyRate))) {
       OBCriteria<GLJournalLine> gljournallineCriteria = OBDal.getInstance()
           .createCriteria(GLJournalLine.class);
-      gljournallineCriteria.add(Restrictions.eq(GLJournalLine.PROPERTY_JOURNALENTRY, glj));
+      gljournallineCriteria.addEqual(GLJournalLine.PROPERTY_JOURNALENTRY, glj);
       ScrollableResults scrollLines = gljournallineCriteria.scroll(ScrollMode.FORWARD_ONLY);
 
       try {

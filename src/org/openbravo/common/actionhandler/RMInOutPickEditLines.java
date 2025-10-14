@@ -27,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
@@ -182,8 +182,8 @@ public class RMInOutPickEditLines extends BaseProcessActionHandler {
       if (inOutLine.getSalesOrderLine().getBOMParent() != null) {
         OBCriteria<ShipmentInOutLine> obc = OBDal.getInstance()
             .createCriteria(ShipmentInOutLine.class);
-        obc.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SALESORDERLINE,
-            inOutLine.getSalesOrderLine().getBOMParent()));
+        obc.addEqual(ShipmentInOutLine.PROPERTY_SALESORDERLINE,
+            inOutLine.getSalesOrderLine().getBOMParent());
         ShipmentInOutLine parentInOutLine = (ShipmentInOutLine) obc.uniqueResult();
         inOutLine.setBOMParent(parentInOutLine);
         OBDal.getInstance().save(inOutLine);

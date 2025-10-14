@@ -19,7 +19,7 @@
 
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;

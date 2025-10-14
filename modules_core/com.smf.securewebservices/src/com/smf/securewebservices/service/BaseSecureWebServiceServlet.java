@@ -22,11 +22,11 @@ package com.smf.securewebservices.service;
 import java.io.IOException;
 import java.io.Writer;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -146,7 +146,7 @@ public class BaseSecureWebServiceServlet extends HttpServlet {
             // HttpSession for WS should typically expire fast
             int maxExpireInterval = getWSInactiveInterval();
             if (maxExpireInterval == 0) {
-              session.invalidate();
+              request.logout();
             } else {
               session.setMaxInactiveInterval(maxExpireInterval);
             }

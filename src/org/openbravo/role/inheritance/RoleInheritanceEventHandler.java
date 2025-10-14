@@ -21,8 +21,8 @@ package org.openbravo.role.inheritance;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

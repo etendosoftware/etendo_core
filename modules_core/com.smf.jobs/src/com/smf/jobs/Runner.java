@@ -12,9 +12,9 @@ import org.openbravo.service.web.WebService;
 import org.openbravo.service.web.WebServiceUtil;
 import org.quartz.SchedulerException;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 /**

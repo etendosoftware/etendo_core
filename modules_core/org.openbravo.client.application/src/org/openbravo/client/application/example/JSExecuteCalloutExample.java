@@ -18,7 +18,7 @@
  */
 package org.openbravo.client.application.example;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 

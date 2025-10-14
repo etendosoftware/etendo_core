@@ -28,11 +28,11 @@ import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Criteria;
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.provider.OBSingleton;
 import org.openbravo.base.session.OBPropertiesProvider;
+import org.openbravo.dal.service.OBCriteria;
 
 /**
  * Utility class with that allows to set a query timeout for hibernate queries, hibernate criterias
@@ -126,30 +126,30 @@ public class QueryTimeOutUtil implements OBSingleton {
     }
   }
 
-  /**
-   * Sets a timeout for a hibernate query, if possible
-   * 
-   * @param query
-   * @param type
-   *          query type, it will be used to fetch the proper timeout
-   * 
-   */
-  public void setQueryTimeOut(Query<?> query, String type) {
+  public void setQueryTimeOut(OBCriteria criteria, String type) {
     if (canApplyTimeOut && checkQueryType(type)) {
-      query.setTimeout(queryTimeOutMap.get(type));
+      try {
+        // Hibernate 6: ya no existe setQueryTimeout directo en Criteria
+        Query<?> qry = criteria.createQuery();
+        if (qry != null) {
+          qry.setTimeout(queryTimeOutMap.get(type));
+        }
+      } catch (Exception e) {
+        log.warn("Unable to apply timeout to OBCriteria", e);
+      }
     }
   }
 
-  /**
-   * Sets a timeout for a hibernate criteria (i.e. OBCriteria), if possible
-   * 
-   * @param criteria
-   * @param type
-   *          query type, it will be used to fetch the proper timeout
-   */
-  public void setQueryTimeOut(Criteria criteria, String type) {
+  public void setQueryTimeOut(org.hibernate.query.Query<?> query, String type) {
     if (canApplyTimeOut && checkQueryType(type)) {
-      criteria.setTimeout(queryTimeOutMap.get(type));
+      try {
+        Integer timeout = queryTimeOutMap.get(type);
+        if (timeout != null) {
+          query.setTimeout(timeout); // Hibernate 6 API
+        }
+      } catch (Exception e) {
+        log.warn("Unable to apply timeout to Hibernate Query", e);
+      }
     }
   }
 
@@ -193,8 +193,15 @@ public class QueryTimeOutUtil implements OBSingleton {
   /**
    * Sets the 0 the timeout of a hibernate criteria
    */
-  public static void resetQueryTimeOut(Criteria criteria) {
-    criteria.setTimeout(0);
+  public static void resetQueryTimeOut(OBCriteria criteria) {
+    try {
+      org.hibernate.query.Query<?> qry = criteria.createQuery();
+      if (qry != null) {
+        qry.setTimeout(0);
+      }
+    } catch (Exception e) {
+      log.warn("Unable to reset query timeout on OBCriteria", e);
+    }
   }
 
   /**

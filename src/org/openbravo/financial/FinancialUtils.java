@@ -30,7 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.Check;
 import org.openbravo.dal.core.OBContext;
@@ -235,12 +235,12 @@ public class FinancialUtils {
     try {
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getInstance()
           .createCriteria(ConversionRate.class);
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_ORGANIZATION, org));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CLIENT, client));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, fromCurrency));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, toCurrency));
-      obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, dateWithoutTimestamp));
-      obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, dateWithoutTimestamp));
+      obcConvRate.addEqual(ConversionRate.PROPERTY_ORGANIZATION, org);
+      obcConvRate.addEqual(ConversionRate.PROPERTY_CLIENT, client);
+      obcConvRate.addEqual(ConversionRate.PROPERTY_CURRENCY, fromCurrency);
+      obcConvRate.addEqual(ConversionRate.PROPERTY_TOCURRENCY, toCurrency);
+      obcConvRate.addLessOrEqualThan(ConversionRate.PROPERTY_VALIDFROMDATE, dateWithoutTimestamp);
+      obcConvRate.addGreaterOrEqualThan(ConversionRate.PROPERTY_VALIDTODATE, dateWithoutTimestamp);
       obcConvRate.setFilterOnReadableClients(false);
       obcConvRate.setFilterOnReadableOrganization(false);
       conversionRate = (ConversionRate) obcConvRate.uniqueResult();

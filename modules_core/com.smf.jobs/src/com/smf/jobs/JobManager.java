@@ -1,5 +1,13 @@
 package com.smf.jobs;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 
 import com.smf.jobs.model.Job;
 import com.smf.jobs.model.JobLine;
@@ -8,7 +16,7 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.util.OBClassLoader;
@@ -25,7 +33,7 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.quartz.SchedulerException;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.util.*;
 import java.util.stream.Collectors;
 

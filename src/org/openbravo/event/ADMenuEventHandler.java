@@ -20,8 +20,8 @@ package org.openbravo.event;
 
 import java.util.Arrays;
 
-import javax.enterprise.event.Observes;
-import javax.servlet.ServletException;
+import jakarta.enterprise.event.Observes;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.exception.OBException;

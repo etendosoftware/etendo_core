@@ -1,53 +1,37 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2011 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
 package org.openbravo.dal.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Criterion;
 import org.openbravo.base.structure.BaseOBObject;
 
 /**
  * Util class for DAL
- * 
+ *
  * @author gorkaion
- * 
  */
 public class OBDao {
 
   /**
-   * Generic OBCriteria.
-   * 
+   * Generic OBCriteria builder based on a map of field/value pairs.
+   *
    * @param clazz
    *          Class (entity).
-   * @param constraints
-   *          List of hibernate Criterion instances which are used as filters
-   * @return An OBCriteria object with the constraints.
+   * @param filters
+   *          Map of field → value conditions.
+   * @return An OBCriteria object with the filters applied.
    */
-  public static <T extends BaseOBObject> OBCriteria<T> getFilteredCriteria(Class<T> clazz,
-      Criterion... constraints) {
+  public static <T extends BaseOBObject> OBCriteria<T> getFilteredCriteria(
+      Class<T> clazz, Map<String, Object> filters) {
+
     OBCriteria<T> obc = OBDal.getInstance().createCriteria(clazz);
-    for (Criterion c : constraints) {
-      obc.add(c);
+    if (filters != null) {
+      for (Map.Entry<String, Object> entry : filters.entrySet()) {
+        obc.addEqual(entry.getKey(), entry.getValue());
+      }
     }
     return obc;
   }
@@ -56,11 +40,6 @@ public class OBDao {
    * Returns a List of BaseOBOBjects of the Property identified by the property from the
    * BaseOBObject obj. This method enables the activeFilter so inactive BaseOBObjects are not
    * included on the returned List.
-   * 
-   * @param obj
-   *          BaseOBObject from which the values are requested
-   * @param property
-   *          the name of the Property for which the value is requested
    */
   @SuppressWarnings("unchecked")
   public static <T extends BaseOBObject> List<T> getActiveOBObjectList(BaseOBObject obj,
@@ -81,21 +60,15 @@ public class OBDao {
   /**
    * Parses the string of comma separated id's to return a List with the BaseOBObjects of the given
    * class. If there is an invalid id a null value is added to the List.
-   * 
-   * @param t
-   *          class of the BaseOBObject the id's belong to
-   * @param _IDs
-   *          String containing the comma separated list of id's
-   * @return a List object containing the parsed OBObjects
    */
   public static <T extends BaseOBObject> List<T> getOBObjectListFromString(Class<T> t,
       String _IDs) {
     String strBaseOBOBjectIDs = _IDs;
-    final List<T> baseOBObjectList = new ArrayList<T>();
+    final List<T> baseOBObjectList = new ArrayList<>();
     if (strBaseOBOBjectIDs.startsWith("(")) {
       strBaseOBOBjectIDs = strBaseOBOBjectIDs.substring(1, strBaseOBOBjectIDs.length() - 1);
     }
-    if (!strBaseOBOBjectIDs.equals("")) {
+    if (!strBaseOBOBjectIDs.isEmpty()) {
       strBaseOBOBjectIDs = StringUtils.remove(strBaseOBOBjectIDs, "'");
       StringTokenizer st = new StringTokenizer(strBaseOBOBjectIDs, ",", false);
       while (st.hasMoreTokens()) {
@@ -107,7 +80,7 @@ public class OBDao {
   }
 
   public static <T extends BaseOBObject> List<String> getIDListFromOBObject(List<T> list) {
-    List<String> idList = new ArrayList<String>();
+    List<String> idList = new ArrayList<>();
     for (BaseOBObject o : list) {
       idList.add(o.getId().toString());
     }

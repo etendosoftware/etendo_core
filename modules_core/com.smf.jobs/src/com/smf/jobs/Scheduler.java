@@ -24,7 +24,7 @@ import org.openbravo.scheduling.ProcessContext;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.quartz.SchedulerException;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;

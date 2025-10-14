@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Test suite for the JobsComponentProvider class, responsible for testing its functionality and annotations.

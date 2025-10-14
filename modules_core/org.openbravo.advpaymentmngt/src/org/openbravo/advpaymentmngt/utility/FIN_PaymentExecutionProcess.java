@@ -18,7 +18,7 @@
  */
 package org.openbravo.advpaymentmngt.utility;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.financialmgmt.payment.PaymentRun;

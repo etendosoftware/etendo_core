@@ -22,7 +22,7 @@ package org.openbravo.erpCommon.obps;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;

@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.Parameter;
@@ -541,13 +541,13 @@ public class DimensionDisplayUtility {
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     if (dimension != null) {
-      obc.add(Restrictions.eq(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension));
+      obc.addEqual(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension);
     }
     if (documentBaseType != null) {
-      obc.add(Restrictions.eq(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, documentBaseType));
+      obc.addEqual(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, documentBaseType);
     }
     if (level != null) {
-      obc.add(Restrictions.eq(DimensionMapping.PROPERTY_LEVEL, level));
+      obc.addEqual(DimensionMapping.PROPERTY_LEVEL, level);
     }
     return obc.list();
   }

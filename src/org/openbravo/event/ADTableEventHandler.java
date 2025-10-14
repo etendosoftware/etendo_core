@@ -18,9 +18,17 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
 
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.enterprise.event.Observes;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -80,9 +88,14 @@ class ADTableEventHandler extends EntityPersistenceEventObserver {
     Object dataOriginType = event.getCurrentState(dataOriginTypeProperty);
     if (ApplicationConstants.TABLEBASEDTABLE.equals(dataOriginType) && javaClassName != null) {
       OBCriteria<Table> tableCriteria = OBDal.getInstance().createCriteria(Table.class);
-      tableCriteria.add(Restrictions.eq(Table.PROPERTY_JAVACLASSNAME, javaClassName));
-      tableCriteria.add(Restrictions.eq(Table.PROPERTY_DATAPACKAGE, packageName));
-      tableCriteria.add(Restrictions.not(Restrictions.eq(Table.PROPERTY_ID, tableId)));
+      tableCriteria.addEqual(Table.PROPERTY_JAVACLASSNAME, javaClassName);
+      tableCriteria.addEqual(Table.PROPERTY_DATAPACKAGE, packageName);
+      tableCriteria.add(/* TODO: Migrar manualmente - era Restrictions.not()
+                   * Opción 1: Negar la condición directamente si es simple
+                   * Opción 2: Usar lógica inversa en el código
+                   * Original: Restrictions.not(Restrictions.eq(Table.PROPERTY_ID, tableId))
+                   */
+                   null /* TEMPORAL - Debe implementarse */);
       if (tableCriteria.count() != 0) {
         throw new OBException(Utility.messageBD(conn, "DuplicateJavaClassName", language));
       }

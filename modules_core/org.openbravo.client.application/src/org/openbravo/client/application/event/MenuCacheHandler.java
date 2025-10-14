@@ -19,8 +19,8 @@
 
 package org.openbravo.client.application.event;
 
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

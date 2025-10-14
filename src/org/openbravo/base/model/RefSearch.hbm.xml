@@ -26,7 +26,7 @@
             <generator class="org.openbravo.base.session.DalUUIDGenerator" />
 		</id>
 		
-		<property name="active" type="org.openbravo.base.session.OBYesNoType" not-null="true" column="isactive"/>
+		<property name="active" type="yes_no" not-null="true" column="isactive"/>
          
         <many-to-one name="referenceObject" not-null="true" class="org.openbravo.base.model.Reference" column="ad_reference_id" />
 

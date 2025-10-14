@@ -21,7 +21,7 @@ package org.openbravo.client.application.event;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;

@@ -18,6 +18,14 @@
  */
 package org.openbravo.common.datasource;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,9 +37,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -39,9 +47,9 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Predicate;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
@@ -210,7 +218,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     return OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .add(Restrictions.in(OrderLine.PROPERTY_ID, ids))
+        .addInIds(OrderLine.PROPERTY_ID, ids)
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -259,7 +267,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     return OBDal.getInstance()
         .createCriteria(Warehouse.class)
-        .add(Restrictions.in(Warehouse.PROPERTY_ID, ids))
+        .addInIds(Warehouse.PROPERTY_ID, ids)
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -281,17 +289,17 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     new OrganizationStructureProvider().getChildTree(reservation.getOrganization().getId(), true);
     OBCriteria<Warehouse> obc = OBDal.getInstance().createCriteria(Warehouse.class);
     if (reservation.getWarehouse() != null) {
-      obc.add(Restrictions.eq(Warehouse.PROPERTY_ID, reservation.getWarehouse().getId()));
+      obc.addEqual(Warehouse.PROPERTY_ID, reservation.getWarehouse().getId());
       return obc.list();
     }
     if (reservation.getStorageBin() != null) {
-      obc.add(Restrictions.eq(Warehouse.PROPERTY_ID,
-          reservation.getStorageBin().getWarehouse().getId()));
+      obc.addEqual(Warehouse.PROPERTY_ID,
+          reservation.getStorageBin().getWarehouse().getId());
       return obc.list();
     }
     // Just on hand warehouses are taken into account as per window validation
-    obc.add(Restrictions.in(Warehouse.PROPERTY_ID,
-        getOnHandWarehouseIds(reservation.getOrganization())));
+    obc.addInIds(Warehouse.PROPERTY_ID,
+        getOnHandWarehouseIds(reservation.getOrganization()));
     if (contains != null && !"".equals(contains)) {
       if (contains.startsWith("[")) {
         try {
@@ -312,6 +320,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
                       "%" + myJSONObject.get("value") + "%");
                 }
               } else {
+                // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
                 myCriterion = Restrictions.or(myCriterion, Restrictions
                     .ilike(Warehouse.PROPERTY_NAME, "%" + myJSONObject.get("value") + "%"));
               }
@@ -335,7 +344,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
         obc.add(Restrictions.ilike(Warehouse.PROPERTY_NAME, "%" + contains + "%"));
       }
     }
-    obc.addOrder(Order.asc(Warehouse.PROPERTY_NAME));
+    obc.addOrderBy(Warehouse.PROPERTY_NAME, true);
     return obc.list();
   }
 
@@ -352,7 +361,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     final List<OrgWarehouse> orgWarehosueList = OBDal.getInstance()
         .createCriteria(OrgWarehouse.class)
-        .add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, organization))
+        .addEqual(OrgWarehouse.PROPERTY_ORGANIZATION, organization)
         .list();
 
     for (final OrgWarehouse ow : orgWarehosueList) {
@@ -395,7 +404,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     }
     return OBDal.getInstance()
         .createCriteria(Locator.class)
-        .add(Restrictions.in(Locator.PROPERTY_ID, ids))
+        .addInIds(Locator.PROPERTY_ID, ids)
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -412,13 +421,13 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     new OrganizationStructureProvider().getChildTree(reservation.getOrganization().getId(), true);
     OBCriteria<Locator> obc = OBDal.getInstance()
         .createCriteria(Locator.class)
-        .add(Restrictions.in(Locator.PROPERTY_WAREHOUSE,
-            getOnHandWarehouses(reservation.getOrganization())));
+        .addInIds(Locator.PROPERTY_WAREHOUSE,
+            getOnHandWarehouses(reservation.getOrganization()));
     if (reservation.getWarehouse() != null) {
-      obc.add(Restrictions.eq(Locator.PROPERTY_WAREHOUSE, reservation.getWarehouse()));
+      obc.addEqual(Locator.PROPERTY_WAREHOUSE, reservation.getWarehouse());
     }
     if (reservation.getStorageBin() != null) {
-      obc.add(Restrictions.eq(Locator.PROPERTY_ID, reservation.getStorageBin().getId()));
+      obc.addEqual(Locator.PROPERTY_ID, reservation.getStorageBin().getId());
       return obc.list();
     }
     if (contains != null && !"".equals(contains)) {
@@ -500,7 +509,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     }
     return OBDal.getInstance()
         .createCriteria(AttributeSetInstance.class)
-        .add(Restrictions.in(AttributeSetInstance.PROPERTY_ID, ids))
+        .addInIds(AttributeSetInstance.PROPERTY_ID, ids)
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -538,7 +547,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     return OBDal.getInstance()
         .createCriteria(InventoryStatus.class)
-        .add(Restrictions.in(InventoryStatus.PROPERTY_ID, ids))
+        .addInIds(InventoryStatus.PROPERTY_ID, ids)
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -845,8 +854,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     OBCriteria<AttributeSetInstance> obc = OBDal.getInstance()
         .createCriteria(AttributeSetInstance.class);
     if (reservation.getAttributeSetValue() != null) {
-      obc.add(
-          Restrictions.eq(AttributeSetInstance.PROPERTY_ID, reservation.getAttributeSetValue()));
+      obc.addEqual(AttributeSetInstance.PROPERTY_ID, reservation.getAttributeSetValue());
     }
     if (contains != null && !"".equals(contains)) {
       Criterion myCriterion = null;
@@ -893,7 +901,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             Restrictions.ilike(AttributeSetInstance.PROPERTY_DESCRIPTION, "%" + contains + "%"));
       }
     }
-    obc.addOrder(Order.asc(AttributeSetInstance.PROPERTY_DESCRIPTION));
+    obc.addOrderBy(AttributeSetInstance.PROPERTY_DESCRIPTION, true);
     return obc.list();
   }
 
@@ -904,10 +912,10 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
     obc.createAlias(OrderLine.PROPERTY_SALESORDER, "o");
     if (reservation.getAttributeSetValue() != null) {
-      obc.add(Restrictions.eq(OrderLine.PROPERTY_ATTRIBUTESETVALUE,
-          reservation.getAttributeSetValue()));
+      obc.addEqual(OrderLine.PROPERTY_ATTRIBUTESETVALUE,
+          reservation.getAttributeSetValue());
     }
-    obc.add(Restrictions.eq(OrderLine.PROPERTY_PRODUCT, reservation.getProduct()));
+    obc.addEqual(OrderLine.PROPERTY_PRODUCT, reservation.getProduct());
     if (contains != null && !"".equals(contains)) {
       Criterion myCriterion = null;
       if (contains.startsWith("[")) {

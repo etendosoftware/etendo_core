@@ -31,7 +31,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.BaseActionHandler;
@@ -75,7 +75,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
           .get(InventoryAmountUpdate.class, invAmtUpdId);
       final OBCriteria<InventoryAmountUpdateLine> qLines = OBDal.getInstance()
           .createCriteria(InventoryAmountUpdateLine.class);
-      qLines.add(Restrictions.eq(InventoryAmountUpdateLine.PROPERTY_CAINVENTORYAMT, invAmtUpd));
+      qLines.addEqual(InventoryAmountUpdateLine.PROPERTY_CAINVENTORYAMT, invAmtUpd);
 
       final ScrollableResults scrollLines = qLines.scroll(ScrollMode.FORWARD_ONLY);
       try {

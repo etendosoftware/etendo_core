@@ -18,7 +18,7 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.model.Entity;

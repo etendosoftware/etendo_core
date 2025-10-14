@@ -26,15 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.base.structure.InheritedAccessEnabled;
@@ -660,9 +660,9 @@ public class RoleInheritanceManager {
       boolean seqNoAscending) {
     final OBCriteria<RoleInheritance> obCriteria = OBDal.getInstance()
         .createCriteria(RoleInheritance.class);
-    obCriteria.add(Restrictions.eq(RoleInheritance.PROPERTY_ROLE, role));
+    obCriteria.addEqual(RoleInheritance.PROPERTY_ROLE, role);
     if (excludedInheritFrom != null) {
-      obCriteria.add(Restrictions.ne(RoleInheritance.PROPERTY_INHERITFROM, excludedInheritFrom));
+      obCriteria.addNotEqual(RoleInheritance.PROPERTY_INHERITFROM, excludedInheritFrom);
     }
     obCriteria.addOrderBy(RoleInheritance.PROPERTY_SEQUENCENUMBER, seqNoAscending);
     return obCriteria.list();
@@ -707,8 +707,8 @@ public class RoleInheritanceManager {
     final ArrayList<RoleInheritance> roleInheritancesList = new ArrayList<RoleInheritance>();
     final OBCriteria<RoleInheritance> obCriteria = OBDal.getInstance()
         .createCriteria(RoleInheritance.class);
-    obCriteria.add(Restrictions.eq(RoleInheritance.PROPERTY_ROLE, inheritance.getRole()));
-    obCriteria.add(Restrictions.ne(RoleInheritance.PROPERTY_ID, inheritance.getId()));
+    obCriteria.addEqual(RoleInheritance.PROPERTY_ROLE, inheritance.getRole());
+    obCriteria.addNotEqual(RoleInheritance.PROPERTY_ID, inheritance.getId());
     obCriteria.addOrderBy(RoleInheritance.PROPERTY_SEQUENCENUMBER, true);
     boolean added = false;
     for (RoleInheritance rh : obCriteria.list()) {

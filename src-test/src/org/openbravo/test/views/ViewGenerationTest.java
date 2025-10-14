@@ -22,7 +22,7 @@ package org.openbravo.test.views;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.Before;
 import org.openbravo.base.weld.test.WeldBaseTest;

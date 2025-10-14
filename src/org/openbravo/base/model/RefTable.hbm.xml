@@ -26,13 +26,13 @@
             <generator class="org.openbravo.base.session.DalUUIDGenerator" />
 		</id>
 		
-		<property name="active" type="org.openbravo.base.session.OBYesNoType" not-null="true" column="isactive"/>				
+		<property name="active" type="yes_no" not-null="true" column="isactive"/>				
          
         <many-to-one name="reference" not-null="true" class="org.openbravo.base.model.Reference" column="ad_reference_id" insert="false" update="false"/>
 
 		<many-to-one name="column" not-null="true" class="org.openbravo.base.model.Column" column="ad_key"/>	
     
-        <property name="displayedValue" type="org.openbravo.base.session.OBYesNoType" not-null="true" column="IsValueDisplayed"/>
+        <property name="displayedValue" type="yes_no" not-null="true" column="IsValueDisplayed"/>
     			
     <many-to-one name="displayColumn" not-null="true" class="org.openbravo.base.model.Column" column="ad_display"/>        
 		

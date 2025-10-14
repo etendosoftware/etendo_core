@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.Test;
 import org.openbravo.base.model.Entity;

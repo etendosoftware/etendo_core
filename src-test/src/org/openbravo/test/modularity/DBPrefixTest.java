@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.criterion.Restrictions;
 import org.junit.FixMethodOrder;

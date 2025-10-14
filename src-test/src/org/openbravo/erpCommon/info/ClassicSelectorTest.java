@@ -21,7 +21,7 @@ package org.openbravo.erpCommon.info;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.junit.Test;
 import org.openbravo.erpCommon.utility.TableSQLData;

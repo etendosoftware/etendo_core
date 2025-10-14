@@ -27,14 +27,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -315,7 +315,7 @@ public class GenerateInvoicesmanual extends HttpSecureAppServlet {
     OBCriteria<Order> orderCrit = OBDal.getInstance().createCriteria(Order.class);
 
     ArrayList<String> orderIds = Utility.stringToArrayList(strOrderIds.replaceAll("\\(|\\)|'", ""));
-    orderCrit.add(Restrictions.in(Order.PROPERTY_ID, orderIds));
+    orderCrit.addInIds(Order.PROPERTY_ID, orderIds);
 
     List<Order> orders = orderCrit.list();
     return orders;

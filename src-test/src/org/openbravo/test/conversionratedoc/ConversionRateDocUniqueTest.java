@@ -21,7 +21,7 @@ package org.openbravo.test.conversionratedoc;
 
 import java.math.BigDecimal;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.jboss.arquillian.junit.InSequence;
 import org.junit.After;

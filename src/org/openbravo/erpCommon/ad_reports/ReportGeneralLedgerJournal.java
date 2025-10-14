@@ -28,16 +28,16 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesHistory;
@@ -1162,7 +1162,7 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
       }
 
       OBCriteria<BaseOBObject> query = OBDal.getInstance().createCriteria(tablename);
-      query.add(Restrictions.eq("documentNo", documentNo));
+      query.addEqual("documentNo", documentNo);
 
       return Utility.getInStrList(query.list(), true);
     } catch (Exception ignore) {

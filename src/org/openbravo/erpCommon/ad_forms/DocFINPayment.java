@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -795,9 +795,9 @@ public class DocFINPayment extends AcctServer {
       if (FIN_Utility.isPaymentConfirmed(payment.getStatus(), null)) {
         OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
-        obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, payment.getAccount()));
-        obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-            payment.getPaymentMethod()));
+        obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, payment.getAccount());
+        obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+            payment.getPaymentMethod());
         obCriteria.setFilterOnReadableClients(false);
         obCriteria.setFilterOnReadableOrganization(false);
         List<FinAccPaymentMethod> lines = obCriteria.list();
@@ -906,12 +906,12 @@ public class DocFINPayment extends AcctServer {
     try {
       OBCriteria<FIN_FinancialAccountAccounting> accounts = OBDal.getInstance()
           .createCriteria(FIN_FinancialAccountAccounting.class);
-      accounts.add(Restrictions.eq(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNT, finAccount));
-      accounts.add(Restrictions.eq(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNTINGSCHEMA,
+      accounts.addEqual(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNT, finAccount);
+      accounts.addEqual(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNTINGSCHEMA,
           OBDal.getInstance()
               .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
-                  as.m_C_AcctSchema_ID)));
-      accounts.add(Restrictions.eq(FIN_FinancialAccountAccounting.PROPERTY_ACTIVE, true));
+                  as.m_C_AcctSchema_ID));
+      accounts.addEqual(FIN_FinancialAccountAccounting.PROPERTY_ACTIVE, true);
       accounts.setFilterOnReadableClients(false);
       accounts.setFilterOnReadableOrganization(false);
       List<FIN_FinancialAccountAccounting> accountList = accounts.list();
@@ -920,9 +920,9 @@ public class DocFINPayment extends AcctServer {
       }
       OBCriteria<FinAccPaymentMethod> accPaymentMethod = OBDal.getInstance()
           .createCriteria(FinAccPaymentMethod.class);
-      accPaymentMethod.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, finAccount));
+      accPaymentMethod.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, finAccount);
       accPaymentMethod
-          .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+          .addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
       accPaymentMethod.setFilterOnReadableClients(false);
       accPaymentMethod.setFilterOnReadableOrganization(false);
       List<FinAccPaymentMethod> lines = accPaymentMethod.list();

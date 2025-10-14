@@ -21,10 +21,10 @@ package org.openbravo.advpaymentmngt.ad_actionbutton;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.openbravo.advpaymentmngt.utility.FIN_BankStatementImport;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;

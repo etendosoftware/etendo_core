@@ -29,7 +29,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.exception.GenericJDBCException;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -79,8 +79,8 @@ public class VariantAutomaticGenerationProcess implements Process {
 
       OBCriteria<ProductCharacteristic> prChCrit = OBDal.getInstance()
           .createCriteria(ProductCharacteristic.class);
-      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, product));
-      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_VARIANT, true));
+      prChCrit.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, product);
+      prChCrit.addEqual(ProductCharacteristic.PROPERTY_VARIANT, true);
       prChCrit.addOrderBy(ProductCharacteristic.PROPERTY_SEQUENCENUMBER, true);
       List<ProductCharacteristic> prChCritList = prChCrit.list();
       List<String> prChs = new ArrayList<String>();

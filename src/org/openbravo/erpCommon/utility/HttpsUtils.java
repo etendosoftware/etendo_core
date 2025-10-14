@@ -31,7 +31,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStoreException;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

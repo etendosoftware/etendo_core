@@ -23,8 +23,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * HttpSession mock to be used to test components requiring an HTTP session
@@ -78,7 +78,7 @@ public class HttpSessionMock implements HttpSession {
 
   @SuppressWarnings("deprecation")
   @Override
-  public javax.servlet.http.HttpSessionContext getSessionContext() {
+  public jakarta.servlet.http.HttpSessionContext getSessionContext() {
     throw new UnsupportedOperationException();
   }
 

@@ -30,7 +30,7 @@ import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.Date;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;

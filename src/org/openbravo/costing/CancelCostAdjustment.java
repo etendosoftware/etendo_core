@@ -29,7 +29,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
@@ -104,8 +104,8 @@ public class CancelCostAdjustment extends BaseActionHandler {
     // Call cost
     OBCriteria<CostAdjustmentLine> qLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    qLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, costAdjustmentOrig));
-    qLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISSOURCE, true));
+    qLines.addEqual(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, costAdjustmentOrig);
+    qLines.addEqual(CostAdjustmentLine.PROPERTY_ISSOURCE, true);
     ScrollableResults scrollLines = qLines.scroll(ScrollMode.FORWARD_ONLY);
     try {
       int cnt = 0;

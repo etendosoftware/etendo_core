@@ -19,7 +19,7 @@ package org.openbravo.service.datasource.hql;
 
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * A HqlQueryTransformer is able to transform an HQL query. HqlTransformer are instantiated using

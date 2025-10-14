@@ -20,10 +20,10 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import java.math.BigDecimal;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -255,13 +255,12 @@ public class SE_Invoice_BPartner extends SimpleCallout {
           OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
               .createCriteria(FinAccPaymentMethod.class);
           obc.setFilterOnReadableOrganization(false);
-          obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
-          obc.add(
-              Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, selectedPaymentMethod));
-          obc.add(Restrictions.in(FinAccPaymentMethod.PROPERTY_ORGANIZATION + ".id",
+          obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
+          obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, selectedPaymentMethod);
+          obc.addInIds(FinAccPaymentMethod.PROPERTY_ORGANIZATION + ".id",
               OBContext.getOBContext()
                   .getOrganizationStructureProvider()
-                  .getNaturalTree(strOrgId)));
+                  .getNaturalTree(strOrgId));
 
           // filter is on unique constraint so list() size <=1 always
           if (obc.uniqueResult() == null) {

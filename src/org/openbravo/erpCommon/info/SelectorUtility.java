@@ -18,7 +18,7 @@
  */
 package org.openbravo.erpCommon.info;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Common utility functions to be used by the different selectors.

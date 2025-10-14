@@ -21,7 +21,7 @@ package org.openbravo.common.actionhandler.createlinesfromprocess;
 
 import java.util.HashMap;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;

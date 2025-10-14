@@ -21,9 +21,9 @@ package org.openbravo.erpCommon.businessUtility;
 
 import java.util.Iterator;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.model.common.order.Order;

@@ -21,7 +21,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Map;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;

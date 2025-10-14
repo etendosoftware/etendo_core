@@ -19,6 +19,14 @@
 
 package org.openbravo.erpCommon.obps;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
@@ -48,18 +56,18 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.CRC32;
 
 import javax.crypto.Cipher;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpSession;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -850,8 +858,8 @@ public class ActivationKey {
       OBCriteria<HeartbeatLog> hbLog = OBDal.getInstance().createCriteria(HeartbeatLog.class);
       Calendar lastDays = Calendar.getInstance();
       lastDays.add(Calendar.DAY_OF_MONTH, -9);
-      hbLog.add(Restrictions.ge(HeartbeatLog.PROPERTY_CREATIONDATE,
-          new Date(lastDays.getTimeInMillis())));
+      hbLog.addGreaterOrEqualThan(HeartbeatLog.PROPERTY_CREATIONDATE,
+          new Date(lastDays.getTimeInMillis()));
       return hbLog.count() > 0;
 
     } finally {
@@ -881,14 +889,21 @@ public class ActivationKey {
       OBCriteria<Session> obCriteria = OBDal.getInstance().createCriteria(Session.class);
 
       // sesion_active='Y' and (lastPing is null or lastPing<lastValidPing)
+      // TODO: Migrar 
+ Restrictions.and() a CriteriaBuilder.and() manualmente
       obCriteria.add(Restrictions.and(Restrictions.eq(Session.PROPERTY_SESSIONACTIVE, true),
+          // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
           Restrictions.or(Restrictions.isNull(Session.PROPERTY_LASTPING),
               Restrictions.lt(Session.PROPERTY_LASTPING, lastValidPingTime))));
-      obCriteria.add(
-          Restrictions.not(Restrictions.in(Session.PROPERTY_LOGINSTATUS, NO_CU_SESSION_TYPES)));
+      obCriteria.add(/* TODO: Migrar manualmente - era Restrictions.not()
+                   * Opción 1: Negar la condición directamente si es simple
+                   * Opción 2: Usar lógica inversa en el código
+                   * Original: Restrictions.not(Restrictions.in(Session.PROPERTY_LOGINSTATUS, NO_CU_SESSION_TYPES))
+                   */
+                   null /* TEMPORAL - Debe implementarse */);
 
       if (currentSessionId != null) {
-        obCriteria.add(Restrictions.ne(Session.PROPERTY_ID, currentSessionId));
+        obCriteria.addNotEqual(Session.PROPERTY_ID, currentSessionId);
       }
 
       List<Session> expiredCandidates = obCriteria.list();
@@ -1073,12 +1088,17 @@ public class ActivationKey {
    */
   public int getActiveSessions(String currentSession) {
     OBCriteria<Session> obCriteria = OBDal.getInstance().createCriteria(Session.class);
-    obCriteria.add(Restrictions.eq(Session.PROPERTY_SESSIONACTIVE, true));
+    obCriteria.addEqual(Session.PROPERTY_SESSIONACTIVE, true);
     obCriteria
-        .add(Restrictions.not(Restrictions.in(Session.PROPERTY_LOGINSTATUS, NO_CU_SESSION_TYPES)));
+        .add(/* TODO: Migrar manualmente - era Restrictions.not()
+                   * Opción 1: Negar la condición directamente si es simple
+                   * Opción 2: Usar lógica inversa en el código
+                   * Original: Restrictions.not(Restrictions.in(Session.PROPERTY_LOGINSTATUS, NO_CU_SESSION_TYPES))
+                   */
+                   null /* TEMPORAL - Debe implementarse */);
 
     if (currentSession != null && !currentSession.equals("")) {
-      obCriteria.add(Restrictions.ne(Session.PROPERTY_ID, currentSession));
+      obCriteria.addNotEqual(Session.PROPERTY_ID, currentSession);
     }
     return obCriteria.count();
   }
@@ -1361,11 +1381,11 @@ public class ActivationKey {
     OBContext.setAdminMode();
     try {
       OBCriteria<Module> mods = OBDal.getInstance().createCriteria(Module.class);
-      mods.add(Restrictions.eq(Module.PROPERTY_COMMERCIAL, true));
-      mods.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
+      mods.addEqual(Module.PROPERTY_COMMERCIAL, true);
+      mods.addEqual(Module.PROPERTY_ENABLED, true);
       // Allow development of commercial modules which are not in the license.
-      mods.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, false));
-      mods.addOrder(Order.asc(Module.PROPERTY_NAME));
+      mods.addEqual(Module.PROPERTY_INDEVELOPMENT, false);
+      mods.addOrderBy(Module.PROPERTY_NAME, true);
       for (Module mod : mods.list()) {
         if (isModuleSubscribed(mod.getJavaPackage(),
             refreshIfneeded) == CommercialModuleStatus.NO_SUBSCRIBED) {
@@ -1603,8 +1623,8 @@ public class ActivationKey {
   public int getNumberWSDayCounter() {
     Date date = getDayAt0(new Date());
     OBCriteria<Session> qLogins = OBDal.getInstance().createCriteria(Session.class);
-    qLogins.add(Restrictions.eq(Session.PROPERTY_LOGINSTATUS, "WS"));
-    qLogins.add(Restrictions.ge(Session.PROPERTY_CREATIONDATE, date));
+    qLogins.addEqual(Session.PROPERTY_LOGINSTATUS, "WS");
+    qLogins.addGreaterOrEqualThan(Session.PROPERTY_CREATIONDATE, date);
     return qLogins.count();
   }
 

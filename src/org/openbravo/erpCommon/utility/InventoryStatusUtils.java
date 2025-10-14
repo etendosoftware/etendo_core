@@ -22,7 +22,7 @@ package org.openbravo.erpCommon.utility;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.common.hooks.InventoryStatusHookManager;
@@ -123,8 +123,8 @@ public class InventoryStatusUtils {
    */
   private static int getNumberOfVirtualBins(Locator storageBin, boolean active) {
     OBCriteria<Locator> obc = OBDal.getInstance().createCriteria(Locator.class);
-    obc.add(Restrictions.eq(Locator.PROPERTY_ISVIRTUAL, true));
-    obc.add(Restrictions.eq(Locator.PROPERTY_PARENTLOCATOR, storageBin));
+    obc.addEqual(Locator.PROPERTY_ISVIRTUAL, true);
+    obc.addEqual(Locator.PROPERTY_PARENTLOCATOR, storageBin);
     obc.setFilterOnActive(active);
     return obc.count();
   }

@@ -18,7 +18,15 @@
  */
 package org.openbravo.erpCommon.ad_process;
 
-import org.hibernate.criterion.Restrictions;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -63,7 +71,7 @@ public class CreateCustomModule implements Process {
       module.setVersion("1.0.0");
       module.setTranslationRequired(true);
       OBCriteria<Language> langCriteria = OBDal.getInstance().createCriteria(Language.class);
-      langCriteria.add(Restrictions.eq(Language.PROPERTY_LANGUAGE, "en_US"));
+      langCriteria.addEqual(Language.PROPERTY_LANGUAGE, "en_US");
       module.setLanguage(langCriteria.list().get(0));
       OBDal.getInstance().save(module);
 

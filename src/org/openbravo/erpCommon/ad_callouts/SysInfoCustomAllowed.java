@@ -19,7 +19,7 @@
 
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.client.kernel.BaseComponent;

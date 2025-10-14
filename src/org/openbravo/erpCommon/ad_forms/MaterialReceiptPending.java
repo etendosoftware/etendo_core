@@ -29,11 +29,11 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -456,16 +456,16 @@ public class MaterialReceiptPending extends HttpSecureAppServlet {
 
               OBCriteria<UOMConversion> conversion = OBDal.getInstance()
                   .createCriteria(UOMConversion.class);
-              conversion.add(Restrictions.eq(UOMConversion.PROPERTY_UOM, uom));
-              conversion.add(Restrictions.eq(UOMConversion.PROPERTY_TOUOM, orderUom));
+              conversion.addEqual(UOMConversion.PROPERTY_UOM, uom);
+              conversion.addEqual(UOMConversion.PROPERTY_TOUOM, orderUom);
               List<UOMConversion> conversionList = conversion.list();
               Boolean useDivideRateBy = false;
 
               // Inverting search of UOM conversion if conversion list is empty
               if (conversionList.isEmpty()) {
                 conversion = OBDal.getInstance().createCriteria(UOMConversion.class);
-                conversion.add(Restrictions.eq(UOMConversion.PROPERTY_UOM, orderUom));
-                conversion.add(Restrictions.eq(UOMConversion.PROPERTY_TOUOM, uom));
+                conversion.addEqual(UOMConversion.PROPERTY_UOM, orderUom);
+                conversion.addEqual(UOMConversion.PROPERTY_TOUOM, uom);
                 conversionList = conversion.list();
                 useDivideRateBy = true;
               }

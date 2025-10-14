@@ -19,9 +19,9 @@
 
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -68,13 +68,13 @@ public class ExternalBusinessPartnerConfigPropertyEventHandler extends EntityPer
 
     final OBCriteria<?> criteria = OBDal.getInstance()
       .createCriteria(event.getTargetInstance().getClass());
-    criteria.add(Restrictions.eq(
+    criteria.addEqual(
       ExternalBusinessPartnerConfigProperty.PROPERTY_EXTERNALBUSINESSPARTNERINTEGRATIONCONFIGURATION,
-      currentExtBPConfig));
+      currentExtBPConfig);
     criteria
-      .add(Restrictions.eq(ExternalBusinessPartnerConfigProperty.PROPERTY_ISDEFAULTEMAIL, true));
-    criteria.add(Restrictions.eq(ExternalBusinessPartnerConfigProperty.PROPERTY_ACTIVE, true));
-    criteria.add(Restrictions.ne(ExternalBusinessPartnerConfigProperty.PROPERTY_ID, id));
+      .addEqual(ExternalBusinessPartnerConfigProperty.PROPERTY_ISDEFAULTEMAIL, true);
+    criteria.addEqual(ExternalBusinessPartnerConfigProperty.PROPERTY_ACTIVE, true);
+    criteria.addNotEqual(ExternalBusinessPartnerConfigProperty.PROPERTY_ID, id);
 
     criteria.setMaxResults(1);
     if (criteria.uniqueResult() != null) {

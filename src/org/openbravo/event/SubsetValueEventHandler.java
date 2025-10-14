@@ -18,9 +18,9 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -57,15 +57,15 @@ class SubsetValueEventHandler extends EntityPersistenceEventObserver {
     if (event.getCurrentState(codeProperty) != event.getPreviousState(codeProperty)) {
       OBCriteria<ProductCharacteristic> productCharacteristic = OBDal.getInstance()
           .createCriteria(ProductCharacteristic.class);
-      productCharacteristic.add(Restrictions.eq(ProductCharacteristic.PROPERTY_CHARACTERISTICSUBSET,
-          chsubsetv.getCharacteristicSubset()));
+      productCharacteristic.addEqual(ProductCharacteristic.PROPERTY_CHARACTERISTICSUBSET,
+          chsubsetv.getCharacteristicSubset());
       if (productCharacteristic.count() > 0) {
         for (ProductCharacteristic productCh : productCharacteristic.list()) {
           OBCriteria<ProductCharacteristicConf> productCharateristicsConf = OBDal.getInstance()
               .createCriteria(ProductCharacteristicConf.class);
           productCharateristicsConf
-              .add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
-                  chsubsetv.getCharacteristicValue()));
+              .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
+                  chsubsetv.getCharacteristicValue());
           productCharateristicsConf.add(Restrictions
               .eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, productCh));
           if (productCharateristicsConf.count() > 0) {

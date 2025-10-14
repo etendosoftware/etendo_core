@@ -20,12 +20,12 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import java.math.BigDecimal;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -106,8 +106,8 @@ public class OperativeQuantity_To_BaseQuantity extends SimpleCallout {
 
   private Table getTableOfHeaderTabFromWindow(String windowId) {
     OBCriteria<Tab> obc = OBDal.getInstance().createCriteria(Tab.class);
-    obc.add(Restrictions.eq(Tab.PROPERTY_WINDOW, OBDal.getInstance().get(Window.class, windowId)));
-    obc.add(Restrictions.eq(Tab.PROPERTY_TABLEVEL, 0L));
+    obc.addEqual(Tab.PROPERTY_WINDOW, OBDal.getInstance().get(Window.class, windowId));
+    obc.addEqual(Tab.PROPERTY_TABLEVEL, 0L);
     obc.addOrderBy(Tab.PROPERTY_SEQUENCENUMBER, true);
     Tab tab = (Tab) obc.list().get(0);
     return tab.getTable();
