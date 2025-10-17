@@ -292,9 +292,8 @@ export.database: exports database structure and data to xml files.
     <pathelement path="${base.src}" />
 
     <!-- This prevents failing YUI compression  -->
-    <pathelement location="${base.lib}/build/yuicompressor-2.4.2.jar" />
-    <pathelement location="${base.lib}/build/ob-rhino-1.6R7.jar" />
-    <pathelement location="${base.lib}/build/YUIAnt.jar" />
+    <pathelement location="${base.lib.location}/build/yuicompressor-2.4.2.jar" />
+    <pathelement location="${base.lib.location}/build/YUIAnt.jar" />
 
     <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
       <include name="build/*.jar" />
@@ -350,9 +349,8 @@ export.database: exports database structure and data to xml files.
     <pathelement path="${base.src}" />
 
     <!-- This prevents failing YUI compression  -->
-    <pathelement location="${base.lib}/build/yuicompressor-2.4.2.jar" />
-    <pathelement location="${base.lib}/build/ob-rhino-1.6R7.jar" />
-    <pathelement location="${base.lib}/build/YUIAnt.jar" />
+    <pathelement location="${base.lib.location}/build/yuicompressor-2.4.2.jar" />
+    <pathelement location="${base.lib.location}/build/YUIAnt.jar" />
 
     <fileset dir="${base.lib}" erroronmissingdir="${isSourceJar}">
       <include name="build/*.jar" />

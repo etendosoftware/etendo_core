@@ -65,7 +65,6 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
   private final static String LOG4J2TEST_XML = BASEDIR_TEST_SRC + "log4j2-test.xml";
   private final static String LOG4J2WEB_XML = BASEDIR_CONFIG + "log4j2-web.xml";
   private final static String REDISSON_YAML = BASEDIR_CONFIG + "redisson-config.yaml";
-  private final static String COMMON_COMPONENT = ".settings/org.eclipse.wst.common.component";
   private final static String CLASSPATH = ".classpath";
   private final static String OPENBRAVO_LICENSE = BASEDIR + "/legal/Licensing.txt";
   private final static int LINES_SHOWING_LICENSE = 50;
@@ -175,7 +174,6 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
     if (acceptedLicense) {
       initializeOpenbravoPropertiesWithDefaults(p);
       setValuesInOpenbravoProperties(p);
-      setValuesInCommonComponent(p);
       fileCopySomeTemplates(p);
       p.log("Configuration complete.");
     } else {
@@ -224,8 +222,6 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
         case WRITE_PROPERTIES:
           // All options have been selected... configure Openbravo.properties file.
           setValuesInOpenbravoProperties(p);
-          // Configure common.component file.
-          setValuesInCommonComponent(p);
           break;
         case FINISH_CONFIGURATION:
           finishConfigurationProcess(p);
@@ -250,27 +246,6 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
       e.printStackTrace();
     }
     acceptLicense(p);
-  }
-
-  /**
-   * This method replaces old values in org.eclipse.wst.common.component by the new requested
-   * values.
-   */
-  private void setValuesInCommonComponent(Project p) {
-    fileCopyTemplate(COMMON_COMPONENT + ".template", COMMON_COMPONENT, p);
-    File file = new File(COMMON_COMPONENT);
-    // Get new context name to replace.
-    String contextDeploy = replaceProperties.get(PREFIX_CONTEXT_NAME);
-    if (!(searchOptionsProperties(file, PREFIX_COMMON_COMPONENT_DEPLOY, p)
-        .equals(contextDeploy + SUFFIX_COMMON_COMPONENT_DEPLOY)
-        && searchOptionsProperties(file, PREFIX_COMMON_COMPONENT_CONTEXT, p)
-            .equals(contextDeploy + SUFFIX_COMMON_COMPONENT_CONTEXT))) {
-      // Update new contextDeploy in common_component file: context-root and deploy-name
-      replaceGeneralProperty(COMMON_COMPONENT, PREFIX_COMMON_COMPONENT_DEPLOY,
-          contextDeploy + SUFFIX_COMMON_COMPONENT_DEPLOY, p);
-      replaceGeneralProperty(COMMON_COMPONENT, PREFIX_COMMON_COMPONENT_CONTEXT,
-          contextDeploy + SUFFIX_COMMON_COMPONENT_CONTEXT, p);
-    }
   }
 
   /**
@@ -785,7 +760,6 @@ public class ConfigurationApp extends org.apache.tools.ant.Task {
     fileCopyTemplate(FORMAT_XML + ".template", FORMAT_XML, p);
     fileCopyTemplate(LOG4J2_XML + ".template", LOG4J2_XML, p);
     fileCopyTemplate(LOG4J2WEB_XML + ".template", LOG4J2WEB_XML, p);
-    fileCopyTemplate(CLASSPATH + ".template", CLASSPATH, p);
     fileCopyTemplate(BASEDIR_TEST + CLASSPATH + ".template", BASEDIR_TEST + CLASSPATH, p);
     fileCopyTemplate(LOG4J2TEST_XML + ".template", LOG4J2TEST_XML, p);
     fileCopyTemplate(REDISSON_YAML + ".template", REDISSON_YAML, p);
