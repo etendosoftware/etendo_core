@@ -306,8 +306,8 @@ spec:
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "org.openbravo.test.WebserviceTestSuite"
               try {
-                def suiteName = "org.openbravo.test.WebserviceTestSuite"
                 echo "--------------- Running ${suiteName} ---------------"
                 sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test0.exec"
@@ -358,8 +358,8 @@ spec:
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "com.smf.test.CoreTestSuite"
               try {
-                def suiteName = "com.smf.test.CoreTestSuite"
                 echo "--------------- Running ${suiteName} ---------------"
                 sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
@@ -409,8 +409,8 @@ spec:
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "org.openbravo.test.StandaloneTestSuite"
               try {
-                def suiteName = "org.openbravo.test.StandaloneTestSuite"
                 echo "--------------- Running ${suiteName} ---------------"
                 sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test2.exec"
@@ -459,8 +459,8 @@ spec:
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "com.etendoerp.*"
               try {
-                def suiteName = "com.etendoerp.*"
                 echo "--------------- Running ${suiteName} Tests ---------------"
                 sh "./gradlew test --tests \"com.etendoerp.*\" --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test3.exec"
