@@ -129,8 +129,8 @@ spec:
           try {
             echo "---------------------- Setting up Environment Variables ----------------------"
             env.JACOCO_REPORT_EXISTS = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
-            env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution. 
-            env.STATUS_BUILD = FAILED // Variable to track the status of the build. 
+            env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution.
+            env.STATUS_BUILD = FAILED // Variable to track the status of the build.
             env.ERROR_MESSAGE = "Build Failed"
             env.FAILED_SUITES = "" // List to collect failed test suites
             sh "printenv"
@@ -140,9 +140,9 @@ spec:
               script: "git diff --name-only HEAD~1 HEAD",
               returnStdout: true
             ).trim()
-            
+
             echo "Files changed in last commit: ${changedFiles}"
-            
+
             // Check if only JenkinsfileOracle was changed
             def filesList = changedFiles.split('\n')
             def onlyOracleJenkinsfile = filesList.size() == 1 && filesList[0] == "pipelines/unittests/JenkinsfileOracle"
@@ -151,7 +151,7 @@ spec:
               echo "⏭️ Only pipelines/unittests/JenkinsfileOracle was changed. Skipping pipeline execution."
 
               sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-              
+
               echo "✅ Pipeline execution aborted successfully. Commit marked as success."
               currentBuild.result = ABORTED
               return
