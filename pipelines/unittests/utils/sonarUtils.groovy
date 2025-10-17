@@ -3,13 +3,6 @@
 /**
  * Checks if this is the first analysis for a given branch
  * @param branch Branch name to check
-      // Use the analysis-specific API to get measures for this exact analysis
-      response = sh(
-        script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/measures/component?component=${sonarProjectKey}&metricKeys=coverage&analysisId=${targetAnalysis.key}\"",
-        returnStdout: true
-      ).trim()
-      
-      echo "📈 Analysis-specific measures API response for ${targetAnalysis.key}: ${response}"am sonarProjectKey SonarQube project key
  * @param sonarToken SonarQube API token
  * @param sonarServer SonarQube server URL
  * @return true if this is the first analysis, false otherwise
@@ -17,7 +10,7 @@
 def isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
   try {
     def analysisResp = sh(
-      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${encodedBranch}&ps=1\"",
+      script: "curl -s -u ${sonarToken}: \"${sonarServer}/api/project_analyses/search?project=${sonarProjectKey}&branch=${branch}&ps=1\"",
       returnStdout: true
     ).trim()
     
