@@ -89,7 +89,7 @@ public class Fin_UtilityLegacy implements FIN_SequenceActionInterface {
             Sequence seq = docType.getDocumentSequence();
             if (seq == null && tableName != null) {
                 OBCriteria<Sequence> obcSeq = OBDal.getInstance().createCriteria(Sequence.class);
-                obcSeq.add(Restrictions.eq(Sequence.PROPERTY_NAME, tableName));
+                obcSeq.addEqual(Sequence.PROPERTY_NAME, tableName);
                 obcSeq.setMaxResults(1);
                 seq = (Sequence) obcSeq.uniqueResult();
             }

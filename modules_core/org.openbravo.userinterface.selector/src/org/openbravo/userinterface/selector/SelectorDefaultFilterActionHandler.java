@@ -96,8 +96,8 @@ public class SelectorDefaultFilterActionHandler extends BaseActionHandler {
       final Entity entity = ModelProvider.getInstance().getEntity(entityName);
 
       OBCriteria<SelectorField> obc = OBDal.getInstance().createCriteria(SelectorField.class);
-      obc.add(Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, sel));
-      obc.add(Restrictions.isNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION));
+      obc.addEqual(SelectorField.PROPERTY_OBUISELSELECTOR, sel);
+      obc.addIsNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION);
 
       List<SelectorField> selFields = obc.list();
       if (selFields.isEmpty()) {

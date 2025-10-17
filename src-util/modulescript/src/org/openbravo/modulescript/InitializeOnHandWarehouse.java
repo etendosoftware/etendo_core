@@ -20,7 +20,7 @@ package org.openbravo.modulescript;
 
 import java.sql.Connection;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.database.ConnectionProvider;
 

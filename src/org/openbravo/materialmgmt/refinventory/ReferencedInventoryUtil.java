@@ -103,12 +103,11 @@ public class ReferencedInventoryUtil {
           ? OBDal.getInstance().getProxy(AttributeSetInstance.class, "0")
           : _originalAttributeSetInstance;
 
-      final OBCriteria<AttributeSetInstance> criteria = OBDao.getFilteredCriteria(
-          AttributeSetInstance.class,
-          Restrictions.eq(AttributeSetInstance.PROPERTY_PARENTATTRIBUTESETINSTANCE + ".id",
-              originalAttributeSetInstance.getId()),
-          Restrictions.eq(AttributeSetInstance.PROPERTY_REFERENCEDINVENTORY + ".id",
-              referencedInventory.getId()));
+      final OBCriteria<AttributeSetInstance> criteria = OBDal.getInstance().createCriteria(AttributeSetInstance.class);
+      criteria.addAnd(
+          (cb, obc) -> cb.equal(obc.getPath(AttributeSetInstance.PROPERTY_PARENTATTRIBUTESETINSTANCE + ".id"), originalAttributeSetInstance.getId()),
+          (cb, obc) -> cb.equal(obc.getPath(AttributeSetInstance.PROPERTY_REFERENCEDINVENTORY + ".id"), referencedInventory.getId())
+      );
       criteria.setMaxResults(1);
       return criteria.list().get(0);
     } catch (final Exception notFound) {

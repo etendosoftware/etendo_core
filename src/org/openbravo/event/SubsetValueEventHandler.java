@@ -27,6 +27,7 @@ import org.openbravo.base.model.Property;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.CharacteristicSubsetValue;
 import org.openbravo.model.common.plm.ProductCharacteristic;
@@ -66,8 +67,7 @@ class SubsetValueEventHandler extends EntityPersistenceEventObserver {
           productCharateristicsConf
               .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
                   chsubsetv.getCharacteristicValue());
-          productCharateristicsConf.add(Restrictions
-              .eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, productCh));
+          productCharateristicsConf.addFunction((cb, obc) -> cb.equal(obc.getPath(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT), productCh));
           if (productCharateristicsConf.count() > 0) {
             for (ProductCharacteristicConf conf : productCharateristicsConf.list()) {
               if (chsubsetv.getCode() != conf.getCode()) {

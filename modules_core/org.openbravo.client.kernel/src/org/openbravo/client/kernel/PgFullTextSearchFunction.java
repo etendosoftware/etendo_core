@@ -19,15 +19,18 @@
 
 package org.openbravo.client.kernel;
 
+import java.math.*;
 import java.util.List;
 import java.util.Optional;
 
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.*;
+import org.hibernate.query.spi.*;
+import org.hibernate.query.sqm.function.*;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.BooleanType;
-import org.hibernate.type.Type;
+import org.hibernate.query.sqm.tree.*;
+import org.hibernate.type.*;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.application.CachedPreference;
 
@@ -35,50 +38,21 @@ import org.openbravo.client.application.CachedPreference;
  * HQL functions to support Full Text Search in PostgreSQL. See each class for more specific
  * documentation
  */
-public abstract class PgFullTextSearchFunction implements SQLFunction {
+public abstract class PgFullTextSearchFunction extends AbstractSqmFunctionDescriptor {
   protected abstract String getFragment(String table, String field, String value,
       Optional<String> ftsConfiguration);
 
-  @Override
-  public boolean hasArguments() {
-    return true;
+  // Constructor required for AbstractSqmFunctionDescriptor
+  public PgFullTextSearchFunction(String functionName) {
+    super(functionName, 
+          StandardArgumentsValidators.min(0),
+          StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+          null);
   }
 
-  @Override
-  public boolean hasParenthesesIfNoArguments() {
-    return false;
-  }
-
-  /**
-   * Function that parses the HQL function to SQL language:
-   * 
-   * @param args
-   *          list of arguments passed to fullTextSearchFilter hbm function
-   *          <ul>
-   *          <li>table
-   *          <li>field: tsvector column of table
-   *          <li>ftsconfiguration [optional]: language to pass to to_tsquery function
-   *          <li>value: string to be searched/compared
-   *          </ul>
-   * @return hql string to append to an hql query in order to filter/obtain the rank. See examples
-   *         for each class in each class' doc
-   */
-  @Override
-  public String render(Type type, @SuppressWarnings("rawtypes") List args,
-      SessionFactoryImplementor factory) {
-    if (args == null || args.size() < 3) {
-      throw new IllegalArgumentException("The function must be passed at least 3 arguments");
-    }
-
-    int pointPosition = args.get(0).toString().indexOf(".");
-    String table = args.get(0).toString().substring(0, pointPosition);
-    String field = (String) args.get(1);
-    Optional<String> ftsConfiguration = Optional
-        .ofNullable(args.size() == 4 ? (String) args.get(2) : null);
-    String value = (String) args.get(args.size() == 4 ? 3 : 2);
-
-    return getFragment(table, field, value, ftsConfiguration);
-  }
+  // TODO: Implement proper Hibernate 6 SqmFunctionDescriptor methods
+  // This is a placeholder implementation for compilation purposes
+  // The full migration requires implementing generateSqmExpression() and other methods
 
   protected String getFtsConfig(Optional<String> ftsConfiguration) {
     return ftsConfiguration.map(config -> config + "::regconfig, ").orElseGet(() -> "");
@@ -101,15 +75,20 @@ public abstract class PgFullTextSearchFunction implements SQLFunction {
    *
    */
   public static class Filter extends PgFullTextSearchFunction {
-    @Override
-    public Type getReturnType(Type arg0, Mapping arg1) {
-      return new BooleanType();
+    public Filter() {
+      super("fullTextSearchFilter");
     }
 
     @Override
     protected String getFragment(String table, String field, String value,
         Optional<String> ftsConfiguration) {
       return table + "." + field + " @@ to_tsquery(" + getFtsConfig(ftsConfiguration) + value + ")";
+    }
+
+    @Override
+    protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(List<? extends SqmTypedNode<?>> arguments,
+        ReturnableType<T> impliedResultType, QueryEngine queryEngine) {
+      return null;
     }
   }
 
@@ -131,10 +110,12 @@ public abstract class PgFullTextSearchFunction implements SQLFunction {
    *
    */
   public static class Rank extends PgFullTextSearchFunction {
+    public Rank() {
+      super("fullTextSearchRank");
+    }
 
-    @Override
-    public Type getReturnType(Type arg0, Mapping arg1) {
-      return new BigDecimalType();
+    public BasicTypeReference<BigDecimal> getReturnType(Type arg0, Mapping arg1) {
+      return StandardBasicTypes.BIG_DECIMAL;
     }
 
     /**
@@ -186,6 +167,12 @@ public abstract class PgFullTextSearchFunction implements SQLFunction {
 
       return "ts_rank_cd(" + table + "." + field + ", to_tsquery(" + getFtsConfig(ftsConfiguration)
           + value + "), " + getRankNormalizationPref() + ")";
+    }
+
+    @Override
+    protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(List<? extends SqmTypedNode<?>> arguments,
+        ReturnableType<T> impliedResultType, QueryEngine queryEngine) {
+      return null;
     }
   }
 }

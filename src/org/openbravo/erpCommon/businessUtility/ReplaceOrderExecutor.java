@@ -265,10 +265,8 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
     ScrollableResults orderLines = getOrderLineList(oldOrder);
     long lineNoCounter = 1;
     long i = 0;
-    while (orderLines.next()) {
-      final OrderLine oldOrderLine = (OrderLine) orderLines.get(0);
-
-      // Create inverse Order line
+      while (orderLines.next()) {
+        final OrderLine oldOrderLine = (OrderLine) orderLines.get();      // Create inverse Order line
       final OrderLine inverseOrderLine = createInverseOrderLine(oldOrderLine, inverseOrder);
 
       // Netting goods shipment is created
@@ -328,7 +326,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
           final List<ShipmentInOut> shipments = new ArrayList<>();
           final List<ShipmentInOutLine> shipLines = new ArrayList<>();
           while (shipmentLines.next()) {
-            final ShipmentInOutLine shipLine = (ShipmentInOutLine) shipmentLines.get(0);
+            final ShipmentInOutLine shipLine = (ShipmentInOutLine) shipmentLines.get();
             // The netting shipment is flagged as unprocessed.
             final ShipmentInOut shipment = shipLine.getShipmentReceipt();
             if (shipment.isProcessed().booleanValue()) {
@@ -667,7 +665,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
       try (final ScrollableResults newOrderLines = getOrderLineList(newOrder)) {
         int i = 0;
         while (newOrderLines.next()) {
-          final OrderLine newOrderLine = (OrderLine) newOrderLines.get(0);
+          final OrderLine newOrderLine = (OrderLine) newOrderLines.get();
           if (newOrderLine.getDeliveredQuantity() != null && newOrderLine.getOrderedQuantity()
               .subtract(newOrderLine.getDeliveredQuantity())
               .compareTo(BigDecimal.ZERO) == 0) {

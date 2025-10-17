@@ -38,13 +38,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -104,16 +101,15 @@ import org.openbravo.service.db.ImportResult;
 
 /**
  * @author David Alsasua
- * 
- *         Initial Client Setup Utility class
+ *     <p>
+ *     Initial Client Setup Utility class
  */
 public class InitialSetupUtility {
   private static final Logger log4j = LogManager.getLogger();
 
   /**
-   * 
    * @param strClient
-   *          name of the client
+   *     name of the client
    * @return true if exists client in database with provided name
    * @throws Exception
    */
@@ -124,9 +120,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param strUser
-   *          user name
+   *     user name
    * @return true if exists a user with the name provided in database
    * @throws Exception
    */
@@ -144,11 +139,10 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param strClientName
-   *          client name
+   *     client name
    * @param strCurrency
-   *          currency id
+   *     currency id
    * @return Client object for the created client
    * @throws Exception
    */
@@ -280,9 +274,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param strCurrencyID
-   *          c_currency_id
+   *     c_currency_id
    * @return Currency object that belongs to provided id
    * @throws Exception
    */
@@ -291,9 +284,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param strLanguage
-   *          language key (for example en_US)
+   *     language key (for example en_US)
    * @return Language object corresponding to provided key
    * @throws Exception
    */
@@ -305,13 +297,12 @@ public class InitialSetupUtility {
   }
 
   /**
-   * @deprecated use tableTreeRelation, because it retrieves all tableTrees, instead of only the
-   *             trees defined in the DA_TreeType type list reference Returns the relation of trees
-   *             defined in the reference list of the application dictionary called AD_TreeType Type
-   * 
    * @return java.util.List&lt;org.openbravo.model.ad.domain.List&gt;: the relation of AD list
-   *         elements
+   *     elements
    * @throws Exception
+   * @deprecated use tableTreeRelation, because it retrieves all tableTrees, instead of only the
+   *     trees defined in the DA_TreeType type list reference Returns the relation of trees
+   *     defined in the reference list of the application dictionary called AD_TreeType Type
    */
   @Deprecated
   public static List<org.openbravo.model.ad.domain.List> treeRelation() throws Exception {
@@ -335,9 +326,9 @@ public class InitialSetupUtility {
 
   /**
    * Returns the relation of trees that use the ADTree tree structure, AD_TABLE_TREE table
-   * 
+   *
    * @return java.util.List&lt;TableTree&gt;: the relation of all the trees that use the ADTree tree
-   *         structure
+   *     structure
    * @throws Exception
    */
   public static List<TableTree> tableTreeRelation() throws Exception {
@@ -347,20 +338,17 @@ public class InitialSetupUtility {
     // See issue https://issues.openbravo.com/view.php?id=31856
     DataSource accountTreeDatasource = OBDal.getInstance()
         .get(DataSource.class, "D2F94DC86DEC48D69E4BFCE59DC670CF");
-    // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-    obcTableTree.add(Restrictions.or(
-        //
-        Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, "ADTree"),
-        Restrictions.eq(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource)));
+    obcTableTree.addOr((cb, obc) -> cb.equal(obc.getPath(TableTree.PROPERTY_TREESTRUCTURE), "ADTree"),
+        (cb, obc) -> cb.equal(obc.getPath(TableTree.PROPERTY_DATASOURCE), accountTreeDatasource));
     obcTableTree.addOrderBy(TableTree.PROPERTY_NAME, true);
     return obcTableTree.list();
   }
 
   /**
    * Returns the tree of the provided type
-   * 
+   *
    * @param strTreeTypeMenu
-   *          two letters corresponding to the tree type for the menu
+   *     two letters corresponding to the tree type for the menu
    * @return Tree menu element (defined at system level)
    * @throws Exception
    */
@@ -377,13 +365,13 @@ public class InitialSetupUtility {
   }
 
   /**
-   * @deprecated use new insertTree method where new parameter "table" is added
    * @param client
    * @param name
    * @param treeType
    * @param boIsAllNodes
    * @return object Tree for the new tree
    * @throws Exception
+   * @deprecated use new insertTree method where new parameter "table" is added
    */
   @Deprecated
   public static Tree insertTree(Client client, String name, String treeType, Boolean boIsAllNodes)
@@ -406,8 +394,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * @deprecated use new insertClientinfo method where new parameter "campaignTree" is added
-   * 
    * @param client
    * @param menuTree
    * @param orgTree
@@ -430,7 +416,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param menuTree
    * @param orgTree
@@ -465,7 +450,7 @@ public class InitialSetupUtility {
 
   /**
    * Associates a client info record to a client
-   * 
+   *
    * @param client
    * @param clientInfo
    * @return true if update was correct
@@ -480,7 +465,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @throws Exception
    */
@@ -501,7 +485,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @throws Exception
    */
@@ -513,7 +496,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param sys
    * @param client
    */
@@ -531,7 +513,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param sys
    * @param client
    */
@@ -550,7 +531,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param sys
    * @param client
    */
@@ -567,15 +547,14 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
-   *          client for which the role will be created
+   *     client for which the role will be created
    * @param orgProvided
-   *          if null, role inserted for organization with id=0
+   *     if null, role inserted for organization with id=0
    * @param name
-   *          name of the role
+   *     name of the role
    * @param strUserLevelProvided
-   *          if null, user level " CO" will be set to the new role
+   *     if null, user level " CO" will be set to the new role
    * @return Role object for new element
    */
   public static Role insertRole(Client client, Organization orgProvided, String name,
@@ -584,15 +563,14 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
-   *          client for which the role will be created
+   *     client for which the role will be created
    * @param orgProvided
-   *          if null, role inserted for organization with id=0
+   *     if null, role inserted for organization with id=0
    * @param name
-   *          name of the role
+   *     name of the role
    * @param strUserLevelProvided
-   *          if null, user level " CO" will be set to the new role
+   *     if null, user level " CO" will be set to the new role
    * @return Role object for new element
    */
   public static Role insertRole(Client client, Organization orgProvided, String name,
@@ -627,11 +605,10 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param role
-   *          role for which the organization access information will be created
+   *     role for which the organization access information will be created
    * @param orgProvided
-   *          if null, organization with id "0" will be used
+   *     if null, organization with id "0" will be used
    * @return RoleOrganization object for new element
    */
   public static RoleOrganization insertRoleOrganization(Role role, Organization orgProvided)
@@ -640,11 +617,10 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param role
-   *          role for which the organization access information will be created
+   *     role for which the organization access information will be created
    * @param orgProvided
-   *          if null, organization with id "0" will be used
+   *     if null, organization with id "0" will be used
    * @return RoleOrganization object for new element
    */
   public static RoleOrganization insertRoleOrganization(Role role, Organization orgProvided,
@@ -675,7 +651,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param name
@@ -718,7 +693,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param user
    * @param orgProvided
@@ -732,7 +706,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param user
    * @param orgProvided
@@ -771,7 +744,7 @@ public class InitialSetupUtility {
   /**
    * Inserts a new role for the created client and user. Also user Openbravo will have rights to
    * access new client
-   * 
+   *
    * @param client
    * @param user
    * @param organization
@@ -785,7 +758,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param name
@@ -813,7 +785,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @return Organization object for * organization (with id 0)
    */
   private static Organization getZeroOrg() {
@@ -821,7 +792,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param calendar
@@ -850,7 +820,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param name
@@ -882,7 +851,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param element
    * @param orgProvided
    * @param name
@@ -950,7 +918,7 @@ public class InitialSetupUtility {
 
   /**
    * Returns the nodes of a given tree
-   * 
+   *
    * @param accountTree
    * @param client
    * @param orgProvided
@@ -989,7 +957,7 @@ public class InitialSetupUtility {
 
   /**
    * Returns the nodes of a given tree
-   * 
+   *
    * @param accountTree
    * @param client
    * @return List&lt;TreeNode&gt; with relation of tree node elements of the provided tree
@@ -1001,22 +969,22 @@ public class InitialSetupUtility {
 
   /**
    * Sorts the account tree (stored in ADTreeNode) according to the order provided
-   * 
+   *
    * @param treeNodes
-   *          relation of nodes in ADTreeNode belonging to the accounting tree to sort out
+   *     relation of nodes in ADTreeNode belonging to the accounting tree to sort out
    * @param mapSequence
-   *          HashMap&lt;String,Long&gt; where the String belongs to the value of a c_elementvalue,
-   *          and Long to the sequence that must be assigned to the node that represents that
-   *          element value in ADTreeNode
+   *     HashMap&lt;String,Long&gt; where the String belongs to the value of a c_elementvalue,
+   *     and Long to the sequence that must be assigned to the node that represents that
+   *     element value in ADTreeNode
    * @param mapElementValueValue
-   *          each tree node in treeNodes has one entry in mapElementValueId to link it's value with
-   *          the c_elementvalue_id of that element in c_elementvalue table
+   *     each tree node in treeNodes has one entry in mapElementValueId to link it's value with
+   *     the c_elementvalue_id of that element in c_elementvalue table
    * @param mapElementValueId
-   *          stores the link value &lt;-&gt; c_elementvalue_id
+   *     stores the link value &lt;-&gt; c_elementvalue_id
    * @param mapParent
-   *          stores the link value &lt;-&gt; value of the parent
+   *     stores the link value &lt;-&gt; value of the parent
    * @param doFlush
-   *          if true, each new update performs a flush in DAL
+   *     if true, each new update performs a flush in DAL
    * @throws Exception
    */
   public static void updateAccountTree(List<TreeNode> treeNodes, HashMap<String, Long> mapSequence,
@@ -1055,7 +1023,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param elementValue
    * @param operand
    * @param sign
@@ -1079,7 +1046,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param element
    * @param value
    * @return ElementValue object for the given value in the provided element
@@ -1109,7 +1075,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param currency
@@ -1146,13 +1111,12 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param acctSchema
    * @param orgProvided
-   *          optional parameter. If null, organization 0 will be used
+   *     optional parameter. If null, organization 0 will be used
    * @param listElement
-   *          element of the reference list which is going to be inserted. From it's name, the name
-   *          of the acct.schema element will be taken, and from it's value (search key) the type
+   *     element of the reference list which is going to be inserted. From it's name, the name
+   *     of the acct.schema element will be taken, and from it's value (search key) the type
    * @param sequence
    * @param isMandatory
    * @param isBalanced
@@ -1197,9 +1161,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param defaultElementValues
-   *          map with DefaultAccount and ElementValue object that will be set
+   *     map with DefaultAccount and ElementValue object that will be set
    * @param acctSchema
    * @return AcctSchemaDefault object for the created element
    * @throws Exception
@@ -1497,9 +1460,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param defaultElementValues
-   *          map with DefaultAccount and ElementValue object that will be set
+   *     map with DefaultAccount and ElementValue object that will be set
    * @param acctSchema
    * @return AcctSchemaGL object for the created element
    * @throws Exception
@@ -1559,7 +1521,7 @@ public class InitialSetupUtility {
   /**
    * Returns an account combination for the provided ElementValue element. If it doesn't exists,
    * creates a new one.
-   * 
+   *
    * @param client
    * @param orgProvided
    * @param elementValue
@@ -1609,7 +1571,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param acctSchema
    * @param orgProvided
@@ -1636,7 +1597,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param organization
    * @param name
@@ -1658,7 +1618,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param organization
    * @param name
@@ -1678,7 +1637,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param organization
    * @param name
@@ -1719,12 +1677,12 @@ public class InitialSetupUtility {
 
   /**
    * Given a dataset, inserts the elements in the xml file into database.
-   * 
+   *
    * @param dataset
    * @param client
    * @param orgProvided
    * @return ImportResult object for the created element. Errors, warnings and log is provided in
-   *         this object.
+   *     this object.
    * @throws Exception
    */
   public static ImportResult insertReferenceData(DataSet dataset, Client client,
@@ -1825,7 +1783,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param document
    * @param name
    * @param templateLocation
@@ -1850,7 +1807,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param documentTemplate
    * @return EmailTemplate object for the new element
    */
@@ -1865,10 +1821,10 @@ public class InitialSetupUtility {
 
   /**
    * Returns the set of Module objects for the given ids
-   * 
+   *
    * @param strModules
-   *          relation of ids (in a format so that can be included in a "in" statement of a "where"
-   *          clause
+   *     relation of ids (in a format so that can be included in a "in" statement of a "where"
+   *     clause
    * @return List&lt;Module&gt; with the relation of modules
    * @throws Exception
    */
@@ -1887,10 +1843,10 @@ public class InitialSetupUtility {
 
   /**
    * Returns the set of Module objects for the given ids
-   * 
+   *
    * @param strModules
-   *          relation of ids (in a format so that can be included in a "in" statement of a "where"
-   *          clause
+   *     relation of ids (in a format so that can be included in a "in" statement of a "where"
+   *     clause
    * @throws Exception
    */
   public static List<Module> getRDModules(String strModules) throws Exception {
@@ -1908,13 +1864,12 @@ public class InitialSetupUtility {
   }
 
   /**
-   * @deprecated use {@link #getDataSets(Module, List)}
-   * 
    * @param module
    * @param accessLevel
-   *          3-&gt; client/org; 1-&gt; organization only
+   *     3-&gt; client/org; 1-&gt; organization only
    * @return List&lt;DataSet&gt; with the relation of DataSet objects
    * @throws Exception
+   * @deprecated use {@link #getDataSets(Module, List)}
    */
   @Deprecated
   public static List<DataSet> getDataSets(Module module, String accessLevel) throws Exception {
@@ -1925,10 +1880,10 @@ public class InitialSetupUtility {
 
   /**
    * Given a module, and an access level, returns all the datasets contained in that module
-   * 
+   *
    * @param module
    * @param accessLevel
-   *          3-&gt; client/org; 6-&gt; System/client
+   *     3-&gt; client/org; 6-&gt; System/client
    * @return List&lt;DataSet&gt; with the relation of DataSet objects
    * @throws Exception
    */
@@ -1954,9 +1909,9 @@ public class InitialSetupUtility {
   /**
    * Returns the relation of ad_ref_list elements for the reference with AD_Reference_id='181'
    * (Acct.schema elements)
-   * 
+   *
    * @return List&lt;org.openbravo.model.ad.domain.List&gt; with the relation of ad_ref_list
-   *         elements
+   *     elements
    * @throws Exception
    */
   public static List<org.openbravo.model.ad.domain.List> getAcctSchemaElements() throws Exception {
@@ -1979,10 +1934,9 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
-   *          optional parameter. If not provided, "*" organization used
+   *     optional parameter. If not provided, "*" organization used
    * @param module
    * @return ADClientModule object with the created element
    * @throws Exception
@@ -2024,14 +1978,17 @@ public class InitialSetupUtility {
       obc.addEqual(DataSet.PROPERTY_MODULE, module);
       Object[] organizationAccessLevel = { "3", "1" };
       Object[] systemAccessLevel = { "3", "6" };
-      // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-      obc.add(Restrictions.or(
-          // TODO: Migrar 
- Restrictions.and() a CriteriaBuilder.and() manualmente
-          Restrictions.and(Restrictions.ne(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
-              Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, organizationAccessLevel)),
-          Restrictions.and(Restrictions.eq(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
-              Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, systemAccessLevel))));
+      // Migración de Restrictions.or() con Restrictions.and() anidados
+      obc.addOr(
+          (cb, obcCriteria) -> cb.and(
+              cb.notEqual(obcCriteria.getPath(DataSet.PROPERTY_ORGANIZATION), getZeroOrg()),
+              obcCriteria.getPath(DataSet.PROPERTY_DATAACCESSLEVEL).in((Object[]) organizationAccessLevel)
+          ),
+          (cb, obcCriteria) -> cb.and(
+              cb.equal(obcCriteria.getPath(DataSet.PROPERTY_ORGANIZATION), getZeroOrg()),
+              obcCriteria.getPath(DataSet.PROPERTY_DATAACCESSLEVEL).in((Object[]) systemAccessLevel)
+          )
+      );
       obc.addOrderBy("m." + Module.PROPERTY_ID, true);
       obc.addOrderBy(DataSet.PROPERTY_SEQUENCENUMBER, true);
       obc.addOrderBy(DataSet.PROPERTY_ID, true);
@@ -2050,7 +2007,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param module
    * @return ADClientModule object with the created element
@@ -2226,9 +2182,9 @@ public class InitialSetupUtility {
 
   /**
    * Returns the tree of the provided type
-   * 
+   *
    * @param strTreeTypeMenu
-   *          two letters corresponding to the tree type for the menu
+   *     two letters corresponding to the tree type for the menu
    * @return Tree menu element (defined at system level)
    * @throws Exception
    */
@@ -2256,7 +2212,7 @@ public class InitialSetupUtility {
 
   /**
    * Returns the ADTree associated with the given table
-   * 
+   *
    * @return Tree menu element (defined at system level)
    * @throws Exception
    */

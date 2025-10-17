@@ -518,7 +518,7 @@ public class ApplicationComponentProvider extends BaseComponentProvider {
 
   private static boolean existsDynamicNavigationBarComponents() {
     OBCriteria<NavBarComponent> obc = OBDal.getInstance().createCriteria(NavBarComponent.class);
-    obc.add(Restrictions.eq(NavBarComponent.PROPERTY_ISSTATICCOMPONENT, false));
+    obc.addEqual(NavBarComponent.PROPERTY_ISSTATICCOMPONENT, false);
     obc.setMaxResults(1);
     return obc.uniqueResult() != null;
   }

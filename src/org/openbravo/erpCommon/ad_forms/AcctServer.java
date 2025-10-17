@@ -46,7 +46,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Projections;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.APRM_FinaccTransactionV;
 import org.openbravo.base.exception.OBException;
@@ -926,9 +926,11 @@ public abstract class AcctServer {
       OBContext.setAdminMode(true);
       for (AcctSchema as : m_as) {
         AcctSchemaTable table = null;
-        OBCriteria<AcctSchemaTable> criteria = OBDao.getFilteredCriteria(AcctSchemaTable.class,
-            cb.equal(root.get("accountingSchema.id"), as.getC_AcctSchema_ID()),
-            cb.equal(root.get("table.id"), AD_Table_ID));
+        OBCriteria<AcctSchemaTable> criteria = OBDal.getInstance().createCriteria(AcctSchemaTable.class);
+        criteria.addAnd(
+            (cb, obc) -> cb.equal(obc.getPath("accountingSchema.id"), as.getC_AcctSchema_ID()),
+            (cb, obc) -> cb.equal(obc.getPath("table.id"), AD_Table_ID)
+        );
         criteria.setFilterOnReadableClients(false);
         criteria.setFilterOnReadableOrganization(false);
         table = (AcctSchemaTable) criteria.uniqueResult();
@@ -1468,9 +1470,7 @@ public abstract class AcctServer {
             List<ConversionRateDoc> conversionRate = conversionQuery.list();
             OBCriteria<Currency> currencyCrit = OBDal.getInstance().createCriteria(Currency.class);
             currencyCrit.addEqual(Currency.PROPERTY_ID, acctSchema.m_C_Currency_ID);
-            // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-            currencyCrit.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.max(Currency.PROPERTY_STANDARDPRECISION));
+            currencyCrit.setProjectionMax(Currency.PROPERTY_STANDARDPRECISION);
             Long precision = 0L;
             if (currencyCrit.count() > 0) {
               List<Currency> toCurrency = currencyCrit.list();

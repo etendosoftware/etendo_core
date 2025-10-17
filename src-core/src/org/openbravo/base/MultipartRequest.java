@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
 
-import org.apache.commons.fileupload.FileItem;
+import jakarta.servlet.http.Part;
 import org.openbravo.data.FieldProvider;
 
 @SuppressWarnings("serial")
@@ -205,11 +205,11 @@ public class MultipartRequest implements FieldProvider {
   }
 
   protected void readSubmittedFile() throws IOException {
-    FileItem fi = vars.getMultiFile(filename);
-    if (fi == null) {
+    Part part = vars.getMultiFile(filename);
+    if (part == null) {
       throw new IOException("Invalid filename: " + filename);
     }
-    InputStream in = fi.getInputStream();
+    InputStream in = part.getInputStream();
     if (in == null) {
       throw new IOException("Corrupted filename: " + filename);
     }

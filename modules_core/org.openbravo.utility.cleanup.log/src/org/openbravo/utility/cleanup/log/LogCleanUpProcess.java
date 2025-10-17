@@ -89,7 +89,7 @@ public class LogCleanUpProcess extends DalBaseProcess {
 
       OBCriteria<LogCleanUpConfig> qConfig = OBDal.getInstance()
           .createCriteria(LogCleanUpConfig.class);
-      qConfig.add(Restrictions.eq(LogCleanUpConfig.PROPERTY_ACTIVE, true));
+      qConfig.addEqual(LogCleanUpConfig.PROPERTY_ACTIVE, true);
 
       long totalDeletedRows = 0L;
       Set<String> tablesWithDeletions = new LinkedHashSet<String>();

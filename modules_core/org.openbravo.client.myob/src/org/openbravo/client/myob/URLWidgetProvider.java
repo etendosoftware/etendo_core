@@ -26,6 +26,7 @@ package org.openbravo.client.myob;
  */
 
 
+import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -33,7 +34,8 @@ import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.NonUniqueResultException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
-import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.*;
+import org.openbravo.userinterface.selector.*;
 
 /**
  * Responsible for creating the URL Widgets.
@@ -64,10 +66,10 @@ public class URLWidgetProvider extends WidgetProvider {
       final JSONObject parameters = new JSONObject();
       jsonObject.put(WidgetProvider.PARAMETERS, parameters);
       try {
-        final WidgetURL widgetURL = (WidgetURL) OBDao
-            .getFilteredCriteria(WidgetURL.class,
-                Restrictions.eq(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass()))
-            .uniqueResult();
+        Map<String, Object> filters = new HashMap<>();
+        filters.put(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass());
+        OBCriteria<WidgetURL> selFieldsCrit = OBDao.getFilteredCriteria(WidgetURL.class, filters);
+        final WidgetURL widgetURL = (WidgetURL) selFieldsCrit.uniqueResult();
         if (widgetURL != null) {
           parameters.put(SRC, widgetURL.getURL());
         } else {
@@ -94,10 +96,10 @@ public class URLWidgetProvider extends WidgetProvider {
     try {
       addDefaultWidgetProperties(jsonObject, widgetInstance);
       final JSONObject parameters = jsonObject.getJSONObject(WidgetProvider.PARAMETERS);
-      final WidgetURL widgetURL = (WidgetURL) OBDao
-          .getFilteredCriteria(WidgetURL.class,
-              Restrictions.eq(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass()))
-          .uniqueResult();
+      Map<String, Object> filters = new HashMap<>();
+      filters.put(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass());
+      OBCriteria<WidgetURL> selFieldsCrit = OBDao.getFilteredCriteria(WidgetURL.class, filters);
+      final WidgetURL widgetURL = (WidgetURL) selFieldsCrit.uniqueResult();
       if (widgetURL != null) {
         parameters.put(SRC, widgetURL.getURL());
       } else {

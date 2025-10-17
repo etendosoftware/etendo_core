@@ -180,10 +180,10 @@ public class CharacteristicsUIDefinition extends TextUIDefinition {
         // Find parent
         OBCriteria<TreeNode> treeNodeCri = OBDal.getInstance().createCriteria(TreeNode.class);
         treeNodeCri.createAlias(TreeNode.PROPERTY_TREE, "tree");
-        treeNodeCri.add(Restrictions.eq("tree." + Tree.PROPERTY_CLIENT,
-            OBContext.getOBContext().getCurrentClient()));
-        treeNodeCri.add(Restrictions.eq("tree." + Tree.PROPERTY_TYPEAREA, "CH"));
-        treeNodeCri.add(Restrictions.eq(TreeNode.PROPERTY_NODE, currentCharValue.getId()));
+        treeNodeCri.addEqual("tree." + Tree.PROPERTY_CLIENT,
+            OBContext.getOBContext().getCurrentClient());
+        treeNodeCri.addEqual("tree." + Tree.PROPERTY_TYPEAREA, "CH");
+        treeNodeCri.addEqual(TreeNode.PROPERTY_NODE, currentCharValue.getId());
         List<TreeNode> treeNodeList = treeNodeCri.list();
         if (treeNodeList.size() == 1 && !treeNodeList.get(0).getReportSet().equals("0")) {
           // Parent Exists

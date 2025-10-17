@@ -43,6 +43,8 @@ import java.util.Map;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +52,6 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Hibernate;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.domaintype.BigDecimalDomainType;
@@ -513,9 +514,12 @@ public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
 
     // If sortByClause is empty set default sort options.
     if (sortByClause.length() == 0) {
-      OBCriteria<SelectorField> selFieldsCrit = OBDao.getFilteredCriteria(SelectorField.class,
-          Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, sel),
-          Restrictions.eq(SelectorField.PROPERTY_SHOWINGRID, true));
+      Map<String, Object> filters = new HashMap<>();
+      filters.put(SelectorField.PROPERTY_OBUISELSELECTOR, sel);
+      filters.put(SelectorField.PROPERTY_SHOWINGRID, true);
+
+      OBCriteria<SelectorField> selFieldsCrit = OBDao.getFilteredCriteria(
+          SelectorField.class, filters);
       selFieldsCrit.addOrderBy(SelectorField.PROPERTY_SORTNO, true);
       for (SelectorField selField : selFieldsCrit.list()) {
         int fieldSortIndex = getFieldSortIndex(selField.getDisplayColumnAlias(), sel);
@@ -578,19 +582,21 @@ public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
    *         there is no query column with an alias equal to the provided field name.
    */
   private int getFieldSortIndex(String fieldName, Selector sel) {
-    @SuppressWarnings("deprecation")
-    final String[] queryAliases = OBDal.getInstance()
-        .getSession()
-        .createQuery(sel.getHQL().replace(ADDITIONAL_FILTERS, "1=1"))
-        .getReturnAliases();
+    String hql = sel.getHQL().replace(ADDITIONAL_FILTERS, "1=1");
 
-    for (int i = 0; i < queryAliases.length; i++) {
-      if (queryAliases[i] != null && queryAliases[i].equals(fieldName)) {
-        return i + 1;
+    Pattern aliasPattern = Pattern.compile("(?i)\\bas\\s+(\\w+)");
+    Matcher matcher = aliasPattern.matcher(hql);
+
+    int i = 0;
+    while (matcher.find()) {
+      i++;
+      if (matcher.group(1).equalsIgnoreCase(fieldName)) {
+        return i;
       }
     }
     return 0;
   }
+
 
   private HashMap<String, String[]> getCriteria(JSONArray criterias) {
     HashMap<String, String[]> criteriaValues = new HashMap<String, String[]>();

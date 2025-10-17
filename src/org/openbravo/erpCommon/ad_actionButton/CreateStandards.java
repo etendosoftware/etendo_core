@@ -209,8 +209,7 @@ public class CreateStandards implements org.openbravo.scheduling.Process {
                 // getValue from
                 OBCriteria<AttributeInstance> attributeInstanceCriteria = OBDal.getInstance()
                     .createCriteria(AttributeInstance.class);
-                attributeInstanceCriteria.add(Restrictions
-                    .eq(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attSetInstanceFrom));
+                attributeInstanceCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attSetInstanceFrom);
                 attributeInstanceCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTE,
                     opProductAtt.getAttributeUse().getAttribute());
                 List<AttributeInstance> AttributeInstanceList = attributeInstanceCriteria.list();

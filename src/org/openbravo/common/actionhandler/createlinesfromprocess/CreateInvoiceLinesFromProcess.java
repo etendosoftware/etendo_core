@@ -119,9 +119,7 @@ public class CreateInvoiceLinesFromProcess {
   private Long getLastLineNoOfCurrentInvoice(final Invoice currentInvoice) {
     OBCriteria<InvoiceLine> obc = OBDal.getInstance().createCriteria(InvoiceLine.class);
     obc.addEqual(InvoiceLine.PROPERTY_INVOICE, currentInvoice);
-    // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-    obc.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.max(InvoiceLine.PROPERTY_LINENO));
+    obc.setProjectionMax(InvoiceLine.PROPERTY_LINENO);
     Long lineNumber = 0L;
     obc.setMaxResults(1);
     Object o = obc.uniqueResult();

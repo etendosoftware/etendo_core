@@ -66,7 +66,7 @@ public class UniqueConstraintImportTest extends XMLBaseTest {
     setSystemAdministratorContext();
     final Country country = getCountryByCode("NO");
     final OBCriteria<CountryTrl> obc = OBDal.getInstance().createCriteria(CountryTrl.class);
-    obc.add(Restrictions.eq("country", country));
+    obc.addEqual("country", country);
     final List<CountryTrl> countryTrls = obc.list();
     if (countryTrls.size() > 0) {
       return;
@@ -132,14 +132,14 @@ public class UniqueConstraintImportTest extends XMLBaseTest {
   private Country getCountryByCode(String name) {
     final OBCriteria<Country> obc = OBDal.getInstance().createCriteria(Country.class);
     // has unique constraint
-    obc.add(Restrictions.eq("iSOCountryCode", name));
+    obc.addEqual("iSOCountryCode", name);
     return (Country) obc.uniqueResult();
   }
 
   private <T extends BaseOBObject> String exportClass(Class<T> clz, String field, Object value) {
     final OBCriteria<?> obc = OBDal.getInstance().createCriteria(clz);
     if (field != null) {
-      obc.add(Restrictions.eq(field, value));
+      obc.addEqual(field, value);
     }
 
     final EntityXMLConverter exc = EntityXMLConverter.newInstance();

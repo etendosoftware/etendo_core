@@ -139,7 +139,7 @@ public class ProductStatusTest extends OBBaseTest {
       final Product costingProduct1 = OBDal.getInstance().get(Product.class, COSTING_PRODUCT_1);
       final OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance()
           .createCriteria(StorageDetail.class);
-      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, costingProduct1));
+      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, costingProduct1);
       final List<StorageDetail> storageDetailList = storageDetailCriteria.list();
       for (final StorageDetail storageDetail : storageDetailList) {
         storageDetail.setQuantityOnHand(BigDecimal.ZERO);
@@ -166,7 +166,7 @@ public class ProductStatusTest extends OBBaseTest {
       final Product costingProduct1 = OBDal.getInstance().get(Product.class, COSTING_PRODUCT_1);
       final OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance()
           .createCriteria(StorageDetail.class);
-      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, costingProduct1));
+      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, costingProduct1);
       storageDetailCriteria.setMaxResults(1);
       final StorageDetail storageDetail = (StorageDetail) storageDetailCriteria.uniqueResult();
       final BigDecimal qtyOnHand = storageDetail.getQuantityOnHand() != null

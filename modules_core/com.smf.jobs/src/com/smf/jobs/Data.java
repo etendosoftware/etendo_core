@@ -63,7 +63,7 @@ public class Data {
                 criteria = OBDal.getInstance().createCriteria(entity);
             }
 
-            criteria.add(Restrictions.in(BaseOBObject.ID, records));
+            criteria.addInIds(BaseOBObject.ID, records);
             contents.addAll(criteria.list());
         }
 

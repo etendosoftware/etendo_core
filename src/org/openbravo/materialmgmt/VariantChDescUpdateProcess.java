@@ -118,7 +118,7 @@ public class VariantChDescUpdateProcess extends DalBaseProcess {
       int i = 0;
       try {
         while (products.next()) {
-          Product product = (Product) products.get(0);
+          Product product = (Product) products.get();
           updateProduct(product);
 
           if ((i % 100) == 0) {

@@ -80,7 +80,7 @@ public class ViewTest extends OBBaseTest {
     OBContext.setAdminMode();
     try {
       OBCriteria<Invoice> payedInvoice = OBDal.getInstance().createCriteria(Invoice.class);
-      payedInvoice.add(Restrictions.eq(Invoice.PROPERTY_PAYMENTCOMPLETE, true));
+      payedInvoice.addEqual(Invoice.PROPERTY_PAYMENTCOMPLETE, true);
       payedInvoice.setMaxResults(1);
       Invoice anyPayedInvoice = (Invoice) payedInvoice.uniqueResult();
       assertThat("Original invoice has payments " + anyPayedInvoice,

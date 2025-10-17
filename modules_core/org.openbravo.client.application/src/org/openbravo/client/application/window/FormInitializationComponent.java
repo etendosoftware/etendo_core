@@ -397,8 +397,9 @@ public class FormInitializationComponent extends BaseActionHandler {
    */
   private int computeAttachmentCount(Tab tab, List<String> recordIds, boolean doExists) {
     String tableId = tab.getTable().getId();
-    OBCriteria<Attachment> attachmentFiles = OBDao.getFilteredCriteria(Attachment.class,
-        cb.equal(root.get("table.id"), tableId), root.get("record").in(recordIds));
+    OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
+    attachmentFiles.addEqual("table.id", tableId);
+    attachmentFiles.addIn("record", recordIds);
     // do not filter by the attachment's organization
     // if the user has access to the record where the file its attached, it has access to all its
     // attachments

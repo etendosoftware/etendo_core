@@ -326,7 +326,7 @@ public class OBViewGridComponent extends BaseTemplateComponent {
    */
   private List<String> getPropertiesUsedInAuxiliaryInputs() {
     OBCriteria<AuxiliaryInput> criteria = OBDal.getInstance().createCriteria(AuxiliaryInput.class);
-    criteria.add(Restrictions.eq(AuxiliaryInput.PROPERTY_TAB, tab));
+    criteria.addEqual(AuxiliaryInput.PROPERTY_TAB, tab);
     List<AuxiliaryInput> auxInputs = criteria.list();
     boolean throwExceptionIfNotExists = false;
     List<String> propertiesUsedInAuxiliaryInputs = new ArrayList<String>();

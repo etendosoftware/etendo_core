@@ -163,8 +163,8 @@ public class SelectorDataSourceFilter implements DataSourceFilter {
       // Applying default expression for selector fields when is not a selector window request
       if (!"Window".equals(requestType)) {
         OBCriteria<SelectorField> sfc = OBDal.getInstance().createCriteria(SelectorField.class);
-        sfc.add(Restrictions.isNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION));
-        sfc.add(Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, sel));
+        sfc.addIsNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION);
+        sfc.addEqual(SelectorField.PROPERTY_OBUISELSELECTOR, sel);
 
         applyDefaultExpressions(sel, parameters, sfc, request, filterHQL);
         verifyPropertyTypes(sel, parameters);

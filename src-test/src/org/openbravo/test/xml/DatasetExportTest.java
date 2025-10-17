@@ -260,7 +260,7 @@ public class DatasetExportTest extends OBBaseTest {
 
   private DataSetTable createDataSetTable(DataSet ds, String tableName) {
     final OBCriteria<Table> obcTable = OBDal.getInstance().createCriteria(Table.class);
-    obcTable.add(Restrictions.eq(Table.PROPERTY_DBTABLENAME, tableName));
+    obcTable.addEqual(Table.PROPERTY_DBTABLENAME, tableName);
     assertTrue(obcTable.list().size() == 1);
     final Table table = obcTable.list().get(0);
 
@@ -305,8 +305,8 @@ public class DatasetExportTest extends OBBaseTest {
 
   private Column getColumn(DataSetTable dst, Property p) {
     final OBCriteria<Column> obcColumn = OBDal.getInstance().createCriteria(Column.class);
-    obcColumn.add(Restrictions.and(Restrictions.eq(Column.PROPERTY_DBCOLUMNNAME, p.getColumnName()),
-        Restrictions.eq(Column.PROPERTY_TABLE, dst.getTable())));
+    obcColumn.addAnd((cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_DBCOLUMNNAME), p.getColumnName()),
+                     (cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_TABLE), dst.getTable()));
     assertTrue(obcColumn.list().size() == 1);
     return obcColumn.list().get(0);
   }

@@ -193,9 +193,9 @@ public class CoreAttachImplementation extends AttachImplementation {
       attachmentTable = OBDal.getInstance().get(Table.class, tableID);
       OBCriteria<Attachment> attachmentCriteria = OBDal.getInstance()
           .createCriteria(Attachment.class);
-      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_RECORD, recordID));
-      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_TABLE, attachmentTable));
-      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_NAME, fileName));
+      attachmentCriteria.addEqual(Attachment.PROPERTY_RECORD, recordID);
+      attachmentCriteria.addEqual(Attachment.PROPERTY_TABLE, attachmentTable);
+      attachmentCriteria.addEqual(Attachment.PROPERTY_NAME, fileName);
 
       attachmentCriteria.setFilterOnReadableOrganization(false);
       attachmentCriteria.setMaxResults(1);

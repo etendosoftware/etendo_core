@@ -111,7 +111,7 @@ public class ServiceOrderLineRelate extends BaseProcessActionHandler {
           .scroll(ScrollMode.FORWARD_ONLY);
 
       while (scroller.next()) {
-        final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get()[0];
+        final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get();
         OBDal.getInstance().remove(or);
       }
       OBDal.getInstance().flush();

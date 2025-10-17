@@ -44,6 +44,8 @@ import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
 import org.openbravo.database.ConnectionProvider;
@@ -361,10 +363,9 @@ public class CashVATUtil {
       final FIN_PaymentDetail paymentDetail) {
     try {
       OBContext.setAdminMode(true);
-      return OBDao
-          .getFilteredCriteria(InvoiceTaxCashVAT.class,
-              Restrictions.eq(InvoiceTaxCashVAT.PROPERTY_FINPAYMENTDETAIL, paymentDetail))
-          .list();
+      OBCriteria<InvoiceTaxCashVAT> criteria = OBDal.getInstance().createCriteria(InvoiceTaxCashVAT.class);
+      criteria.addFunction((cb, obc) -> cb.equal(obc.getPath(InvoiceTaxCashVAT.PROPERTY_FINPAYMENTDETAIL), paymentDetail));
+      return criteria.list();
     } finally {
       OBContext.restorePreviousMode();
     }

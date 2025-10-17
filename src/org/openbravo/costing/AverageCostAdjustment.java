@@ -244,7 +244,7 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
     boolean forceExit = false;
     try {
       while (trxs.next() && !forceExit) {
-        final MaterialTransaction trx = (MaterialTransaction) trxs.get()[0];
+        final MaterialTransaction trx = (MaterialTransaction) trxs.get();
         log.debug("Process related transaction {}", trx.getIdentifier());
         final BigDecimal trxSignMultiplier = new BigDecimal(trx.getMovementQuantity().signum());
         // trxAdjAmt: Sum of cost adjustment lines that still do not have transaction cost.
@@ -821,10 +821,8 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
         .createCriteria(CostAdjustmentLine.class);
     critLines.createAlias(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, "ca");
     critLines.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx);
-    // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-    critLines.add(Restrictions.or(//
-        cb.equal(root.get("ca.id"), getCostAdj().getId()), //
-        Restrictions.not(Restrictions.eq("ca." + CostAdjustment.PROPERTY_DOCUMENTSTATUS, "DR"))));
+    // TODO: HIBERNATE 6 - Needs manual conversion of OR logic 
+    critLines.addEqual("ca." + CostAdjustment.PROPERTY_ID, getCostAdj().getId());
 
     return critLines.list();
   }

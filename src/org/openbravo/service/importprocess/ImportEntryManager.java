@@ -616,7 +616,7 @@ public class ImportEntryManager implements ImportEntryManagerMBean {
                   while (entries.next() && isHandlingImportEntries()) {
                     entryCount++;
                     typeOfDataEntryCount++;
-                    final ImportEntry entry = (ImportEntry) entries.get(0);
+                    final ImportEntry entry = (ImportEntry) ((Object[]) entries.get())[0];
 
                     log.trace("Handle import entry {}", entry::getIdentifier);
 

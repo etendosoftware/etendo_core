@@ -33,7 +33,7 @@ public class Utilities {
                 criteria.setFilterOnReadableClients(false);
                 criteria.setFilterOnReadableOrganization(false);
                 criteria.addEqual(Field.PROPERTY_TAB, tab);
-                criteria.add(Restrictions.ilike(Field.PROPERTY_NAME, "Document No.", MatchMode.ANYWHERE));
+                criteria.addIlike(Field.PROPERTY_NAME, "%Document No.%");
                 final List<Field> fields = criteria.list();
                 if (!fields.isEmpty()) {
                         field = fields.get(0);

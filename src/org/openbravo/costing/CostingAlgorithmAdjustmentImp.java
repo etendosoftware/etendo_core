@@ -481,7 +481,7 @@ public abstract class CostingAlgorithmAdjustmentImp {
       while (trxs.next()) {
         counter++;
 
-        final MaterialTransaction trx = (MaterialTransaction) trxs.get()[0];
+        final MaterialTransaction trx = (MaterialTransaction) trxs.get();
         if (trx.isCostCalculated() && !trx.isCostPermanent()) {
           BigDecimal adjAmt = costAdjAmt.multiply(trx.getMovementQuantity().abs())
               .divide(inoutline.getMovementQuantity().abs(), precission, RoundingMode.HALF_UP);

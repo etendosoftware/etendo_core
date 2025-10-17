@@ -123,8 +123,8 @@ public class ParametersActionHandler extends BaseActionHandler implements Portal
 
         ParameterValue value = (ParameterValue) OBDal.getInstance()
             .createCriteria(ParameterValue.class)
-            .add(Restrictions.eq(dbFilterProperty, filterObject))
-            .add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, param))
+            .addEqual(dbFilterProperty, filterObject)
+            .addEqual(ParameterValue.PROPERTY_PARAMETER, param)
             .setMaxResults(1)
             .uniqueResult();
 

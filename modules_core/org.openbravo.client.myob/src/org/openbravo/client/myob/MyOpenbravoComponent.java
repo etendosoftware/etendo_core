@@ -342,11 +342,11 @@ public class MyOpenbravoComponent extends SessionDynamicTemplateComponent {
     OBCriteria<WidgetInstance> obc = OBDal.getInstance().createCriteria(WidgetInstance.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnActive(false);
-    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_CLIENT, client));
-    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_VISIBLEATROLE, visibleAtRole));
-    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_VISIBLEATUSER, visibleAtUser));
-    obc.add(Restrictions.in(WidgetInstance.PROPERTY_WIDGETCLASS + "." + WidgetClass.PROPERTY_ID,
-        widgetClasses));
+    obc.addEqual(WidgetInstance.PROPERTY_CLIENT, client);
+    obc.addEqual(WidgetInstance.PROPERTY_VISIBLEATROLE, visibleAtRole);
+    obc.addEqual(WidgetInstance.PROPERTY_VISIBLEATUSER, visibleAtUser);
+    obc.addIn(WidgetInstance.PROPERTY_WIDGETCLASS + "." + WidgetClass.PROPERTY_ID,
+        widgetClasses);
     return obc.list();
   }
 

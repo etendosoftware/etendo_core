@@ -279,7 +279,7 @@ public class ProcessInvoiceUtil {
                     OBCriteria<ReversedInvoice> revInvoiceCriteria = OBDal.getInstance()
                             .createCriteria(ReversedInvoice.class);
                     revInvoiceCriteria
-                            .add(Restrictions.eq(ReversedInvoice.PROPERTY_REVERSEDINVOICE, invoice));
+                            .addEqual(ReversedInvoice.PROPERTY_REVERSEDINVOICE, invoice);
                     revInvoiceCriteria.setMaxResults(1);
                     ReversedInvoice revInvoice = (ReversedInvoice) revInvoiceCriteria.uniqueResult();
 

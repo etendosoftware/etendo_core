@@ -349,7 +349,7 @@ public class SecureJsonDataService implements JsonDataService {
       try {
         int i = 0;
         while (scrollableResults.next()) {
-          final Object result = scrollableResults.get()[0];
+          final Object result = scrollableResults.get();
           final JSONObject json = toJsonConverter.toJsonObject((BaseOBObject) result,
               DataResolvingMode.FULL);
 

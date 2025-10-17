@@ -201,8 +201,8 @@ public class StandardWindowComponent extends BaseTemplateComponent {
   /** Returns the applicable System Grid Configuration if any. */
   public static Optional<GCSystem> getSystemGridConfig() {
     OBCriteria<GCSystem> gcSystemCriteria = OBDal.getInstance().createCriteria(GCSystem.class);
-    gcSystemCriteria.addOrder(Order.desc(GCTab.PROPERTY_SEQNO));
-    gcSystemCriteria.addOrder(Order.desc(GCTab.PROPERTY_ID));
+    gcSystemCriteria.addOrderBy(GCTab.PROPERTY_SEQNO, false);
+    gcSystemCriteria.addOrderBy(GCTab.PROPERTY_ID, false);
     gcSystemCriteria.setMaxResults(1);
     return Optional.ofNullable((GCSystem) gcSystemCriteria.uniqueResult());
   }

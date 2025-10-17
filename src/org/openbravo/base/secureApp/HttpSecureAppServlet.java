@@ -603,7 +603,7 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
     m_AuthManager.logout(request, response);
   }
 
-  protected void invalidateSession(HttpServletRequest request) {
+  protected void invalidateSession(HttpServletRequest request) throws ServletException {
     HttpSession session = request.getSession(false);
     if (session != null) {
       // finally invalidate the session (this event will be caught by the session listener

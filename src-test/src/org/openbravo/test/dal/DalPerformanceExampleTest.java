@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.collection.internal.PersistentBag;
+// import org.hibernate.collection.internal.PersistentBag; // TODO: Migrate to Hibernate 6 equivalent
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.Query;
 import org.junit.Assert;
@@ -84,7 +84,7 @@ public class DalPerformanceExampleTest extends OBBaseTest {
     final ScrollableResults productScroller1 = productCriteria.scroll(ScrollMode.FORWARD_ONLY);
     int i = 0;
     while (productScroller1.next()) {
-      final Product product = (Product) productScroller1.get()[0];
+      final Product product = (Product) productScroller1.get();
       System.err.println(product.getId());
       // clear the session every 100 records
       if ((i % 100) == 0) {
@@ -99,7 +99,7 @@ public class DalPerformanceExampleTest extends OBBaseTest {
     productQuery.setFetchSize(1000);
     final ScrollableResults productScroller2 = productQuery.scroll(ScrollMode.FORWARD_ONLY);
     while (productScroller2.next()) {
-      final Product product = (Product) productScroller2.get()[0];
+      final Product product = (Product) productScroller2.get();
       System.err.println(product.getId());
       // clear the session every 100 records
       if ((i % 100) == 0) {
@@ -231,7 +231,7 @@ public class DalPerformanceExampleTest extends OBBaseTest {
       bpQuery.setMaxResult(1000);
       final ScrollableResults scroller = bpQuery.scroll(ScrollMode.FORWARD_ONLY);
       while (scroller.next()) {
-        final BusinessPartner bp = (BusinessPartner) scroller.get()[0];
+        final BusinessPartner bp = (BusinessPartner) scroller.get();
 
         // this will load the category object with a separate query
         System.err.println(bp.getBusinessPartnerCategory().getIdentifier());
@@ -260,7 +260,7 @@ public class DalPerformanceExampleTest extends OBBaseTest {
           .setMaxResults(1000);
       final ScrollableResults scroller = qry.scroll(ScrollMode.FORWARD_ONLY);
       while (scroller.next()) {
-        final BusinessPartner bp = (BusinessPartner) scroller.get()[0];
+        final BusinessPartner bp = (BusinessPartner) scroller.get();
 
         // the category is already loaded, so this won't fire a query
         System.err.println(bp.getBusinessPartnerCategory().getIdentifier());

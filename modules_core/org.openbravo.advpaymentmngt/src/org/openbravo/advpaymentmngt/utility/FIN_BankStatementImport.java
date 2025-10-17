@@ -36,14 +36,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.base.exception.OBException;
@@ -52,6 +50,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.database.ConnectionProvider;
@@ -69,14 +68,12 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.service.db.CallStoredProcedure;
 
 public abstract class FIN_BankStatementImport {
-  private FIN_FinancialAccount financialAccount;
+  public static final String DOCUMENT_BankStatementFile = "BSF";
+  private static Logger log4j = LogManager.getLogger();
   OBError myError = null;
   String filename = "";
-  private static Logger log4j = LogManager.getLogger();
-
-  public static final String DOCUMENT_BankStatementFile = "BSF";
-
   ArrayList<String> stringExceptions = null;
+  private FIN_FinancialAccount financialAccount;
 
   public FIN_BankStatementImport(FIN_FinancialAccount _financialAccount) {
     setFinancialAccount(_financialAccount);
@@ -94,7 +91,7 @@ public abstract class FIN_BankStatementImport {
 
   /**
    * @param error
-   *          the myError to set
+   *     the myError to set
    */
   public void setMyError(OBError error) {
     this.myError = error;
@@ -109,7 +106,7 @@ public abstract class FIN_BankStatementImport {
   }
 
   private InputStream getFile(VariablesSecureApp vars) throws IOException {
-    FileItem fi = vars.getMultiFile("inpFile");
+    FileItem fi = (FileItem) vars.getMultiFile("inpFile");
     if (fi == null) {
       throw new IOException("Invalid filename");
     }
@@ -414,21 +411,20 @@ public abstract class FIN_BankStatementImport {
     try {
       OBCriteria<BusinessPartner> obCriteria = OBDal.getInstance()
           .createCriteria(BusinessPartner.class);
-      Criterion[] orCriterionElements = new Criterion[list.size()];
-      for (int i = 0; i < list.size(); i++) {
-        String token = list.get(i);
-        orCriterionElements[i] = cb.like(root.get("name"), "%" + token + "%").ignoreCase();
+
+      List<PredicateFunction> orPredicates = new ArrayList<>();
+      for (String token : list) {
+        orPredicates.add((cb, obc) -> cb.like(cb.upper(obc.getPath("name")), cb.upper(cb.literal("%" + token + "%"))));
       }
-      obCriteria.add(// TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-Restrictions.or(orCriterionElements))
-          .add(root.get("organization.id").in(new OrganizationStructureProvider().getNaturalTree(organization.getId())));
+      obCriteria.addOr(orPredicates.toArray(new PredicateFunction[0]))
+          .addIn("organization.id", new OrganizationStructureProvider().getNaturalTree(organization.getId()));
 
       businessPartnersScroll = obCriteria.scroll(ScrollMode.SCROLL_SENSITIVE);
 
       if (!businessPartnersScroll.next()) {
         return null;
       } else {
-        BusinessPartner bp = (BusinessPartner) businessPartnersScroll.get(0);
+        BusinessPartner bp = (BusinessPartner) businessPartnersScroll.get();
         final String id = bp.getId();
         if (!businessPartnersScroll.next()) {
           return OBDal.getInstance().get(BusinessPartner.class, id);
@@ -448,41 +444,40 @@ Restrictions.or(orCriterionElements))
   private String closest(ScrollableResults businessPartners, String partnername) {
     String targetBusinessPartnerId = "";
     try {
-      businessPartners.beforeFirst();
-      businessPartners.next();
-      targetBusinessPartnerId = businessPartners.getString(0);
-      String targetBusinessPartnerName = businessPartners.getString(1);
+      // No pasamos ScrollMode
+      if (!businessPartners.next()) {
+        return targetBusinessPartnerId; // No hay resultados
+      }
+
+      Object[] firstRow = (Object[]) businessPartners.get();
+      targetBusinessPartnerId = firstRow[0].toString();
+      String targetBusinessPartnerName = firstRow[1].toString();
 
       int distance = StringUtils.getLevenshteinDistance(partnername, targetBusinessPartnerName);
       String parsedPartnername = partnername.toLowerCase();
+
       // Remove exceptions
       for (String eliminate : stringExceptions) {
         parsedPartnername = parsedPartnername.replaceAll(eliminate.toLowerCase(), "");
       }
 
-      // Remove Numeric characters
-      char[] digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-      for (char character : digits) {
-        parsedPartnername = parsedPartnername.replace(character, ' ');
-        parsedPartnername = parsedPartnername.trim();
-      }
+      parsedPartnername = parsedPartnername.replaceAll("\\d", " ").trim();
 
+      // Reset scroll
       businessPartners.beforeFirst();
+
       while (businessPartners.next()) {
-        String bpId = "";
-        String bpName = "";
-        bpId = businessPartners.getString(0);
-        bpName = businessPartners.getString(1);
-        // Calculates distance between two strings meaning number of changes required for a string
-        // to
-        // convert in another string
-        int bpDistance = StringUtils.getLevenshteinDistance(parsedPartnername,
-            bpName.toLowerCase());
+        Object[] row = (Object[]) businessPartners.get();
+        String bpId = row[0].toString();
+        String bpName = row[1].toString();
+
+        int bpDistance = StringUtils.getLevenshteinDistance(parsedPartnername, bpName.toLowerCase());
         if (bpDistance < distance) {
           distance = bpDistance;
           targetBusinessPartnerId = bpId;
         }
       }
+
       return targetBusinessPartnerId;
     } catch (Exception e) {
       log4j.error("Exception during closest", e);
@@ -490,13 +485,14 @@ Restrictions.or(orCriterionElements))
     }
   }
 
+
   private BankFileFormat getBankFileFormat() {
     List<BankFileFormat> bankFileFormat = new ArrayList<BankFileFormat>();
     OBContext.setAdminMode();
     final String JAVACLASSNAME = this.getClass().getName();
     try {
       OBCriteria<BankFileFormat> obc = OBDal.getInstance().createCriteria(BankFileFormat.class);
-      obc.add(Restrictions.eq(BankFileFormat.PROPERTY_JAVACLASSNAME, JAVACLASSNAME));
+      obc.addEqual(BankFileFormat.PROPERTY_JAVACLASSNAME, JAVACLASSNAME);
       obc.setMaxResults(1);
       bankFileFormat = obc.list();
     } finally {
@@ -513,11 +509,11 @@ Restrictions.or(orCriterionElements))
       OBCriteria<BankFileException> obc = OBDal.getInstance()
           .createCriteria(BankFileException.class);
       obc.createAlias(BankFileException.PROPERTY_BANKFILEFORMAT, "BFF");
-      obc.add(Restrictions.eq("BFF." + BankFileFormat.PROPERTY_JAVACLASSNAME,
-          bankFileFormat.getJavaClassName()));
-      obc.add(Restrictions.or(
-          Restrictions.eq(BankFileException.PROPERTY_FINANCIALACCOUNT, financialAccount),
-          Restrictions.isNull(BankFileException.PROPERTY_FINANCIALACCOUNT)));
+      obc.addEqual("BFF." + BankFileFormat.PROPERTY_JAVACLASSNAME,
+          bankFileFormat.getJavaClassName());
+      obc.addOr(
+          (cb, obc_inner) -> cb.equal(obc_inner.getPath(BankFileException.PROPERTY_FINANCIALACCOUNT), financialAccount),
+          (cb, obc_inner) -> cb.isNull(obc_inner.getPath(BankFileException.PROPERTY_FINANCIALACCOUNT)));
       bankFileExceptions = obc.list();
     } finally {
       OBContext.restorePreviousMode();

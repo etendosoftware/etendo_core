@@ -110,7 +110,7 @@ class RoleEventHandler extends EntityPersistenceEventObserver {
       ScrollableResults scroll = criteria.scroll(ScrollMode.FORWARD_ONLY);
       try {
         while (scroll.next()) {
-          final Organization organization = (Organization) scroll.get()[0];
+          final Organization organization = (Organization) scroll.get();
           roleOrganizationList.add(getRoleOrganization(role, organization, true));
           logger
               .debug("Added organization " + organization.getName() + " to role " + role.getName());
@@ -128,7 +128,7 @@ class RoleEventHandler extends EntityPersistenceEventObserver {
       ScrollableResults scroll = criteria.scroll(ScrollMode.FORWARD_ONLY);
       try {
         while (scroll.next()) {
-          final Organization organization = (Organization) scroll.get()[0];
+          final Organization organization = (Organization) scroll.get();
           roleOrganizationList.add(getRoleOrganization(role, organization, true));
           logger
               .debug("Added organization " + organization.getName() + " to role " + role.getName());

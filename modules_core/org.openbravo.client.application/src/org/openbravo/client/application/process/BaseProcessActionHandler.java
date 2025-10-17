@@ -27,6 +27,7 @@ package org.openbravo.client.application.process;
 
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,10 +35,7 @@ import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemFactory;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import jakarta.servlet.http.Part;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
@@ -57,6 +55,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.EntityAccessChecker;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+
 import org.openbravo.database.SessionInfo;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBError;
@@ -277,7 +276,8 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
    */
   @Override
   protected Map<String, Object> extractParametersFromRequest(HttpServletRequest request) {
-    boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+    String contentType = request.getContentType();
+    boolean isMultipart = contentType != null && contentType.toLowerCase().startsWith("multipart/");
     if (isMultipart) {
       return parseMultipartParameters(request);
     } else {
@@ -292,7 +292,8 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
   @Override
   protected String extractRequestContent(HttpServletRequest request,
       Map<String, Object> requestParameters) throws IOException {
-    boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+    String contentType = request.getContentType();
+    boolean isMultipart = contentType != null && contentType.toLowerCase().startsWith("multipart/");
     if (isMultipart) {
       return (String) requestParameters.get(PARAM_VALUES);
     } else {
@@ -312,25 +313,24 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     Map<String, Object> parameters = new HashMap<>();
     String fileName;
     try {
-      FileItemFactory factory = new DiskFileItemFactory();
-      ServletFileUpload upload = new ServletFileUpload(factory);
-      List<FileItem> items = upload.parseRequest(request);
+      Collection<Part> parts = request.getParts();
 
-      for (FileItem item : items) {
-        if (item.isFormField()) {
-          String value = item.getString("UTF-8");
-          parameters.put(item.getFieldName(), value);
-          log.debug("Added parameter {} with value: {}", item.getFieldName(), value);
+      for (Part part : parts) {
+        if (part.getContentType() == null) { // form field has no content type
+          byte[] bytes = part.getInputStream().readAllBytes();
+          String value = new String(bytes, "UTF-8");
+          parameters.put(part.getName(), value);
+          log.debug("Added parameter {} with value: {}", part.getName(), value);
         } else {
-          fileName = item.getName();
+          fileName = part.getSubmittedFileName();
           if (StringUtils.isNotBlank(fileName)) {
             Map<String, Object> fileInfo = Map.of(
-                PARAM_FILE_CONTENT, item.getInputStream(),
+                PARAM_FILE_CONTENT, part.getInputStream(),
                 PARAM_FILE_NAME, fileName,
-                PARAM_FILE_SIZE, item.getSize()
+                PARAM_FILE_SIZE, part.getSize()
             );
-            parameters.put(item.getFieldName(), fileInfo);
-            log.debug("Added parameter {} file {}", item.getFieldName(), fileName);
+            parameters.put(part.getName(), fileInfo);
+            log.debug("Added parameter {} file {}", part.getName(), fileName);
           }
         }
       }
@@ -382,9 +382,8 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
       if (!checkPermission) {
         // check if window is accessible
         OBCriteria<WindowAccess> qAccess = OBDal.getInstance().createCriteria(WindowAccess.class);
-        qAccess.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
-        qAccess
-            .add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
+        qAccess.addEqual(WindowAccess.PROPERTY_WINDOW, window);
+        qAccess.addEqual(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
         return qAccess.count() > 0;
       }
     }
@@ -394,8 +393,8 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     // * Invoked from menu (without window)
     // In any of these two cases, security is checked based on process access
     OBCriteria<ProcessAccess> qAccess = OBDal.getInstance().createCriteria(ProcessAccess.class);
-    qAccess.add(Restrictions.eq(ProcessAccess.PROPERTY_OBUIAPPPROCESS, processDefinition));
-    qAccess.add(Restrictions.eq(ProcessAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
+    qAccess.addEqual(ProcessAccess.PROPERTY_OBUIAPPPROCESS, processDefinition);
+    qAccess.addEqual(ProcessAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
     return qAccess.count() > 0;
   }
 

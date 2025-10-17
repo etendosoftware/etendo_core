@@ -224,7 +224,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
    */
   private Table getMaterialManagementConsumptionTable(BaseOBObject document) {
     final OBCriteria<Table> criteria = OBDal.getInstance().createCriteria(Table.class);
-    criteria.add(Restrictions.eq(Table.PROPERTY_NAME, document.getEntityName()));
+    criteria.addEqual(Table.PROPERTY_NAME, document.getEntityName());
     criteria.setMaxResults(1);
     return (Table) criteria.uniqueResult();
   }

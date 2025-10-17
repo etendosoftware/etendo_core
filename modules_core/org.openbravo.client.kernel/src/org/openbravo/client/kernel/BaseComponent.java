@@ -209,7 +209,7 @@ public abstract class BaseComponent implements Component {
       OBContext.setAdminMode();
       try {
         OBCriteria<Module> qMod = OBDal.getInstance().createCriteria(Module.class);
-        qMod.addOrder(Order.asc(Module.PROPERTY_ID));
+        qMod.addOrderBy(Module.PROPERTY_ID, true);
         for (Module mod : qMod.list()) {
           moduleVersions += mod.getId() + "-" + mod.getVersion() + "-" + mod.isEnabled();
           if ("T".equals(mod.getType())) {

@@ -121,7 +121,7 @@ public class RMCreateInvoice implements org.openbravo.scheduling.Process {
     OBCriteria<APRMPendingPaymentFromInvoice> ppfiCriteria = OBDal.getInstance()
         .createCriteria(APRMPendingPaymentFromInvoice.class);
     ppfiCriteria.addEqual(APRMPendingPaymentFromInvoice.PROPERTY_PROCESSNOW, false);
-    ppfiCriteria.addInIds(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS,
+    ppfiCriteria.addInEntities(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS,
         getLeaveAsCreditProcesses());
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS, false);
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_ORGANIZATION, false);

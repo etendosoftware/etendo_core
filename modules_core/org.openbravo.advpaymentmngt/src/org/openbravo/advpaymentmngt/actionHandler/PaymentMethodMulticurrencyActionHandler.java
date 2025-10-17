@@ -135,10 +135,10 @@ public class PaymentMethodMulticurrencyActionHandler extends BaseActionHandler {
           .createCriteria(FinAccPaymentMethod.class);
       obc.setFilterOnReadableOrganization(false);
       obc.setMaxResults(1);
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT,
-          OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId)));
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-          OBDal.getInstance().get(FIN_PaymentMethod.class, paymentMethodId)));
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT,
+          OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId));
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+          OBDal.getInstance().get(FIN_PaymentMethod.class, paymentMethodId));
       return (FinAccPaymentMethod) obc.uniqueResult();
     } finally {
       OBContext.restorePreviousMode();

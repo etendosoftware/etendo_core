@@ -124,8 +124,8 @@ class TreeTablesEventHandler extends EntityPersistenceEventObserver {
   private DataSourceService getDataSource(String tableId) {
     Table table = OBDal.getInstance().getProxy(Table.class, tableId);
     OBCriteria<TableTree> obq = OBDal.getInstance().createCriteria(TableTree.class);
-    obq.add(Restrictions.eq(TableTree.PROPERTY_TABLE, table));
-    obq.add(Restrictions.eq(TableTree.PROPERTY_ISMAINTREE, true));
+    obq.addEqual(TableTree.PROPERTY_TABLE, table);
+    obq.addEqual(TableTree.PROPERTY_ISMAINTREE, true);
     List<TableTree> tableTreeList = obq.list();
     if (tableTreeList.isEmpty()) {
       return null;
@@ -175,7 +175,7 @@ class TreeTablesEventHandler extends EntityPersistenceEventObserver {
     OBContext.setAdminMode(true);
     try {
       OBCriteria<Table> treeTablesCriteria = OBDal.getInstance().createCriteria(Table.class);
-      treeTablesCriteria.add(Restrictions.eq(Table.PROPERTY_ISTREE, true));
+      treeTablesCriteria.addEqual(Table.PROPERTY_ISTREE, true);
       List<Table> treeTableList = treeTablesCriteria.list();
       ArrayList<Entity> entityArray = new ArrayList<>();
       for (Table treeTable : treeTableList) {

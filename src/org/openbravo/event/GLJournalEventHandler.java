@@ -62,7 +62,7 @@ class GLJournalEventHandler extends EntityPersistenceEventObserver {
         if (gljournallineCriteria.count() > 0) {
           int i = 0;
           while (scrollLines.next()) {
-            final GLJournalLine journalLine = (GLJournalLine) scrollLines.get()[0];
+            final GLJournalLine journalLine = (GLJournalLine) scrollLines.get();
             if (!glj.getCurrency().getId().equals(journalLine.getCurrency().getId())) {
               journalLine.setCurrency(glj.getCurrency());
               OBDal.getInstance().save(journalLine);

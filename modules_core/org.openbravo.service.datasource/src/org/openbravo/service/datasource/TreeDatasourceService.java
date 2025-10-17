@@ -465,9 +465,9 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
       // If the tab has been provided, check if the user has access to its window
       OBCriteria<WindowAccess> qWindowAccess = OBDal.getInstance()
           .createCriteria(WindowAccess.class);
-      qWindowAccess.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, tab.getWindow()));
+      qWindowAccess.addEqual(WindowAccess.PROPERTY_WINDOW, tab.getWindow());
       qWindowAccess
-          .add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
+          .addEqual(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
       hasAccessToTable = qWindowAccess.count() > 0;
     }
     return hasAccessToTable;
@@ -510,7 +510,7 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
    * @throws TooManyTreeNodesException
    */
   private List<String> getFilteredNodes(Table table, Map<String, String> parameters)
-      throws TooManyTreeNodesException {
+      throws TooManyTreeNodesException, JSONException {
     List<String> filteredNodes = new ArrayList<String>();
     Entity entity = ModelProvider.getInstance().getEntityByTableId(table.getId());
     // Delegate on the default standard datasource to fetch the filtered nodes

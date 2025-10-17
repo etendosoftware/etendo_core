@@ -125,9 +125,9 @@ public class PaymentExecutionUtils {
       FIN_PaymentMethod paymentMethod) {
     final OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACTIVE, true));
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACTIVE, true);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     try {

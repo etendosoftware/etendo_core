@@ -19,6 +19,7 @@
 
 package org.openbravo.base.session;
 
+import java.sql.Connection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -29,11 +30,11 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -167,8 +168,8 @@ public abstract class SessionFactoryController {
       configuration.getProperties().setProperty(AvailableSettings.JPA_VALIDATION_MODE, "NONE");
       configuration.getProperties().setProperty(AvailableSettings.CHECK_NULLABILITY, "false");
       // TODO: consider setting isolation level explicitly
-      // configuration.getProperties().setProperty(Environment.ISOLATION,
-      // "" + Connection.TRANSACTION_READ_COMMITTED);
+      configuration.getProperties().setProperty(Environment.ISOLATION,
+      "" + Connection.TRANSACTION_READ_COMMITTED);
 
       //registerSqlFunctions();
 
@@ -179,13 +180,8 @@ public abstract class SessionFactoryController {
       StandardServiceRegistry serviceRegistry = configuration.getStandardServiceRegistryBuilder().build();
       initializeServices(serviceRegistry);
 
-      // 🔧 Registrar el tipo personalizado ANTES de construir el SessionFactory
-      // Esto es crítico para que Hibernate 6 use el tipo correcto en los metadatos
       configuration.registerTypeOverride(org.openbravo.base.session.OBYesNoType.INSTANCE);
-      log.info("✅ Registered OBYesNoType (Y/N boolean mapping) BEFORE building SessionFactory");
-
       SessionFactory delegateSessionFactory = configuration.buildSessionFactory(serviceRegistry);
-
       dalSessionFactory.setDelegateSessionFactory(delegateSessionFactory);
 
       sessionFactory = dalSessionFactory;

@@ -120,10 +120,10 @@ class WindowPersonalizationEventHandler extends EntityPersistenceEventObserver {
         .createCriteria(Preference.class);
     // filter out the preferences that do not store the default view
     preferenceCriteria
-        .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "OBUIAPP_DefaultSavedView"));
+        .addEqual(Preference.PROPERTY_PROPERTY, "OBUIAPP_DefaultSavedView");
     // filter out the preferences whose default view is not the one being deleted
     preferenceCriteria
-        .add(Restrictions.eq(Preference.PROPERTY_SEARCHKEY, uiPersonalization.getId()));
+        .addEqual(Preference.PROPERTY_SEARCHKEY, uiPersonalization.getId());
     return preferenceCriteria.list();
   }
 }

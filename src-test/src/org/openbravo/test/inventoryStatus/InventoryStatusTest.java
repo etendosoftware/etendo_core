@@ -164,10 +164,10 @@ public class InventoryStatusTest extends WeldBaseTest {
     String valueISYes = " to_char(value) = 'Y' ";
 
     OBCriteria<Preference> criteria = OBDal.getInstance().createCriteria(Preference.class);
-    criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE));
+    criteria.addEqual(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE);
     criteria.add(Restrictions.sqlRestriction(valueISYes));
-    criteria.add(Restrictions.eq(Preference.PROPERTY_CLIENT, client));
-    criteria.add(Restrictions.eq(Preference.PROPERTY_ORGANIZATION, organization));
+    criteria.addEqual(Preference.PROPERTY_CLIENT, client);
+    criteria.addEqual(Preference.PROPERTY_ORGANIZATION, organization);
     return !criteria.list().isEmpty();
   }
 

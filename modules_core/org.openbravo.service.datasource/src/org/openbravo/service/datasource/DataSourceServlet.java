@@ -1087,7 +1087,7 @@ public class DataSourceServlet extends BaseKernelServlet {
         }
         // Search window references that linked with the window of the provided tab.
         OBCriteria<RefWindow> obcRefWindow = OBDal.getInstance().createCriteria(RefWindow.class);
-        obcRefWindow.add(Restrictions.eq(RefWindow.PROPERTY_WINDOW, tab.getWindow()));
+        obcRefWindow.addEqual(RefWindow.PROPERTY_WINDOW, tab.getWindow());
         if (obcRefWindow.list().size() == 0) {
           return false;
         }
@@ -1098,7 +1098,7 @@ public class DataSourceServlet extends BaseKernelServlet {
 
         // Then search parameters that linked with references and get theirs processes.
         OBCriteria<Parameter> obParameters = OBDal.getInstance().createCriteria(Parameter.class);
-        obParameters.add(Restrictions.in(Parameter.PROPERTY_REFERENCESEARCHKEY, references));
+        obParameters.addIn(Parameter.PROPERTY_REFERENCESEARCHKEY, references);
         if (obParameters.list().size() == 0) {
           return false;
         }
@@ -1122,7 +1122,7 @@ public class DataSourceServlet extends BaseKernelServlet {
 
         // Finally select all columns that linked with selected processes and get their fields.
         OBCriteria<Column> columns = OBDal.getInstance().createCriteria(Column.class);
-        columns.add(Restrictions.in(Column.PROPERTY_OBUIAPPPROCESS, obuiapProcesses));
+        columns.addIn(Column.PROPERTY_OBUIAPPPROCESS, obuiapProcesses);
         if (columns.list().size() == 0) {
           return false;
         }

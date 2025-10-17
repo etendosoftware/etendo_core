@@ -93,7 +93,7 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
         try {
           while (scroller.next()) {
             boolean changed = false;
-            final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get()[0];
+            final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get();
             // Order Quantity has changed from positive to negative or backwards
             if (currentOrderedQty.signum() != 0 && oldOrderedQty.signum() != 0
                 && currentOrderedQty.signum() != oldOrderedQty.signum()) {
@@ -159,7 +159,7 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
       rol.setMaxResult(1000);
       final ScrollableResults scroller = rol.scroll(ScrollMode.FORWARD_ONLY);
       while (scroller.next()) {
-        final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get()[0];
+        final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get();
         OBDal.getInstance().remove(or);
       }
     }
@@ -168,7 +168,7 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
       rol.setMaxResult(1000);
       final ScrollableResults scroller = rol.scroll(ScrollMode.FORWARD_ONLY);
       while (scroller.next()) {
-        final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get()[0];
+        final OrderlineServiceRelation or = (OrderlineServiceRelation) scroller.get();
         OBDal.getInstance().remove(or);
       }
     }

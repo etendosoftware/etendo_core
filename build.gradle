@@ -34,7 +34,7 @@ if (file('version.properties').exists()) {
     }
 }
 
-static def getVersionSuffix( versionTs ) {
+static def getVersionSuffix(versionTs) {
     def branch = ""
     def proc = "git rev-parse --abbrev-ref HEAD".execute()
     proc.in.eachLine { line -> branch = line }
@@ -46,7 +46,7 @@ static def getVersionSuffix( versionTs ) {
     return ""
 }
 
-version = CURRENT_VERSION + getVersionSuffix( versionTs )
+version = CURRENT_VERSION + getVersionSuffix(versionTs)
 
 def artifactID = 'etendo-core'
 def javaPackage = group + '.' + artifactID
@@ -55,7 +55,7 @@ java {
     sourceCompatibility = JavaVersion.VERSION_11
 }
 
-jar{
+jar {
     archiveBaseName.set("${javaPackage}")
     zip64 = true
 }
@@ -367,27 +367,32 @@ tasks.named('jar') {
 def loadedDeps = ext.dependenciesListCOMPILATION
 
 dependencies {
-    // --- Jakarta API (sustitutos de javax.*) ---
-    implementation "jakarta.persistence:jakarta.persistence-api:3.1.0"
-    implementation "jakarta.servlet:jakarta.servlet-api:6.0.0"
-    implementation "jakarta.inject:jakarta.inject-api:2.0.1"
-    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1"
-    implementation "jakarta.annotation:jakarta.annotation-api:2.1.1"
-    implementation "jakarta.validation:jakarta.validation-api:3.0.2"
-    implementation "jakarta.transaction:jakarta.transaction-api:2.0.1"
-
-    // --- Hibernate 6.x (si todavía no lo tenés) ---
-    implementation "org.hibernate.orm:hibernate-core:6.5.2.Final"
+    // --- Logging ---
+    implementation enforcedPlatform("org.apache.logging.log4j:log4j-bom:2.22.1")
+    implementation 'org.apache.logging.log4j:log4j-api'
+    implementation 'org.apache.logging.log4j:log4j-core'
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
+    implementation 'org.apache.logging.log4j:log4j-web'
+    implementation 'org.apache.logging.log4j:log4j-1.2-api'
 }
 
 dependencies {
     if (loadedDeps != null) {
         loadedDeps.each { String dependency ->
             implementation(dependency) {
-                exclude group: '*', module: '*'
+                exclude group: 'org.jboss.weld'
+                exclude group: 'org.jboss.weld.module'
+                exclude group: 'org.jboss.weld.environment'
             }
         }
     } else {
         throw new GradleException("Does not have dependencies to load.")
+    }
+}
+
+configurations.configureEach {
+    if (name != "antClasspath") { // evita mutar configuraciones internas
+        exclude group: 'xpp3'
+        exclude group: 'org.gjt.xpp'
     }
 }

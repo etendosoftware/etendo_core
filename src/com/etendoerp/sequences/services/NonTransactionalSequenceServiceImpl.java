@@ -12,6 +12,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.OBDal;
 
@@ -119,7 +121,11 @@ public class NonTransactionalSequenceServiceImpl implements NonTransactionalSequ
         Optional.ofNullable(optimizer).ifPresent(strategy -> params.put("optimizer", strategy));
 
         try {
-            generator.configure(StandardBasicTypes.LONG, params, serviceRegistry);
+            // Resolve LONG type using the SessionFactory's TypeConfiguration (not a Service itself)
+            SessionFactoryImplementor sfi = (SessionFactoryImplementor) OBDal.getInstance().getSession().getSessionFactory();
+            var typeConfiguration = sfi.getTypeConfiguration();
+            Type longType = typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.LONG);
+            generator.configure(longType, params, serviceRegistry);
             generator.registerExportables(database);
         } catch (MappingException e) {
             throw new OBException(e.getMessage(), e);

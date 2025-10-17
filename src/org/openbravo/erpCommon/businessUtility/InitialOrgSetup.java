@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.fileupload.FileItem;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
@@ -123,7 +123,7 @@ public class InitialOrgSetup {
    */
   public OBError createOrganization(String strOrgName, String strOrgUser, String strOrgType,
       String strParentOrg, String strcLocationId, String strPassword, String strModules,
-      boolean boCreateAccounting, FileItem fileCoAFilePath, String strCurrency, boolean bBPartner,
+      boolean boCreateAccounting, jakarta.servlet.http.Part fileCoAFilePath, String strCurrency, boolean bBPartner,
       boolean bProduct, boolean bProject, boolean bCampaign, boolean bSalesRegion) {
     OBError obResult = new OBError();
     obResult.setType(ERRORTYPE);
@@ -513,7 +513,7 @@ public class InitialOrgSetup {
     return strModules;
   }
 
-  private OBError createAccounting(FileItem fileCoAFilePath, String strCurrency, boolean partner,
+  private OBError createAccounting(jakarta.servlet.http.Part fileCoAFilePath, String strCurrency, boolean partner,
       boolean product, boolean project, boolean campaign, boolean salesRegion,
       VariablesSecureApp vars) {
     OBError obResult = new OBError();

@@ -209,7 +209,7 @@ public class FIN_BankStatementProcess implements org.openbravo.scheduling.Proces
       final OBCriteria<FIN_BankStatementLine> obc = OBDal.getInstance()
           .createCriteria(FIN_BankStatementLine.class);
       obc.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
-      obc.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ID, bankStatement.getId()));
+      obc.addEqual("bs." + FIN_BankStatement.PROPERTY_ID, bankStatement.getId());
       obc.addOrderBy(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, true);
       obc.setMaxResults(1);
       final List<FIN_BankStatementLine> bst = obc.list();
@@ -238,8 +238,8 @@ public class FIN_BankStatementProcess implements org.openbravo.scheduling.Proces
     try {
       final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, account));
-      obc.add(Restrictions.ge(FIN_Reconciliation.PROPERTY_ENDINGDATE, bankStatementLineMinDate));
+      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, account);
+      obc.addGreaterOrEqual(FIN_Reconciliation.PROPERTY_ENDINGDATE, bankStatementLineMinDate);
       obc.setMaxResults(1);
       return obc.list();
     } finally {

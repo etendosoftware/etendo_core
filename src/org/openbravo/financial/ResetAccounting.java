@@ -163,7 +163,7 @@ public class ResetAccounting {
             int i = 0;
             try {
               while (scroll.next()) {
-                final Object[] resultSet = scroll.get();
+                final Object[] resultSet = (Object[]) scroll.get();
                 final String organization = (String) resultSet[0];
                 final String orgperiodcontrol = (String) resultSet[1];
 
@@ -967,7 +967,7 @@ public class ResetAccounting {
           .scroll(ScrollMode.FORWARD_ONLY)) {
         int i = 0;
         while (scroll.next()) {
-          final Object[] resultSet = scroll.get();
+          final Object[] resultSet = (Object[]) scroll.get();
           final String orgPeriodControl = (String) resultSet[1];
 
           validatePeriods(clientId, orgIds, tableId, dateFrom, dbt, orgPeriodControl, resultSet);

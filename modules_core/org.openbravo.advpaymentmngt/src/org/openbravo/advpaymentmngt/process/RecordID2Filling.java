@@ -149,7 +149,7 @@ public class RecordID2Filling extends DalBaseProcess {
     try {
       while (scroller.next()) {
         OBContext.setAdminMode(false);
-        final AccountingFact accountingEntry = (AccountingFact) scroller.get()[0];
+        final AccountingFact accountingEntry = (AccountingFact) scroller.get();
         try {
           FIN_FinaccTransaction trx = OBDal.getInstance()
               .get(FIN_FinaccTransaction.class, accountingEntry.getLineID());
@@ -241,7 +241,7 @@ public class RecordID2Filling extends DalBaseProcess {
     try {
       while (scrollerInTransit.next()) {
         OBContext.setAdminMode(false);
-        final AccountingFact accountingEntry = (AccountingFact) scrollerInTransit.get()[0];
+        final AccountingFact accountingEntry = (AccountingFact) scrollerInTransit.get();
         try {
           FIN_FinaccTransaction trx = OBDal.getInstance()
               .get(FIN_FinaccTransaction.class,
@@ -502,9 +502,9 @@ public class RecordID2Filling extends DalBaseProcess {
     String use = null;
     OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT,
-        OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId)));
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT,
+        OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId));
     obc.setMaxResults(1);
     FinAccPaymentMethod pm = (FinAccPaymentMethod) obc.uniqueResult();
     if (isReceipt) {

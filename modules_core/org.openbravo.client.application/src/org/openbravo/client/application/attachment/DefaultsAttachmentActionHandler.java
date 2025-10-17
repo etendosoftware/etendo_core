@@ -98,8 +98,8 @@ public class DefaultsAttachmentActionHandler extends BaseActionHandler {
           // Calculate stored value.
           OBCriteria<ParameterValue> parameterValueCriteria = OBDal.getInstance()
               .createCriteria(ParameterValue.class);
-          parameterValueCriteria.add(Restrictions.eq(ParameterValue.PROPERTY_FILE, attachment));
-          parameterValueCriteria.add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, param));
+          parameterValueCriteria.addEqual(ParameterValue.PROPERTY_FILE, attachment);
+          parameterValueCriteria.addEqual(ParameterValue.PROPERTY_PARAMETER, param);
           ParameterValue parameterValue = (ParameterValue) parameterValueCriteria.uniqueResult();
           if (parameterValue != null) {
             // If the parameter has a previous value set it on the defaults map and continue with

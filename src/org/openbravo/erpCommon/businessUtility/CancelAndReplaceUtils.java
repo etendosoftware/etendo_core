@@ -50,6 +50,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.TriggerHandler;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -393,7 +394,7 @@ public class CancelAndReplaceUtils {
         oldOrderLines = getOrderLineList(oldOrder);
         int i = 0;
         while (oldOrderLines.next()) {
-          final OrderLine oldOrderLine = (OrderLine) oldOrderLines.get(0);
+          final OrderLine oldOrderLine = (OrderLine) oldOrderLines.get();
           final Reservation reservation = getReservationForOrderLine(oldOrderLine);
           if (reservation != null) {
             ReservationUtils.processReserve(reservation, "CL");
@@ -582,13 +583,15 @@ public class CancelAndReplaceUtils {
       final OBCriteria<FIN_PaymentScheduleDetail> paymentScheduleDetailCriteria = OBDal
           .getInstance()
           .createCriteria(FIN_PaymentScheduleDetail.class);
-      paymentScheduleDetailCriteria.add(Restrictions
-          .eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE, paymentSchedule));
+      FIN_PaymentSchedule finalPaymentSchedule = paymentSchedule;
+      paymentScheduleDetailCriteria.addFunction((cb, obc) -> cb.equal(obc.getPath(
+          FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE), finalPaymentSchedule));
       // There should be only one with null paymentDetails
       paymentScheduleDetailCriteria
           .addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
-      paymentScheduleDetailCriteria.add(Restrictions
-          .eq(FIN_PaymentScheduleDetail.PROPERTY_ORGANIZATION, paymentSchedule.getOrganization()));
+      FIN_PaymentSchedule finalPaymentSchedule1 = paymentSchedule;
+      paymentScheduleDetailCriteria.addFunction((cb, obc) -> cb.equal(obc.getPath(
+          FIN_PaymentScheduleDetail.PROPERTY_ORGANIZATION), finalPaymentSchedule1.getOrganization()));
       paymentScheduleDetailCriteria.setFilterOnReadableOrganization(false);
       final List<FIN_PaymentScheduleDetail> pendingPaymentScheduleDetailList = paymentScheduleDetailCriteria
           .list();

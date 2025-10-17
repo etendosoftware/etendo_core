@@ -23,6 +23,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.filter.IsIDFilter;
@@ -177,7 +178,7 @@ public class InitialClientSetup extends HttpSecureAppServlet {
     String strClientUser = vars.getStringParameter("inpClientUser");
     String strPassword = vars.getStringParameter("inpPassword");
     String strCurrency = vars.getStringParameter("inpCurrency");
-    org.apache.commons.fileupload.FileItem fileCoAFilePath = vars.getMultiFile("inpFile");
+    FileItem fileCoAFilePath = (FileItem) vars.getMultiFile("inpFile");
     boolean bCreateAccounting = isTrue(vars.getStringParameter("inpCreateAccounting"));
     initialClientSetupLog4j.debug(
         "process() - Client name: " + strClientName + ". Client user name: " + strClientUser);

@@ -76,6 +76,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.OBInterceptor;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.xml.XMLUtil;
 import org.openbravo.database.ConnectionProvider;
@@ -1798,15 +1799,9 @@ public class ImportModule implements Serializable {
 
       OBCriteria<org.openbravo.model.ad.module.Module> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.module.Module.class);
-      obCriteria.add(Restrictions
-          .not(Restrictions.eq(org.openbravo.model.ad.module.Module.PROPERTY_STATUS, "U")));
+      obCriteria.addFunction((cb, obc) -> cb.not(cb.equal(obc.getPath(org.openbravo.model.ad.module.Module.PROPERTY_STATUS), "U")));
       if (!installingMods.isEmpty()) {
-        obCriteria.add(/* TODO: Migrar manualmente - era Restrictions.not()
-                   * Opción 1: Negar la condición directamente si es simple
-                   * Opción 2: Usar lógica inversa en el código
-                   * Original: Restrictions.not(Restrictions.in(org.openbravo.model.ad.module.Module.PROPERTY_ID, installingMods))
-                   */
-                   null /* TEMPORAL - Debe implementarse */);
+        obCriteria.addFunction((cb, obc) -> cb.not(obc.getPath(org.openbravo.model.ad.module.Module.PROPERTY_ID).in(installingMods)));
       }
       List<org.openbravo.model.ad.module.Module> modules = obCriteria.list();
 

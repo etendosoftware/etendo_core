@@ -19,6 +19,7 @@
 
 package org.openbravo.erpCommon.ad_forms;
 
+import jakarta.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +45,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.fileupload.FileItem;
+import jakarta.servlet.http.Part;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.Platform;
@@ -736,7 +737,7 @@ public class ModuleManagement extends HttpSecureAppServlet {
   @SuppressWarnings("deprecation")
   private void printPageInstallFile(HttpServletResponse response, HttpServletRequest request,
       VariablesSecureApp vars) throws ServletException, IOException {
-    final FileItem fi = vars.getMultiFile("inpFile");
+    final Part fi = vars.getMultiFile("inpFile");
 
     if (!fi.getName().toUpperCase().endsWith(".OBX")) {
       // We don't have a .obx file
@@ -1828,7 +1829,7 @@ public class ModuleManagement extends HttpSecureAppServlet {
     OBError message;
     if (im.getIsLocal()) {
       im.execute(
-          ((FileItem) vars.getSessionObject("ModuleManagementInstall|File")).getInputStream());
+          ((Part) vars.getSessionObject("ModuleManagementInstall|File")).getInputStream());
     } else {
       im.execute();
     }

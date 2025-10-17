@@ -18,7 +18,7 @@
  */
 package org.openbravo.userinterface.skin.s250to300Comp.modulescript;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.modulescript.ModuleScript;

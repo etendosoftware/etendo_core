@@ -30,8 +30,8 @@ import java.nio.file.Paths;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,19 +111,19 @@ public abstract class ProcessUploadedFile extends HttpSecureAppServlet {
 
     File tempFile = null;
     try {
-      final FileItem fileItem = vars.getMultiFile("inpname");
+      final Part fileItem = vars.getMultiFile("inpname");
       if (fileItem == null) {
         throw new ServletException("Empty file");
       }
       final String tmpFolder = System.getProperty("java.io.tmpdir");
 
-      String strName = fileItem.getName();
+      String strName = fileItem.getSubmittedFileName();
       int i = strName.lastIndexOf(File.separator);
       if (i != -1) {
         strName = strName.substring(i + 1);
       }
       tempFile = new File(tmpFolder, strName);
-      fileItem.write(tempFile);
+      fileItem.write(tempFile.getAbsolutePath());
       final UploadResult uploadResult = processFile(tempFile, paramValues);
       final String importErrorHandling = paramValues.getString("importErrorHandling");
       if (uploadResult.getErrorCount() > 0 && importErrorHandling.equals("stop_at_error")) {
@@ -134,7 +134,7 @@ public abstract class ProcessUploadedFile extends HttpSecureAppServlet {
 
       JSONObject obj = new JSONObject();
       obj.put("msg", uploadResult.getResultMessage());
-      final String resultFileName = uploadResult.writeToFile(fileItem.getName());
+      final String resultFileName = uploadResult.writeToFile(fileItem.getSubmittedFileName());
       obj.put("fileName", resultFileName);
       printResponse(response, paramValues, obj, null);
     } finally {

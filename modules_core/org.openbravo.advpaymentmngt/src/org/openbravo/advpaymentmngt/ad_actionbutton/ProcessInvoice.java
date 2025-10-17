@@ -582,14 +582,16 @@ public class ProcessInvoice extends HttpSecureAppServlet {
   }
 
   private boolean isInvoiceWithPayments(Invoice invoice) {
-    for (FIN_PaymentSchedule ps : OBDao
-        .getFilteredCriteria(FIN_PaymentSchedule.class,
-            Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice))
-        .list()) {
-      for (FIN_PaymentDetailV pdv : OBDao
-          .getFilteredCriteria(FIN_PaymentDetailV.class,
-              Restrictions.eq(FIN_PaymentDetailV.PROPERTY_PAYMENTPLANINVOICE, ps))
-          .list()) {
+    // Crear OBCriteria para FIN_PaymentSchedule
+    OBCriteria<FIN_PaymentSchedule> psCriteria = OBDal.getInstance().createCriteria(FIN_PaymentSchedule.class);
+    psCriteria.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice);
+    
+    for (FIN_PaymentSchedule ps : psCriteria.list()) {
+      // Crear OBCriteria para FIN_PaymentDetailV
+      OBCriteria<FIN_PaymentDetailV> pdvCriteria = OBDal.getInstance().createCriteria(FIN_PaymentDetailV.class);
+      pdvCriteria.addEqual(FIN_PaymentDetailV.PROPERTY_PAYMENTPLANINVOICE, ps);
+      
+      for (FIN_PaymentDetailV pdv : pdvCriteria.list()) {
         if (pdv.getPayment() != null && !"RPVOID".equals(pdv.getPayment().getStatus())) {
           return true;
         }

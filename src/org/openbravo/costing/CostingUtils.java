@@ -676,7 +676,7 @@ public class CostingUtils {
     BigDecimal sum = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        Object[] resultSet = scroll.get();
+        Object[] resultSet = (Object[]) scroll.get();
         BigDecimal origAmt = (BigDecimal) resultSet[0];
         String origCurId = (String) resultSet[1];
 

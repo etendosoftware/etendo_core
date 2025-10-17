@@ -113,7 +113,7 @@ class CreateReplacementOrderExecutor extends CancelAndReplaceUtils {
     long i = 0;
     try (final ScrollableResults orderLines = getOrderLineList(oldOrder)) {
       while (orderLines.next()) {
-        final OrderLine oldOrderLine = (OrderLine) orderLines.get(0);
+        final OrderLine oldOrderLine = (OrderLine) orderLines.get();
         // Skip discount lines as they will be created when booking the replacement order
         if (oldOrderLine.getOrderDiscount() != null) {
           continue;
@@ -173,7 +173,7 @@ class CreateReplacementOrderExecutor extends CancelAndReplaceUtils {
         final ScrollableResults newOrderLines = getOrderLinesListWithReplacedLineWithRelatedService(
             order)) {
       while (newOrderLines.next()) {
-        updateOrderLineRelatedServices((OrderLine) newOrderLines.get(0));
+        updateOrderLineRelatedServices((OrderLine) newOrderLines.get());
 
         if ((++i % 100) == 0) {
           OBDal.getInstance().flush();
@@ -226,8 +226,8 @@ class CreateReplacementOrderExecutor extends CancelAndReplaceUtils {
       final OrderLine replacedOrderLine) {
     return (OrderLine) OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, order))
-        .add(Restrictions.eq(OrderLine.PROPERTY_REPLACEDORDERLINE, replacedOrderLine))
+        .addEqual(OrderLine.PROPERTY_SALESORDER, order)
+        .addEqual(OrderLine.PROPERTY_REPLACEDORDERLINE, replacedOrderLine)
         .setMaxResults(1)
         .uniqueResult();
   }

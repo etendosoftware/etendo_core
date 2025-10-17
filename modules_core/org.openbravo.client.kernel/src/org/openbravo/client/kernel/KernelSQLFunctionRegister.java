@@ -23,9 +23,18 @@ import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
+import java.util.List;
+
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.StandardBasicTypes;
 import org.openbravo.dal.core.SQLFunctionRegister;
 
@@ -36,22 +45,71 @@ import org.openbravo.dal.core.SQLFunctionRegister;
 public class KernelSQLFunctionRegister implements SQLFunctionRegister {
 
   @Override
-  public Map<String, SQLFunction> getSQLFunctions() {
-    Map<String, SQLFunction> sqlFunctions = new HashMap<>();
-    sqlFunctions.put("ad_org_getcalendarowner",
-        new StandardSQLFunction("ad_org_getcalendarowner", StandardBasicTypes.STRING));
-    sqlFunctions.put("ad_org_getperiodcontrolallow",
-        new StandardSQLFunction("ad_org_getperiodcontrolallow", StandardBasicTypes.STRING));
-    sqlFunctions.put("get_uuid", new StandardSQLFunction("get_uuid", StandardBasicTypes.STRING));
-    sqlFunctions.put("m_isparent_ch_value",
-        new StandardSQLFunction("m_isparent_ch_value", StandardBasicTypes.STRING));
-    sqlFunctions.put("m_getjsondescription",
-        new StandardSQLFunction("m_getjsondescription", StandardBasicTypes.STRING));
-    sqlFunctions.put("now", new NoArgSQLFunction("now", StandardBasicTypes.TIMESTAMP));
-    sqlFunctions.put("to_timestamp",
-        new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP));
-    sqlFunctions.put("fullTextSearchFilter", new PgFullTextSearchFunction.Filter());
-    sqlFunctions.put("fullTextSearchRank", new PgFullTextSearchFunction.Rank());
+  public Map<String, SqmFunctionDescriptor> getSQLFunctions() {
+    Map<String, SqmFunctionDescriptor> sqlFunctions = new HashMap<>();
+    
+    // Standard SQL functions with arguments
+    sqlFunctions.put("ad_org_getcalendarowner", new StandardSqlFunction("ad_org_getcalendarowner"));
+    sqlFunctions.put("ad_org_getperiodcontrolallow", new StandardSqlFunction("ad_org_getperiodcontrolallow"));
+    sqlFunctions.put("get_uuid", new StandardSqlFunction("get_uuid"));
+    sqlFunctions.put("m_isparent_ch_value", new StandardSqlFunction("m_isparent_ch_value"));
+    sqlFunctions.put("m_getjsondescription", new StandardSqlFunction("m_getjsondescription"));
+    sqlFunctions.put("to_timestamp", new StandardSqlFunction("to_timestamp"));
+    
+    // No-argument SQL function
+    sqlFunctions.put("now", new NoArgSqlFunction("now"));
+    
+    // Full text search functions (commenting out for now as they need special migration)
+    // sqlFunctions.put("fullTextSearchFilter", new PgFullTextSearchFunction.Filter());
+    // sqlFunctions.put("fullTextSearchRank", new PgFullTextSearchFunction.Rank());
+    
     return sqlFunctions;
+  }
+  
+  // Helper class for standard SQL functions with arguments
+  private static class StandardSqlFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+    private final String functionName;
+    
+    public StandardSqlFunction(String functionName) {
+      super(functionName, 
+            StandardArgumentsValidators.min(0),
+            StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+            null);
+      this.functionName = functionName;
+    }
+    
+    @Override
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, 
+                      ReturnableType<?> returnType, SqlAstTranslator<?> translator) {
+      sqlAppender.appendSql(functionName);
+      sqlAppender.appendSql("(");
+      for (int i = 0; i < arguments.size(); i++) {
+        if (i > 0) {
+          sqlAppender.appendSql(", ");
+        }
+        translator.render(arguments.get(i), SqlAstNodeRenderingMode.DEFAULT);
+      }
+      sqlAppender.appendSql(")");
+    }
+  }
+  
+  // Helper class for no-argument SQL functions
+  private static class NoArgSqlFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+    private final String functionName;
+    
+    public NoArgSqlFunction(String functionName) {
+      super(functionName, 
+            StandardArgumentsValidators.exactly(0),
+            StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+            null);
+      this.functionName = functionName;
+    }
+    
+    @Override
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, 
+                      ReturnableType<?> returnType, SqlAstTranslator<?> translator) {
+      sqlAppender.appendSql(functionName);
+      sqlAppender.appendSql("()");
+    }
   }
 }

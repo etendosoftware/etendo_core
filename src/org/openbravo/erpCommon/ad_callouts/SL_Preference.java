@@ -69,18 +69,20 @@ public class SL_Preference extends SimpleCallout {
 
       String client = info.getStringParameter("inpvisibleatClientId", idFilter);
       if (client.isEmpty() || client.equals("0")) {
-        // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-        qPref.add(Restrictions.or(Restrictions.isNull(Preference.PROPERTY_VISIBLEATCLIENT),
-            Restrictions.eq(Preference.PROPERTY_VISIBLEATCLIENT + ".id", "0")));
+        qPref.addOr(
+            (cb, obc) -> cb.isNull(obc.getPath(Preference.PROPERTY_VISIBLEATCLIENT)),
+            (cb, obc) -> cb.equal(obc.getPath(Preference.PROPERTY_VISIBLEATCLIENT + ".id"), "0")
+        );
       } else {
         qPref.addEqual(Preference.PROPERTY_VISIBLEATCLIENT + ".id", client);
       }
 
       String org = info.getStringParameter("inpvisibleatOrgId", idFilter);
       if (org.isEmpty() || org.equals("0")) {
-        // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-        qPref.add(Restrictions.or(Restrictions.isNull(Preference.PROPERTY_VISIBLEATORGANIZATION),
-            Restrictions.eq(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", "0")));
+        qPref.addOr(
+            (cb, obc) -> cb.isNull(obc.getPath(Preference.PROPERTY_VISIBLEATORGANIZATION)),
+            (cb, obc) -> cb.equal(obc.getPath(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id"), "0")
+        );
       } else {
         qPref.addEqual(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", org);
       }

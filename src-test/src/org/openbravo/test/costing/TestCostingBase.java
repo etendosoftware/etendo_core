@@ -84,11 +84,10 @@ public class TestCostingBase extends WeldBaseTest {
 
         // Create Internal Consumption Document Type if it does not exist for this context
         OBCriteria<DocumentType> internalConsCrit = OBDal.getInstance().createCriteria(DocumentType.class);
-        internalConsCrit.add(Restrictions.eq(DocumentType.PROPERTY_DOCUMENTCATEGORY,
-            TestCostingConstants.MAT_INT_CONSUMPTION_DOC_CAT));
-        internalConsCrit.add(
-            Restrictions.eq(DocumentType.PROPERTY_TABLE, OBDal.getInstance().get(Table.class,
-                TestCostingConstants.INTERNAL_CONSUMPTION_TABLE_ID)));
+        internalConsCrit.addEqual(DocumentType.PROPERTY_DOCUMENTCATEGORY,
+            TestCostingConstants.MAT_INT_CONSUMPTION_DOC_CAT);
+        internalConsCrit.addEqual(DocumentType.PROPERTY_TABLE, OBDal.getInstance().get(Table.class,
+                TestCostingConstants.INTERNAL_CONSUMPTION_TABLE_ID));
         internalConsCrit.setMaxResults(1);
 
         if (internalConsCrit.uniqueResult() == null) {
@@ -124,8 +123,8 @@ public class TestCostingBase extends WeldBaseTest {
             .add(OBDal.getInstance().get(Table.class, TestCostingConstants.TABLE_MATCH_INVOICE_ID));
         final OBCriteria<AcctSchemaTable> criteria1 = OBDal.getInstance()
             .createCriteria(AcctSchemaTable.class);
-        criteria1.add(Restrictions.eq(AcctSchemaTable.PROPERTY_ACCOUNTINGSCHEMA, acctSchema));
-        criteria1.add(Restrictions.in(AcctSchemaTable.PROPERTY_TABLE, tableList));
+        criteria1.addEqual(AcctSchemaTable.PROPERTY_ACCOUNTINGSCHEMA, acctSchema);
+        criteria1.addIn(AcctSchemaTable.PROPERTY_TABLE, tableList);
         criteria1.setFilterOnActive(false);
         criteria1.setFilterOnReadableClients(false);
         criteria1.setFilterOnReadableOrganization(false);
@@ -215,8 +214,8 @@ public class TestCostingBase extends WeldBaseTest {
           .add(OBDal.getInstance().get(Table.class, TestCostingConstants.TABLE_MATCH_INVOICE_ID));
       final OBCriteria<AcctSchemaTable> criteria = OBDal.getInstance()
           .createCriteria(AcctSchemaTable.class);
-      criteria.add(Restrictions.eq(AcctSchemaTable.PROPERTY_ACCOUNTINGSCHEMA, acctSchema));
-      criteria.add(Restrictions.in(AcctSchemaTable.PROPERTY_TABLE, tableList));
+      criteria.addEqual(AcctSchemaTable.PROPERTY_ACCOUNTINGSCHEMA, acctSchema);
+      criteria.addIn(AcctSchemaTable.PROPERTY_TABLE, tableList);
       for (AcctSchemaTable acctSchemaTable : criteria.list()) {
         acctSchemaTable.setActive(false);
         OBDal.getInstance().save(acctSchemaTable);

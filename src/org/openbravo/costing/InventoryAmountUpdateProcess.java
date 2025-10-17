@@ -81,7 +81,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
       try {
         int cnt = 0;
         while (scrollLines.next()) {
-          final InventoryAmountUpdateLine line = (InventoryAmountUpdateLine) scrollLines.get()[0];
+          final InventoryAmountUpdateLine line = (InventoryAmountUpdateLine) scrollLines.get();
           final String lineId = line.getId();
           final CostingRule rule = CostingUtils.getCostDimensionRule(
               OBDal.getInstance().get(Organization.class, orgId), line.getReferenceDate());
@@ -131,7 +131,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
             .scroll(ScrollMode.FORWARD_ONLY);
         try {
           while (invLines.next()) {
-            final InventoryCount inventory = (InventoryCount) invLines.get()[0];
+            final InventoryCount inventory = (InventoryCount) invLines.get();
             new InventoryCountProcess().processInventory(inventory, false, true);
           }
         } finally {
@@ -180,7 +180,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
     int i = 1;
     try {
       while (stockLines.next()) {
-        final Object[] stockLine = stockLines.get();
+        final Object[] stockLine = (Object[]) stockLines.get();
         final String attrSetInsId = (String) stockLine[0];
         final String uomId = (String) stockLine[1];
         final String orderUOMId = (String) stockLine[2];

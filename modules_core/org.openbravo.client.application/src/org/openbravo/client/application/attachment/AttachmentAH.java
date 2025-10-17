@@ -26,6 +26,7 @@ package org.openbravo.client.application.attachment;
  */
 
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -166,15 +167,15 @@ public class AttachmentAH extends BaseActionHandler {
     String attachmentId = (String) parameters.get("attachId");
     String tableId = tab.getTable().getId();
 
-    OBCriteria<Attachment> attachmentFiles = OBDao.getFilteredCriteria(Attachment.class,
-        cb.equal(root.get("table.id"), tableId),
-        root.get("record").in((Object[]) recordIds.split(",")));
+    OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
+    attachmentFiles.addEqual("table.id", tableId);
+    attachmentFiles.addIn("record", Arrays.asList(recordIds.split(",")));
     // do not filter by the attachment's organization
     // if the user has access to the record where the file its attached, it has access to all
     // its attachments
     attachmentFiles.setFilterOnReadableOrganization(false);
     if (attachmentId != null) {
-      attachmentFiles.add(Restrictions.eq(Attachment.PROPERTY_ID, attachmentId));
+      attachmentFiles.addEqual(Attachment.PROPERTY_ID, attachmentId);
     }
 
     for (Attachment attachment : attachmentFiles.list()) {

@@ -78,7 +78,7 @@ public class MRPManufacturingPlanProcess extends DalBaseProcess {
       int i = 0;
       try {
         while (linesToUpdate.next()) {
-          ProductionRunLine prLine = (ProductionRunLine) linesToUpdate.get(0);
+          ProductionRunLine prLine = (ProductionRunLine) linesToUpdate.get();
           prLine.setInserted(false);
           OBDal.getInstance().save(prLine);
 

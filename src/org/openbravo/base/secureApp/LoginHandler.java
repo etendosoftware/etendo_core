@@ -183,7 +183,7 @@ public class LoginHandler extends HttpBaseServlet {
    * a new JSSESSIONID cookie. It is called every time the user logs in to prevent some malicious
    * user from stealing a cookie which later on will correspond with a valid session
    */
-  private void resetCookieId(HttpServletRequest req) {
+  private void resetCookieId(HttpServletRequest req) throws ServletException {
     HttpSession httpSession = req.getSession(false);
     if (httpSession != null && !httpSession.isNew()) {
       req.logout();
@@ -625,7 +625,7 @@ public class LoginHandler extends HttpBaseServlet {
       OBContext.setAdminMode();
       User user = (User) OBDal.getInstance()
           .createCriteria(User.class)
-          .add(Restrictions.eq(User.PROPERTY_ID, userId))
+          .addEqual(User.PROPERTY_ID, userId)
           .setFilterOnReadableClients(false)
           .setFilterOnReadableOrganization(false)
           .uniqueResult();

@@ -117,7 +117,7 @@ public class KernelServlet extends BaseKernelServlet {
   }
 
   private static synchronized void decBypassAuthenticationCount(HttpSession session,
-      HttpServletRequest request) {
+      HttpServletRequest request) throws ServletException {
     if (session != null && "Y".equals(session.getAttribute("forceLogin"))) {
       Integer count = (Integer) session.getAttribute("forcedSessionsRequestCount");
       count = (count != null ? count : 0) - 1;

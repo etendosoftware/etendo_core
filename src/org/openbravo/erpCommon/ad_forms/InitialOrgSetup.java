@@ -59,7 +59,7 @@ public class InitialOrgSetup extends HttpSecureAppServlet {
       final String strcLocationId = vars.getStringParameter("inpcLocationId");
       final String strPassword = vars.getStringParameter("inpPassword");
       final String strCreateAccounting = vars.getStringParameter("inpCreateAccounting");
-      org.apache.commons.fileupload.FileItem fileCoAFilePath = vars.getMultiFile("inpFile");
+      jakarta.servlet.http.Part fileCoAFilePath = vars.getMultiFile("inpFile");
       final String strCurrency = vars.getStringParameter("inpCurrency");
       final boolean bBPartner = isTrue(vars.getStringParameter("inpBPartner"));
       final boolean bProduct = isTrue(vars.getStringParameter("inpProduct"));

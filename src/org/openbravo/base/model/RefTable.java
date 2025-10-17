@@ -55,7 +55,14 @@ public class RefTable extends ModelObject {
   }
 
   public void setReference(Reference reference) {
+    if (reference == null) {
+      log.debug("Hibernate set null Reference on RefTable " + this + " during initialization phase.");
+      this.reference = null;
+      return;
+    }
+
     this.reference = reference;
+
     final DomainType domainType = reference.getDomainType();
     if (!(domainType instanceof TableDomainType)) {
       log.error("Domain type of reference " + reference.getId() + " is not a TableDomainType but a "
@@ -64,6 +71,7 @@ public class RefTable extends ModelObject {
       ((TableDomainType) domainType).setRefTable(this);
     }
   }
+
 
   public Column getDisplayColumn() {
     return displayColumn;

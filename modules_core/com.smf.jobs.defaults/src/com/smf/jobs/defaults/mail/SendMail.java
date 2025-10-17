@@ -197,7 +197,7 @@ public class SendMail extends Action {
         try {
             OBContext.setAdminMode();
             OBCriteria<Table> tableOBCriteria = OBDal.getInstance().createCriteria(Table.class);
-            tableOBCriteria.add(Restrictions.eq(Table.PROPERTY_DBTABLENAME, tableName));
+            tableOBCriteria.addEqual(Table.PROPERTY_DBTABLENAME, tableName);
             tableOBCriteria.setMaxResults(1);
 
             Table table = (Table) tableOBCriteria.uniqueResult();

@@ -205,7 +205,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
 
     BaseOBObject refreshedBob = (BaseOBObject) OBDal.getInstance()
         .createCriteria(obj.getEntityName())
-        .add(Restrictions.eq(BaseOBObject.ID, obj.getId()))
+        .addEqual(BaseOBObject.ID, obj.getId())
         .uniqueResult();
     assertThat(obj.getEntityName() + " - " + obj.getId() + " response description",
         updatedOrder.getString("description"), is(expectedDescription));

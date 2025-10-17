@@ -121,7 +121,7 @@ public class GlobalMenu {
   private List<MenuOption> createInitialMenuList(Tree tree, String language) {
     List<MenuOption> menuOptions = new ArrayList<MenuOption>();
     OBCriteria<TreeNode> treeNodes = OBDal.getInstance().createCriteria(TreeNode.class);
-    treeNodes.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
+    treeNodes.addEqual(TreeNode.PROPERTY_TREE, tree);
     treeNodes.setFilterOnActive(false);
 
     // Cache in DAL session all menu entries in a single query, so no need to query one by one

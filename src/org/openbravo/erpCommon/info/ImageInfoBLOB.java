@@ -80,7 +80,7 @@ public class ImageInfoBLOB extends HttpSecureAppServlet {
         Entity entity = ModelProvider.getInstance().getEntityByTableId(tableId);
         OBContext.getOBContext().getEntityAccessChecker().checkWritableAccess(entity);
 
-        byte[] bytea = vars.getMultiFile("inpFile").get();
+        byte[] bytea = org.openbravo.dal.service.FileItemHelper.getBytes(vars.getMultiFile("inpFile"));
         String mimeType = MimeTypeUtil.getInstance().getMimeTypeName(bytea);
 
         String imageSizeAction = vars.getStringParameter("imageSizeAction");

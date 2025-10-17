@@ -5,6 +5,7 @@ import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 
+import java.util.ArrayList;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -89,7 +90,7 @@ public class SequencesGenerator extends Action {
       //Get Document Type
       OBCriteria<DocumentType> documentTypeOBCriteria = OBDal.getInstance().createCriteria(DocumentType.class);
       documentTypeOBCriteria.addEqual(DocumentType.PROPERTY_TABLE, column.getTable());
-      documentTypeOBCriteria.addInIds(DocumentType.PROPERTY_ORGANIZATION + ".id", parentOrganizations);
+      documentTypeOBCriteria.addInIds(DocumentType.PROPERTY_ORGANIZATION + ".id", new ArrayList<>(parentOrganizations));
       List<DocumentType> documentTypes = documentTypeOBCriteria.list();
 
       for (String orgId : organizations) {

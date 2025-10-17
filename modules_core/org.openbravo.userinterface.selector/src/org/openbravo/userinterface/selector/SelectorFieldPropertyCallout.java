@@ -127,9 +127,9 @@ public class SelectorFieldPropertyCallout extends SimpleCallout {
       final Table propertyTable = OBDal.getInstance().getProxy(Table.class, tableId);
 
       final OBCriteria<Column> columnCriteria = OBDal.getInstance().createCriteria(Column.class);
-      columnCriteria.add(// TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
-Restrictions.and(Restrictions.eq(Column.PROPERTY_TABLE, propertyTable),
-          Restrictions.eq(Column.PROPERTY_DBCOLUMNNAME, foundProperty.getColumnName())));
+      Property finalFoundProperty = foundProperty;
+      columnCriteria.addAnd((cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_TABLE), propertyTable),
+                            (cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_DBCOLUMNNAME), finalFoundProperty.getColumnName()));
       final List<Column> columnList = columnCriteria.list();
       if (columnList.isEmpty()) {
         // No columns, don't do anything

@@ -13,6 +13,7 @@ package org.openbravo.base;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -22,15 +23,12 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.servlet.ServletRequestContext;
+import jakarta.servlet.http.Part;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.filter.NumberFilter;
@@ -50,7 +48,7 @@ public class VariablesBase {
   private String postDataHash = null;
   private List<String> sortedParameters = null;
   public boolean isMultipart = false;
-  List<FileItem> items;
+  Collection<Part> parts;
   private final String DEFAULT_FORMAT_NAME = "qtyEdition";
 
   static Logger log4j = LogManager.getLogger();
@@ -79,12 +77,12 @@ public class VariablesBase {
     } else {
       this.session = request.getSession(!isStatelessRequest(request));
       this.httpRequest = request;
-      this.isMultipart = ServletFileUpload.isMultipartContent(new ServletRequestContext(request));
+      // Use Jakarta Servlet native multipart support
+      String contentType = request.getContentType();
+      this.isMultipart = contentType != null && contentType.toLowerCase().startsWith("multipart/");
       if (isMultipart) {
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-        ServletFileUpload upload = new ServletFileUpload(factory);
         try {
-          items = upload.parseRequest(request);
+          parts = request.getParts();
         } catch (Exception ex) {
           log4j.error("Error parsing multipart request", ex);
         }
@@ -1577,15 +1575,15 @@ public class VariablesBase {
    *         multipart or the parameter is not found.
    */
   public String getMultiParameter(String parameter, RequestFilter requestFilter) {
-    if (!isMultipart || items == null) {
+    if (!isMultipart || parts == null) {
       return "";
     }
-    Iterator<FileItem> iter = items.iterator();
-    while (iter.hasNext()) {
-      FileItem item = iter.next();
-      if (item.isFormField() && item.getFieldName().equals(parameter)) {
+    for (Part part : parts) {
+      if (part.getName().equals(parameter) && part.getContentType() == null) { // form field has no content type
         try {
-          String value = item.getString("UTF-8");
+          java.io.InputStream inputStream = part.getInputStream();
+          byte[] bytes = inputStream.readAllBytes();
+          String value = new String(bytes, "UTF-8");
           filterRequest(requestFilter, value);
           return value;
         } catch (Exception ex) {
@@ -1616,16 +1614,16 @@ public class VariablesBase {
    *         multipart.
    */
   public String[] getMultiParameters(String parameter, RequestFilter requestFilter) {
-    if (!isMultipart || items == null) {
+    if (!isMultipart || parts == null) {
       return null;
     }
-    Iterator<FileItem> iter = items.iterator();
     Vector<String> result = new Vector<String>();
-    while (iter.hasNext()) {
-      FileItem item = iter.next();
-      if (item.isFormField() && item.getFieldName().equals(parameter)) {
+    for (Part part : parts) {
+      if (part.getName().equals(parameter) && part.getContentType() == null) { // form field has no content type
         try {
-          String value = item.getString("UTF-8");
+          java.io.InputStream inputStream = part.getInputStream();
+          byte[] bytes = inputStream.readAllBytes();
+          String value = new String(bytes, "UTF-8");
           filterRequest(requestFilter, value);
           result.addElement(value);
         } catch (Exception ex) {
@@ -1643,17 +1641,15 @@ public class VariablesBase {
    * 
    * @param parameter
    *          The name of the parameter that contains the file
-   * @return FileItem object containing the file content
+   * @return Part object containing the file content
    */
-  public FileItem getMultiFile(String parameter) {
-    if (!isMultipart || items == null) {
+  public Part getMultiFile(String parameter) {
+    if (!isMultipart || parts == null) {
       return null;
     }
-    Iterator<FileItem> iter = items.iterator();
-    while (iter.hasNext()) {
-      FileItem item = iter.next();
-      if (!item.isFormField() && item.getFieldName().equals(parameter)) {
-        return item;
+    for (Part part : parts) {
+      if (part.getName().equals(parameter) && part.getContentType() != null) { // file has content type
+        return part;
       }
     }
     return null;

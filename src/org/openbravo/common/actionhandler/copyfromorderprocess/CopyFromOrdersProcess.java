@@ -149,7 +149,7 @@ public class CopyFromOrdersProcess {
         selectedOrder);
     try {
       while (orderLines.next()) {
-        OrderLine orderLine = (OrderLine) orderLines.get()[0];
+        OrderLine orderLine = (OrderLine) orderLines.get();
         OrderLine newOrderLine = createLineFromSelectedOrderLineAndRunHooks(orderLine);
         processingOrder.getOrderLineList().add(newOrderLine);
         OBDal.getInstance().save(newOrderLine);
@@ -244,9 +244,7 @@ public class CopyFromOrdersProcess {
   private Long getLastLineNoOfCurrentOrder() {
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
     obc.addEqual(OrderLine.PROPERTY_SALESORDER, processingOrder);
-    // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-    obc.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.max(OrderLine.PROPERTY_LINENO));
+    obc.setProjectionMax(OrderLine.PROPERTY_LINENO);
     Long lineNumber = 0L;
     obc.setMaxResults(1);
     Object o = obc.uniqueResult();

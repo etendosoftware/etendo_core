@@ -108,7 +108,7 @@ public class SecureWebServicesUtils {
 		OBContext.setAdminMode();
 		try {
 			OBCriteria<OrganizationTree> crit = OBDal.getInstance().createCriteria(OrganizationTree.class);
-			crit.add(Restrictions.eq(OrganizationTree.PROPERTY_PARENTORGANIZATION, org));
+			crit.addEqual(OrganizationTree.PROPERTY_PARENTORGANIZATION, org);
 			crit.setFilterOnReadableClients(false);
 			crit.setFilterOnReadableOrganization(false);
 			List<OrganizationTree> orgTreeList = crit.list();
@@ -133,7 +133,7 @@ public class SecureWebServicesUtils {
 		OBContext.setAdminMode();
 		try {
 			OBCriteria<Warehouse> crit = OBDal.getInstance().createCriteria(Warehouse.class);
-			crit.add(Restrictions.in(Warehouse.PROPERTY_ORGANIZATION, childrenOrg));
+			crit.addIn(Warehouse.PROPERTY_ORGANIZATION, childrenOrg);
 			crit.setFilterOnReadableClients(false);
 			crit.setFilterOnReadableOrganization(false);
 			warehouses = crit.list();

@@ -118,10 +118,10 @@ public class ReferencedInventoryBoxForcedReservation extends ReferencedInventory
         Restrictions.eq(StorageDetail.PROPERTY_PRODUCT,
             refInv.getMaterialMgmtStorageDetailList().get(0).getProduct()));
     if (isForceBin) {
-      crit.add(Restrictions.eq(Reservation.PROPERTY_STORAGEBIN + ".id", BINS[0]));
+      crit.addEqual(Reservation.PROPERTY_STORAGEBIN + ".id", BINS[0]);
     }
     if (isForceAttribute) {
-      crit.add(Restrictions.isNotNull(Reservation.PROPERTY_ATTRIBUTESETVALUE));
+      crit.addIsNotNull(Reservation.PROPERTY_ATTRIBUTESETVALUE);
     }
     crit.addOrderBy(Reservation.PROPERTY_RESSTATUS, true);
     final List<Reservation> reservations = crit.list();

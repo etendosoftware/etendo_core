@@ -66,8 +66,8 @@ public class AlertActionHandler extends BaseActionHandler implements PortalAcces
    * (non-Javadoc)
    * 
    * @see
-   * org.openbravo.client.kernel.BaseActionHandler#execute(javax.servlet.http.HttpServletRequest,
-   * javax.servlet.http.HttpServletResponse)
+   * org.openbravo.client.kernel.BaseActionHandler#execute(jakarta.servlet.http.HttpServletRequest,
+   * jakarta.servlet.http.HttpServletResponse)
    */
   @Override
   public void execute() {

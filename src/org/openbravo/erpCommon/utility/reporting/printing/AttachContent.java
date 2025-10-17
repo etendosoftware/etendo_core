@@ -16,7 +16,7 @@
  ************************************************************************/
 package org.openbravo.erpCommon.utility.reporting.printing;
 
-import org.apache.commons.fileupload.FileItem;
+import jakarta.servlet.http.Part;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.data.FieldProvider;
@@ -27,7 +27,7 @@ public class AttachContent implements FieldProvider {
   static Logger log4j = LogManager.getLogger();
   public String docName;
   public String fileName;
-  public FileItem fileItem;
+  public Part fileItem;
   public String id;
   public String visible;
   public String selected;
@@ -56,11 +56,11 @@ public class AttachContent implements FieldProvider {
     this.id = id;
   }
 
-  public FileItem getFileItem() {
+  public Part getFileItem() {
     return fileItem;
   }
 
-  public void setFileItem(FileItem fileItem) {
+  public void setFileItem(Part fileItem) {
     this.fileItem = fileItem;
   }
 

@@ -20,7 +20,7 @@ package org.openbravo.userinterface.selector.wad;
 
 import java.util.Properties;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.wad.controls.WADControl;
 import org.openbravo.xmlEngine.XmlDocument;

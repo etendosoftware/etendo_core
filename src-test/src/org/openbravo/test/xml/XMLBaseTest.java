@@ -95,7 +95,7 @@ public class XMLBaseTest extends OBBaseTest {
   protected <T extends BaseOBObject> List<T> getList(Class<T> clz, Organization org) {
     final OBCriteria<T> obc = OBDal.getInstance().createCriteria(clz);
     if (org != null) {
-      obc.add(Restrictions.eq("organization", org));
+      obc.addEqual("organization", org);
     }
     return obc.list();
   }
@@ -123,7 +123,7 @@ public class XMLBaseTest extends OBBaseTest {
     // exc.setOptionEmbedChildren(true);
     // exc.setOptionIncludeChildren(true);
     if (!(o == null)) {
-      obc.add(Restrictions.eq("organization", o));
+      obc.addEqual("organization", o);
     }
     return exc.toXML(new ArrayList<BaseOBObject>(obc.list()));
   }

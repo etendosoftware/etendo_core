@@ -26,23 +26,20 @@ package org.openbravo.advpaymentmngt.ad_reports;
  */
 
 
+import jakarta.persistence.criteria.JoinType;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperReport;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.Selection;
-import org.hibernate.criterion.Projections;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import org.hibernate.sql.JoinType;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -57,14 +54,11 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JasperReport;
-
 public class ReportReconciliation extends HttpSecureAppServlet {
-  private static final long serialVersionUID = 1L;
-  private static final Logger log = LogManager.getLogger();
   final static String DETAIL = "DETAIL";
   final static String SUMMARY = "SUMMARY";
+  private static final long serialVersionUID = 1L;
+  private static final Logger log = LogManager.getLogger();
 
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -185,17 +179,17 @@ public class ReportReconciliation extends HttpSecureAppServlet {
 
   /**
    * Calculates the sum of outstanding payments/deposits applying the following filters:
-   * 
+   * <p>
    * - They belong to the financial account of the reconciliation.
-   * 
+   * <p>
    * - The transaction date must be lower than the ending date of the reconciliation.
-   * 
+   * <p>
    * - They do not belong to any reconciliation.
-   * 
+   *
    * @param recon
-   *          Reconciliation
+   *     Reconciliation
    * @return List with 2 values. The first one is the sum of outstanding payments (transactions) and
-   *         the second is the sum of outstanding deposits (transactions).
+   *     the second is the sum of outstanding deposits (transactions).
    */
   private List<BigDecimal> getOutstandingPaymentAndDepositTotal(FIN_Reconciliation recon) {
     List<BigDecimal> outList = new ArrayList<BigDecimal>();
@@ -203,35 +197,24 @@ public class ReportReconciliation extends HttpSecureAppServlet {
     try {
       OBCriteria<FIN_FinaccTransaction> obcTrans = OBDal.getInstance()
           .createCriteria(FIN_FinaccTransaction.class);
-      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount()));
-      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_PROCESSED, true));
-      obcTrans.add(
-          Restrictions.le(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate()));
+      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount());
+      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_PROCESSED, true);
+      obcTrans.addLessOrEqual(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate());
       List<FIN_Reconciliation> afterReconciliations = MatchTransactionDao
           .getReconciliationListAfterDate(recon);
       if (!afterReconciliations.isEmpty()) {
-        obcTrans.add(// TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-Restrictions.or(
-            Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION),
-            Restrictions.in(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, afterReconciliations)));
+        obcTrans.addOr((cb, obc) -> cb.isNull(obc.getPath(FIN_FinaccTransaction.PROPERTY_RECONCILIATION)),
+            (cb, obc) -> cb.in(obc.getPath(FIN_FinaccTransaction.PROPERTY_RECONCILIATION)).value(afterReconciliations));
       } else {
-        obcTrans.add(Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION));
+        obcTrans.addIsNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION);
       }
 
-      // TODO: Migrar // TODO: Migrar 
- ProjectionList a CriteriaQuery multiselect() manualmente
- ProjectionList a CriteriaQuery multiselect() manualmente
-      ProjectionList projections = // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- Projections.projectionList();
-      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT));
-      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT));
-      obcTrans.setProjection(projections);
+      // Usar nueva funcionalidad de múltiples proyecciones
+      obcTrans.setMultipleSums(
+          FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT,
+          FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT
+      );
+
       @SuppressWarnings("rawtypes")
       List o = obcTrans.list();
       if (o != null && !o.isEmpty()) {
@@ -253,15 +236,15 @@ Restrictions.or(
 
   /**
    * Calculates the sum of un-reconciled bank statement lines applying the following filters:
-   * 
+   * <p>
    * - They belong to the financial account of the reconciliation.
-   * 
+   * <p>
    * - The transaction date must be lower than the ending date of the reconciliation.
-   * 
+   * <p>
    * - They are not matched with any transaction.
-   * 
+   *
    * @param recon
-   *          Reconciliation
+   *     Reconciliation
    * @return Sum of the un-reconciled bank statement lines.
    */
   private BigDecimal getUnreconciledBankStatmentLinesTotal(FIN_Reconciliation recon) {
@@ -272,25 +255,23 @@ Restrictions.or(
           .createCriteria(FIN_BankStatementLine.class);
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION, "tr",
-          JoinType.LEFT_OUTER_JOIN);
-      obcBsl.add(
-          Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, recon.getEndingDate()));
+          JoinType.LEFT);
+      obcBsl.addLessOrEqual(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, recon.getEndingDate());
       List<FIN_Reconciliation> afterReconciliations = MatchTransactionDao
           .getReconciliationListAfterDate(recon);
       if (!afterReconciliations.isEmpty()) {
-        obcBsl.add(Restrictions.or(
-            Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION),
-            Restrictions.in("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION,
-                afterReconciliations)));
+        obcBsl.addOr((cb, obc) -> cb.isNull(obc.getPath(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION)),
+            (cb, obc) -> cb.in(obc.getPath("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION)).value(
+                afterReconciliations));
       } else {
-        obcBsl.add(Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION));
+        obcBsl.addIsNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION);
       }
-      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, recon.getAccount()));
-      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
-      ProjectionList projections = Projections.projectionList();
-      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_CRAMOUNT));
-      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_DRAMOUNT));
-      obcBsl.setProjection(projections);
+      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, recon.getAccount());
+      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true);
+      obcBsl.setMultipleSums(
+          FIN_BankStatementLine.PROPERTY_CRAMOUNT,
+          FIN_BankStatementLine.PROPERTY_DRAMOUNT
+      );
 
       @SuppressWarnings("rawtypes")
       List o = obcBsl.list();
@@ -311,11 +292,11 @@ Restrictions.or(
   /**
    * Calculates the sum of all the transactions in a higher date than the end date of the given
    * reconciliation.
-   * 
+   *
    * @param recon
-   *          Reconciliation.
+   *     Reconciliation.
    * @return Sum of all the transactions in a higher date than the end date of the given
-   *         reconciliation.
+   *     reconciliation.
    */
   private BigDecimal getTransactionsTotalAfterReconciliationEndDate(FIN_Reconciliation recon) {
     BigDecimal balance = BigDecimal.ZERO;
@@ -323,14 +304,13 @@ Restrictions.or(
     try {
       OBCriteria<FIN_FinaccTransaction> obcTrans = OBDal.getInstance()
           .createCriteria(FIN_FinaccTransaction.class);
-      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount()));
-      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_PROCESSED, true));
-      obcTrans.add(
-          Restrictions.gt(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate()));
-      ProjectionList projections = Projections.projectionList();
-      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT));
-      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT));
-      obcTrans.setProjection(projections);
+      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount());
+      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_PROCESSED, true);
+      obcTrans.addGreaterThan(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate());
+      obcTrans.setMultipleSums(
+          FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT,
+          FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT
+      );
 
       @SuppressWarnings("rawtypes")
       List o = obcTrans.list();
@@ -352,9 +332,9 @@ Restrictions.or(
 
   /**
    * Calculates the balance of the financial account at the day of the reconciliation.
-   * 
+   *
    * @param recon
-   *          Reconciliation
+   *     Reconciliation
    * @return Balance of the financial account at the day of the reconciliation.
    */
   private BigDecimal getBalanceOfAccount(FIN_Reconciliation recon) {

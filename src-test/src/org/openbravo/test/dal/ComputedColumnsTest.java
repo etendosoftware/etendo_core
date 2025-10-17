@@ -102,7 +102,7 @@ public class ComputedColumnsTest extends OBBaseTest {
 
     // try to filter in Criteria by computed column...
     OBCriteria<Order> qOrder = OBDal.getInstance().createCriteria(Order.class);
-    qOrder.add(Restrictions.eq(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100));
+    qOrder.addEqual(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100);
     boolean thrown = false;
     try {
       qOrder.count();
