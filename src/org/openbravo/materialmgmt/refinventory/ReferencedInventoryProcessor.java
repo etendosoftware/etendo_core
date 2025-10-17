@@ -65,7 +65,7 @@ import org.openbravo.service.db.CallProcess;
  * quantity pending to box/unbox. This is the key to be able to successfully process the reservation
  * reallocation.
  */
-abstract class ReferencedInventoryProcessor {
+public abstract class ReferencedInventoryProcessor {
   private static final String M_MOVEMENT_POST_ID = "122";
   private static final String JS_STORAGEDETAIL_ID = "id";
   private static final String QUANTITY = "quantityOnHand";
