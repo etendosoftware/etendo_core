@@ -16,17 +16,18 @@
       <parameter name="p_is_automation" type="VARCHAR" mode="in">
         <default/>
       </parameter>
-      <body><![CDATA[v_isso char(1);
-  v_category text;
-  v_doctype_id character varying;
-  v_dbt text := upper(trim(p_docbasetype));
-  v_auto boolean := upper(coalesce(p_is_automation,'N')) = 'Y';
+      <body><![CDATA[v_isso CHAR(1);
+  v_category varchar2(10);
+  v_doctype_id varchar2(32);
+  v_dbt varchar2(10) := UPPER(TRIM(p_docbasetype)); 
+  v_auto CHAR(1) := CASE WHEN UPPER(COALESCE(p_is_automation,'N'))='Y' THEN 'Y' ELSE 'N' END;
 BEGIN
   IF v_dbt IN ('SOO','RSO','MMS','RMS','ARI','ARC') THEN
     v_isso := 'Y';
   ELSE
     v_isso := 'N';
   END IF;
+
   IF v_dbt IN ('SOO','POO','RSO','RPO') THEN
     v_category := 'ORD';
   ELSIF v_dbt IN ('ARI','API','ARC','APC') THEN
@@ -36,10 +37,12 @@ BEGIN
   ELSE
     v_category := NULL;
   END IF;
+
   IF v_category IS NULL THEN
     RETURN AD_GET_DOCTYPE(p_client_id, p_org_id, p_docbasetype);
   END IF;
-  IF p_bp_id IS NOT NULL AND p_bp_id <> '' THEN
+
+  IF p_bp_id IS NOT NULL AND LENGTH(TRIM(p_bp_id)) > 0 THEN
     SELECT bpd.c_doctype_id
       INTO v_doctype_id
       FROM c_bpartner_doctype bpd
@@ -49,14 +52,13 @@ BEGIN
        AND bpd.documentcategory = v_category
        AND bpd.c_doctype_id IS NOT NULL
        AND (
-         CASE WHEN v_auto
-              THEN COALESCE(bpd.isforceautomation,'N') = 'Y'
-              ELSE TRUE
-         END
+         (v_auto = 'Y' AND COALESCE(bpd.isforceautomation,'N') = 'Y')
+         OR v_auto = 'N'
        )
        AND AD_ISORGINCLUDED(p_org_id, bpd.ad_org_id, bpd.ad_client_id) <> -1
      ORDER BY AD_ISORGINCLUDED(p_org_id, bpd.ad_org_id, bpd.ad_client_id) ASC
      LIMIT 1;
+
     IF v_doctype_id IS NULL THEN
       SELECT bpd.c_doctype_id
         INTO v_doctype_id
@@ -67,19 +69,19 @@ BEGIN
          AND bpd.documentcategory = v_category
          AND bpd.c_doctype_id IS NOT NULL
          AND (
-           CASE WHEN v_auto
-             THEN COALESCE(bpd.isforceautomation,'N') = 'Y'
-               ELSE TRUE
-           END
+           (v_auto = 'Y' AND COALESCE(bpd.isforceautomation,'N') = 'Y')
+           OR v_auto = 'N'
          )
          AND bpd.ad_org_id = '0'
        ORDER BY 1
        LIMIT 1;
     END IF;
   END IF;
+
   IF v_doctype_id IS NULL THEN
     v_doctype_id := AD_GET_DOCTYPE(p_client_id, p_org_id, p_docbasetype);
   END IF;
+
   RETURN v_doctype_id;
 END C_BP_GET_DOCTYPE
 ]]></body>
