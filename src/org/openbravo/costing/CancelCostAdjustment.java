@@ -110,7 +110,7 @@ public class CancelCostAdjustment extends BaseActionHandler {
     try {
       int cnt = 0;
       while (scrollLines.next()) {
-        final CostAdjustmentLine lineOrig = (CostAdjustmentLine) scrollLines.get()[0];
+        final CostAdjustmentLine lineOrig = (CostAdjustmentLine) scrollLines.get();
         CostAdjustmentLine lineCancel = (CostAdjustmentLine) DalUtil.copy(lineOrig, false);
         lineCancel.setUpdated(new Date());
         lineCancel.setUpdatedBy(OBContext.getOBContext().getUser());

@@ -133,11 +133,11 @@ public class TransactionsDao {
     try {
       final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, account));
+      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, account);
       if ("Y".equals(isProcessed)) {
-        obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_PROCESSED, true));
+        obc.addEqual(FIN_Reconciliation.PROPERTY_PROCESSED, true);
       } else if ("N".equals(isProcessed)) {
-        obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_PROCESSED, false));
+        obc.addEqual(FIN_Reconciliation.PROPERTY_PROCESSED, false);
       }
       obc.addOrderBy(FIN_Reconciliation.PROPERTY_ENDINGDATE, false);
       obc.addOrderBy(FIN_Reconciliation.PROPERTY_CREATIONDATE, false);
@@ -151,9 +151,9 @@ public class TransactionsDao {
   public static void updateAccountingDate(FIN_FinaccTransaction transaction) {
     final String FIN_FINACC_TRANSACTION_TABLE = "4D8C3B3C31D1410DA046140C9F024D17";
     OBCriteria<AccountingFact> obcAF = OBDal.getInstance().createCriteria(AccountingFact.class);
-    obcAF.add(Restrictions.eq(AccountingFact.PROPERTY_TABLE,
-        OBDal.getInstance().get(Table.class, FIN_FINACC_TRANSACTION_TABLE)));
-    obcAF.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, transaction.getId()));
+    obcAF.addEqual(AccountingFact.PROPERTY_TABLE,
+        OBDal.getInstance().get(Table.class, FIN_FINACC_TRANSACTION_TABLE));
+    obcAF.addEqual(AccountingFact.PROPERTY_RECORDID, transaction.getId());
     for (AccountingFact aFact : obcAF.list()) {
       aFact.setAccountingDate(transaction.getTransactionDate());
       aFact.setTransactionDate(transaction.getTransactionDate());

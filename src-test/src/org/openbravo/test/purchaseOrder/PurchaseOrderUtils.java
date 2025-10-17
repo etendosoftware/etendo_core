@@ -181,8 +181,8 @@ public class PurchaseOrderUtils {
       receiptLine.setMovementQuantity(orderLine.getOrderedQuantity());
 
       OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance().createCriteria(StorageDetail.class);
-      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, productPrice.getProduct()));
-      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_STORAGEBIN, storageBin));
+      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, productPrice.getProduct());
+      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_STORAGEBIN, storageBin);
 
       receiptLine.setStorageBin(storageBin);
       receiptLine.setSalesOrderLine(orderLine);

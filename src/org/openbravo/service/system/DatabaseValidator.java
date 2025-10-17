@@ -42,15 +42,16 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.View;
-import org.hibernate.criterion.LogicalExpression;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.LogicalExpression;
 import jakarta.persistence.criteria.CriteriaBuilder;
-import org.hibernate.criterion.SimpleExpression;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.SimpleExpression;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.model.domaintype.ButtonDomainType;
 import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.dal.service.OBCriteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.datamodel.Table;
@@ -289,14 +290,10 @@ public class DatabaseValidator implements SystemValidator {
         .get(org.openbravo.model.ad.domain.Reference.class, "16EC6DF4A59747749FDF256B7FBBB058");
 
     // if one of the old-booleans is set, but not using new reference-id's -> report as warning
-    SimpleExpression enc = Restrictions.eq(Column.PROPERTY_DISPLAYENCRIPTION, Boolean.TRUE);
-    LogicalExpression // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-newRefs = Restrictions.or(Restrictions.eq(Column.PROPERTY_REFERENCE, hashed),
-        Restrictions.eq(Column.PROPERTY_REFERENCE, encrypted));
     OBCriteria<Column> colQuery = OBDal.getInstance().createCriteria(Column.class);
-    // TODO: Migrar 
- Restrictions.and() a CriteriaBuilder.and() manualmente
-    colQuery.add(Restrictions.and(enc, Restrictions.not(newRefs)));
+    colQuery.addAnd((cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_DISPLAYENCRIPTION), Boolean.TRUE),
+                    (cb, obc) -> cb.not(cb.or(cb.equal(obc.getPath(Column.PROPERTY_REFERENCE), hashed),
+                                              cb.equal(obc.getPath(Column.PROPERTY_REFERENCE), encrypted))));
 
     // only validate given module (if given)
     if (validateModule != null) {

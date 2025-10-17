@@ -83,7 +83,7 @@ public class UOMManagementUtil {
     OBDal.getInstance().flush();
 
     OBCriteria<Preference> qPref = OBDal.getInstance().createCriteria(Preference.class);
-    qPref.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "UomManagement"));
+    qPref.addEqual(Preference.PROPERTY_PROPERTY, "UomManagement");
 
     assertFalse("No property has been set", qPref.list().isEmpty());
 

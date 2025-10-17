@@ -1,0 +1,485 @@
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=utf-8"></META>
+<TITLE id="processName">#TITLE#</TITLE>
+<LINK rel="shortcut icon" href="../../../../../web/images/favicon.ico" type="image/x-icon"></LINK>
+<LINK rel="stylesheet" type="text/css" href="../../../../../web/skins/Default/Openbravo_ERP.css" id="paramCSS"></LINK>
+<LINK rel="stylesheet" type="text/css" media="print" href="../../../../../web/skins/Default/Openbravo_ERP_print.css" id="paramCSS_print"></LINK>
+
+<SCRIPT language="JavaScript" type="text/javascript" id="paramDirectory">
+var baseDirectory = "../../../../../web/";
+</SCRIPT>
+<SCRIPT language="JavaScript" src="../utility/DynamicJS.js" type="text/javascript"></SCRIPT>
+<SCRIPT language="JavaScript" type="text/javascript" id="paramLanguage">
+  defaultLang = "en_US";
+</SCRIPT>
+<SCRIPT language="JavaScript" src="../../../../../web/js/shortcuts.js" type="text/javascript"></SCRIPT>
+<SCRIPT language="JavaScript" src="../../../../../web/js/utils.js" type="text/javascript"></SCRIPT>
+<SCRIPT language="JavaScript" src="../../../../../web/js/messages.js" type="text/javascript"></SCRIPT>
+<SCRIPT language="JavaScript" src="../../../../../web/js/windowKeyboard.js" type="text/javascript"></SCRIPT>
+<SCRIPT language="JavaScript" src="../../../../../web/js/appStatus.js" type="text/javascript"></SCRIPT> 
+<SCRIPT language="JavaScript" src="../../../../../web/js/ajax.js" type="text/javascript"></SCRIPT>
+<SCRIPT language="JavaScript" src="../../../../../web/js/default/MessageBox.js" type="text/javascript"></SCRIPT>
+<script language="JavaScript" src="../../../../../web/js/searchs.js" type="text/javascript"></script>
+<script language="JavaScript" src="../../../../../web/js/default/ValidationTextBox.js" type="text/javascript"></script>
+
+<SCRIPT type="text/javascript" id="reloadOpener">
+window.onunload = reloadOpener; // Reload opener when closing/canceling
+</SCRIPT>
+<SCRIPT language="JavaScript" type="text/javascript">
+var action="";
+
+function validate(action, form, value) {
+  var frm = document.frmMain;
+  var key = frm.inpKey;
+  try { initialize_MessageBox('messageBoxID'); } catch (ignored) {}
+  return validateClient(action, form, value);
+}
+</SCRIPT>
+<SCRIPT language="JavaScript" type="text/javascript">function debugSearch(key, text, keyField) {
+  return true;
+}
+
+function validateClient(action, form, value) {
+  var frm=document.frmMain;
+  if (inputValue(frm.inpmLocatorfrom)==null || inputValue(frm.inpmLocatorfrom)=="") {
+    setWindowElementFocus(frm.inpmLocatorfrom_R);
+    showJSMessage(1);
+    return false;
+  }
+
+  if (inputValue(frm.inpmLocatorto)==null || inputValue(frm.inpmLocatorto)=="") {
+    setWindowElementFocus(frm.inpmLocatorto_R);
+    showJSMessage(1);
+    return false;
+  }
+
+  setProcessingMode('popup', true);
+  return true;
+}
+
+function onloadClient() {
+  var frm=document.frmMain;
+  var key = frm.inpKey;keyArray[keyArray.length] = new keyArrayItem("ENTER", "openSearch(null, null, '../info/Locator.html', null, false, 'frmMain', 'inpmLocatorfrom', 'inpmLocatorfrom_R', inputValue(document.frmMain.inpmLocatorfrom_R), 'inpIDValue', inputValue(document.frmMain.inpmLocatorfrom), 'WindowID', inputValue(document.frmMain.inpwindowId), 'inpmWarehouseId', inputValue(document.frmMain.inpmWarehouseId), 'inpAD_Org_ID', inputValue(document.frmMain.inpadOrgId), 'Command', 'KEY');", "inpmLocatorfrom_R", "null");
+keyArray[keyArray.length] = new keyArrayItem("ENTER", "openSearch(null, null, '../info/Locator.html', null, false, 'frmMain', 'inpmLocatorto', 'inpmLocatorto_R', inputValue(document.frmMain.inpmLocatorto_R), 'inpIDValue', inputValue(document.frmMain.inpmLocatorto), 'WindowID', inputValue(document.frmMain.inpwindowId), 'inpmWarehouseId', inputValue(document.frmMain.inpmWarehouseId), 'inpAD_Org_ID', inputValue(document.frmMain.inpadOrgId), 'Command', 'KEY');", "inpmLocatorto_R", "null");
+  return true;
+}
+
+function reloadComboReloads800048(changedField) {
+  submitCommandForm(changedField, false, null, '../ad_callouts/ComboReloadsProcessHelper.html', 'hiddenFrame', null, null, true);
+  return true;
+}
+</SCRIPT>
+
+<SCRIPT language="JavaScript" type="text/javascript" id="isNotGeneric">
+function submitThisPage(strCommand) {
+  submitCommandForm(strCommand, true, null, action, '_self');
+	return true;
+}
+</SCRIPT>
+<SCRIPT language="JavaScript" type="text/javascript">
+function submitThisPageJasper() {
+  if (!validate()) { 
+    return false;
+  }
+  var parameters = addArrayValue(parameters, "scrollbars", "1");
+  openPopUp('../utility/PrintJR.html', 'JREPORT' + document.forms[0].inpadProcessId.value, null, null, null, null, false, null, true, false, parameters);
+  setProcessingMode('popup', false);
+  return true;
+}
+
+</SCRIPT>
+	<SCRIPT language="JavaScript" type="text/javascript">
+	function onLoadDo(){
+		action = document.forms[0].action;
+	    setProcessingMode('popup', false);
+		this.windowTables = new Array(
+		  new windowTableId('client', 'linkButtonOk')
+		);
+		setWindowTableParentElement();
+		enableShortcuts('popup');
+        setBrowserAutoComplete(false);
+        setValidationMessages();
+        
+		onloadClient();
+		setWindowElementFocus('firstElement');
+	}
+
+</SCRIPT>
+</HEAD>
+<BODY leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="onLoadDo();">
+<IFRAME name="hiddenFrame" style="display:none;"></IFRAME>
+<FORM id="form" method="post" action="Window_Edition.html" name="frmMain">
+<INPUT type="hidden" name="Command"></INPUT>
+<INPUT type="hidden" name="inpLastFieldChanged"></INPUT>
+<INPUT type="hidden" name="inpKey" value="" id="key"></INPUT>
+<INPUT type="hidden" name="inpwindowId" value="" id="window"></INPUT>
+<INPUT type="hidden" name="inpprocessing" value="" id="processing"></INPUT>
+<INPUT type="hidden" name="inpadProcessId" value="800048"></INPUT>
+<INPUT type="hidden" name="IsPopUpCall" value="1"></INPUT>
+<DIV class="Popup_ContentPane_CircleLogo">
+  <DIV class="Popup_WindowLogo">
+    <IMG class="Popup_WindowLogo_Icon Popup_WindowLogo_Icon_process" src="../../../../../web/images/blank.gif" border="0/"></IMG>
+  </DIV>
+</DIV>
+<TABLE cellspacing="0" cellpadding="0" width="100%">
+  <TR>
+    <TD>
+      <TABLE cellspacing="0" cellpadding="0" class="Popup_ContentPane_NavBar">
+        <TR class="Popup_NavBar_bg"><TD></TD>
+          <TD class="Popup_NavBar_separator_cell"></TD>
+          <TD class="Popup_NavBar_bg_logo_left"></TD>
+          <TD class="Popup_NavBar_bg_logo" width="1" onclick="openNewBrowser('http://www.openbravo.com', 'Openbravo');return false;"><IMG src="../../../../../web/images/blank.gif" alt="Openbravo" title="Openbravo" border="0" id="openbravoLogo" class="Popup_NavBar_logo"></IMG></TD>
+          <TD class="Popup_NavBar_bg_logo_right"></TD>
+          <TD class="Popup_NavBar_Popup_title_cell"><SPAN id="processDescription">#processDescription#</SPAN></TD>
+          <TD class="Popup_NavBar_separator_cell"></TD>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR>
+  
+  <TR>
+    <TD>
+      <TABLE cellspacing="0" cellpadding="0" class="Popup_ContentPane_SeparatorBar">
+        <TR>
+          <TD class="Popup_SeparatorBar_bg"></TD>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR>
+  <TR>
+    <TD>
+      <TABLE cellspacing="0" cellpadding="0" class="Popup_ContentPane_InfoBar">
+        <TR>
+          <TD class="Popup_InfoBar_Icon_cell"><IMG src="../../../../../web/images/blank.gif" border="0" class="Popup_InfoBar_Icon_info"></IMG></TD>
+          <TD class="Popup_InfoBar_text_table">
+            <TABLE>
+              <TR>
+                <TD class="Popup_InfoBar_text" id="processHelp">#processHelp#</TD>
+              </TR>
+            </TABLE>
+          </TD>
+        </TR>
+      </TABLE>
+    </TD>
+  </TR>
+    <TR>
+    <TD>
+      
+       <TABLE cellpadding="0" cellspacing="0" id="messageBoxID" class="MessageBoxHIDDEN">
+            <TBODY>
+            <TR class="MessageBox_TopMargin">
+              <TD class="MessageBox_LeftMargin"></TD>
+              <TD></TD>
+              <TD class="MessageBox_RightMargin"></TD>
+            </TR>
+            <TR>
+              <TD class="MessageBox_LeftMargin"></TD>
+              <TD>
+                <TABLE cellpadding="0" cellspacing="0" class="MessageBox_Container">
+                  <TBODY>
+                  <TR>
+                    <TD class="MessageBox_LeftTrans">
+                      <TABLE style="width: 100%; height: 100%" cellpadding="0" cellspacing="0">
+                        <TBODY>
+                        <TR>
+                          <TD class="MessageBox_TopLeft"></TD>
+                        </TR>
+                        <TR>
+                          <TD class="MessageBox_Left"></TD>
+                        </TR>
+                        </TBODY>
+                      </TABLE>
+                    </TD>
+                    <TD class="MessageBox_bg">
+                      <TABLE class="MessageBox_Top">
+                      <TBODY>
+                        <TR>
+                          <TD>
+                            <SPAN>
+                            <TABLE cellpadding="0" cellspacing="0" class="MessageBox_Body_ContentCell">
+                              <TBODY>
+                              <TR>
+                                <TD class="MessageBox_Icon_ContentCell">
+                                  <DIV class="MessageBox_Icon"></DIV>
+                                </TD>
+                                <TD style="vertical-align: top;" id="messageBoxIDContent">
+                                  <SPAN>
+                                    <DIV class="MessageBox_TextTitle" id="messageBoxIDTitle">
+                                      xxInfo: AccessTableWithNoView
+                                    </DIV>
+                                    <DIV class="MessageBox_TextDescription" id="messageBoxIDMessage">
+                                      xxThe current information is empty.
+                                    </DIV>
+                                    <DIV class="MessageBox_TextSeparator"></DIV>
+                                  </SPAN>
+                                </TD>
+                              </TR>
+                              </TBODY>
+                            </TABLE>
+                            </SPAN>
+                          </TD>
+                        </TR>
+                        </TBODY>
+                      </TABLE>
+                    </TD>
+                    <TD class="MessageBox_RightTrans">
+                      <TABLE style="width: 100%; height: 100%" cellpadding="0" cellspacing="0">
+                        <TBODY>
+                        <TR>
+                          <TD class="MessageBox_TopRight"></TD>
+                        </TR>
+                        <TR>
+                          <TD class="MessageBox_Right"></TD>
+                        </TR>
+                        </TBODY>
+                      </TABLE>
+                    </TD>
+                  </TR>
+                  <TR>
+                    <TD rowspan="2" class="MessageBox_BottomLeft">
+                    </TD>
+                    <TD class="MessageBox_BottomTrans MessageBox_bg">
+                    </TD>
+                    <TD rowspan="2" class="MessageBox_BottomRight">
+                    </TD>
+                  </TR>
+                  <TR>
+                    <TD class="MessageBox_Bottom">
+                    </TD>
+                  </TR>
+                  </TBODY>
+                </TABLE>
+              </TD>
+              <TD class="MessageBox_RightMargin"></TD>
+            </TR>
+            <TR class="MessageBox_BottomMargin">
+              <TD class="MessageBox_LeftMargin"></TD>
+              <TD></TD>
+              <TD class="MessageBox_RightMargin"></TD>
+            </TR>
+            </TBODY>
+          </TABLE> 
+    </TD>
+  </TR>
+  
+  <TR>
+    <TD>
+      <DIV class="Popup_ContentPane_Client" style="overflow: auto;" id="client">
+        <TABLE cellspacing="0" cellpadding="0" class="Popup_Client_TablePopup">
+
+          <TR>
+            <TD class="TableEdition_OneCell_width"></TD>
+            <TD class="TableEdition_OneCell_width"></TD>
+            <TD class="TableEdition_OneCell_width"></TD>
+            <TD class="TableEdition_OneCell_width"></TD>
+          </TR>
+          
+          <tr><td class="TitleCell"><span class="LabelText" id="M_LocatorFrom_lbl"><span id="lbl::M_LocatorFrom">#M_LocatorFrom#</span>&nbsp;</span></td>
+<td class="TextBox_btn_ContentCell"><div id="editDiscard">
+<DIV id="M_LocatorFrom_inp">
+  <INPUT type="hidden" name="inpmLocatorfrom" id="M_LocatorFrom" value="" onchange="logChanges(this);return true;"></INPUT>
+  <TABLE border="0" cellspacing="0" cellpadding="0" summary="" class="">
+    <TR>
+      <TD class="TextBox_ContentCell">
+      <TABLE style="border:0px;border-collapse:collapse;">
+        <TR>
+          <TD style="padding-top: 0px;">
+            
+            <INPUT type="text" class="dojoValidateValid required TextBox_btn_OneCell_width" tabindex="" maxlength="40" name="inpmLocatorfrom_R" id="M_LocatorFrom_R" value="" required="true" onkeydown="changeToEditingMode('onkeydown');" onkeypress="changeToEditingMode('onkeypress');" oncut="changeToEditingMode('oncut');" onpaste="changeToEditingMode('onpaste');" oncontextmenu="changeToEditingMode('oncontextmenu');" onchange="validateTextBox(this.id);"></INPUT>
+          </TD>
+        </TR>
+      </TABLE>
+  <SPAN class="TextBox_MsgContainer_span" style="display: none;" id="M_LocatorFrom_RmissingSpan">
+    <TABLE class="TextBox_MsgContainer_table">
+      <TR class="TextBox_MsgContainer_tr">
+        <TD class="TextBox_MsgContainer_td"><DIV class="TextBox_MsgContainer_div"></DIV></TD><TD></TD>
+      </TR>
+      <TR>
+        <TD colspan="2" class="missing"><DIV class="TextBox_MsgContainer_div2" id="M_LocatorFrom_RmissingSpanText">xx</DIV></TD>
+      </TR>
+    </TABLE>
+  </SPAN>
+      </TD>
+      <TD class="FieldButton_ContentCell"><A class="FieldButtonLink" href="#" onfocus="setWindowElementFocus(this); window.status='Locator'; return true;" onblur="window.status=''; return true;" onkeypress="this.className='FieldButtonLink_active'; return true;" onkeyup="this.className='FieldButtonLink_focus'; return true;" onclick="openSearch(null, null, '../info/Locator.html', null, false, 'frmMain', 'inpmLocatorfrom', 'inpmLocatorfrom_R', inputValue(document.frmMain.inpmLocatorfrom_R), 'inpIDValue', inputValue(document.frmMain.inpmLocatorfrom), 'WindowID', inputValue(document.frmMain.inpwindowId), 'inpmWarehouseId', inputValue(document.frmMain.inpmWarehouseId), 'inpAD_Org_ID', inputValue(document.frmMain.inpadOrgId));return false;">
+  <TABLE class="FieldButton" onmousedown="this.className='FieldButton_active'; return true;" onmouseup="this.className='FieldButton'; return true;" onmouseover="this.className='FieldButton_hover'; window.status='Locator'; return true;" onmouseout="this.className='FieldButton'; window.status=''; return true;" id="M_LocatorFromlinkLocator">
+    <TR>
+      <TD class="FieldButton_bg">
+        <IMG alt="Locator" class="FieldButton_Icon FieldButton_Icon_Locator" title="Locator" src="../../../../../web/images/blank.gif" border="0" id="buttonLocator"></IMG>
+      </TD>
+    </TR>
+  </TABLE>
+</A>
+</TD>
+    </TR>
+  </TABLE>
+</DIV>
+
+</div><div id="newDiscard">
+<DIV id="M_LocatorFrom_inp">
+  <INPUT type="hidden" name="inpmLocatorfrom" id="M_LocatorFrom" value="" onchange="logChanges(this);return true;"></INPUT>
+  <TABLE border="0" cellspacing="0" cellpadding="0" summary="" class="">
+    <TR>
+      <TD class="TextBox_ContentCell">
+      <TABLE style="border:0px;border-collapse:collapse;">
+        <TR>
+          <TD style="padding-top: 0px;">
+            
+            <INPUT type="text" class="dojoValidateValid required TextBox_btn_OneCell_width" tabindex="" maxlength="40" name="inpmLocatorfrom_R" id="M_LocatorFrom_R" value="" required="true" onkeydown="changeToEditingMode('onkeydown');" onkeypress="changeToEditingMode('onkeypress');" oncut="changeToEditingMode('oncut');" onpaste="changeToEditingMode('onpaste');" oncontextmenu="changeToEditingMode('oncontextmenu');" onchange="validateTextBox(this.id);"></INPUT>
+          </TD>
+        </TR>
+      </TABLE>
+  <SPAN class="TextBox_MsgContainer_span" style="display: none;" id="M_LocatorFrom_RmissingSpan">
+    <TABLE class="TextBox_MsgContainer_table">
+      <TR class="TextBox_MsgContainer_tr">
+        <TD class="TextBox_MsgContainer_td"><DIV class="TextBox_MsgContainer_div"></DIV></TD><TD></TD>
+      </TR>
+      <TR>
+        <TD colspan="2" class="missing"><DIV class="TextBox_MsgContainer_div2" id="M_LocatorFrom_RmissingSpanText">xx</DIV></TD>
+      </TR>
+    </TABLE>
+  </SPAN>
+      </TD>
+      <TD class="FieldButton_ContentCell"><A class="FieldButtonLink" href="#" onfocus="setWindowElementFocus(this); window.status='Locator'; return true;" onblur="window.status=''; return true;" onkeypress="this.className='FieldButtonLink_active'; return true;" onkeyup="this.className='FieldButtonLink_focus'; return true;" onclick="openSearch(null, null, '../info/Locator.html', null, false, 'frmMain', 'inpmLocatorfrom', 'inpmLocatorfrom_R', inputValue(document.frmMain.inpmLocatorfrom_R), 'inpIDValue', inputValue(document.frmMain.inpmLocatorfrom), 'WindowID', inputValue(document.frmMain.inpwindowId), 'inpmWarehouseId', inputValue(document.frmMain.inpmWarehouseId), 'inpAD_Org_ID', inputValue(document.frmMain.inpadOrgId));return false;">
+  <TABLE class="FieldButton" onmousedown="this.className='FieldButton_active'; return true;" onmouseup="this.className='FieldButton'; return true;" onmouseover="this.className='FieldButton_hover'; window.status='Locator'; return true;" onmouseout="this.className='FieldButton'; window.status=''; return true;" id="M_LocatorFromlinkLocator">
+    <TR>
+      <TD class="FieldButton_bg">
+        <IMG alt="Locator" class="FieldButton_Icon FieldButton_Icon_Locator" title="Locator" src="../../../../../web/images/blank.gif" border="0" id="buttonLocator"></IMG>
+      </TD>
+    </TR>
+  </TABLE>
+</A>
+</TD>
+    </TR>
+  </TABLE>
+</DIV>
+
+</div></td>
+<td></td>
+<td></td>
+</tr>
+<tr><td class="TitleCell"><span class="LabelText" id="M_LocatorTo_lbl"><span id="lbl::M_LocatorTo">#M_LocatorTo#</span>&nbsp;</span></td>
+<td class="TextBox_btn_ContentCell"><div id="editDiscard">
+<DIV id="M_LocatorTo_inp">
+  <INPUT type="hidden" name="inpmLocatorto" id="M_LocatorTo" value="" onchange="logChanges(this);return true;"></INPUT>
+  <TABLE border="0" cellspacing="0" cellpadding="0" summary="" class="">
+    <TR>
+      <TD class="TextBox_ContentCell">
+      <TABLE style="border:0px;border-collapse:collapse;">
+        <TR>
+          <TD style="padding-top: 0px;">
+            
+            <INPUT type="text" class="dojoValidateValid required TextBox_btn_OneCell_width" tabindex="" maxlength="40" name="inpmLocatorto_R" id="M_LocatorTo_R" value="" required="true" onkeydown="changeToEditingMode('onkeydown');" onkeypress="changeToEditingMode('onkeypress');" oncut="changeToEditingMode('oncut');" onpaste="changeToEditingMode('onpaste');" oncontextmenu="changeToEditingMode('oncontextmenu');" onchange="validateTextBox(this.id);"></INPUT>
+          </TD>
+        </TR>
+      </TABLE>
+  <SPAN class="TextBox_MsgContainer_span" style="display: none;" id="M_LocatorTo_RmissingSpan">
+    <TABLE class="TextBox_MsgContainer_table">
+      <TR class="TextBox_MsgContainer_tr">
+        <TD class="TextBox_MsgContainer_td"><DIV class="TextBox_MsgContainer_div"></DIV></TD><TD></TD>
+      </TR>
+      <TR>
+        <TD colspan="2" class="missing"><DIV class="TextBox_MsgContainer_div2" id="M_LocatorTo_RmissingSpanText">xx</DIV></TD>
+      </TR>
+    </TABLE>
+  </SPAN>
+      </TD>
+      <TD class="FieldButton_ContentCell"><A class="FieldButtonLink" href="#" onfocus="setWindowElementFocus(this); window.status='Locator'; return true;" onblur="window.status=''; return true;" onkeypress="this.className='FieldButtonLink_active'; return true;" onkeyup="this.className='FieldButtonLink_focus'; return true;" onclick="openSearch(null, null, '../info/Locator.html', null, false, 'frmMain', 'inpmLocatorto', 'inpmLocatorto_R', inputValue(document.frmMain.inpmLocatorto_R), 'inpIDValue', inputValue(document.frmMain.inpmLocatorto), 'WindowID', inputValue(document.frmMain.inpwindowId), 'inpmWarehouseId', inputValue(document.frmMain.inpmWarehouseId), 'inpAD_Org_ID', inputValue(document.frmMain.inpadOrgId));return false;">
+  <TABLE class="FieldButton" onmousedown="this.className='FieldButton_active'; return true;" onmouseup="this.className='FieldButton'; return true;" onmouseover="this.className='FieldButton_hover'; window.status='Locator'; return true;" onmouseout="this.className='FieldButton'; window.status=''; return true;" id="M_LocatorTolinkLocator">
+    <TR>
+      <TD class="FieldButton_bg">
+        <IMG alt="Locator" class="FieldButton_Icon FieldButton_Icon_Locator" title="Locator" src="../../../../../web/images/blank.gif" border="0" id="buttonLocator"></IMG>
+      </TD>
+    </TR>
+  </TABLE>
+</A>
+</TD>
+    </TR>
+  </TABLE>
+</DIV>
+
+</div><div id="newDiscard">
+<DIV id="M_LocatorTo_inp">
+  <INPUT type="hidden" name="inpmLocatorto" id="M_LocatorTo" value="" onchange="logChanges(this);return true;"></INPUT>
+  <TABLE border="0" cellspacing="0" cellpadding="0" summary="" class="">
+    <TR>
+      <TD class="TextBox_ContentCell">
+      <TABLE style="border:0px;border-collapse:collapse;">
+        <TR>
+          <TD style="padding-top: 0px;">
+            
+            <INPUT type="text" class="dojoValidateValid required TextBox_btn_OneCell_width" tabindex="" maxlength="40" name="inpmLocatorto_R" id="M_LocatorTo_R" value="" required="true" onkeydown="changeToEditingMode('onkeydown');" onkeypress="changeToEditingMode('onkeypress');" oncut="changeToEditingMode('oncut');" onpaste="changeToEditingMode('onpaste');" oncontextmenu="changeToEditingMode('oncontextmenu');" onchange="validateTextBox(this.id);"></INPUT>
+          </TD>
+        </TR>
+      </TABLE>
+  <SPAN class="TextBox_MsgContainer_span" style="display: none;" id="M_LocatorTo_RmissingSpan">
+    <TABLE class="TextBox_MsgContainer_table">
+      <TR class="TextBox_MsgContainer_tr">
+        <TD class="TextBox_MsgContainer_td"><DIV class="TextBox_MsgContainer_div"></DIV></TD><TD></TD>
+      </TR>
+      <TR>
+        <TD colspan="2" class="missing"><DIV class="TextBox_MsgContainer_div2" id="M_LocatorTo_RmissingSpanText">xx</DIV></TD>
+      </TR>
+    </TABLE>
+  </SPAN>
+      </TD>
+      <TD class="FieldButton_ContentCell"><A class="FieldButtonLink" href="#" onfocus="setWindowElementFocus(this); window.status='Locator'; return true;" onblur="window.status=''; return true;" onkeypress="this.className='FieldButtonLink_active'; return true;" onkeyup="this.className='FieldButtonLink_focus'; return true;" onclick="openSearch(null, null, '../info/Locator.html', null, false, 'frmMain', 'inpmLocatorto', 'inpmLocatorto_R', inputValue(document.frmMain.inpmLocatorto_R), 'inpIDValue', inputValue(document.frmMain.inpmLocatorto), 'WindowID', inputValue(document.frmMain.inpwindowId), 'inpmWarehouseId', inputValue(document.frmMain.inpmWarehouseId), 'inpAD_Org_ID', inputValue(document.frmMain.inpadOrgId));return false;">
+  <TABLE class="FieldButton" onmousedown="this.className='FieldButton_active'; return true;" onmouseup="this.className='FieldButton'; return true;" onmouseover="this.className='FieldButton_hover'; window.status='Locator'; return true;" onmouseout="this.className='FieldButton'; window.status=''; return true;" id="M_LocatorTolinkLocator">
+    <TR>
+      <TD class="FieldButton_bg">
+        <IMG alt="Locator" class="FieldButton_Icon FieldButton_Icon_Locator" title="Locator" src="../../../../../web/images/blank.gif" border="0" id="buttonLocator"></IMG>
+      </TD>
+    </TR>
+  </TABLE>
+</A>
+</TD>
+    </TR>
+  </TABLE>
+</DIV>
+
+</div></td>
+<td></td>
+<td></td>
+</tr>
+
+          <TR><TD height="20px" colspan="4"></TD></TR>
+          <TR>
+            <TD></TD>
+            
+            <TD class="Button_RightAlign_ContentCell">
+              <DIV>
+                <BUTTON type="button" id="buttonOK" class="ButtonLink" onclick="submitThisPage('SAVE_BUTTONMove_FromTo_Locator800048');return false;" onfocus="buttonEvent('onfocus', this); window.status='xx'; return true;" onblur="buttonEvent('onblur', this);" onkeyup="buttonEvent('onkeyup', this);" onkeydown="buttonEvent('onkeydown', this);" onkeypress="buttonEvent('onkeypress', this);" onmouseup="buttonEvent('onmouseup', this);" onmousedown="buttonEvent('onmousedown', this);" onmouseover="buttonEvent('onmouseover', this); window.status='xx'; return true;" onmouseout="buttonEvent('onmouseout', this);">
+                  <TABLE class="Button">
+                    <TR>
+                      <TD class="Button_left"><IMG class="Button_Icon Button_Icon_ok" alt="xx" title="xx" src="../../../../../web/images/blank.gif" border="0" id="imgButtonOK"></IMG></TD>
+                      <TD class="Button_text Button_width" id="tdButtonOK">OK</TD>
+                      <TD class="Button_right"></TD>
+                    </TR>
+                  </TABLE>
+                </BUTTON>
+              </DIV>
+            </TD>
+            <TD class="Button_LeftAlign_ContentCell">
+              <DIV>
+                <BUTTON type="button" id="buttonCancel" class="ButtonLink" onclick="closePage();return false;" onfocus="buttonEvent('onfocus', this); window.status='xx'; return true;" onblur="buttonEvent('onblur', this);" onkeyup="buttonEvent('onkeyup', this);" onkeydown="buttonEvent('onkeydown', this);" onkeypress="buttonEvent('onkeypress', this);" onmouseup="buttonEvent('onmouseup', this);" onmousedown="buttonEvent('onmousedown', this);" onmouseover="buttonEvent('onmouseover', this); window.status='xx'; return true;" onmouseout="buttonEvent('onmouseout', this);">
+                  <TABLE class="Button">
+                    <TR>
+                      <TD class="Button_left"><IMG class="Button_Icon Button_Icon_cancel" alt="xx" title="xx" src="../../../../../web/images/blank.gif" border="0" id="imgButtonCancel"></IMG></TD>
+                      <TD class="Button_text Button_width" id="tdButtonCancel">Cancel</TD>
+                      <TD class="Button_right"></TD>
+                    </TR>
+                  </TABLE>
+                </BUTTON>
+              </DIV>
+            </TD>
+            <TD></TD>
+          </TR>
+        </TABLE>
+      </DIV>
+    </TD>
+  </TR>
+</TABLE>
+</FORM>
+
+
+</BODY></HTML>

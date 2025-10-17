@@ -65,8 +65,8 @@ public class MenuTreeOperationManager extends CheckTreeOperationManager {
   private boolean areThereTemplatesInDevelopment() {
     OBCriteria<Module> templatesInDevelopmentCriteria = OBDal.getInstance()
         .createCriteria(Module.class);
-    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_TYPE, TEMPLATE_TYPE));
-    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, true));
+    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_TYPE, TEMPLATE_TYPE);
+    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_INDEVELOPMENT, true);
     return (templatesInDevelopmentCriteria.count() > 0);
   }
 }

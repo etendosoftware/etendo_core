@@ -6,7 +6,7 @@ import java.sql.*;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;

@@ -69,7 +69,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
   public void testACreateCurrency() {
     setTestAdminContext();
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, "TE2"));
+    obc.addEqual(Currency.PROPERTY_ISOCODE, "TE2");
     final List<Currency> cs = obc.list();
     if (cs.size() == 0) {
       final Currency c = OBProvider.getInstance().get(Currency.class);
@@ -96,7 +96,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
     setTestUserContext();
     addReadWriteAccess(Currency.class);
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, "TE2"));
+    obc.addEqual(Currency.PROPERTY_ISOCODE, "TE2");
     final List<Currency> cs = obc.list();
     assertEquals(1, cs.size());
     final Currency c = cs.get(0);
@@ -193,7 +193,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
     // setUserContext(getRandomUserId());
     // try {
     // final OBCriteria<Costing> obc = OBDal.getInstance().createCriteria(Costing.class);
-    // obc.add(Restrictions.eq(Costing.PROPERTY_ID, "FE8370A36E91432688A323A07D606622"));
+    // obc.addEqual(Costing.PROPERTY_ID, "FE8370A36E91432688A323A07D606622");
     // final List<Costing> cs = obc.list();
     // assertTrue(cs.size() > 0);
     // fail("Non readable check not enforced");
@@ -211,7 +211,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
     addReadWriteAccess(Currency.class);
     addReadWriteAccess(CurrencyTrl.class);
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, "TE2"));
+    obc.addEqual(Currency.PROPERTY_ISOCODE, "TE2");
     final List<Currency> cs = obc.list();
     assertEquals(1, cs.size());
     OBDal.getInstance().remove(cs.get(0));

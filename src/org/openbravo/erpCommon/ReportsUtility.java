@@ -34,6 +34,8 @@ import java.util.List;
 
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -130,7 +132,7 @@ public class ReportsUtility {
     initialBalanceQuery.addEqual(AccountingFact.PROPERTY_BUSINESSPARTNER,
         OBDal.getInstance().get(BusinessPartner.class, bpartnerId));
     initialBalanceQuery
-        .addInIds(AccountingFact.PROPERTY_ORGANIZATION, getOrgList(orgId));
+        .addInEntities(AccountingFact.PROPERTY_ORGANIZATION, getOrgList(orgId));
     try {
       initialBalanceQuery.addLessThan(AccountingFact.PROPERTY_ACCOUNTINGDATE, OBDateUtils.getDate(dateFrom));
     } catch (ParseException pe) {
@@ -144,23 +146,36 @@ public class ReportsUtility {
     final List<ElementValue> validAccountsList = getValidAccounts(acctSchemaId, bpartnerId,
         isCustomer);
     if (!validAccountsList.isEmpty()) {
-      initialBalanceQuery.addInIds(AccountingFact.PROPERTY_ACCOUNT, validAccountsList);
+      initialBalanceQuery.addInEntities(AccountingFact.PROPERTY_ACCOUNT, validAccountsList);
     }
 
     initialBalanceQuery.setFilterOnReadableOrganization(false);
 
-    final // TODO: Migrar
- ProjectionList a CriteriaBuilder con multiselect manualmente
- ProjectionList projections = // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- // TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
- Projections.projectionList();
-    projections.add(Projections.sum(currency == null ? AccountingFact.PROPERTY_DEBIT
-        : AccountingFact.PROPERTY_FOREIGNCURRENCYDEBIT));
-    projections.add(Projections.sum(currency == null ? AccountingFact.PROPERTY_CREDIT
-        : AccountingFact.PROPERTY_FOREIGNCURRENCYCREDIT));
-    initialBalanceQuery.setProjection(projections);
-
-    return getBalanceFromQuery(initialBalanceQuery);
+    // Migración de ProjectionList a CriteriaBuilder con multiselect
+    // Creamos una query de agregación usando el helper
+    CriteriaQuery<Object[]> projQuery = initialBalanceQuery.createProjectionQuery();
+    Root<?> root = projQuery.getRoots().iterator().next();
+    CriteriaBuilder cb = initialBalanceQuery.getCriteriaBuilder();
+    
+    projQuery.multiselect(
+        cb.sum(root.get(currency == null ? AccountingFact.PROPERTY_DEBIT
+            : AccountingFact.PROPERTY_FOREIGNCURRENCYDEBIT)),
+        cb.sum(root.get(currency == null ? AccountingFact.PROPERTY_CREDIT
+            : AccountingFact.PROPERTY_FOREIGNCURRENCYCREDIT))
+    );
+    
+    List<Object[]> results = initialBalanceQuery.getSession().createQuery(projQuery).getResultList();
+    
+    // Procesar los resultados como lo hacía getBalanceFromQuery
+    if (results.isEmpty()) {
+      return BigDecimal.ZERO;
+    }
+    
+    Object[] row = results.get(0);
+    BigDecimal debitSum = row[0] != null ? (BigDecimal) row[0] : BigDecimal.ZERO;
+    BigDecimal creditSum = row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO;
+    
+    return debitSum.subtract(creditSum);
 
   }
 

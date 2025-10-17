@@ -42,7 +42,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projections;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.OBClassLoader;
@@ -90,9 +90,7 @@ public class LCMatchingProcess {
       }
       final OBCriteria<LCMatched> critMatched = OBDal.getInstance().createCriteria(LCMatched.class);
       critMatched.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, currentLcCost);
-      // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-      critMatched.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.sum(LCMatched.PROPERTY_AMOUNT));
+      critMatched.setProjectionSum(LCMatched.PROPERTY_AMOUNT);
       final BigDecimal matchedAmt = (BigDecimal) critMatched.uniqueResult();
       if (matchedAmt != null) {
         currentLcCost.setMatchingAmount(matchedAmt);
@@ -132,7 +130,7 @@ Projections.sum(LCMatched.PROPERTY_AMOUNT));
     // Check there are Matching Lines.
     final OBCriteria<LandedCostCost> critLCMatched = OBDal.getInstance()
         .createCriteria(LandedCostCost.class);
-    critLCMatched.add(Restrictions.sizeEq(LandedCostCost.PROPERTY_LANDEDCOSTMATCHEDLIST, 0));
+    critLCMatched.addSizeEq(LandedCostCost.PROPERTY_LANDEDCOSTMATCHEDLIST, 0);
     critLCMatched.addEqual(LandedCostCost.PROPERTY_ID, lcCost.getId());
     if (critLCMatched.uniqueResult() != null) {
       throw new OBException(OBMessageUtils.messageBD("LCCostNoMatchings"));
@@ -191,7 +189,7 @@ Projections.sum(LCMatched.PROPERTY_AMOUNT));
     int i = 0;
     try {
       while (receiptamts.next()) {
-        final Object[] receiptAmt = receiptamts.get();
+        final Object[] receiptAmt = (Object[]) receiptamts.get();
         final BigDecimal amt = (BigDecimal) receiptAmt[0];
         final ShipmentInOutLine receiptLine = OBDal.getInstance()
             .get(ShipmentInOutLine.class, receiptAmt[1]);

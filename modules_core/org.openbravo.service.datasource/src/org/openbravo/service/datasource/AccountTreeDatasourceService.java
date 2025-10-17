@@ -76,9 +76,9 @@ public class AccountTreeDatasourceService extends ADTreeDatasourceService {
     TableTree tableTree = null;
     DataSource accountTreeDatasource = OBDal.getInstance().get(DataSource.class, DATASOURCE_ID);
     OBCriteria<TableTree> criteria = OBDal.getInstance().createCriteria(TableTree.class);
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_TABLE, table));
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, CUSTOM_STRUCTURE));
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource));
+    criteria.addEqual(TableTree.PROPERTY_TABLE, table);
+    criteria.addEqual(TableTree.PROPERTY_TREESTRUCTURE, CUSTOM_STRUCTURE);
+    criteria.addEqual(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource);
     criteria.setMaxResults(1);
     tableTree = (TableTree) criteria.uniqueResult();
     return tableTree;

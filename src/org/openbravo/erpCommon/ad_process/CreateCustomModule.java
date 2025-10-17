@@ -30,6 +30,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.ad.module.DataPackage;
@@ -54,7 +55,7 @@ public class CreateCustomModule implements Process {
     OBContext.setAdminMode();
     try {
       OBCriteria<Module> modCriteria = OBDal.getInstance().createCriteria(Module.class);
-      modCriteria.add(Restrictions.ilike(Module.PROPERTY_NAME, MODULE_NAME));
+      modCriteria.addFunction((cb, obc) -> cb.like(cb.upper(obc.getPath(Module.PROPERTY_NAME)), MODULE_NAME.toUpperCase()));
       if (modCriteria.count() != 0) {
         OBError msg = new OBError();
         msg.setType("Info");

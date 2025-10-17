@@ -345,8 +345,8 @@ public class OBViewTab extends BaseTemplateComponent {
   public String getViewGrid() {
     // check at least one field is visible in grid view, does not stop the execution
     OBCriteria<Field> fieldCriteria = OBDal.getInstance().createCriteria(Field.class);
-    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, getTab()));
-    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_SHOWINGRIDVIEW, true));
+    fieldCriteria.addEqual(Field.PROPERTY_TAB, getTab());
+    fieldCriteria.addEqual(Field.PROPERTY_SHOWINGRIDVIEW, true);
     if (fieldCriteria.count() == 0) {
       log.error("No Fields are visible in grid view for Tab " + tab.getWindow().getName() + " - "
           + tab.getName());
@@ -577,7 +577,7 @@ public class OBViewTab extends BaseTemplateComponent {
           continue;
         }
         final OBCriteria<Selector> criteria = OBDal.getInstance().createCriteria(Selector.class);
-        criteria.add(Restrictions.eq(Selector.PROPERTY_REFERENCE, fld.getColumn().getReferenceSearchKey()));
+        criteria.addEqual(Selector.PROPERTY_REFERENCE, fld.getColumn().getReferenceSearchKey());
         criteria.setMaxResults(1);
         Selector selector = (Selector) criteria.uniqueResult();
 

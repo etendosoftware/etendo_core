@@ -102,19 +102,19 @@ public class Window implements WebService {
       org.openbravo.model.ad.ui.Window adWindow = OBDal.getInstance().get(org.openbravo.model.ad.ui.Window.class, windowId);
 
       OBCriteria<WindowAccess> windowAccessCriteria = OBDal.getInstance().createCriteria(WindowAccess.class);
-      windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-      windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_SMFMUMOBILEVIEW, true));
-      windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ACTIVE, true));
+      windowAccessCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+      windowAccessCriteria.addEqual(WindowAccess.PROPERTY_SMFMUMOBILEVIEW, true);
+      windowAccessCriteria.addEqual(WindowAccess.PROPERTY_ACTIVE, true);
 
       OBCriteria<Language> languageCriteria = OBDal.getInstance().createCriteria(Language.class);
-      languageCriteria.add(Restrictions.eq(Language.PROPERTY_LANGUAGE, language));
+      languageCriteria.addEqual(Language.PROPERTY_LANGUAGE, language);
       Language currentLanguage = (Language) languageCriteria.uniqueResult();
       if (currentLanguage.isSystemLanguage())
         OBContext.getOBContext().setLanguage(currentLanguage);
 
       if (adWindow != null) {
         // Specific window present. Check if role has access to it:
-        windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, adWindow));
+        windowAccessCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, adWindow);
         windowAccessCriteria.setMaxResults(1);
         WindowAccess windowAccess = (WindowAccess) windowAccessCriteria.uniqueResult();
 

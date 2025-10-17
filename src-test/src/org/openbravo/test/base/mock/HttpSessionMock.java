@@ -76,23 +76,8 @@ public class HttpSessionMock implements HttpSession {
     return servletContext;
   }
 
-  @SuppressWarnings("deprecation")
-  @Override
-  public jakarta.servlet.http.HttpSessionContext getSessionContext() {
-    throw new UnsupportedOperationException();
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public Object getValue(String name) {
-    return getAttribute(name);
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public String[] getValueNames() {
-    return attributes.keySet().toArray(new String[0]);
-  }
+  // Note: HttpSessionContext and related deprecated methods (getValue, getValueNames, putValue, removeValue) 
+  // have been completely removed from Jakarta Servlet API and are no longer supported
 
   @Override
   public void invalidate() {
@@ -105,21 +90,9 @@ public class HttpSessionMock implements HttpSession {
     return false;
   }
 
-  @SuppressWarnings("deprecation")
-  @Override
-  public void putValue(String name, Object value) {
-    setAttribute(name, value);
-  }
-
   @Override
   public void removeAttribute(String name) {
     attributes.remove(name);
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public void removeValue(String name) {
-    removeAttribute(name);
   }
 
   @Override

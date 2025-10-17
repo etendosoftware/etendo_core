@@ -67,9 +67,9 @@ public class ReceivedFromPaymentMethodActionHandler extends BaseActionHandler {
           if (paymentMethod != null) {
             OBCriteria<FinAccPaymentMethod> criteria = OBDal.getInstance()
                 .createCriteria(FinAccPaymentMethod.class);
-            criteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount));
+            criteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount);
             criteria
-                .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+                .addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
             criteria.setFilterOnReadableOrganization(false);
             criteria.setFilterOnActive(true);
             criteria.setMaxResults(1);

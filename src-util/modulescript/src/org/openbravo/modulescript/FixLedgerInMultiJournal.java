@@ -21,7 +21,7 @@ package org.openbravo.modulescript;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.modulescript.ModuleScript;
 import java.sql.Connection;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 
 public class FixLedgerInMultiJournal extends ModuleScript {

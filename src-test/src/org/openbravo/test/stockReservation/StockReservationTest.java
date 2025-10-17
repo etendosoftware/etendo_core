@@ -186,9 +186,7 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @After
   public void cleanUp() {
-    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).add(
-        Restrictions.eq(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY)).add(
-        Restrictions.eq(Preference.PROPERTY_SELECTED, true)).uniqueResult();
+    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).addEqual(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY).addEqual(Preference.PROPERTY_SELECTED, true).uniqueResult();
     OBDal.getInstance().remove(pref);
     OBDal.getInstance().flush();
     OBDal.getInstance().commitAndClose();

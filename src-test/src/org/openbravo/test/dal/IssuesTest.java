@@ -301,7 +301,7 @@ public class IssuesTest extends OBBaseTest {
     setSystemAdministratorContext();
 
     OBCriteria<Module> obc = OBDal.getInstance().createCriteria(Module.class);
-    obc.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, false));
+    obc.addEqual(Module.PROPERTY_INDEVELOPMENT, false);
 
     if (obc.list().size() == 0) {
       // Can't test DAL's connection provider

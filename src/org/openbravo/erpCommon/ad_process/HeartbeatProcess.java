@@ -56,6 +56,8 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteriaMigrationHelper;
+import jakarta.persistence.criteria.Predicate;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.obps.ActivationKey;
@@ -646,15 +648,16 @@ public class HeartbeatProcess implements Process {
 
     final OBCriteria<ProcessRequest> prCriteria = OBDal.getInstance()
         .createCriteria(ProcessRequest.class);
-    // TODO: Migrar 
- Restrictions.and() a CriteriaBuilder.and() manualmente
-    prCriteria.add(Restrictions.and(Restrictions.eq(ProcessRequest.PROPERTY_PROCESS, HBProcess),
-        // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-        Restrictions.or(
-            Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
+    // Migración de Restrictions.and() con Restrictions.or() anidado
+    prCriteria.addAnd(
+        (cb, obc) -> cb.equal(obc.getPath(ProcessRequest.PROPERTY_PROCESS), HBProcess),
+        (cb, obc) -> cb.or(
+            cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS),
                 org.openbravo.scheduling.Process.SCHEDULED),
-            Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
-                org.openbravo.scheduling.Process.MISFIRED))));
+            cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS),
+                org.openbravo.scheduling.Process.MISFIRED)
+        )
+    );
     final List<ProcessRequest> prRequestList = prCriteria.list();
 
     if (prRequestList.size() == 0) { // Resetting state to disabled

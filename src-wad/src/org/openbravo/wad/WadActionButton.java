@@ -24,7 +24,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Vector;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.data.Sqlc;
 import org.openbravo.database.ConnectionProvider;

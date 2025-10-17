@@ -77,7 +77,7 @@ public class FICTest extends BaseDataSourceTestDal {
   @Issue("28541")
   public void dateTimeShouldntChange() throws Exception {
     OBCriteria<CostingRule> qRule = OBDal.getInstance().createCriteria(CostingRule.class);
-    qRule.add(Restrictions.isNotNull(CostingRule.PROPERTY_STARTINGDATE));
+    qRule.addIsNotNull(CostingRule.PROPERTY_STARTINGDATE);
     qRule.setMaxResults(1);
     assertThat(qRule.list(), not(empty()));
 

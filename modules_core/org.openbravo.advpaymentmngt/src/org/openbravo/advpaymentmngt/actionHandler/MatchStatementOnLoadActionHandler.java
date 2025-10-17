@@ -127,7 +127,7 @@ public class MatchStatementOnLoadActionHandler extends BaseActionHandler {
     try {
       List<String> bankLines = new ArrayList<String>();
       while (bankLinesSR.next()) {
-        final FIN_BankStatementLine bankStatementLine = (FIN_BankStatementLine) bankLinesSR.get(0);
+        final FIN_BankStatementLine bankStatementLine = (FIN_BankStatementLine) bankLinesSR.get();
         bankLines.add(bankStatementLine.getId());
         if ((i % 100) == 0) {
           OBDal.getInstance().getSession().clear();

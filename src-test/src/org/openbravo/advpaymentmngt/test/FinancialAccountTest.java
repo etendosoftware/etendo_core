@@ -94,7 +94,7 @@ public class FinancialAccountTest extends OBBaseTest {
     final OBCriteria<FIN_FinancialAccount> obCriteria = OBDal.getInstance()
         .createCriteria(FIN_FinancialAccount.class);
     obCriteria
-        .add(Restrictions.eq(FIN_FinancialAccount.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION));
+        .addEqual(FIN_FinancialAccount.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION);
     final List<FIN_FinancialAccount> finAccs = obCriteria.list();
     for (FIN_FinancialAccount fa : finAccs) {
       OBDal.getInstance().remove(fa);

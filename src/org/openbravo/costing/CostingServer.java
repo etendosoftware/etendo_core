@@ -241,7 +241,7 @@ public class CostingServer {
             OBDal.getInstance().save(lcReceipt);
 
           }
-          final LandedCostCost landedCostCost = (LandedCostCost) lcLines.get()[0];
+          final LandedCostCost landedCostCost = (LandedCostCost) lcLines.get();
           landedCostCost.setLandedCost(landedCost);
           landedCost.getLandedCostCostList().add(landedCostCost);
           OBDal.getInstance().save(landedCost);
@@ -391,7 +391,7 @@ public class CostingServer {
     OBDal.getInstance().save(transaction);
     try (ScrollableResults scroll = getCostAdjustmentLines(origInOutLineTrx)) {
       while (scroll.next()) {
-        final Tuple result = (Tuple) scroll.get()[0];
+        final Tuple result = (Tuple) scroll.get();
         final BigDecimal cost = (BigDecimal) result.get("cost");
         final String sourceProcess = (String) result.get("sourceProcess");
         createAdjustment(sourceProcess, cost);

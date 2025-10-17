@@ -241,9 +241,9 @@ abstract class ReferencedInventoryProcessor {
       try {
         while (reservationStockScroll.next()
             && ReferencedInventoryUtil.isGreaterThanZero(remainingQtyToReleaseInReservations)) {
-          final ReservationStock reservationStock = (ReservationStock) reservationStockScroll
-              .get()[0];
-          final BigDecimal currentReservedQty = (BigDecimal) reservationStockScroll.get()[1];
+          Object[] row = (Object[]) reservationStockScroll.get();
+          final ReservationStock reservationStock = (ReservationStock) row[0];
+          final BigDecimal currentReservedQty = (BigDecimal) row[1];
           final BigDecimal qtyToMoveInThisReservation = remainingQtyToReleaseInReservations
               .min(currentReservedQty);
 

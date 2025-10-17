@@ -117,9 +117,9 @@ class AcctSchemaEventHandler extends EntityPersistenceEventObserver {
   private Element getAccountElement(AcctSchema acctSchema) {
     final String ELEMENTTYPE_ACCOUNT = "AC";
     OBCriteria<AcctSchemaElement> aee = OBDal.getInstance().createCriteria(AcctSchemaElement.class);
-    aee.add(Restrictions.eq(AcctSchemaElement.PROPERTY_ACCOUNTINGSCHEMA, acctSchema));
-    aee.add(Restrictions.isNotNull(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT));
-    aee.add(Restrictions.eq(AcctSchemaElement.PROPERTY_TYPE, ELEMENTTYPE_ACCOUNT));
+    aee.addEqual(AcctSchemaElement.PROPERTY_ACCOUNTINGSCHEMA, acctSchema);
+    aee.addIsNotNull(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT);
+    aee.addEqual(AcctSchemaElement.PROPERTY_TYPE, ELEMENTTYPE_ACCOUNT);
     aee.setMaxResults(1);
     List<AcctSchemaElement> aees = aee.list();
     if (!aees.isEmpty()) {
@@ -132,7 +132,7 @@ class AcctSchemaEventHandler extends EntityPersistenceEventObserver {
   private int countSchemas(Element element) {
     Set<AcctSchema> schemas = new HashSet<>();
     OBCriteria<AcctSchemaElement> aee = OBDal.getInstance().createCriteria(AcctSchemaElement.class);
-    aee.add(Restrictions.eq(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT, element));
+    aee.addEqual(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT, element);
     for (AcctSchemaElement acctSchemaElement : aee.list()) {
       schemas.add(acctSchemaElement.getAccountingSchema());
     }
@@ -159,7 +159,7 @@ class AcctSchemaEventHandler extends EntityPersistenceEventObserver {
     ScrollableResults elementvalues = elementValueQry.scroll(ScrollMode.FORWARD_ONLY);
     try {
       while (elementvalues.next()) {
-        ElementValue elementValue = (ElementValue) elementvalues.get(0);
+        ElementValue elementValue = (ElementValue) elementvalues.get();
         boolean isCredit = getAccountSign(elementValue.getAccountType(), assetPositive,
             liabilityPositive, ownersEquityPositive, expensePositive, revenuePositive);
         if (!ACCOUNTTYPE_MEMO.equals(elementValue.getAccountType())) {

@@ -130,7 +130,7 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
         int i = 0;
         try {
           while (scroll.next()) {
-            final String paymentCreditId = (String) scroll.get()[0];
+            final String paymentCreditId = (String) scroll.get();
             final FIN_Payment paymentCredit = OBDal.getInstance()
                 .get(FIN_Payment.class, paymentCreditId);
             creditAmount = paymentCredit.getGeneratedCredit()
@@ -251,7 +251,7 @@ public class SetNewBPCurrency extends BaseProcessActionHandler {
           scroll.beforeFirst();
           i = 0;
           while (scroll.next()) {
-            final String paymentCreditId = (String) scroll.get()[0];
+            final String paymentCreditId = (String) scroll.get();
             final FIN_Payment paymentCredit = OBDal.getInstance()
                 .get(FIN_Payment.class, paymentCreditId);
             creditAmount = paymentCredit.getGeneratedCredit();

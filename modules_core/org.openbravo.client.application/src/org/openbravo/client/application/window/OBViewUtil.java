@@ -26,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Hibernate;
-import org.hibernate.collection.internal.PersistentBag;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.persister.entity.EntityPersister;
@@ -188,7 +188,7 @@ public class OBViewUtil {
         ownerInSession = OBDal.getInstance().get(owner.getEntityName(), owner.getId());
       }
 
-      String propName = ((PersistentBag) trlObjects).getRole();
+      String propName = ((PersistentCollection<?>) trlObjects).getRole();
       propName = propName.substring(propName.indexOf('.') + 1);
       initializedTrlObjects = (List<BaseOBObject>) ownerInSession.get(propName);
     } else {

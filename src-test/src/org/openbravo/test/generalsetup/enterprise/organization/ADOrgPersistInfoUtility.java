@@ -130,10 +130,10 @@ class ADOrgPersistInfoUtility {
           .get(Organization.class, ADOrgPersistInfoConstants.ORG_0);
       final OBCriteria<OrganizationType> criteria = OBDal.getInstance()
           .createCriteria(OrganizationType.class);
-      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_BUSINESSUNIT, true));
-      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_ACTIVE, true));
-      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_CLIENT, client));
-      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_ORGANIZATION, org0));
+      criteria.addEqual(OrganizationType.PROPERTY_BUSINESSUNIT, true);
+      criteria.addEqual(OrganizationType.PROPERTY_ACTIVE, true);
+      criteria.addEqual(OrganizationType.PROPERTY_CLIENT, client);
+      criteria.addEqual(OrganizationType.PROPERTY_ORGANIZATION, org0);
       criteria.setMaxResults(1);
       if (criteria.uniqueResult() != null) {
         businessUnitOrgType = ((OrganizationType) criteria.uniqueResult()).getId();

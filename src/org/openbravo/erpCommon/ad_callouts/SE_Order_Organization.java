@@ -80,9 +80,7 @@ public class SE_Order_Organization extends SimpleCallout {
 
         OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
         orgWarehouseCriteria.addEqual(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId));
-        // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-        orgWarehouseCriteria.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
+        orgWarehouseCriteria.setProjectionProperty(OrgWarehouse.PROPERTY_WAREHOUSE);
 
         List<String> warehouseIds = new ArrayList<>();
         List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();

@@ -78,7 +78,7 @@ public class DynamicEntityTest extends OBBaseTest {
     addReadWriteAccess(Category.class);
     addReadWriteAccess(CategoryAccounts.class);
     final OBCriteria<Category> obc = OBDal.getInstance().createCriteria(Category.class);
-    obc.add(Restrictions.eq(Category.PROPERTY_NAME, "hello world"));
+    obc.addEqual(Category.PROPERTY_NAME, "hello world");
     final List<Category> bpgs = obc.list();
     assertEquals(1, bpgs.size());
     final Category bog = bpgs.get(0);
@@ -89,7 +89,7 @@ public class DynamicEntityTest extends OBBaseTest {
     // first delete the related accounts
     final OBCriteria<CategoryAccounts> obc2 = OBDal.getInstance()
         .createCriteria(CategoryAccounts.class);
-    obc2.add(Restrictions.eq(CategoryAccounts.PROPERTY_BUSINESSPARTNERCATEGORY, bpgs.get(0)));
+    obc2.addEqual(CategoryAccounts.PROPERTY_BUSINESSPARTNERCATEGORY, bpgs.get(0));
     final List<CategoryAccounts> bogas = obc2.list();
     for (final CategoryAccounts bga : bogas) {
       OBDal.getInstance().refresh(bga);
@@ -107,7 +107,7 @@ public class DynamicEntityTest extends OBBaseTest {
     setTestUserContext();
     addReadWriteAccess(Category.class);
     final OBCriteria<Category> obc = OBDal.getInstance().createCriteria(Category.class);
-    obc.add(Restrictions.eq(Category.PROPERTY_NAME, "hello world"));
+    obc.addEqual(Category.PROPERTY_NAME, "hello world");
     final List<Category> bpgs = obc.list();
     assertEquals(0, bpgs.size());
   }

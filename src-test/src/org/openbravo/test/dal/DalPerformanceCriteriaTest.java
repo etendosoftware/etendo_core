@@ -146,7 +146,7 @@ public class DalPerformanceCriteriaTest extends OBBaseTest {
     @Override
     public int doCriteriaQry() {
       final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-      obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, DOLLAR));
+      obc.addEqual(Currency.PROPERTY_ISOCODE, DOLLAR);
       if (doScroll) {
         final ScrollableResults r = obc.scroll(ScrollMode.FORWARD_ONLY);
         int cnt = 0;
@@ -233,7 +233,7 @@ public class DalPerformanceCriteriaTest extends OBBaseTest {
     public int doCriteriaQry() {
       final OBCriteria<MaterialTransaction> obc = OBDal.getInstance()
           .createCriteria(MaterialTransaction.class);
-      obc.add(Restrictions.isNotNull(MaterialTransaction.PROPERTY_UOM));
+      obc.addIsNotNull(MaterialTransaction.PROPERTY_UOM);
       obc.addOrderBy(MaterialTransaction.PROPERTY_PRODUCT + "." + Product.PROPERTY_NAME, false);
       obc.setMaxResults(10);
       obc.setFirstResult(0);
@@ -282,7 +282,7 @@ public class DalPerformanceCriteriaTest extends OBBaseTest {
     @Override
     public int doCriteriaQry() {
       OBCriteria<Table> c = OBDal.getInstance().createCriteria(Table.class);
-      c.add(Restrictions.eq(Table.PROPERTY_ID, "100"));
+      c.addEqual(Table.PROPERTY_ID, "100");
       if (doScroll) {
         final ScrollableResults r = c.scroll(ScrollMode.FORWARD_ONLY);
         int cnt = 0;
@@ -423,36 +423,36 @@ public class DalPerformanceCriteriaTest extends OBBaseTest {
   /*
    * List<FIN_PaymentSchedule> lQuery, lReturn = new ArrayList<FIN_PaymentSchedule>();
    * OBCriteria<FIN_PaymentSchedule> obcPS = OBDal.getInstance().createCriteria(
-   * FIN_PaymentSchedule.class); obcPS.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE,
-   * invoice)); lQuery = obcPS.list();
+   * FIN_PaymentSchedule.class); obcPS.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE,
+   * invoice); lQuery = obcPS.list();
    * 
    * // 1) Remove not paid payment schedule detail lines OBCriteria<FIN_PaymentScheduleDetail>
    * obcPSD = OBDal.getInstance().createCriteria( FIN_PaymentScheduleDetail.class);
-   * obcPSD.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-   * invoicePS));
+   * obcPSD.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+   * invoicePS);
    * obcPSD.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
    * 
    * OBCriteria<FIN_PaymentScheduleDetail> orderedPSDs = OBDal.getInstance().createCriteria(
    * FIN_PaymentScheduleDetail.class);
-   * orderedPSDs.add(Restrictions.in(FIN_PaymentScheduleDetail.PROPERTY_ID, psdSet));
+   * orderedPSDs.addIn(FIN_PaymentScheduleDetail.PROPERTY_ID, psdSet);
    * orderedPSDs.addOrderBy(FIN_PaymentScheduleDetail.PROPERTY_AMOUNT, true);
    * 
    * OBCriteria<FinAccPaymentMethod> psdFilter = OBDal.getInstance().createCriteria(
-   * FinAccPaymentMethod.class); psdFilter.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT,
-   * finAcc)); psdFilter.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-   * finPmtMethod));
+   * FinAccPaymentMethod.class); psdFilter.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT,
+   * finAcc); psdFilter.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+   * finPmtMethod);
    * 
    * OBCriteria<FIN_Payment> obcPayment = OBDal.getInstance().createCriteria(FIN_Payment.class);
-   * obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp));
-   * obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_RECEIPT, isReceipt));
-   * obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO));
-   * obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_USEDCREDIT, BigDecimal.ZERO));
+   * obcPayment.addEqual(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp);
+   * obcPayment.addEqual(FIN_Payment.PROPERTY_RECEIPT, isReceipt);
+   * obcPayment.addNotEqual(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO);
+   * obcPayment.addNotEqual(FIN_Payment.PROPERTY_USEDCREDIT, BigDecimal.ZERO);
    * obcPayment.addOrderBy(FIN_Payment.PROPERTY_PAYMENTDATE, false);
    * obcPayment.addOrderBy(FIN_Payment.PROPERTY_DOCUMENTNO, false); return obcPayment.list();
    * 
    * final OBCriteria<RoleOrganization> roleOrgs = OBDal.getInstance().createCriteria(
-   * RoleOrganization.class); roleOrgs.add(Restrictions.eq(RoleOrganization.PROPERTY_ROLE, role));
-   * roleOrgs.add(Restrictions.eq(RoleOrganization.PROPERTY_ORGADMIN, true));
+   * RoleOrganization.class); roleOrgs.addEqual(RoleOrganization.PROPERTY_ROLE, role);
+   * roleOrgs.addEqual(RoleOrganization.PROPERTY_ORGADMIN, true);
    * 
    * OBCriteria<ModuleInstall> qModInstall = OBDal.getInstance().createCriteria(
    * ModuleInstall.class);

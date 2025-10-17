@@ -105,7 +105,7 @@ public class TemplateResolver {
     while (true) {
       final OBCriteria<Template> templateCriteria = OBDal.getInstance()
           .createCriteria(Template.class);
-      templateCriteria.add(Restrictions.eq(Template.PROPERTY_OVERRIDESTEMPLATE, currentTemplate));
+      templateCriteria.addEqual(Template.PROPERTY_OVERRIDESTEMPLATE, currentTemplate);
       final List<Template> overridingTemplates = templateCriteria.list();
       if (overridingTemplates.size() == 0) {
         return currentTemplate;

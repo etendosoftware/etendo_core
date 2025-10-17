@@ -108,13 +108,13 @@ class RoleAccessUniqueHandler extends EntityPersistenceEventObserver {
 
     OBCriteria<BaseOBObject> q = OBDal.getInstance().createCriteria(entity.getName());
 
-    q.add(cb.equal(root.get("role"), newRole));
-    q.add(Restrictions.eq(securedObjectProperty.getName(),
-        event.getCurrentState(securedObjectProperty)));
+    q.addEqual("role", newRole);
+    q.addEqual(securedObjectProperty.getName(),
+        event.getCurrentState(securedObjectProperty));
 
     if (event instanceof EntityUpdateEvent) {
       // do not count itself when updating
-      q.add(cb.notEqual(root.get("id"), event.getId()));
+      q.addNotEqual("id", event.getId());
     }
 
     if (q.count() > 0) {

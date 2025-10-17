@@ -18,7 +18,7 @@
  */
 package org.openbravo.event;
 
-import java.util.List;
+import java.util.*;
 
 import jakarta.enterprise.event.Observes;
 
@@ -114,7 +114,7 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
         ScrollableResults scroll = getValuesToAdd(prCh);
         try {
           while (scroll.next()) {
-            Object[] strChValue = scroll.get();
+            Object[] strChValue = (Object[]) scroll.get();
             String chValueId = (String) strChValue[0];
             String chValueCode = (String) strChValue[1];
             Boolean chValueActive = (Boolean) strChValue[2];
@@ -214,7 +214,7 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
         ScrollableResults scroll = getValuesToAdd(prCh);
         try {
           while (scroll.next()) {
-            Object[] strChValue = scroll.get();
+            Object[] strChValue = (Object[]) scroll.get();
             String chValueId = (String) strChValue[0];
             String chValueCode = (String) strChValue[1];
             Boolean chValueActive = (Boolean) strChValue[2];
@@ -222,8 +222,7 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
             if (existingValues.remove(chValueId)) {
               OBCriteria<ProductCharacteristicConf> prChConfCrit = OBDal.getInstance()
                   .createCriteria(ProductCharacteristicConf.class);
-              prChConfCrit.add(Restrictions
-                  .eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh));
+              prChConfCrit.addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh);
               prChConfCrit
                   .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
                       OBDal.getInstance().get(CharacteristicValue.class, chValueId));
@@ -320,8 +319,7 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
     try (ScrollableResults scroll = criteria.scroll(ScrollMode.FORWARD_ONLY)) {
       int i = 0;
       while (scroll.next()) {
-        ProductCharacteristicValue productCharacteristicValue = (ProductCharacteristicValue) scroll
-            .get(0);
+        ProductCharacteristicValue productCharacteristicValue = (ProductCharacteristicValue) ((Object[]) scroll.get())[0];
         OBDal.getInstance().remove(productCharacteristicValue);
         i++;
         if (i % 100 == 0) {

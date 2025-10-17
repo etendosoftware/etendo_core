@@ -1,0 +1,785 @@
+<?xml version="1.0" encoding="UTF-8"?><SqlClass name="ActionButtonData" package="org.openbravo.erpCommon.reference" accessModifier="public">
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment>empty select</SqlMethodComment>
+    <Sql>
+      SELECT * FROM DUAL
+    </Sql>
+  </SqlMethod>
+
+  <SqlMethod name="process100" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_YearPeriods</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_YearPeriods(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process1003900000" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_TAXPAYMENT_POST</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_TAXPAYMENT_POST(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process1004400000" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Requisition_CreatePO</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Requisition_CreatePO(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process1004400002" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_RequisitionLine_Status0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_RequisitionLine_Status0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process1004400003" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Requisition_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Requisition_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process1004400004" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure </SqlMethodComment>
+      <Sql><![CDATA[
+        CALL (?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process101" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_DiscountSchema_ReSeq</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_DiscountSchema_ReSeq(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process103" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_PriceList_Create</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_PriceList_Create(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process104" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Order_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Order_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process105" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Inventory_ListCreate</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Inventory_ListCreate(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process106" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Inventory_ListUpdate</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Inventory_ListUpdate(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process108" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_AcctSchema_Default_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_AcctSchema_Default_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process109" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_InOut_Post0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_InOut_Post0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process111" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Invoice_Post0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Invoice_Post0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process112" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_BP_Group_Acct_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_BP_Group_Acct_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process113" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Window_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Window_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process114" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Tab_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Tab_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process119" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Invoice_Create0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Invoice_Create0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process122" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Movement_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Movement_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process123" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Commission_Process</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Commission_Process(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process134" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Invoice_Create0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Invoice_Create0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process137" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Production_Run</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Production_Run(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process140" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Product_Category_Acct_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Product_Category_Acct_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process142" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Invoice_CreateReceipt</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Invoice_CreateReceipt(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process144" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Cash_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Cash_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process147" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_BankStatement_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_BankStatement_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process154" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_InOut_CreateInvoice</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_InOut_CreateInvoice(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process155" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_PaySelection_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_PaySelection_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process164" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_GenerateSOFromProjectOrder</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_GenerateSOFromProjectOrder(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process165" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Commission_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Commission_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process166" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_CommissionRun_Process</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_CommissionRun_Process(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process167" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Period_Process</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Period_Process(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process168" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_PeriodControl_Process</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_PeriodControl_Process(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process169" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure GL_Journal_Post0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL GL_Journal_Post0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process172" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Synchronize</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Synchronize(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process173" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Table_Import0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Table_Import0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process174" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Tab_Import0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Tab_Import0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process179" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Language_Create</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Language_Create(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process180" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure T_InventoryValue_Create</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL T_InventoryValue_Create(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process184" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure S_TimeExpense_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL S_TimeExpense_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process185" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure DBA_Recompile</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL DBA_Recompile(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process188" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure GL_JournalBatch_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL GL_JournalBatch_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process193" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Order_PO_Create</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Order_PO_Create(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process199" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_InOut_Create0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_InOut_Create0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process216" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_GenerateSOFromProjectPhase</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_GenerateSOFromProjectPhase(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process53863D4359114ADE92133F772135AEEB" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Org_Ready</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Org_Ready(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process5A2A0AF88AF54BB085DCC52FCC9B17B7" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Reservation_Post0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Reservation_Post0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process65D1E895C7FD47B48F3D18BC9E28BE9F" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Create_Audit_Triggers</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Create_Audit_Triggers(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process6E1ADD5C8B6B4ACB82237DAA8114451E" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_INVEXPLODEBOMNOTSTOCK</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_INVEXPLODEBOMNOTSTOCK(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800002" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_ChangeProjectStatus</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_ChangeProjectStatus(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800003" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Copy_Project_Lines</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Copy_Project_Lines(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800005" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_GenerateSOFromProject</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_GenerateSOFromProject(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800006" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_GeneratePOFromProject</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_GeneratePOFromProject(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800010" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_InOut_UpdateQuantityes</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_InOut_UpdateQuantityes(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800022" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Copy_Product_Template</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Copy_Product_Template(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800024" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Debt_Payment_Change</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Debt_Payment_Change(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800025" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Settlement_Post0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Settlement_Post0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800048" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Move_Locator</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Move_Locator(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800068" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Rappel_Invoice_Create</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Rappel_Invoice_Create(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800069" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_PriceListVersionGenerate</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_PriceListVersionGenerate(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800075" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Create_PInvoice_From_Outs</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Create_PInvoice_From_Outs(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800077" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Debt_Payment_Balancing_Rep</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Debt_Payment_Balancing_Rep(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800087" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure AD_Update_Table_Identifier0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL AD_Update_Table_Identifier0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800094" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Project_Won</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Project_Won(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800103" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_WorkRequirement_Process</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_WorkRequirement_Process(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800105" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_ProductionRun_Standard</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_ProductionRun_Standard(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800106" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_WorkEffort_Validate</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_WorkEffort_Validate(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800109" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure Ma_Standard_Cost</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL Ma_Standard_Cost(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800112" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_Copy_Version</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_Copy_Version(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800114" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_Measure_Time_Explode0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_Measure_Time_Explode0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800117" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_WorkRequirement_Close</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_WorkRequirement_Close(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800118" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_WRPhase_Close</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_WRPhase_Close(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800120" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_PC_CASE_CREATE</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_PC_CASE_CREATE(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800125" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure A_Asset_Post0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL A_Asset_Post0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800126" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Debt_Payment_Create</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Debt_Payment_Create(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800127" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_Measure_Shift_Explode</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_Measure_Shift_Explode(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800130" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_Maint_All</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_Maint_All(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800131" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Internal_Consumption_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Internal_Consumption_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800134" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure A_Amortization_Process</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL A_Amortization_Process(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800135" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Budget_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Budget_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800136" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure A_Asset_Group_Acct_Copy</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL A_Asset_Group_Acct_Copy(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800140" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_DP_Management_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_DP_Management_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800141" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Freight_Calculate</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Freight_Calculate(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800142" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_Remittance_Post</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_Remittance_Post(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800152" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MA_Indirect_Cost_Calculate</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MA_Indirect_Cost_Calculate(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800159" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MRP_Requisition</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MRP_Requisition(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800160" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MRP_WorkRequirement</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MRP_WorkRequirement(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800161" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MRP_ProcessPlan_Recalculate0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MRP_ProcessPlan_Recalculate0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800162" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MRP_Production_Run</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MRP_Production_Run(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800163" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MRP_PurchaseOrder</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MRP_PurchaseOrder(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process800164" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure MRP_Purchase_Run</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL MRP_Purchase_Run(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="process9CD67D41E43242CDA034FB994B75812A" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_UPDATE_PARETO_PRODUCT0</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_UPDATE_PARETO_PRODUCT0(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="processD234AE084F7040DCB66E281A4237FF99" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure </SqlMethodComment>
+      <Sql><![CDATA[
+        CALL (?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="processD56220370A774B7FA51323BE3C6E0F22" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure C_PayInAdvance_Create</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL C_PayInAdvance_Create(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="processDAE719940FE9463F8A3E3C401BBAFC53" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_INOUTEXPLODEBOMNOTSTOCK</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_INOUTEXPLODEBOMNOTSTOCK(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="processDFC78024B1F54CBB95DC73425BA6687F" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_EXPLODEBOMNOTSTOCK</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_EXPLODEBOMNOTSTOCK(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+  <SqlMethod name="processFF80818132C964E30132C9747257002E" type="callableStatement" return="object" object="ActionButtonData">
+      <SqlMethodComment>procedure M_Get_Stock</SqlMethodComment>
+      <Sql><![CDATA[
+        CALL M_Get_Stock(?)
+      ]]></Sql>
+      <Parameter name="adPinstanceId"></Parameter>
+   </SqlMethod>
+
+</SqlClass>

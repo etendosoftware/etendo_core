@@ -85,7 +85,7 @@ public class ServletContextMock implements ServletContext {
 
     Optional<File> optTmpDir = getDirectory(tmpPath);
     if (optTmpDir.isPresent()) {
-      attributes.put("javax.servlet.context.tempdir", optTmpDir.get());
+      attributes.put("jakarta.servlet.context.tempdir", optTmpDir.get());
     }
 
     initMimeTypes();

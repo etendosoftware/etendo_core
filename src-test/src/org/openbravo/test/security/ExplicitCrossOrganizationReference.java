@@ -510,7 +510,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
   static void grantWindowAccess(Role role, String windowId) {
     WindowAccess windowAccess = OBProvider.getInstance().get(WindowAccess.class);
     final OBCriteria<Window> obCriteria = OBDal.getInstance().createCriteria(Window.class);
-    obCriteria.add(Restrictions.eq(Window.PROPERTY_ID, windowId));
+    obCriteria.addEqual(Window.PROPERTY_ID, windowId);
     obCriteria.setMaxResults(1);
     windowAccess.setClient(role.getClient());
     windowAccess.setOrganization(role.getOrganization());

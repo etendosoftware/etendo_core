@@ -93,7 +93,7 @@ public class PriceListVersionFilterExpression implements FilterExpression {
     priceListCrit.addEqual(PriceList.PROPERTY_DEFAULT, true);
     String orgs = getOrgs();
     if (StringUtils.isNotEmpty(orgs)) {
-      priceListCrit.addInIds(PriceList.PROPERTY_ORGANIZATION,
+      priceListCrit.addInEntities(PriceList.PROPERTY_ORGANIZATION,
           OBDao.getOBObjectListFromString(Organization.class, orgs));
       priceListCrit.setFilterOnReadableOrganization(false);
     }

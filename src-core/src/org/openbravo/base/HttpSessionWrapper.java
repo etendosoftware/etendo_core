@@ -17,8 +17,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Implements a fake HttpSession to be used when running out of a Servlet container (such as Quartz
@@ -65,32 +65,8 @@ public class HttpSessionWrapper implements HttpSession {
     return null;
   }
 
-  /**
-   * @deprecated
-   */
-  @Deprecated
-  @Override
-  public javax.servlet.http.HttpSessionContext getSessionContext() {
-    return null;
-  }
-
-  /**
-   * @deprecated
-   */
-  @Deprecated
-  @Override
-  public Object getValue(String arg0) {
-    return null;
-  }
-
-  /**
-   * @deprecated
-   */
-  @Deprecated
-  @Override
-  public String[] getValueNames() {
-    return null;
-  }
+  // Note: HttpSessionContext and related deprecated methods (getValue, getValueNames, putValue, removeValue) 
+  // have been completely removed from Jakarta Servlet API and are no longer supported
 
   @Override
   public void invalidate() {
@@ -101,25 +77,9 @@ public class HttpSessionWrapper implements HttpSession {
     return false;
   }
 
-  /**
-   * @deprecated
-   */
-  @Deprecated
-  @Override
-  public void putValue(String arg0, Object arg1) {
-  }
-
   @Override
   public void removeAttribute(String arg0) {
     setAttribute(arg0, null);
-  }
-
-  /**
-   * @deprecated
-   */
-  @Deprecated
-  @Override
-  public void removeValue(String arg0) {
   }
 
   @Override

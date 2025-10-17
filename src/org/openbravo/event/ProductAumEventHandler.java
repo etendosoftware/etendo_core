@@ -38,6 +38,8 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteriaMigrationHelper;
+import jakarta.persistence.criteria.Predicate;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -89,16 +91,11 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (event instanceof EntityNewEvent) {
       OBCriteria<ProductAUM> duplicateAUM = OBDal.getInstance().createCriteria(ProductAUM.class);
-      // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar // TODO: Migrar 
- Restrictions.and() a CriteriaBuilder.and() manualmente
- Restrictions.and() a CriteriaBuilder.and() manualmente
- Restrictions.and() a CriteriaBuilder.and() manualmente
- Restrictions.and() a CriteriaBuilder.and() manualmente
- Restrictions.and() a CriteriaBuilder.and() manualmente
- Restrictions.and() a CriteriaBuilder.and() manualmente
- Restrictions.and() a CriteriaBuilder.and() manualmente
-      duplicateAUM.add(Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product),
-          Restrictions.eq(ProductAUM.PROPERTY_UOM, target.getUOM())));
+      // Migración de Restrictions.and()
+      duplicateAUM.addAnd(
+          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product),
+          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_UOM), target.getUOM())
+      );
       duplicateAUM.setMaxResults(1);
       if (duplicateAUM.uniqueResult() != null) {
         throw new OBException(OBMessageUtils.messageBD(conn, "DuplicateAUM", language));
@@ -107,10 +104,9 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (target.getSales().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primarySales = OBDal.getInstance().createCriteria(ProductAUM.class);
-      // TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
-      primarySales.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
-          Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_SALES, UOMUtil.UOM_PRIMARY),
-              Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
+      primarySales.addAnd((cb, obc) -> cb.notEqual(obc.getPath(ProductAUM.PROPERTY_ID), target.getId()),
+                          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_SALES), UOMUtil.UOM_PRIMARY),
+                          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product));
       primarySales.setMaxResults(1);
       if (primarySales.uniqueResult() != null) {
         throw new OBException(OBMessageUtils.messageBD(conn, "DuplicatePrimarySalesAUM", language));
@@ -119,10 +115,9 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (target.getPurchase().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primaryPurchase = OBDal.getInstance().createCriteria(ProductAUM.class);
-      // TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
-      primaryPurchase.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
-          Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_PURCHASE, UOMUtil.UOM_PRIMARY),
-              Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
+      primaryPurchase.addAnd((cb, obc) -> cb.notEqual(obc.getPath(ProductAUM.PROPERTY_ID), target.getId()),
+                             (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PURCHASE), UOMUtil.UOM_PRIMARY),
+                             (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product));
       primaryPurchase.setMaxResults(1);
       if (primaryPurchase.uniqueResult() != null) {
         throw new OBException(
@@ -133,10 +128,9 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
     if (target.getLogistics().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primaryLogistics = OBDal.getInstance()
           .createCriteria(ProductAUM.class);
-      // TODO: Migrar Restrictions.and() a CriteriaBuilder.and() manualmente
-      primaryLogistics.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
-          Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_LOGISTICS, UOMUtil.UOM_PRIMARY),
-              Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
+      primaryLogistics.addAnd((cb, obc) -> cb.notEqual(obc.getPath(ProductAUM.PROPERTY_ID), target.getId()),
+                              (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_LOGISTICS), UOMUtil.UOM_PRIMARY),
+                              (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product));
       primaryLogistics.setMaxResults(1);
       if (primaryLogistics.uniqueResult() != null) {
         throw new OBException(

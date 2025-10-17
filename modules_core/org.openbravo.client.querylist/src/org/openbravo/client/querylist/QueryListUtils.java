@@ -137,7 +137,7 @@ class QueryListUtils {
   public static List<OBCQL_QueryColumn> getColumns(OBCQL_WidgetQuery query) {
     OBCriteria<OBCQL_QueryColumn> obcColumns = OBDal.getInstance()
         .createCriteria(OBCQL_QueryColumn.class);
-    obcColumns.add(Restrictions.eq(OBCQL_QueryColumn.PROPERTY_WIDGETQUERY, query));
+    obcColumns.addEqual(OBCQL_QueryColumn.PROPERTY_WIDGETQUERY, query);
     obcColumns.addOrderBy(OBCQL_QueryColumn.PROPERTY_SEQUENCENUMBER, true);
     return obcColumns.list();
   }

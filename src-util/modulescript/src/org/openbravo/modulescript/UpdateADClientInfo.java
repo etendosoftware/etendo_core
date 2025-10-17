@@ -19,7 +19,7 @@
 package org.openbravo.modulescript;
 
 import org.openbravo.database.ConnectionProvider;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 public class UpdateADClientInfo extends ModuleScript {
 

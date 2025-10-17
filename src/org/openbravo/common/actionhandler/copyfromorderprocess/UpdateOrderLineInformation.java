@@ -152,9 +152,7 @@ class UpdateOrderLineInformation implements CopyFromOrdersProcessImplementationI
     OBCriteria<Location> obc = OBDal.getInstance().createCriteria(Location.class);
     obc.addEqual(Location.PROPERTY_BUSINESSPARTNER, businessPartner);
     obc.addEqual(Location.PROPERTY_ACTIVE, true);
-    // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-    obc.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.max(Location.PROPERTY_ID));
+    obc.setProjectionMax(Location.PROPERTY_ID);
     obc.setMaxResults(1);
     return (String) obc.uniqueResult();
   }

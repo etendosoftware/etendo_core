@@ -803,7 +803,7 @@ public class Sqlc extends DefaultHandler {
     out1.append("import org.apache.logging.log4j.Logger;\n");
     out1.append("import org.apache.logging.log4j.LogManager;\n");
     out1.append("\n");
-    out1.append("import javax.servlet.ServletException;\n");
+    out1.append("import jakarta.servlet.ServletException;\n");
     out1.append("\n");
     out1.append("import org.openbravo.data.FieldProvider;\n");
     out1.append("import org.openbravo.database.ConnectionProvider;\n");

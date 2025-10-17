@@ -1134,7 +1134,7 @@ public class FactLine {
             .replaceAll("@Line@", ":paramLineId");
 
         @SuppressWarnings("unchecked")
-        NativeQuery<String> query = OBDal.getInstance().getSession().createSQLQuery(strSql);
+        NativeQuery<String> query = OBDal.getInstance().getSession().createNativeQuery(strSql, String.class);
         if (strSql.contains(":paramRecordId")) {
           query.setParameter("paramRecordId", strRecord_ID);
         }

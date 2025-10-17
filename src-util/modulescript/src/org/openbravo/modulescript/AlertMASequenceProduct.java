@@ -18,7 +18,7 @@
  */
 package org.openbravo.modulescript;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.database.ConnectionProvider;
 

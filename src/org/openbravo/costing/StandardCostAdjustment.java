@@ -63,7 +63,7 @@ public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
     try {
       while (trxs.next()) {
         final MaterialTransaction trx = OBDal.getInstance()
-            .get(MaterialTransaction.class, trxs.get()[0]);
+            .get(MaterialTransaction.class, trxs.get());
         BigDecimal adjAmount;
 
         if (trxType == TrxType.InventoryOpening) {

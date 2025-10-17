@@ -18,7 +18,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /** Basic utilities to encrypt/decrypt Strings. */
 public class CryptoUtility {

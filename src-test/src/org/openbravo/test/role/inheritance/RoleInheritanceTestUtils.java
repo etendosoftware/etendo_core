@@ -150,8 +150,8 @@ public class RoleInheritanceTestUtils {
   public static void removeInheritance(Role role, Role template) {
     final OBCriteria<RoleInheritance> obCriteria = OBDal.getInstance()
         .createCriteria(RoleInheritance.class);
-    obCriteria.add(Restrictions.eq(RoleInheritance.PROPERTY_ROLE, role));
-    obCriteria.add(Restrictions.eq(RoleInheritance.PROPERTY_INHERITFROM, template));
+    obCriteria.addEqual(RoleInheritance.PROPERTY_ROLE, role);
+    obCriteria.addEqual(RoleInheritance.PROPERTY_INHERITFROM, template);
     obCriteria.setMaxResults(1);
     RoleInheritance roleInheritance = (RoleInheritance) obCriteria.uniqueResult();
     OBDal.getInstance().remove(roleInheritance);
@@ -329,7 +329,7 @@ public class RoleInheritanceTestUtils {
     final RoleOrganization orgAccess = OBProvider.getInstance().get(RoleOrganization.class);
     final OBCriteria<Organization> obCriteria = OBDal.getInstance()
         .createCriteria(Organization.class);
-    obCriteria.add(Restrictions.eq(Organization.PROPERTY_NAME, orgName));
+    obCriteria.addEqual(Organization.PROPERTY_NAME, orgName);
     obCriteria.setMaxResults(1);
     orgAccess.setClient(role.getClient());
     orgAccess.setRole(role);
@@ -344,13 +344,13 @@ public class RoleInheritanceTestUtils {
       boolean isActive) {
     final OBCriteria<Organization> orgCriteria = OBDal.getInstance()
         .createCriteria(Organization.class);
-    orgCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, orgName));
+    orgCriteria.addEqual(Window.PROPERTY_NAME, orgName);
     orgCriteria.setMaxResults(1);
     final OBCriteria<RoleOrganization> orgAccessCriteria = OBDal.getInstance()
         .createCriteria(RoleOrganization.class);
-    orgAccessCriteria.add(Restrictions.eq(RoleOrganization.PROPERTY_ROLE, role));
+    orgAccessCriteria.addEqual(RoleOrganization.PROPERTY_ROLE, role);
     orgAccessCriteria
-        .add(Restrictions.eq(RoleOrganization.PROPERTY_ORGANIZATION, orgCriteria.uniqueResult()));
+        .addEqual(RoleOrganization.PROPERTY_ORGANIZATION, orgCriteria.uniqueResult());
     orgAccessCriteria.setMaxResults(1);
     RoleOrganization ro = (RoleOrganization) orgAccessCriteria.uniqueResult();
     ro.setOrgAdmin(isOrgAdmin);
@@ -360,7 +360,7 @@ public class RoleInheritanceTestUtils {
   private static void removeOrgAccesses(Role role) {
     final OBCriteria<RoleOrganization> obCriteria = OBDal.getInstance()
         .createCriteria(RoleOrganization.class);
-    obCriteria.add(Restrictions.eq(RoleOrganization.PROPERTY_ROLE, role));
+    obCriteria.addEqual(RoleOrganization.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (RoleOrganization ro : obCriteria.list()) {
       role.getADRoleOrganizationList().remove(ro);
@@ -384,7 +384,7 @@ public class RoleInheritanceTestUtils {
   private static WindowAccess addWindowAccess(Role role, String windowName, boolean editableField) {
     final WindowAccess windowAccess = OBProvider.getInstance().get(WindowAccess.class);
     final OBCriteria<Window> obCriteria = OBDal.getInstance().createCriteria(Window.class);
-    obCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    obCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     obCriteria.setMaxResults(1);
     windowAccess.setClient(role.getClient());
     windowAccess.setOrganization(role.getOrganization());
@@ -400,13 +400,13 @@ public class RoleInheritanceTestUtils {
   private static void updateWindowAccess(Role role, String windowName, boolean editableField,
       boolean isActive) {
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     final OBCriteria<WindowAccess> windowAccessCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
+    windowAccessCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
     windowAccessCriteria
-        .add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, windowCriteria.uniqueResult()));
+        .addEqual(WindowAccess.PROPERTY_WINDOW, windowCriteria.uniqueResult());
     windowAccessCriteria.setMaxResults(1);
     WindowAccess wa = (WindowAccess) windowAccessCriteria.uniqueResult();
     wa.setEditableField(editableField);
@@ -416,7 +416,7 @@ public class RoleInheritanceTestUtils {
   private static void removeWindowAccesses(Role role) {
     final OBCriteria<WindowAccess> obCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    obCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (WindowAccess wa : obCriteria.list()) {
       role.getADWindowAccessList().remove(wa);
@@ -441,14 +441,14 @@ public class RoleInheritanceTestUtils {
       boolean editableField, boolean editableTab) {
 
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> waCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    waCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    waCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     waCriteria.setMaxResults(1);
     WindowAccess wa = (WindowAccess) waCriteria.uniqueResult();
     if (wa == null) {
@@ -458,8 +458,8 @@ public class RoleInheritanceTestUtils {
 
     final TabAccess tabAccess = OBProvider.getInstance().get(TabAccess.class);
     final OBCriteria<Tab> obCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    obCriteria.add(Restrictions.eq(Tab.PROPERTY_NAME, tabName));
-    obCriteria.add(Restrictions.eq(Tab.PROPERTY_WINDOW, window));
+    obCriteria.addEqual(Tab.PROPERTY_NAME, tabName);
+    obCriteria.addEqual(Tab.PROPERTY_WINDOW, window);
     obCriteria.setMaxResults(1);
     Tab tab = (Tab) obCriteria.uniqueResult();
 
@@ -477,26 +477,26 @@ public class RoleInheritanceTestUtils {
   private static void updateTabAccess(Role role, String windowName, String tabName,
       boolean editableTab, boolean isActive) {
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> waCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    waCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    waCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     waCriteria.setMaxResults(1);
 
     final OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_WINDOW, window));
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_NAME, tabName));
+    tabCriteria.addEqual(Tab.PROPERTY_WINDOW, window);
+    tabCriteria.addEqual(Tab.PROPERTY_NAME, tabName);
     tabCriteria.setMaxResults(1);
 
     final OBCriteria<TabAccess> tabAccessCriteria = OBDal.getInstance()
         .createCriteria(TabAccess.class);
     tabAccessCriteria
-        .add(Restrictions.eq(TabAccess.PROPERTY_WINDOWACCESS, waCriteria.uniqueResult()));
-    tabAccessCriteria.add(Restrictions.eq(TabAccess.PROPERTY_TAB, tabCriteria.uniqueResult()));
+        .addEqual(TabAccess.PROPERTY_WINDOWACCESS, waCriteria.uniqueResult());
+    tabAccessCriteria.addEqual(TabAccess.PROPERTY_TAB, tabCriteria.uniqueResult());
     tabAccessCriteria.setMaxResults(1);
     TabAccess ta = (TabAccess) tabAccessCriteria.uniqueResult();
     ta.setEditableField(editableTab);
@@ -505,14 +505,14 @@ public class RoleInheritanceTestUtils {
 
   private static void removeTabAccesses(Role role, String windowName) {
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> obCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    obCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    obCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    obCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    obCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     obCriteria.setFilterOnActive(false);
     WindowAccess wa = (WindowAccess) obCriteria.uniqueResult();
     List<TabAccess> tabAccessToDelete = new ArrayList<TabAccess>();
@@ -546,25 +546,25 @@ public class RoleInheritanceTestUtils {
       boolean editableField, boolean editableTab, boolean editableInField, boolean checkOnSave) {
 
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> waCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    waCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    waCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     waCriteria.setMaxResults(1);
 
     final OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_NAME, tabName));
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_WINDOW, window));
+    tabCriteria.addEqual(Tab.PROPERTY_NAME, tabName);
+    tabCriteria.addEqual(Tab.PROPERTY_WINDOW, window);
     tabCriteria.setMaxResults(1);
     Tab tab = (Tab) tabCriteria.uniqueResult();
 
     final OBCriteria<TabAccess> taCriteria = OBDal.getInstance().createCriteria(TabAccess.class);
-    taCriteria.add(Restrictions.eq(TabAccess.PROPERTY_WINDOWACCESS, waCriteria.uniqueResult()));
-    taCriteria.add(Restrictions.eq(TabAccess.PROPERTY_TAB, tab));
+    taCriteria.addEqual(TabAccess.PROPERTY_WINDOWACCESS, waCriteria.uniqueResult());
+    taCriteria.addEqual(TabAccess.PROPERTY_TAB, tab);
     taCriteria.setMaxResults(1);
 
     TabAccess ta = (TabAccess) taCriteria.uniqueResult();
@@ -576,8 +576,8 @@ public class RoleInheritanceTestUtils {
     final FieldAccess fieldAccess = OBProvider.getInstance().get(FieldAccess.class);
 
     final OBCriteria<Field> obCriteria = OBDal.getInstance().createCriteria(Field.class);
-    obCriteria.add(Restrictions.eq(Field.PROPERTY_NAME, fieldName));
-    obCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, tab));
+    obCriteria.addEqual(Field.PROPERTY_NAME, fieldName);
+    obCriteria.addEqual(Field.PROPERTY_TAB, tab);
     obCriteria.setMaxResults(1);
     Field field = (Field) obCriteria.uniqueResult();
 
@@ -595,40 +595,40 @@ public class RoleInheritanceTestUtils {
   private static void updateFieldAccess(Role role, String windowName, String tabName,
       String fieldName, boolean editableField, boolean isActive) {
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> waCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    waCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    waCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     waCriteria.setMaxResults(1);
 
     final OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_WINDOW, window));
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_NAME, tabName));
+    tabCriteria.addEqual(Tab.PROPERTY_WINDOW, window);
+    tabCriteria.addEqual(Tab.PROPERTY_NAME, tabName);
     tabCriteria.setMaxResults(1);
     Tab tab = (Tab) tabCriteria.uniqueResult();
 
     final OBCriteria<TabAccess> tabAccessCriteria = OBDal.getInstance()
         .createCriteria(TabAccess.class);
     tabAccessCriteria
-        .add(Restrictions.eq(TabAccess.PROPERTY_WINDOWACCESS, waCriteria.uniqueResult()));
-    tabAccessCriteria.add(Restrictions.eq(TabAccess.PROPERTY_TAB, tab));
+        .addEqual(TabAccess.PROPERTY_WINDOWACCESS, waCriteria.uniqueResult());
+    tabAccessCriteria.addEqual(TabAccess.PROPERTY_TAB, tab);
     tabAccessCriteria.setMaxResults(1);
     TabAccess ta = (TabAccess) tabAccessCriteria.uniqueResult();
 
     final OBCriteria<Field> fieldCriteria = OBDal.getInstance().createCriteria(Field.class);
-    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, tab));
-    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_NAME, fieldName));
+    fieldCriteria.addEqual(Field.PROPERTY_TAB, tab);
+    fieldCriteria.addEqual(Field.PROPERTY_NAME, fieldName);
     fieldCriteria.setMaxResults(1);
 
     final OBCriteria<FieldAccess> fieldAccessCriteria = OBDal.getInstance()
         .createCriteria(FieldAccess.class);
-    fieldAccessCriteria.add(Restrictions.eq(FieldAccess.PROPERTY_TABACCESS, ta));
+    fieldAccessCriteria.addEqual(FieldAccess.PROPERTY_TABACCESS, ta);
     fieldAccessCriteria
-        .add(Restrictions.eq(FieldAccess.PROPERTY_FIELD, fieldCriteria.uniqueResult()));
+        .addEqual(FieldAccess.PROPERTY_FIELD, fieldCriteria.uniqueResult());
     fieldAccessCriteria.setMaxResults(1);
 
     FieldAccess fa = (FieldAccess) fieldAccessCriteria.uniqueResult();
@@ -638,26 +638,26 @@ public class RoleInheritanceTestUtils {
 
   private static void removeFieldAccesses(Role role, String windowName, String tabName) {
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_WINDOW, window));
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_NAME, tabName));
+    tabCriteria.addEqual(Tab.PROPERTY_WINDOW, window);
+    tabCriteria.addEqual(Tab.PROPERTY_NAME, tabName);
     tabCriteria.setMaxResults(1);
     Tab tab = (Tab) tabCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> waCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    waCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    waCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     waCriteria.setFilterOnActive(false);
     WindowAccess wa = (WindowAccess) waCriteria.uniqueResult();
 
     final OBCriteria<TabAccess> taCriteria = OBDal.getInstance().createCriteria(TabAccess.class);
-    taCriteria.add(Restrictions.eq(TabAccess.PROPERTY_WINDOWACCESS, wa));
-    taCriteria.add(Restrictions.eq(TabAccess.PROPERTY_TAB, tab));
+    taCriteria.addEqual(TabAccess.PROPERTY_WINDOWACCESS, wa);
+    taCriteria.addEqual(TabAccess.PROPERTY_TAB, tab);
     taCriteria.setFilterOnActive(false);
     TabAccess ta = (TabAccess) taCriteria.uniqueResult();
 
@@ -697,7 +697,7 @@ public class RoleInheritanceTestUtils {
     final org.openbravo.model.ad.access.ProcessAccess processAccess = OBProvider.getInstance()
         .get(org.openbravo.model.ad.access.ProcessAccess.class);
     final OBCriteria<Process> obCriteria = OBDal.getInstance().createCriteria(Process.class);
-    obCriteria.add(Restrictions.eq(Process.PROPERTY_NAME, reportName));
+    obCriteria.addEqual(Process.PROPERTY_NAME, reportName);
     obCriteria.setMaxResults(1);
     processAccess.setClient(role.getClient());
     processAccess.setOrganization(role.getOrganization());
@@ -710,16 +710,16 @@ public class RoleInheritanceTestUtils {
 
   private static void updateReportAndProcessAccess(Role role, String reportName, boolean isActive) {
     final OBCriteria<Process> processCriteria = OBDal.getInstance().createCriteria(Process.class);
-    processCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, reportName));
+    processCriteria.addEqual(Window.PROPERTY_NAME, reportName);
     processCriteria.setMaxResults(1);
     final OBCriteria<org.openbravo.model.ad.access.ProcessAccess> processAccessCriteria = OBDal
         .getInstance()
         .createCriteria(org.openbravo.model.ad.access.ProcessAccess.class);
     processAccessCriteria
-        .add(Restrictions.eq(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_ROLE, role));
+        .addEqual(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_ROLE, role);
     processAccessCriteria
-        .add(Restrictions.eq(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_PROCESS,
-            processCriteria.uniqueResult()));
+        .addEqual(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_PROCESS,
+            processCriteria.uniqueResult());
     processAccessCriteria.setMaxResults(1);
     org.openbravo.model.ad.access.ProcessAccess pa = (org.openbravo.model.ad.access.ProcessAccess) processAccessCriteria
         .uniqueResult();
@@ -730,7 +730,7 @@ public class RoleInheritanceTestUtils {
     final OBCriteria<org.openbravo.model.ad.access.ProcessAccess> obCriteria = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.access.ProcessAccess.class);
     obCriteria
-        .add(Restrictions.eq(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_ROLE, role));
+        .addEqual(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (org.openbravo.model.ad.access.ProcessAccess pa : obCriteria.list()) {
       role.getADProcessAccessList().remove(pa);
@@ -754,7 +754,7 @@ public class RoleInheritanceTestUtils {
   private static void addFormAccess(Role role, String formName) {
     final FormAccess formAccess = OBProvider.getInstance().get(FormAccess.class);
     final OBCriteria<Form> obCriteria = OBDal.getInstance().createCriteria(Form.class);
-    obCriteria.add(Restrictions.eq(Form.PROPERTY_NAME, formName));
+    obCriteria.addEqual(Form.PROPERTY_NAME, formName);
     obCriteria.setMaxResults(1);
     formAccess.setClient(role.getClient());
     formAccess.setOrganization(role.getOrganization());
@@ -767,13 +767,13 @@ public class RoleInheritanceTestUtils {
 
   private static void updateFormAccess(Role role, String formName, boolean isActive) {
     final OBCriteria<Form> formCriteria = OBDal.getInstance().createCriteria(Form.class);
-    formCriteria.add(Restrictions.eq(Form.PROPERTY_NAME, formName));
+    formCriteria.addEqual(Form.PROPERTY_NAME, formName);
     formCriteria.setMaxResults(1);
     final OBCriteria<FormAccess> formAccessCriteria = OBDal.getInstance()
         .createCriteria(FormAccess.class);
-    formAccessCriteria.add(Restrictions.eq(FormAccess.PROPERTY_ROLE, role));
+    formAccessCriteria.addEqual(FormAccess.PROPERTY_ROLE, role);
     formAccessCriteria
-        .add(Restrictions.eq(FormAccess.PROPERTY_SPECIALFORM, formCriteria.uniqueResult()));
+        .addEqual(FormAccess.PROPERTY_SPECIALFORM, formCriteria.uniqueResult());
     formAccessCriteria.setMaxResults(1);
     FormAccess fa = (FormAccess) formAccessCriteria.uniqueResult();
     fa.setActive(isActive);
@@ -781,7 +781,7 @@ public class RoleInheritanceTestUtils {
 
   private static void removeFormAccesses(Role role) {
     final OBCriteria<FormAccess> obCriteria = OBDal.getInstance().createCriteria(FormAccess.class);
-    obCriteria.add(Restrictions.eq(FormAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(FormAccess.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (FormAccess fa : obCriteria.list()) {
       role.getADFormAccessList().remove(fa);
@@ -806,7 +806,7 @@ public class RoleInheritanceTestUtils {
     final WidgetClassAccess widgetAccess = OBProvider.getInstance().get(WidgetClassAccess.class);
     final OBCriteria<WidgetClass> obCriteria = OBDal.getInstance()
         .createCriteria(WidgetClass.class);
-    obCriteria.add(Restrictions.eq(WidgetClass.PROPERTY_WIDGETTITLE, widgetTitle));
+    obCriteria.addEqual(WidgetClass.PROPERTY_WIDGETTITLE, widgetTitle);
     obCriteria.setMaxResults(1);
     widgetAccess.setClient(role.getClient());
     widgetAccess.setOrganization(role.getOrganization());
@@ -820,13 +820,12 @@ public class RoleInheritanceTestUtils {
   private static void updateWidgetAccess(Role role, String widgetTitle, boolean isActive) {
     final OBCriteria<WidgetClass> widgetCriteria = OBDal.getInstance()
         .createCriteria(WidgetClass.class);
-    widgetCriteria.add(Restrictions.eq(WidgetClass.PROPERTY_WIDGETTITLE, widgetTitle));
+    widgetCriteria.addEqual(WidgetClass.PROPERTY_WIDGETTITLE, widgetTitle);
     widgetCriteria.setMaxResults(1);
     final OBCriteria<WidgetClassAccess> widgetAccessCriteria = OBDal.getInstance()
         .createCriteria(WidgetClassAccess.class);
-    widgetAccessCriteria.add(Restrictions.eq(WidgetClassAccess.PROPERTY_ROLE, role));
-    widgetAccessCriteria.add(
-        Restrictions.eq(WidgetClassAccess.PROPERTY_WIDGETCLASS, widgetCriteria.uniqueResult()));
+    widgetAccessCriteria.addEqual(WidgetClassAccess.PROPERTY_ROLE, role);
+    widgetAccessCriteria.addEqual(WidgetClassAccess.PROPERTY_WIDGETCLASS, widgetCriteria.uniqueResult());
     widgetAccessCriteria.setMaxResults(1);
     WidgetClassAccess wa = (WidgetClassAccess) widgetAccessCriteria.uniqueResult();
     wa.setActive(isActive);
@@ -835,7 +834,7 @@ public class RoleInheritanceTestUtils {
   private static void removeWidgetClassAccesses(Role role) {
     final OBCriteria<WidgetClassAccess> obCriteria = OBDal.getInstance()
         .createCriteria(WidgetClassAccess.class);
-    obCriteria.add(Restrictions.eq(WidgetClassAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(WidgetClassAccess.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (WidgetClassAccess wa : obCriteria.list()) {
       role.getOBKMOWidgetClassAccessList().remove(wa);
@@ -861,7 +860,7 @@ public class RoleInheritanceTestUtils {
     final OBCriteria<OBUIAPPViewImplementation> obCriteria = OBDal.getInstance()
         .createCriteria(OBUIAPPViewImplementation.class);
     obCriteria
-        .add(Restrictions.eq(OBUIAPPViewImplementation.PROPERTY_NAME, viewImplementationName));
+        .addEqual(OBUIAPPViewImplementation.PROPERTY_NAME, viewImplementationName);
     obCriteria.setMaxResults(1);
     viewAccess.setClient(role.getClient());
     viewAccess.setOrganization(role.getOrganization());
@@ -875,13 +874,12 @@ public class RoleInheritanceTestUtils {
   private static void updateViewImplementationAccess(Role role, String viewName, boolean isActive) {
     final OBCriteria<OBUIAPPViewImplementation> viewCriteria = OBDal.getInstance()
         .createCriteria(OBUIAPPViewImplementation.class);
-    viewCriteria.add(Restrictions.eq(OBUIAPPViewImplementation.PROPERTY_NAME, viewName));
+    viewCriteria.addEqual(OBUIAPPViewImplementation.PROPERTY_NAME, viewName);
     viewCriteria.setMaxResults(1);
     final OBCriteria<ViewRoleAccess> viewAccessCriteria = OBDal.getInstance()
         .createCriteria(ViewRoleAccess.class);
-    viewAccessCriteria.add(Restrictions.eq(ViewRoleAccess.PROPERTY_ROLE, role));
-    viewAccessCriteria.add(
-        Restrictions.eq(ViewRoleAccess.PROPERTY_VIEWIMPLEMENTATION, viewCriteria.uniqueResult()));
+    viewAccessCriteria.addEqual(ViewRoleAccess.PROPERTY_ROLE, role);
+    viewAccessCriteria.addEqual(ViewRoleAccess.PROPERTY_VIEWIMPLEMENTATION, viewCriteria.uniqueResult());
     viewAccessCriteria.setMaxResults(1);
     ViewRoleAccess va = (ViewRoleAccess) viewAccessCriteria.uniqueResult();
     va.setActive(isActive);
@@ -890,7 +888,7 @@ public class RoleInheritanceTestUtils {
   private static void removeViewImplementationAccesses(Role role) {
     final OBCriteria<ViewRoleAccess> obCriteria = OBDal.getInstance()
         .createCriteria(ViewRoleAccess.class);
-    obCriteria.add(Restrictions.eq(ViewRoleAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(ViewRoleAccess.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (ViewRoleAccess va : obCriteria.list()) {
       role.getObuiappViewRoleAccessList().remove(va);
@@ -917,7 +915,7 @@ public class RoleInheritanceTestUtils {
     final OBCriteria<org.openbravo.client.application.Process> obCriteria = OBDal.getInstance()
         .createCriteria(org.openbravo.client.application.Process.class);
     obCriteria
-        .add(Restrictions.eq(org.openbravo.client.application.Process.PROPERTY_NAME, processName));
+        .addEqual(org.openbravo.client.application.Process.PROPERTY_NAME, processName);
     obCriteria.setMaxResults(1);
     processAccess.setClient(role.getClient());
     processAccess.setOrganization(role.getOrganization());
@@ -934,16 +932,16 @@ public class RoleInheritanceTestUtils {
     final OBCriteria<org.openbravo.client.application.Process> processCriteria = OBDal.getInstance()
         .createCriteria(org.openbravo.client.application.Process.class);
     processCriteria
-        .add(Restrictions.eq(org.openbravo.client.application.Process.PROPERTY_NAME, processName));
+        .addEqual(org.openbravo.client.application.Process.PROPERTY_NAME, processName);
     processCriteria.setMaxResults(1);
     final OBCriteria<org.openbravo.client.application.ProcessAccess> processAccessCriteria = OBDal
         .getInstance()
         .createCriteria(org.openbravo.client.application.ProcessAccess.class);
     processAccessCriteria
-        .add(Restrictions.eq(org.openbravo.client.application.ProcessAccess.PROPERTY_ROLE, role));
+        .addEqual(org.openbravo.client.application.ProcessAccess.PROPERTY_ROLE, role);
     processAccessCriteria
-        .add(Restrictions.eq(org.openbravo.client.application.ProcessAccess.PROPERTY_OBUIAPPPROCESS,
-            processCriteria.uniqueResult()));
+        .addEqual(org.openbravo.client.application.ProcessAccess.PROPERTY_OBUIAPPPROCESS,
+            processCriteria.uniqueResult());
     processAccessCriteria.setMaxResults(1);
     org.openbravo.client.application.ProcessAccess pa = (org.openbravo.client.application.ProcessAccess) processAccessCriteria
         .uniqueResult();
@@ -955,7 +953,7 @@ public class RoleInheritanceTestUtils {
         .getInstance()
         .createCriteria(org.openbravo.client.application.ProcessAccess.class);
     obCriteria
-        .add(Restrictions.eq(org.openbravo.client.application.ProcessAccess.PROPERTY_ROLE, role));
+        .addEqual(org.openbravo.client.application.ProcessAccess.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (org.openbravo.client.application.ProcessAccess pa : obCriteria.list()) {
       role.getOBUIAPPProcessAccessList().remove(pa);
@@ -979,7 +977,7 @@ public class RoleInheritanceTestUtils {
   private static void addTableAccess(Role role, String tableName, boolean isReadOnly) {
     final TableAccess tableAccess = OBProvider.getInstance().get(TableAccess.class);
     final OBCriteria<Table> obCriteria = OBDal.getInstance().createCriteria(Table.class);
-    obCriteria.add(Restrictions.eq(Table.PROPERTY_DBTABLENAME, tableName));
+    obCriteria.addEqual(Table.PROPERTY_DBTABLENAME, tableName);
     obCriteria.setMaxResults(1);
     tableAccess.setClient(role.getClient());
     tableAccess.setOrganization(role.getOrganization());
@@ -994,13 +992,13 @@ public class RoleInheritanceTestUtils {
   private static void updateTableAccess(Role role, String tableName, boolean isReadOnly,
       boolean isActive) {
     final OBCriteria<Table> tableCriteria = OBDal.getInstance().createCriteria(Table.class);
-    tableCriteria.add(Restrictions.eq(Table.PROPERTY_DBTABLENAME, tableName));
+    tableCriteria.addEqual(Table.PROPERTY_DBTABLENAME, tableName);
     tableCriteria.setMaxResults(1);
     final OBCriteria<TableAccess> tableAccessCriteria = OBDal.getInstance()
         .createCriteria(TableAccess.class);
-    tableAccessCriteria.add(Restrictions.eq(TableAccess.PROPERTY_ROLE, role));
+    tableAccessCriteria.addEqual(TableAccess.PROPERTY_ROLE, role);
     tableAccessCriteria
-        .add(Restrictions.eq(TableAccess.PROPERTY_TABLE, tableCriteria.uniqueResult()));
+        .addEqual(TableAccess.PROPERTY_TABLE, tableCriteria.uniqueResult());
     tableAccessCriteria.setMaxResults(1);
     TableAccess ta = (TableAccess) tableAccessCriteria.uniqueResult();
     ta.setReadOnly(isReadOnly);
@@ -1023,7 +1021,7 @@ public class RoleInheritanceTestUtils {
   private static void removeTableAccesses(Role role) {
     final OBCriteria<TableAccess> obCriteria = OBDal.getInstance()
         .createCriteria(TableAccess.class);
-    obCriteria.add(Restrictions.eq(TableAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(TableAccess.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (TableAccess ta : obCriteria.list()) {
       role.getADTableAccessList().remove(ta);
@@ -1034,7 +1032,7 @@ public class RoleInheritanceTestUtils {
   private static void addAlertRecipient(Role role, String alertName) {
     final AlertRecipient alertRecipient = OBProvider.getInstance().get(AlertRecipient.class);
     final OBCriteria<AlertRule> obCriteria = OBDal.getInstance().createCriteria(AlertRule.class);
-    obCriteria.add(Restrictions.eq(AlertRule.PROPERTY_NAME, alertName));
+    obCriteria.addEqual(AlertRule.PROPERTY_NAME, alertName);
     obCriteria.setMaxResults(1);
     alertRecipient.setClient(role.getClient());
     alertRecipient.setOrganization(role.getOrganization());
@@ -1048,13 +1046,13 @@ public class RoleInheritanceTestUtils {
   private static void updateAlertRecipientAccess(Role role, String alertName, boolean isSendEmail,
       boolean isActive) {
     final OBCriteria<AlertRule> alertCriteria = OBDal.getInstance().createCriteria(AlertRule.class);
-    alertCriteria.add(Restrictions.eq(AlertRule.PROPERTY_NAME, alertName));
+    alertCriteria.addEqual(AlertRule.PROPERTY_NAME, alertName);
     alertCriteria.setMaxResults(1);
     final OBCriteria<AlertRecipient> alertRecipientCriteria = OBDal.getInstance()
         .createCriteria(AlertRecipient.class);
-    alertRecipientCriteria.add(Restrictions.eq(AlertRecipient.PROPERTY_ROLE, role));
+    alertRecipientCriteria.addEqual(AlertRecipient.PROPERTY_ROLE, role);
     alertRecipientCriteria
-        .add(Restrictions.eq(AlertRecipient.PROPERTY_ALERTRULE, alertCriteria.uniqueResult()));
+        .addEqual(AlertRecipient.PROPERTY_ALERTRULE, alertCriteria.uniqueResult());
     alertRecipientCriteria.setMaxResults(1);
     AlertRecipient ar = (AlertRecipient) alertRecipientCriteria.uniqueResult();
     ar.setSendEMail(isSendEmail);
@@ -1077,7 +1075,7 @@ public class RoleInheritanceTestUtils {
   private static void removeAlertRecipients(Role role) {
     final OBCriteria<AlertRecipient> obCriteria = OBDal.getInstance()
         .createCriteria(AlertRecipient.class);
-    obCriteria.add(Restrictions.eq(AlertRecipient.PROPERTY_ROLE, role));
+    obCriteria.addEqual(AlertRecipient.PROPERTY_ROLE, role);
     obCriteria.setFilterOnActive(false);
     for (AlertRecipient ar : obCriteria.list()) {
       OBDal.getInstance().remove(ar);
@@ -1102,8 +1100,8 @@ public class RoleInheritanceTestUtils {
       boolean isActive) {
     final OBCriteria<Preference> preferenceCriteria = OBDal.getInstance()
         .createCriteria(Preference.class);
-    preferenceCriteria.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATROLE, role));
-    preferenceCriteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, propertyName));
+    preferenceCriteria.addEqual(Preference.PROPERTY_VISIBLEATROLE, role);
+    preferenceCriteria.addEqual(Preference.PROPERTY_PROPERTY, propertyName);
     preferenceCriteria.setMaxResults(1);
     Preference p = (Preference) preferenceCriteria.uniqueResult();
     p.setSelected(isSelected);
@@ -1125,7 +1123,7 @@ public class RoleInheritanceTestUtils {
 
   private static void removePreferences(Role role) {
     final OBCriteria<Preference> obCriteria = OBDal.getInstance().createCriteria(Preference.class);
-    obCriteria.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATROLE, role));
+    obCriteria.addEqual(Preference.PROPERTY_VISIBLEATROLE, role);
     obCriteria.setFilterOnActive(false);
     for (Preference p : obCriteria.list()) {
       OBDal.getInstance().remove(p);
@@ -1247,7 +1245,7 @@ public class RoleInheritanceTestUtils {
   private static String[] getOrgsFromOrgAccesses(Role role) {
     final OBCriteria<RoleOrganization> obCriteria = OBDal.getInstance()
         .createCriteria(RoleOrganization.class);
-    obCriteria.add(Restrictions.eq(RoleOrganization.PROPERTY_ROLE, role));
+    obCriteria.addEqual(RoleOrganization.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(RoleOrganization.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_NAME,
         true);
     List<RoleOrganization> list = obCriteria.list();
@@ -1264,7 +1262,7 @@ public class RoleInheritanceTestUtils {
   private static String[] getWindowsFromWindowAccesses(Role role) {
     final OBCriteria<WindowAccess> obCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    obCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(WindowAccess.PROPERTY_WINDOW + "." + Window.PROPERTY_NAME, true);
     List<WindowAccess> list = obCriteria.list();
     String[] result = new String[list.size() * 2];
@@ -1279,18 +1277,18 @@ public class RoleInheritanceTestUtils {
 
   private static String[] getTabFromTabAccesses(Role role, String windowName) {
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> obCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    obCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    obCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    obCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    obCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     obCriteria.setMaxResults(1);
 
     final OBCriteria<TabAccess> tabCriteria = OBDal.getInstance().createCriteria(TabAccess.class);
-    tabCriteria.add(Restrictions.eq(TabAccess.PROPERTY_WINDOWACCESS, obCriteria.uniqueResult()));
+    tabCriteria.addEqual(TabAccess.PROPERTY_WINDOWACCESS, obCriteria.uniqueResult());
     tabCriteria.addOrderBy(TabAccess.PROPERTY_TAB + "." + Tab.PROPERTY_NAME, true);
     List<TabAccess> list = tabCriteria.list();
     String[] result = new String[list.size() * 2];
@@ -1305,32 +1303,32 @@ public class RoleInheritanceTestUtils {
 
   private static String[] getFieldFromFieldAccesses(Role role, String windowName, String tabName) {
     final OBCriteria<Window> windowCriteria = OBDal.getInstance().createCriteria(Window.class);
-    windowCriteria.add(Restrictions.eq(Window.PROPERTY_NAME, windowName));
+    windowCriteria.addEqual(Window.PROPERTY_NAME, windowName);
     windowCriteria.setMaxResults(1);
     Window window = (Window) windowCriteria.uniqueResult();
 
     final OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_NAME, tabName));
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_WINDOW, window));
+    tabCriteria.addEqual(Tab.PROPERTY_NAME, tabName);
+    tabCriteria.addEqual(Tab.PROPERTY_WINDOW, window);
     tabCriteria.setMaxResults(1);
     Tab tab = (Tab) tabCriteria.uniqueResult();
 
     final OBCriteria<WindowAccess> waCriteria = OBDal.getInstance()
         .createCriteria(WindowAccess.class);
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-    waCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+    waCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+    waCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, window);
     waCriteria.setMaxResults(1);
     WindowAccess windowAccess = (WindowAccess) waCriteria.uniqueResult();
 
     final OBCriteria<TabAccess> taCriteria = OBDal.getInstance().createCriteria(TabAccess.class);
-    taCriteria.add(Restrictions.eq(TabAccess.PROPERTY_WINDOWACCESS, windowAccess));
-    taCriteria.add(Restrictions.eq(TabAccess.PROPERTY_TAB, tab));
+    taCriteria.addEqual(TabAccess.PROPERTY_WINDOWACCESS, windowAccess);
+    taCriteria.addEqual(TabAccess.PROPERTY_TAB, tab);
     taCriteria.setMaxResults(1);
     TabAccess tabAccess = (TabAccess) taCriteria.uniqueResult();
 
     final OBCriteria<FieldAccess> faCriteria = OBDal.getInstance()
         .createCriteria(FieldAccess.class);
-    faCriteria.add(Restrictions.eq(FieldAccess.PROPERTY_TABACCESS, tabAccess));
+    faCriteria.addEqual(FieldAccess.PROPERTY_TABACCESS, tabAccess);
     faCriteria.addOrderBy(FieldAccess.PROPERTY_FIELD + "." + Field.PROPERTY_NAME, true);
 
     List<FieldAccess> list = faCriteria.list();
@@ -1348,7 +1346,7 @@ public class RoleInheritanceTestUtils {
     final OBCriteria<org.openbravo.model.ad.access.ProcessAccess> obCriteria = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.access.ProcessAccess.class);
     obCriteria
-        .add(Restrictions.eq(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_ROLE, role));
+        .addEqual(org.openbravo.model.ad.access.ProcessAccess.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(
         org.openbravo.model.ad.access.ProcessAccess.PROPERTY_PROCESS + "." + Process.PROPERTY_NAME,
         true);
@@ -1365,7 +1363,7 @@ public class RoleInheritanceTestUtils {
 
   private static String[] getFormsFromFormAccesses(Role role) {
     final OBCriteria<FormAccess> obCriteria = OBDal.getInstance().createCriteria(FormAccess.class);
-    obCriteria.add(Restrictions.eq(FormAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(FormAccess.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(FormAccess.PROPERTY_SPECIALFORM + "." + Form.PROPERTY_NAME, true);
     List<FormAccess> list = obCriteria.list();
     String[] result = new String[list.size() * 2];
@@ -1381,7 +1379,7 @@ public class RoleInheritanceTestUtils {
   private static String[] getWidgetsFromWidgetAccesses(Role role) {
     final OBCriteria<WidgetClassAccess> obCriteria = OBDal.getInstance()
         .createCriteria(WidgetClassAccess.class);
-    obCriteria.add(Restrictions.eq(WidgetClassAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(WidgetClassAccess.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(
         WidgetClassAccess.PROPERTY_WIDGETCLASS + "." + WidgetClass.PROPERTY_WIDGETTITLE, true);
     List<WidgetClassAccess> list = obCriteria.list();
@@ -1398,7 +1396,7 @@ public class RoleInheritanceTestUtils {
   private static String[] getViewsFromViewAccesses(Role role) {
     final OBCriteria<ViewRoleAccess> obCriteria = OBDal.getInstance()
         .createCriteria(ViewRoleAccess.class);
-    obCriteria.add(Restrictions.eq(ViewRoleAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(ViewRoleAccess.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(
         ViewRoleAccess.PROPERTY_VIEWIMPLEMENTATION + "." + OBUIAPPViewImplementation.PROPERTY_NAME,
         true);
@@ -1418,7 +1416,7 @@ public class RoleInheritanceTestUtils {
         .getInstance()
         .createCriteria(org.openbravo.client.application.ProcessAccess.class);
     obCriteria
-        .add(Restrictions.eq(org.openbravo.client.application.ProcessAccess.PROPERTY_ROLE, role));
+        .addEqual(org.openbravo.client.application.ProcessAccess.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(org.openbravo.client.application.ProcessAccess.PROPERTY_OBUIAPPPROCESS
         + "." + org.openbravo.client.application.Process.PROPERTY_NAME, true);
     List<org.openbravo.client.application.ProcessAccess> list = obCriteria.list();
@@ -1435,7 +1433,7 @@ public class RoleInheritanceTestUtils {
   private static String[] getTablesFromTableAccesses(Role role) {
     final OBCriteria<TableAccess> obCriteria = OBDal.getInstance()
         .createCriteria(TableAccess.class);
-    obCriteria.add(Restrictions.eq(TableAccess.PROPERTY_ROLE, role));
+    obCriteria.addEqual(TableAccess.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(TableAccess.PROPERTY_TABLE + "." + Table.PROPERTY_DBTABLENAME, true);
     List<TableAccess> list = obCriteria.list();
     String[] result = new String[list.size() * 2];
@@ -1451,7 +1449,7 @@ public class RoleInheritanceTestUtils {
   private static String[] getAlertRulesFromAlertRecipients(Role role) {
     final OBCriteria<AlertRecipient> obCriteria = OBDal.getInstance()
         .createCriteria(AlertRecipient.class);
-    obCriteria.add(Restrictions.eq(AlertRecipient.PROPERTY_ROLE, role));
+    obCriteria.addEqual(AlertRecipient.PROPERTY_ROLE, role);
     obCriteria.addOrderBy(AlertRecipient.PROPERTY_ALERTRULE + "." + AlertRule.PROPERTY_NAME, true);
     List<AlertRecipient> list = obCriteria.list();
     String[] result = new String[list.size() * 2];
@@ -1466,7 +1464,7 @@ public class RoleInheritanceTestUtils {
 
   private static String[] getPreferences(Role role) {
     final OBCriteria<Preference> obCriteria = OBDal.getInstance().createCriteria(Preference.class);
-    obCriteria.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATROLE, role));
+    obCriteria.addEqual(Preference.PROPERTY_VISIBLEATROLE, role);
     obCriteria.addOrderBy(Preference.PROPERTY_PROPERTY, true);
     List<Preference> list = obCriteria.list();
     String[] result = new String[list.size() * 2];

@@ -84,8 +84,8 @@ public class UpdateInvariantCharacteristicsHandler extends BaseActionHandler {
         // Retrieves all the product invariant characteristics
         OBCriteria<ProductCharacteristic> criteria = OBDal.getInstance()
             .createCriteria(ProductCharacteristic.class);
-        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, product));
-        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_VARIANT, false));
+        criteria.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, product);
+        criteria.addEqual(ProductCharacteristic.PROPERTY_VARIANT, false);
 
         JSONArray productCharArray = new JSONArray();
 
@@ -96,10 +96,10 @@ public class UpdateInvariantCharacteristicsHandler extends BaseActionHandler {
           OBCriteria<ProductCharacteristicValue> criteriaSelectedValue = OBDal.getInstance()
               .createCriteria(ProductCharacteristicValue.class);
           criteriaSelectedValue
-              .add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
-                  characteristic.getCharacteristic()));
-          criteriaSelectedValue.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_PRODUCT,
-              characteristic.getProduct()));
+              .addEqual(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
+                  characteristic.getCharacteristic());
+          criteriaSelectedValue.addEqual(ProductCharacteristicValue.PROPERTY_PRODUCT,
+              characteristic.getProduct());
           ProductCharacteristicValue selectedValue = (ProductCharacteristicValue) criteriaSelectedValue
               .uniqueResult();
           productChar.put("id", characteristic.getCharacteristic().getId());

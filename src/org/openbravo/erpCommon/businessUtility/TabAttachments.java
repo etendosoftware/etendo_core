@@ -31,7 +31,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,20 +102,20 @@ public class TabAttachments extends HttpSecureAppServlet {
         }
 
         final String strDocumentOrganization = paramValues.getString("inpDocumentOrg");
-        final FileItem file = vars.getMultiFile("inpname");
+        final jakarta.servlet.http.Part file = vars.getMultiFile("inpname");
         if (file == null) {
           throw new ServletException("Empty file");
         }
         final String tmpFolder = System.getProperty("java.io.tmpdir");
 
-        String strName = file.getName();
+        String strName = org.openbravo.dal.service.FileItemHelper.getFileName(file);
         int i = strName.lastIndexOf(File.separator);
         if (i != -1) {
           strName = strName.substring(i + 1);
         }
         tempFile = new File(tmpFolder, strName);
         try {
-          file.write(tempFile);
+          org.openbravo.dal.service.FileItemHelper.write(file, tempFile);
         } catch (Exception e) {
           log.error("Error creating temp file", e);
           throw new OBException(OBMessageUtils.messageBD("ErrorUploadingFile"), e);

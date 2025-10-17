@@ -186,7 +186,7 @@ public class CostAdjustmentProcess {
     try {
       String strLines = "";
       while (lines.next()) {
-        CostAdjustmentLine line = (CostAdjustmentLine) lines.get()[0];
+        CostAdjustmentLine line = (CostAdjustmentLine) lines.get();
         strLines += line.getLineNo() + ", ";
 
         if (count == 10) {
@@ -276,16 +276,15 @@ public class CostAdjustmentProcess {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
     Date referenceDate = costAdjustmentLine.getCostAdjustment().getReferenceDate();
-    // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-    critLines.add(Restrictions.or(
-        Restrictions.eq(CostAdjustmentLine.PROPERTY_PARENTCOSTADJUSTMENTLINE, costAdjustmentLine),
-        cb.equal(root.get("id"), costAdjustmentLine.getId())));
+    // TODO: HIBERNATE 6 - Needs manual conversion of OR logic
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_PARENTCOSTADJUSTMENTLINE, costAdjustmentLine);
+    // critLines.addOr(...); // Requires Predicate objects
     ScrollableResults lines = critLines.scroll(ScrollMode.FORWARD_ONLY);
 
     try {
       OBContext.setAdminMode(false);
       while (lines.next()) {
-        CostAdjustmentLine line = (CostAdjustmentLine) lines.get(0);
+        CostAdjustmentLine line = (CostAdjustmentLine) lines.get();
         if (!line.getTransactionCostList().isEmpty()) {
           continue;
         }

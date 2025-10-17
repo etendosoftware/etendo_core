@@ -93,10 +93,9 @@ public class SL_TaxCategory_Org extends SimpleCallout {
   private String getDefaultCategory(String strOrgId) {
     OBContext.setAdminMode();
     try {
-      OBCriteria<ProductCategory> productCatCrit = OBDao.getFilteredCriteria(
-          ProductCategory.class, Restrictions
-              .eq(ProductCategory.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID, strOrgId),
-          Restrictions.eq(ProductCategory.PROPERTY_DEFAULT, true));
+      OBCriteria<ProductCategory> productCatCrit = OBDal.getInstance().createCriteria(ProductCategory.class);
+      productCatCrit.addAnd((cb, obc) -> cb.equal(obc.getPath(ProductCategory.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID), strOrgId),
+                            (cb, obc) -> cb.equal(obc.getPath(ProductCategory.PROPERTY_DEFAULT), true));
       productCatCrit.addEqual(ProductCategory.PROPERTY_SUMMARYLEVEL, false);
       productCatCrit.setMaxResults(1);
       List<ProductCategory> categories = productCatCrit.list();

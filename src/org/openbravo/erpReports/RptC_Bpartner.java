@@ -367,8 +367,8 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
     obcPayment.addEqual(FIN_Payment.PROPERTY_RECEIPT, isReceipt);
     obcPayment.addNotEqual(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO);
     obcPayment.addNotEqual(FIN_Payment.PROPERTY_STATUS, "RPAP");
-    obcPayment.add(Restrictions.neProperty(FIN_Payment.PROPERTY_GENERATEDCREDIT,
-        FIN_Payment.PROPERTY_USEDCREDIT));
+    obcPayment.addNeProperty(FIN_Payment.PROPERTY_GENERATEDCREDIT,
+        FIN_Payment.PROPERTY_USEDCREDIT);
     obcPayment.addOrderBy(FIN_Payment.PROPERTY_PAYMENTDATE, true);
     obcPayment.addOrderBy(FIN_Payment.PROPERTY_DOCUMENTNO, true);
     return obcPayment.list();

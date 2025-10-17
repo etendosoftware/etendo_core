@@ -59,6 +59,7 @@ import org.openbravo.client.kernel.reference.FKComboUIDefinition;
 import org.openbravo.client.kernel.reference.UIDefinition;
 import org.openbravo.client.kernel.reference.UIDefinitionController;
 import org.openbravo.dal.core.DalUtil;
+import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
 import org.openbravo.model.ad.datamodel.Column;
@@ -253,11 +254,10 @@ public class OBTreeReferenceComponent extends BaseTemplateComponent {
    * @return true if there is at least one active field shown in grid
    */
   public String getShowSelectorGrid() {
-    if (OBDao
-        .getFilteredCriteria(ReferencedTreeField.class,
-            Restrictions.eq(ReferencedTreeField.PROPERTY_REFTREE, getReferencedTree()),
-            Restrictions.eq(ReferencedTreeField.PROPERTY_SHOWINGRID, true))
-        .count() > 0) {
+    OBCriteria<ReferencedTreeField> criteria = OBDal.getInstance().createCriteria(ReferencedTreeField.class);
+    criteria.addEqual(ReferencedTreeField.PROPERTY_REFTREE, getReferencedTree());
+    criteria.addEqual(ReferencedTreeField.PROPERTY_SHOWINGRID, true);
+    if (criteria.count() > 0) {
       return Boolean.TRUE.toString();
     }
     return Boolean.FALSE.toString();

@@ -20,7 +20,7 @@ package org.openbravo.buildvalidation;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.base.ExecutionLimits;
 import org.openbravo.database.ConnectionProvider;

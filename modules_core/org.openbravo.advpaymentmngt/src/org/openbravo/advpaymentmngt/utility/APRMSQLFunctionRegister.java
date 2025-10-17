@@ -24,10 +24,26 @@ import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
+import java.util.List;
+
+import org.hibernate.query.ReturnableType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.openbravo.dal.core.SQLFunctionRegister;
 import org.openbravo.service.db.DalConnectionProvider;
 
@@ -39,13 +55,69 @@ public class APRMSQLFunctionRegister implements SQLFunctionRegister {
   private static final String RDBMS = new DalConnectionProvider(false).getRDBMS();
 
   @Override
-  public Map<String, SQLFunction> getSQLFunctions() {
-    Map<String, SQLFunction> sqlFunctions = new HashMap<>();
-    sqlFunctions.put("ad_message_get2",
-        new StandardSQLFunction("ad_message_get2", StandardBasicTypes.STRING));
-    sqlFunctions.put("hqlagg",
-        new SQLFunctionTemplate(StandardBasicTypes.STRING, getAggregationSQL()));
+  public Map<String, SqmFunctionDescriptor> getSQLFunctions() {
+    Map<String, SqmFunctionDescriptor> sqlFunctions = new HashMap<>();
+    
+    // Standard SQL function for ad_message_get2
+    sqlFunctions.put("ad_message_get2", new StandardSqlFunction("ad_message_get2"));
+    
+    // Template SQL function for hqlagg
+    sqlFunctions.put("hqlagg", new TemplateSqlFunction("hqlagg", getAggregationSQL()));
+    
     return sqlFunctions;
+  }
+  
+  // Helper class for standard SQL functions
+  private static class StandardSqlFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+    private final String functionName;
+    
+    public StandardSqlFunction(String functionName) {
+      super(functionName, 
+            StandardArgumentsValidators.exactly(1),
+            StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+            null);
+      this.functionName = functionName;
+    }
+    
+    @Override
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, 
+                      ReturnableType<?> returnType, SqlAstTranslator<?> translator) {
+      sqlAppender.appendSql(functionName);
+      sqlAppender.appendSql("(");
+      if (!arguments.isEmpty()) {
+        translator.render(arguments.get(0), SqlAstNodeRenderingMode.DEFAULT);
+      }
+      sqlAppender.appendSql(")");
+    }
+  }
+  
+  // Helper class for template SQL functions
+  private static class TemplateSqlFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+    private final String template;
+    
+    public TemplateSqlFunction(String name, String template) {
+      super(name, 
+            StandardArgumentsValidators.exactly(1),
+            StandardFunctionReturnTypeResolvers.useFirstNonNull(),
+            null);
+      this.template = template;
+    }
+    
+    @Override
+    public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, 
+                      ReturnableType<?> returnType, SqlAstTranslator<?> translator) {
+      String sql = template;
+      for (int i = 0; i < arguments.size(); i++) {
+        String placeholder = "?" + (i + 1);
+        if (sql.contains(placeholder)) {
+          int pos = sql.indexOf(placeholder);
+          sqlAppender.appendSql(sql.substring(0, pos));
+          translator.render(arguments.get(i), SqlAstNodeRenderingMode.DEFAULT);
+          sql = sql.substring(pos + placeholder.length());
+        }
+      }
+      sqlAppender.appendSql(sql);
+    }
   }
 
   private String getAggregationSQL() {

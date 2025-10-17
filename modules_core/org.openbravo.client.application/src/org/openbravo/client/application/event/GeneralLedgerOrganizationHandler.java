@@ -74,7 +74,7 @@ class GeneralLedgerOrganizationHandler extends EntityPersistenceEventObserver {
             .createCriteria(OrganizationAcctSchema.class);
         orgSchema.setFilterOnReadableOrganization(false);
         orgSchema.setFilterOnActive(false);
-        orgSchema.add(Restrictions.eq(OrganizationAcctSchema.PROPERTY_ORGANIZATION, organization));
+        orgSchema.addEqual(OrganizationAcctSchema.PROPERTY_ORGANIZATION, organization);
         List<OrganizationAcctSchema> orgSchemalist = orgSchema.list();
         ArrayList<String> idlist = new ArrayList<>();
 

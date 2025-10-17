@@ -118,8 +118,8 @@ public class StockReservationTestUtils {
     inventoryCountLine.setProduct(productPrice.getProduct());
 
     OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance().createCriteria(StorageDetail.class);
-    storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, productPrice.getProduct()));
-    storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_STORAGEBIN, storageBin));
+    storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, productPrice.getProduct());
+    storageDetailCriteria.addEqual(StorageDetail.PROPERTY_STORAGEBIN, storageBin);
     StorageDetail storageDetail = (StorageDetail) storageDetailCriteria.setMaxResults(1).uniqueResult();
 
     inventoryCountLine.setStorageBin(storageBin);
@@ -306,8 +306,7 @@ public class StockReservationTestUtils {
   public static Reservation findReservationForOrder(Order salesOrder) {
     OBDal.getInstance().refresh(salesOrder);
     OBCriteria<Reservation> reservationCriteria = OBDal.getInstance().createCriteria(Reservation.class);
-    reservationCriteria.add(
-        Restrictions.eq(Reservation.PROPERTY_SALESORDERLINE + ".id", salesOrder.getOrderLineList().get(0).getId()));
+    reservationCriteria.addEqual(Reservation.PROPERTY_SALESORDERLINE + ".id", salesOrder.getOrderLineList().get(0).getId());
     return (Reservation) reservationCriteria.setMaxResults(1).uniqueResult();
   }
 
@@ -320,7 +319,7 @@ public class StockReservationTestUtils {
    */
   public static List<ReservationStock> findReservationStocksForReservation(Reservation reservation) {
     OBCriteria<ReservationStock> reservationStockCriteria = OBDal.getInstance().createCriteria(ReservationStock.class);
-    reservationStockCriteria.add(Restrictions.eq(ReservationStock.PROPERTY_RESERVATION + ".id", reservation.getId()));
+    reservationStockCriteria.addEqual(ReservationStock.PROPERTY_RESERVATION + ".id", reservation.getId());
     return reservationStockCriteria.list();
   }
 }

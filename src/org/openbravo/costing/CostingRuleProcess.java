@@ -370,7 +370,7 @@ public class CostingRuleProcess implements Process {
     try {
       while (stockLines.next()) {
         final long t3 = System.currentTimeMillis();
-        final Object[] stockLine = stockLines.get();
+        final Object[] stockLine = (Object[]) stockLines.get();
         final String productId = (String) stockLine[0];
         final String attrSetInsId = (String) stockLine[1];
         final String uomId = (String) stockLine[2];
@@ -592,7 +592,7 @@ public class CostingRuleProcess implements Process {
       try {
         while (trxs.next()) {
           final long t4 = System.currentTimeMillis();
-          MaterialTransaction trx = (MaterialTransaction) trxs.get(0);
+          MaterialTransaction trx = (MaterialTransaction) trxs.get();
           // Remove 1 second from transaction date to ensure that cost is calculated with previous
           // costing rule.
           trx.setTransactionProcessDate(DateUtils.addSeconds(startingDate, -1));

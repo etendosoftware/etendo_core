@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
@@ -546,7 +546,7 @@ public class InitialClientSetup {
   }
 
   OBError createAccounting(VariablesSecureApp vars,
-      org.apache.commons.fileupload.FileItem fileCoAFilePath, Boolean bBPartner, Boolean bProduct,
+      FileItem fileCoAFilePath, Boolean bBPartner, Boolean bProduct,
       Boolean bProject, Boolean bCampaign, Boolean bSalesRegion, String strAccountText,
       String strCalendarText) {
     if (client == null || treeAccount == null) {

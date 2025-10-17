@@ -76,7 +76,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
    * @see org.openbravo.service.datasource.DataSource#fetch(java.util.Map)
    */
   @Override
-  public String fetch(Map<String, String> parameters) {
+  public String fetch(Map<String, String> parameters) throws JSONException {
     return fetch(parameters, true);
   }
 
@@ -92,7 +92,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     }
   }
 
-  public void fetch(Map<String, String> parameters, QueryResultWriter writer) {
+  public void fetch(Map<String, String> parameters, QueryResultWriter writer) throws JSONException {
     OBContext.setAdminMode(true);
     try {
       addFetchParameters(parameters);

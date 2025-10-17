@@ -442,7 +442,7 @@ public class CostAdjustmentUtils {
     BigDecimal cost = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        final Object[] resultSet = scroll.get();
+        final Object[] resultSet = (Object[]) scroll.get();
         final BigDecimal costAmt = (BigDecimal) resultSet[0];
         final String origCurId = (String) resultSet[1];
 
@@ -995,7 +995,7 @@ public class CostAdjustmentUtils {
     BigDecimal sum = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        final Object[] resultSet = scroll.get();
+        final Object[] resultSet = (Object[]) scroll.get();
         final BigDecimal origAmt = (BigDecimal) resultSet[0];
         final String origCurId = (String) resultSet[1];
 
@@ -1249,7 +1249,7 @@ public class CostAdjustmentUtils {
     BigDecimal sum = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        Object[] resultSet = scroll.get();
+        Object[] resultSet = (Object[]) scroll.get();
         BigDecimal origAmt = (BigDecimal) resultSet[0];
         String origCurId = (String) resultSet[1];
 

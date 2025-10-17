@@ -35,6 +35,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -320,9 +321,9 @@ public class AttachImplementationManager {
       String tableId = tab.getTable().getId();
       final ZipOutputStream dest = new ZipOutputStream(os);
       HashMap<String, Integer> writtenFiles = new HashMap<String, Integer>();
-      OBCriteria<Attachment> attachmentFiles = OBDao.getFilteredCriteria(Attachment.class,
-          cb.equal(root.get("table.id"), tableId),
-          root.get("record").in((Object[]) recordIds.split(",")));
+      OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
+      attachmentFiles.addEqual("table.id", tableId);
+      attachmentFiles.addIn("record", Arrays.asList(recordIds.split(",")));
       attachmentFiles.setFilterOnReadableOrganization(false);
       for (Attachment attachmentFile : attachmentFiles.list()) {
         checkReadableAccess(attachmentFile);
@@ -413,8 +414,8 @@ public class AttachImplementationManager {
    */
   private Long getSequenceNumber(Table table, String recordId) {
     OBCriteria<Attachment> obc = OBDal.getInstance().createCriteria(Attachment.class);
-    obc.add(Restrictions.eq(Attachment.PROPERTY_RECORD, recordId));
-    obc.add(Restrictions.eq(Attachment.PROPERTY_TABLE, table));
+    obc.addEqual(Attachment.PROPERTY_RECORD, recordId);
+    obc.addEqual(Attachment.PROPERTY_TABLE, table);
     obc.addOrderBy(Attachment.PROPERTY_SEQUENCENUMBER, false);
     obc.setFilterOnReadableOrganization(false);
     obc.setMaxResults(1);
@@ -438,9 +439,9 @@ public class AttachImplementationManager {
    */
   private Attachment getAttachment(Table table, String recordId, String fileName) {
     OBCriteria<Attachment> obc = OBDal.getInstance().createCriteria(Attachment.class);
-    obc.add(Restrictions.eq(Attachment.PROPERTY_RECORD, recordId));
-    obc.add(Restrictions.eq(Attachment.PROPERTY_NAME, fileName));
-    obc.add(Restrictions.eq(Attachment.PROPERTY_TABLE, table));
+    obc.addEqual(Attachment.PROPERTY_RECORD, recordId);
+    obc.addEqual(Attachment.PROPERTY_NAME, fileName);
+    obc.addEqual(Attachment.PROPERTY_TABLE, table);
     obc.setFilterOnReadableOrganization(false);
     obc.setMaxResults(1);
     return (Attachment) obc.uniqueResult();
@@ -513,8 +514,8 @@ public class AttachImplementationManager {
       ParameterValue metadataStoredValue = null;
       final OBCriteria<ParameterValue> critStoredMetadata = OBDal.getInstance()
           .createCriteria(ParameterValue.class);
-      critStoredMetadata.add(Restrictions.eq(ParameterValue.PROPERTY_FILE, attachment));
-      critStoredMetadata.add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, parameter));
+      critStoredMetadata.addEqual(ParameterValue.PROPERTY_FILE, attachment);
+      critStoredMetadata.addEqual(ParameterValue.PROPERTY_PARAMETER, parameter);
       critStoredMetadata.setMaxResults(1);
       try {
         metadataStoredValue = (ParameterValue) critStoredMetadata.uniqueResult();

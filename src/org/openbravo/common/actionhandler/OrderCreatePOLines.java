@@ -106,9 +106,7 @@ public class OrderCreatePOLines extends BaseProcessActionHandler {
     // if no lines selected don't do anything.
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
     obc.addEqual(OrderLine.PROPERTY_SALESORDER, order);
-    // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-    obc.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.max(OrderLine.PROPERTY_LINENO));
+    obc.setProjectionMax(OrderLine.PROPERTY_LINENO);
     Long lineNo = 0L;
     Object o = obc.uniqueResult();
     if (o != null) {

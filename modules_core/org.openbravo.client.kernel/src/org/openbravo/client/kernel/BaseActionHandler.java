@@ -44,8 +44,8 @@ public abstract class BaseActionHandler implements ActionHandler {
   /*
    * (non-Javadoc)
    * 
-   * @see org.openbravo.client.kernel.ActionHandler#execute(javax.servlet.http.HttpServletRequest,
-   * javax.servlet.http.HttpServletResponse)
+   * @see org.openbravo.client.kernel.ActionHandler#execute(jakarta.servlet.http.HttpServletRequest,
+   * jakarta.servlet.http.HttpServletResponse)
    */
   @Override
   public void execute() {

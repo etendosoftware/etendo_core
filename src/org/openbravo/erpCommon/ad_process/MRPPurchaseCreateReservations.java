@@ -1,6 +1,8 @@
 /*
  *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
+ * The contents o         while (outgoingRLs.next()) {
+          final PurchasingRunLine outgoingLine = (PurchasingRunLine) outgoingRLs.get();     while (outgoingRLs.next()) {
+          final PurchasingRunLine outgoingLine = (PurchasingRunLine) outgoingRLs.get();this file are subject to the Openbravo  Public  License
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
@@ -94,7 +96,7 @@ public class MRPPurchaseCreateReservations extends DalBaseProcess {
     String productID = "";
     try {
       while (outgoingRLs.next()) {
-        final PurchasingRunLine outgoingLine = (PurchasingRunLine) outgoingRLs.get(0);
+        final PurchasingRunLine outgoingLine = (PurchasingRunLine) ((Object[]) outgoingRLs.get())[0];
         if (!productID.equals(outgoingLine.getProduct().getId())) {
           productID = outgoingLine.getProduct().getId();
           currentStock = BigDecimal.ZERO;
@@ -104,9 +106,9 @@ public class MRPPurchaseCreateReservations extends DalBaseProcess {
             && outgoingLine.getSalesOrderLine().getSalesOrder().isSalesTransaction();
         while (quantity.signum() == 1) {
           if (currentStock.signum() < 1 && incomingRLs.next()) {
-            incomingLine = (PurchasingRunLine) incomingRLs.get(0);
+            incomingLine = (PurchasingRunLine) incomingRLs.get();
             if (!productID.equals(outgoingLine.getProduct().getId()) && incomingRLs.next()) {
-              incomingLine = (PurchasingRunLine) incomingRLs.get(0);
+              incomingLine = (PurchasingRunLine) incomingRLs.get();
             }
             currentStock = currentStock.add(incomingLine.getQuantity());
             if (incomingLine.getTransactionType().equals("PP")

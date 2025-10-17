@@ -41,8 +41,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONException;
@@ -1007,11 +1007,11 @@ public class PrintController extends HttpSecureAppServlet {
     if (vars.getMultiFile("inpFile") != null
         && !vars.getMultiFile("inpFile").getName().equals("")) {
       final AttachContent content = new AttachContent();
-      final FileItem file1 = vars.getMultiFile("inpFile");
+      final Part file1 = vars.getMultiFile("inpFile");
       content.setFileName(pocData[0].ourreference.replace('/', '_') + '-'
-          + Utility.formatDate(new Date(), "yyyyMMdd-HHmmss") + '.' + file1.getName());
+          + Utility.formatDate(new Date(), "yyyyMMdd-HHmmss") + '.' + file1.getSubmittedFileName());
       content.setFileItem(file1);
-      content.setId(Utility.formatDate(new Date(), "yyyyMMdd-HHmmss") + '.' + file1.getName());
+      content.setId(Utility.formatDate(new Date(), "yyyyMMdd-HHmmss") + '.' + file1.getSubmittedFileName());
       content.visible = "hidden";
       if ("Y".equals(vars.getStringParameter("inpArchive"))) {
         content.setSelected("true");

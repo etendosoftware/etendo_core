@@ -126,9 +126,9 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
   private String getConfigScriptsNotExported() {
     // Get all applied configuration scripts which are not exported in 3.0
     OBCriteria<Module> qMod = OBDal.getInstance().createCriteria(Module.class);
-    qMod.add(Restrictions.eq(Module.PROPERTY_TYPE, "T"));
-    qMod.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
-    qMod.add(Restrictions.eq(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true));
+    qMod.addEqual(Module.PROPERTY_TYPE, "T");
+    qMod.addEqual(Module.PROPERTY_ENABLED, true);
+    qMod.addEqual(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true);
     String obDir = OBPropertiesProvider.getInstance()
         .getOpenbravoProperties()
         .getProperty("source.path");

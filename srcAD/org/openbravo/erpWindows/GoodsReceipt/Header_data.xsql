@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SqlClass id="class" name="HeaderData" package="org.openbravo.erpWindows.GoodsReceipt">
+  <SqlClassComment>WAD Generated class</SqlClassComment>
+
+  <SqlMethod name="dummy" type="preparedStatement" return="multiple">
+    <Sql>
+      SELECT '' AS dummy from DUAL
+    </Sql>
+  </SqlMethod>
+
+
+   <SqlMethod name="selectActP154_M_PriceList_Version_ID" type="preparedStatement" return="String" default="">
+    <SqlMethodComment>Select for auxiliar field</SqlMethodComment>
+    <Sql><![CDATA[
+        SELECT MIN(M_PRICELIST_VERSION_ID) AS TOTAL FROM M_PRICELIST_VERSION M, C_BPARTNER B WHERE M.M_PRICELIST_ID = (CASE ? WHEN 'Y' THEN B.M_PRICELIST_ID ELSE COALESCE(B.PO_PRICELIST_ID, B.M_PRICELIST_ID) END) AND M.ISACTIVE = 'Y' AND B.C_BPARTNER_ID = ? 
+    ]]></Sql>
+
+<Parameter name="isSOTrx"/>
+<Parameter name="C_BPARTNER_ID"/>
+  </SqlMethod>
+
+
+
+
+
+   <SqlMethod name="selectActDefM_InOut_ID" type="preparedStatement" return="String" default="">
+    <SqlMethodComment>Select for action search</SqlMethodComment>
+    <Sql><![CDATA[
+        SELECT DocumentNo FROM M_InOut WHERE isActive='Y' AND M_InOut_ID = ?  
+    ]]></Sql>
+    <Parameter name="M_InOut_ID"/>
+  </SqlMethod>
+
+
+</SqlClass>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SqlClass id="class" name="HeaderData" package="org.openbravo.erpWindows.SalesOrder">
+  <SqlClassComment>WAD Generated class</SqlClassComment>
+
+  <SqlMethod name="dummy" type="preparedStatement" return="multiple">
+    <Sql>
+      SELECT '' AS dummy from DUAL
+    </Sql>
+  </SqlMethod>
+
+
+
+
+  <SqlMethod name="updateDocAction" type="preparedStatement" return="rowCount">
+    <Sql><![CDATA[
+        UPDATE C_Order
+        SET docaction = ? 
+        WHERE C_Order.C_Order_ID = ?
+    ]]></Sql>
+    <Parameter name="docaction"></Parameter>
+    <Parameter id="paramKey" name="cOrderId"></Parameter>
+  </SqlMethod>
+
+
+
+   <SqlMethod name="selectActDefM_AttributeSetInstance_ID" type="preparedStatement" return="String" default="">
+    <SqlMethodComment>Select for action search</SqlMethodComment>
+    <Sql><![CDATA[
+        SELECT Description FROM M_AttributeSetInstance WHERE isActive='Y' AND M_AttributeSetInstance_ID = ?  
+    ]]></Sql>
+    <Parameter name="M_AttributeSetInstance_ID"/>
+  </SqlMethod>
+
+
+</SqlClass>

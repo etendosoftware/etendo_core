@@ -199,7 +199,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
       OBDal.getInstance().remove(config);
 
       Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
-          .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE)).add(Restrictions.eq(Preference.PROPERTY_SELECTED, true))
+          .addEqual(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE).addEqual(Preference.PROPERTY_SELECTED, true)
           .uniqueResult();
       if(pref != null) {
         OBDal.getInstance().remove(pref);

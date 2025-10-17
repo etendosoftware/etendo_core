@@ -257,7 +257,7 @@ public class PriceDifferenceProcess {
     int i = 0;
     try {
       while (lines.next()) {
-        MaterialTransaction line = (MaterialTransaction) lines.get(0);
+        MaterialTransaction line = (MaterialTransaction) lines.get();
         costAdjCreated = calculateTransactionPriceDifference(legalOrganization, line);
         if (costAdjCreated) {
           count++;

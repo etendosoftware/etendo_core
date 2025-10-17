@@ -108,7 +108,7 @@ class RemoveImagesEventHandler extends EntityPersistenceEventObserver {
    */
   private Image getDummyImage(boolean createIfNotExists) {
     OBCriteria<Image> dummyImageCriteria = OBDal.getInstance().createCriteria(Image.class);
-    dummyImageCriteria.add(Restrictions.idEq(DUMMY_IMAGE_ID));
+    dummyImageCriteria.addEqual("id", DUMMY_IMAGE_ID);
     Image dummyImage = (Image) dummyImageCriteria.uniqueResult();
     // If it is not already created, do it
     if (dummyImage == null && createIfNotExists) {
@@ -185,8 +185,8 @@ class RemoveImagesEventHandler extends EntityPersistenceEventObserver {
   // Check if this image is used by another product
   private static boolean checkImageUtilization(String productId, Image bob) {
     final OBCriteria<Product> obCriteria = OBDal.getInstance().createCriteria(Product.class);
-    obCriteria.add(Restrictions.eq(Product.PROPERTY_IMAGE, bob));
-    obCriteria.add(Restrictions.ne(Product.PROPERTY_ID, productId));
+    obCriteria.addEqual(Product.PROPERTY_IMAGE, bob);
+    obCriteria.addNotEqual(Product.PROPERTY_ID, productId);
     obCriteria.setFilterOnActive(false);
     obCriteria.setFilterOnReadableClients(false);
     obCriteria.setFilterOnReadableOrganization(false);

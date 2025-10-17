@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
+// TODO: Verificar dependencia Jakarta Mail - temporalmente comentado para migración Hibernate 6
 import jakarta.mail.Address;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
@@ -238,7 +239,7 @@ public class EmailManager {
     }
   }
 
-  private static class SMTPAuthenticator extends jakarta.mail.Authenticator {
+  private static class SMTPAuthenticator extends Authenticator {
     private String _username;
     private String _password;
 
@@ -302,9 +303,9 @@ public class EmailManager {
       props.put("mail.smtp.socketFactory.port", configuration.smtpport);
     }
 
-    ClientAuthenticator authenticator = null;
+    SMTPAuthenticator authenticator = null;
     if (configuration.smtpserveraccount != null) {
-      authenticator = new ClientAuthenticator(configuration.smtpserveraccount,
+      authenticator = new SMTPAuthenticator(configuration.smtpserveraccount,
           FormatUtilities.encryptDecrypt(configuration.smtpserverpassword, false));
     }
 

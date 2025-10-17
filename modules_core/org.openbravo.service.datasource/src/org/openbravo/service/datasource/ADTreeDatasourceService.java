@@ -43,7 +43,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projections;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
@@ -133,8 +133,8 @@ public class ADTreeDatasourceService extends TreeDatasourceService {
       Tree tree = getTree(table);
       OBCriteria<TreeNode> adTreeNodeCriteria = OBDal.getInstance().createCriteria(TreeNode.class);
       adTreeNodeCriteria.setFilterOnActive(false);
-      adTreeNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-      adTreeNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_NODE, bobId));
+      adTreeNodeCriteria.addEqual(TreeNode.PROPERTY_TREE, tree);
+      adTreeNodeCriteria.addEqual(TreeNode.PROPERTY_NODE, bobId);
       TreeNode treeNode = (TreeNode) adTreeNodeCriteria.uniqueResult();
       int nChildrenMoved = reparentChildrenOfDeletedNode(tree, treeNode.getReportSet(),
           treeNode.getNode());
@@ -156,8 +156,8 @@ public class ADTreeDatasourceService extends TreeDatasourceService {
   protected TableTree getTableTree(Table table) {
     TableTree tableTree = null;
     OBCriteria<TableTree> criteria = OBDal.getInstance().createCriteria(TableTree.class);
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_TABLE, table));
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, "ADTree"));
+    criteria.addEqual(TableTree.PROPERTY_TABLE, table);
+    criteria.addEqual(TableTree.PROPERTY_TREESTRUCTURE, "ADTree");
     // There can be at most one ADTree table per table, so it is safe to use uniqueResult
     tableTree = (TableTree) criteria.uniqueResult();
     return tableTree;
@@ -245,7 +245,7 @@ public class ADTreeDatasourceService extends TreeDatasourceService {
     ScrollableResults scrollNodes = obq.createQuery(Object[].class).scroll(ScrollMode.FORWARD_ONLY);
     try {
       while (scrollNodes.next()) {
-        Object[] node = scrollNodes.get();
+        Object[] node = (Object[]) scrollNodes.get();
         JSONObject value = null;
         BaseOBObject bob = (BaseOBObject) node[ENTITY];
         try {
@@ -404,18 +404,17 @@ public class ADTreeDatasourceService extends TreeDatasourceService {
       // No need to recompute sequence numbers
       OBCriteria<TreeNode> maxSeqNoCriteria = OBDal.getInstance().createCriteria(TreeNode.class);
       maxSeqNoCriteria.setFilterOnActive(false);
-      maxSeqNoCriteria.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-      maxSeqNoCriteria.add(Restrictions.eq(TreeNode.PROPERTY_REPORTSET, newParentId));
-      maxSeqNoCriteria.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.max(TreeNode.PROPERTY_SEQUENCENUMBER));
+      maxSeqNoCriteria.addEqual(TreeNode.PROPERTY_TREE, tree);
+      maxSeqNoCriteria.addEqual(TreeNode.PROPERTY_REPORTSET, newParentId);
+      maxSeqNoCriteria.setProjectionMax(TreeNode.PROPERTY_SEQUENCENUMBER);
       Long maxSeqNo = (Long) maxSeqNoCriteria.uniqueResult();
       seqNo = maxSeqNo + 10;
     } else {
       // Sequence numbers of the nodes that are positioned after the new one needs to be recomputed
       OBCriteria<TreeNode> nextNodeCriteria = OBDal.getInstance().createCriteria(TreeNode.class);
       nextNodeCriteria.setFilterOnActive(false);
-      nextNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-      nextNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_NODE, nextNodeId));
+      nextNodeCriteria.addEqual(TreeNode.PROPERTY_TREE, tree);
+      nextNodeCriteria.addEqual(TreeNode.PROPERTY_NODE, nextNodeId);
       TreeNode nextNode = (TreeNode) nextNodeCriteria.uniqueResult();
       seqNo = nextNode.getSequenceNumber();
       recomputeSequenceNumbers(tree, newParentId, seqNo);
@@ -539,9 +538,9 @@ Projections.max(TreeNode.PROPERTY_SEQUENCENUMBER));
 
     OBCriteria<Tree> treeCriteria = OBDal.getInstance().createCriteria(Tree.class);
     treeCriteria.setFilterOnActive(false);
-    treeCriteria.add(Restrictions.eq(Tree.PROPERTY_TABLE, referencedTable));
+    treeCriteria.addEqual(Tree.PROPERTY_TABLE, referencedTable);
     treeCriteria
-        .add(Restrictions.eq(Tree.PROPERTY_CLIENT, OBContext.getOBContext().getCurrentClient()));
+        .addEqual(Tree.PROPERTY_CLIENT, OBContext.getOBContext().getCurrentClient());
     return (Tree) treeCriteria.uniqueResult();
   }
 
@@ -553,7 +552,7 @@ Projections.max(TreeNode.PROPERTY_SEQUENCENUMBER));
     Tree tree = null;
     OBCriteria<Tree> adTreeCriteria = OBDal.getInstance().createCriteria(Tree.class);
     adTreeCriteria.setFilterOnActive(false);
-    adTreeCriteria.add(Restrictions.eq(Tree.PROPERTY_TABLE, table));
+    adTreeCriteria.addEqual(Tree.PROPERTY_TABLE, table);
     tree = (Tree) adTreeCriteria.uniqueResult();
     return tree;
   }
@@ -620,8 +619,8 @@ Projections.max(TreeNode.PROPERTY_SEQUENCENUMBER));
 
     OBCriteria<TreeNode> treeNodeCriteria = OBDal.getInstance().createCriteria(TreeNode.class);
     treeNodeCriteria.setFilterOnActive(false);
-    treeNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-    treeNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_NODE, nodeId));
+    treeNodeCriteria.addEqual(TreeNode.PROPERTY_TREE, tree);
+    treeNodeCriteria.addEqual(TreeNode.PROPERTY_NODE, nodeId);
     TreeNode treeNode = (TreeNode) treeNodeCriteria.uniqueResult();
     treeNode.setReportSet(parentIdDB);
     if (isOrdered) {
@@ -673,8 +672,8 @@ Projections.max(TreeNode.PROPERTY_SEQUENCENUMBER));
     try {
       OBCriteria<TreeNode> treeNodeCriteria = OBDal.getInstance().createCriteria(TreeNode.class);
       treeNodeCriteria.setFilterOnActive(false);
-      treeNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-      treeNodeCriteria.add(Restrictions.eq(TreeNode.PROPERTY_NODE, bobId));
+      treeNodeCriteria.addEqual(TreeNode.PROPERTY_TREE, tree);
+      treeNodeCriteria.addEqual(TreeNode.PROPERTY_NODE, bobId);
       TreeNode treeNode = (TreeNode) treeNodeCriteria.uniqueResult();
       BaseOBObject bob = OBDal.getInstance().get(entity.getName(), treeNode.getNode());
       json = toJsonConverter.toJsonObject(bob, DataResolvingMode.FULL);

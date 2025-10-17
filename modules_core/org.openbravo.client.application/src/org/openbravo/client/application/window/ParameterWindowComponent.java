@@ -144,9 +144,9 @@ public class ParameterWindowComponent extends BaseTemplateComponent {
       if (p.isActive() && p.getReference().getId().equals(BUTTON_LIST_REFERENCE_ID)) {
         OBCriteria<org.openbravo.model.ad.domain.List> qList = OBDal.getInstance()
             .createCriteria(org.openbravo.model.ad.domain.List.class);
-        qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
-            p.getReferenceSearchKey()));
-        qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_ACTIVE, true));
+        qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
+            p.getReferenceSearchKey());
+        qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_ACTIVE, true);
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEQUENCENUMBER, true);
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, true);
         List<org.openbravo.model.ad.domain.List> buttonList = qList.list();

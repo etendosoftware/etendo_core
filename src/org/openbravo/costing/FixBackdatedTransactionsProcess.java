@@ -102,7 +102,7 @@ public class FixBackdatedTransactionsProcess extends BaseProcessActionHandler {
           Date lastMovementDate = dateFormat.parse(BEGINNING_OF_TIMES);
           String productId = "";
           while (transactions.next()) {
-            final MaterialTransaction trx = (MaterialTransaction) transactions.get()[0];
+            final MaterialTransaction trx = (MaterialTransaction) transactions.get();
             if (!StringUtils.equals(productId, trx.getProduct().getId())) {
               productId = trx.getProduct().getId();
               lastMovementDate = dateFormat.parse(BEGINNING_OF_TIMES);

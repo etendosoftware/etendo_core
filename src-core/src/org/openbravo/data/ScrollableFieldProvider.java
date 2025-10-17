@@ -11,7 +11,7 @@
  */
 package org.openbravo.data;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 /**
  * Interface implemented by java code generated for xsql-files if any SqlMethod defined is using

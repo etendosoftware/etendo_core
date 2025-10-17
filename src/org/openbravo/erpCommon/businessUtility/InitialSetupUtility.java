@@ -52,6 +52,8 @@ import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteriaMigrationHelper;
+import jakarta.persistence.criteria.Predicate;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.DimensionDisplayUtility;
@@ -347,11 +349,8 @@ public class InitialSetupUtility {
     // See issue https://issues.openbravo.com/view.php?id=31856
     DataSource accountTreeDatasource = OBDal.getInstance()
         .get(DataSource.class, "D2F94DC86DEC48D69E4BFCE59DC670CF");
-    // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-    obcTableTree.add(Restrictions.or(
-        //
-        Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, "ADTree"),
-        Restrictions.eq(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource)));
+    obcTableTree.addOr((cb, obc) -> cb.equal(obc.getPath(TableTree.PROPERTY_TREESTRUCTURE), "ADTree"),
+                       (cb, obc) -> cb.equal(obc.getPath(TableTree.PROPERTY_DATASOURCE), accountTreeDatasource));
     obcTableTree.addOrderBy(TableTree.PROPERTY_NAME, true);
     return obcTableTree.list();
   }
@@ -2024,14 +2023,17 @@ public class InitialSetupUtility {
       obc.addEqual(DataSet.PROPERTY_MODULE, module);
       Object[] organizationAccessLevel = { "3", "1" };
       Object[] systemAccessLevel = { "3", "6" };
-      // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-      obc.add(Restrictions.or(
-          // TODO: Migrar 
- Restrictions.and() a CriteriaBuilder.and() manualmente
-          Restrictions.and(Restrictions.ne(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
-              Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, organizationAccessLevel)),
-          Restrictions.and(Restrictions.eq(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
-              Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, systemAccessLevel))));
+      // Migración de Restrictions.or() con Restrictions.and() anidados
+      obc.addOr(
+          (cb, obcCriteria) -> cb.and(
+              cb.notEqual(obcCriteria.getPath(DataSet.PROPERTY_ORGANIZATION), getZeroOrg()),
+              obcCriteria.getPath(DataSet.PROPERTY_DATAACCESSLEVEL).in((Object[]) organizationAccessLevel)
+          ),
+          (cb, obcCriteria) -> cb.and(
+              cb.equal(obcCriteria.getPath(DataSet.PROPERTY_ORGANIZATION), getZeroOrg()),
+              obcCriteria.getPath(DataSet.PROPERTY_DATAACCESSLEVEL).in((Object[]) systemAccessLevel)
+          )
+      );
       obc.addOrderBy("m." + Module.PROPERTY_ID, true);
       obc.addOrderBy(DataSet.PROPERTY_SEQUENCENUMBER, true);
       obc.addOrderBy(DataSet.PROPERTY_ID, true);

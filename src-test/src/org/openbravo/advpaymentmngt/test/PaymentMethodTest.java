@@ -95,7 +95,7 @@ public class PaymentMethodTest extends OBBaseTest {
   public void testDeletePaymentMethod() {
     final OBCriteria<FIN_PaymentMethod> obCriteria = OBDal.getInstance()
         .createCriteria(FIN_PaymentMethod.class);
-    obCriteria.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION));
+    obCriteria.addEqual(FIN_PaymentMethod.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION);
     final List<FIN_PaymentMethod> paymentMethods = obCriteria.list();
     for (FIN_PaymentMethod pm : paymentMethods) {
       OBDal.getInstance().remove(pm);

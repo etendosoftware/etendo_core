@@ -29,6 +29,7 @@ import org.openbravo.costing.StandardAlgorithm;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -383,23 +384,23 @@ public class ReportValuationStock extends BaseReportActionHandler {
       try {
         ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
         Date maxDate = OBDateUtils.getDate(DateTimeData.nDaysAfter(readOnlyCP, strDate, "1"));
-        criteria.add(Restrictions.lt(MaterialTransaction.PROPERTY_MOVEMENTDATE, maxDate));
+        criteria.addFunction((cb, obc) -> cb.lessThan(obc.getPath(MaterialTransaction.PROPERTY_MOVEMENTDATE), maxDate));
       } catch (Exception e) {
         log4j.error("Error parsing date: " + strDate, e);
       }
 
-      criteria.add(Restrictions.eq(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, false));
-      criteria.add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + ID, orgs));
+      criteria.addEqual(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, false);
+      criteria.addIn(MaterialTransaction.PROPERTY_ORGANIZATION + ID, orgs);
       criteria.createAlias(MaterialTransaction.PROPERTY_PRODUCT, "p");
-      criteria.add(Restrictions.eq("p." + Product.PROPERTY_STOCKED, true));
+      criteria.addEqual("p." + Product.PROPERTY_STOCKED, true);
 
       if (StringUtils.isNotBlank(strWarehouse)) {
         criteria.createAlias(MaterialTransaction.PROPERTY_STORAGEBIN, "loc");
-        criteria.add(Restrictions.eq("loc." + Locator.PROPERTY_WAREHOUSE + ID, strWarehouse));
+        criteria.addEqual("loc." + Locator.PROPERTY_WAREHOUSE + ID, strWarehouse);
       }
 
       if (StringUtils.isNotBlank(strCategoryProduct)) {
-        criteria.add(Restrictions.eq("p." + Product.PROPERTY_PRODUCTCATEGORY + ID, strCategoryProduct));
+        criteria.addEqual("p." + Product.PROPERTY_PRODUCTCATEGORY + ID, strCategoryProduct);
       }
 
       criteria.setMaxResults(1);

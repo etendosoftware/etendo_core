@@ -72,9 +72,9 @@ public class ManagePrereservationActionHandler extends BaseProcessActionHandler 
       final OrderLine pol = OBDal.getInstance().get(OrderLine.class, strPOLId);
 
       if (pol != null) {
-        OBCriteria<ReservationStock> critRS = OBDao.getFilteredCriteria(ReservationStock.class,
-            Restrictions.eq(ReservationStock.PROPERTY_SALESORDERLINE, pol),
-            Restrictions.isNull(ReservationStock.PROPERTY_STORAGEBIN));
+        OBCriteria<ReservationStock> critRS = OBDal.getInstance().createCriteria(ReservationStock.class);
+        critRS.addEqual(ReservationStock.PROPERTY_SALESORDERLINE, pol);
+        critRS.addIsNull(ReservationStock.PROPERTY_STORAGEBIN);
         List<String> idList = new ArrayList<String>();
         for (ReservationStock resStock : critRS.list()) {
           idList.add(resStock.getId());

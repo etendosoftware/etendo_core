@@ -214,8 +214,7 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         try {
           OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
               .createCriteria(ConversionRateDoc.class);
-          obc.add(
-              Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
+          obc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction);
           boolean dataRemoved = false;
           for (ConversionRateDoc conversionRateDoc : obc.list()) {
             dataRemoved = true;
@@ -272,10 +271,9 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
     try {
       OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
-      obc.add(
-          Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, transaction.getForeignCurrency()));
-      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY, transaction.getCurrency()));
-      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
+      obc.addEqual(ConversionRateDoc.PROPERTY_CURRENCY, transaction.getForeignCurrency());
+      obc.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY, transaction.getCurrency());
+      obc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction);
       return obc.list();
     } finally {
       OBContext.restorePreviousMode();
@@ -322,9 +320,9 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
         obCriteria
-            .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, transaction.getAccount()));
-        obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-            payment.getPaymentMethod()));
+            .addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, transaction.getAccount());
+        obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+            payment.getPaymentMethod());
         obCriteria.setFilterOnReadableClients(false);
         obCriteria.setFilterOnReadableOrganization(false);
         List<FinAccPaymentMethod> lines = obCriteria.list();

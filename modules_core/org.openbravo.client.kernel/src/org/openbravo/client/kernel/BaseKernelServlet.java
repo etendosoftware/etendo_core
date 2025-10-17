@@ -89,14 +89,6 @@ public abstract class BaseKernelServlet extends HttpSecureAppServlet {
     super.service(request, response);
   }
 
-  @Override
-  protected void invalidateSession(HttpServletRequest request) {
-    HttpSession session = request.getSession(false);
-    if (session != null) {
-      request.logout();
-    }
-  }
-
   public static class KernelHttpServletResponse extends HttpServletResponseWrapper {
     private String redirectTarget = null;
     private boolean doLogout = false;

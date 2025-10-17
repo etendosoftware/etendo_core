@@ -43,7 +43,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projections;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -130,14 +130,14 @@ public class LandedCostProcess {
   private void doChecks(final LandedCost landedCost, final JSONObject message) {
     // Check there are Receipt Lines and Costs.
     OBCriteria<LandedCost> critLC = OBDal.getInstance().createCriteria(LandedCost.class);
-    critLC.add(Restrictions.sizeEq(LandedCost.PROPERTY_LANDEDCOSTCOSTLIST, 0));
+    critLC.addSizeEq(LandedCost.PROPERTY_LANDEDCOSTCOSTLIST, 0);
     critLC.addEqual(LandedCost.PROPERTY_ID, landedCost.getId());
     if (critLC.uniqueResult() != null) {
       throw new OBException(OBMessageUtils.messageBD("LandedCostNoCosts"));
     }
 
     critLC = OBDal.getInstance().createCriteria(LandedCost.class);
-    critLC.add(Restrictions.sizeEq(LandedCost.PROPERTY_LANDEDCOSTRECEIPTLIST, 0));
+    critLC.addSizeEq(LandedCost.PROPERTY_LANDEDCOSTRECEIPTLIST, 0);
     critLC.addEqual(LandedCost.PROPERTY_ID, landedCost.getId());
     if (critLC.uniqueResult() != null) {
       throw new OBException(OBMessageUtils.messageBD("LandedCostNoReceipts"));
@@ -262,7 +262,7 @@ public class LandedCostProcess {
     try {
       while (receiptamts.next()) {
         log.debug("Process receipt amounts");
-        final Object[] receiptAmt = receiptamts.get();
+        final Object[] receiptAmt = (Object[]) receiptamts.get();
         final BigDecimal amt = (BigDecimal) receiptAmt[0];
         final Currency lcCostCurrency = OBDal.getInstance().get(Currency.class, receiptAmt[1]);
         final ShipmentInOutLine receiptLine = OBDal.getInstance()
@@ -362,9 +362,7 @@ public class LandedCostProcess {
     lcc.setProcessed(Boolean.TRUE);
     final OBCriteria<LCMatched> critMatched = OBDal.getInstance().createCriteria(LCMatched.class);
     critMatched.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, lcc);
-    // TODO: Migrar Projections a CriteriaBuilder con multiselect/select manualmente
-    critMatched.setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.sum(LCMatched.PROPERTY_AMOUNT));
+    critMatched.setProjectionSum(LCMatched.PROPERTY_AMOUNT);
     BigDecimal matchedAmt = (BigDecimal) critMatched.uniqueResult();
     if (matchedAmt == null) {
       matchedAmt = lcc.getAmount();

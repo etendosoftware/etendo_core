@@ -78,9 +78,9 @@ public class ObserverBaseTest extends WeldBaseTest {
     OBContext.setAdminMode(true);
     try {
       OBCriteria<Note> q = OBDal.getInstance().createCriteria(Note.class);
-      q.add(Restrictions.eq(Note.PROPERTY_RECORD, obj.getId()));
-      q.add(Restrictions.eq(Note.PROPERTY_TABLE,
-          OBDal.getInstance().getProxy(Table.class, obj.getEntity().getTableId())));
+      q.addEqual(Note.PROPERTY_RECORD, obj.getId());
+      q.addEqual(Note.PROPERTY_TABLE,
+          OBDal.getInstance().getProxy(Table.class, obj.getEntity().getTableId()));
       return q.count();
     } finally {
       OBContext.restorePreviousMode();

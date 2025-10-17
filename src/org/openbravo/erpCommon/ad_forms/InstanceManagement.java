@@ -38,7 +38,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
+import jakarta.servlet.http.Part;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -180,7 +180,7 @@ public class InstanceManagement extends HttpSecureAppServlet {
 
   private void printPageInstallFile(HttpServletResponse response, VariablesSecureApp vars)
       throws IOException, ServletException {
-    FileItem fi = vars.getMultiFile("inpFile");
+    Part fi = vars.getMultiFile("inpFile");
     OBError msg = new OBError();
     try {
       InputStream is = fi.getInputStream();

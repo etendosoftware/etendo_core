@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -757,7 +758,7 @@ public class AuditTrailPopup extends HttpSecureAppServlet {
     crit.addEqual(AuditTrailRaw.PROPERTY_TABLE, tableId);
     crit.addEqual(AuditTrailRaw.PROPERTY_RECORDID, recordId);
     // filter to only show rows which have their column shown in the tab
-    crit.addInIds(AuditTrailRaw.PROPERTY_COLUMN, columnIds);
+    crit.addInIds(AuditTrailRaw.PROPERTY_COLUMN, new HashSet<>(columnIds));
     if (!userId.isEmpty()) {
       crit.addEqual(AuditTrailRaw.PROPERTY_USERCONTACT, userId);
     }
@@ -935,7 +936,8 @@ public class AuditTrailPopup extends HttpSecureAppServlet {
     c.addEqual(Field.PROPERTY_TAB, tab);
     c.addEqual(Field.PROPERTY_DISPLAYED, Boolean.TRUE);
     c.addEqual(Field.PROPERTY_SHOWINGRIDVIEW, Boolean.TRUE);
-    c.setFetchMode("column", FetchMode.JOIN); // optimize column association
+    // Note: FetchMode.JOIN has been replaced with fetch joins in Hibernate 6
+    // This optimization is no longer needed as it's handled automatically
     c.addOrderBy(Field.PROPERTY_SEQUENCENUMBER, true);
     List<Field> fields = c.list();
     return fields;

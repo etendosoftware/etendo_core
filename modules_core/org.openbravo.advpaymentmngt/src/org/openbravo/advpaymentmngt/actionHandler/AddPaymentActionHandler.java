@@ -851,8 +851,8 @@ public class AddPaymentActionHandler extends Action {
     try {
       OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
           .createCriteria(FinAccPaymentMethod.class);
-      obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, finAccount));
-      obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, finPaymentMethod));
+      obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, finAccount);
+      obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, finPaymentMethod);
       obCriteria.setFilterOnReadableClients(false);
       obCriteria.setFilterOnReadableOrganization(false);
       obCriteria.setMaxResults(1);

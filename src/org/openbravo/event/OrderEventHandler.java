@@ -120,8 +120,8 @@ class OrderEventHandler extends EntityPersistenceEventObserver {
   private List<OrderLine> getOrderLines(final OrderParameters orderParameters) {
     return OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER,
-            OBDal.getInstance().get(Order.class, orderParameters.getOrderId())))
+        .addEqual(OrderLine.PROPERTY_SALESORDER,
+            OBDal.getInstance().get(Order.class, orderParameters.getOrderId()))
         .list();
   }
 

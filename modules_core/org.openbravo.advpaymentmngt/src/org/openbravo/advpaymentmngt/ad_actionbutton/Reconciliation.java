@@ -562,8 +562,8 @@ public class Reconciliation extends HttpSecureAppServlet {
     try {
       final OBCriteria<FIN_ReconciliationLine_v> obc = OBDal.getInstance()
           .createCriteria(FIN_ReconciliationLine_v.class);
-      obc.add(Restrictions.eq(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation));
-      obc.add(Restrictions.isNotNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE));
+      obc.addEqual(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation);
+      obc.addIsNotNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE);
       obc.setMaxResults(1);
       final List<FIN_ReconciliationLine_v> rec = obc.list();
       return (rec.size() != 0);
@@ -606,7 +606,7 @@ public class Reconciliation extends HttpSecureAppServlet {
     try {
       OBCriteria<FIN_FinaccTransaction> trans = OBDal.getInstance()
           .createCriteria(FIN_FinaccTransaction.class);
-      trans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, reconciliation));
+      trans.addEqual(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, reconciliation);
       trans.setFilterOnReadableClients(false);
       trans.setFilterOnReadableOrganization(false);
       transactions = trans.list();
@@ -634,10 +634,9 @@ public class Reconciliation extends HttpSecureAppServlet {
         if (payment != null) {
           OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
               .createCriteria(FinAccPaymentMethod.class);
-          obCriteria.add(
-              Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, reconciliation.getAccount()));
-          obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-              payment.getPaymentMethod()));
+          obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, reconciliation.getAccount());
+          obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+              payment.getPaymentMethod());
           obCriteria.setFilterOnReadableClients(false);
           obCriteria.setFilterOnReadableOrganization(false);
           List<FinAccPaymentMethod> lines = obCriteria.list();

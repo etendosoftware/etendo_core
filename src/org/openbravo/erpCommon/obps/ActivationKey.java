@@ -74,6 +74,9 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteriaMigrationHelper;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.obps.DisabledModules.Artifacts;
@@ -889,18 +892,19 @@ public class ActivationKey {
       OBCriteria<Session> obCriteria = OBDal.getInstance().createCriteria(Session.class);
 
       // sesion_active='Y' and (lastPing is null or lastPing<lastValidPing)
-      // TODO: Migrar 
- Restrictions.and() a CriteriaBuilder.and() manualmente
-      obCriteria.add(Restrictions.and(Restrictions.eq(Session.PROPERTY_SESSIONACTIVE, true),
-          // TODO: Migrar Restrictions.or() a CriteriaBuilder.or() manualmente
-          Restrictions.or(Restrictions.isNull(Session.PROPERTY_LASTPING),
-              Restrictions.lt(Session.PROPERTY_LASTPING, lastValidPingTime))));
-      obCriteria.add(/* TODO: Migrar manualmente - era Restrictions.not()
-                   * Opción 1: Negar la condición directamente si es simple
-                   * Opción 2: Usar lógica inversa en el código
-                   * Original: Restrictions.not(Restrictions.in(Session.PROPERTY_LOGINSTATUS, NO_CU_SESSION_TYPES))
-                   */
-                   null /* TEMPORAL - Debe implementarse */);
+      // Migración de Restrictions.and() con Restrictions.or() anidado
+      obCriteria.addAnd(
+          (cb, obc) -> cb.equal(obc.getPath(Session.PROPERTY_SESSIONACTIVE), true),
+          (cb, obc) -> cb.or(
+              cb.isNull(obc.getPath(Session.PROPERTY_LASTPING)),
+              cb.lessThan(obc.getPath(Session.PROPERTY_LASTPING), lastValidPingTime)
+          )
+      );
+      
+      // Migración de Restrictions.not() con Restrictions.in()
+      // Original: Restrictions.not(Restrictions.in(Session.PROPERTY_LOGINSTATUS, NO_CU_SESSION_TYPES))
+      CriteriaBuilder cb = obCriteria.getCriteriaBuilder();
+      obCriteria.add(cb.not(obCriteria.getPath(Session.PROPERTY_LOGINSTATUS).in(NO_CU_SESSION_TYPES)));
 
       if (currentSessionId != null) {
         obCriteria.addNotEqual(Session.PROPERTY_ID, currentSessionId);

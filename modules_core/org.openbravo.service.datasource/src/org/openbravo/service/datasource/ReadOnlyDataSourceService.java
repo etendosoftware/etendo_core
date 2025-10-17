@@ -55,7 +55,7 @@ public abstract class ReadOnlyDataSourceService extends DefaultDataSourceService
    * @see org.openbravo.service.datasource.DataSource#fetch(java.util.Map)
    */
   @Override
-  public String fetch(Map<String, String> parameters) {
+  public String fetch(Map<String, String> parameters) throws JSONException {
 
     addFetchParameters(parameters);
     final String startRowStr = parameters.get(JsonConstants.STARTROW_PARAMETER);
@@ -117,13 +117,13 @@ public abstract class ReadOnlyDataSourceService extends DefaultDataSourceService
   }
 
   @Override
-  public void fetch(Map<String, String> parameters, QueryResultWriter writer) {
+  public void fetch(Map<String, String> parameters, QueryResultWriter writer) throws JSONException {
     for (JSONObject jsonObject : fetchJSONObject(parameters)) {
       writer.write(jsonObject);
     }
   }
 
-  private List<JSONObject> fetchJSONObject(Map<String, String> parameters) {
+  private List<JSONObject> fetchJSONObject(Map<String, String> parameters) throws JSONException {
     final String startRowStr = parameters.get(JsonConstants.STARTROW_PARAMETER);
     final String endRowStr = parameters.get(JsonConstants.ENDROW_PARAMETER);
     int startRow = -1;
@@ -156,7 +156,7 @@ public abstract class ReadOnlyDataSourceService extends DefaultDataSourceService
   }
 
   private List<Map<String, Object>> getSelectedData(Map<String, String> parameters, int startRow,
-      int endRow) {
+      int endRow) throws JSONException {
     List<Map<String, Object>> data;
     int pageSizeIncreaseCount = 0;
     int selectedRecords = DataSourceUtils.getNumberOfSelectedRecords(parameters);
@@ -226,7 +226,7 @@ public abstract class ReadOnlyDataSourceService extends DefaultDataSourceService
    *         startRow parameter should be strictly followed though.
    */
   protected abstract List<Map<String, Object>> getData(Map<String, String> parameters, int startRow,
-      int endRow);
+      int endRow) throws JSONException;
 
   /*
    * (non-Javadoc)

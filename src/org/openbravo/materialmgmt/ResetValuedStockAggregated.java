@@ -329,12 +329,11 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
   private static Date getLastDateToFromAggregatedTable(final Organization legalEntity) {
     Date dateTo = null;
     try {
-      dateTo = (Date) OBDal.getInstance()
-          .createCriteria(ValuedStockAggregated.class)
-          .addEqual(ValuedStockAggregated.PROPERTY_ORGANIZATION, legalEntity)
-          .setProjection(// TODO: Migrar Projections a CriteriaBuilder (select, groupBy, etc.) manualmente
-Projections.max(ValuedStockAggregated.PROPERTY_ENDINGDATE))
-          .uniqueResult();
+      OBCriteria<ValuedStockAggregated> criteria = OBDal.getInstance()
+          .createCriteria(ValuedStockAggregated.class);
+      criteria.addEqual(ValuedStockAggregated.PROPERTY_ORGANIZATION, legalEntity);
+      criteria.setProjectionMax(ValuedStockAggregated.PROPERTY_ENDINGDATE);
+      dateTo = (Date) criteria.uniqueResult();
       if (dateTo == null) {
         final DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         dateTo = formatter.parse("01-01-0001");

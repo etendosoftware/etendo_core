@@ -41,6 +41,9 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
+import org.openbravo.dal.service.OBCriteriaMigrationHelper;
+import jakarta.persistence.criteria.Predicate;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.businessUtility.Preferences;
@@ -129,8 +132,7 @@ public class UOMUtil {
     try {
       OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
       pAUMCriteria.addEqual("product.id", mProductId);
-      pAUMCriteria.add(Restrictions
-          .eq(isSoTrx ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE, UOM_PRIMARY));
+      pAUMCriteria.addFunction((cb, obc) -> cb.equal(obc.getPath(isSoTrx ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE), UOM_PRIMARY));
       Product product = OBDal.getInstance().get(Product.class, mProductId);
       finalAUM = product.getUOM().getId();
       ProductAUM primaryAum = (ProductAUM) pAUMCriteria.uniqueResult();
@@ -240,10 +242,11 @@ public class UOMUtil {
 
         OBCriteria<ProductAUM> productAUMConversionCriteria = OBDal.getInstance()
             .createCriteria(ProductAUM.class);
-        // TODO: Migrar 
- Restrictions.and() a CriteriaBuilder.and() manualmente
-        productAUMConversionCriteria.add(Restrictions.and(cb.equal(root.get("product.id"), mProductId),
-            cb.equal(root.get("uOM.id"), toUOMId)));
+        // Migración de Restrictions.and()
+        productAUMConversionCriteria.addAnd(
+            (cb, obc) -> cb.equal(obc.getPath("product.id"), mProductId),
+            (cb, obc) -> cb.equal(obc.getPath("uOM.id"), toUOMId)
+        );
 
         try {
           ProductAUM conversion = (ProductAUM) productAUMConversionCriteria.uniqueResult();

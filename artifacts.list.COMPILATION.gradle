@@ -27,7 +27,6 @@ List<String> _dependenciesListCOMPILATION = [
   'commons-collections:commons-collections:3.2.2', 
   'commons-dbcp:commons-dbcp:1.4', 
   'commons-digester:commons-digester:2.1',
-  'commons-fileupload:commons-fileupload:1.5',
   'commons-io:commons-io:2.16.1',
   'commons-logging:commons-logging:1.2', 
   'commons-pool:commons-pool:1.5.6', 
