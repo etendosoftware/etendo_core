@@ -1,21 +1,3 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2001-2017 Openbravo SLU 
- * All Rights Reserved. 
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
 package org.openbravo.erpCommon.ad_callouts;
 
 import java.math.BigDecimal;
@@ -25,9 +7,22 @@ import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 
+/**
+ * Callout that keeps the Tax Amount (inptaxamt) consistent with the Tax Base Amount and
+ * the configured tax rate of the selected Tax for an Invoice line.
+ */
 public class SL_InvoiceTax_Amt extends SimpleCallout {
+  private static final String INPTAXAMT = "inptaxamt";
+  private static final String INPTAXBASEAMT = "inptaxbaseamt";
 
+  /**
+   * Executes the callout logic for keeping the invoice line's tax amount in sync with the
+   * selected tax and base amount.
+   * @param info the {@link CalloutInfo} providing input parameters and the response writer
+   * @throws ServletException if an error occurs while executing the callout
+   */
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
 
@@ -37,26 +32,50 @@ public class SL_InvoiceTax_Amt extends SimpleCallout {
     // Parameters
     String taxId = info.getStringParameter("inpcTaxId", IsIDFilter.instance);
     String invoiceId = info.getStringParameter("inpcInvoiceId", IsIDFilter.instance);
-    BigDecimal taxAmt = info.getBigDecimalParameter("inptaxamt");
-    BigDecimal taxBaseAmt = info.getBigDecimalParameter("inptaxbaseamt");
-
+    BigDecimal taxAmt = info.getBigDecimalParameter(INPTAXAMT);
+    BigDecimal taxBaseAmt = info.getBigDecimalParameter(INPTAXBASEAMT);
+    if (taxAmt == null){
+      taxAmt = BigDecimal.ZERO;
+    }
+    if (taxBaseAmt == null) {
+      taxBaseAmt = BigDecimal.ZERO;
+    }
+    
     // Update Tax Amount and Tax Base Amount
     SLInvoiceTaxAmtData[] data = SLInvoiceTaxAmtData.select(this, taxId, invoiceId);
-    BigDecimal taxRate = StringUtils.isEmpty(data[0].rate) ? BigDecimal.ONE
-        : new BigDecimal(data[0].rate);
-    Integer taxScale = Integer.valueOf(data[0].priceprecision);
-
-    if (StringUtils.equals(fieldChanged, "inptaxamt")) {
-      if (taxRate.compareTo(BigDecimal.ZERO) != 0) {
-        taxBaseAmt = ((taxAmt.divide(taxRate, 12, RoundingMode.HALF_EVEN))
-            .multiply(new BigDecimal("100"))).setScale(taxScale, RoundingMode.HALF_UP);
+    BigDecimal taxRate = BigDecimal.ZERO;
+    int taxScale = 2;
+    if (data != null && data.length > 0) {
+      if (StringUtils.isNotBlank(data[0].rate)) {
+        try {
+          taxRate = new BigDecimal(data[0].rate.trim());
+        } catch (NumberFormatException e) {
+          log4j.warn("Invalid tax rate: " + data[0].rate, e);
+          taxRate = BigDecimal.ZERO;
+        }
       }
-    } else {
-      taxAmt = ((taxBaseAmt.multiply(taxRate)).divide(new BigDecimal("100"), 12,
-          RoundingMode.HALF_EVEN)).setScale(taxScale, RoundingMode.HALF_UP);
+      try {
+        taxScale = Integer.parseInt(
+          data[0].priceprecision != null ? data[0].priceprecision.trim() : "2");
+      } catch (NumberFormatException e) {
+        log4j.warn("Invalid price precision: " + data[0].priceprecision, e);
+        taxScale = 2;
+      }
     }
+    BigDecimal sysTaxAmt = taxBaseAmt.multiply(taxRate).divide(new BigDecimal("100"), 12, RoundingMode.HALF_EVEN).setScale(taxScale, RoundingMode.HALF_UP);
 
-    info.addResult("inptaxamt", taxAmt);
-    info.addResult("inptaxbaseamt", taxBaseAmt);
+    if (StringUtils.equals(INPTAXAMT, fieldChanged)) {
+      final BigDecimal newTaxAmt = taxAmt.setScale(taxScale, RoundingMode.HALF_UP);
+      final BigDecimal maxDelta = new BigDecimal("0.01");
+      if (newTaxAmt.subtract(sysTaxAmt).abs().compareTo(maxDelta) > 0) {
+        info.addResult("WARNING", OBMessageUtils.messageBD("ETP_TaxAdjOutOfRange"));
+      }
+      info.addResult(INPTAXAMT, newTaxAmt);
+      return; 
+    }
+    final BigDecimal newTaxAmt = taxBaseAmt.multiply(taxRate).divide(new BigDecimal("100"), 12, RoundingMode.HALF_EVEN).setScale(taxScale, RoundingMode.HALF_UP);
+
+    info.addResult(INPTAXAMT, newTaxAmt);
+    info.addResult(INPTAXBASEAMT, taxBaseAmt.setScale(taxScale, RoundingMode.HALF_UP));
   }
 }

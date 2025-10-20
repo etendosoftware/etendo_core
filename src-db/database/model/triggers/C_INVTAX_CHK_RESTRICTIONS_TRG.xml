@@ -6,7 +6,6 @@
 
 
 
-
 /*************************************************************************
 * The contents of this file are subject to the Openbravo  Public  License
 * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
@@ -25,9 +24,11 @@
 ************************************************************************/
   v_Processed VARCHAR(60) ;
   v_C_INVOICE_ID VARCHAR2(32) ;
-    
+  
+  v_only_taxamt   BOOLEAN;
+  v_within_margin BOOLEAN;
 BEGIN
-    
+
     IF AD_isTriggerEnabled()='N' THEN RETURN;
     END IF;
 
@@ -42,13 +43,18 @@ BEGIN
   FROM C_INVOICE
   WHERE C_INVOICE_ID=v_C_INVOICE_ID;
   IF UPDATING THEN
-    IF(v_Processed='Y' AND ((COALESCE(:old.TAXBASEAMT, 0) <> COALESCE(:new.TAXBASEAMT, 0))
-	   OR(COALESCE(:old.TAXAMT, 0) <> COALESCE(:new.TAXAMT, 0))
-	   OR(COALESCE(:old.C_TAX_ID, '0') <> COALESCE(:new.C_TAX_ID, '0'))
-	   OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
-	   OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0'))))
-  THEN
-      RAISE_APPLICATION_ERROR(-20000, '@20501@' || ' - ' || :old.TAXBASEAMT || ' - ' ||:new.TAXBASEAMT || ' - ' ||:old.TAXAMT || ' - ' || :new.TAXAMT || ' - ' || :old.C_TAX_ID || ' - ' ||:new.C_TAX_ID) ;
+    v_only_taxamt := COALESCE(:OLD.taxbaseamt,0) = COALESCE(:NEW.taxbaseamt,0)
+    AND COALESCE(:OLD.c_tax_id,'0') = COALESCE(:NEW.c_tax_id,'0')
+    AND COALESCE(:OLD.ad_org_id,'0') = COALESCE(:NEW.ad_org_id,'0')
+    AND COALESCE(:OLD.ad_client_id,'0') = COALESCE(:NEW.ad_client_id,'0')
+    AND COALESCE(:OLD.taxamt,0) <> COALESCE(:NEW.taxamt,0);v_within_margin :=
+    ABS(COALESCE(:NEW.taxamt,0) - COALESCE(:NEW.origtaxamt, :NEW.taxamt, 0)) <= 0.01;
+    IF v_Processed = 'Y' AND NOT (v_only_taxamt AND v_within_margin) THEN
+      RAISE EXCEPTION '%',
+        '@20501@' || ' - ' ||
+        :OLD.taxbaseamt || ' - ' || :NEW.taxbaseamt || ' - ' ||
+        :OLD.taxamt     || ' - ' || :NEW.taxamt     || ' - ' ||
+        :OLD.c_tax_id   || ' - ' || :NEW.c_tax_id;
     END IF;
   END IF;
   IF((DELETING OR INSERTING) AND v_Processed='Y') THEN
