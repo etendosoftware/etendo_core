@@ -22,7 +22,7 @@ pipeline {
     REPO_URL            = 'https://github.com/etendosoftware/etendo_core'
     REPO_URL_GIT        = 'git@github.com:etendosoftware/etendo_core.git'
 
-    CLONE_PLUGIN        = 'TRUE'
+    CLONE_PLUGIN        = 'FALSE'
     PLUGIN_NAME         = 'buildSrc'
     PLUGIN_URL          = 'git@github.com:etendosoftware/com.etendoerp.gradleplugin.git'
 
@@ -34,7 +34,7 @@ pipeline {
 
     // Stack
     JAVA_HOME           = '/usr/lib/jvm/jdk-17.0.13'
-    TOMCAT_URL          = 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz'
+    TOMCAT_URL          = 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.111/bin/apache-tomcat-9.0.111.tar.gz'
     POSTGRES_VERSION    = '17'
 
     CONTEXT_BUILD       = 'Unit Tests with Postgres Database'
