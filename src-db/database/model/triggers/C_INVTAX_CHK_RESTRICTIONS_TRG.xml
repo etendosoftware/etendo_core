@@ -2,10 +2,6 @@
   <database name="TRIGGER C_INVTAX_CHK_RESTRICTIONS_TRG">
     <trigger name="C_INVTAX_CHK_RESTRICTIONS_TRG" table="C_INVOICETAX" fires="before" insert="true" update="true" delete="true" foreach="row">
       <body><![CDATA[
-
-
-
-
 /*************************************************************************
 * The contents of this file are subject to the Openbravo  Public  License
 * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
@@ -32,7 +28,6 @@ BEGIN
     IF AD_isTriggerEnabled()='N' THEN RETURN;
     END IF;
 
-
   IF INSERTING THEN
     v_C_INVOICE_ID:=:new.C_INVOICE_ID;
   ELSE
@@ -50,11 +45,7 @@ BEGIN
     AND COALESCE(:OLD.taxamt,0) <> COALESCE(:NEW.taxamt,0);v_within_margin :=
     ABS(COALESCE(:NEW.taxamt,0) - COALESCE(:NEW.origtaxamt, :NEW.taxamt, 0)) <= 0.01;
     IF v_Processed = 'Y' AND NOT (v_only_taxamt AND v_within_margin) THEN
-      RAISE EXCEPTION '%',
-        '@20501@' || ' - ' ||
-        :OLD.taxbaseamt || ' - ' || :NEW.taxbaseamt || ' - ' ||
-        :OLD.taxamt     || ' - ' || :NEW.taxamt     || ' - ' ||
-        :OLD.c_tax_id   || ' - ' || :NEW.c_tax_id;
+      RAISE_APPLICATION_ERROR(-20000, '@20501@'  || ' - ' || :OLD.taxbaseamt || ' - ' || :NEW.taxbaseamt || ' - ' || :OLD.taxamt || ' - ' || :NEW.taxamt || ' - ' || :OLD.c_tax_id || ' - ' || :NEW.c_tax_id);
     END IF;
   END IF;
   IF((DELETING OR INSERTING) AND v_Processed='Y') THEN
