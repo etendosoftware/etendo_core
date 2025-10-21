@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+  <database name="TRIGGER C_INVOICE_RESET_TAX_TRG">
+    <trigger name="C_INVOICE_RESET_TAX_TRG" table="C_INVOICE" fires="after" insert="false" update="true" delete="false" foreach="row">
+      <body><![CDATA[BEGIN
+  IF AD_isTriggerEnabled()='N' THEN RETURN;
+  END IF;
+  
+  IF TG_OP='UPDATE' THEN
+    IF ((:OLD.processed='Y' AND :NEW.processed='N')
+      OR (:OLD.posted='Y' AND :NEW.posted='N')) THEN
+      UPDATE c_invoicetax
+      SET taxamt = origtaxamt
+      WHERE c_invoice_id = :NEW.c_invoice_id
+        AND COALESCE(origtaxamt, 0) <> 0
+        AND taxamt <> origtaxamt;
+    END IF;
+  END IF;
+
+IF TG_OP='DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF; 
+END C_INVOICE_RESET_TAX_TRG
+]]></body>
+    </trigger>
+  </database>
