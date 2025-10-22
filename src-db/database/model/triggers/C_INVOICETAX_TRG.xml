@@ -34,32 +34,24 @@
   v_IsCashVAT_Invoice C_Invoice.IsCashVAT%TYPE;
   v_IsWithholding_Tax C_Tax.IsWithholdingTax%TYPE;
   v_Rate_Tax C_Tax.Rate%TYPE;
-  v_DocStatus VARCHAR(2);
-  v_only_taxamt BOOLEAN;
-  v_within_margin BOOLEAN;
-  v_proc2 VARCHAR(1);
-  v_posted2 VARCHAR(1);
-  v_docstat2 VARCHAR(2);
 BEGIN
     
     IF AD_isTriggerEnabled()='N' THEN RETURN;
     END IF;
 
+
   IF UPDATING THEN
-    SELECT PROCESSED, docstatus
-    INTO v_Processed, v_DocStatus
+    SELECT PROCESSED
+    INTO v_Processed
     FROM C_INVOICE
     WHERE C_INVOICE_ID=:old.C_INVOICE_ID;
-    v_only_taxamt := (COALESCE(:old.taxbaseamt,0) = COALESCE(:new.taxbaseamt,0))
-      AND (COALESCE(:old.c_tax_id,'0') = COALESCE(:new.c_tax_id,'0'))
-      AND (COALESCE(:old.ad_org_id,'0') = COALESCE(:new.ad_org_id,'0'))
-      AND (COALESCE(:old.ad_client_id,'0') = COALESCE(:new.ad_client_id,'0'))
-      AND (COALESCE(:old.taxamt,0) <> COALESCE(:new.taxamt,0));
-    v_within_margin := abs(COALESCE(:new.taxamt,0) - COALESCE(:new.origtaxamt,0)) <= 0.01;
-    IF v_Processed = 'Y' THEN
-      IF NOT (v_DocStatus = 'CO' AND v_only_taxamt AND v_within_margin) THEN
-        RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
-      END IF;
+    IF(v_Processed='Y'
+    AND ((COALESCE(:old.TAXBASEAMT, 0) <> COALESCE(:new.TAXBASEAMT, 0))
+    OR(COALESCE(:old.TAXAMT, 0) <> COALESCE(:new.TAXAMT, 0))
+    OR(COALESCE(:old.C_TAX_ID, '0') <> COALESCE(:new.C_TAX_ID, '0'))
+    OR(COALESCE(:old.AD_ORG_ID, '0') <> COALESCE(:new.AD_ORG_ID, '0'))
+    OR(COALESCE(:old.AD_CLIENT_ID, '0') <> COALESCE(:new.AD_CLIENT_ID, '0')))) THEN
+      RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
     END IF;
   END IF;
   -- Get ID
@@ -69,20 +61,14 @@ BEGIN
     v_ID:=:old.C_Invoice_ID;
   END IF;
   -- ReadOnly Check
-  SELECT processed, posted, docstatus
-  INTO v_proc2, v_posted2, v_docstat2
-  FROM c_invoice
-  WHERE c_invoice_id = v_ID;
-
-  IF (v_proc2 = 'Y' OR v_posted2 = 'Y') THEN
-    IF NOT (UPDATING
-      AND v_docstat2 = 'CO'
-      AND (COALESCE(:old.taxbaseamt,0) = COALESCE(:new.taxbaseamt,0))
-      AND (COALESCE(:old.c_tax_id,'0') = COALESCE(:new.c_tax_id,'0'))
-      AND (COALESCE(:old.taxamt,0) <> COALESCE(:new.taxamt,0))
-      AND abs(COALESCE(:new.taxamt,0) - COALESCE(:new.origtaxamt,0)) <= 0.01) THEN
-      RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
-    END IF;
+  SELECT COUNT(*)
+  INTO v_RO
+  FROM C_Invoice
+  WHERE C_Invoice_ID=v_ID
+    AND(Processed='Y'
+    OR Posted='Y') ;
+  IF(v_RO > 0) THEN
+    RAISE_APPLICATION_ERROR(-20000, '@20501@') ;
   END IF;
 
  -- Update C_Invoice.IsCashVAT flag from the line tax rate.

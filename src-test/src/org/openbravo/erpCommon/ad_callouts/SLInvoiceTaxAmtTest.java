@@ -1,7 +1,6 @@
 package org.openbravo.erpCommon.ad_callouts;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
@@ -20,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout.CalloutInfo;
-import org.openbravo.erpCommon.utility.OBMessageUtils;
 
 /**
  * Unit tests for {@link SL_InvoiceTax_Amt}.
@@ -33,6 +31,8 @@ public class SLInvoiceTaxAmtTest {
   private static final String INV1 = "INV-1";
   private static final String INPTAXAMT = "inptaxamt";
   private static final String INPTAXBASEAMT = "inptaxbaseamt";
+  private static final String DATA_21 = "21";
+  private static final String DATA_2 = "2";
 
   @Mock
   private CalloutInfo info;
@@ -74,7 +74,7 @@ public class SLInvoiceTaxAmtTest {
     when(info.getBigDecimalParameter(INPTAXAMT)).thenReturn(new BigDecimal("21.01"));
     try (MockedStatic<SLInvoiceTaxAmtData> mockedData = mockStatic(SLInvoiceTaxAmtData.class)) {
       mockedData.when(() -> SLInvoiceTaxAmtData.select(callout, TAX1, INV1))
-        .thenReturn(data("21", "2"));
+        .thenReturn(data(DATA_21, DATA_2));
       callout.execute(info);
       verify(info, never()).addResult(eq("WARNING"), any());
       verify(info).addResult(INPTAXAMT, new BigDecimal("21.01"));
@@ -92,14 +92,11 @@ public class SLInvoiceTaxAmtTest {
     when(info.getLastFieldChanged()).thenReturn(INPTAXAMT);
     when(info.getBigDecimalParameter(INPTAXBASEAMT)).thenReturn(new BigDecimal("100"));
     when(info.getBigDecimalParameter(INPTAXAMT)).thenReturn(new BigDecimal("21.03"));
-    try (MockedStatic<SLInvoiceTaxAmtData> mockedData = mockStatic(SLInvoiceTaxAmtData.class);
-         MockedStatic<OBMessageUtils> mockedMsg = mockStatic(OBMessageUtils.class)) {
+    try (MockedStatic<SLInvoiceTaxAmtData> mockedData = mockStatic(SLInvoiceTaxAmtData.class)) {
       mockedData.when(() -> SLInvoiceTaxAmtData.select(callout, TAX1, INV1))
-        .thenReturn(data("21", "2"));
-      mockedMsg.when(() -> OBMessageUtils.messageBD(anyString()))
-        .thenReturn("ETP_TaxAdjOutOfRange");
+        .thenReturn(data(DATA_21, DATA_2));
       callout.execute(info);
-      verify(info).addResult("WARNING", "ETP_TaxAdjOutOfRange");
+      verify(info, never()).addResult(eq("WARNING"), any());
       verify(info).addResult(INPTAXAMT, new BigDecimal("21.03"));
     }
   }
@@ -115,7 +112,7 @@ public class SLInvoiceTaxAmtTest {
     when(info.getBigDecimalParameter(INPTAXBASEAMT)).thenReturn(new BigDecimal("123.456"));
     try (MockedStatic<SLInvoiceTaxAmtData> mockedData = mockStatic(SLInvoiceTaxAmtData.class)) {
       mockedData.when(() -> SLInvoiceTaxAmtData.select(callout, TAX1, INV1))
-        .thenReturn(data("21", "2"));
+        .thenReturn(data(DATA_21, DATA_2));
       callout.execute(info);
       verify(info).addResult(INPTAXAMT, new BigDecimal("25.93"));
       verify(info).addResult(INPTAXBASEAMT, new BigDecimal("123.46"));

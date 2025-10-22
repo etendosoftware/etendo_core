@@ -66,10 +66,6 @@ public class SL_InvoiceTax_Amt extends SimpleCallout {
 
     if (StringUtils.equals(INPTAXAMT, fieldChanged)) {
       final BigDecimal newTaxAmt = taxAmt.setScale(taxScale, RoundingMode.HALF_UP);
-      final BigDecimal maxDelta = new BigDecimal("0.01");
-      if (newTaxAmt.subtract(sysTaxAmt).abs().compareTo(maxDelta) > 0) {
-        info.addResult("WARNING", OBMessageUtils.messageBD("ETP_TaxAdjOutOfRange"));
-      }
       info.addResult(INPTAXAMT, newTaxAmt);
       return; 
     }
