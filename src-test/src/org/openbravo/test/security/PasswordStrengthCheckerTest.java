@@ -21,7 +21,7 @@ package org.openbravo.test.security;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.junit.Test;
 import org.openbravo.base.weld.test.WeldBaseTest;

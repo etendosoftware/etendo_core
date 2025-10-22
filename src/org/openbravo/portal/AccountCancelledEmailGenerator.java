@@ -21,7 +21,7 @@ package org.openbravo.portal;
 import java.io.File;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.openbravo.email.EmailEventContentGenerator;
 import org.openbravo.erpCommon.utility.OBMessageUtils;

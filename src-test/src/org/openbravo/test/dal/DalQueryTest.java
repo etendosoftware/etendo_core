@@ -203,7 +203,7 @@ public class DalQueryTest extends OBBaseTest {
   public void testIUpdateCurrencyByUser() {
     setUserContext("E12DC7B3FF8C4F64924A98195223B1F8");
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, DOLLAR));
+    obc.addEqual(Currency.PROPERTY_ISOCODE, DOLLAR);
     final List<Currency> cs = obc.list();
     assertEquals(1, cs.size());
     final Currency c = cs.get(0);

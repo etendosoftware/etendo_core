@@ -19,6 +19,7 @@
 
 package org.openbravo.erpCommon.ad_forms;
 
+import jakarta.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,12 +40,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.fileupload.FileItem;
+import jakarta.servlet.http.Part;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ddlutils.Platform;
@@ -55,8 +56,8 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -374,8 +375,7 @@ public class ModuleManagement extends HttpSecureAppServlet {
 
       OBCriteria<org.openbravo.model.ad.module.Module> qUpgr = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.module.Module.class);
-      qUpgr.add(
-          Restrictions.isNotNull(org.openbravo.model.ad.module.Module.PROPERTY_UPGRADEAVAILABLE));
+      qUpgr.addIsNotNull(org.openbravo.model.ad.module.Module.PROPERTY_UPGRADEAVAILABLE);
 
       for (org.openbravo.model.ad.module.Module upgr : qUpgr.list()) {
         JSONObject upgrade = new JSONObject();
@@ -737,7 +737,7 @@ public class ModuleManagement extends HttpSecureAppServlet {
   @SuppressWarnings("deprecation")
   private void printPageInstallFile(HttpServletResponse response, HttpServletRequest request,
       VariablesSecureApp vars) throws ServletException, IOException {
-    final FileItem fi = vars.getMultiFile("inpFile");
+    final Part fi = vars.getMultiFile("inpFile");
 
     if (!fi.getName().toUpperCase().endsWith(".OBX")) {
       // We don't have a .obx file
@@ -1829,7 +1829,7 @@ public class ModuleManagement extends HttpSecureAppServlet {
     OBError message;
     if (im.getIsLocal()) {
       im.execute(
-          ((FileItem) vars.getSessionObject("ModuleManagementInstall|File")).getInputStream());
+          ((Part) vars.getSessionObject("ModuleManagementInstall|File")).getInputStream());
     } else {
       im.execute();
     }
@@ -2203,9 +2203,8 @@ public class ModuleManagement extends HttpSecureAppServlet {
       // Populate module specific grid
       OBCriteria<org.openbravo.model.ad.module.Module> qModuleSpecific = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.module.Module.class);
-      qModuleSpecific.add(
-          Restrictions.isNotNull(org.openbravo.model.ad.module.Module.PROPERTY_MATURITYUPDATE));
-      qModuleSpecific.addOrder(Order.asc(org.openbravo.model.ad.module.Module.PROPERTY_NAME));
+      qModuleSpecific.addIsNotNull(org.openbravo.model.ad.module.Module.PROPERTY_MATURITYUPDATE);
+      qModuleSpecific.addOrderBy(org.openbravo.model.ad.module.Module.PROPERTY_NAME, true);
       ArrayList<HashMap<String, String>> moduleSpecifics = new ArrayList<HashMap<String, String>>();
       List<org.openbravo.model.ad.module.Module> moduleSpecificList = qModuleSpecific.list();
       if (moduleSpecificList.isEmpty()) {
@@ -2229,8 +2228,8 @@ public class ModuleManagement extends HttpSecureAppServlet {
       OBCriteria<org.openbravo.model.ad.module.Module> qModule = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.module.Module.class);
       qModule
-          .add(Restrictions.isNull(org.openbravo.model.ad.module.Module.PROPERTY_MATURITYUPDATE));
-      qModule.addOrder(Order.asc(org.openbravo.model.ad.module.Module.PROPERTY_NAME));
+          .addIsNull(org.openbravo.model.ad.module.Module.PROPERTY_MATURITYUPDATE);
+      qModule.addOrderBy(org.openbravo.model.ad.module.Module.PROPERTY_NAME, true);
 
       ArrayList<HashMap<String, String>> modules = new ArrayList<HashMap<String, String>>();
       List<org.openbravo.model.ad.module.Module> moduleList = qModule.list();
@@ -2247,12 +2246,11 @@ public class ModuleManagement extends HttpSecureAppServlet {
       // Dependencies table
       OBCriteria<org.openbravo.model.ad.module.ModuleDependency> qDeps = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.module.ModuleDependency.class);
-      qDeps.add(Restrictions.eq(
-          org.openbravo.model.ad.module.ModuleDependency.PROPERTY_USEREDITABLEENFORCEMENT, true));
-      qDeps.addOrder(Order.asc(org.openbravo.model.ad.module.ModuleDependency.PROPERTY_MODULE));
-      qDeps.addOrder(Order.asc(org.openbravo.model.ad.module.ModuleDependency.PROPERTY_ISINCLUDED));
-      qDeps.addOrder(
-          Order.asc(org.openbravo.model.ad.module.ModuleDependency.PROPERTY_DEPENDANTMODULENAME));
+      qDeps.addEqual(
+          org.openbravo.model.ad.module.ModuleDependency.PROPERTY_USEREDITABLEENFORCEMENT, true);
+      qDeps.addOrderBy(org.openbravo.model.ad.module.ModuleDependency.PROPERTY_MODULE, true);
+      qDeps.addOrderBy(org.openbravo.model.ad.module.ModuleDependency.PROPERTY_ISINCLUDED, true);
+      qDeps.addOrderBy(org.openbravo.model.ad.module.ModuleDependency.PROPERTY_DEPENDANTMODULENAME, true);
       List<org.openbravo.model.ad.module.ModuleDependency> deps = qDeps.list();
 
       if (deps.isEmpty()) {
@@ -2270,9 +2268,9 @@ public class ModuleManagement extends HttpSecureAppServlet {
       // Get the static text values once, not to query db each time for them
       OBCriteria<org.openbravo.model.ad.domain.List> qList = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE + ".id",
-          "8BA0A3775CE14CE69989B6C09982FB2E"));
-      qList.addOrder(Order.asc(org.openbravo.model.ad.domain.List.PROPERTY_SEQUENCENUMBER));
+      qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE + ".id",
+          "8BA0A3775CE14CE69989B6C09982FB2E");
+      qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEQUENCENUMBER, true);
       List<org.openbravo.model.ad.domain.List> rList = qList.list();
       SQLReturnObject[] fpEnforcementCombo = new SQLReturnObject[rList.size()];
       for (org.openbravo.model.ad.domain.List value : rList) {
@@ -2426,8 +2424,7 @@ public class ModuleManagement extends HttpSecureAppServlet {
     // cleaning module upgrades
     OBCriteria<org.openbravo.model.ad.module.Module> qUpgr = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.module.Module.class);
-    qUpgr.add(
-        Restrictions.isNotNull(org.openbravo.model.ad.module.Module.PROPERTY_UPGRADEAVAILABLE));
+    qUpgr.addIsNotNull(org.openbravo.model.ad.module.Module.PROPERTY_UPGRADEAVAILABLE);
     try {
       OBInterceptor.setPreventUpdateInfoChange(true);
       for (org.openbravo.model.ad.module.Module mod : qUpgr.list()) {

@@ -21,8 +21,8 @@ package org.openbravo.client.application.window;
 
 import java.util.Collection;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /** Exposes {@link ApplicationDictionaryCachedStructures} as a JMX Bean. */
 @ApplicationScoped

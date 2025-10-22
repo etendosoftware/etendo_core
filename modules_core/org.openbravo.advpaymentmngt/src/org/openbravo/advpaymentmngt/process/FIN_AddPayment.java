@@ -18,6 +18,14 @@
  */
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -27,10 +35,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -893,22 +901,20 @@ public class FIN_AddPayment {
     try {
       OBCriteria<FIN_PaymentScheduleDetail> psdFilter = OBDal.getInstance()
           .createCriteria(FIN_PaymentScheduleDetail.class);
-      psdFilter.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_CLIENT, psd.getClient()));
-      psdFilter.add(
-          Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORGANIZATION, psd.getOrganization()));
-      psdFilter.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
+      psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_CLIENT, psd.getClient());
+      psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORGANIZATION, psd.getOrganization());
+      psdFilter.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
       if (psd.getOrderPaymentSchedule() == null) {
-        psdFilter.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE));
+        psdFilter.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE);
       } else {
-        psdFilter.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
-            psd.getOrderPaymentSchedule()));
+        psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
+            psd.getOrderPaymentSchedule());
       }
       if (psd.getInvoicePaymentSchedule() == null) {
-        psdFilter
-            .add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE));
+        psdFilter.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE);
       } else {
-        psdFilter.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-            psd.getInvoicePaymentSchedule()));
+        psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+            psd.getInvoicePaymentSchedule());
       }
 
       // Update amount and remove payment schedule detail
@@ -1103,8 +1109,8 @@ public class FIN_AddPayment {
         .createCriteria(FIN_PaymentScheduleDetail.class);
     OBContext.setAdminMode();
     try {
-      obc.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-          invoicePaymentSchedule));
+      obc.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+          invoicePaymentSchedule);
       obc.addOrderBy(FIN_PaymentScheduleDetail.PROPERTY_CREATIONDATE, false);
       obc.setFilterOnReadableOrganization(false);
       obc.setMaxResults(1);
@@ -1123,8 +1129,8 @@ public class FIN_AddPayment {
         .createCriteria(FIN_PaymentSchedInvV.class);
     OBContext.setAdminMode();
     try {
-      obc.add(Restrictions.eq(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice));
-      obc.setProjection(Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
+      obc.addEqual(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice);
+      obc.setProjectionMax(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT);
       return (Date) obc.uniqueResult();
     } finally {
       OBContext.restorePreviousMode();
@@ -1331,14 +1337,14 @@ public class FIN_AddPayment {
     try {
       OBCriteria<FIN_PaymentScheduleDetail> obc = OBDal.getInstance()
           .createCriteria(FIN_PaymentScheduleDetail.class);
-      obc.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
+      obc.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
       if (paymentScheduleDetail.getInvoicePaymentSchedule() != null) {
-        obc.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-            paymentScheduleDetail.getInvoicePaymentSchedule()));
+        obc.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+            paymentScheduleDetail.getInvoicePaymentSchedule());
       }
       if (paymentScheduleDetail.getOrderPaymentSchedule() != null) {
-        obc.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
-            paymentScheduleDetail.getOrderPaymentSchedule()));
+        obc.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
+            paymentScheduleDetail.getOrderPaymentSchedule());
       }
       return obc.list();
     } finally {

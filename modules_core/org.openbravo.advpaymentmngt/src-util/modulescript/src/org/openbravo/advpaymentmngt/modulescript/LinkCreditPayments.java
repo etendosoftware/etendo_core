@@ -20,7 +20,7 @@ package org.openbravo.advpaymentmngt.modulescript;
 
 import java.math.BigDecimal;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

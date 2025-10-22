@@ -81,7 +81,7 @@ public class OneToManyTest extends OBBaseTest {
     addReadWriteAccess(OrderLine.class);
     addReadWriteAccess(OrderLineTax.class);
     final OBCriteria<Order> orders = OBDal.getInstance().createCriteria(Order.class);
-    orders.add(Restrictions.eq(Order.PROPERTY_DOCUMENTSTATUS, "DR")); // Draft
+    orders.addEqual(Order.PROPERTY_DOCUMENTSTATUS, "DR"); // Draft
     // document
 
     for (final Order o : orders.list()) {
@@ -120,7 +120,7 @@ public class OneToManyTest extends OBBaseTest {
     addReadWriteAccess(OrderLine.class);
     addReadWriteAccess(OrderLineTax.class);
     final OBCriteria<Order> orders = OBDal.getInstance().createCriteria(Order.class);
-    orders.add(Restrictions.eq(Order.PROPERTY_DOCUMENTSTATUS, "DR"));
+    orders.addEqual(Order.PROPERTY_DOCUMENTSTATUS, "DR");
 
     OrderLine toRemove = null;
     for (final Order o : orders.list()) {
@@ -152,7 +152,7 @@ public class OneToManyTest extends OBBaseTest {
     addReadWriteAccess(OrderLineTax.class);
 
     final OBCriteria<OrderLine> lines = OBDal.getInstance().createCriteria(OrderLine.class);
-    lines.add(Restrictions.eq(OrderLine.PROPERTY_ID, lineId));
+    lines.addEqual(OrderLine.PROPERTY_ID, lineId);
 
     assertEquals(0, lines.list().size());
 
@@ -163,7 +163,7 @@ public class OneToManyTest extends OBBaseTest {
   // setFBUserContext();
   // final OBCriteria<BusinessPartner> bpartners = OBDal.getInstance().createCriteria(
   // BusinessPartner.class);
-  // bpartners.add(Restrictions.eq(BusinessPartner.PROPERTY_SEARCHKEY, "mafalda"));
+  // bpartners.addEqual(BusinessPartner.PROPERTY_SEARCHKEY, "mafalda");
   //
   // if (bpartners.list().size() > 0) {
   // final BusinessPartner partner = bpartners.list().get(0);

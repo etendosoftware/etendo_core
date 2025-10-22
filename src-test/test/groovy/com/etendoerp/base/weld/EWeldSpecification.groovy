@@ -19,12 +19,12 @@ import org.openbravo.client.kernel.KernelInitializer
 import org.openbravo.dal.core.OBInterceptor
 import org.openbravo.dal.core.SQLFunctionRegister
 
-import javax.enterprise.inject.Any
-import javax.enterprise.inject.Instance
-import javax.enterprise.inject.spi.Bean
-import javax.enterprise.inject.spi.BeanManager
-import javax.enterprise.util.AnnotationLiteral
-import javax.inject.Inject
+import jakarta.enterprise.inject.Any
+import jakarta.enterprise.inject.Instance
+import jakarta.enterprise.inject.spi.Bean
+import jakarta.enterprise.inject.spi.BeanManager
+import jakarta.enterprise.util.AnnotationLiteral
+import jakarta.inject.Inject
 
 //@RunWith(Arquillian.class)
 class EWeldSpecification extends EBaseSpecification {

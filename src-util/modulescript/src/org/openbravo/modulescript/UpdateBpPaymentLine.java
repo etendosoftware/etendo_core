@@ -29,7 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 /**
  * This module script has ben created due to issue 28939. 
  * Due to some performance issues this module script sometimes 

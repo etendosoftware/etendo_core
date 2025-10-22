@@ -80,8 +80,8 @@ public class EntityXMLImportTestReference extends XMLBaseTest {
     Location l = null;
     setTestUserContext();
     OBCriteria<Warehouse> obc = OBDal.getInstance().createCriteria(Warehouse.class);
-    obc.add(Restrictions.eq(Warehouse.PROPERTY_ORGANIZATION,
-        OBDal.getInstance().get(Organization.class, TEST_US_ORG_ID)));
+    obc.addEqual(Warehouse.PROPERTY_ORGANIZATION,
+        OBDal.getInstance().get(Organization.class, TEST_US_ORG_ID));
     numberOfWarehouses = obc.count();
     for (Warehouse w : obc.list()) {
       warehouseNames.add(w.getName());

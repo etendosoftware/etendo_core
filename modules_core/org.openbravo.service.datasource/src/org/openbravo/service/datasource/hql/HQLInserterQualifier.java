@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import javax.enterprise.util.AnnotationLiteral;
+import jakarta.enterprise.util.AnnotationLiteral;
 
 /**
  * This class allows to define a qualifier used to register a HQL injection component provider. This
@@ -34,7 +34,7 @@ import javax.enterprise.util.AnnotationLiteral;
  */
 public class HQLInserterQualifier {
 
-  @javax.inject.Qualifier
+  @jakarta.inject.Qualifier
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.TYPE })
   public @interface Qualifier {

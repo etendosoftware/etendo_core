@@ -18,9 +18,9 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -58,10 +58,10 @@ public class SE_PaymentMethod_FinAccount extends SimpleCallout {
       OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
           .createCriteria(FinAccPaymentMethod.class);
       // (paymentmethod, financial_account) is unique
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount));
-      obc.add(Restrictions.in("organization.id",
-          OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount);
+      obc.addInIds("organization.id",
+          OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId));
 
       FinAccPaymentMethod selectedAccPaymentMethod = (FinAccPaymentMethod) obc.uniqueResult();
       if (selectedAccPaymentMethod != null) {

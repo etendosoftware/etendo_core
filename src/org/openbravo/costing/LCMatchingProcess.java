@@ -18,14 +18,22 @@
  */
 package org.openbravo.costing;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -34,8 +42,8 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.OBClassLoader;
 import org.openbravo.base.weld.WeldUtils;
@@ -81,8 +89,8 @@ public class LCMatchingProcess {
         return message;
       }
       final OBCriteria<LCMatched> critMatched = OBDal.getInstance().createCriteria(LCMatched.class);
-      critMatched.add(Restrictions.eq(LCMatched.PROPERTY_LANDEDCOSTCOST, currentLcCost));
-      critMatched.setProjection(Projections.sum(LCMatched.PROPERTY_AMOUNT));
+      critMatched.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, currentLcCost);
+      critMatched.setProjectionSum(LCMatched.PROPERTY_AMOUNT);
       final BigDecimal matchedAmt = (BigDecimal) critMatched.uniqueResult();
       if (matchedAmt != null) {
         currentLcCost.setMatchingAmount(matchedAmt);
@@ -122,8 +130,8 @@ public class LCMatchingProcess {
     // Check there are Matching Lines.
     final OBCriteria<LandedCostCost> critLCMatched = OBDal.getInstance()
         .createCriteria(LandedCostCost.class);
-    critLCMatched.add(Restrictions.sizeEq(LandedCostCost.PROPERTY_LANDEDCOSTMATCHEDLIST, 0));
-    critLCMatched.add(Restrictions.eq(LandedCostCost.PROPERTY_ID, lcCost.getId()));
+    critLCMatched.addSizeEq(LandedCostCost.PROPERTY_LANDEDCOSTMATCHEDLIST, 0);
+    critLCMatched.addEqual(LandedCostCost.PROPERTY_ID, lcCost.getId());
     if (critLCMatched.uniqueResult() != null) {
       throw new OBException(OBMessageUtils.messageBD("LCCostNoMatchings"));
     }
@@ -181,7 +189,7 @@ public class LCMatchingProcess {
     int i = 0;
     try {
       while (receiptamts.next()) {
-        final Object[] receiptAmt = receiptamts.get();
+        final Object[] receiptAmt = (Object[]) receiptamts.get();
         final BigDecimal amt = (BigDecimal) receiptAmt[0];
         final ShipmentInOutLine receiptLine = OBDal.getInstance()
             .get(ShipmentInOutLine.class, receiptAmt[1]);

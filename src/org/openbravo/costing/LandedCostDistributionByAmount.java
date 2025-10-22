@@ -23,7 +23,7 @@ import java.math.RoundingMode;
 import java.util.Date;
 
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -61,13 +61,14 @@ public class LandedCostDistributionByAmount extends LandedCostDistributionAlgori
 
     // Loop to get all receipts amounts and calculate the total.
     final OBCriteria<LCReceipt> critLCRL = OBDal.getInstance().createCriteria(LCReceipt.class);
-    critLCRL.add(Restrictions.eq(LCReceipt.PROPERTY_LANDEDCOST, landedCost));
+    critLCRL.addEqual(LCReceipt.PROPERTY_LANDEDCOST, landedCost);
     ScrollableResults receiptCosts = getReceiptCosts(landedCost, false);
     int i = 0;
     try {
       while (receiptCosts.next()) {
-        final String strTrxCur = (String) receiptCosts.get()[2];
-        BigDecimal trxAmt = (BigDecimal) receiptCosts.get()[3];
+        Object[] row = (Object[]) receiptCosts.get();
+        final String strTrxCur = (String) row[2];
+        BigDecimal trxAmt = (BigDecimal) row[3];
         if (!strTrxCur.equals(strCurId)) {
           trxAmt = getConvertedAmount(trxAmt, strTrxCur, strCurId, dateReference, strOrgId);
         }
@@ -89,10 +90,11 @@ public class LandedCostDistributionByAmount extends LandedCostDistributionAlgori
     receiptCosts = getReceiptCosts(landedCost, true);
     i = 0;
     while (receiptCosts.next()) {
+      Object[] row = (Object[]) receiptCosts.get();
       final ShipmentInOutLine receiptline = OBDal.getInstance()
-          .get(ShipmentInOutLine.class, receiptCosts.get()[1]);
-      final String strTrxCurId = (String) receiptCosts.get()[2];
-      BigDecimal trxAmt = (BigDecimal) receiptCosts.get()[3];
+          .get(ShipmentInOutLine.class, row[1]);
+      final String strTrxCurId = (String) row[2];
+      BigDecimal trxAmt = (BigDecimal) row[3];
 
       if (!strTrxCurId.equals(strCurId)) {
         trxAmt = getConvertedAmount(trxAmt, strTrxCurId, strCurId, dateReference, strOrgId);
@@ -110,7 +112,7 @@ public class LandedCostDistributionByAmount extends LandedCostDistributionAlgori
       }
       pendingAmt = pendingAmt.subtract(receiptAmt);
       final LCReceipt lcrl = (LCReceipt) OBDal.getInstance()
-          .getProxy(LCReceipt.ENTITY_NAME, receiptCosts.get()[0]);
+          .getProxy(LCReceipt.ENTITY_NAME, receiptCosts.get());
       final LCReceiptLineAmt lcrla = OBProvider.getInstance().get(LCReceiptLineAmt.class);
       lcrla.setLandedCostCost((LandedCostCost) OBDal.getInstance()
           .getProxy(LandedCostCost.ENTITY_NAME, localLcCost.getId()));

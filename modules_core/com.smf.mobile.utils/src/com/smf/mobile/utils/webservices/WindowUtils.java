@@ -1,5 +1,13 @@
 package com.smf.mobile.utils.webservices;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import com.smf.mobile.utils.data.MobileIdentifier;
 import com.smf.mobile.utils.data.TabConfiguration;
 import org.apache.logging.log4j.LogManager;
@@ -7,7 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -69,13 +77,13 @@ public class WindowUtils {
         JSONArray identifiers = new JSONArray();
 
         OBCriteria<TabConfiguration> tabConfigurationOBCriteria = OBDal.getInstance().createCriteria(TabConfiguration.class);
-        tabConfigurationOBCriteria.add(Restrictions.eq(TabConfiguration.PROPERTY_TAB, tab));
+        tabConfigurationOBCriteria.addEqual(TabConfiguration.PROPERTY_TAB, tab);
         tabConfigurationOBCriteria.setMaxResults(1);
 
         TabConfiguration config = (TabConfiguration) tabConfigurationOBCriteria.uniqueResult();
         if (config !=  null) {
             OBCriteria<MobileIdentifier> mobileIdentifierOBCriteria = OBDal.getInstance().createCriteria(MobileIdentifier.class);
-            mobileIdentifierOBCriteria.add(Restrictions.eq(MobileIdentifier.PROPERTY_TABCONFIGURATION, config));
+            mobileIdentifierOBCriteria.addEqual(MobileIdentifier.PROPERTY_TABCONFIGURATION, config);
             mobileIdentifierOBCriteria.addOrderBy(MobileIdentifier.PROPERTY_SEQUENCENUMBER, true);
 
             for (MobileIdentifier identifier : mobileIdentifierOBCriteria.list()) {
@@ -189,7 +197,7 @@ public class WindowUtils {
             defaultValue = defaultValue.replace("@AD_USER_ID@", separator + user.getId() + separator);
             if (defaultValue.contains("@COUNTRYDEF@")) {
                 OBCriteria<Country> countryCriteria = OBDal.getInstance().createCriteria(Country.class);
-                countryCriteria.add(Restrictions.eq(Country.PROPERTY_DEFAULT, true));
+                countryCriteria.addEqual(Country.PROPERTY_DEFAULT, true);
                 countryCriteria.setMaxResults(1);
                 Country country = (Country) countryCriteria.uniqueResult();
                 String countryId = country != null ? country.getId() : "";
@@ -199,8 +207,8 @@ public class WindowUtils {
 
 
             if (parentId != null) {
-                OBCriteria<Column> parentColumnCriteria = OBDal.getInstance().createCriteria(Column.class).add(Restrictions.eq(Column.PROPERTY_TABLE,tab.getTable()));
-                parentColumnCriteria.add(Restrictions.eq(Column.PROPERTY_LINKTOPARENTCOLUMN,true));
+                OBCriteria<Column> parentColumnCriteria = OBDal.getInstance().createCriteria(Column.class).addEqual(Column.PROPERTY_TABLE,tab.getTable());
+                parentColumnCriteria.addEqual(Column.PROPERTY_LINKTOPARENTCOLUMN,true);
                 Column parentColumn = null;
                 for (Column column:parentColumnCriteria.list()) {
                     Entity targetEntity = ModelProvider.getInstance().getEntityByTableId(tab.getTable().getId()).getPropertyByColumnName(column.getDBColumnName()).getTargetEntity();

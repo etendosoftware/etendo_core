@@ -20,7 +20,7 @@ package org.openbravo.client.application.navigationbarcomponents;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.client.application.MenuManager;

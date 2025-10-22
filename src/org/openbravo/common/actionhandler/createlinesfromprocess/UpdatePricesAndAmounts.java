@@ -24,7 +24,7 @@ import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;

@@ -18,15 +18,16 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.CharacteristicSubsetValue;
 import org.openbravo.model.common.plm.ProductCharacteristic;
@@ -57,17 +58,16 @@ class SubsetValueEventHandler extends EntityPersistenceEventObserver {
     if (event.getCurrentState(codeProperty) != event.getPreviousState(codeProperty)) {
       OBCriteria<ProductCharacteristic> productCharacteristic = OBDal.getInstance()
           .createCriteria(ProductCharacteristic.class);
-      productCharacteristic.add(Restrictions.eq(ProductCharacteristic.PROPERTY_CHARACTERISTICSUBSET,
-          chsubsetv.getCharacteristicSubset()));
+      productCharacteristic.addEqual(ProductCharacteristic.PROPERTY_CHARACTERISTICSUBSET,
+          chsubsetv.getCharacteristicSubset());
       if (productCharacteristic.count() > 0) {
         for (ProductCharacteristic productCh : productCharacteristic.list()) {
           OBCriteria<ProductCharacteristicConf> productCharateristicsConf = OBDal.getInstance()
               .createCriteria(ProductCharacteristicConf.class);
           productCharateristicsConf
-              .add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
-                  chsubsetv.getCharacteristicValue()));
-          productCharateristicsConf.add(Restrictions
-              .eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, productCh));
+              .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
+                  chsubsetv.getCharacteristicValue());
+          productCharateristicsConf.addFunction((cb, obc) -> cb.equal(obc.getPath(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT), productCh));
           if (productCharateristicsConf.count() > 0) {
             for (ProductCharacteristicConf conf : productCharateristicsConf.list()) {
               if (chsubsetv.getCode() != conf.getCode()) {

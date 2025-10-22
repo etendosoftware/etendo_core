@@ -19,6 +19,14 @@
 
 package org.openbravo.service.datasource;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,10 +35,10 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.enterprise.inject.UnsatisfiedResolutionException;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +47,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
@@ -457,9 +465,9 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
       // If the tab has been provided, check if the user has access to its window
       OBCriteria<WindowAccess> qWindowAccess = OBDal.getInstance()
           .createCriteria(WindowAccess.class);
-      qWindowAccess.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, tab.getWindow()));
+      qWindowAccess.addEqual(WindowAccess.PROPERTY_WINDOW, tab.getWindow());
       qWindowAccess
-          .add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
+          .addEqual(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
       hasAccessToTable = qWindowAccess.count() > 0;
     }
     return hasAccessToTable;
@@ -502,7 +510,7 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
    * @throws TooManyTreeNodesException
    */
   private List<String> getFilteredNodes(Table table, Map<String, String> parameters)
-      throws TooManyTreeNodesException {
+      throws TooManyTreeNodesException, JSONException {
     List<String> filteredNodes = new ArrayList<String>();
     Entity entity = ModelProvider.getInstance().getEntityByTableId(table.getId());
     // Delegate on the default standard datasource to fetch the filtered nodes

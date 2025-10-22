@@ -43,8 +43,8 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.function.SQLFunction;
+// import org.hibernate.criterion.Restrictions; // TODO: Migrate to Hibernate 6 CriteriaBuilder
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;

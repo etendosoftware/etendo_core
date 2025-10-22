@@ -19,6 +19,14 @@
 
 package org.openbravo.client.application;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,11 +34,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.client.application.MenuManager.MenuEntryType;
 import org.openbravo.client.application.MenuManager.MenuOption;
@@ -113,7 +121,7 @@ public class GlobalMenu {
   private List<MenuOption> createInitialMenuList(Tree tree, String language) {
     List<MenuOption> menuOptions = new ArrayList<MenuOption>();
     OBCriteria<TreeNode> treeNodes = OBDal.getInstance().createCriteria(TreeNode.class);
-    treeNodes.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
+    treeNodes.addEqual(TreeNode.PROPERTY_TREE, tree);
     treeNodes.setFilterOnActive(false);
 
     // Cache in DAL session all menu entries in a single query, so no need to query one by one

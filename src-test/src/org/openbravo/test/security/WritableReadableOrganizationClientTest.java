@@ -125,7 +125,7 @@ public class WritableReadableOrganizationClientTest extends OBBaseTest {
     setTestUserContext();
     addReadWriteAccess(Product.class);
     final OBCriteria<Product> obc = OBDal.getInstance().createCriteria(Product.class);
-    obc.add(Restrictions.eq("id", TEST_PRODUCT_ID));
+    obc.addEqual("id", TEST_PRODUCT_ID);
     final List<Product> ps = obc.list();
     assertEquals(1, ps.size());
     final Product p = ps.get(0);
@@ -152,7 +152,7 @@ public class WritableReadableOrganizationClientTest extends OBBaseTest {
     setTestUserContext();
     addReadWriteAccess(Category.class);
     final OBCriteria<Category> obc = OBDal.getInstance().createCriteria(Category.class);
-    obc.add(Restrictions.eq("name", "Supplier"));
+    obc.addEqual("name", "Supplier");
     final List<Category> bogs = obc.list();
     assertEquals(1, bogs.size());
     final Category bp = bogs.get(0);

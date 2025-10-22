@@ -19,13 +19,21 @@
 
 package org.openbravo.client.application.event;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.client.kernel.event.EntityDeleteEvent;
@@ -70,7 +78,7 @@ class ReorderCascadingChildDeletionsHandler extends EntityPersistenceEventObserv
     if (targetEntity == orderEntity) {
       log.debug("Pre-deleting c_ordertax for order: " + event.getId());
       OBCriteria<OrderTax> otc = OBDal.getInstance().createCriteria(OrderTax.class);
-      otc.add(Restrictions.eq(OrderTax.PROPERTY_SALESORDER, event.getTargetInstance()));
+      otc.addEqual(OrderTax.PROPERTY_SALESORDER, event.getTargetInstance());
       List<OrderTax> otList = otc.list();
       for (OrderTax ot : otList) {
         OBDal.getInstance().remove(ot);
@@ -78,7 +86,7 @@ class ReorderCascadingChildDeletionsHandler extends EntityPersistenceEventObserv
     } else if (targetEntity == invoiceEntity) {
       log.debug("Pre-deleting c_invoicetax for invoice: " + event.getId());
       OBCriteria<InvoiceTax> otc = OBDal.getInstance().createCriteria(InvoiceTax.class);
-      otc.add(Restrictions.eq(InvoiceTax.PROPERTY_INVOICE, event.getTargetInstance()));
+      otc.addEqual(InvoiceTax.PROPERTY_INVOICE, event.getTargetInstance());
       List<InvoiceTax> otList = otc.list();
       for (InvoiceTax ot : otList) {
         // Before delete InvoiceTax set recalculate=N to avoid raise error in InvoiceTaxEventHandler

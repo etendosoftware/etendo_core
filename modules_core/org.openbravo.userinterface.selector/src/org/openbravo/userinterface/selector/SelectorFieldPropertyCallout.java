@@ -18,12 +18,20 @@
  */
 package org.openbravo.userinterface.selector;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -119,8 +127,9 @@ public class SelectorFieldPropertyCallout extends SimpleCallout {
       final Table propertyTable = OBDal.getInstance().getProxy(Table.class, tableId);
 
       final OBCriteria<Column> columnCriteria = OBDal.getInstance().createCriteria(Column.class);
-      columnCriteria.add(Restrictions.and(Restrictions.eq(Column.PROPERTY_TABLE, propertyTable),
-          Restrictions.eq(Column.PROPERTY_DBCOLUMNNAME, foundProperty.getColumnName())));
+      Property finalFoundProperty = foundProperty;
+      columnCriteria.addAnd((cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_TABLE), propertyTable),
+                            (cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_DBCOLUMNNAME), finalFoundProperty.getColumnName()));
       final List<Column> columnList = columnCriteria.list();
       if (columnList.isEmpty()) {
         // No columns, don't do anything

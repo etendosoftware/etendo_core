@@ -15,9 +15,12 @@
  */
 package org.openbravo.erpCommon.utility.poc;
 
-import javax.mail.Authenticator;
-import javax.mail.PasswordAuthentication;
+// TODO: Verificar dependencia Jakarta Mail
+// import jakarta.mail.Authenticator;
+// import jakarta.mail.PasswordAuthentication;
 
+// TEMPORAL: Comentado por migración Hibernate 6 - falta dependencia Jakarta Mail
+/* 
 class ClientAuthenticator extends Authenticator {
   private String _username;
   private String _password;
@@ -32,3 +35,6 @@ class ClientAuthenticator extends Authenticator {
     return new PasswordAuthentication(_username, _password);
   }
 }
+*/
+
+// TODO: Clase temporalmente comentada - restaurar cuando se agregue dependencia Jakarta Mail

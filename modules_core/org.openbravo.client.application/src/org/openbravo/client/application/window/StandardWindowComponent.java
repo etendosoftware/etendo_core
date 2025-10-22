@@ -18,6 +18,14 @@
  */
 package org.openbravo.client.application.window;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
@@ -31,7 +39,7 @@ import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Order;
+import jakarta.persistence.criteria.Order;
 import org.openbravo.client.application.GCSystem;
 import org.openbravo.client.application.GCTab;
 import org.openbravo.client.kernel.BaseTemplateComponent;
@@ -193,8 +201,8 @@ public class StandardWindowComponent extends BaseTemplateComponent {
   /** Returns the applicable System Grid Configuration if any. */
   public static Optional<GCSystem> getSystemGridConfig() {
     OBCriteria<GCSystem> gcSystemCriteria = OBDal.getInstance().createCriteria(GCSystem.class);
-    gcSystemCriteria.addOrder(Order.desc(GCTab.PROPERTY_SEQNO));
-    gcSystemCriteria.addOrder(Order.desc(GCTab.PROPERTY_ID));
+    gcSystemCriteria.addOrderBy(GCTab.PROPERTY_SEQNO, false);
+    gcSystemCriteria.addOrderBy(GCTab.PROPERTY_ID, false);
     gcSystemCriteria.setMaxResults(1);
     return Optional.ofNullable((GCSystem) gcSystemCriteria.uniqueResult());
   }

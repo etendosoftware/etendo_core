@@ -24,13 +24,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -83,9 +83,9 @@ public class Posted extends HttpSecureAppServlet {
         final Table table = OBDal.getInstance().get(Table.class, strTableId);
         final OBCriteria<AccountingFact> fact = OBDal.getInstance()
             .createCriteria(AccountingFact.class);
-        fact.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, strKey));
-        fact.add(Restrictions.eq(AccountingFact.PROPERTY_TABLE, table));
-        fact.add(Restrictions.eq(AccountingFact.PROPERTY_MODIFY, true));
+        fact.addEqual(AccountingFact.PROPERTY_RECORDID, strKey);
+        fact.addEqual(AccountingFact.PROPERTY_TABLE, table);
+        fact.addEqual(AccountingFact.PROPERTY_MODIFY, true);
         if (fact.count() > 0) {
           strModify = "Y";
         }

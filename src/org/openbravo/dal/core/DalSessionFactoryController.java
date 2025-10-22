@@ -27,15 +27,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import com.etendoerp.sequences.services.NonTransactionalSequenceService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.Service;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
@@ -57,7 +57,7 @@ public class DalSessionFactoryController extends SessionFactoryController {
   @Any
   private Instance<SQLFunctionRegister> sqlFunctionRegisters;
 
-  private Map<String, SQLFunction> sqlFunctions;
+  private Map<String, SqmFunctionDescriptor> sqlFunctions;
 
   @Override
   protected void mapModel(Configuration configuration) {
@@ -93,8 +93,7 @@ public class DalSessionFactoryController extends SessionFactoryController {
     configuration.setInterceptor(new OBInterceptor());
   }
 
-  @Override
-  protected Map<String, SQLFunction> getSQLFunctions() {
+  protected Map<String, SqmFunctionDescriptor> getSQLFunctions() {
     if (sqlFunctions != null) {
       return sqlFunctions;
     }
@@ -103,7 +102,7 @@ public class DalSessionFactoryController extends SessionFactoryController {
       return sqlFunctions;
     }
     for (SQLFunctionRegister register : sqlFunctionRegisters) {
-      Map<String, SQLFunction> registeredSqlFunctions = register.getSQLFunctions();
+      Map<String, SqmFunctionDescriptor> registeredSqlFunctions = register.getSQLFunctions();
       if (registeredSqlFunctions == null) {
         continue;
       }
@@ -112,7 +111,7 @@ public class DalSessionFactoryController extends SessionFactoryController {
     return sqlFunctions;
   }
 
-  void setSQLFunctions(Map<String, SQLFunction> sqlFunctions) {
+  void setSQLFunctions(Map<String, SqmFunctionDescriptor> sqlFunctions) {
     this.sqlFunctions = sqlFunctions;
   }
 

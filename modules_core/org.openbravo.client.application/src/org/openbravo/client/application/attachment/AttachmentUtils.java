@@ -19,7 +19,16 @@
 
 package org.openbravo.client.application.attachment;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
@@ -88,7 +97,7 @@ public class AttachmentUtils {
       // Only one active AttachmentConfig is allowed per client.
       OBCriteria<AttachmentConfig> critAttConf = OBDal.getInstance()
           .createCriteria(AttachmentConfig.class);
-      critAttConf.add(Restrictions.eq(AttachmentConfig.PROPERTY_CLIENT + ".id", clientId));
+      critAttConf.addEqual(AttachmentConfig.PROPERTY_CLIENT + ".id", clientId);
       if (!OBDal.getInstance().isActiveFilterEnabled()) {
         critAttConf.setFilterOnActive(true);
       }
@@ -166,8 +175,9 @@ public class AttachmentUtils {
    */
   public static List<JSONObject> getTabAttachmentsForRows(Tab tab, String[] recordIds) {
     String tableId = tab.getTable().getId();
-    OBCriteria<Attachment> attachmentFiles = OBDao.getFilteredCriteria(Attachment.class,
-        Restrictions.eq("table.id", tableId), Restrictions.in("record", (Object[]) recordIds));
+    OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
+    attachmentFiles.addEqual("table.id", tableId);
+    attachmentFiles.addIn("record", Arrays.asList(recordIds));
     attachmentFiles.addOrderBy("creationDate", false);
     List<JSONObject> attachments = new ArrayList<>();
     // do not filter by the attachment's organization
@@ -264,8 +274,8 @@ public class AttachmentUtils {
 
         final OBCriteria<ParameterValue> critStoredMetadata = OBDal.getInstance()
             .createCriteria(ParameterValue.class);
-        critStoredMetadata.add(Restrictions.eq(ParameterValue.PROPERTY_FILE, attachment));
-        critStoredMetadata.add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, param));
+        critStoredMetadata.addEqual(ParameterValue.PROPERTY_FILE, attachment);
+        critStoredMetadata.addEqual(ParameterValue.PROPERTY_PARAMETER, param);
         critStoredMetadata.setMaxResults(1);
         ParameterValue metadataStoredValue = (ParameterValue) critStoredMetadata.uniqueResult();
         if (CORE_DESC_PARAMETER.equals(param.getId()) && metadataStoredValue == null

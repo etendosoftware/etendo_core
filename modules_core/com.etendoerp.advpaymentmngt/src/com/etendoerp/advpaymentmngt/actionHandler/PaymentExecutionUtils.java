@@ -1,9 +1,17 @@
 package com.etendoerp.advpaymentmngt.actionHandler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.exception.NoExecutionProcessFoundException;
 import org.openbravo.advpaymentmngt.process.FIN_ExecutePayment;
@@ -117,9 +125,9 @@ public class PaymentExecutionUtils {
       FIN_PaymentMethod paymentMethod) {
     final OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACTIVE, true));
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACTIVE, true);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     try {

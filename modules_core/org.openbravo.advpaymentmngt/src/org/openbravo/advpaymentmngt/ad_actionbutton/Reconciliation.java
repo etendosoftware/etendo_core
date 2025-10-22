@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.ad_actionbutton;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -31,12 +39,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.APRM_FinaccTransactionV;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
@@ -554,8 +562,8 @@ public class Reconciliation extends HttpSecureAppServlet {
     try {
       final OBCriteria<FIN_ReconciliationLine_v> obc = OBDal.getInstance()
           .createCriteria(FIN_ReconciliationLine_v.class);
-      obc.add(Restrictions.eq(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation));
-      obc.add(Restrictions.isNotNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE));
+      obc.addEqual(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation);
+      obc.addIsNotNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE);
       obc.setMaxResults(1);
       final List<FIN_ReconciliationLine_v> rec = obc.list();
       return (rec.size() != 0);
@@ -598,7 +606,7 @@ public class Reconciliation extends HttpSecureAppServlet {
     try {
       OBCriteria<FIN_FinaccTransaction> trans = OBDal.getInstance()
           .createCriteria(FIN_FinaccTransaction.class);
-      trans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, reconciliation));
+      trans.addEqual(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, reconciliation);
       trans.setFilterOnReadableClients(false);
       trans.setFilterOnReadableOrganization(false);
       transactions = trans.list();
@@ -626,10 +634,9 @@ public class Reconciliation extends HttpSecureAppServlet {
         if (payment != null) {
           OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
               .createCriteria(FinAccPaymentMethod.class);
-          obCriteria.add(
-              Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, reconciliation.getAccount()));
-          obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-              payment.getPaymentMethod()));
+          obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, reconciliation.getAccount());
+          obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+              payment.getPaymentMethod());
           obCriteria.setFilterOnReadableClients(false);
           obCriteria.setFilterOnReadableOrganization(false);
           List<FinAccPaymentMethod> lines = obCriteria.list();

@@ -105,8 +105,8 @@ public class WSReadableClientsTest extends BaseWSTest {
     OBContext.setAdminMode();
     try {
       OBCriteria<Region> regionCriteria = OBDal.getInstance().createCriteria(Region.class);
-      regionCriteria.add(Restrictions.eq(Region.PROPERTY_COUNTRY + ".id", COUNTRY_ID));
-      regionCriteria.add(Restrictions.eq(Region.PROPERTY_NAME, REGION_NAME));
+      regionCriteria.addEqual(Region.PROPERTY_COUNTRY + ".id", COUNTRY_ID);
+      regionCriteria.addEqual(Region.PROPERTY_NAME, REGION_NAME);
       regionCriteria.setFilterOnReadableClients(false);
       regionCriteria.setMaxResults(1);
       Region region = (Region) regionCriteria.uniqueResult();

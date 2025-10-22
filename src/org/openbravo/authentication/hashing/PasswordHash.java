@@ -19,6 +19,14 @@
 
 package org.openbravo.authentication.hashing;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +34,7 @@ import java.util.Optional;
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.User;
@@ -73,7 +81,7 @@ public class PasswordHash {
     try {
       User user = (User) OBDal.getInstance()
           .createCriteria(User.class)
-          .add(Restrictions.eq(User.PROPERTY_USERNAME, userName))
+          .addEqual(User.PROPERTY_USERNAME, userName)
           .setFilterOnActive(true)
           .setFilterOnReadableClients(false)
           .setFilterOnReadableOrganization(false)

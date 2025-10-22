@@ -18,9 +18,9 @@
  */
 package org.openbravo.event;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.client.kernel.event.EntityDeleteEvent;
@@ -49,7 +49,7 @@ class InvoiceLineEventHandler extends EntityPersistenceEventObserver {
 
   private void checkInvoiceLineRelation(InvoiceLine invoiceLine) {
     OBCriteria<InvoiceLine> criteria = OBDal.getInstance().createCriteria(InvoiceLine.class);
-    criteria.add(Restrictions.eq(InvoiceLine.PROPERTY_INVOICE, invoiceLine.getInvoice()));
+    criteria.addEqual(InvoiceLine.PROPERTY_INVOICE, invoiceLine.getInvoice());
 
     if (criteria.count() == 1) {
       Invoice invoice = OBDal.getInstance().get(Invoice.class, invoiceLine.getInvoice().getId());
@@ -65,8 +65,8 @@ class InvoiceLineEventHandler extends EntityPersistenceEventObserver {
 
   private void unlinkInvoiceFromGoodsReceipt(Invoice objInvoice) {
     OBCriteria<ShipmentInOut> criteria = OBDal.getInstance().createCriteria(ShipmentInOut.class);
-    criteria.add(Restrictions.eq(ShipmentInOut.PROPERTY_SALESTRANSACTION, Boolean.FALSE));
-    criteria.add(Restrictions.eq(ShipmentInOut.PROPERTY_INVOICE, objInvoice));
+    criteria.addEqual(ShipmentInOut.PROPERTY_SALESTRANSACTION, Boolean.FALSE);
+    criteria.addEqual(ShipmentInOut.PROPERTY_INVOICE, objInvoice);
 
     ShipmentInOut goodsReceipt = (ShipmentInOut) criteria.uniqueResult();
     if (goodsReceipt != null) {

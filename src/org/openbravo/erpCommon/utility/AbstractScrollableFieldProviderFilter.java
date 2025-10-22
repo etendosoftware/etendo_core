@@ -18,7 +18,7 @@
  */
 package org.openbravo.erpCommon.utility;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.data.FieldProvider;
 import org.openbravo.data.ScrollableFieldProvider;

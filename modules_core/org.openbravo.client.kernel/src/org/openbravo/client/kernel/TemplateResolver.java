@@ -18,12 +18,20 @@
  */
 package org.openbravo.client.kernel;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 
@@ -97,7 +105,7 @@ public class TemplateResolver {
     while (true) {
       final OBCriteria<Template> templateCriteria = OBDal.getInstance()
           .createCriteria(Template.class);
-      templateCriteria.add(Restrictions.eq(Template.PROPERTY_OVERRIDESTEMPLATE, currentTemplate));
+      templateCriteria.addEqual(Template.PROPERTY_OVERRIDESTEMPLATE, currentTemplate);
       final List<Template> overridingTemplates = templateCriteria.list();
       if (overridingTemplates.size() == 0) {
         return currentTemplate;

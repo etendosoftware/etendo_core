@@ -20,7 +20,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 
 import java.text.ParseException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * Action for processing shipment.

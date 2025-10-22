@@ -38,7 +38,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
@@ -56,7 +56,7 @@ import org.openbravo.model.financialmgmt.accounting.AccountingFact;
 import org.openbravo.model.financialmgmt.calendar.Period;
 import org.openbravo.service.db.DbUtility;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 public class ResetAccounting {
   static final int FETCH_SIZE = 1000;
@@ -163,7 +163,7 @@ public class ResetAccounting {
             int i = 0;
             try {
               while (scroll.next()) {
-                final Object[] resultSet = scroll.get();
+                final Object[] resultSet = (Object[]) scroll.get();
                 final String organization = (String) resultSet[0];
                 final String orgperiodcontrol = (String) resultSet[1];
 
@@ -284,8 +284,8 @@ public class ResetAccounting {
               .setFilterOnReadableClients(false)
               .setFilterOnReadableOrganization(false)
               .setFilterOnActive(false)
-              .add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, localRecordId))
-              .add(Restrictions.eq(AccountingFact.PROPERTY_TABLE, table))
+              .addEqual(AccountingFact.PROPERTY_RECORDID, localRecordId)
+              .addEqual(AccountingFact.PROPERTY_TABLE, table)
               .setMaxResults(1)
               .list()
               .isEmpty();
@@ -588,9 +588,9 @@ public class ResetAccounting {
     final String CLIENT_SYSTEM = "0";
     final OBCriteria<Organization> obc = OBDal.getInstance().createCriteria(Organization.class);
     if (!CLIENT_SYSTEM.equals(client.getId())) {
-      obc.add(Restrictions.eq(Organization.PROPERTY_CLIENT, client));
+      obc.addEqual(Organization.PROPERTY_CLIENT, client);
     }
-    return obc.add(Restrictions.in(Organization.PROPERTY_ID, orgIds))
+    return obc.addInIds(Organization.PROPERTY_ID, orgIds)
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .list();
@@ -845,11 +845,11 @@ public class ResetAccounting {
       for (String transaction : transactions) {
         final List<AccountingFact> facts = OBDal.getInstance()
             .createCriteria(AccountingFact.class)
-            .add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, transaction))
-            .add(Restrictions.eq(AccountingFact.PROPERTY_TABLE,
-                OBDal.getInstance().get(Table.class, tableId)))
-            .add(Restrictions.eq(AccountingFact.PROPERTY_CLIENT,
-                OBDal.getInstance().get(Client.class, clientId)))
+            .addEqual(AccountingFact.PROPERTY_RECORDID, transaction)
+            .addEqual(AccountingFact.PROPERTY_TABLE,
+                OBDal.getInstance().get(Table.class, tableId))
+            .addEqual(AccountingFact.PROPERTY_CLIENT,
+                OBDal.getInstance().get(Client.class, clientId))
             .list();
         final Set<Date> exceptionDates = new HashSet<>();
         for (AccountingFact fact : facts) {
@@ -967,7 +967,7 @@ public class ResetAccounting {
           .scroll(ScrollMode.FORWARD_ONLY)) {
         int i = 0;
         while (scroll.next()) {
-          final Object[] resultSet = scroll.get();
+          final Object[] resultSet = (Object[]) scroll.get();
           final String orgPeriodControl = (String) resultSet[1];
 
           validatePeriods(clientId, orgIds, tableId, dateFrom, dbt, orgPeriodControl, resultSet);

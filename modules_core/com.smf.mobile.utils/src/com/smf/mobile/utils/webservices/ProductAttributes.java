@@ -1,5 +1,13 @@
 package com.smf.mobile.utils.webservices;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.BufferedReader;
 import java.io.Writer;
 import java.text.DateFormat;
@@ -9,21 +17,22 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -150,7 +159,7 @@ public class ProductAttributes implements WebService {
 
     // Get assigned attributes
     OBCriteria<AttributeUse> criteria = OBDal.getInstance().createCriteria(AttributeUse.class);
-    criteria.add(Restrictions.eq(AttributeUse.PROPERTY_ATTRIBUTESET, attributeSet));
+    criteria.addEqual(AttributeUse.PROPERTY_ATTRIBUTESET, attributeSet);
     criteria.addOrderBy(AttributeUse.PROPERTY_SEQUENCENUMBER, true);
     List<AttributeUse> results = criteria.list();
 
@@ -166,8 +175,8 @@ public class ProductAttributes implements WebService {
 
         if (attributeSetInstance != null) {
           OBCriteria<AttributeInstance> valueCriteria = OBDal.getInstance().createCriteria(AttributeInstance.class);
-          valueCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance));
-          valueCriteria.add(Restrictions.isNull(AttributeInstance.PROPERTY_ATTRIBUTEVALUE));
+          valueCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance);
+          valueCriteria.addFunction((cb, obc) -> cb.isNull(obc.getPath(AttributeInstance.PROPERTY_ATTRIBUTEVALUE)));
           List<AttributeInstance> valueResults = valueCriteria.list();
 
           if (!valueResults.isEmpty()) {
@@ -186,8 +195,8 @@ public class ProductAttributes implements WebService {
 
             if (attributeSetInstance != null) {
               OBCriteria<AttributeInstance> listValueCriteria = OBDal.getInstance().createCriteria(AttributeInstance.class);
-              listValueCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance));
-              listValueCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTEVALUE, value));
+              listValueCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance);
+              listValueCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTEVALUE, value);
               List<AttributeInstance> listValueResults = listValueCriteria.list();
 
               if (!listValueResults.isEmpty()) {
@@ -289,7 +298,7 @@ public class ProductAttributes implements WebService {
 
         String lot = attributes.getString("lot");
         if (lot != null && !lot.isEmpty()) {
-          attributeCriteria.add(Restrictions.eq(AttributeSetInstance.PROPERTY_LOTNAME, lot));
+          attributeCriteria.addEqual(AttributeSetInstance.PROPERTY_LOTNAME, lot);
         }
 
       } else if ("serialNo".equals(key)) {
@@ -298,7 +307,7 @@ public class ProductAttributes implements WebService {
 
         if (serialno != null && !serialno.isEmpty()) {
 
-          attributeCriteria.add(Restrictions.eq(AttributeSetInstance.PROPERTY_SERIALNO, serialno));
+          attributeCriteria.addEqual(AttributeSetInstance.PROPERTY_SERIALNO, serialno);
         }
 
       } else if ("expirationDate".equals(key)) {
@@ -311,7 +320,7 @@ public class ProductAttributes implements WebService {
           try {
             guaranteeDate = dateFormat.parse(guaranteeDateStr);
             attributeCriteria
-                .add(Restrictions.eq(AttributeSetInstance.PROPERTY_EXPIRATIONDATE, guaranteeDate));
+                .addEqual(AttributeSetInstance.PROPERTY_EXPIRATIONDATE, guaranteeDate);
           } catch (Exception e) {
             log.error(e.getMessage(), e);
           }
@@ -351,11 +360,10 @@ public class ProductAttributes implements WebService {
         // instances
         OBCriteria<AttributeInstance> attributeInstanceCriteria = OBDal.getInstance()
             .createCriteria(AttributeInstance.class);
-        attributeInstanceCriteria.add(
-            Restrictions.in(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances));
+        attributeInstanceCriteria.addIn(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances);
 
         attributeInstanceCriteria
-            .add(Restrictions.in(AttributeInstance.PROPERTY_SEARCHKEY, attributeInstancesValues));
+            .addIn(AttributeInstance.PROPERTY_SEARCHKEY, attributeInstancesValues);
 
         List<AttributeInstance> attributeInstances = attributeInstanceCriteria.list();
 
@@ -412,11 +420,11 @@ public class ProductAttributes implements WebService {
     }
     
     OBCriteria<StorageDetail> sdCriteria = OBDal.getInstance().createCriteria(StorageDetail.class);
-    sdCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_STORAGEBIN, storageBin));
+    sdCriteria.addEqual(StorageDetail.PROPERTY_STORAGEBIN, storageBin);
 
     if (attributeSetInstances != null) {
       sdCriteria
-          .add(Restrictions.in(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances));
+          .addIn(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances);
     }
 
     if (attributeInstances != null) {
@@ -424,7 +432,7 @@ public class ProductAttributes implements WebService {
       for (AttributeInstance attributeInstance : attributeInstances) {
         attributes.add(attributeInstance.getAttributeSetValue());
       }
-      sdCriteria.add(Restrictions.in(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributes));
+      sdCriteria.addIn(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributes);
     }
 
     return sdCriteria.list();
@@ -467,8 +475,8 @@ public class ProductAttributes implements WebService {
 
           final OBCriteria<AttributeUse> attributeuseCriteria = OBDal.getInstance().createCriteria(
               AttributeUse.class);
-          attributeuseCriteria.add(Restrictions.eq(AttributeUse.PROPERTY_ATTRIBUTESET,
-              product.getAttributeSet()));
+          attributeuseCriteria.addEqual(AttributeUse.PROPERTY_ATTRIBUTESET,
+              product.getAttributeSet());
           attributeuseCriteria.addOrderBy(AttributeUse.PROPERTY_SEQUENCENUMBER, true);
 
           final List<AttributeUse> attributeUseResults = attributeuseCriteria.list();

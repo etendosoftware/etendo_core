@@ -22,7 +22,7 @@ package org.openbravo.erpCommon.ad_callouts;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 

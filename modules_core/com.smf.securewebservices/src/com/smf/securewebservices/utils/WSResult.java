@@ -3,7 +3,7 @@ package com.smf.securewebservices.utils;
 import java.io.PrintWriter;
 import java.util.List;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;

@@ -19,6 +19,14 @@
 
 package org.openbravo.materialmgmt.refinventory;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,7 +36,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -95,12 +103,11 @@ public class ReferencedInventoryUtil {
           ? OBDal.getInstance().getProxy(AttributeSetInstance.class, "0")
           : _originalAttributeSetInstance;
 
-      final OBCriteria<AttributeSetInstance> criteria = OBDao.getFilteredCriteria(
-          AttributeSetInstance.class,
-          Restrictions.eq(AttributeSetInstance.PROPERTY_PARENTATTRIBUTESETINSTANCE + ".id",
-              originalAttributeSetInstance.getId()),
-          Restrictions.eq(AttributeSetInstance.PROPERTY_REFERENCEDINVENTORY + ".id",
-              referencedInventory.getId()));
+      final OBCriteria<AttributeSetInstance> criteria = OBDal.getInstance().createCriteria(AttributeSetInstance.class);
+      criteria.addAnd(
+          (cb, obc) -> cb.equal(obc.getPath(AttributeSetInstance.PROPERTY_PARENTATTRIBUTESETINSTANCE + ".id"), originalAttributeSetInstance.getId()),
+          (cb, obc) -> cb.equal(obc.getPath(AttributeSetInstance.PROPERTY_REFERENCEDINVENTORY + ".id"), referencedInventory.getId())
+      );
       criteria.setMaxResults(1);
       return criteria.list().get(0);
     } catch (final Exception notFound) {

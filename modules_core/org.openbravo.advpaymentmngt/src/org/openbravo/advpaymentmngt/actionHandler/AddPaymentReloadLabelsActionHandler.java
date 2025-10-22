@@ -19,13 +19,21 @@
 
 package org.openbravo.advpaymentmngt.actionHandler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.application.Parameter;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
@@ -67,8 +75,8 @@ public class AddPaymentReloadLabelsActionHandler extends BaseActionHandler {
       values.put("financialAccount", financialAccountElement.get(labelProperty));
       if (!StringUtils.equals(lang.getLanguage(), "en_US")) {
         final OBCriteria<ElementTrl> obcBP = OBDal.getInstance().createCriteria(ElementTrl.class);
-        obcBP.add(Restrictions.eq(ElementTrl.PROPERTY_APPLICATIONELEMENT, businessPartnerElement));
-        obcBP.add(Restrictions.eq(ElementTrl.PROPERTY_LANGUAGE, lang));
+        obcBP.addEqual(ElementTrl.PROPERTY_APPLICATIONELEMENT, businessPartnerElement);
+        obcBP.addEqual(ElementTrl.PROPERTY_LANGUAGE, lang);
         obcBP.setMaxResults(1);
         final ElementTrl elementBP = (ElementTrl) obcBP.uniqueResult();
         if (elementBP != null) {
@@ -76,8 +84,8 @@ public class AddPaymentReloadLabelsActionHandler extends BaseActionHandler {
         }
 
         final OBCriteria<ElementTrl> obcFA = OBDal.getInstance().createCriteria(ElementTrl.class);
-        obcFA.add(Restrictions.eq(ElementTrl.PROPERTY_APPLICATIONELEMENT, financialAccountElement));
-        obcFA.add(Restrictions.eq(ElementTrl.PROPERTY_LANGUAGE, lang));
+        obcFA.addEqual(ElementTrl.PROPERTY_APPLICATIONELEMENT, financialAccountElement);
+        obcFA.addEqual(ElementTrl.PROPERTY_LANGUAGE, lang);
         obcFA.setMaxResults(1);
         final ElementTrl elementFA = (ElementTrl) obcFA.uniqueResult();
         if (elementFA != null) {

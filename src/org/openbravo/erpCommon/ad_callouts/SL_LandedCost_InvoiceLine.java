@@ -20,7 +20,7 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import java.math.BigDecimal;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;

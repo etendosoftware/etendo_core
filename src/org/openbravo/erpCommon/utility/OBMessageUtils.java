@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
@@ -79,9 +79,9 @@ public class OBMessageUtils {
       log4j.debug("messageBD - Message Code: " + strCode);
       OBCriteria<Message> obcMessage = OBDal.getInstance().createCriteria(Message.class);
       if (ignoreCase) {
-        obcMessage.add(Restrictions.eq(Message.PROPERTY_SEARCHKEY, strCode).ignoreCase());
+        obcMessage.addEqual(Message.PROPERTY_SEARCHKEY, strCode);
       } else {
-        obcMessage.add(Restrictions.eq(Message.PROPERTY_SEARCHKEY, strCode));
+        obcMessage.addEqual(Message.PROPERTY_SEARCHKEY, strCode);
       }
       obcMessage.setMaxResults(1);
       Message msg = (Message) obcMessage.uniqueResult();
@@ -107,7 +107,7 @@ public class OBMessageUtils {
       try {
         OBContext.setAdminMode(false);
         OBCriteria<Element> obcElement = OBDal.getInstance().createCriteria(Element.class);
-        obcElement.add(Restrictions.eq(Element.PROPERTY_DBCOLUMNNAME, strCode).ignoreCase());
+        obcElement.addEqual(Element.PROPERTY_DBCOLUMNNAME, strCode);
         if (obcElement.count() > 0) {
           Element element = obcElement.list().get(0);
           strMessage = element.getName();

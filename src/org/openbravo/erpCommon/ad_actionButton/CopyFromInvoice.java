@@ -26,13 +26,13 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Set;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -324,8 +324,8 @@ public class CopyFromInvoice extends HttpSecureAppServlet {
       GLItem glItem = OBDal.getInstance().get(GLItem.class, accountId);
 
       OBCriteria<TaxRate> obcriteria = OBDal.getInstance().createCriteria(TaxRate.class);
-      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_TAXCATEGORY, glItem.getTaxCategory()));
-      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE));
+      obcriteria.addEqual(TaxRate.PROPERTY_TAXCATEGORY, glItem.getTaxCategory());
+      obcriteria.addEqual(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE);
       List<TaxRate> taxRates = obcriteria.list();
       if (taxRates.size() == 0) {
         throw new OBException(
@@ -341,8 +341,8 @@ public class CopyFromInvoice extends HttpSecureAppServlet {
       Product product = OBDal.getInstance().get(Product.class, productId);
 
       OBCriteria<TaxRate> obcriteria = OBDal.getInstance().createCriteria(TaxRate.class);
-      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_TAXCATEGORY, product.getTaxCategory()));
-      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE));
+      obcriteria.addEqual(TaxRate.PROPERTY_TAXCATEGORY, product.getTaxCategory());
+      obcriteria.addEqual(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE);
       List<TaxRate> taxRates = obcriteria.list();
       if (taxRates.size() == 0) {
         throw new OBException(

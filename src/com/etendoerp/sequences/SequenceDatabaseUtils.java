@@ -4,7 +4,7 @@ package com.etendoerp.sequences;
 import com.etendoerp.sequences.parameters.SequenceParameterList;
 import com.etendoerp.sequences.transactional.RequiredDimensionException;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.security.OrganizationStructureProvider;
@@ -54,7 +54,7 @@ public class SequenceDatabaseUtils {
         SequenceConfig sequenceConfig = getSequenceConfiguration(reference);
         if (sequenceConfig != null) {
             final OBCriteria<DimensionsList> dimensionsListOBCriteria = OBDal.getInstance().createCriteria(DimensionsList.class);
-            dimensionsListOBCriteria.add(Restrictions.eq(DimensionsList.PROPERTY_SEQUENCECONFIG, sequenceConfig));
+            dimensionsListOBCriteria.addEqual(DimensionsList.PROPERTY_SEQUENCECONFIG, sequenceConfig);
             dimensionsLists = dimensionsListOBCriteria.list();
         }
         return dimensionsLists;
@@ -70,7 +70,7 @@ public class SequenceDatabaseUtils {
      */
     public static SequenceConfig getSequenceConfiguration(Reference reference) {
         final OBCriteria<SequenceConfig> sequenceConfigOBCriteria = OBDal.getInstance().createCriteria(SequenceConfig.class);
-        sequenceConfigOBCriteria.add(Restrictions.eq(SequenceConfig.PROPERTY_REFERENCE, reference));
+        sequenceConfigOBCriteria.addEqual(SequenceConfig.PROPERTY_REFERENCE, reference);
         return (SequenceConfig) sequenceConfigOBCriteria.uniqueResult();
     }
 

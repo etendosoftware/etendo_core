@@ -27,14 +27,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -312,19 +312,18 @@ public class CostingUtils {
     // Get cost from M_Costing for given date.
     OBCriteria<Costing> obcCosting = OBDal.getInstance()
         .createCriteria(Costing.class)
-        .add(Restrictions.eq(Costing.PROPERTY_PRODUCT, product))
-        .add(Restrictions.le(Costing.PROPERTY_STARTINGDATE, date))
-        .add(Restrictions.gt(Costing.PROPERTY_ENDINGDATE, date))
-        .add(Restrictions.eq(Costing.PROPERTY_COSTTYPE, costtype))
-        .add(Restrictions.isNotNull(Costing.PROPERTY_COST));
+        .addEqual(Costing.PROPERTY_PRODUCT, product)
+        .addLessOrEqualThan(Costing.PROPERTY_STARTINGDATE, date)
+        .addGreaterThan(Costing.PROPERTY_ENDINGDATE, date)
+        .addEqual(Costing.PROPERTY_COSTTYPE, costtype)
+        .addIsNotNull(Costing.PROPERTY_COST);
 
     if (costDimensions.get(CostDimension.Warehouse) != null) {
-      obcCosting.add(
-          Restrictions.eq(Costing.PROPERTY_WAREHOUSE, costDimensions.get(CostDimension.Warehouse)));
+      obcCosting.addEqual(Costing.PROPERTY_WAREHOUSE, costDimensions.get(CostDimension.Warehouse));
     }
 
     List<Costing> obcCostingList = obcCosting
-        .add(Restrictions.eq(Costing.PROPERTY_ORGANIZATION, org))
+        .addEqual(Costing.PROPERTY_ORGANIZATION, org)
         .setFilterOnReadableOrganization(false)
         .setMaxResults(2)
         .list();
@@ -677,7 +676,7 @@ public class CostingUtils {
     BigDecimal sum = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        Object[] resultSet = scroll.get();
+        Object[] resultSet = (Object[]) scroll.get();
         BigDecimal origAmt = (BigDecimal) resultSet[0];
         String origCurId = (String) resultSet[1];
 
@@ -911,12 +910,12 @@ public class CostingUtils {
     OBCriteria<MaterialTransaction> criteria = OBDal.getInstance()
         .createCriteria(MaterialTransaction.class);
     criteria.createAlias(MaterialTransaction.PROPERTY_STORAGEBIN, "sb")
-        .add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCT, product))
-        .add(Restrictions.eq(MaterialTransaction.PROPERTY_ISPROCESSED, true))
-        .add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + ".id", orgs));
+        .addEqual(MaterialTransaction.PROPERTY_PRODUCT, product)
+        .addEqual(MaterialTransaction.PROPERTY_ISPROCESSED, true)
+        .addInIds(MaterialTransaction.PROPERTY_ORGANIZATION + ".id", orgs);
     if (costDimensions.get(CostDimension.Warehouse) != null) {
-      criteria.add(Restrictions.eq("sb." + Locator.PROPERTY_WAREHOUSE + ".id",
-          costDimensions.get(CostDimension.Warehouse).getId()));
+      criteria.addEqual("sb." + Locator.PROPERTY_WAREHOUSE + ".id",
+          costDimensions.get(CostDimension.Warehouse).getId());
     }
 
     return criteria.setFilterOnReadableOrganization(false).setMaxResults(1).uniqueResult() != null;

@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -288,7 +288,7 @@ public class LinkToParentTreeDatasourceService extends TreeDatasourceService {
     final ScrollableResults scrollableResults = query.scroll(ScrollMode.FORWARD_ONLY);
     try {
       while (scrollableResults.next()) {
-        BaseOBObject bob = (BaseOBObject) scrollableResults.get()[0];
+        BaseOBObject bob = (BaseOBObject) scrollableResults.get();
         final JSONObject json = toJsonConverter.toJsonObject(bob, DataResolvingMode.FULL);
         if (fetchRoot) {
           json.put("parentId", ROOT_NODE_CLIENT);
@@ -867,7 +867,7 @@ public class LinkToParentTreeDatasourceService extends TreeDatasourceService {
     final ScrollableResults scrollableResults = query.scroll(ScrollMode.FORWARD_ONLY);
     try {
       while (scrollableResults.next()) {
-        BaseOBObject bob = (BaseOBObject) scrollableResults.get()[0];
+        BaseOBObject bob = (BaseOBObject) scrollableResults.get();
         final JSONObject json = toJsonConverter.toJsonObject(bob, DataResolvingMode.FULL);
 
         Object nodeId = bob.get(nodeIdProperty.getName());

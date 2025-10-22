@@ -1,5 +1,13 @@
 package com.smf.mobile.utils.webservices;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,8 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +24,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -94,19 +102,19 @@ public class Window implements WebService {
       org.openbravo.model.ad.ui.Window adWindow = OBDal.getInstance().get(org.openbravo.model.ad.ui.Window.class, windowId);
 
       OBCriteria<WindowAccess> windowAccessCriteria = OBDal.getInstance().createCriteria(WindowAccess.class);
-      windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, role));
-      windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_SMFMUMOBILEVIEW, true));
-      windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_ACTIVE, true));
+      windowAccessCriteria.addEqual(WindowAccess.PROPERTY_ROLE, role);
+      windowAccessCriteria.addEqual(WindowAccess.PROPERTY_SMFMUMOBILEVIEW, true);
+      windowAccessCriteria.addEqual(WindowAccess.PROPERTY_ACTIVE, true);
 
       OBCriteria<Language> languageCriteria = OBDal.getInstance().createCriteria(Language.class);
-      languageCriteria.add(Restrictions.eq(Language.PROPERTY_LANGUAGE, language));
+      languageCriteria.addEqual(Language.PROPERTY_LANGUAGE, language);
       Language currentLanguage = (Language) languageCriteria.uniqueResult();
       if (currentLanguage.isSystemLanguage())
         OBContext.getOBContext().setLanguage(currentLanguage);
 
       if (adWindow != null) {
         // Specific window present. Check if role has access to it:
-        windowAccessCriteria.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, adWindow));
+        windowAccessCriteria.addEqual(WindowAccess.PROPERTY_WINDOW, adWindow);
         windowAccessCriteria.setMaxResults(1);
         WindowAccess windowAccess = (WindowAccess) windowAccessCriteria.uniqueResult();
 

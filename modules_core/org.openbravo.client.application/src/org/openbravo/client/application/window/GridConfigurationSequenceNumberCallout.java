@@ -18,9 +18,17 @@
  */
 package org.openbravo.client.application.window;
 
-import javax.servlet.ServletException;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
 
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.servlet.ServletException;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.application.GCSystem;
 import org.openbravo.client.application.GCTab;
 import org.openbravo.dal.core.OBContext;
@@ -56,13 +64,13 @@ public class GridConfigurationSequenceNumberCallout extends SimpleCallout {
       String tabOfGcTabId = info.getStringParameter("inpadTabId", null);
       Tab myTab = OBDal.getInstance().get(Tab.class, tabOfGcTabId);
       OBCriteria<GCTab> gcTabCriteria = OBDal.getInstance().createCriteria(GCTab.class);
-      gcTabCriteria.add(Restrictions.and(Restrictions.eq(GCTab.PROPERTY_TAB, myTab),
-          Restrictions.eq(GCTab.PROPERTY_SEQNO, configurationSequence)));
+      gcTabCriteria.addAnd((cb, obc) -> cb.equal(obc.getPath(GCTab.PROPERTY_TAB), myTab),
+                           (cb, obc) -> cb.equal(obc.getPath(GCTab.PROPERTY_SEQNO), configurationSequence));
       int countGCTabCriteria = gcTabCriteria.count();
       createWarningMessage(info, countGCTabCriteria);
     } else if (info.getTabId().equals(GC_SYSTEM_TAB_ID)) {
       OBCriteria<GCSystem> gcSystemCriteria = OBDal.getInstance().createCriteria(GCSystem.class);
-      gcSystemCriteria.add(Restrictions.eq(GCSystem.PROPERTY_SEQNO, configurationSequence));
+      gcSystemCriteria.addEqual(GCSystem.PROPERTY_SEQNO, configurationSequence);
       int countGCSystemCriteria = gcSystemCriteria.count();
       createWarningMessage(info, countGCSystemCriteria);
     }

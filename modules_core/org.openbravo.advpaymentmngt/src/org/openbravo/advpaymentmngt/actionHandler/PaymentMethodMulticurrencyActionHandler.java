@@ -19,11 +19,19 @@
 
 package org.openbravo.advpaymentmngt.actionHandler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Date;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
@@ -127,10 +135,10 @@ public class PaymentMethodMulticurrencyActionHandler extends BaseActionHandler {
           .createCriteria(FinAccPaymentMethod.class);
       obc.setFilterOnReadableOrganization(false);
       obc.setMaxResults(1);
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT,
-          OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId)));
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-          OBDal.getInstance().get(FIN_PaymentMethod.class, paymentMethodId)));
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT,
+          OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId));
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+          OBDal.getInstance().get(FIN_PaymentMethod.class, paymentMethodId));
       return (FinAccPaymentMethod) obc.uniqueResult();
     } finally {
       OBContext.restorePreviousMode();

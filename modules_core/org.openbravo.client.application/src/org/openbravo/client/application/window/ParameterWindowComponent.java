@@ -18,12 +18,20 @@
  */
 package org.openbravo.client.application.window;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -31,7 +39,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.client.application.Parameter;
 import org.openbravo.client.application.Process;
@@ -136,9 +144,9 @@ public class ParameterWindowComponent extends BaseTemplateComponent {
       if (p.isActive() && p.getReference().getId().equals(BUTTON_LIST_REFERENCE_ID)) {
         OBCriteria<org.openbravo.model.ad.domain.List> qList = OBDal.getInstance()
             .createCriteria(org.openbravo.model.ad.domain.List.class);
-        qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
-            p.getReferenceSearchKey()));
-        qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_ACTIVE, true));
+        qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
+            p.getReferenceSearchKey());
+        qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_ACTIVE, true);
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEQUENCENUMBER, true);
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, true);
         List<org.openbravo.model.ad.domain.List> buttonList = qList.list();

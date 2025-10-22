@@ -19,12 +19,20 @@
 
 package org.openbravo.common.actionhandler.copyfromorderprocess;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Set;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
@@ -142,9 +150,9 @@ class UpdateOrderLineInformation implements CopyFromOrdersProcessImplementationI
    */
   private String getMaxBusinessPartnerLocationId(final BusinessPartner businessPartner) {
     OBCriteria<Location> obc = OBDal.getInstance().createCriteria(Location.class);
-    obc.add(Restrictions.eq(Location.PROPERTY_BUSINESSPARTNER, businessPartner));
-    obc.add(Restrictions.eq(Location.PROPERTY_ACTIVE, true));
-    obc.setProjection(Projections.max(Location.PROPERTY_ID));
+    obc.addEqual(Location.PROPERTY_BUSINESSPARTNER, businessPartner);
+    obc.addEqual(Location.PROPERTY_ACTIVE, true);
+    obc.setProjectionMax(Location.PROPERTY_ID);
     obc.setMaxResults(1);
     return (String) obc.uniqueResult();
   }

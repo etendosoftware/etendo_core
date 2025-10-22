@@ -19,12 +19,20 @@
 
 package org.openbravo.service.datasource;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.datamodel.Table;
@@ -68,9 +76,9 @@ public class AccountTreeDatasourceService extends ADTreeDatasourceService {
     TableTree tableTree = null;
     DataSource accountTreeDatasource = OBDal.getInstance().get(DataSource.class, DATASOURCE_ID);
     OBCriteria<TableTree> criteria = OBDal.getInstance().createCriteria(TableTree.class);
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_TABLE, table));
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, CUSTOM_STRUCTURE));
-    criteria.add(Restrictions.eq(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource));
+    criteria.addEqual(TableTree.PROPERTY_TABLE, table);
+    criteria.addEqual(TableTree.PROPERTY_TREESTRUCTURE, CUSTOM_STRUCTURE);
+    criteria.addEqual(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource);
     criteria.setMaxResults(1);
     tableTree = (TableTree) criteria.uniqueResult();
     return tableTree;

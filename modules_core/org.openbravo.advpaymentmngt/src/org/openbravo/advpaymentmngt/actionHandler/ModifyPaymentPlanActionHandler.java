@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.actionHandler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,7 +41,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.exception.ConstraintViolationException;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentMonitorProcess;
@@ -303,7 +311,7 @@ public class ModifyPaymentPlanActionHandler extends BaseProcessActionHandler {
   private boolean existsPaymentScheduleDetail(FIN_PaymentDetail pd) {
     OBCriteria<FIN_PaymentScheduleDetail> obcPSD = OBDal.getInstance()
         .createCriteria(FIN_PaymentScheduleDetail.class);
-    obcPSD.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS, pd));
+    obcPSD.addEqual(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS, pd);
     obcPSD.setMaxResults(1);
     return obcPSD.uniqueResult() != null;
   }
@@ -348,9 +356,8 @@ public class ModifyPaymentPlanActionHandler extends BaseProcessActionHandler {
       // 1) Remove not paid payment schedule detail lines
       OBCriteria<FIN_PaymentScheduleDetail> obcPSD = OBDal.getInstance()
           .createCriteria(FIN_PaymentScheduleDetail.class);
-      obcPSD.add(
-          Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE, invoicePS));
-      obcPSD.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
+      obcPSD.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE, invoicePS);
+      obcPSD.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
       for (FIN_PaymentScheduleDetail psd : obcPSD.list()) {
         invoicePS.getFINPaymentScheduleDetailInvoicePaymentScheduleList().remove(psd);
         OBDal.getInstance().save(invoicePS);
@@ -506,7 +513,7 @@ public class ModifyPaymentPlanActionHandler extends BaseProcessActionHandler {
     List<FIN_PaymentSchedule> lQuery, lReturn = new ArrayList<FIN_PaymentSchedule>();
     OBCriteria<FIN_PaymentSchedule> obcPS = OBDal.getInstance()
         .createCriteria(FIN_PaymentSchedule.class);
-    obcPS.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice));
+    obcPS.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice);
     lQuery = obcPS.list();
     for (FIN_PaymentSchedule ps : lQuery) {
       if (ps.getPaidAmount().abs().compareTo(ps.getAmount().abs()) < 0) {

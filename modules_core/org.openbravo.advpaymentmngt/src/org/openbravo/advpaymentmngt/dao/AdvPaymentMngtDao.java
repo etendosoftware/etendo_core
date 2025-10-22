@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.dao;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,11 +39,13 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
+import jakarta.persistence.criteria.Predicate;
+// TODO: Migrar DetachedCriteria a subquery con CriteriaBuilder manualmente
+// import org.hibernate.criterion.DetachedCriteria;
+// import org.hibernate.criterion.Projections;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Subquery;
+// import org.hibernate.criterion.Subqueries;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.APRMPendingPaymentFromInvoice;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -677,8 +687,8 @@ public class AdvPaymentMngtDao {
 
     OBCriteria<FIN_PaymentScheduleDetail> obcPSD = OBDal.getInstance()
         .createCriteria(FIN_PaymentScheduleDetail.class);
-    obcPSD.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-        fin_PaymentSchedule));
+    obcPSD.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+        fin_PaymentSchedule);
     List<FIN_PaymentScheduleDetail> lPSD = obcPSD.list();
     Iterator<FIN_PaymentScheduleDetail> itPSD = lPSD.iterator();
 
@@ -733,8 +743,7 @@ public class AdvPaymentMngtDao {
       PaymentDirection paymentDirection) {
     final OBCriteria<FIN_PaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FIN_PaymentMethod.class);
-    obc.add(Restrictions.in("organization.id",
-        OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
+    obc.addIn("organization.id", OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId));
     obc.setFilterOnReadableOrganization(false);
 
     Set<String> payMethods = new HashSet<>();
@@ -760,8 +769,7 @@ public class AdvPaymentMngtDao {
         final OBCriteria<FinAccPaymentMethod> obcExc = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
         obcExc.createAlias(FinAccPaymentMethod.PROPERTY_ACCOUNT, "acc");
-        obcExc.add(Restrictions.in("acc.organization.id",
-            OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
+        obcExc.addIn("acc.organization.id", OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId));
         obcExc.setFilterOnReadableOrganization(false);
         for (FinAccPaymentMethod fapm : obcExc.list()) {
           payMethods.add(fapm.getPaymentMethod().getId());
@@ -772,9 +780,9 @@ public class AdvPaymentMngtDao {
         addPaymentMethodList(obc, new ArrayList<String>(payMethods));
       }
       if (paymentDirection == PaymentDirection.IN) {
-        obc.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_PAYINALLOW, true));
+        obc.addEqual(FIN_PaymentMethod.PROPERTY_PAYINALLOW, true);
       } else if (paymentDirection == PaymentDirection.OUT) {
-        obc.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_PAYOUTALLOW, true));
+        obc.addEqual(FIN_PaymentMethod.PROPERTY_PAYOUTALLOW, true);
       }
     }
     obc.addOrderBy(FIN_PaymentMethod.PROPERTY_NAME, true);
@@ -785,14 +793,14 @@ public class AdvPaymentMngtDao {
     final OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
     obc.createAlias(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, "pm");
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_DEFAULT, true));
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_DEFAULT, true);
     if (paymentIn) {
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYINALLOW, true));
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYINALLOW, true);
     } else {
-      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYOUTALLOW, true));
+      obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYOUTALLOW, true);
     }
-    obc.addOrder(org.hibernate.criterion.Order.asc("pm." + FIN_PaymentMethod.PROPERTY_NAME));
+    obc.addOrderBy("pm." + FIN_PaymentMethod.PROPERTY_NAME, true);
     obc.setFilterOnReadableOrganization(false);
     obc.setMaxResults(1);
     FinAccPaymentMethod paymentMethod = (FinAccPaymentMethod) obc.uniqueResult();
@@ -810,22 +818,20 @@ public class AdvPaymentMngtDao {
    */
   private void addPaymentMethodList(OBCriteria<FIN_PaymentMethod> obc,
       List<String> paymentMethods) {
-    Criterion compoundExp = null;
+    List<OBCriteria.PredicateFunction> batchPredicates = new ArrayList<>();
     int paymentMethodsSize = paymentMethods.size();
     int batchIni = 0;
     int batchSize = 1000;
+    
     while (paymentMethodsSize > batchIni) {
       List<String> paymentMethodsToRemove = paymentMethods.subList(batchIni,
           Math.min(batchIni + batchSize, paymentMethodsSize));
-      if (compoundExp == null) {
-        compoundExp = Restrictions.in("id", paymentMethodsToRemove);
-      } else {
-        compoundExp = Restrictions.or(compoundExp, Restrictions.in("id", paymentMethodsToRemove));
-      }
+      batchPredicates.add((cb, obc_inner) -> cb.in(obc_inner.getPath("id")).value(paymentMethodsToRemove));
       batchIni += batchSize;
     }
-    if (compoundExp != null) {
-      obc.add(compoundExp);
+    
+    if (!batchPredicates.isEmpty()) {
+      obc.addOr(batchPredicates.toArray(new OBCriteria.PredicateFunction[0]));
     }
   }
 
@@ -833,27 +839,38 @@ public class AdvPaymentMngtDao {
       String strOrgId, String strCurrencyId, PaymentDirection paymentDirection) {
     final OBCriteria<FIN_FinancialAccount> obc = OBDal.getInstance()
         .createCriteria(FIN_FinancialAccount.class, "acc");
-    obc.add(Restrictions.in("organization.id",
-        OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
+    obc.addIn("organization.id", OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId));
     obc.setFilterOnReadableOrganization(false);
 
     Currency requiredCurrency = null;
     if (strCurrencyId != null && !strCurrencyId.isEmpty()) {
-      DetachedCriteria multiCurrAllowed = DetachedCriteria
-          .forEntityName(FinAccPaymentMethod.ENTITY_NAME, "fapm")
-          .add(Restrictions.eqProperty(FinAccPaymentMethod.PROPERTY_ACCOUNT + ".id", "acc.id"));
-      if (paymentDirection == PaymentDirection.IN || paymentDirection == PaymentDirection.EITHER) {
-        multiCurrAllowed
-            .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYINISMULTICURRENCY, true));
-      }
-      if (paymentDirection == PaymentDirection.OUT || paymentDirection == PaymentDirection.EITHER) {
-        multiCurrAllowed
-            .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYOUTISMULTICURRENCY, true));
-      }
       requiredCurrency = OBDal.getInstance().get(Currency.class, strCurrencyId);
-      obc.add(
-          Restrictions.or(Restrictions.eq(FIN_FinancialAccount.PROPERTY_CURRENCY, requiredCurrency),
-              Subqueries.exists(multiCurrAllowed.setProjection(Projections.id()))));
+      final Currency finalRequiredCurrency = requiredCurrency;
+      final PaymentDirection finalPaymentDirection = paymentDirection;
+      
+      obc.addFunction((cb, obcriteria) -> {
+        // Subquery for multicurrency allowed
+        var subquery = obcriteria.cq.subquery(String.class);
+        var fapmRoot = subquery.from(FinAccPaymentMethod.class);
+        subquery.select(fapmRoot.get("id"));
+        
+        var predicates = new ArrayList<jakarta.persistence.criteria.Predicate>();
+        predicates.add(cb.equal(fapmRoot.get(FinAccPaymentMethod.PROPERTY_ACCOUNT).get("id"), obcriteria.root.get("id")));
+        
+        if (finalPaymentDirection == PaymentDirection.IN || finalPaymentDirection == PaymentDirection.EITHER) {
+          predicates.add(cb.equal(fapmRoot.get(FinAccPaymentMethod.PROPERTY_PAYINISMULTICURRENCY), true));
+        }
+        if (finalPaymentDirection == PaymentDirection.OUT || finalPaymentDirection == PaymentDirection.EITHER) {
+          predicates.add(cb.equal(fapmRoot.get(FinAccPaymentMethod.PROPERTY_PAYOUTISMULTICURRENCY), true));
+        }
+        
+        subquery.where(cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0])));
+        
+        return cb.or(
+            cb.equal(obcriteria.root.get(FIN_FinancialAccount.PROPERTY_CURRENCY), finalRequiredCurrency),
+            cb.exists(subquery)
+        );
+      });
     }
 
     if (strPaymentMethodId != null && !strPaymentMethodId.isEmpty()) {
@@ -863,7 +880,7 @@ public class AdvPaymentMngtDao {
       if (finAccsMethods.isEmpty()) {
         return (new ArrayList<FIN_FinancialAccount>());
       }
-      ExpressionForFinAccPayMethod exp = new ExpressionForFinAccPayMethod();
+      ExpressionForFinAccPayMethod exp = new ExpressionForFinAccPayMethod(obc.getCriteriaBuilder(), obc);
 
       for (FinAccPaymentMethod finAccPayMethod : finAccsMethods) {
         boolean validPaymentDirection = true;
@@ -895,7 +912,7 @@ public class AdvPaymentMngtDao {
 
       }
 
-      Criterion crit = exp.getCriterion();
+      Predicate crit = exp.getCriterion();
       if (crit != null) {
         obc.add(crit);
       } else {
@@ -908,9 +925,15 @@ public class AdvPaymentMngtDao {
   private static class ExpressionForFinAccPayMethod {
 
     private int MAX = 999;
+    private final List<Predicate> batchPredicates = new ArrayList<>();
+    private final List<String> finAccs = new ArrayList<>();
+    private final CriteriaBuilder cb;
+    private final OBCriteria<?> obc;
 
-    private Criterion compoundexp = null;
-    List<String> finAccs = new ArrayList<>();
+    public ExpressionForFinAccPayMethod(CriteriaBuilder cb, OBCriteria<?> obc) {
+      this.cb = cb;
+      this.obc = obc;
+    }
 
     public void addFinAccPaymentMethod(FinAccPaymentMethod finAccPayMethod) {
       finAccs.add(finAccPayMethod.getAccount().getId());
@@ -919,21 +942,26 @@ public class AdvPaymentMngtDao {
       }
     }
 
-    public Criterion getCriterion() {
+    public Predicate getCriterion() {
       if (!finAccs.isEmpty()) {
         refresh();
       }
-      return compoundexp;
+      
+      if (batchPredicates.isEmpty()) {
+        return null;
+      } else if (batchPredicates.size() == 1) {
+        return batchPredicates.get(0);
+      } else {
+        return cb.or(batchPredicates.toArray(new Predicate[0]));
+      }
     }
 
     private void refresh() {
       // finAccs size must be > 0
-      if (compoundexp == null) {
-        compoundexp = Restrictions.in("id", finAccs);
-      } else {
-        compoundexp = Restrictions.or(compoundexp, Restrictions.in("id", finAccs));
+      if (!finAccs.isEmpty()) {
+        batchPredicates.add(cb.in(obc.getPath("id")).value(new ArrayList<>(finAccs)));
+        finAccs.clear();
       }
-      finAccs = new ArrayList<>();
     }
   }
 
@@ -941,9 +969,9 @@ public class AdvPaymentMngtDao {
       FIN_PaymentMethod paymentMethod) {
     final OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACTIVE, true));
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACTIVE, true);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     try {
@@ -1010,9 +1038,9 @@ public class AdvPaymentMngtDao {
       PaymentExecutionProcess executionProcess) {
     OBCriteria<PaymentExecutionProcessParameter> obc = OBDal.getInstance()
         .createCriteria(PaymentExecutionProcessParameter.class);
-    obc.add(Restrictions.eq(PaymentExecutionProcessParameter.PROPERTY_PAYMENTEXECUTIONPROCESS,
-        executionProcess));
-    obc.add(Restrictions.eq(PaymentExecutionProcessParameter.PROPERTY_PARAMETERTYPE, "IN"));
+    obc.addEqual(PaymentExecutionProcessParameter.PROPERTY_PAYMENTEXECUTIONPROCESS,
+        executionProcess);
+    obc.addEqual(PaymentExecutionProcessParameter.PROPERTY_PARAMETERTYPE, "IN");
     return obc.list();
   }
 
@@ -1075,19 +1103,18 @@ public class AdvPaymentMngtDao {
           .get(FIN_FinancialAccount.class, financialAccountId);
 
       OBCriteria<FIN_Payment> obcPayment = OBDal.getInstance().createCriteria(FIN_Payment.class);
-      obcPayment.add(Restrictions.in("organization.id",
-          OBContext.getOBContext()
+      obcPayment.addIn("organization.id", OBContext.getOBContext()
               .getOrganizationStructureProvider()
-              .getParentTree(organizationId, true)));
-      obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_STATUS, "RPAE"));
-      obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_PAYMENTMETHOD, obPayMethod));
-      obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_ACCOUNT, obFinAccount));
-      obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_RECEIPT, isReceipt));
+              .getParentTree(organizationId, true));
+      obcPayment.addEqual(FIN_Payment.PROPERTY_STATUS, "RPAE");
+      obcPayment.addEqual(FIN_Payment.PROPERTY_PAYMENTMETHOD, obPayMethod);
+      obcPayment.addEqual(FIN_Payment.PROPERTY_ACCOUNT, obFinAccount);
+      obcPayment.addEqual(FIN_Payment.PROPERTY_RECEIPT, isReceipt);
       if (dateFrom != null) {
-        obcPayment.add(Restrictions.ge(FIN_Payment.PROPERTY_PAYMENTDATE, dateFrom));
+        obcPayment.addGreaterOrEqual(FIN_Payment.PROPERTY_PAYMENTDATE, dateFrom);
       }
       if (dateTo != null) {
-        obcPayment.add(Restrictions.lt(FIN_Payment.PROPERTY_PAYMENTDATE, dateTo));
+        obcPayment.addLessThan(FIN_Payment.PROPERTY_PAYMENTDATE, dateTo);
       }
 
       boolean ascDesc = true;
@@ -1115,8 +1142,7 @@ public class AdvPaymentMngtDao {
     OBCriteria<FIN_PaymentScheduleDetail> psdCriteria = OBDal.getInstance()
         .createCriteria(FIN_PaymentScheduleDetail.class);
     if (!paySchedList.isEmpty()) {
-      psdCriteria.add(
-          Restrictions.in(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE, paySchedList));
+      psdCriteria.addIn(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE, paySchedList);
       for (FIN_PaymentScheduleDetail psd : psdCriteria.list()) {
         if (psd.getPaymentDetails() != null) {
           FIN_Payment payment = psd.getPaymentDetails().getFinPayment();
@@ -1134,7 +1160,7 @@ public class AdvPaymentMngtDao {
   public void setPaymentExecuting(FIN_Payment payment, boolean executing) {
     OBCriteria<APRMPendingPaymentFromInvoice> ppfiCriteria = OBDal.getInstance()
         .createCriteria(APRMPendingPaymentFromInvoice.class);
-    ppfiCriteria.add(Restrictions.eq(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENT, payment));
+    ppfiCriteria.addEqual(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENT, payment);
     ppfiCriteria.setMaxResults(1);
     APRMPendingPaymentFromInvoice pendingPayment = (APRMPendingPaymentFromInvoice) ppfiCriteria
         .uniqueResult();
@@ -1148,7 +1174,7 @@ public class AdvPaymentMngtDao {
   public boolean isPaymentBeingExecuted(FIN_Payment payment) {
     OBCriteria<APRMPendingPaymentFromInvoice> ppfiCriteria = OBDal.getInstance()
         .createCriteria(APRMPendingPaymentFromInvoice.class);
-    ppfiCriteria.add(Restrictions.eq(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENT, payment));
+    ppfiCriteria.addEqual(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENT, payment);
     ppfiCriteria.setMaxResults(1);
     APRMPendingPaymentFromInvoice pendingPayment = (APRMPendingPaymentFromInvoice) ppfiCriteria
         .uniqueResult();
@@ -1163,7 +1189,7 @@ public class AdvPaymentMngtDao {
   public void removeFromExecutionPending(FIN_Payment payment) {
     OBCriteria<APRMPendingPaymentFromInvoice> ppfiCriteria = OBDal.getInstance()
         .createCriteria(APRMPendingPaymentFromInvoice.class);
-    ppfiCriteria.add(Restrictions.eq(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENT, payment));
+    ppfiCriteria.addEqual(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENT, payment);
     List<APRMPendingPaymentFromInvoice> pendingPayments = ppfiCriteria.list();
     OBDal.getInstance().remove(pendingPayments.get(0));
     OBDal.getInstance().flush();
@@ -1172,7 +1198,7 @@ public class AdvPaymentMngtDao {
   public List<APRMPendingPaymentFromInvoice> getPendingPayments() {
     OBCriteria<APRMPendingPaymentFromInvoice> ppfiCriteria = OBDal.getInstance()
         .createCriteria(APRMPendingPaymentFromInvoice.class);
-    ppfiCriteria.add(Restrictions.eq(APRMPendingPaymentFromInvoice.PROPERTY_PROCESSNOW, false));
+    ppfiCriteria.addEqual(APRMPendingPaymentFromInvoice.PROPERTY_PROCESSNOW, false);
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS, false);
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_ORGANIZATION, false);
     return ppfiCriteria.list();
@@ -1264,10 +1290,10 @@ public class AdvPaymentMngtDao {
   public List<FIN_Payment> getCustomerPaymentsWithUsedCredit(BusinessPartner bp,
       Boolean isReceipt) {
     OBCriteria<FIN_Payment> obcPayment = OBDal.getInstance().createCriteria(FIN_Payment.class);
-    obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp));
-    obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_RECEIPT, isReceipt));
-    obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO));
-    obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_USEDCREDIT, BigDecimal.ZERO));
+    obcPayment.addEqual(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp);
+    obcPayment.addEqual(FIN_Payment.PROPERTY_RECEIPT, isReceipt);
+    obcPayment.addNotEqual(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO);
+    obcPayment.addNotEqual(FIN_Payment.PROPERTY_USEDCREDIT, BigDecimal.ZERO);
     obcPayment.addOrderBy(FIN_Payment.PROPERTY_PAYMENTDATE, false);
     obcPayment.addOrderBy(FIN_Payment.PROPERTY_DOCUMENTNO, false);
     return obcPayment.list();
@@ -1277,7 +1303,7 @@ public class AdvPaymentMngtDao {
     OBCriteria<Preference> obcPreference = OBDal.getInstance().createCriteria(Preference.class);
     obcPreference.setFilterOnReadableClients(false);
     obcPreference.setFilterOnReadableOrganization(false);
-    obcPreference.add(Restrictions.eq(Preference.PROPERTY_ATTRIBUTE, "APRM_Ready"));
+    obcPreference.addEqual(Preference.PROPERTY_ATTRIBUTE, "APRM_Ready");
 
     return obcPreference.count() > 0;
   }
@@ -1315,17 +1341,16 @@ public class AdvPaymentMngtDao {
     try {
       OBContext.setAdminMode(false);
       OBCriteria<FIN_Payment> obcFinPayment = OBDal.getInstance().createCriteria(FIN_Payment.class);
-      obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_PROCESSED, true));
-      obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_BUSINESSPARTNER, businessPartner));
-      obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_GENERATEDCREDIT, amount));
-      obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_USEDCREDIT, BigDecimal.ZERO));
-      obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_CURRENCY, currency));
-      obcFinPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_RECEIPT, isReceipt));
-      obcFinPayment.add(Restrictions.le(FIN_Payment.PROPERTY_PAYMENTDATE, toDate));
-      obcFinPayment.add(Restrictions.in("organization.id",
-          OBContext.getOBContext()
+      obcFinPayment.addEqual(FIN_Payment.PROPERTY_PROCESSED, true);
+      obcFinPayment.addEqual(FIN_Payment.PROPERTY_BUSINESSPARTNER, businessPartner);
+      obcFinPayment.addEqual(FIN_Payment.PROPERTY_GENERATEDCREDIT, amount);
+      obcFinPayment.addEqual(FIN_Payment.PROPERTY_USEDCREDIT, BigDecimal.ZERO);
+      obcFinPayment.addEqual(FIN_Payment.PROPERTY_CURRENCY, currency);
+      obcFinPayment.addEqual(FIN_Payment.PROPERTY_RECEIPT, isReceipt);
+      obcFinPayment.addLessOrEqual(FIN_Payment.PROPERTY_PAYMENTDATE, toDate);
+      obcFinPayment.addIn("organization.id", OBContext.getOBContext()
               .getOrganizationStructureProvider()
-              .getNaturalTree(organization.getId())));
+              .getNaturalTree(organization.getId()));
       obcFinPayment.addOrderBy(FIN_Payment.PROPERTY_PAYMENTDATE, true);
       obcFinPayment.setMaxResults(1);
       return (FIN_Payment) obcFinPayment.uniqueResult();

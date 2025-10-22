@@ -19,10 +19,18 @@
 
 package org.openbravo.advpaymentmngt.actionHandler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBCriteria;
@@ -59,9 +67,9 @@ public class ReceivedFromPaymentMethodActionHandler extends BaseActionHandler {
           if (paymentMethod != null) {
             OBCriteria<FinAccPaymentMethod> criteria = OBDal.getInstance()
                 .createCriteria(FinAccPaymentMethod.class);
-            criteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount));
+            criteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount);
             criteria
-                .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+                .addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
             criteria.setFilterOnReadableOrganization(false);
             criteria.setFilterOnActive(true);
             criteria.setMaxResults(1);

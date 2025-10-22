@@ -16,15 +16,15 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationExpirationPasswordException;
 import org.openbravo.authentication.AuthenticationManager;
@@ -220,7 +220,7 @@ public class DefaultAuthenticationManager extends AuthenticationManager {
     final OBCriteria<User> obc = OBDal.getInstance().createCriteria(User.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.add(Restrictions.eq(User.PROPERTY_ID, userId));
+    obc.addEqual(User.PROPERTY_ID, userId);
     final User userOB = (User) obc.uniqueResult();
     Date lastUpdatePassword = userOB.getLastPasswordUpdate();
     Long validityDays = userOB.getClient().getDaysToPasswordExpiration();

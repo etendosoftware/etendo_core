@@ -18,14 +18,22 @@
  */
 package org.openbravo.event;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Date;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -112,8 +120,8 @@ class OrderEventHandler extends EntityPersistenceEventObserver {
   private List<OrderLine> getOrderLines(final OrderParameters orderParameters) {
     return OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER,
-            OBDal.getInstance().get(Order.class, orderParameters.getOrderId())))
+        .addEqual(OrderLine.PROPERTY_SALESORDER,
+            OBDal.getInstance().get(Order.class, orderParameters.getOrderId()))
         .list();
   }
 

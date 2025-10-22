@@ -18,6 +18,14 @@
  */
 package org.openbravo.service.datasource;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Writer;
@@ -34,11 +42,11 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.Vector;
 
-import javax.inject.Inject;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +54,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
@@ -1079,7 +1087,7 @@ public class DataSourceServlet extends BaseKernelServlet {
         }
         // Search window references that linked with the window of the provided tab.
         OBCriteria<RefWindow> obcRefWindow = OBDal.getInstance().createCriteria(RefWindow.class);
-        obcRefWindow.add(Restrictions.eq(RefWindow.PROPERTY_WINDOW, tab.getWindow()));
+        obcRefWindow.addEqual(RefWindow.PROPERTY_WINDOW, tab.getWindow());
         if (obcRefWindow.list().size() == 0) {
           return false;
         }
@@ -1090,7 +1098,7 @@ public class DataSourceServlet extends BaseKernelServlet {
 
         // Then search parameters that linked with references and get theirs processes.
         OBCriteria<Parameter> obParameters = OBDal.getInstance().createCriteria(Parameter.class);
-        obParameters.add(Restrictions.in(Parameter.PROPERTY_REFERENCESEARCHKEY, references));
+        obParameters.addIn(Parameter.PROPERTY_REFERENCESEARCHKEY, references);
         if (obParameters.list().size() == 0) {
           return false;
         }
@@ -1114,7 +1122,7 @@ public class DataSourceServlet extends BaseKernelServlet {
 
         // Finally select all columns that linked with selected processes and get their fields.
         OBCriteria<Column> columns = OBDal.getInstance().createCriteria(Column.class);
-        columns.add(Restrictions.in(Column.PROPERTY_OBUIAPPPROCESS, obuiapProcesses));
+        columns.addIn(Column.PROPERTY_OBUIAPPPROCESS, obuiapProcesses);
         if (columns.list().size() == 0) {
           return false;
         }

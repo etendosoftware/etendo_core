@@ -18,13 +18,21 @@
  */
 package org.openbravo.service.datasource;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -107,7 +115,7 @@ public class DataSourceServiceProvider {
 
   private DataSource getDataSourceFromDataSourceName(String dataSourceName) {
     final OBCriteria<DataSource> obCriteria = OBDal.getInstance().createCriteria(DataSource.class);
-    obCriteria.add(Restrictions.eq(DataSource.PROPERTY_NAME, dataSourceName));
+    obCriteria.addEqual(DataSource.PROPERTY_NAME, dataSourceName);
     // obserds_datasource.name has unique constraint
     return (DataSource) obCriteria.uniqueResult();
   }
@@ -115,7 +123,7 @@ public class DataSourceServiceProvider {
   private DataSource getDataSourceFromTableName(String tableName) {
     DataSource dataSource = null;
     final OBCriteria<Table> qTable = OBDal.getInstance().createCriteria(Table.class);
-    qTable.add(Restrictions.eq(Table.PROPERTY_NAME, tableName));
+    qTable.addEqual(Table.PROPERTY_NAME, tableName);
     // ad_table.name is unique
     Table table = (Table) qTable.uniqueResult();
     if (table != null) {

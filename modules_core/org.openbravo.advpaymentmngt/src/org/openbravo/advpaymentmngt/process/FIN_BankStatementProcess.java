@@ -19,12 +19,20 @@
 
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Date;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -201,7 +209,7 @@ public class FIN_BankStatementProcess implements org.openbravo.scheduling.Proces
       final OBCriteria<FIN_BankStatementLine> obc = OBDal.getInstance()
           .createCriteria(FIN_BankStatementLine.class);
       obc.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
-      obc.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ID, bankStatement.getId()));
+      obc.addEqual("bs." + FIN_BankStatement.PROPERTY_ID, bankStatement.getId());
       obc.addOrderBy(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, true);
       obc.setMaxResults(1);
       final List<FIN_BankStatementLine> bst = obc.list();
@@ -230,8 +238,8 @@ public class FIN_BankStatementProcess implements org.openbravo.scheduling.Proces
     try {
       final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, account));
-      obc.add(Restrictions.ge(FIN_Reconciliation.PROPERTY_ENDINGDATE, bankStatementLineMinDate));
+      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, account);
+      obc.addGreaterOrEqual(FIN_Reconciliation.PROPERTY_ENDINGDATE, bankStatementLineMinDate);
       obc.setMaxResults(1);
       return obc.list();
     } finally {

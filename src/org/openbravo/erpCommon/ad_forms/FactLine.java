@@ -21,7 +21,7 @@ import java.math.RoundingMode;
 import java.sql.Connection;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -1134,7 +1134,7 @@ public class FactLine {
             .replaceAll("@Line@", ":paramLineId");
 
         @SuppressWarnings("unchecked")
-        NativeQuery<String> query = OBDal.getInstance().getSession().createSQLQuery(strSql);
+        NativeQuery<String> query = OBDal.getInstance().getSession().createNativeQuery(strSql, String.class);
         if (strSql.contains(":paramRecordId")) {
           query.setParameter("paramRecordId", strRecord_ID);
         }

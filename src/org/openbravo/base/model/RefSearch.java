@@ -44,15 +44,23 @@ public class RefSearch extends ModelObject {
 
   public void setReferenceObject(Reference referenceObj) {
     this.referenceObject = referenceObj;
-    reference = referenceObj.getId();
+
+    if (referenceObj == null) {
+      this.reference = null;
+      return;
+    }
+
+    this.reference = referenceObj.getId();
+
     final DomainType domainType = referenceObj.getDomainType();
     if (!(domainType instanceof SearchDomainType)) {
       log.error("Domain type of reference " + referenceObj.getId()
-          + " is not a TableDomainType but a " + domainType);
+          + " is not a SearchDomainType but a " + domainType);
     } else {
       ((SearchDomainType) domainType).setRefSearch(this);
     }
   }
+
 
   public Column getColumn() {
     return column;

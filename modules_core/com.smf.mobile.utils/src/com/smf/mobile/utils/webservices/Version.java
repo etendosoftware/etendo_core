@@ -12,8 +12,8 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.service.web.WebService;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class Version implements WebService {
 

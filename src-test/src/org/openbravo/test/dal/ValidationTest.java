@@ -65,7 +65,7 @@ public class ValidationTest extends OBBaseTest {
   public void testTypeChecking() {
     setTestAdminContext();
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, DOLLAR));
+    obc.addEqual(Currency.PROPERTY_ISOCODE, DOLLAR);
     final List<Currency> cs = obc.list();
     final Currency c = cs.get(0);
 

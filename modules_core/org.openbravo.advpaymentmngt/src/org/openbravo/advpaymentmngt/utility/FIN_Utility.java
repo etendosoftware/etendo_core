@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.utility;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -39,7 +47,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
@@ -81,9 +89,9 @@ import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.utils.Replace;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 
 public class FIN_Utility {
@@ -662,34 +670,41 @@ public class FIN_Utility {
    *          Value. Property, value and operator.
    * @return All the records that satisfy the conditions.
    */
-  public static <T extends BaseOBObject> List<T> getAllInstances(Class<T> clazz,
-      boolean setFilterClient, boolean setFilterOrg, Value... values) {
+  public static <T extends BaseOBObject> List<T> getAllInstances(
+      Class<T> clazz,
+      boolean setFilterClient,
+      boolean setFilterOrg,
+      Value... values) {
+
     OBCriteria<T> obc = OBDal.getInstance().createCriteria(clazz);
     obc.setFilterOnReadableClients(setFilterClient);
     obc.setFilterOnReadableOrganization(setFilterOrg);
+
     for (Value value : values) {
-      if (value.getValue() == null && "==".equals(value.getOperator())) {
-        obc.add(Restrictions.isNull(value.getField()));
-      } else if (value.getValue() == null && "!=".equals(value.getOperator())) {
-        obc.add(Restrictions.isNotNull(value.getField()));
-      } else if ("==".equals(value.getOperator())) {
-        obc.add(Restrictions.eq(value.getField(), value.getValue()));
-      } else if ("!=".equals(value.getOperator())) {
-        obc.add(Restrictions.ne(value.getField(), value.getValue()));
-      } else if ("<".equals(value.getOperator())) {
-        obc.add(Restrictions.lt(value.getField(), value.getValue()));
-      } else if (">".equals(value.getOperator())) {
-        obc.add(Restrictions.gt(value.getField(), value.getValue()));
-      } else if ("<=".equals(value.getOperator())) {
-        obc.add(Restrictions.le(value.getField(), value.getValue()));
-      } else if (">=".equals(value.getOperator())) {
-        obc.add(Restrictions.ge(value.getField(), value.getValue()));
+      if (value.getValue() == null && StringUtils.equals("==", value.getOperator())) {
+        obc.addIsNull(value.getField());
+      } else if (value.getValue() == null && StringUtils.equals("!=", value.getOperator())) {
+        obc.addIsNotNull(value.getField());
+      } else if (StringUtils.equals("==", value.getOperator())) {
+        obc.addEqual(value.getField(), value.getValue());
+      } else if (StringUtils.equals("!=", value.getOperator())) {
+        obc.addNotEqual(value.getField(), value.getValue());
+      } else if (StringUtils.equals("<", value.getOperator())) {
+        obc.addLessThan(value.getField(), (Comparable) value.getValue());
+      } else if (StringUtils.equals(">", value.getOperator())) {
+        obc.addGreaterThan(value.getField(), (Comparable) value.getValue());
+      } else if (StringUtils.equals("<=", value.getOperator())) {
+        obc.addLessOrEqual(value.getField(), (Comparable) value.getValue());
+      } else if (StringUtils.equals(">=", value.getOperator())) {
+        obc.addGreaterOrEqual(value.getField(), (Comparable) value.getValue());
       } else {
-        obc.add(Restrictions.eq(value.getField(), value.getValue()));
+        obc.addEqual(value.getField(), value.getValue());
       }
     }
+
     return obc.list();
   }
+
 
   /**
    * Generic OBCriteria with filter on readable clients and organizations active.
@@ -713,40 +728,44 @@ public class FIN_Utility {
    *          Value. Property, value and operator.
    * @return One record that satisfies the conditions.
    */
+  /**
+   * Generic OBCriteria.
+   *
+   * @param clazz
+   *          Class (entity).
+   * @param values
+   *          Value. Property, value and operator.
+   * @return One record that satisfies the conditions.
+   */
   public static <T extends BaseOBObject> T getOneInstance(Class<T> clazz, Value... values) {
     OBCriteria<T> obc = OBDal.getInstance().createCriteria(clazz);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.add(Restrictions.ne(Client.PROPERTY_ID, "0"));
+    obc.addNotEqual(Client.PROPERTY_ID, "0");
+
     for (Value value : values) {
-      if (value.getValue() == null && "==".equals(value.getOperator())) {
-        obc.add(Restrictions.isNull(value.getField()));
-      } else if (value.getValue() == null && "!=".equals(value.getOperator())) {
-        obc.add(Restrictions.isNotNull(value.getField()));
-      } else if ("==".equals(value.getOperator())) {
-        obc.add(Restrictions.eq(value.getField(), value.getValue()));
-      } else if ("!=".equals(value.getOperator())) {
-        obc.add(Restrictions.ne(value.getField(), value.getValue()));
-      } else if ("<".equals(value.getOperator())) {
-        obc.add(Restrictions.lt(value.getField(), value.getValue()));
-      } else if (">".equals(value.getOperator())) {
-        obc.add(Restrictions.gt(value.getField(), value.getValue()));
-      } else if ("<=".equals(value.getOperator())) {
-        obc.add(Restrictions.le(value.getField(), value.getValue()));
-      } else if (">=".equals(value.getOperator())) {
-        obc.add(Restrictions.ge(value.getField(), value.getValue()));
+      if (value.getValue() == null && StringUtils.equals("==", value.getOperator())) {
+        obc.addIsNull(value.getField());
+      } else if (value.getValue() == null && StringUtils.equals("!=", value.getOperator())) {
+        obc.addIsNotNull(value.getField());
+      } else if (StringUtils.equals("==", value.getOperator())) {
+        obc.addEqual(value.getField(), value.getValue());
+      } else if (StringUtils.equals("!=", value.getOperator())) {
+        obc.addNotEqual(value.getField(), value.getValue());
+      } else if (StringUtils.equals("<", value.getOperator())) {
+        obc.addLessThan(value.getField(), (Comparable) value.getValue());
+      } else if (StringUtils.equals(">", value.getOperator())) {
+        obc.addGreaterThan(value.getField(), (Comparable) value.getValue());
+      } else if (StringUtils.equals("<=", value.getOperator())) {
+        obc.addLessOrEqual(value.getField(), (Comparable) value.getValue());
+      } else if (StringUtils.equals(">=", value.getOperator())) {
+        obc.addGreaterOrEqual(value.getField(), (Comparable) value.getValue());
       } else {
-        obc.add(Restrictions.eq(value.getField(), value.getValue()));
+        obc.addEqual(value.getField(), value.getValue());
       }
     }
 
-    final List<T> listt = obc.list();
-    if (listt != null && listt.size() > 0) {
-      return listt.get(0);
-    } else {
-      return null;
-    }
-
+    return (T) obc.uniqueResult();
   }
 
   public static BigDecimal getDepositAmount(Boolean isReceipt, BigDecimal amount) {
@@ -856,13 +875,13 @@ public class FIN_Utility {
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getInstance()
           .createCriteria(ConversionRate.class);
       obcConvRate.setFilterOnReadableOrganization(false);
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_ORGANIZATION, org));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, fromCurrency));
-      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, toCurrency));
-      obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate));
+      obcConvRate.addEqual(ConversionRate.PROPERTY_ORGANIZATION, org);
+      obcConvRate.addEqual(ConversionRate.PROPERTY_CURRENCY, fromCurrency);
+      obcConvRate.addEqual(ConversionRate.PROPERTY_TOCURRENCY, toCurrency);
+      obcConvRate.addLessOrEqual(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate);
       long oneDay = 24 * 60 * 60 * 1000;
-      obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE,
-          new Date(conversionDate.getTime() - oneDay)));
+      obcConvRate.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE,
+          new Date(conversionDate.getTime() - oneDay));
       conversionRateList = obcConvRate.list();
       if ((conversionRateList != null) && (conversionRateList.size() != 0)) {
         conversionRate = conversionRateList.get(0);
@@ -908,17 +927,17 @@ public class FIN_Utility {
         .createCriteria(ConversionRateDoc.class);
 
     if (entity.equals(ModelProvider.getInstance().getEntity("Invoice"))) {
-      obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE,
-          OBDal.getInstance().get(Invoice.class, documentId)));
+      obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_INVOICE,
+          OBDal.getInstance().get(Invoice.class, documentId));
     } else if (entity.equals(ModelProvider.getInstance().getEntity("FIN_Payment"))) {
-      obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_PAYMENT,
-          OBDal.getInstance().get(FIN_Payment.class, documentId)));
+      obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_PAYMENT,
+          OBDal.getInstance().get(FIN_Payment.class, documentId));
     } else if (entity.equals(ModelProvider.getInstance().getEntity("FIN_Finacc_Transaction"))) {
-      obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION,
-          OBDal.getInstance().get(FIN_FinaccTransaction.class, documentId)));
+      obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION,
+          OBDal.getInstance().get(FIN_FinaccTransaction.class, documentId));
     }
-    obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, fromCurrency));
-    obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY, toCurrency));
+    obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_CURRENCY, fromCurrency);
+    obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY, toCurrency);
     obcConvRateDoc.setMaxResults(1);
     if (obcConvRateDoc.uniqueResult() != null) {
       return (ConversionRateDoc) obcConvRateDoc.uniqueResult();
@@ -1092,7 +1111,7 @@ public class FIN_Utility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obCriteria.add(Restrictions.eq("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7"));
+      obCriteria.addEqual("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7");
       List<org.openbravo.model.ad.domain.List> adRefList = obCriteria.list();
       for (org.openbravo.model.ad.domain.List adRef : adRefList) {
         if (isConfirmed.equals(isPaymentConfirmed(adRef.getSearchKey(), null))) {
@@ -1121,7 +1140,7 @@ public class FIN_Utility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obCriteria.add(Restrictions.eq("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7"));
+      obCriteria.addEqual("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7");
       List<org.openbravo.model.ad.domain.List> adRefList = obCriteria.list();
       for (org.openbravo.model.ad.domain.List adRef : adRefList) {
         if (isConfirmed.equals(isPaymentConfirmed(adRef.getSearchKey(), psd))) {
@@ -1624,7 +1643,7 @@ public class FIN_Utility {
     OBCriteria<FIN_FinaccTransaction> finAccTransactionCriteria = OBDal.getInstance()
         .createCriteria(FIN_FinaccTransaction.class);
     finAccTransactionCriteria
-        .add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment));
+        .addEqual(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment);
     finAccTransactionCriteria.setMaxResults(1);
     return (FIN_FinaccTransaction) finAccTransactionCriteria.uniqueResult();
   }

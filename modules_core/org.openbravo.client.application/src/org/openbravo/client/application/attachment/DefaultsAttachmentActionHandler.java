@@ -18,18 +18,26 @@
  */
 package org.openbravo.client.application.attachment;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpSession;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.application.Parameter;
 import org.openbravo.client.application.ParameterUtils;
 import org.openbravo.client.application.ParameterValue;
@@ -90,8 +98,8 @@ public class DefaultsAttachmentActionHandler extends BaseActionHandler {
           // Calculate stored value.
           OBCriteria<ParameterValue> parameterValueCriteria = OBDal.getInstance()
               .createCriteria(ParameterValue.class);
-          parameterValueCriteria.add(Restrictions.eq(ParameterValue.PROPERTY_FILE, attachment));
-          parameterValueCriteria.add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, param));
+          parameterValueCriteria.addEqual(ParameterValue.PROPERTY_FILE, attachment);
+          parameterValueCriteria.addEqual(ParameterValue.PROPERTY_PARAMETER, param);
           ParameterValue parameterValue = (ParameterValue) parameterValueCriteria.uniqueResult();
           if (parameterValue != null) {
             // If the parameter has a previous value set it on the defaults map and continue with

@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -76,7 +76,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
    * @see org.openbravo.service.datasource.DataSource#fetch(java.util.Map)
    */
   @Override
-  public String fetch(Map<String, String> parameters) {
+  public String fetch(Map<String, String> parameters) throws JSONException {
     return fetch(parameters, true);
   }
 
@@ -92,7 +92,7 @@ public class DefaultDataSourceService extends BaseDataSourceService {
     }
   }
 
-  public void fetch(Map<String, String> parameters, QueryResultWriter writer) {
+  public void fetch(Map<String, String> parameters, QueryResultWriter writer) throws JSONException {
     OBContext.setAdminMode(true);
     try {
       addFetchParameters(parameters);

@@ -19,7 +19,7 @@
 package org.openbravo.v3.datasets;
 
 import java.sql.PreparedStatement;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.modulescript.ModuleScript;
 import org.openbravo.modulescript.ModuleScriptExecutionLimits;

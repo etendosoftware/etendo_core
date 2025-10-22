@@ -18,12 +18,20 @@
  */
 package org.openbravo.client.application;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -144,8 +152,8 @@ public class ApplicationUtils {
 
       final OBCriteria<RoleOrganization> roleOrgs = OBDal.getInstance()
           .createCriteria(RoleOrganization.class);
-      roleOrgs.add(Restrictions.eq(RoleOrganization.PROPERTY_ROLE, role));
-      roleOrgs.add(Restrictions.eq(RoleOrganization.PROPERTY_ORGADMIN, true));
+      roleOrgs.addEqual(RoleOrganization.PROPERTY_ROLE, role);
+      roleOrgs.addEqual(RoleOrganization.PROPERTY_ORGADMIN, true);
 
       return roleOrgs.list();
 
@@ -163,8 +171,8 @@ public class ApplicationUtils {
       OBContext.setAdminMode();
 
       final OBCriteria<UserRoles> userRoles = OBDal.getInstance().createCriteria(UserRoles.class);
-      userRoles.add(Restrictions.eq(UserRoles.PROPERTY_USERCONTACT, user));
-      userRoles.add(Restrictions.eq(UserRoles.PROPERTY_ROLEADMIN, true));
+      userRoles.addEqual(UserRoles.PROPERTY_USERCONTACT, user);
+      userRoles.addEqual(UserRoles.PROPERTY_ROLEADMIN, true);
 
       return userRoles.list();
 

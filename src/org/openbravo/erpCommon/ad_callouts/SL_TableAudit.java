@@ -19,10 +19,10 @@
 
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.Utility;
@@ -40,8 +40,8 @@ public class SL_TableAudit extends SimpleCallout {
       boolean currentRecordFullyAudited = StringUtils.equals(strIsFullyAudited, "Y");
       if (currentRecordFullyAudited) {
         OBCriteria<Table> qTables = OBDal.getInstance().createCriteria(Table.class);
-        qTables.add(Restrictions.eq(Table.PROPERTY_ISFULLYAUDITED, true));
-        qTables.add(Restrictions.eq(Table.PROPERTY_ISAUDITINSERTS, true));
+        qTables.addEqual(Table.PROPERTY_ISFULLYAUDITED, true);
+        qTables.addEqual(Table.PROPERTY_ISAUDITINSERTS, true);
         if (qTables.count() == 0) {
           info.addResult("inpisauditinserts", "N");
         } else {

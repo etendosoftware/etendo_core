@@ -20,7 +20,7 @@ package org.openbravo.erpCommon.ad_forms;
 
 import java.sql.Connection;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;

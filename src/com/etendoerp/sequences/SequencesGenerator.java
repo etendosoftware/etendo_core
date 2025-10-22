@@ -5,12 +5,13 @@ import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 
+import java.util.ArrayList;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -76,7 +77,7 @@ public class SequencesGenerator extends Action {
         TransactionalSequenceUtils.TRANSACTIONAL_SEQUENCE_ID);
     //Filter columns by transactional sequence references
     OBCriteria<Column> columnOBCriteria = OBDal.getInstance().createCriteria(Column.class);
-    columnOBCriteria.add(Restrictions.eq(Column.PROPERTY_REFERENCE, reference));
+    columnOBCriteria.addEqual(Column.PROPERTY_REFERENCE, reference);
     List<Column> sequenceColumns = columnOBCriteria.list();
 
     int count = 0;
@@ -88,8 +89,8 @@ public class SequencesGenerator extends Action {
 
       //Get Document Type
       OBCriteria<DocumentType> documentTypeOBCriteria = OBDal.getInstance().createCriteria(DocumentType.class);
-      documentTypeOBCriteria.add(Restrictions.eq(DocumentType.PROPERTY_TABLE, column.getTable()));
-      documentTypeOBCriteria.add(Restrictions.in(DocumentType.PROPERTY_ORGANIZATION + ".id", parentOrganizations));
+      documentTypeOBCriteria.addEqual(DocumentType.PROPERTY_TABLE, column.getTable());
+      documentTypeOBCriteria.addInIds(DocumentType.PROPERTY_ORGANIZATION + ".id", new ArrayList<>(parentOrganizations));
       List<DocumentType> documentTypes = documentTypeOBCriteria.list();
 
       for (String orgId : organizations) {
@@ -150,12 +151,12 @@ public class SequencesGenerator extends Action {
 
   public boolean existsSequence(Column column, Client client, Organization organization, DocumentType documentType) {
     OBCriteria<Sequence> sequenceOBCriteria = OBDal.getInstance().createCriteria(Sequence.class);
-    sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_CLIENT, client));
-    sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_COLUMN, column));
+    sequenceOBCriteria.addEqual(Sequence.PROPERTY_CLIENT, client);
+    sequenceOBCriteria.addEqual(Sequence.PROPERTY_COLUMN, column);
     if (documentType != null) {
-      sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_DOCUMENTTYPE, documentType));
+      sequenceOBCriteria.addEqual(Sequence.PROPERTY_DOCUMENTTYPE, documentType);
     }
-    sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_ORGANIZATION, organization));
+    sequenceOBCriteria.addEqual(Sequence.PROPERTY_ORGANIZATION, organization);
     sequenceOBCriteria.setMaxResults(1);
     return sequenceOBCriteria.uniqueResult() != null;
   }

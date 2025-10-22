@@ -18,6 +18,14 @@
  */
 package org.openbravo.common.actionhandler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -30,8 +38,8 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
@@ -97,8 +105,8 @@ public class OrderCreatePOLines extends BaseProcessActionHandler {
     Order order = OBDal.getInstance().get(Order.class, strOrderId);
     // if no lines selected don't do anything.
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
-    obc.add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, order));
-    obc.setProjection(Projections.max(OrderLine.PROPERTY_LINENO));
+    obc.addEqual(OrderLine.PROPERTY_SALESORDER, order);
+    obc.setProjectionMax(OrderLine.PROPERTY_LINENO);
     Long lineNo = 0L;
     Object o = obc.uniqueResult();
     if (o != null) {

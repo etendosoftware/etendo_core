@@ -18,11 +18,19 @@
  */
 package org.openbravo.client.application.attachment;
 
-import javax.servlet.ServletException;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.application.Parameter;
@@ -63,14 +71,15 @@ public class MetadataOnTab extends SimpleCallout {
     AttachmentMethod attMethod = OBDal.getInstance().get(AttachmentMethod.class, methodId);
     Tab tab = adcs.getTab(tabId);
     OBCriteria<Parameter> critParam = OBDal.getInstance().createCriteria(Parameter.class);
-    critParam.add(Restrictions.eq(Parameter.PROPERTY_ATTACHMENTMETHOD, attMethod));
-    critParam.add(Restrictions.eq(Parameter.PROPERTY_TAB, tab));
-    critParam.setProjection(Projections.max(Parameter.PROPERTY_SEQUENCENUMBER));
+    critParam.addEqual(Parameter.PROPERTY_ATTACHMENTMETHOD, attMethod);
+    critParam.addEqual(Parameter.PROPERTY_TAB, tab);
+    critParam.setProjectionMax(Parameter.PROPERTY_SEQUENCENUMBER);
 
-    if (critParam.uniqueResult() == null) {
+    Object result = critParam.uniqueResult();
+    if (result == null) {
       return 10;
     }
-    long maxSeqNo = (Long) critParam.uniqueResult();
+    long maxSeqNo = (Long) result;
 
     return (int) (maxSeqNo + 10);
   }

@@ -29,7 +29,7 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.Collection;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -231,14 +231,14 @@ public class PostDocumentTest extends OBBaseTest {
 
   private void checkResults() {
     OBCriteria<AccountingFact> obc = OBDal.getInstance().createCriteria(AccountingFact.class);
-    obc.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, keyId));
-    obc.add(Restrictions.eq(AccountingFact.PROPERTY_TABLE + ".id", tableId));
+    obc.addEqual(AccountingFact.PROPERTY_RECORDID, keyId);
+    obc.addEqual(AccountingFact.PROPERTY_TABLE + ".id", tableId);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.addOrder(Order.asc(AccountingFact.PROPERTY_ACCOUNTINGSCHEMA));
-    obc.addOrder(Order.asc(AccountingFact.PROPERTY_ACCOUNT));
-    obc.addOrder(Order.asc(AccountingFact.PROPERTY_DEBIT));
-    obc.addOrder(Order.asc(AccountingFact.PROPERTY_CREDIT));
+    obc.addOrderBy(AccountingFact.PROPERTY_ACCOUNTINGSCHEMA, true);
+    obc.addOrderBy(AccountingFact.PROPERTY_ACCOUNT, true);
+    obc.addOrderBy(AccountingFact.PROPERTY_DEBIT, true);
+    obc.addOrderBy(AccountingFact.PROPERTY_CREDIT, true);
     int counter = 0;
     for (AccountingFact fact : obc.list()) {
       String[] result = resultTest[counter];

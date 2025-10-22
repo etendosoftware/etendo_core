@@ -26,11 +26,11 @@
             <generator class="org.openbravo.base.session.DalUUIDGenerator" />
 		</id>
 		
-		<property name="active" type="org.openbravo.base.session.OBYesNoType" not-null="true" column="isactive"/>				
+		<property name="active" type="yes_no" not-null="true" column="isactive"/>				
 		<property name="name" not-null="true"/>
         <property name="modelImpl" column="model_impl"/>
         <many-to-one name="parentReference" column="parentreference_id"/>
-        <property name="baseReference" type="org.openbravo.base.session.OBYesNoType" not-null="true" column="isbasereference"/>
+        <property name="baseReference" type="yes_no" not-null="true" column="isbasereference"/>
 
 		<property name="updated"/>
 

@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 
-import javax.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Instance;
 
 import org.hibernate.criterion.Criterion;
 import org.junit.jupiter.api.BeforeEach;

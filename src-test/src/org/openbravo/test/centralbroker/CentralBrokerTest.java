@@ -91,7 +91,7 @@ public class CentralBrokerTest extends OBBaseTest {
   public void test06() {
     // Remove all AUM before added to product 4028E6C72959682B01295ADC1E6E0230
     OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-    pAUMCriteria.add(Restrictions.eq("product.id", PRODUCT_ID));
+    pAUMCriteria.addEqual("product.id", PRODUCT_ID);
     for (ProductAUM pAUM : pAUMCriteria.list()) {
       OBDal.getInstance().remove(pAUM);
     }

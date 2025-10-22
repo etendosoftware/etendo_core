@@ -19,11 +19,19 @@
 
 package org.openbravo.service.datasource.treeChecks;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -57,8 +65,8 @@ public class MenuTreeOperationManager extends CheckTreeOperationManager {
   private boolean areThereTemplatesInDevelopment() {
     OBCriteria<Module> templatesInDevelopmentCriteria = OBDal.getInstance()
         .createCriteria(Module.class);
-    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_TYPE, TEMPLATE_TYPE));
-    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, true));
+    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_TYPE, TEMPLATE_TYPE);
+    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_INDEVELOPMENT, true);
     return (templatesInDevelopmentCriteria.count() > 0);
   }
 }

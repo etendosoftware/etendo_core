@@ -19,12 +19,20 @@
 
 package org.openbravo.client.application.event;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -100,7 +108,7 @@ class RemoveImagesEventHandler extends EntityPersistenceEventObserver {
    */
   private Image getDummyImage(boolean createIfNotExists) {
     OBCriteria<Image> dummyImageCriteria = OBDal.getInstance().createCriteria(Image.class);
-    dummyImageCriteria.add(Restrictions.idEq(DUMMY_IMAGE_ID));
+    dummyImageCriteria.addEqual("id", DUMMY_IMAGE_ID);
     Image dummyImage = (Image) dummyImageCriteria.uniqueResult();
     // If it is not already created, do it
     if (dummyImage == null && createIfNotExists) {
@@ -177,8 +185,8 @@ class RemoveImagesEventHandler extends EntityPersistenceEventObserver {
   // Check if this image is used by another product
   private static boolean checkImageUtilization(String productId, Image bob) {
     final OBCriteria<Product> obCriteria = OBDal.getInstance().createCriteria(Product.class);
-    obCriteria.add(Restrictions.eq(Product.PROPERTY_IMAGE, bob));
-    obCriteria.add(Restrictions.ne(Product.PROPERTY_ID, productId));
+    obCriteria.addEqual(Product.PROPERTY_IMAGE, bob);
+    obCriteria.addNotEqual(Product.PROPERTY_ID, productId);
     obCriteria.setFilterOnActive(false);
     obCriteria.setFilterOnReadableClients(false);
     obCriteria.setFilterOnReadableOrganization(false);

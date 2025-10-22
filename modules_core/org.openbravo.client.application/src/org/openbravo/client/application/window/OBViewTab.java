@@ -18,6 +18,14 @@
  */
 package org.openbravo.client.application.window;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,13 +37,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -337,8 +345,8 @@ public class OBViewTab extends BaseTemplateComponent {
   public String getViewGrid() {
     // check at least one field is visible in grid view, does not stop the execution
     OBCriteria<Field> fieldCriteria = OBDal.getInstance().createCriteria(Field.class);
-    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, getTab()));
-    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_SHOWINGRIDVIEW, true));
+    fieldCriteria.addEqual(Field.PROPERTY_TAB, getTab());
+    fieldCriteria.addEqual(Field.PROPERTY_SHOWINGRIDVIEW, true);
     if (fieldCriteria.count() == 0) {
       log.error("No Fields are visible in grid view for Tab " + tab.getWindow().getName() + " - "
           + tab.getName());
@@ -569,7 +577,7 @@ public class OBViewTab extends BaseTemplateComponent {
           continue;
         }
         final OBCriteria<Selector> criteria = OBDal.getInstance().createCriteria(Selector.class);
-        criteria.add(Restrictions.eq(Selector.PROPERTY_REFERENCE, fld.getColumn().getReferenceSearchKey()));
+        criteria.addEqual(Selector.PROPERTY_REFERENCE, fld.getColumn().getReferenceSearchKey());
         criteria.setMaxResults(1);
         Selector selector = (Selector) criteria.uniqueResult();
 

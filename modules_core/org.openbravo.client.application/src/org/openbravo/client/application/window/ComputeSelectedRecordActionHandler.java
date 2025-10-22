@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
@@ -65,8 +65,8 @@ public class ComputeSelectedRecordActionHandler extends BaseActionHandler {
    * (non-Javadoc)
    * 
    * @see
-   * org.openbravo.client.kernel.BaseActionHandler#execute(javax.servlet.http.HttpServletRequest,
-   * javax.servlet.http.HttpServletResponse)
+   * org.openbravo.client.kernel.BaseActionHandler#execute(jakarta.servlet.http.HttpServletRequest,
+   * jakarta.servlet.http.HttpServletResponse)
    */
   @Override
   public void execute() {

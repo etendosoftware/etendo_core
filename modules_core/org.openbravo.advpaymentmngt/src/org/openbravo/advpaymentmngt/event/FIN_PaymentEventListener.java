@@ -21,7 +21,7 @@ package org.openbravo.advpaymentmngt.event;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;

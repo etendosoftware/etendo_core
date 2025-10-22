@@ -19,6 +19,14 @@
 
 package org.openbravo.common.actionhandler.createlinesfromprocess;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,17 +34,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
@@ -110,8 +118,8 @@ public class CreateInvoiceLinesFromProcess {
 
   private Long getLastLineNoOfCurrentInvoice(final Invoice currentInvoice) {
     OBCriteria<InvoiceLine> obc = OBDal.getInstance().createCriteria(InvoiceLine.class);
-    obc.add(Restrictions.eq(InvoiceLine.PROPERTY_INVOICE, currentInvoice));
-    obc.setProjection(Projections.max(InvoiceLine.PROPERTY_LINENO));
+    obc.addEqual(InvoiceLine.PROPERTY_INVOICE, currentInvoice);
+    obc.setProjectionMax(InvoiceLine.PROPERTY_LINENO);
     Long lineNumber = 0L;
     obc.setMaxResults(1);
     Object o = obc.uniqueResult();

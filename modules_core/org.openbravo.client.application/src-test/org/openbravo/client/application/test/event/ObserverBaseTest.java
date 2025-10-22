@@ -19,7 +19,15 @@
 
 package org.openbravo.client.application.test.event;
 
-import org.hibernate.criterion.Restrictions;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.openbravo.base.structure.BaseOBObject;
@@ -70,9 +78,9 @@ public class ObserverBaseTest extends WeldBaseTest {
     OBContext.setAdminMode(true);
     try {
       OBCriteria<Note> q = OBDal.getInstance().createCriteria(Note.class);
-      q.add(Restrictions.eq(Note.PROPERTY_RECORD, obj.getId()));
-      q.add(Restrictions.eq(Note.PROPERTY_TABLE,
-          OBDal.getInstance().getProxy(Table.class, obj.getEntity().getTableId())));
+      q.addEqual(Note.PROPERTY_RECORD, obj.getId());
+      q.addEqual(Note.PROPERTY_TABLE,
+          OBDal.getInstance().getProxy(Table.class, obj.getEntity().getTableId()));
       return q.count();
     } finally {
       OBContext.restorePreviousMode();

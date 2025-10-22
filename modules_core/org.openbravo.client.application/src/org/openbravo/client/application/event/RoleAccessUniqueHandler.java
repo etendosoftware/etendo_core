@@ -19,9 +19,17 @@
 
 package org.openbravo.client.application.event;
 
-import javax.enterprise.event.Observes;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
 
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.enterprise.event.Observes;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -100,13 +108,13 @@ class RoleAccessUniqueHandler extends EntityPersistenceEventObserver {
 
     OBCriteria<BaseOBObject> q = OBDal.getInstance().createCriteria(entity.getName());
 
-    q.add(Restrictions.eq("role", newRole));
-    q.add(Restrictions.eq(securedObjectProperty.getName(),
-        event.getCurrentState(securedObjectProperty)));
+    q.addEqual("role", newRole);
+    q.addEqual(securedObjectProperty.getName(),
+        event.getCurrentState(securedObjectProperty));
 
     if (event instanceof EntityUpdateEvent) {
       // do not count itself when updating
-      q.add(Restrictions.ne("id", event.getId()));
+      q.addNotEqual("id", event.getId());
     }
 
     if (q.count() > 0) {

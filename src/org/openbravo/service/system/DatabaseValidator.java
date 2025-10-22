@@ -19,6 +19,14 @@
 
 package org.openbravo.service.system;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -34,15 +42,16 @@ import org.apache.ddlutils.model.Index;
 import org.apache.ddlutils.model.Reference;
 import org.apache.ddlutils.model.Unique;
 import org.apache.ddlutils.model.View;
-import org.hibernate.criterion.LogicalExpression;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.SimpleExpression;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.LogicalExpression;
+import jakarta.persistence.criteria.CriteriaBuilder;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.SimpleExpression;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.model.domaintype.ButtonDomainType;
 import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.dal.service.OBCriteria;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.datamodel.Table;
@@ -194,8 +203,8 @@ public class DatabaseValidator implements SystemValidator {
 
       final List<Table> adTables = OBDal.getInstance()
           .createCriteria(Table.class)
-          .add(Restrictions.eq(Table.PROPERTY_VIEW, false))
-          .add(Restrictions.eq(Table.PROPERTY_DATAORIGINTYPE, ApplicationConstants.TABLEBASEDTABLE))
+          .addEqual(Table.PROPERTY_VIEW, false)
+          .addEqual(Table.PROPERTY_DATAORIGINTYPE, ApplicationConstants.TABLEBASEDTABLE)
           .list();
 
       final String moduleId = (getValidateModule() == null ? null : getValidateModule().getId());
@@ -281,15 +290,14 @@ public class DatabaseValidator implements SystemValidator {
         .get(org.openbravo.model.ad.domain.Reference.class, "16EC6DF4A59747749FDF256B7FBBB058");
 
     // if one of the old-booleans is set, but not using new reference-id's -> report as warning
-    SimpleExpression enc = Restrictions.eq(Column.PROPERTY_DISPLAYENCRIPTION, Boolean.TRUE);
-    LogicalExpression newRefs = Restrictions.or(Restrictions.eq(Column.PROPERTY_REFERENCE, hashed),
-        Restrictions.eq(Column.PROPERTY_REFERENCE, encrypted));
     OBCriteria<Column> colQuery = OBDal.getInstance().createCriteria(Column.class);
-    colQuery.add(Restrictions.and(enc, Restrictions.not(newRefs)));
+    colQuery.addAnd((cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_DISPLAYENCRIPTION), Boolean.TRUE),
+                    (cb, obc) -> cb.not(cb.or(cb.equal(obc.getPath(Column.PROPERTY_REFERENCE), hashed),
+                                              cb.equal(obc.getPath(Column.PROPERTY_REFERENCE), encrypted))));
 
     // only validate given module (if given)
     if (validateModule != null) {
-      colQuery.add(Restrictions.eq(Column.PROPERTY_MODULE, validateModule));
+      colQuery.addEqual(Column.PROPERTY_MODULE, validateModule);
     }
     if (colQuery.count() > 0) {
       List<Column> columns = colQuery.list();
@@ -311,7 +319,7 @@ public class DatabaseValidator implements SystemValidator {
   private void checkDataSetName(SystemValidationResult result) {
     OBCriteria<DataSet> obc = OBDal.getInstance().createCriteria(DataSet.class);
     if (validateModule != null) {
-      obc.add(Restrictions.eq(DataSet.PROPERTY_MODULE, validateModule));
+      obc.addEqual(DataSet.PROPERTY_MODULE, validateModule);
     }
     List<DataSet> dsList = obc.list();
     for (DataSet ds : dsList) {
@@ -864,14 +872,14 @@ public class DatabaseValidator implements SystemValidator {
    */
   public void checkFieldsInGridView(Table adTable, SystemValidationResult result) {
     OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_TABLE, adTable));
+    tabCriteria.addEqual(Tab.PROPERTY_TABLE, adTable);
     for (Tab tab : tabCriteria.list()) {
       if ("Field Sequence".equals(tab.getName()) || ("Grid Sequence".equals(tab.getName()))) {
         continue;
       }
       OBCriteria<Field> fieldCriteria = OBDal.getInstance().createCriteria(Field.class);
-      fieldCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, tab));
-      fieldCriteria.add(Restrictions.eq(Field.PROPERTY_SHOWINGRIDVIEW, true));
+      fieldCriteria.addEqual(Field.PROPERTY_TAB, tab);
+      fieldCriteria.addEqual(Field.PROPERTY_SHOWINGRIDVIEW, true);
       if (fieldCriteria.count() == 0) {
         result.addError(SystemValidationType.NOFIELDSINGRIDVIEW,
             "No Fields are visible in grid view for Tab " + tab.getWindow().getName() + " - "
@@ -890,13 +898,13 @@ public class DatabaseValidator implements SystemValidator {
   private void checkKillableImplementation(SystemValidationResult result) {
     OBCriteria<org.openbravo.model.ad.ui.Process> obc = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.ui.Process.class);
-    obc.add(Restrictions.eq(org.openbravo.model.ad.ui.Process.PROPERTY_KILLABLE, true));
+    obc.addEqual(org.openbravo.model.ad.ui.Process.PROPERTY_KILLABLE, true);
     // FIXME: Remove when https://issues.openbravo.com/view.php?id=41753 is fixed
-    obc.add(Restrictions.ne(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
-        FRENCHFISCAL_MODULE));
+    obc.addNotEqual(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
+        FRENCHFISCAL_MODULE);
     if (validateModule != null) {
-      obc.add(Restrictions.eq(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
-          validateModule.getId()));
+      obc.addEqual(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
+          validateModule.getId());
     }
     List<org.openbravo.model.ad.ui.Process> processList = obc.list();
     for (org.openbravo.model.ad.ui.Process process : processList) {

@@ -28,12 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ReadListener;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -195,7 +195,7 @@ public class RequestContext {
   }
 
   public static class HttpServletRequestWrapper
-      extends javax.servlet.http.HttpServletRequestWrapper {
+      extends jakarta.servlet.http.HttpServletRequestWrapper {
 
     private HttpServletRequest delegate;
     private Map<String, Object> attributes = new HashMap<String, Object>();

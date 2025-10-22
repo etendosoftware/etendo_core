@@ -18,11 +18,19 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -48,8 +56,8 @@ public class SL_TaxCategory_Org extends SimpleCallout {
     while ("".equals(taxCategoryId)) {
       whereClause = "as tn where tn.node = :organizationId and tn.client.id = :clientId";
       OBCriteria<TaxCategory> taxCategory = OBDal.getInstance().createCriteria(TaxCategory.class);
-      taxCategory.add(Restrictions.eq(TaxCategory.PROPERTY_ORGANIZATION, organization));
-      taxCategory.add(Restrictions.eq(TaxCategory.PROPERTY_DEFAULT, true));
+      taxCategory.addEqual(TaxCategory.PROPERTY_ORGANIZATION, organization);
+      taxCategory.addEqual(TaxCategory.PROPERTY_DEFAULT, true);
       taxCategory.setMaxResults(1);
       List<TaxCategory> listTaxCategory = taxCategory.list();
       TaxCategory taxCategoryObject = (!listTaxCategory.isEmpty() ? listTaxCategory.get(0) : null);
@@ -85,11 +93,10 @@ public class SL_TaxCategory_Org extends SimpleCallout {
   private String getDefaultCategory(String strOrgId) {
     OBContext.setAdminMode();
     try {
-      OBCriteria<ProductCategory> productCatCrit = OBDao.getFilteredCriteria(
-          ProductCategory.class, Restrictions
-              .eq(ProductCategory.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID, strOrgId),
-          Restrictions.eq(ProductCategory.PROPERTY_DEFAULT, true));
-      productCatCrit.add(Restrictions.eq(ProductCategory.PROPERTY_SUMMARYLEVEL, false));
+      OBCriteria<ProductCategory> productCatCrit = OBDal.getInstance().createCriteria(ProductCategory.class);
+      productCatCrit.addAnd((cb, obc) -> cb.equal(obc.getPath(ProductCategory.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID), strOrgId),
+                            (cb, obc) -> cb.equal(obc.getPath(ProductCategory.PROPERTY_DEFAULT), true));
+      productCatCrit.addEqual(ProductCategory.PROPERTY_SUMMARYLEVEL, false);
       productCatCrit.setMaxResults(1);
       List<ProductCategory> categories = productCatCrit.list();
       if (categories.size() > 0) {

@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;

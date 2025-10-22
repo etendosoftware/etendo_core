@@ -24,13 +24,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.costing.CostingAlgorithm.CostDimension;
 import org.openbravo.costing.CostingServer.TrxType;
@@ -308,8 +308,8 @@ public abstract class CostingAlgorithmAdjustmentImp {
 
     final OBCriteria<ProductionLine> critPL = OBDal.getInstance()
         .createCriteria(ProductionLine.class)
-        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan()))
-        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+"))
+        .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan())
+        .addEqual(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+")
         .addOrderBy(ProductionLine.PROPERTY_COMPONENTCOST, true);
     critPL.createAlias(ProductionLine.PROPERTY_PRODUCT, "pr");
 
@@ -357,10 +357,10 @@ public abstract class CostingAlgorithmAdjustmentImp {
     final ProductionLine pl = currentCostAdjLine.getInventoryTransaction().getProductionLine();
     final OBCriteria<ProductionLine> critBOM = OBDal.getInstance()
         .createCriteria(ProductionLine.class)
-        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan()))
-        .add(Restrictions.gt(ProductionLine.PROPERTY_MOVEMENTQUANTITY, BigDecimal.ZERO))
-        .add(Restrictions.eq("pr." + Product.PROPERTY_STOCKED, true))
-        .add(Restrictions.eq("pr." + Product.PROPERTY_PRODUCTTYPE, "I"));
+        .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan())
+        .addGreaterThan(ProductionLine.PROPERTY_MOVEMENTQUANTITY, BigDecimal.ZERO)
+        .addEqual("pr." + Product.PROPERTY_STOCKED, true)
+        .addEqual("pr." + Product.PROPERTY_PRODUCTTYPE, "I");
     critBOM.createAlias(ProductionLine.PROPERTY_PRODUCT, "pr");
     for (ProductionLine pline : critBOM.list()) {
       if (pline.getMaterialMgmtMaterialTransactionList().isEmpty()) {
@@ -481,7 +481,7 @@ public abstract class CostingAlgorithmAdjustmentImp {
       while (trxs.next()) {
         counter++;
 
-        final MaterialTransaction trx = (MaterialTransaction) trxs.get()[0];
+        final MaterialTransaction trx = (MaterialTransaction) trxs.get();
         if (trx.isCostCalculated() && !trx.isCostPermanent()) {
           BigDecimal adjAmt = costAdjAmt.multiply(trx.getMovementQuantity().abs())
               .divide(inoutline.getMovementQuantity().abs(), precission, RoundingMode.HALF_UP);
@@ -699,8 +699,8 @@ public abstract class CostingAlgorithmAdjustmentImp {
       final MaterialTransaction movementTransaction) {
     return OBDal.getInstance()
         .createCriteria(TransactionCost.class)
-        .add(Restrictions.eq(TransactionCost.PROPERTY_INVENTORYTRANSACTION, movementTransaction))
-        .add(Restrictions.isNotNull(TransactionCost.PROPERTY_COSTADJUSTMENTLINE))
+        .addEqual(TransactionCost.PROPERTY_INVENTORYTRANSACTION, movementTransaction)
+        .addIsNotNull(TransactionCost.PROPERTY_COSTADJUSTMENTLINE)
         .list();
   }
 }

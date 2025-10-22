@@ -18,12 +18,20 @@
  */
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -191,9 +199,9 @@ public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Proce
     try {
       OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_DOCUMENTSTATUS, "DR"));
-      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_PROCESSED, false));
-      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, account));
+      obc.addEqual(FIN_Reconciliation.PROPERTY_DOCUMENTSTATUS, "DR");
+      obc.addEqual(FIN_Reconciliation.PROPERTY_PROCESSED, false);
+      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, account);
       obc.setMaxResults(1);
       return obc.uniqueResult() != null;
     } finally {
@@ -204,18 +212,16 @@ public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Proce
   private void updateReconciliations(FIN_Reconciliation reconciliation) {
     final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
         .createCriteria(FIN_Reconciliation.class);
-    obc.add(
-        Restrictions.ge(FIN_Reconciliation.PROPERTY_ENDINGDATE, reconciliation.getEndingDate()));
-    obc.add(Restrictions.ge(FIN_Reconciliation.PROPERTY_CREATIONDATE,
-        reconciliation.getCreationDate()));
-    obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount()));
-    obc.addOrder(Order.asc(FIN_Reconciliation.PROPERTY_ENDINGDATE));
-    obc.addOrder(Order.asc(FIN_Reconciliation.PROPERTY_CREATIONDATE));
+    obc.addGreaterOrEqual(FIN_Reconciliation.PROPERTY_ENDINGDATE, reconciliation.getEndingDate());
+    obc.addGreaterOrEqual(FIN_Reconciliation.PROPERTY_CREATIONDATE,
+        reconciliation.getCreationDate());
+    obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount());
+    obc.addOrderBy(FIN_Reconciliation.PROPERTY_ENDINGDATE, true);
+    obc.addOrderBy(FIN_Reconciliation.PROPERTY_CREATIONDATE, true);
     final List<FIN_Reconciliation> reconciliations = obc.list();
     for (FIN_Reconciliation rec : reconciliations) {
       updateReconciliation(rec);
     }
-    return;
   }
 
   private void updateReconciliation(FIN_Reconciliation reconciliation) {
@@ -229,7 +235,6 @@ public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Proce
     } finally {
       OBContext.restorePreviousMode();
     }
-    return;
   }
 
 }

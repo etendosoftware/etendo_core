@@ -18,6 +18,14 @@
  */
 package org.openbravo.client.application.event;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +35,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBCriteria;
@@ -76,8 +84,8 @@ public class UpdateInvariantCharacteristicsHandler extends BaseActionHandler {
         // Retrieves all the product invariant characteristics
         OBCriteria<ProductCharacteristic> criteria = OBDal.getInstance()
             .createCriteria(ProductCharacteristic.class);
-        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, product));
-        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_VARIANT, false));
+        criteria.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, product);
+        criteria.addEqual(ProductCharacteristic.PROPERTY_VARIANT, false);
 
         JSONArray productCharArray = new JSONArray();
 
@@ -88,10 +96,10 @@ public class UpdateInvariantCharacteristicsHandler extends BaseActionHandler {
           OBCriteria<ProductCharacteristicValue> criteriaSelectedValue = OBDal.getInstance()
               .createCriteria(ProductCharacteristicValue.class);
           criteriaSelectedValue
-              .add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
-                  characteristic.getCharacteristic()));
-          criteriaSelectedValue.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_PRODUCT,
-              characteristic.getProduct()));
+              .addEqual(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
+                  characteristic.getCharacteristic());
+          criteriaSelectedValue.addEqual(ProductCharacteristicValue.PROPERTY_PRODUCT,
+              characteristic.getProduct());
           ProductCharacteristicValue selectedValue = (ProductCharacteristicValue) criteriaSelectedValue
               .uniqueResult();
           productChar.put("id", characteristic.getCharacteristic().getId());

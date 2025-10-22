@@ -346,7 +346,7 @@ public class ReversePaymentTest extends WeldBaseTest {
     try {
       final OBCriteria<FIN_PaymentMethod> paymentMethodOBCriteria = OBDal.getInstance()
           .createCriteria(FIN_PaymentMethod.class);
-      paymentMethodOBCriteria.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_NAME, REVERSE_PAYMENT_METHOD_NAME));
+      paymentMethodOBCriteria.addEqual(FIN_PaymentMethod.PROPERTY_NAME, REVERSE_PAYMENT_METHOD_NAME);
       FIN_PaymentMethod paymentMethod = (FIN_PaymentMethod) paymentMethodOBCriteria.setMaxResults(1).uniqueResult();
       FIN_FinancialAccount financialAccount = OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId);
       FinAccPaymentMethod finAccPaymentMethod = TestUtility.getOneInstance(FinAccPaymentMethod.class,

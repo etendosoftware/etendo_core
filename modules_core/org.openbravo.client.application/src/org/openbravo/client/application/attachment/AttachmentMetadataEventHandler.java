@@ -18,9 +18,17 @@
  */
 package org.openbravo.client.application.attachment;
 
-import javax.enterprise.event.Observes;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
 
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.enterprise.event.Observes;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -82,9 +90,9 @@ class AttachmentMetadataEventHandler extends EntityPersistenceEventObserver {
   private boolean checkDuplicates(Parameter parameter) {
     OBCriteria<Parameter> critParam = OBDal.getInstance().createCriteria(Parameter.class);
     critParam
-        .add(Restrictions.eq(Parameter.PROPERTY_ATTACHMENTMETHOD, parameter.getAttachmentMethod()));
-    critParam.add(Restrictions.eq(Parameter.PROPERTY_DBCOLUMNNAME, parameter.getDBColumnName()));
-    critParam.add(Restrictions.ne(Parameter.PROPERTY_ID, parameter.getId()));
+        .addEqual(Parameter.PROPERTY_ATTACHMENTMETHOD, parameter.getAttachmentMethod());
+    critParam.addEqual(Parameter.PROPERTY_DBCOLUMNNAME, parameter.getDBColumnName());
+    critParam.addNotEqual(Parameter.PROPERTY_ID, parameter.getId());
     critParam.setMaxResults(1);
     return critParam.uniqueResult() != null;
   }

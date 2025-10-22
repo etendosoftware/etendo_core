@@ -1,5 +1,13 @@
 package com.smf.jobs.defaults.mail;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import com.smf.jobs.Action;
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Data;
@@ -10,7 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.ConfigParameters;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -31,7 +39,7 @@ import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.util.*;
 
 
@@ -189,7 +197,7 @@ public class SendMail extends Action {
         try {
             OBContext.setAdminMode();
             OBCriteria<Table> tableOBCriteria = OBDal.getInstance().createCriteria(Table.class);
-            tableOBCriteria.add(Restrictions.eq(Table.PROPERTY_DBTABLENAME, tableName));
+            tableOBCriteria.addEqual(Table.PROPERTY_DBTABLENAME, tableName);
             tableOBCriteria.setMaxResults(1);
 
             Table table = (Table) tableOBCriteria.uniqueResult();

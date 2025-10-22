@@ -1,47 +1,25 @@
-/*
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2011 Openbravo SLU 
- * All Rights Reserved. 
- * Contributor(s):  ______________________________________.
- ************************************************************************
- */
-
 package org.openbravo.base.session;
 
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.DiscriminatorType;
-import org.hibernate.type.PrimitiveType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaType;
+import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 
 /**
  * Implements the same logic as the hibernate yesno type, handles null values as false. As certain
  * methods can not be extended the solution is to catch the isDirty check by reimplementing the
  * areEqual method.
- * 
- * @author mtaal
  */
-public class OBYesNoType extends AbstractSingleColumnStandardBasicType<Boolean>
-    implements PrimitiveType<Boolean>, DiscriminatorType<Boolean> {
+public class OBYesNoType extends AbstractSingleColumnStandardBasicType<Boolean> {
+
   private static final long serialVersionUID = 1L;
 
+  public static final OBYesNoType INSTANCE = new OBYesNoType();
+
   public OBYesNoType() {
-    super(CharTypeDescriptor.INSTANCE, new LocalBooleanTypeDescriptor());
+    super(CharJdbcType.INSTANCE, new LocalBooleanJavaType());
   }
 
   @Override
@@ -49,42 +27,45 @@ public class OBYesNoType extends AbstractSingleColumnStandardBasicType<Boolean>
     return "yes_no";
   }
 
-  @Override
-  @SuppressWarnings("rawtypes")
-  public Class getPrimitiveClass() {
-    return boolean.class;
+  /**
+   * Converts a Java Boolean value into its SQL literal representation.
+   * Example: Y / N
+   */
+  public String objectToSQLString(Boolean value, Dialect dialect) {
+    return '\'' + (value != null && value ? "Y" : "N") + '\'';
   }
 
-  @Override
-  public Boolean stringToObject(String xml) throws Exception {
-    return fromString(xml);
+  /**
+   * Converts a string (database or XML) into a Boolean value.
+   * Accepts Y, T, 1 as true; everything else is false.
+   */
+  public Boolean fromString(CharSequence string) {
+    if (string == null || string.length() == 0) {
+      return Boolean.FALSE;
+    }
+    char c = Character.toUpperCase(string.charAt(0));
+    return c == 'Y' || c == 'T' || c == '1';
   }
 
-  @Override
+  /**
+   * Returns the default Boolean value for this type (false).
+   */
   public Serializable getDefaultValue() {
     return Boolean.FALSE;
   }
 
-  @Override
-  public String objectToSQLString(Boolean value, Dialect dialect) throws Exception {
-    return StringType.INSTANCE.objectToSQLString(value.booleanValue() ? "Y" : "N", dialect);
-  }
-
-  private static class LocalBooleanTypeDescriptor extends BooleanTypeDescriptor {
-
+  /**
+   * Custom Boolean Java descriptor that treats null as false
+   * when comparing values.
+   */
+  private static class LocalBooleanJavaType extends BooleanJavaType {
     private static final long serialVersionUID = 1L;
 
     @Override
     public boolean areEqual(Boolean x, Boolean y) {
-      if (x == y) {
-        return true;
-      }
-      if (x == null && y != null && y instanceof Boolean) {
-        return y.booleanValue() == false;
-      } else if (y == null && x != null && x instanceof Boolean) {
-        return x.booleanValue() == false;
-      }
-
+      if (x == y) return true;
+      if (x == null) return y == null || !y;
+      if (y == null) return !x;
       return super.areEqual(x, y);
     }
   }

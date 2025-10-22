@@ -19,6 +19,14 @@
 
 package org.openbravo.erpCommon.ad_forms;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -26,13 +34,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import jakarta.servlet.http.Part;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -123,12 +131,12 @@ public class InstanceManagement extends HttpSecureAppServlet {
     try {
       // Check for commercial modules installed in the instance
       OBCriteria<Module> qMods = OBDal.getInstance().createCriteria(Module.class);
-      qMods.add(Restrictions.eq(Module.PROPERTY_COMMERCIAL, true));
-      qMods.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
-      qMods.addOrder(Order.asc(Module.PROPERTY_NAME));
+      qMods.addEqual(Module.PROPERTY_COMMERCIAL, true);
+      qMods.addEqual(Module.PROPERTY_ENABLED, true);
+      qMods.addOrderBy(Module.PROPERTY_NAME, true);
 
       // core can be commercial, do not take it into account
-      qMods.add(Restrictions.ne(Module.PROPERTY_ID, "0"));
+      qMods.addNotEqual(Module.PROPERTY_ID, "0");
       boolean deactivable = true;
       String commercialModules = "";
       for (Module mod : qMods.list()) {
@@ -172,7 +180,7 @@ public class InstanceManagement extends HttpSecureAppServlet {
 
   private void printPageInstallFile(HttpServletResponse response, VariablesSecureApp vars)
       throws IOException, ServletException {
-    FileItem fi = vars.getMultiFile("inpFile");
+    Part fi = vars.getMultiFile("inpFile");
     OBError msg = new OBError();
     try {
       InputStream is = fi.getInputStream();

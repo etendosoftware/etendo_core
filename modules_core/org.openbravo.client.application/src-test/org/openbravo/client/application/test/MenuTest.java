@@ -20,7 +20,7 @@ package org.openbravo.client.application.test;
 
 import static org.junit.Assert.assertFalse;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

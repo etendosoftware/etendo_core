@@ -18,7 +18,7 @@
  */
 package org.openbravo.erpCommon.modules;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.openbravo.base.HttpBaseServlet;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;

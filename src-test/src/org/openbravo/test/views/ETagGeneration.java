@@ -26,7 +26,7 @@ import static org.junit.Assume.assumeThat;
 
 import java.net.HttpURLConnection;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.hibernate.query.Query;
 import org.junit.Test;

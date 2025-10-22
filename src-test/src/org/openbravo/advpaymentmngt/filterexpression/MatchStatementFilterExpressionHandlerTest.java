@@ -10,7 +10,7 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Instance;
 
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Before;

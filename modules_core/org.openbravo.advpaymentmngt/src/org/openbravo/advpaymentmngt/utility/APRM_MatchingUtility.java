@@ -19,13 +19,21 @@
 
 package org.openbravo.advpaymentmngt.utility;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -35,8 +43,8 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
@@ -100,8 +108,8 @@ public class APRM_MatchingUtility {
     try {
       final OBCriteria<FIN_ReconciliationLine_v> obc = OBDal.getInstance()
           .createCriteria(FIN_ReconciliationLine_v.class);
-      obc.add(Restrictions.eq(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation));
-      obc.add(Restrictions.isNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE));
+      obc.addEqual(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation);
+      obc.addIsNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE);
       for (FIN_ReconciliationLine_v recLine : obc.list()) {
         result.add(recLine.getFinancialAccountTransaction());
       }
@@ -448,11 +456,10 @@ public class APRM_MatchingUtility {
     FIN_BankStatement bs = bsline.getBankStatement();
     OBCriteria<FIN_BankStatementLine> obc = OBDal.getInstance()
         .createCriteria(FIN_BankStatementLine.class);
-    obc.add(
-        Restrictions.eq(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, bsline.getBankStatement()));
-    obc.add(Restrictions.eq(FIN_BankStatementLine.PROPERTY_LINENO, bsline.getLineNo()));
-    obc.add(Restrictions.ne(FIN_BankStatementLine.PROPERTY_ID, bsline.getId()));
-    obc.add(Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION));
+    obc.addEqual(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, bsline.getBankStatement());
+    obc.addEqual(FIN_BankStatementLine.PROPERTY_LINENO, bsline.getLineNo());
+    obc.addNotEqual(FIN_BankStatementLine.PROPERTY_ID, bsline.getId());
+    obc.addIsNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION);
     // Following list should contain just 2 elements maximum
     final List<FIN_BankStatementLine> splitLines = obc.list();
 
@@ -753,8 +760,8 @@ public class APRM_MatchingUtility {
     obc.createAlias(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE, "bsl");
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.add(Restrictions.eq(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation));
-    obc.addOrder(Order.desc("bsl." + FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE));
+    obc.addEqual(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation);
+    obc.addOrderBy("bsl." + FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, false);
     obc.setMaxResults(1);
     FIN_ReconciliationLine_v line = ((FIN_ReconciliationLine_v) obc.uniqueResult());
     // If there are no lines use reconciliation ending Date

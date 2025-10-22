@@ -26,28 +26,28 @@
       <generator class="org.openbravo.base.session.DalUUIDGenerator" />
     </id>
 
-    <property name="active" type="org.openbravo.base.session.OBYesNoType" not-null="true" column="isactive"/>        
+    <property name="active" type="yes_no" not-null="true" column="isactive"/>        
     <property name="name" not-null="true"/>
 
     <property name="columnName"/>
     <property name="fieldLength"/>
     <property name="defaultValue"/>
-    <property name="storedInSession" type="org.openbravo.base.session.OBYesNoType" column="issessionattr"/>
-    <property name="key" type="org.openbravo.base.session.OBYesNoType" column="iskey"/>
-    <property name="secondaryKey" type="org.openbravo.base.session.OBYesNoType" column="issecondarykey"/>
-    <property name="parent" type="org.openbravo.base.session.OBYesNoType" column="isparent"/>
-    <property name="updatable" type="org.openbravo.base.session.OBYesNoType" column="isupdateable"/>
-    <property name="identifier" type="org.openbravo.base.session.OBYesNoType" column="isidentifier"/>
-    <property name="mandatory" type="org.openbravo.base.session.OBYesNoType" column="ismandatory"/>
-    <property name="encrypted" type="org.openbravo.base.session.OBYesNoType" column="isencrypted"/>
-    <property name="decryptable" type="org.openbravo.base.session.OBYesNoType" column="isdesencryptable"/>
-    <property name="translatable" type="org.openbravo.base.session.OBYesNoType" column="istranslated"/>
+    <property name="storedInSession" type="yes_no" column="issessionattr"/>
+    <property name="key" type="yes_no" column="iskey"/>
+    <property name="secondaryKey" type="yes_no" column="issecondarykey"/>
+    <property name="parent" type="yes_no" column="isparent"/>
+    <property name="updatable" type="yes_no" column="isupdateable"/>
+    <property name="identifier" type="yes_no" column="isidentifier"/>
+    <property name="mandatory" type="yes_no" column="ismandatory"/>
+    <property name="encrypted" type="yes_no" column="isencrypted"/>
+    <property name="decryptable" type="yes_no" column="isdesencryptable"/>
+    <property name="translatable" type="yes_no" column="istranslated"/>
     <property name="valueMin"/>
     <property name="valueMax"/>
     <property name="position"/>
     <property name="seqno"/>
     <property name="sqlLogic"/>
-    <property name="usedSequence" type="org.openbravo.base.session.OBYesNoType" column="isusedsequence"/>
+    <property name="usedSequence" type="yes_no" column="isusedsequence"/>
 
     <many-to-one name="table" not-null="true" class="org.openbravo.base.model.Table" column="ad_table_id"/>
      
@@ -55,10 +55,10 @@
 
     <many-to-one name="referenceValue" class="org.openbravo.base.model.Reference" column="ad_reference_value_id"/>
 
-    <property name="transient" type="org.openbravo.base.session.OBYesNoType" column="istransient"/>
+    <property name="transient" type="yes_no" column="istransient"/>
     <property name="isTransientCondition" column="istransientcondition"/>
-    <property name="allowedCrossOrgReference" type="org.openbravo.base.session.OBYesNoType" column="allowed_cross_org_link"/>
-    <property name="childPropertyInParent" type="org.openbravo.base.session.OBYesNoType" column="is_child_property_in_parent"/>
+    <property name="allowedCrossOrgReference" type="yes_no" column="allowed_cross_org_link"/>
+    <property name="childPropertyInParent" type="yes_no" column="is_child_property_in_parent"/>
                         
     <many-to-one name="module" not-null="true" class="org.openbravo.base.model.Module" column="ad_module_id"/>
 

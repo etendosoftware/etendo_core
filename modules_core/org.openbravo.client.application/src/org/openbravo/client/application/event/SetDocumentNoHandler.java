@@ -22,7 +22,7 @@ package org.openbravo.client.application.event;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

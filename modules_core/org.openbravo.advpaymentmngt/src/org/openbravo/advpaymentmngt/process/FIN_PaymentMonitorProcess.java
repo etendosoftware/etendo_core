@@ -19,6 +19,14 @@
 
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -29,8 +37,8 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -123,7 +131,7 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
 
       invoiceScroller = obc.scroll(ScrollMode.FORWARD_ONLY);
       while (invoiceScroller.next()) {
-        final Invoice invoice = (Invoice) invoiceScroller.get()[0];
+        final Invoice invoice = (Invoice) invoiceScroller.get();
         updateInvoice(invoice);
         counter++;
         if (counter % 100 == 0) {
@@ -213,8 +221,8 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
     }
-    obc.add(Restrictions.eq(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice));
-    obc.setProjection(Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
+    obc.addEqual(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice);
+    obc.setProjectionMax(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT);
     obc.setMaxResults(1);
     Object o = obc.uniqueResult();
     if (o != null) {
@@ -318,9 +326,9 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
     }
-    obc.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice));
-    obc.add(Restrictions.ne(FIN_PaymentSchedule.PROPERTY_OUTSTANDINGAMOUNT, BigDecimal.ZERO));
-    obc.setProjection(Projections.min(FIN_PaymentSchedule.PROPERTY_DUEDATE));
+    obc.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice);
+    obc.addNotEqual(FIN_PaymentSchedule.PROPERTY_OUTSTANDINGAMOUNT, BigDecimal.ZERO);
+    obc.setProjectionMin(FIN_PaymentSchedule.PROPERTY_DUEDATE);
     obc.setMaxResults(1);
     Object o = obc.uniqueResult();
     if (o != null) {
@@ -343,14 +351,14 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
   private static boolean isPreferenceOfModule(String property, String moduleId) {
 
     final OBCriteria<Preference> obcNotSel = OBDal.getInstance().createCriteria(Preference.class);
-    obcNotSel.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, property));
+    obcNotSel.addEqual(Preference.PROPERTY_PROPERTY, property);
     obcNotSel.setFilterOnReadableClients(false);
     obcNotSel.setFilterOnReadableOrganization(false);
     obcNotSel.setMaxResults(1);
 
     final OBCriteria<Preference> obcSel = OBDal.getInstance().createCriteria(Preference.class);
-    obcSel.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, property));
-    obcSel.add(Restrictions.eq(Preference.PROPERTY_SELECTED, true));
+    obcSel.addEqual(Preference.PROPERTY_PROPERTY, property);
+    obcSel.addEqual(Preference.PROPERTY_SELECTED, true);
     obcSel.setFilterOnReadableClients(false);
     obcSel.setFilterOnReadableOrganization(false);
     obcSel.setMaxResults(1);

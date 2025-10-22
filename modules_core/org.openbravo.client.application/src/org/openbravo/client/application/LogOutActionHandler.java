@@ -20,8 +20,8 @@ package org.openbravo.client.application;
 
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.client.kernel.BaseActionHandler;
@@ -43,8 +43,8 @@ public class LogOutActionHandler extends BaseActionHandler implements PortalAcce
    * (non-Javadoc)
    * 
    * @see
-   * org.openbravo.client.kernel.BaseActionHandler#execute(javax.servlet.http.HttpServletRequest,
-   * javax.servlet.http.HttpServletResponse)
+   * org.openbravo.client.kernel.BaseActionHandler#execute(jakarta.servlet.http.HttpServletRequest,
+   * jakarta.servlet.http.HttpServletResponse)
    */
   @Override
   public void execute() {

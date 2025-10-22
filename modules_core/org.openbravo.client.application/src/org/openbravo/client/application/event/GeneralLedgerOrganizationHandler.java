@@ -19,12 +19,20 @@
 
 package org.openbravo.client.application.event;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -66,7 +74,7 @@ class GeneralLedgerOrganizationHandler extends EntityPersistenceEventObserver {
             .createCriteria(OrganizationAcctSchema.class);
         orgSchema.setFilterOnReadableOrganization(false);
         orgSchema.setFilterOnActive(false);
-        orgSchema.add(Restrictions.eq(OrganizationAcctSchema.PROPERTY_ORGANIZATION, organization));
+        orgSchema.addEqual(OrganizationAcctSchema.PROPERTY_ORGANIZATION, organization);
         List<OrganizationAcctSchema> orgSchemalist = orgSchema.list();
         ArrayList<String> idlist = new ArrayList<>();
 

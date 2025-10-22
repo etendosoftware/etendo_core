@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.RequestScoped;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;

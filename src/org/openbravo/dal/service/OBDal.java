@@ -27,13 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.SessionStatistics;
 import org.openbravo.base.model.Entity;
@@ -195,12 +194,13 @@ public class OBDal implements OBNotSingleton {
    */
   public Connection getConnection(boolean doFlush) {
     if (doFlush) {
-      // before returning a connection flush all other hibernate actions
+      // before returning a connection flush all others hibernate actions
       // to the database.
       flush();
     }
 
-    return ((SessionImplementor) SessionHandler.getInstance().getSession(poolName)).connection();
+    Session session = SessionHandler.getInstance().getSession(poolName);
+    return session.doReturningWork(conn -> conn);
   }
 
   /**
@@ -563,8 +563,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(Class<T> clz) {
     checkReadAccess(clz);
     final Entity entity = ModelProvider.getInstance().getEntity(clz);
-    final OBCriteria<T> obCriteria = new OBCriteria<>(clz.getName(),
-        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
+    final OBCriteria<T> obCriteria = new OBCriteria<>(clz,
+        SessionHandler.getInstance().getSession(poolName));
     obCriteria.setEntity(entity);
     return obCriteria;
   }
@@ -581,8 +581,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(Class<T> clz, String alias) {
     checkReadAccess(clz);
     final Entity entity = ModelProvider.getInstance().getEntity(clz);
-    final OBCriteria<T> obCriteria = new OBCriteria<>(clz.getName(), alias,
-        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
+    final OBCriteria<T> obCriteria = new OBCriteria<>(clz,
+        SessionHandler.getInstance().getSession(poolName));
     obCriteria.setEntity(entity);
     return obCriteria;
   }
@@ -597,8 +597,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(String entityName) {
     checkReadAccess(entityName);
     Entity entity = ModelProvider.getInstance().getEntity(entityName);
-    final OBCriteria<T> obCriteria = new OBCriteria<>(entity.getMappingClass().getName(),
-        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
+    final OBCriteria<T> obCriteria = new OBCriteria<>((Class<T>) entity.getMappingClass(),
+        SessionHandler.getInstance().getSession(poolName));
     obCriteria.setEntity(entity);
     return obCriteria;
   }
@@ -615,8 +615,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(String entityName, String alias) {
     checkReadAccess(entityName);
     Entity entity = ModelProvider.getInstance().getEntity(entityName);
-    final OBCriteria<T> obCriteria = new OBCriteria<>(entity.getMappingClass().getName(), alias,
-        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
+    final OBCriteria<T> obCriteria = new OBCriteria<>((Class<T>) entity.getMappingClass(),
+        SessionHandler.getInstance().getSession(poolName));
     obCriteria.setEntity(entity);
     return obCriteria;
   }
@@ -642,25 +642,22 @@ public class OBDal implements OBNotSingleton {
     for (final UniqueConstraint uc : entity.getUniqueConstraints()) {
       final OBCriteria<BaseOBObject> criteria = createCriteria(entity.getName());
       if (id != null) {
-        criteria.add(Restrictions.ne("id", id));
+        criteria.addNotEqual("id", id);
       }
       for (final Property p : uc.getProperties()) {
         final Object value = obObject.getValue(p.getName());
-        criteria.add(Restrictions.eq(p.getName(), value));
+        criteria.addEqual(p.getName(), value);
       }
       final List<BaseOBObject> queryResult = criteria.list();
-      // this is not fast, but the list should be small normally
-      // if performance becomes a problem then a hashset should
-      // be used.
       for (final BaseOBObject queriedObject : queryResult) {
         if (!result.contains(queriedObject)) {
           result.add(queriedObject);
         }
       }
     }
-
     return result;
   }
+
 
   protected void setClientOrganization(Object o) {
     final OBContext obContext = OBContext.getOBContext();

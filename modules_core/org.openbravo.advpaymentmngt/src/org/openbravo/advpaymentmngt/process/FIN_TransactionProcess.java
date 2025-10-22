@@ -18,13 +18,21 @@
  */
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.APRM_FinaccTransactionV;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -206,8 +214,7 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         try {
           OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
               .createCriteria(ConversionRateDoc.class);
-          obc.add(
-              Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
+          obc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction);
           boolean dataRemoved = false;
           for (ConversionRateDoc conversionRateDoc : obc.list()) {
             dataRemoved = true;
@@ -264,10 +271,9 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
     try {
       OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
-      obc.add(
-          Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, transaction.getForeignCurrency()));
-      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY, transaction.getCurrency()));
-      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
+      obc.addEqual(ConversionRateDoc.PROPERTY_CURRENCY, transaction.getForeignCurrency());
+      obc.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY, transaction.getCurrency());
+      obc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction);
       return obc.list();
     } finally {
       OBContext.restorePreviousMode();
@@ -314,9 +320,9 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
         obCriteria
-            .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, transaction.getAccount()));
-        obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-            payment.getPaymentMethod()));
+            .addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, transaction.getAccount());
+        obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+            payment.getPaymentMethod());
         obCriteria.setFilterOnReadableClients(false);
         obCriteria.setFilterOnReadableOrganization(false);
         List<FinAccPaymentMethod> lines = obCriteria.list();

@@ -20,12 +20,12 @@ package org.openbravo.client.kernel;
 
 import java.io.IOException;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.http.HttpSession;
 
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 
@@ -87,14 +87,6 @@ public abstract class BaseKernelServlet extends HttpSecureAppServlet {
   protected void callServiceInSuper(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
     super.service(request, response);
-  }
-
-  @Override
-  protected void invalidateSession(HttpServletRequest request) {
-    HttpSession session = request.getSession(false);
-    if (session != null) {
-      session.invalidate();
-    }
   }
 
   public static class KernelHttpServletResponse extends HttpServletResponseWrapper {

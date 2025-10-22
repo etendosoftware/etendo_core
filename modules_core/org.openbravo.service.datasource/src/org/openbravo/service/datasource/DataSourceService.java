@@ -21,6 +21,7 @@ package org.openbravo.service.datasource;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jettison.json.*;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.client.kernel.Template;
@@ -65,7 +66,7 @@ public interface DataSourceService {
    *          the parameters often coming from the HTTP request
    * @return the json result string
    */
-  public String fetch(Map<String, String> parameters);
+  public String fetch(Map<String, String> parameters) throws JSONException;
 
   /**
    * Execute a delete action. The id of the deleted record is present in the parameters.

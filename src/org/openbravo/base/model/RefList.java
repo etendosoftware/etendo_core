@@ -41,8 +41,18 @@ public class RefList extends ModelObject {
   }
 
   public void setReference(Reference reference) {
+    if (reference == null) {
+      this.reference = null;
+      log.debug("Hibernate called setReference(null) for RefList during initialization");
+      return;
+    }
     this.reference = reference;
+
     final DomainType domainType = reference.getDomainType();
+    if (domainType == null) {
+      log.warn("Reference " + reference.getId() + " has no domainType defined.");
+      return;
+    }
     if (!(domainType instanceof StringEnumerateDomainType)) {
       log.error("Domain type of reference " + reference.getId() + " is not a TableDomainType but a "
           + domainType);
@@ -50,6 +60,7 @@ public class RefList extends ModelObject {
       ((StringEnumerateDomainType) domainType).addEnumerateValue(value);
     }
   }
+
 
   public String getValue() {
     return value;

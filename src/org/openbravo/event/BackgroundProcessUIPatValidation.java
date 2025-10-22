@@ -3,7 +3,7 @@ package org.openbravo.event;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -20,7 +20,7 @@ import org.openbravo.model.ad.domain.ModelImplementation;
 import org.openbravo.model.ad.ui.Process;
 
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 public class BackgroundProcessUIPatValidation extends EntityPersistenceEventObserver {
   private static Entity[] entities = {
@@ -61,7 +61,7 @@ public class BackgroundProcessUIPatValidation extends EntityPersistenceEventObse
     String processId = (String) event.getTargetInstance().getId();
     OBCriteria<ModelImplementation> modelImplCrit = OBDal.getInstance().createCriteria(
         ModelImplementation.class);
-    modelImplCrit.add(Restrictions.eq(ModelImplementation.PROPERTY_PROCESS + ".id", processId));
+    modelImplCrit.addEqual(ModelImplementation.PROPERTY_PROCESS + ".id", processId);
     return modelImplCrit.setMaxResults(1).uniqueResult() == null;
   }
 }

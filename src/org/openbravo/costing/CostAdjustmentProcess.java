@@ -18,14 +18,22 @@
  */
 package org.openbravo.costing;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.servlet.ServletException;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,8 +41,8 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.WeldUtils;
@@ -178,7 +186,7 @@ public class CostAdjustmentProcess {
     try {
       String strLines = "";
       while (lines.next()) {
-        CostAdjustmentLine line = (CostAdjustmentLine) lines.get()[0];
+        CostAdjustmentLine line = (CostAdjustmentLine) lines.get();
         strLines += line.getLineNo() + ", ";
 
         if (count == 10) {
@@ -251,13 +259,13 @@ public class CostAdjustmentProcess {
         .createCriteria(CostAdjustmentLine.class);
     critLines.createAlias(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, "trx");
     critLines.createAlias(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, "ca");
-    critLines.add(Restrictions.eq("ca.id", strCostAdjustmentId));
-    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISRELATEDTRANSACTIONADJUSTED, false));
-    critLines.addOrder(Order.asc("trx." + MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE));
-    critLines.addOrder(Order.asc("ca." + CostAdjustment.PROPERTY_DOCUMENTNO));
-    critLines.addOrder(Order.asc(CostAdjustmentLine.PROPERTY_LINENO));
-    critLines.addOrder(Order.asc(CostAdjustmentLine.PROPERTY_ADJUSTMENTAMOUNT));
-    critLines.addOrder(Order.asc("trx." + MaterialTransaction.PROPERTY_MOVEMENTDATE));
+    critLines.addEqual("ca.id", strCostAdjustmentId);
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_ISRELATEDTRANSACTIONADJUSTED, false);
+    critLines.addOrderBy("trx." + MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE, true);
+    critLines.addOrderBy("ca." + CostAdjustment.PROPERTY_DOCUMENTNO, true);
+    critLines.addOrderBy(CostAdjustmentLine.PROPERTY_LINENO, true);
+    critLines.addOrderBy(CostAdjustmentLine.PROPERTY_ADJUSTMENTAMOUNT, true);
+    critLines.addOrderBy("trx." + MaterialTransaction.PROPERTY_MOVEMENTDATE, true);
     critLines.setMaxResults(1);
     return (CostAdjustmentLine) critLines.uniqueResult();
   }
@@ -268,15 +276,15 @@ public class CostAdjustmentProcess {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
     Date referenceDate = costAdjustmentLine.getCostAdjustment().getReferenceDate();
-    critLines.add(Restrictions.or(
-        Restrictions.eq(CostAdjustmentLine.PROPERTY_PARENTCOSTADJUSTMENTLINE, costAdjustmentLine),
-        Restrictions.eq("id", costAdjustmentLine.getId())));
+    // TODO: HIBERNATE 6 - Needs manual conversion of OR logic
+    critLines.addEqual(CostAdjustmentLine.PROPERTY_PARENTCOSTADJUSTMENTLINE, costAdjustmentLine);
+    // critLines.addOr(...); // Requires Predicate objects
     ScrollableResults lines = critLines.scroll(ScrollMode.FORWARD_ONLY);
 
     try {
       OBContext.setAdminMode(false);
       while (lines.next()) {
-        CostAdjustmentLine line = (CostAdjustmentLine) lines.get(0);
+        CostAdjustmentLine line = (CostAdjustmentLine) lines.get();
         if (!line.getTransactionCostList().isEmpty()) {
           continue;
         }

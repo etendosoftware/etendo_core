@@ -23,9 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -151,8 +151,8 @@ public class ServiceDeliverUtility {
     if (orderLine.getBOMParent() != null) {
       OBCriteria<ShipmentInOutLine> obc = OBDal.getInstance()
           .createCriteria(ShipmentInOutLine.class);
-      obc.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipment));
-      obc.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine.getBOMParent()));
+      obc.addEqual(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipment);
+      obc.addEqual(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine.getBOMParent());
       obc.setMaxResults(1);
       shipmentLine.setBOMParent((ShipmentInOutLine) obc.uniqueResult());
     }

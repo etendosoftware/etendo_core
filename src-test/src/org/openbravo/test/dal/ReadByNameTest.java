@@ -130,8 +130,8 @@ public class ReadByNameTest extends OBBaseTest {
     OBCriteria<org.openbravo.model.common.businesspartner.Location> obc = OBDal.getInstance()
         .createCriteria(org.openbravo.model.common.businesspartner.Location.class);
 
-    obc.add(Restrictions.eq(org.openbravo.model.common.businesspartner.Location.PROPERTY_NAME,
-        locName));
+    obc.addEqual(org.openbravo.model.common.businesspartner.Location.PROPERTY_NAME,
+        locName);
 
     assertFalse(obc.list().isEmpty());
 

@@ -18,10 +18,19 @@
  */
 package org.openbravo.client.application.attachment;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -29,7 +38,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.Check;
 import org.openbravo.base.util.CheckException;
@@ -158,15 +167,15 @@ public class AttachmentAH extends BaseActionHandler {
     String attachmentId = (String) parameters.get("attachId");
     String tableId = tab.getTable().getId();
 
-    OBCriteria<Attachment> attachmentFiles = OBDao.getFilteredCriteria(Attachment.class,
-        Restrictions.eq("table.id", tableId),
-        Restrictions.in("record", (Object[]) recordIds.split(",")));
+    OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
+    attachmentFiles.addEqual("table.id", tableId);
+    attachmentFiles.addIn("record", Arrays.asList(recordIds.split(",")));
     // do not filter by the attachment's organization
     // if the user has access to the record where the file its attached, it has access to all
     // its attachments
     attachmentFiles.setFilterOnReadableOrganization(false);
     if (attachmentId != null) {
-      attachmentFiles.add(Restrictions.eq(Attachment.PROPERTY_ID, attachmentId));
+      attachmentFiles.addEqual(Attachment.PROPERTY_ID, attachmentId);
     }
 
     for (Attachment attachment : attachmentFiles.list()) {

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

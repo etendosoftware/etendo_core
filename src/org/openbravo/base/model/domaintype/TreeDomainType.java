@@ -92,14 +92,17 @@ public class TreeDomainType extends BaseForeignKeyDomainType {
 
   private Column readKeyColumn(Session session, Table table) {
     //@formatter:off
+    // Hibernate 6 fix: Use named parameter for boolean to let yes_no type handle conversion
     String hql = 
             "select c " +
             "  from Column as c " +
             " where c.table = :table " +
-            "   and c.key = true " +
+            "   and c.key = :keyValue " +
             " order by c.position asc";
     //@formatter:on
-    Query<Column> query = session.createQuery(hql, Column.class).setParameter("table", table);
+    Query<Column> query = session.createQuery(hql, Column.class)
+        .setParameter("table", table)
+        .setParameter("keyValue", Boolean.TRUE);
 
     List<Column> keyColumns = query.list();
     if (keyColumns.isEmpty()) {

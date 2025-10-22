@@ -4,32 +4,38 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2001-2011 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2001-2011 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.erpReports;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
@@ -355,12 +361,12 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
 
   public List<FIN_Payment> getCustomerPaymentsWithCredit(BusinessPartner bp, boolean isReceipt) {
     OBCriteria<FIN_Payment> obcPayment = OBDal.getInstance().createCriteria(FIN_Payment.class);
-    obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp));
-    obcPayment.add(Restrictions.eq(FIN_Payment.PROPERTY_RECEIPT, isReceipt));
-    obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO));
-    obcPayment.add(Restrictions.ne(FIN_Payment.PROPERTY_STATUS, "RPAP"));
-    obcPayment.add(Restrictions.neProperty(FIN_Payment.PROPERTY_GENERATEDCREDIT,
-        FIN_Payment.PROPERTY_USEDCREDIT));
+    obcPayment.addEqual(FIN_Payment.PROPERTY_BUSINESSPARTNER, bp);
+    obcPayment.addEqual(FIN_Payment.PROPERTY_RECEIPT, isReceipt);
+    obcPayment.addNotEqual(FIN_Payment.PROPERTY_GENERATEDCREDIT, BigDecimal.ZERO);
+    obcPayment.addNotEqual(FIN_Payment.PROPERTY_STATUS, "RPAP");
+    obcPayment.addNotEqual(FIN_Payment.PROPERTY_GENERATEDCREDIT,
+        FIN_Payment.PROPERTY_USEDCREDIT);
     obcPayment.addOrderBy(FIN_Payment.PROPERTY_PAYMENTDATE, true);
     obcPayment.addOrderBy(FIN_Payment.PROPERTY_DOCUMENTNO, true);
     return obcPayment.list();
@@ -427,7 +433,8 @@ public class RptC_Bpartner extends HttpSecureAppServlet {
   /**
    * Creates a {@link VariablesSecureApp} from the given {@link HttpServletRequest}.
    *
-   * @param request the HTTP request
+   * @param request
+   *     the HTTP request
    * @return the initialized secure variables
    */
   protected VariablesSecureApp createVars(HttpServletRequest request) {

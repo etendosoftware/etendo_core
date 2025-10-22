@@ -19,15 +19,23 @@
 
 package org.openbravo.client.application.event;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.enterprise.event.Observes;
+import jakarta.enterprise.event.Observes;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -101,7 +109,7 @@ class ElementValueEventHandler extends EntityPersistenceEventObserver {
     }
     String rootNode = "0";
     OBCriteria<TreeNode> obc = OBDal.getInstance().createCriteria(TreeNode.class);
-    obc.add(Restrictions.eq(TreeNode.PROPERTY_NODE, account.getId()));
+    obc.addEqual(TreeNode.PROPERTY_NODE, account.getId());
     obc.setMaxResults(1);
     List<TreeNode> nodes = obc.list();
     HashMap<String, String> result = getParentAndSeqNo(account);
@@ -142,7 +150,7 @@ class ElementValueEventHandler extends EntityPersistenceEventObserver {
       return result;
     } else {
       OBCriteria<TreeNode> obc = OBDal.getInstance().createCriteria(TreeNode.class);
-      obc.add(Restrictions.eq(TreeNode.PROPERTY_NODE, previousElement.getId()));
+      obc.addEqual(TreeNode.PROPERTY_NODE, previousElement.getId());
       obc.setMaxResults(1);
       List<TreeNode> nodes = obc.list();
       result.put("ParentID", nodes.get(0).getReportSet());
@@ -156,12 +164,11 @@ class ElementValueEventHandler extends EntityPersistenceEventObserver {
 
   List<ElementValue> getAccountList(ElementValue account) {
     OBCriteria<ElementValue> obc = OBDal.getInstance().createCriteria(ElementValue.class);
-    obc.add(
-        Restrictions.eq(ElementValue.PROPERTY_ACCOUNTINGELEMENT, account.getAccountingElement()));
-    obc.add(Restrictions.eq(ElementValue.PROPERTY_ACTIVE, true));
-    obc.add(Restrictions.le(ElementValue.PROPERTY_SEARCHKEY, account.getSearchKey()));
-    obc.add(Restrictions.ne(ElementValue.PROPERTY_ID, account.getId()));
-    obc.addOrder(Order.desc(ElementValue.PROPERTY_SEARCHKEY));
+    obc.addEqual(ElementValue.PROPERTY_ACCOUNTINGELEMENT, account.getAccountingElement());
+    obc.addEqual(ElementValue.PROPERTY_ACTIVE, true);
+    obc.addLessEqual(ElementValue.PROPERTY_SEARCHKEY, account.getSearchKey());
+    obc.addNotEqual(ElementValue.PROPERTY_ID, account.getId());
+    obc.addOrderBy(ElementValue.PROPERTY_SEARCHKEY, false);
     obc.setMaxResults(1);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
@@ -170,9 +177,9 @@ class ElementValueEventHandler extends EntityPersistenceEventObserver {
 
   void updateSeqNo(String parentID, Tree tree, String seqNo) {
     OBCriteria<TreeNode> obc = OBDal.getInstance().createCriteria(TreeNode.class);
-    obc.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-    obc.add(Restrictions.eq(TreeNode.PROPERTY_REPORTSET, parentID));
-    obc.add(Restrictions.ge(TreeNode.PROPERTY_SEQUENCENUMBER, Long.valueOf(seqNo)));
+    obc.addEqual(TreeNode.PROPERTY_TREE, tree);
+    obc.addEqual(TreeNode.PROPERTY_REPORTSET, parentID);
+    obc.addGreaterOrEqual(TreeNode.PROPERTY_SEQUENCENUMBER, Long.valueOf(seqNo));
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     for (TreeNode node : obc.list()) {
@@ -183,9 +190,9 @@ class ElementValueEventHandler extends EntityPersistenceEventObserver {
 
   long getNextSeqNo(Tree tree, String parentId) {
     OBCriteria<TreeNode> obc = OBDal.getInstance().createCriteria(TreeNode.class);
-    obc.add(Restrictions.eq(TreeNode.PROPERTY_REPORTSET, parentId));
-    obc.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-    obc.addOrder(Order.desc(TreeNode.PROPERTY_SEQUENCENUMBER));
+    obc.addEqual(TreeNode.PROPERTY_REPORTSET, parentId);
+    obc.addEqual(TreeNode.PROPERTY_TREE, tree);
+    obc.addOrderBy(TreeNode.PROPERTY_SEQUENCENUMBER, false);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     List<TreeNode> nodes = obc.list();

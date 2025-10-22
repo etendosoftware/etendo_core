@@ -18,9 +18,9 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -47,8 +47,8 @@ public class SL_Order_UpdateLinesDate extends SimpleCallout {
       if (info.getWindowId() != null) {
         Tab orderLineTab = null;
         OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-        tabCriteria.add(Restrictions.eq(Tab.PROPERTY_WINDOW,
-            OBDal.getInstance().get(Window.class, info.getWindowId())));
+        tabCriteria.addEqual(Tab.PROPERTY_WINDOW,
+            OBDal.getInstance().get(Window.class, info.getWindowId()));
         for (Tab tab : tabCriteria.list()) {
           if (tab.getTable().getDBTableName().toUpperCase().equals("C_ORDERLINE")) {
             orderLineTab = tab;
@@ -57,7 +57,7 @@ public class SL_Order_UpdateLinesDate extends SimpleCallout {
         }
 
         OBCriteria<Field> fieldCriteria = OBDal.getInstance().createCriteria(Field.class, null);
-        fieldCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, orderLineTab));
+        fieldCriteria.addEqual(Field.PROPERTY_TAB, orderLineTab);
         for (Field field : fieldCriteria.list()) {
           if ((field.isDisplayed()
               && field.getColumn().getDBColumnName().toUpperCase().equals("DATEORDERED")
@@ -78,8 +78,7 @@ public class SL_Order_UpdateLinesDate extends SimpleCallout {
        * Set dateordered and datepromised in orderlines with dateordered and datepromised in order
        */
       OBCriteria<OrderLine> orderLineCriteria = OBDal.getInstance().createCriteria(OrderLine.class);
-      orderLineCriteria.add(
-          Restrictions.eq(OrderLine.PROPERTY_SALESORDER, OBDal.getInstance().get(Order.class, id)));
+      orderLineCriteria.addEqual(OrderLine.PROPERTY_SALESORDER, OBDal.getInstance().get(Order.class, id));
       if (fieldsToCompare != null && orderLineCriteria.count() > 0) {
         String message = String.format(
             Utility.messageBD(this, "OrderLineUpdate", info.vars.getLanguage()), fieldsToCompare,

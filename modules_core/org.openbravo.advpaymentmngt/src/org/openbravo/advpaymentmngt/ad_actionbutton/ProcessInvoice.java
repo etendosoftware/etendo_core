@@ -18,6 +18,14 @@
  */
 package org.openbravo.advpaymentmngt.ad_actionbutton;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -29,15 +37,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.ProcessInvoiceHook;
 import org.openbravo.advpaymentmngt.ProcessInvoiceUtil;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
@@ -574,14 +582,16 @@ public class ProcessInvoice extends HttpSecureAppServlet {
   }
 
   private boolean isInvoiceWithPayments(Invoice invoice) {
-    for (FIN_PaymentSchedule ps : OBDao
-        .getFilteredCriteria(FIN_PaymentSchedule.class,
-            Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice))
-        .list()) {
-      for (FIN_PaymentDetailV pdv : OBDao
-          .getFilteredCriteria(FIN_PaymentDetailV.class,
-              Restrictions.eq(FIN_PaymentDetailV.PROPERTY_PAYMENTPLANINVOICE, ps))
-          .list()) {
+    // Crear OBCriteria para FIN_PaymentSchedule
+    OBCriteria<FIN_PaymentSchedule> psCriteria = OBDal.getInstance().createCriteria(FIN_PaymentSchedule.class);
+    psCriteria.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice);
+    
+    for (FIN_PaymentSchedule ps : psCriteria.list()) {
+      // Crear OBCriteria para FIN_PaymentDetailV
+      OBCriteria<FIN_PaymentDetailV> pdvCriteria = OBDal.getInstance().createCriteria(FIN_PaymentDetailV.class);
+      pdvCriteria.addEqual(FIN_PaymentDetailV.PROPERTY_PAYMENTPLANINVOICE, ps);
+      
+      for (FIN_PaymentDetailV pdv : pdvCriteria.list()) {
         if (pdv.getPayment() != null && !"RPVOID".equals(pdv.getPayment().getStatus())) {
           return true;
         }

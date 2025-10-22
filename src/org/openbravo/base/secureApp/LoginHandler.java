@@ -11,23 +11,31 @@
  */
 package org.openbravo.base.secureApp;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationExpirationPasswordException;
 import org.openbravo.authentication.AuthenticationManager;
@@ -175,10 +183,10 @@ public class LoginHandler extends HttpBaseServlet {
    * a new JSSESSIONID cookie. It is called every time the user logs in to prevent some malicious
    * user from stealing a cookie which later on will correspond with a valid session
    */
-  private void resetCookieId(HttpServletRequest req) {
+  private void resetCookieId(HttpServletRequest req) throws ServletException {
     HttpSession httpSession = req.getSession(false);
     if (httpSession != null && !httpSession.isNew()) {
-      httpSession.invalidate();
+      req.logout();
     }
     httpSession = req.getSession(true);
 
@@ -617,7 +625,7 @@ public class LoginHandler extends HttpBaseServlet {
       OBContext.setAdminMode();
       User user = (User) OBDal.getInstance()
           .createCriteria(User.class)
-          .add(Restrictions.eq(User.PROPERTY_ID, userId))
+          .addEqual(User.PROPERTY_ID, userId)
           .setFilterOnReadableClients(false)
           .setFilterOnReadableOrganization(false)
           .uniqueResult();

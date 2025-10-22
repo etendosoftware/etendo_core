@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -267,11 +267,10 @@ public class CostAdjustmentUtils {
         .getLegalEntity(trx.getOrganization());
     final OBCriteria<TransactionLast> obc = OBDal.getInstance()
         .createCriteria(TransactionLast.class)
-        .add(Restrictions.eq(TransactionLast.PROPERTY_PRODUCT, trx.getProduct()))
-        .add(Restrictions.eq(TransactionLast.PROPERTY_ORGANIZATION, orgLegal));
+        .addEqual(TransactionLast.PROPERTY_PRODUCT, trx.getProduct())
+        .addEqual(TransactionLast.PROPERTY_ORGANIZATION, orgLegal);
     if (includeWarehouseDimension) {
-      obc.add(
-          Restrictions.eq(TransactionLast.PROPERTY_WAREHOUSE, trx.getStorageBin().getWarehouse()));
+      obc.addEqual(TransactionLast.PROPERTY_WAREHOUSE, trx.getStorageBin().getWarehouse());
     }
     return (TransactionLast) obc.setMaxResults(1).uniqueResult();
   }
@@ -443,7 +442,7 @@ public class CostAdjustmentUtils {
     BigDecimal cost = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        final Object[] resultSet = scroll.get();
+        final Object[] resultSet = (Object[]) scroll.get();
         final BigDecimal costAmt = (BigDecimal) resultSet[0];
         final String origCurId = (String) resultSet[1];
 
@@ -996,7 +995,7 @@ public class CostAdjustmentUtils {
     BigDecimal sum = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        final Object[] resultSet = scroll.get();
+        final Object[] resultSet = (Object[]) scroll.get();
         final BigDecimal origAmt = (BigDecimal) resultSet[0];
         final String origCurId = (String) resultSet[1];
 
@@ -1250,7 +1249,7 @@ public class CostAdjustmentUtils {
     BigDecimal sum = BigDecimal.ZERO;
     try {
       while (scroll.next()) {
-        Object[] resultSet = scroll.get();
+        Object[] resultSet = (Object[]) scroll.get();
         BigDecimal origAmt = (BigDecimal) resultSet[0];
         String origCurId = (String) resultSet[1];
 
@@ -1378,8 +1377,8 @@ public class CostAdjustmentUtils {
     final OBCriteria<org.openbravo.model.ad.domain.List> crList = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.List.class);
     crList.createAlias(propADListReference, "ref");
-    crList.add(Restrictions.eq("ref.id", MovementTypeRefID));
-    crList.add(Restrictions.eq(propADListValue, mvmntType));
+    crList.addEqual("ref.id", MovementTypeRefID);
+    crList.addEqual(propADListValue, mvmntType);
     return ((org.openbravo.model.ad.domain.List) crList.uniqueResult()).getSequenceNumber();
   }
 }

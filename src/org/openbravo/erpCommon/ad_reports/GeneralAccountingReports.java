@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
@@ -40,7 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -572,10 +572,10 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
       final OBCriteria<OrganizationClosing> obc = OBDal.getReadOnlyInstance()
           .createCriteria(OrganizationClosing.class);
       obc.createAlias(OrganizationClosing.PROPERTY_ORGACCTSCHEMA, "oa");
-      obc.add(Restrictions.eq("organization", org));
-      obc.add(Restrictions.eq(OrganizationClosing.PROPERTY_YEAR, year));
-      obc.add(Restrictions.eq("oa.accountingSchema.id", strcAcctSchemaId));
-      obc.add(Restrictions.isNotNull(OrganizationClosing.PROPERTY_CLOSINGFACTACCTGROUP));
+      obc.addEqual("organization", org);
+      obc.addEqual(OrganizationClosing.PROPERTY_YEAR, year);
+      obc.addEqual("oa.accountingSchema.id", strcAcctSchemaId);
+      obc.addIsNotNull(OrganizationClosing.PROPERTY_CLOSINGFACTACCTGROUP);
       obc.setMaxResults(1);
       return obc.uniqueResult() == null;
     } finally {

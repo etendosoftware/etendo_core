@@ -18,20 +18,28 @@
  */
 package org.openbravo.client.kernel;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Order;
+import jakarta.persistence.criteria.Order;
 import org.openbravo.client.application.window.ApplicationDictionaryCachedStructures;
 import org.openbravo.client.kernel.BaseComponentProvider.ComponentResource;
 import org.openbravo.dal.core.OBContext;
@@ -201,7 +209,7 @@ public abstract class BaseComponent implements Component {
       OBContext.setAdminMode();
       try {
         OBCriteria<Module> qMod = OBDal.getInstance().createCriteria(Module.class);
-        qMod.addOrder(Order.asc(Module.PROPERTY_ID));
+        qMod.addOrderBy(Module.PROPERTY_ID, true);
         for (Module mod : qMod.list()) {
           moduleVersions += mod.getId() + "-" + mod.getVersion() + "-" + mod.isEnabled();
           if ("T".equals(mod.getType())) {

@@ -4,21 +4,30 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.erpCommon.ad_process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -36,14 +45,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.ServletException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
@@ -66,27 +71,173 @@ import org.openbravo.scheduling.ProcessLogger;
 
 public class HeartbeatProcess implements Process {
 
-  private static Logger log = LogManager.getLogger();
-
+  public static final String HB_PROCESS_ID = "1005800000";
+  public static final String STATUS_SCHEDULED = "SCH";
+  public static final String STATUS_UNSCHEDULED = "UNS";
   private static final String HEARTBEAT_URL = "https://activation.futit.cloud:443/license-server/heartbeat";
-
   private static final String ENABLING_BEAT = "E";
   private static final String SCHEDULED_BEAT = "S";
   private static final String DISABLING_BEAT = "D";
   private static final String DECLINING_BEAT = "DEC";
   private static final String DEFERRING_BEAT = "DEF";
-
   private static final String UNKNOWN_BEAT = "U";
-  public static final String HB_PROCESS_ID = "1005800000";
-  public static final String STATUS_SCHEDULED = "SCH";
-  public static final String STATUS_UNSCHEDULED = "UNS";
-
+  private static Logger log = LogManager.getLogger();
   private ProcessContext ctx;
 
   private ConnectionProvider connection;
   private ProcessLogger logger;
   private Channel channel;
   private HeartbeatLog hbLog;
+
+  /**
+   * @see HeartbeatProcess#isLoginPopupRequired(String, String, ConnectionProvider)
+   */
+  public static HeartBeatOrRegistration isLoginPopupRequired(VariablesSecureApp vars,
+      ConnectionProvider connectionProvider) throws ServletException {
+    return isLoginPopupRequired(vars.getRole(), vars.getJavaDateFormat(), connectionProvider);
+  }
+
+  /**
+   * Check if a popup is needed to be shown when a user logins.
+   *
+   * @return the type of popup that is needed.
+   */
+  public static HeartBeatOrRegistration isLoginPopupRequired(String roleId, String javaDateFormat,
+      ConnectionProvider connectionProvider) throws ServletException {
+    if (roleId != null && "0".equals(roleId)) {
+      // Check if the instance purpose is set.
+      if (isShowInstancePurposeRequired()) {
+        return HeartBeatOrRegistration.InstancePurpose;
+      }
+      if (isClonedInstance()) {
+        return HeartBeatOrRegistration.InstancePurpose;
+      }
+      if (isShowHeartbeatRequired(javaDateFormat, connectionProvider)) {
+        return HeartBeatOrRegistration.HeartBeat;
+      }
+    }
+    return HeartBeatOrRegistration.None;
+  }
+
+  public static boolean isShowInstancePurposeRequired() {
+    final SystemInformation systemInformation = OBDal.getInstance()
+        .get(SystemInformation.class, "0");
+    if (systemInformation.getInstancePurpose() == null
+        || systemInformation.getInstancePurpose().isEmpty()) {
+      if (ActivationKey.isActiveInstance()) {
+        systemInformation.setInstancePurpose(ActivationKey.getInstance().getProperty("purpose"));
+        OBDal.getInstance().save(systemInformation);
+        OBDal.getInstance().flush();
+        try {
+          OBDal.getInstance().getConnection().commit();
+        } catch (SQLException e) {
+          // ignore exception on commit
+          log.error("Error on commit", e);
+        }
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  public static boolean isClonedInstance() throws ServletException {
+    OBContext.setAdminMode();
+    try {
+      HeartbeatLog lastBeat = getLastHBLog();
+      if ((lastBeat != null && lastBeat.getDatabaseIdentifier() != null
+          && lastBeat.getMacIdentifier() != null)
+          && (!lastBeat.getSystemIdentifier().equals(SystemInfo.getSystemIdentifier())
+          || !lastBeat.getDatabaseIdentifier().equals(SystemInfo.getDBIdentifier())
+          || !lastBeat.getMacIdentifier().equals(SystemInfo.getMacAddress()))) {
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  private static HeartbeatLog getLastHBLog() {
+    OBCriteria<HeartbeatLog> obc = OBDal.getInstance().createCriteria(HeartbeatLog.class);
+    obc.addOrderBy(HeartbeatLog.PROPERTY_CREATIONDATE, false);
+    obc.setMaxResults(1);
+    List<HeartbeatLog> hbLogs = obc.list();
+    if (hbLogs.isEmpty()) {
+      return null;
+    }
+
+    return hbLogs.get(0);
+  }
+
+  /**
+   * @see HeartbeatProcess#isShowHeartbeatRequired(String, ConnectionProvider)
+   */
+  public static boolean isShowHeartbeatRequired(VariablesSecureApp vars,
+      ConnectionProvider connectionProvider) throws ServletException {
+    return isShowHeartbeatRequired(vars.getJavaDateFormat(), connectionProvider);
+  }
+
+  /**
+   * Check if the Heartbeat popup must be displayed.
+   *
+   * @return {@code true} if the Heartbeat popup must be displayed, {@code false} otherwise.
+   */
+  public static boolean isShowHeartbeatRequired(String javaDateFormat,
+      ConnectionProvider connectionProvider) throws ServletException {
+    final SystemInfoData[] hbData = SystemInfoData.selectSystemProperties(connectionProvider);
+    if (hbData.length > 0) {
+      final String isheartbeatactive = hbData[0].isheartbeatactive;
+      final String postponeDate = hbData[0].postponeDate;
+      if (isheartbeatactive == null || isheartbeatactive.equals("")) {
+        if (postponeDate == null || postponeDate.equals("")) {
+          return true;
+        } else {
+          Date date = null;
+          try {
+            date = new SimpleDateFormat(javaDateFormat).parse(postponeDate);
+            if (date.before(new Date())) {
+              return true;
+            }
+          } catch (final ParseException e) {
+            log.error(e.getMessage(), e);
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  public static boolean isHeartbeatEnabled() {
+    SystemInformation sys = OBDal.getInstance().get(SystemInformation.class, "0");
+
+    final org.openbravo.model.ad.ui.Process HBProcess = OBDal.getInstance()
+        .get(org.openbravo.model.ad.ui.Process.class, HB_PROCESS_ID);
+
+    final OBCriteria<ProcessRequest> prCriteria = OBDal.getInstance()
+        .createCriteria(ProcessRequest.class);
+    // Migración de Restrictions.and() con Restrictions.or() anidado
+    prCriteria.addAnd(
+        (cb, obc) -> cb.equal(obc.getPath(ProcessRequest.PROPERTY_PROCESS), HBProcess),
+        (cb, obc) -> cb.or(
+            cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS),
+                org.openbravo.scheduling.Process.SCHEDULED),
+            cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS),
+                org.openbravo.scheduling.Process.MISFIRED)
+        )
+    );
+    final List<ProcessRequest> prRequestList = prCriteria.list();
+
+    if (prRequestList.size() == 0) { // Resetting state to disabled
+      sys.setEnableHeartbeat(false);
+      OBDal.getInstance().save(sys);
+      OBDal.getInstance().flush();
+    }
+
+    // Must exist a scheduled process request for HB and must be enable at SystemInfo level
+    return prRequestList.size() > 0 && sys.isEnableHeartbeat() != null && sys.isEnableHeartbeat();
+  }
 
   @Override
   public void execute(ProcessBundle bundle) throws Exception {
@@ -207,7 +358,7 @@ public class HeartbeatProcess implements Process {
 
   /**
    * Converts properties into a UTF-8 encoded query string.
-   * 
+   *
    * @return the UTF-8 encoded query string
    */
   private String createQueryStr(String beatType) {
@@ -251,7 +402,7 @@ public class HeartbeatProcess implements Process {
 
   /**
    * Sends a query string to the heartbeat server. Returns the https response as a string.
-   * 
+   *
    * @param queryStr
    * @return the result of sending the info
    * @throws IOException
@@ -508,152 +659,6 @@ public class HeartbeatProcess implements Process {
 
   public enum HeartBeatOrRegistration {
     HeartBeat, None, InstancePurpose;
-  }
-
-  /**
-   * @see HeartbeatProcess#isLoginPopupRequired(String, String, ConnectionProvider)
-   */
-  public static HeartBeatOrRegistration isLoginPopupRequired(VariablesSecureApp vars,
-      ConnectionProvider connectionProvider) throws ServletException {
-    return isLoginPopupRequired(vars.getRole(), vars.getJavaDateFormat(), connectionProvider);
-  }
-
-  /**
-   * Check if a popup is needed to be shown when a user logins.
-   * 
-   * @return the type of popup that is needed.
-   */
-  public static HeartBeatOrRegistration isLoginPopupRequired(String roleId, String javaDateFormat,
-      ConnectionProvider connectionProvider) throws ServletException {
-    if (roleId != null && "0".equals(roleId)) {
-      // Check if the instance purpose is set.
-      if (isShowInstancePurposeRequired()) {
-        return HeartBeatOrRegistration.InstancePurpose;
-      }
-      if (isClonedInstance()) {
-        return HeartBeatOrRegistration.InstancePurpose;
-      }
-      if (isShowHeartbeatRequired(javaDateFormat, connectionProvider)) {
-        return HeartBeatOrRegistration.HeartBeat;
-      }
-    }
-    return HeartBeatOrRegistration.None;
-  }
-
-  public static boolean isShowInstancePurposeRequired() {
-    final SystemInformation systemInformation = OBDal.getInstance()
-        .get(SystemInformation.class, "0");
-    if (systemInformation.getInstancePurpose() == null
-        || systemInformation.getInstancePurpose().isEmpty()) {
-      if (ActivationKey.isActiveInstance()) {
-        systemInformation.setInstancePurpose(ActivationKey.getInstance().getProperty("purpose"));
-        OBDal.getInstance().save(systemInformation);
-        OBDal.getInstance().flush();
-        try {
-          OBDal.getInstance().getConnection().commit();
-        } catch (SQLException e) {
-          // ignore exception on commit
-          log.error("Error on commit", e);
-        }
-        return false;
-      }
-      return true;
-    }
-    return false;
-  }
-
-  public static boolean isClonedInstance() throws ServletException {
-    OBContext.setAdminMode();
-    try {
-      HeartbeatLog lastBeat = getLastHBLog();
-      if ((lastBeat != null && lastBeat.getDatabaseIdentifier() != null
-          && lastBeat.getMacIdentifier() != null)
-          && (!lastBeat.getSystemIdentifier().equals(SystemInfo.getSystemIdentifier())
-              || !lastBeat.getDatabaseIdentifier().equals(SystemInfo.getDBIdentifier())
-              || !lastBeat.getMacIdentifier().equals(SystemInfo.getMacAddress()))) {
-        return true;
-      } else {
-        return false;
-      }
-    } finally {
-      OBContext.restorePreviousMode();
-    }
-  }
-
-  private static HeartbeatLog getLastHBLog() {
-    OBCriteria<HeartbeatLog> obc = OBDal.getInstance().createCriteria(HeartbeatLog.class);
-    obc.addOrderBy(HeartbeatLog.PROPERTY_CREATIONDATE, false);
-    obc.setMaxResults(1);
-    List<HeartbeatLog> hbLogs = obc.list();
-    if (hbLogs.isEmpty()) {
-      return null;
-    }
-
-    return hbLogs.get(0);
-  }
-
-  /**
-   * @see HeartbeatProcess#isShowHeartbeatRequired(String, ConnectionProvider)
-   */
-  public static boolean isShowHeartbeatRequired(VariablesSecureApp vars,
-      ConnectionProvider connectionProvider) throws ServletException {
-    return isShowHeartbeatRequired(vars.getJavaDateFormat(), connectionProvider);
-  }
-
-  /**
-   * Check if the Heartbeat popup must be displayed.
-   * 
-   * @return {@code true} if the Heartbeat popup must be displayed, {@code false} otherwise.
-   */
-  public static boolean isShowHeartbeatRequired(String javaDateFormat,
-      ConnectionProvider connectionProvider) throws ServletException {
-    final SystemInfoData[] hbData = SystemInfoData.selectSystemProperties(connectionProvider);
-    if (hbData.length > 0) {
-      final String isheartbeatactive = hbData[0].isheartbeatactive;
-      final String postponeDate = hbData[0].postponeDate;
-      if (isheartbeatactive == null || isheartbeatactive.equals("")) {
-        if (postponeDate == null || postponeDate.equals("")) {
-          return true;
-        } else {
-          Date date = null;
-          try {
-            date = new SimpleDateFormat(javaDateFormat).parse(postponeDate);
-            if (date.before(new Date())) {
-              return true;
-            }
-          } catch (final ParseException e) {
-            log.error(e.getMessage(), e);
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  public static boolean isHeartbeatEnabled() {
-    SystemInformation sys = OBDal.getInstance().get(SystemInformation.class, "0");
-
-    final org.openbravo.model.ad.ui.Process HBProcess = OBDal.getInstance()
-        .get(org.openbravo.model.ad.ui.Process.class, HB_PROCESS_ID);
-
-    final OBCriteria<ProcessRequest> prCriteria = OBDal.getInstance()
-        .createCriteria(ProcessRequest.class);
-    prCriteria.add(Restrictions.and(Restrictions.eq(ProcessRequest.PROPERTY_PROCESS, HBProcess),
-        Restrictions.or(
-            Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
-                org.openbravo.scheduling.Process.SCHEDULED),
-            Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
-                org.openbravo.scheduling.Process.MISFIRED))));
-    final List<ProcessRequest> prRequestList = prCriteria.list();
-
-    if (prRequestList.size() == 0) { // Resetting state to disabled
-      sys.setEnableHeartbeat(false);
-      OBDal.getInstance().save(sys);
-      OBDal.getInstance().flush();
-    }
-
-    // Must exist a scheduled process request for HB and must be enable at SystemInfo level
-    return prRequestList.size() > 0 && sys.isEnableHeartbeat() != null && sys.isEnableHeartbeat();
   }
 
 }

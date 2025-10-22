@@ -18,7 +18,7 @@
  */
 package org.openbravo.client.kernel.event;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.dal.core.TriggerHandler;

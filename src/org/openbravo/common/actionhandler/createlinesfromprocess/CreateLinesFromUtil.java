@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBCriteria;
@@ -144,8 +144,7 @@ class CreateLinesFromUtil {
         aum = OBDal.getInstance().get(UOM.class, selectedPEValuesInLine.getString("operativeUOM"));
         if (aum == null) {
           OBCriteria<UOM> aumCriteria = OBDal.getInstance().createCriteria(UOM.class);
-          aumCriteria.add(
-              Restrictions.eq(UOM.PROPERTY_NAME, selectedPEValuesInLine.getString("operativeUOM")));
+          aumCriteria.addEqual(UOM.PROPERTY_NAME, selectedPEValuesInLine.getString("operativeUOM"));
           aum = (UOM) aumCriteria.uniqueResult();
         }
       }

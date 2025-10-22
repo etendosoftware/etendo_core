@@ -183,7 +183,7 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     final OBCriteria<Greeting> obc = OBDal.getInstance().createCriteria(Greeting.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.add(Restrictions.eq(PROPERTY_ORGANIZATION, org));
+    obc.addEqual(PROPERTY_ORGANIZATION, org);
     // assertEquals(7, obc.list().size());
     for (final Greeting g : obc.list()) {
       OBDal.getInstance().remove(g);
@@ -204,7 +204,7 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     final OBCriteria<Greeting> obc = OBDal.getInstance().createCriteria(Greeting.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.add(Restrictions.eq(PROPERTY_ORGANIZATION, org));
+    obc.addEqual(PROPERTY_ORGANIZATION, org);
     assertEquals(0, obc.list().size());
     OBDal.getInstance().commitAndClose();
   }

@@ -18,6 +18,14 @@
  */
 package org.openbravo.advpaymentmngt.process;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +33,7 @@ import java.util.Set;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -141,7 +149,7 @@ public class RecordID2Filling extends DalBaseProcess {
     try {
       while (scroller.next()) {
         OBContext.setAdminMode(false);
-        final AccountingFact accountingEntry = (AccountingFact) scroller.get()[0];
+        final AccountingFact accountingEntry = (AccountingFact) scroller.get();
         try {
           FIN_FinaccTransaction trx = OBDal.getInstance()
               .get(FIN_FinaccTransaction.class, accountingEntry.getLineID());
@@ -233,7 +241,7 @@ public class RecordID2Filling extends DalBaseProcess {
     try {
       while (scrollerInTransit.next()) {
         OBContext.setAdminMode(false);
-        final AccountingFact accountingEntry = (AccountingFact) scrollerInTransit.get()[0];
+        final AccountingFact accountingEntry = (AccountingFact) scrollerInTransit.get();
         try {
           FIN_FinaccTransaction trx = OBDal.getInstance()
               .get(FIN_FinaccTransaction.class,
@@ -494,9 +502,9 @@ public class RecordID2Filling extends DalBaseProcess {
     String use = null;
     OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
-    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT,
-        OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId)));
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT,
+        OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId));
     obc.setMaxResults(1);
     FinAccPaymentMethod pm = (FinAccPaymentMethod) obc.uniqueResult();
     if (isReceipt) {

@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -54,10 +54,10 @@ public class AccDefUtility {
   public static Period getCurrentPeriod(Date date, Calendar fiscalCalendar) {
     OBCriteria<Period> obc = OBDal.getInstance().createCriteria(Period.class);
     obc.createAlias(Period.PROPERTY_YEAR, "y");
-    obc.add(Restrictions.eq("y." + Year.PROPERTY_CALENDAR, fiscalCalendar));
-    obc.add(Restrictions.ge(Period.PROPERTY_ENDINGDATE, date));
-    obc.add(Restrictions.ne(Period.PROPERTY_PERIODTYPE, "A"));
-    obc.add(Restrictions.le(Period.PROPERTY_STARTINGDATE, date));
+    obc.addEqual("y." + Year.PROPERTY_CALENDAR, fiscalCalendar);
+    obc.addGreaterOrEqualThan(Period.PROPERTY_ENDINGDATE, date);
+    obc.addNotEqual(Period.PROPERTY_PERIODTYPE, "A");
+    obc.addLessOrEqualThan(Period.PROPERTY_STARTINGDATE, date);
     obc.addOrderBy(Period.PROPERTY_PERIODNO, false);
     obc.setFilterOnReadableOrganization(false);
     obc.setFilterOnReadableClients(false);
@@ -72,8 +72,8 @@ public class AccDefUtility {
 
   public static Period getNextPeriod(Period period) {
     OBCriteria<Period> obc = OBDal.getInstance().createCriteria(Period.class);
-    obc.add(Restrictions.eq(Period.PROPERTY_YEAR, period.getYear()));
-    obc.add(Restrictions.ne(Period.PROPERTY_PERIODTYPE, "A"));
+    obc.addEqual(Period.PROPERTY_YEAR, period.getYear());
+    obc.addNotEqual(Period.PROPERTY_PERIODTYPE, "A");
     obc.addOrderBy(Period.PROPERTY_PERIODNO, false);
     obc.setFilterOnReadableOrganization(false);
     obc.setFilterOnReadableClients(false);
@@ -93,8 +93,8 @@ public class AccDefUtility {
 
   public static Period getFirstPeriodOfNextYear(Year year) {
     OBCriteria<Period> obc = OBDal.getInstance().createCriteria(Period.class);
-    obc.add(Restrictions.eq(Period.PROPERTY_YEAR, getNextYear(year)));
-    obc.add(Restrictions.ne(Period.PROPERTY_PERIODTYPE, "A"));
+    obc.addEqual(Period.PROPERTY_YEAR, getNextYear(year));
+    obc.addNotEqual(Period.PROPERTY_PERIODTYPE, "A");
     obc.addOrderBy(Period.PROPERTY_PERIODNO, true);
     obc.setFilterOnReadableOrganization(false);
     obc.setFilterOnReadableClients(false);
@@ -107,7 +107,7 @@ public class AccDefUtility {
 
   public static Year getNextYear(Year year) {
     OBCriteria<Year> obc = OBDal.getInstance().createCriteria(Year.class);
-    obc.add(Restrictions.eq(Year.PROPERTY_CALENDAR, year.getCalendar()));
+    obc.addEqual(Year.PROPERTY_CALENDAR, year.getCalendar());
     obc.addOrderBy(Year.PROPERTY_FISCALYEAR, false);
     obc.setFilterOnReadableOrganization(false);
     obc.setFilterOnReadableClients(false);

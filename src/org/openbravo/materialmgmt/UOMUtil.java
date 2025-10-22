@@ -4,20 +4,28 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2016-2017 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2016-2017 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.materialmgmt;
+
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,7 +37,6 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -47,29 +54,26 @@ import org.openbravo.model.common.uom.UOM;
 import org.openbravo.service.db.DalConnectionProvider;
 
 /**
- * 
  * Utility class for methods related to Unit of Measure functionality
- * 
- * @author Nono Carballo
  *
+ * @author Nono Carballo
  */
 public class UOMUtil {
-
-  private static final Logger log4j = LogManager.getLogger();
-  private static final String UOM_PROPERTY = "UomManagement";
-  private static final String UOM_NOT_APPLICABLE = "NA";
 
   public static final String UOM_PRIMARY = "P";
   public static final String FIELD_PROVIDER_ID = "id";
   public static final String FIELD_PROVIDER_NAME = "name";
+  private static final Logger log4j = LogManager.getLogger();
+  private static final String UOM_PROPERTY = "UomManagement";
+  private static final String UOM_NOT_APPLICABLE = "NA";
 
   /**
    * Get default AUM for a product in a given document
-   * 
+   *
    * @param mProductId
-   *          The product Id
+   *     The product Id
    * @param documentTypeId
-   *          The document type id if the parent document
+   *     The document type id if the parent document
    * @return The default AUM for the product for the given document
    */
 
@@ -90,9 +94,9 @@ public class UOMUtil {
   /**
    * Get default AUM for a product in a Sales Flow. Used when document does not have set document
    * type.
-   * 
+   *
    * @param mProductId
-   *          The product Id
+   *     The product Id
    * @return The default AUM for the product for the Sales Flow
    */
   public static String getDefaultAUMForSales(String mProductId) {
@@ -102,9 +106,9 @@ public class UOMUtil {
   /**
    * Get default AUM for a product in a Purchase Flow. Used when document does not have set document
    * type.
-   * 
+   *
    * @param mProductId
-   *          The product Id
+   *     The product Id
    * @return The default AUM for the product for the Purchase Flow
    */
   public static String getDefaultAUMForPurchase(String mProductId) {
@@ -120,9 +124,10 @@ public class UOMUtil {
     OBContext.setAdminMode(false);
     try {
       OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-      pAUMCriteria.add(Restrictions.eq("product.id", mProductId));
-      pAUMCriteria.add(Restrictions
-          .eq(isSoTrx ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE, UOM_PRIMARY));
+      pAUMCriteria.addEqual("product.id", mProductId);
+      pAUMCriteria.addFunction(
+          (cb, obc) -> cb.equal(obc.getPath(isSoTrx ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE),
+              UOM_PRIMARY));
       Product product = OBDal.getInstance().get(Product.class, mProductId);
       finalAUM = product.getUOM().getId();
       ProductAUM primaryAum = (ProductAUM) pAUMCriteria.uniqueResult();
@@ -137,9 +142,9 @@ public class UOMUtil {
 
   /**
    * Get default AUM for a product in Logistic Flow
-   * 
+   *
    * @param mProductId
-   *          The Id of the product
+   *     The Id of the product
    * @return The default AUM to use in Logistic flow or Base UOM
    */
   public static String getDefaultAUMForLogistic(String mProductId) {
@@ -151,8 +156,8 @@ public class UOMUtil {
     OBContext.setAdminMode(false);
     try {
       OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-      pAUMCriteria.add(Restrictions.eq("product.id", mProductId));
-      pAUMCriteria.add(Restrictions.eq(ProductAUM.PROPERTY_LOGISTICS, UOM_PRIMARY));
+      pAUMCriteria.addEqual("product.id", mProductId);
+      pAUMCriteria.addEqual(ProductAUM.PROPERTY_LOGISTICS, UOM_PRIMARY);
       Product product = OBDal.getInstance().get(Product.class, mProductId);
       finalAUM = product.getUOM().getId();
       ProductAUM primaryAum = (ProductAUM) pAUMCriteria.uniqueResult();
@@ -167,11 +172,11 @@ public class UOMUtil {
 
   /**
    * Get all the available UOM for a product for a given document
-   * 
+   *
    * @param mProductId
-   *          The product id
+   *     The product id
    * @param docTypeId
-   *          The document type id if the parent document
+   *     The document type id if the parent document
    * @return List of the available UOM
    */
   public static List<UOM> getAvailableUOMsForDocument(String mProductId, String docTypeId) {
@@ -184,10 +189,10 @@ public class UOMUtil {
       }
       DocumentType docType = OBDal.getInstance().get(DocumentType.class, docTypeId);
       OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-      pAUMCriteria.add(Restrictions.eq("product.id", mProductId));
-      pAUMCriteria.add(Restrictions.ne(
+      pAUMCriteria.addEqual("product.id", mProductId);
+      pAUMCriteria.addNotEqual(
           docType.isSalesTransaction() ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE,
-          UOM_NOT_APPLICABLE));
+          UOM_NOT_APPLICABLE);
       pAUMCriteria.addOrderBy("uOM.name", true);
       Product product = OBDal.getInstance().get(Product.class, mProductId);
       List<ProductAUM> pAUMList = pAUMCriteria.list();
@@ -203,15 +208,15 @@ public class UOMUtil {
 
   /**
    * Performs conversion for quantity
-   * 
+   *
    * @param mProductId
-   *          The product
+   *     The product
    * @param qty
-   *          The quantity
+   *     The quantity
    * @param toUOM
-   *          The UOM
+   *     The UOM
    * @param reverse
-   *          true if reverse, false otherwise
+   *     true if reverse, false otherwise
    * @throws OBException
    */
 
@@ -232,8 +237,11 @@ public class UOMUtil {
 
         OBCriteria<ProductAUM> productAUMConversionCriteria = OBDal.getInstance()
             .createCriteria(ProductAUM.class);
-        productAUMConversionCriteria.add(Restrictions.and(Restrictions.eq("product.id", mProductId),
-            Restrictions.eq("uOM.id", toUOMId)));
+        // Migración de Restrictions.and()
+        productAUMConversionCriteria.addAnd(
+            (cb, obc) -> cb.equal(obc.getPath("product.id"), mProductId),
+            (cb, obc) -> cb.equal(obc.getPath("uOM.id"), toUOMId)
+        );
 
         try {
           ProductAUM conversion = (ProductAUM) productAUMConversionCriteria.uniqueResult();
@@ -262,13 +270,13 @@ public class UOMUtil {
 
   /**
    * Computes base quantity based on alternative quantity
-   * 
+   *
    * @param mProductId
-   *          The product
+   *     The product
    * @param qty
-   *          The alternative quantity
+   *     The alternative quantity
    * @param toUOM
-   *          The UOM
+   *     The UOM
    * @throws OBException
    */
 
@@ -282,13 +290,13 @@ public class UOMUtil {
 
   /**
    * Computes alternative quantity based on base quantity
-   * 
+   *
    * @param mProductId
-   *          The product
+   *     The product
    * @param qty
-   *          The base quantity
+   *     The base quantity
    * @param toUOM
-   *          The UOM
+   *     The UOM
    * @throws OBException
    */
   public static BigDecimal getConvertedAumQty(String mProductId, BigDecimal qty, String toUOM)
@@ -301,7 +309,7 @@ public class UOMUtil {
 
   /**
    * Returns if the UomManagement preference is enabled
-   * 
+   *
    * @return true if enabled, false otherwise
    */
   public static boolean isUomManagementEnabled() {
@@ -317,11 +325,11 @@ public class UOMUtil {
 
   /**
    * Returns a FieldProvider array containing the default AUM for a product in a given flow
-   * 
+   *
    * @param productId
-   *          The product Id
+   *     The product Id
    * @param docTypeId
-   *          The document type Id
+   *     The document type Id
    */
   public static FieldProvider[] selectDefaultAUM(String productId, String docTypeId) {
     FieldProvider[] finalResult = new FieldProvider[1];
@@ -347,11 +355,11 @@ public class UOMUtil {
 
   /**
    * Returns a FieldProvider array containing the available UOM for a product in a given flow
-   * 
+   *
    * @param productId
-   *          The product Id
+   *     The product Id
    * @param docTypeId
-   *          The document type Id
+   *     The document type Id
    */
   public static FieldProvider[] selectAUM(String productId, String docTypeId) {
     FieldProvider[] finalResult = new FieldProvider[1];
@@ -388,7 +396,7 @@ public class UOMUtil {
     OBContext.setAdminMode(false);
     try {
       OBCriteria<ProductUOM> pUomCriteria = OBDal.getInstance().createCriteria(ProductUOM.class);
-      pUomCriteria.add(Restrictions.eq("product.id", productId));
+      pUomCriteria.addEqual("product.id", productId);
       pUomCriteria.addOrderBy("uOM.name", true);
       List<ProductUOM> pUomList = pUomCriteria.list();
       for (ProductUOM pUom : pUomList) {

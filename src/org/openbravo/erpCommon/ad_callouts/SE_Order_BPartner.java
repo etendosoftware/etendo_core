@@ -18,15 +18,23 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -141,8 +149,8 @@ public class SE_Order_BPartner extends SimpleCallout {
 
     // Warehouses
     OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
-    orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId)));
-    orgWarehouseCriteria.setProjection(Projections.property(OrgWarehouse.PROPERTY_WAREHOUSE));
+    orgWarehouseCriteria.addEqual(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId));
+    orgWarehouseCriteria.setProjectionProperty(OrgWarehouse.PROPERTY_WAREHOUSE);
 
     List<String> warehouseIds = new ArrayList<>();
     List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();

@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
 
 import java.sql.Connection;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

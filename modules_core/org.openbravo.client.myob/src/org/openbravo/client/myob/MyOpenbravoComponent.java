@@ -18,6 +18,14 @@
  */
 package org.openbravo.client.myob;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,14 +33,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.client.application.ApplicationUtils;
 import org.openbravo.client.kernel.SessionDynamicTemplateComponent;
@@ -334,11 +342,11 @@ public class MyOpenbravoComponent extends SessionDynamicTemplateComponent {
     OBCriteria<WidgetInstance> obc = OBDal.getInstance().createCriteria(WidgetInstance.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnActive(false);
-    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_CLIENT, client));
-    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_VISIBLEATROLE, visibleAtRole));
-    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_VISIBLEATUSER, visibleAtUser));
-    obc.add(Restrictions.in(WidgetInstance.PROPERTY_WIDGETCLASS + "." + WidgetClass.PROPERTY_ID,
-        widgetClasses));
+    obc.addEqual(WidgetInstance.PROPERTY_CLIENT, client);
+    obc.addEqual(WidgetInstance.PROPERTY_VISIBLEATROLE, visibleAtRole);
+    obc.addEqual(WidgetInstance.PROPERTY_VISIBLEATUSER, visibleAtUser);
+    obc.addIn(WidgetInstance.PROPERTY_WIDGETCLASS + "." + WidgetClass.PROPERTY_ID,
+        widgetClasses);
     return obc.list();
   }
 

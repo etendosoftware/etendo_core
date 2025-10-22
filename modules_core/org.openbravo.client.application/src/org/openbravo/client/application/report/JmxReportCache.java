@@ -20,7 +20,7 @@ package org.openbravo.client.application.report;
 
 import java.util.Set;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * An standard MBean that allows to view and clear the cached contents of the

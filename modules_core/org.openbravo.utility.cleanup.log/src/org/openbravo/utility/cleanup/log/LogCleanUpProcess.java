@@ -19,18 +19,26 @@
 
 package org.openbravo.utility.cleanup.log;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -81,7 +89,7 @@ public class LogCleanUpProcess extends DalBaseProcess {
 
       OBCriteria<LogCleanUpConfig> qConfig = OBDal.getInstance()
           .createCriteria(LogCleanUpConfig.class);
-      qConfig.add(Restrictions.eq(LogCleanUpConfig.PROPERTY_ACTIVE, true));
+      qConfig.addEqual(LogCleanUpConfig.PROPERTY_ACTIVE, true);
 
       long totalDeletedRows = 0L;
       Set<String> tablesWithDeletions = new LinkedHashSet<String>();

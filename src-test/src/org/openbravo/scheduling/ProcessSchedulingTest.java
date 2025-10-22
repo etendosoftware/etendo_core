@@ -25,8 +25,8 @@ import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 
-import javax.inject.Inject;
-import javax.servlet.ServletException;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
 
 import org.junit.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;

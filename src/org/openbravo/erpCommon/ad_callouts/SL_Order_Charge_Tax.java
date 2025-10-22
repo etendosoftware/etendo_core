@@ -20,7 +20,7 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;

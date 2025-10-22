@@ -15,7 +15,7 @@ import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.pricing.pricelist.PriceListVersion;
 import org.openbravo.service.db.CallStoredProcedure;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;

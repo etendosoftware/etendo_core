@@ -23,8 +23,8 @@ import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
 import java.util.Locale;
 
-import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

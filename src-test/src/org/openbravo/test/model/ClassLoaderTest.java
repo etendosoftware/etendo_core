@@ -25,7 +25,7 @@ import static org.junit.Assert.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.Servlet;
+import jakarta.servlet.Servlet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -97,14 +97,14 @@ public class ClassLoaderTest extends OBBaseTest {
     // Checking listener and filters classes
     OBCriteria<ModelImplementation> obc = OBDal.getInstance()
         .createCriteria(ModelImplementation.class);
-    obc.add(Restrictions.in(ModelImplementation.PROPERTY_OBJECTTYPE, in));
+    obc.addIn(ModelImplementation.PROPERTY_OBJECTTYPE, in);
 
     // these don't need to implement Servlet
     checkClasses("Listener/Filter", obc.list(), notFoundClasses, new ArrayList<String>());
 
     // Checking manual servlets
     obc = OBDal.getInstance().createCriteria(ModelImplementation.class);
-    obc.add(Restrictions.eq(ModelImplementation.PROPERTY_OBJECTTYPE, "S"));
+    obc.addEqual(ModelImplementation.PROPERTY_OBJECTTYPE, "S");
     obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_SPECIALFORM));
     obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_PROCESS));
     obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_CALLOUT));

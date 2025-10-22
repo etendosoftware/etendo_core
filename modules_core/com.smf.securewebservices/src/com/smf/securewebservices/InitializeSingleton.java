@@ -5,8 +5,8 @@ import org.openbravo.client.kernel.ApplicationInitializer;
 import org.openbravo.client.kernel.event.PersistenceEventOBInterceptor;
 import org.openbravo.dal.core.OBInterceptor;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class InitializeSingleton implements ApplicationInitializer{

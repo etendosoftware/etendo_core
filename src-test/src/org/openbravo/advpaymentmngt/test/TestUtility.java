@@ -27,7 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -92,7 +92,7 @@ public class TestUtility extends OBBaseTest {
     if (checkIfExist) {
       final OBCriteria<FIN_FinancialAccount> obc = OBDal.getInstance()
           .createCriteria(FIN_FinancialAccount.class);
-      obc.add(Restrictions.eq(FIN_FinancialAccount.PROPERTY_NAME, name));
+      obc.addEqual(FIN_FinancialAccount.PROPERTY_NAME, name);
       if (obc.list() != null && obc.list().size() > 0) {
         return obc.list().get(0);
       }
@@ -164,7 +164,7 @@ public class TestUtility extends OBBaseTest {
     if (checkIfExist) {
       final OBCriteria<FIN_PaymentMethod> obc = OBDal.getInstance()
           .createCriteria(FIN_PaymentMethod.class);
-      obc.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_NAME, name));
+      obc.addEqual(FIN_PaymentMethod.PROPERTY_NAME, name);
       if (obc.list() != null && obc.list().size() > 0) {
         return obc.list().get(0);
       }
@@ -665,7 +665,7 @@ public class TestUtility extends OBBaseTest {
       if (value.getValue() == null) {
         obCriteria.add(Restrictions.isNull(value.getField()));
       } else {
-        obCriteria.add(Restrictions.eq(value.getField(), value.getValue()));
+        obCriteria.addEqual(value.getField(), value.getValue());
       }
     }
 

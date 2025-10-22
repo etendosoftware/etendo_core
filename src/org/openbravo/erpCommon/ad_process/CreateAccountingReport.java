@@ -26,12 +26,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
@@ -464,8 +464,8 @@ public class CreateAccountingReport extends HttpSecureAppServlet {
       return accounts;
     }
     OBCriteria<TreeNode> obc = OBDal.getInstance().createCriteria(TreeNode.class);
-    obc.add(Restrictions.eq(TreeNode.PROPERTY_REPORTSET, strAccountId));
-    // obc.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
+    obc.addEqual(TreeNode.PROPERTY_REPORTSET, strAccountId);
+    // obc.addEqual(TreeNode.PROPERTY_TREE, tree);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     accounts.add(strAccountId);

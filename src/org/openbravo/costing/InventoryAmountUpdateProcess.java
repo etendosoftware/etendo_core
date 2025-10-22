@@ -31,7 +31,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.BaseActionHandler;
@@ -75,13 +75,13 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
           .get(InventoryAmountUpdate.class, invAmtUpdId);
       final OBCriteria<InventoryAmountUpdateLine> qLines = OBDal.getInstance()
           .createCriteria(InventoryAmountUpdateLine.class);
-      qLines.add(Restrictions.eq(InventoryAmountUpdateLine.PROPERTY_CAINVENTORYAMT, invAmtUpd));
+      qLines.addEqual(InventoryAmountUpdateLine.PROPERTY_CAINVENTORYAMT, invAmtUpd);
 
       final ScrollableResults scrollLines = qLines.scroll(ScrollMode.FORWARD_ONLY);
       try {
         int cnt = 0;
         while (scrollLines.next()) {
-          final InventoryAmountUpdateLine line = (InventoryAmountUpdateLine) scrollLines.get()[0];
+          final InventoryAmountUpdateLine line = (InventoryAmountUpdateLine) scrollLines.get();
           final String lineId = line.getId();
           final CostingRule rule = CostingUtils.getCostDimensionRule(
               OBDal.getInstance().get(Organization.class, orgId), line.getReferenceDate());
@@ -131,7 +131,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
             .scroll(ScrollMode.FORWARD_ONLY);
         try {
           while (invLines.next()) {
-            final InventoryCount inventory = (InventoryCount) invLines.get()[0];
+            final InventoryCount inventory = (InventoryCount) invLines.get();
             new InventoryCountProcess().processInventory(inventory, false, true);
           }
         } finally {
@@ -180,7 +180,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
     int i = 1;
     try {
       while (stockLines.next()) {
-        final Object[] stockLine = stockLines.get();
+        final Object[] stockLine = (Object[]) stockLines.get();
         final String attrSetInsId = (String) stockLine[0];
         final String uomId = (String) stockLine[1];
         final String orderUOMId = (String) stockLine[2];

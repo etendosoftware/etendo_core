@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.Dependent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,7 +39,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -265,10 +265,8 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
     ScrollableResults orderLines = getOrderLineList(oldOrder);
     long lineNoCounter = 1;
     long i = 0;
-    while (orderLines.next()) {
-      final OrderLine oldOrderLine = (OrderLine) orderLines.get(0);
-
-      // Create inverse Order line
+      while (orderLines.next()) {
+        final OrderLine oldOrderLine = (OrderLine) orderLines.get();      // Create inverse Order line
       final OrderLine inverseOrderLine = createInverseOrderLine(oldOrderLine, inverseOrder);
 
       // Netting goods shipment is created
@@ -328,7 +326,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
           final List<ShipmentInOut> shipments = new ArrayList<>();
           final List<ShipmentInOutLine> shipLines = new ArrayList<>();
           while (shipmentLines.next()) {
-            final ShipmentInOutLine shipLine = (ShipmentInOutLine) shipmentLines.get(0);
+            final ShipmentInOutLine shipLine = (ShipmentInOutLine) shipmentLines.get();
             // The netting shipment is flagged as unprocessed.
             final ShipmentInOut shipment = shipLine.getShipmentReceipt();
             if (shipment.isProcessed().booleanValue()) {
@@ -568,7 +566,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
     final List<OrderlineServiceRelation> relationsToRemove = new ArrayList<>();
     final OBCriteria<OrderLine> oldOrderLineCriteria = OBDal.getInstance()
         .createCriteria(OrderLine.class);
-    oldOrderLineCriteria.add(Restrictions.eq("salesOrder.id", oldOrderId));
+    oldOrderLineCriteria.addEqual("salesOrder.id", oldOrderId);
     for (final OrderLine oldOrderLine : oldOrderLineCriteria.list()) {
       //@formatter:off
       final String hqlWhere =
@@ -614,15 +612,15 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
                   final JSONObject line = lines.getJSONObject(i);
                   if (line.has("linepos")
                       && (line.getInt("linepos") + 1) * 10 == oldOrderLine.getLineNo()) {
-                    newOrderLineCriteria.add(Restrictions.in("salesOrder.id", newOrderIds));
-                    newOrderLineCriteria.add(Restrictions.eq("lineNo", (long) ((i + 1) * 10)));
+                    newOrderLineCriteria.addInIds("salesOrder.id", newOrderIds);
+                    newOrderLineCriteria.addEqual("lineNo", (long) ((i + 1) * 10));
                     newOrderLineCriteria.setMaxResults(1);
                     newOrderLine = (OrderLine) newOrderLineCriteria.uniqueResult();
                     break;
                   }
                 }
               } else {
-                newOrderLineCriteria.add(Restrictions.eq("replacedorderline", oldOrderLine));
+                newOrderLineCriteria.addEqual("replacedorderline", oldOrderLine);
                 newOrderLineCriteria.setMaxResults(1);
                 newOrderLine = (OrderLine) newOrderLineCriteria.uniqueResult();
               }
@@ -667,7 +665,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
       try (final ScrollableResults newOrderLines = getOrderLineList(newOrder)) {
         int i = 0;
         while (newOrderLines.next()) {
-          final OrderLine newOrderLine = (OrderLine) newOrderLines.get(0);
+          final OrderLine newOrderLine = (OrderLine) newOrderLines.get();
           if (newOrderLine.getDeliveredQuantity() != null && newOrderLine.getOrderedQuantity()
               .subtract(newOrderLine.getDeliveredQuantity())
               .compareTo(BigDecimal.ZERO) == 0) {
@@ -693,7 +691,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
   private ScrollableResults getShipmentLineListOfOrderLine(final OrderLine line) {
     return OBDal.getInstance()
         .createCriteria(ShipmentInOutLine.class)
-        .add(Restrictions.eq("salesOrderLine", line))
+        .addEqual("salesOrderLine", line)
         .setFilterOnReadableOrganization(false)
         .scroll(ScrollMode.FORWARD_ONLY);
   }
@@ -913,8 +911,8 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
   private OrderLine getReplacementOrderLine(final String oldOrderLineId) {
     return (OrderLine) OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .add(Restrictions.eq("replacedorderline.id", oldOrderLineId))
-        .add(Restrictions.in("salesOrder.id", newOrderIds))
+        .addEqual("replacedorderline.id", oldOrderLineId)
+        .addInIds("salesOrder.id", newOrderIds)
         .setFilterOnReadableOrganization(false)
         .setMaxResults(1)
         .uniqueResult();

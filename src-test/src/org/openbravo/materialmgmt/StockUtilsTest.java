@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.sql.Connection;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;

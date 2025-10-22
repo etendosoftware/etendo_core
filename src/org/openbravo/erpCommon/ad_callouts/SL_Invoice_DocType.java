@@ -18,7 +18,7 @@
  */
 package org.openbravo.erpCommon.ad_callouts;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;

@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.codehaus.jettison.json.JSONObject;
@@ -44,8 +44,8 @@ public abstract class BaseActionHandler implements ActionHandler {
   /*
    * (non-Javadoc)
    * 
-   * @see org.openbravo.client.kernel.ActionHandler#execute(javax.servlet.http.HttpServletRequest,
-   * javax.servlet.http.HttpServletResponse)
+   * @see org.openbravo.client.kernel.ActionHandler#execute(jakarta.servlet.http.HttpServletRequest,
+   * jakarta.servlet.http.HttpServletResponse)
    */
   @Override
   public void execute() {

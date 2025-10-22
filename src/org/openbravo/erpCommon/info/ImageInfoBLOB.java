@@ -21,11 +21,11 @@ package org.openbravo.erpCommon.info;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import javax.inject.Inject;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -80,7 +80,7 @@ public class ImageInfoBLOB extends HttpSecureAppServlet {
         Entity entity = ModelProvider.getInstance().getEntityByTableId(tableId);
         OBContext.getOBContext().getEntityAccessChecker().checkWritableAccess(entity);
 
-        byte[] bytea = vars.getMultiFile("inpFile").get();
+        byte[] bytea = org.openbravo.dal.service.FileItemHelper.getBytes(vars.getMultiFile("inpFile"));
         String mimeType = MimeTypeUtil.getInstance().getMimeTypeName(bytea);
 
         String imageSizeAction = vars.getStringParameter("imageSizeAction");

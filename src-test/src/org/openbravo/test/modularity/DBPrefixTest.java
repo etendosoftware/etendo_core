@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.criterion.Restrictions;
 import org.junit.FixMethodOrder;
@@ -118,7 +118,7 @@ public class DBPrefixTest extends OBBaseTest {
   public void deleteModule() {
     setSystemAdministratorContext();
     final OBCriteria<Module> obCriteria = OBDal.getInstance().createCriteria(Module.class);
-    obCriteria.add(Restrictions.eq(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix"));
+    obCriteria.addEqual(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix");
     final List<Module> modules = obCriteria.list();
     for (Module mod : modules) {
       System.out.println("Removing module: " + mod.getName());
@@ -131,7 +131,7 @@ public class DBPrefixTest extends OBBaseTest {
   private Module getModule() {
     setSystemAdministratorContext();
     final OBCriteria<Module> obCriteria = OBDal.getInstance().createCriteria(Module.class);
-    obCriteria.add(Restrictions.eq(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix"));
+    obCriteria.addEqual(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix");
     final List<Module> modules = obCriteria.list();
     assertEquals("Not a single module obtained", 1, modules.size());
     return modules.get(0);

@@ -18,6 +18,14 @@
  */
 package org.openbravo.erpCommon.businessUtility;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,13 +38,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -96,29 +101,27 @@ import org.openbravo.service.db.ImportResult;
 
 /**
  * @author David Alsasua
- * 
- *         Initial Client Setup Utility class
+ *     <p>
+ *     Initial Client Setup Utility class
  */
 public class InitialSetupUtility {
   private static final Logger log4j = LogManager.getLogger();
 
   /**
-   * 
    * @param strClient
-   *          name of the client
+   *     name of the client
    * @return true if exists client in database with provided name
    * @throws Exception
    */
   public static boolean existsClientName(String strClient) throws Exception {
     final OBCriteria<Client> obcClient = OBDal.getInstance().createCriteria(Client.class);
-    obcClient.add(Restrictions.eq(Client.PROPERTY_NAME, strClient));
+    obcClient.addEqual(Client.PROPERTY_NAME, strClient);
     return obcClient.count() > 0;
   }
 
   /**
-   * 
    * @param strUser
-   *          user name
+   *     user name
    * @return true if exists a user with the name provided in database
    * @throws Exception
    */
@@ -128,7 +131,7 @@ public class InitialSetupUtility {
       final OBCriteria<User> obcUser = OBDal.getInstance().createCriteria(User.class);
       obcUser.setFilterOnReadableClients(false);
       obcUser.setFilterOnReadableOrganization(false);
-      obcUser.add(Restrictions.eq(User.PROPERTY_USERNAME, strUser));
+      obcUser.addEqual(User.PROPERTY_USERNAME, strUser);
       return obcUser.count() > 0;
     } finally {
       OBContext.restorePreviousMode();
@@ -136,11 +139,10 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param strClientName
-   *          client name
+   *     client name
    * @param strCurrency
-   *          currency id
+   *     currency id
    * @return Client object for the created client
    * @throws Exception
    */
@@ -272,9 +274,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param strCurrencyID
-   *          c_currency_id
+   *     c_currency_id
    * @return Currency object that belongs to provided id
    * @throws Exception
    */
@@ -283,35 +284,32 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param strLanguage
-   *          language key (for example en_US)
+   *     language key (for example en_US)
    * @return Language object corresponding to provided key
    * @throws Exception
    */
   public static Language getLanguage(String strLanguage) throws Exception {
     final OBCriteria<Language> obcLanguage = OBDal.getInstance().createCriteria(Language.class);
-    obcLanguage.add(Restrictions.eq(Language.PROPERTY_LANGUAGE, strLanguage));
+    obcLanguage.addEqual(Language.PROPERTY_LANGUAGE, strLanguage);
     // ad_language.ad_language is unique
     return (Language) obcLanguage.uniqueResult();
   }
 
   /**
-   * @deprecated use tableTreeRelation, because it retrieves all tableTrees, instead of only the
-   *             trees defined in the DA_TreeType type list reference Returns the relation of trees
-   *             defined in the reference list of the application dictionary called AD_TreeType Type
-   * 
    * @return java.util.List&lt;org.openbravo.model.ad.domain.List&gt;: the relation of AD list
-   *         elements
+   *     elements
    * @throws Exception
+   * @deprecated use tableTreeRelation, because it retrieves all tableTrees, instead of only the
+   *     trees defined in the DA_TreeType type list reference Returns the relation of trees
+   *     defined in the reference list of the application dictionary called AD_TreeType Type
    */
   @Deprecated
   public static List<org.openbravo.model.ad.domain.List> treeRelation() throws Exception {
 
     final OBCriteria<org.openbravo.model.ad.domain.Reference> obcReference = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.Reference.class);
-    obcReference.add(
-        Restrictions.eq(org.openbravo.model.ad.domain.Reference.PROPERTY_NAME, "AD_TreeType Type"));
+    obcReference.addEqual(org.openbravo.model.ad.domain.Reference.PROPERTY_NAME, "AD_TreeType Type");
     List<org.openbravo.model.ad.domain.Reference> listReferences = obcReference.list();
     if (listReferences.size() != 1) {
       return null;
@@ -321,16 +319,16 @@ public class InitialSetupUtility {
     final OBCriteria<org.openbravo.model.ad.domain.List> obcRefTreeList = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.List.class);
     obcRefTreeList
-        .add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, referenceTree));
-    obcRefTreeList.addOrder(Order.asc("name"));
+        .addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, referenceTree);
+    obcRefTreeList.addOrderBy("name", true);
     return obcRefTreeList.list();
   }
 
   /**
    * Returns the relation of trees that use the ADTree tree structure, AD_TABLE_TREE table
-   * 
+   *
    * @return java.util.List&lt;TableTree&gt;: the relation of all the trees that use the ADTree tree
-   *         structure
+   *     structure
    * @throws Exception
    */
   public static List<TableTree> tableTreeRelation() throws Exception {
@@ -340,19 +338,17 @@ public class InitialSetupUtility {
     // See issue https://issues.openbravo.com/view.php?id=31856
     DataSource accountTreeDatasource = OBDal.getInstance()
         .get(DataSource.class, "D2F94DC86DEC48D69E4BFCE59DC670CF");
-    obcTableTree.add(Restrictions.or(
-        //
-        Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, "ADTree"),
-        Restrictions.eq(TableTree.PROPERTY_DATASOURCE, accountTreeDatasource)));
-    obcTableTree.addOrder(Order.asc(TableTree.PROPERTY_NAME));
+    obcTableTree.addOr((cb, obc) -> cb.equal(obc.getPath(TableTree.PROPERTY_TREESTRUCTURE), "ADTree"),
+        (cb, obc) -> cb.equal(obc.getPath(TableTree.PROPERTY_DATASOURCE), accountTreeDatasource));
+    obcTableTree.addOrderBy(TableTree.PROPERTY_NAME, true);
     return obcTableTree.list();
   }
 
   /**
    * Returns the tree of the provided type
-   * 
+   *
    * @param strTreeTypeMenu
-   *          two letters corresponding to the tree type for the menu
+   *     two letters corresponding to the tree type for the menu
    * @return Tree menu element (defined at system level)
    * @throws Exception
    */
@@ -360,7 +356,7 @@ public class InitialSetupUtility {
     final String AD_MENU_ID = "116";
     Table menuTable = OBDal.getInstance().get(Table.class, AD_MENU_ID);
     final OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TABLE, menuTable));
+    obcTree.addEqual(Tree.PROPERTY_TABLE, menuTable);
     List<Tree> lTrees = obcTree.list();
     if (lTrees.size() != 1) {
       return null;
@@ -369,13 +365,13 @@ public class InitialSetupUtility {
   }
 
   /**
-   * @deprecated use new insertTree method where new parameter "table" is added
    * @param client
    * @param name
    * @param treeType
    * @param boIsAllNodes
    * @return object Tree for the new tree
    * @throws Exception
+   * @deprecated use new insertTree method where new parameter "table" is added
    */
   @Deprecated
   public static Tree insertTree(Client client, String name, String treeType, Boolean boIsAllNodes)
@@ -398,8 +394,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * @deprecated use new insertClientinfo method where new parameter "campaignTree" is added
-   * 
    * @param client
    * @param menuTree
    * @param orgTree
@@ -422,7 +416,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param menuTree
    * @param orgTree
@@ -457,7 +450,7 @@ public class InitialSetupUtility {
 
   /**
    * Associates a client info record to a client
-   * 
+   *
    * @param client
    * @param clientInfo
    * @return true if update was correct
@@ -472,7 +465,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @throws Exception
    */
@@ -493,7 +485,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @throws Exception
    */
@@ -505,7 +496,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param sys
    * @param client
    */
@@ -523,7 +513,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param sys
    * @param client
    */
@@ -542,7 +531,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param sys
    * @param client
    */
@@ -559,15 +547,14 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
-   *          client for which the role will be created
+   *     client for which the role will be created
    * @param orgProvided
-   *          if null, role inserted for organization with id=0
+   *     if null, role inserted for organization with id=0
    * @param name
-   *          name of the role
+   *     name of the role
    * @param strUserLevelProvided
-   *          if null, user level " CO" will be set to the new role
+   *     if null, user level " CO" will be set to the new role
    * @return Role object for new element
    */
   public static Role insertRole(Client client, Organization orgProvided, String name,
@@ -576,15 +563,14 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
-   *          client for which the role will be created
+   *     client for which the role will be created
    * @param orgProvided
-   *          if null, role inserted for organization with id=0
+   *     if null, role inserted for organization with id=0
    * @param name
-   *          name of the role
+   *     name of the role
    * @param strUserLevelProvided
-   *          if null, user level " CO" will be set to the new role
+   *     if null, user level " CO" will be set to the new role
    * @return Role object for new element
    */
   public static Role insertRole(Client client, Organization orgProvided, String name,
@@ -619,11 +605,10 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param role
-   *          role for which the organization access information will be created
+   *     role for which the organization access information will be created
    * @param orgProvided
-   *          if null, organization with id "0" will be used
+   *     if null, organization with id "0" will be used
    * @return RoleOrganization object for new element
    */
   public static RoleOrganization insertRoleOrganization(Role role, Organization orgProvided)
@@ -632,11 +617,10 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param role
-   *          role for which the organization access information will be created
+   *     role for which the organization access information will be created
    * @param orgProvided
-   *          if null, organization with id "0" will be used
+   *     if null, organization with id "0" will be used
    * @return RoleOrganization object for new element
    */
   public static RoleOrganization insertRoleOrganization(Role role, Organization orgProvided,
@@ -667,7 +651,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param name
@@ -710,7 +693,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param user
    * @param orgProvided
@@ -724,7 +706,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param user
    * @param orgProvided
@@ -763,7 +744,7 @@ public class InitialSetupUtility {
   /**
    * Inserts a new role for the created client and user. Also user Openbravo will have rights to
    * access new client
-   * 
+   *
    * @param client
    * @param user
    * @param organization
@@ -777,7 +758,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param name
@@ -805,7 +785,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @return Organization object for * organization (with id 0)
    */
   private static Organization getZeroOrg() {
@@ -813,7 +792,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param calendar
@@ -842,7 +820,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param name
@@ -874,7 +851,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param element
    * @param orgProvided
    * @param name
@@ -942,7 +918,7 @@ public class InitialSetupUtility {
 
   /**
    * Returns the nodes of a given tree
-   * 
+   *
    * @param accountTree
    * @param client
    * @param orgProvided
@@ -963,9 +939,9 @@ public class InitialSetupUtility {
     OBContext.setAdminMode();
     try {
       final OBCriteria<TreeNode> obcTreeNode = OBDal.getInstance().createCriteria(TreeNode.class);
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_TREE, accountTree));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_CLIENT, client));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_ORGANIZATION, organization));
+      obcTreeNode.addEqual(TreeNode.PROPERTY_TREE, accountTree);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_CLIENT, client);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_ORGANIZATION, organization);
       if (OBContext.getOBContext().isInAdministratorMode()) {
         obcTreeNode.setFilterOnReadableClients(false);
         obcTreeNode.setFilterOnReadableOrganization(false);
@@ -981,7 +957,7 @@ public class InitialSetupUtility {
 
   /**
    * Returns the nodes of a given tree
-   * 
+   *
    * @param accountTree
    * @param client
    * @return List&lt;TreeNode&gt; with relation of tree node elements of the provided tree
@@ -993,22 +969,22 @@ public class InitialSetupUtility {
 
   /**
    * Sorts the account tree (stored in ADTreeNode) according to the order provided
-   * 
+   *
    * @param treeNodes
-   *          relation of nodes in ADTreeNode belonging to the accounting tree to sort out
+   *     relation of nodes in ADTreeNode belonging to the accounting tree to sort out
    * @param mapSequence
-   *          HashMap&lt;String,Long&gt; where the String belongs to the value of a c_elementvalue,
-   *          and Long to the sequence that must be assigned to the node that represents that
-   *          element value in ADTreeNode
+   *     HashMap&lt;String,Long&gt; where the String belongs to the value of a c_elementvalue,
+   *     and Long to the sequence that must be assigned to the node that represents that
+   *     element value in ADTreeNode
    * @param mapElementValueValue
-   *          each tree node in treeNodes has one entry in mapElementValueId to link it's value with
-   *          the c_elementvalue_id of that element in c_elementvalue table
+   *     each tree node in treeNodes has one entry in mapElementValueId to link it's value with
+   *     the c_elementvalue_id of that element in c_elementvalue table
    * @param mapElementValueId
-   *          stores the link value &lt;-&gt; c_elementvalue_id
+   *     stores the link value &lt;-&gt; c_elementvalue_id
    * @param mapParent
-   *          stores the link value &lt;-&gt; value of the parent
+   *     stores the link value &lt;-&gt; value of the parent
    * @param doFlush
-   *          if true, each new update performs a flush in DAL
+   *     if true, each new update performs a flush in DAL
    * @throws Exception
    */
   public static void updateAccountTree(List<TreeNode> treeNodes, HashMap<String, Long> mapSequence,
@@ -1047,7 +1023,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param elementValue
    * @param operand
    * @param sign
@@ -1071,7 +1046,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param element
    * @param value
    * @return ElementValue object for the given value in the provided element
@@ -1086,8 +1060,8 @@ public class InitialSetupUtility {
       }
       obcEV.setFilterOnReadableClients(false);
       obcEV.setFilterOnReadableOrganization(false);
-      obcEV.add(Restrictions.eq(ElementValue.PROPERTY_SEARCHKEY, value));
-      obcEV.add(Restrictions.eq(ElementValue.PROPERTY_ACCOUNTINGELEMENT, element));
+      obcEV.addEqual(ElementValue.PROPERTY_SEARCHKEY, value);
+      obcEV.addEqual(ElementValue.PROPERTY_ACCOUNTINGELEMENT, element);
       List<ElementValue> l = obcEV.list();
       if (l.size() != 1) {
         return null;
@@ -1101,7 +1075,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
    * @param currency
@@ -1138,13 +1111,12 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param acctSchema
    * @param orgProvided
-   *          optional parameter. If null, organization 0 will be used
+   *     optional parameter. If null, organization 0 will be used
    * @param listElement
-   *          element of the reference list which is going to be inserted. From it's name, the name
-   *          of the acct.schema element will be taken, and from it's value (search key) the type
+   *     element of the reference list which is going to be inserted. From it's name, the name
+   *     of the acct.schema element will be taken, and from it's value (search key) the type
    * @param sequence
    * @param isMandatory
    * @param isBalanced
@@ -1189,9 +1161,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param defaultElementValues
-   *          map with DefaultAccount and ElementValue object that will be set
+   *     map with DefaultAccount and ElementValue object that will be set
    * @param acctSchema
    * @return AcctSchemaDefault object for the created element
    * @throws Exception
@@ -1489,9 +1460,8 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param defaultElementValues
-   *          map with DefaultAccount and ElementValue object that will be set
+   *     map with DefaultAccount and ElementValue object that will be set
    * @param acctSchema
    * @return AcctSchemaGL object for the created element
    * @throws Exception
@@ -1551,7 +1521,7 @@ public class InitialSetupUtility {
   /**
    * Returns an account combination for the provided ElementValue element. If it doesn't exists,
    * creates a new one.
-   * 
+   *
    * @param client
    * @param orgProvided
    * @param elementValue
@@ -1573,7 +1543,7 @@ public class InitialSetupUtility {
     try {
       OBCriteria<AccountingCombination> obc = OBDal.getInstance()
           .createCriteria(AccountingCombination.class);
-      obc.add(Restrictions.eq(AccountingCombination.PROPERTY_ACCOUNT, elementValue));
+      obc.addEqual(AccountingCombination.PROPERTY_ACCOUNT, elementValue);
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
       List<AccountingCombination> combinations = obc.list();
@@ -1601,7 +1571,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param acctSchema
    * @param orgProvided
@@ -1628,7 +1597,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param organization
    * @param name
@@ -1650,7 +1618,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param organization
    * @param name
@@ -1670,7 +1637,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param organization
    * @param name
@@ -1711,12 +1677,12 @@ public class InitialSetupUtility {
 
   /**
    * Given a dataset, inserts the elements in the xml file into database.
-   * 
+   *
    * @param dataset
    * @param client
    * @param orgProvided
    * @return ImportResult object for the created element. Errors, warnings and log is provided in
-   *         this object.
+   *     this object.
    * @throws Exception
    */
   public static ImportResult insertReferenceData(DataSet dataset, Client client,
@@ -1790,8 +1756,8 @@ public class InitialSetupUtility {
     try {
       OBCriteria<ADClientModule> clientModules = OBDal.getInstance()
           .createCriteria(ADClientModule.class);
-      clientModules.add(Restrictions.eq(ADClientModule.PROPERTY_CLIENT, client));
-      clientModules.add(Restrictions.eq(ADClientModule.PROPERTY_MODULE, module));
+      clientModules.addEqual(ADClientModule.PROPERTY_CLIENT, client);
+      clientModules.addEqual(ADClientModule.PROPERTY_MODULE, module);
       clientModules.setFilterOnReadableOrganization(false);
       clientModules.setFilterOnReadableClients(false);
       return clientModules.list();
@@ -1805,9 +1771,9 @@ public class InitialSetupUtility {
     OBContext.setAdminMode();
     try {
       OBCriteria<ADOrgModule> orgModules = OBDal.getInstance().createCriteria(ADOrgModule.class);
-      orgModules.add(Restrictions.eq(ADOrgModule.PROPERTY_CLIENT, client));
-      orgModules.add(Restrictions.eq(ADOrgModule.PROPERTY_ORGANIZATION, organization));
-      orgModules.add(Restrictions.eq(ADOrgModule.PROPERTY_MODULE, module));
+      orgModules.addEqual(ADOrgModule.PROPERTY_CLIENT, client);
+      orgModules.addEqual(ADOrgModule.PROPERTY_ORGANIZATION, organization);
+      orgModules.addEqual(ADOrgModule.PROPERTY_MODULE, module);
       orgModules.setFilterOnReadableOrganization(false);
       orgModules.setFilterOnReadableClients(false);
       return orgModules.list();
@@ -1817,7 +1783,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param document
    * @param name
    * @param templateLocation
@@ -1842,7 +1807,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param documentTemplate
    * @return EmailTemplate object for the new element
    */
@@ -1857,10 +1821,10 @@ public class InitialSetupUtility {
 
   /**
    * Returns the set of Module objects for the given ids
-   * 
+   *
    * @param strModules
-   *          relation of ids (in a format so that can be included in a "in" statement of a "where"
-   *          clause
+   *     relation of ids (in a format so that can be included in a "in" statement of a "where"
+   *     clause
    * @return List&lt;Module&gt; with the relation of modules
    * @throws Exception
    */
@@ -1879,10 +1843,10 @@ public class InitialSetupUtility {
 
   /**
    * Returns the set of Module objects for the given ids
-   * 
+   *
    * @param strModules
-   *          relation of ids (in a format so that can be included in a "in" statement of a "where"
-   *          clause
+   *     relation of ids (in a format so that can be included in a "in" statement of a "where"
+   *     clause
    * @throws Exception
    */
   public static List<Module> getRDModules(String strModules) throws Exception {
@@ -1900,13 +1864,12 @@ public class InitialSetupUtility {
   }
 
   /**
-   * @deprecated use {@link #getDataSets(Module, List)}
-   * 
    * @param module
    * @param accessLevel
-   *          3-&gt; client/org; 1-&gt; organization only
+   *     3-&gt; client/org; 1-&gt; organization only
    * @return List&lt;DataSet&gt; with the relation of DataSet objects
    * @throws Exception
+   * @deprecated use {@link #getDataSets(Module, List)}
    */
   @Deprecated
   public static List<DataSet> getDataSets(Module module, String accessLevel) throws Exception {
@@ -1917,10 +1880,10 @@ public class InitialSetupUtility {
 
   /**
    * Given a module, and an access level, returns all the datasets contained in that module
-   * 
+   *
    * @param module
    * @param accessLevel
-   *          3-&gt; client/org; 6-&gt; System/client
+   *     3-&gt; client/org; 6-&gt; System/client
    * @return List&lt;DataSet&gt; with the relation of DataSet objects
    * @throws Exception
    */
@@ -1929,9 +1892,9 @@ public class InitialSetupUtility {
     OBContext.setAdminMode();
     try {
       final OBCriteria<DataSet> obcDataSets = OBDal.getInstance().createCriteria(DataSet.class);
-      obcDataSets.add(Restrictions.eq(DataSet.PROPERTY_MODULE, module));
-      obcDataSets.add(Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, accessLevel));
-      obcDataSets.addOrder(Order.asc(DataSet.PROPERTY_NAME));
+      obcDataSets.addEqual(DataSet.PROPERTY_MODULE, module);
+      obcDataSets.addInIds(DataSet.PROPERTY_DATAACCESSLEVEL, accessLevel);
+      obcDataSets.addOrderBy(DataSet.PROPERTY_NAME, true);
       List<DataSet> listDataSets = obcDataSets.list();
       if (!listDataSets.isEmpty()) {
         return listDataSets;
@@ -1946,9 +1909,9 @@ public class InitialSetupUtility {
   /**
    * Returns the relation of ad_ref_list elements for the reference with AD_Reference_id='181'
    * (Acct.schema elements)
-   * 
+   *
    * @return List&lt;org.openbravo.model.ad.domain.List&gt; with the relation of ad_ref_list
-   *         elements
+   *     elements
    * @throws Exception
    */
   public static List<org.openbravo.model.ad.domain.List> getAcctSchemaElements() throws Exception {
@@ -1956,8 +1919,8 @@ public class InitialSetupUtility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obcRefList = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obcRefList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
-          OBDal.getInstance().get(Reference.class, "181")));
+      obcRefList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
+          OBDal.getInstance().get(Reference.class, "181"));
       List<org.openbravo.model.ad.domain.List> listRefList = obcRefList.list();
       if (!listRefList.isEmpty()) {
         return listRefList;
@@ -1971,10 +1934,9 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param orgProvided
-   *          optional parameter. If not provided, "*" organization used
+   *     optional parameter. If not provided, "*" organization used
    * @param module
    * @return ADClientModule object with the created element
    * @throws Exception
@@ -2013,17 +1975,23 @@ public class InitialSetupUtility {
     try {
       OBCriteria<DataSet> obc = OBDal.getInstance().createCriteria(DataSet.class);
       obc.createAlias(DataSet.PROPERTY_MODULE, "m");
-      obc.add(Restrictions.eq(DataSet.PROPERTY_MODULE, module));
+      obc.addEqual(DataSet.PROPERTY_MODULE, module);
       Object[] organizationAccessLevel = { "3", "1" };
       Object[] systemAccessLevel = { "3", "6" };
-      obc.add(Restrictions.or(
-          Restrictions.and(Restrictions.ne(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
-              Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, organizationAccessLevel)),
-          Restrictions.and(Restrictions.eq(DataSet.PROPERTY_ORGANIZATION, getZeroOrg()),
-              Restrictions.in(DataSet.PROPERTY_DATAACCESSLEVEL, systemAccessLevel))));
-      obc.addOrder(Order.asc("m." + Module.PROPERTY_ID));
-      obc.addOrder(Order.asc(DataSet.PROPERTY_SEQUENCENUMBER));
-      obc.addOrder(Order.asc(DataSet.PROPERTY_ID));
+      // Migración de Restrictions.or() con Restrictions.and() anidados
+      obc.addOr(
+          (cb, obcCriteria) -> cb.and(
+              cb.notEqual(obcCriteria.getPath(DataSet.PROPERTY_ORGANIZATION), getZeroOrg()),
+              obcCriteria.getPath(DataSet.PROPERTY_DATAACCESSLEVEL).in((Object[]) organizationAccessLevel)
+          ),
+          (cb, obcCriteria) -> cb.and(
+              cb.equal(obcCriteria.getPath(DataSet.PROPERTY_ORGANIZATION), getZeroOrg()),
+              obcCriteria.getPath(DataSet.PROPERTY_DATAACCESSLEVEL).in((Object[]) systemAccessLevel)
+          )
+      );
+      obc.addOrderBy("m." + Module.PROPERTY_ID, true);
+      obc.addOrderBy(DataSet.PROPERTY_SEQUENCENUMBER, true);
+      obc.addOrderBy(DataSet.PROPERTY_ID, true);
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
       for (DataSet dataset : obc.list()) {
@@ -2039,7 +2007,6 @@ public class InitialSetupUtility {
   }
 
   /**
-   * 
    * @param client
    * @param module
    * @return ADClientModule object with the created element
@@ -2067,8 +2034,8 @@ public class InitialSetupUtility {
       final OBCriteria<Organization> obcOrg = OBDal.getInstance()
           .createCriteria(Organization.class);
       obcOrg.setFilterOnReadableOrganization(false);
-      obcOrg.add(Restrictions.eq(Organization.PROPERTY_CLIENT, client));
-      obcOrg.add(Restrictions.eq(Organization.PROPERTY_NAME, strOrgName));
+      obcOrg.addEqual(Organization.PROPERTY_CLIENT, client);
+      obcOrg.addEqual(Organization.PROPERTY_NAME, strOrgName);
       return obcOrg.count() > 0;
     } finally {
       OBContext.restorePreviousMode();
@@ -2105,8 +2072,8 @@ public class InitialSetupUtility {
     OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
     final String AD_ORG_TABLE_ID = "155";
     Table table = OBDal.getInstance().get(Table.class, AD_ORG_TABLE_ID);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TABLE, table));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_CLIENT, client));
+    obcTree.addEqual(Tree.PROPERTY_TABLE, table);
+    obcTree.addEqual(Tree.PROPERTY_CLIENT, client);
     return obcTree.list().get(0);
   }
 
@@ -2115,9 +2082,9 @@ public class InitialSetupUtility {
     try {
       final OBCriteria<TreeNode> obcTreeNode = OBDal.getInstance().createCriteria(TreeNode.class);
       obcTreeNode.setFilterOnReadableOrganization(false);
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_CLIENT, client));
-      obcTreeNode.add(Restrictions.eq(TreeNode.PROPERTY_NODE, org.getId()));
+      obcTreeNode.addEqual(TreeNode.PROPERTY_TREE, tree);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_CLIENT, client);
+      obcTreeNode.addEqual(TreeNode.PROPERTY_NODE, org.getId());
       return obcTreeNode.list().get(0);
     } finally {
       OBContext.restorePreviousMode();
@@ -2133,8 +2100,8 @@ public class InitialSetupUtility {
       final OBCriteria<TreeNode> obcTreeNodes = OBDal.getInstance().createCriteria(TreeNode.class);
       obcTreeNodes.setFilterOnReadableClients(false);
       obcTreeNodes.setFilterOnReadableOrganization(false);
-      obcTreeNodes.add(Restrictions.eq(TreeNode.PROPERTY_REPORTSET, parentOrg.getId()));
-      obcTreeNodes.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
+      obcTreeNodes.addEqual(TreeNode.PROPERTY_REPORTSET, parentOrg.getId());
+      obcTreeNodes.addEqual(TreeNode.PROPERTY_TREE, tree);
       for (TreeNode treeNode : obcTreeNodes.list()) {
         if (treeNode.getSequenceNumber() > lSeqNo) {
           lSeqNo = treeNode.getSequenceNumber();
@@ -2165,8 +2132,8 @@ public class InitialSetupUtility {
       OBCriteria<MessageTrl> obcMsgTrl = OBDal.getInstance().createCriteria(MessageTrl.class);
       obcMsgTrl.setFilterOnReadableClients(false);
       obcMsgTrl.setFilterOnReadableOrganization(false);
-      obcMsgTrl.add(Restrictions.eq(MessageTrl.PROPERTY_MESSAGE, msg));
-      obcMsgTrl.add(Restrictions.eq(MessageTrl.PROPERTY_LANGUAGE, language));
+      obcMsgTrl.addEqual(MessageTrl.PROPERTY_MESSAGE, msg);
+      obcMsgTrl.addEqual(MessageTrl.PROPERTY_LANGUAGE, language);
       MessageTrl trl = (MessageTrl) obcMsgTrl.uniqueResult();
       if (trl == null) {
         return msg.getMessageText();
@@ -2189,19 +2156,18 @@ public class InitialSetupUtility {
           .createCriteria(org.openbravo.model.ad.ui.Element.class);
       obcElement.setFilterOnReadableClients(false);
       obcElement.setFilterOnReadableOrganization(false);
-      obcElement.add(
-          Restrictions.eq(org.openbravo.model.ad.ui.Element.PROPERTY_DBCOLUMNNAME, columnName));
+      obcElement.addEqual(org.openbravo.model.ad.ui.Element.PROPERTY_DBCOLUMNNAME, columnName);
       if (StringUtils.isNotEmpty(elementName)) {
         obcElement
-            .add(Restrictions.eq(org.openbravo.model.ad.ui.Element.PROPERTY_NAME, elementName));
+            .addEqual(org.openbravo.model.ad.ui.Element.PROPERTY_NAME, elementName);
       }
       obcElement.setMaxResults(1);
       org.openbravo.model.ad.ui.Element element = (org.openbravo.model.ad.ui.Element) obcElement
           .uniqueResult();
 
       OBCriteria<ElementTrl> obcElementTrl = OBDal.getInstance().createCriteria(ElementTrl.class);
-      obcElementTrl.add(Restrictions.eq(ElementTrl.PROPERTY_APPLICATIONELEMENT, element));
-      obcElementTrl.add(Restrictions.eq(ElementTrl.PROPERTY_LANGUAGE, language));
+      obcElementTrl.addEqual(ElementTrl.PROPERTY_APPLICATIONELEMENT, element);
+      obcElementTrl.addEqual(ElementTrl.PROPERTY_LANGUAGE, language);
       ElementTrl trl = (ElementTrl) obcElementTrl.uniqueResult();
       if (trl == null) {
         return element.getName();
@@ -2216,9 +2182,9 @@ public class InitialSetupUtility {
 
   /**
    * Returns the tree of the provided type
-   * 
+   *
    * @param strTreeTypeMenu
-   *          two letters corresponding to the tree type for the menu
+   *     two letters corresponding to the tree type for the menu
    * @return Tree menu element (defined at system level)
    * @throws Exception
    */
@@ -2234,9 +2200,9 @@ public class InitialSetupUtility {
     }
 
     final OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TYPEAREA, strTreeTypeMenu));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_CLIENT, client));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_ORGANIZATION, organization));
+    obcTree.addEqual(Tree.PROPERTY_TYPEAREA, strTreeTypeMenu);
+    obcTree.addEqual(Tree.PROPERTY_CLIENT, client);
+    obcTree.addEqual(Tree.PROPERTY_ORGANIZATION, organization);
     List<Tree> lTrees = obcTree.list();
     if (lTrees.size() != 1) {
       return null;
@@ -2246,7 +2212,7 @@ public class InitialSetupUtility {
 
   /**
    * Returns the ADTree associated with the given table
-   * 
+   *
    * @return Tree menu element (defined at system level)
    * @throws Exception
    */
@@ -2262,9 +2228,9 @@ public class InitialSetupUtility {
     }
 
     final OBCriteria<Tree> obcTree = OBDal.getInstance().createCriteria(Tree.class);
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_TABLE, table));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_CLIENT, client));
-    obcTree.add(Restrictions.eq(Tree.PROPERTY_ORGANIZATION, organization));
+    obcTree.addEqual(Tree.PROPERTY_TABLE, table);
+    obcTree.addEqual(Tree.PROPERTY_CLIENT, client);
+    obcTree.addEqual(Tree.PROPERTY_ORGANIZATION, organization);
     List<Tree> lTrees = obcTree.list();
     if (lTrees.size() != 1) {
       return null;

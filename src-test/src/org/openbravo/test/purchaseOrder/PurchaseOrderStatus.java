@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.hibernate.criterion.Restrictions;
 import org.junit.After;
@@ -308,7 +308,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
       TriggerHandler.getInstance().disable();
 
       OBCriteria<ShipmentInOutLine> criteria = OBDal.getInstance().createCriteria(ShipmentInOutLine.class);
-      criteria.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipmentInOut));
+      criteria.addEqual(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipmentInOut);
       List<ShipmentInOutLine> lines = criteria.list();
 
       for (ShipmentInOutLine line : lines) {
@@ -357,7 +357,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
    */
   private static MaterialTransaction getTransactionByLine(ShipmentInOutLine line) {
     OBCriteria<MaterialTransaction> cTransaction = OBDal.getInstance().createCriteria(MaterialTransaction.class);
-    cTransaction.add(Restrictions.eq(MaterialTransaction.PROPERTY_GOODSSHIPMENTLINE, line));
+    cTransaction.addEqual(MaterialTransaction.PROPERTY_GOODSSHIPMENTLINE, line);
     cTransaction.setMaxResults(1);
     return (MaterialTransaction) cTransaction.uniqueResult();
   }

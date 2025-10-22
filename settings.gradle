@@ -15,11 +15,10 @@ pluginManagement {
     }
 }
 
-// Add modules subprojects
-new File("${this.rootDir}/modules").listFiles().each {
+rootProject.name = "etendo"
+
+new File("${rootDir}/modules").listFiles()?.each {
     if (it.directory && new File(it, 'build.gradle').exists()) {
         include(":modules:${it.name}")
     }
 }
-
-rootProject.name = "etendo"

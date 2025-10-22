@@ -1,11 +1,19 @@
 package com.etendoerp.reportvaluationstock.handler;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import net.sf.jasperreports.engine.JRDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.domaintype.DateDomainType;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -21,6 +29,7 @@ import org.openbravo.costing.StandardAlgorithm;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -39,7 +48,7 @@ import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -375,23 +384,23 @@ public class ReportValuationStock extends BaseReportActionHandler {
       try {
         ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
         Date maxDate = OBDateUtils.getDate(DateTimeData.nDaysAfter(readOnlyCP, strDate, "1"));
-        criteria.add(Restrictions.lt(MaterialTransaction.PROPERTY_MOVEMENTDATE, maxDate));
+        criteria.addFunction((cb, obc) -> cb.lessThan(obc.getPath(MaterialTransaction.PROPERTY_MOVEMENTDATE), maxDate));
       } catch (Exception e) {
         log4j.error("Error parsing date: " + strDate, e);
       }
 
-      criteria.add(Restrictions.eq(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, false));
-      criteria.add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + ID, orgs));
+      criteria.addEqual(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, false);
+      criteria.addIn(MaterialTransaction.PROPERTY_ORGANIZATION + ID, orgs);
       criteria.createAlias(MaterialTransaction.PROPERTY_PRODUCT, "p");
-      criteria.add(Restrictions.eq("p." + Product.PROPERTY_STOCKED, true));
+      criteria.addEqual("p." + Product.PROPERTY_STOCKED, true);
 
       if (StringUtils.isNotBlank(strWarehouse)) {
         criteria.createAlias(MaterialTransaction.PROPERTY_STORAGEBIN, "loc");
-        criteria.add(Restrictions.eq("loc." + Locator.PROPERTY_WAREHOUSE + ID, strWarehouse));
+        criteria.addEqual("loc." + Locator.PROPERTY_WAREHOUSE + ID, strWarehouse);
       }
 
       if (StringUtils.isNotBlank(strCategoryProduct)) {
-        criteria.add(Restrictions.eq("p." + Product.PROPERTY_PRODUCTCATEGORY + ID, strCategoryProduct));
+        criteria.addEqual("p." + Product.PROPERTY_PRODUCTCATEGORY + ID, strCategoryProduct);
       }
 
       criteria.setMaxResults(1);

@@ -19,9 +19,17 @@
 
 package org.openbravo.client.application.event;
 
-import javax.enterprise.event.Observes;
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
 
-import org.hibernate.criterion.Restrictions;
+
+import jakarta.enterprise.event.Observes;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -94,10 +102,10 @@ class TableTreeEventHandler extends EntityPersistenceEventObserver {
     if (ADTREE_STRUCTURE.equals(treeStructure)) {
       // Check that there is no other ADTree Defined for this table
       OBCriteria<TableTree> obq = OBDal.getInstance().createCriteria(TableTree.class);
-      obq.add(Restrictions.eq(TableTree.PROPERTY_TABLE, table));
-      obq.add(Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, treeStructure));
+      obq.addEqual(TableTree.PROPERTY_TABLE, table);
+      obq.addEqual(TableTree.PROPERTY_TREESTRUCTURE, treeStructure);
       if (recordId != null) {
-        obq.add(Restrictions.ne(TableTree.PROPERTY_ID, recordId));
+        obq.addNotEqual(TableTree.PROPERTY_ID, recordId);
       }
       if (obq.count() > 0) {
         String language = OBContext.getOBContext().getLanguage().getLanguage();

@@ -56,7 +56,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;

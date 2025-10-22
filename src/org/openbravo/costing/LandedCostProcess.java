@@ -18,15 +18,23 @@
  */
 package org.openbravo.costing;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
-import javax.inject.Inject;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -35,8 +43,8 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
+// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.util.OBClassLoader;
@@ -122,15 +130,15 @@ public class LandedCostProcess {
   private void doChecks(final LandedCost landedCost, final JSONObject message) {
     // Check there are Receipt Lines and Costs.
     OBCriteria<LandedCost> critLC = OBDal.getInstance().createCriteria(LandedCost.class);
-    critLC.add(Restrictions.sizeEq(LandedCost.PROPERTY_LANDEDCOSTCOSTLIST, 0));
-    critLC.add(Restrictions.eq(LandedCost.PROPERTY_ID, landedCost.getId()));
+    critLC.addSizeEq(LandedCost.PROPERTY_LANDEDCOSTCOSTLIST, 0);
+    critLC.addEqual(LandedCost.PROPERTY_ID, landedCost.getId());
     if (critLC.uniqueResult() != null) {
       throw new OBException(OBMessageUtils.messageBD("LandedCostNoCosts"));
     }
 
     critLC = OBDal.getInstance().createCriteria(LandedCost.class);
-    critLC.add(Restrictions.sizeEq(LandedCost.PROPERTY_LANDEDCOSTRECEIPTLIST, 0));
-    critLC.add(Restrictions.eq(LandedCost.PROPERTY_ID, landedCost.getId()));
+    critLC.addSizeEq(LandedCost.PROPERTY_LANDEDCOSTRECEIPTLIST, 0);
+    critLC.addEqual(LandedCost.PROPERTY_ID, landedCost.getId());
     if (critLC.uniqueResult() != null) {
       throw new OBException(OBMessageUtils.messageBD("LandedCostNoReceipts"));
     }
@@ -184,7 +192,7 @@ public class LandedCostProcess {
   private void distributeAmounts(final LandedCost landedCost) {
     final OBCriteria<LandedCostCost> criteria = OBDal.getInstance()
         .createCriteria(LandedCostCost.class);
-    criteria.add(Restrictions.eq(LandedCostCost.PROPERTY_LANDEDCOST, landedCost));
+    criteria.addEqual(LandedCostCost.PROPERTY_LANDEDCOST, landedCost);
     criteria.addOrderBy(LandedCostCost.PROPERTY_LINENO, true);
     for (LandedCostCost lcCost : criteria.list()) {
       lcCost = OBDal.getInstance().get(LandedCostCost.class, lcCost.getId());
@@ -254,7 +262,7 @@ public class LandedCostProcess {
     try {
       while (receiptamts.next()) {
         log.debug("Process receipt amounts");
-        final Object[] receiptAmt = receiptamts.get();
+        final Object[] receiptAmt = (Object[]) receiptamts.get();
         final BigDecimal amt = (BigDecimal) receiptAmt[0];
         final Currency lcCostCurrency = OBDal.getInstance().get(Currency.class, receiptAmt[1]);
         final ShipmentInOutLine receiptLine = OBDal.getInstance()
@@ -318,8 +326,7 @@ public class LandedCostProcess {
 
     final OBCriteria<ConversionRateDoc> conversionRateDoc = OBDal.getInstance()
         .createCriteria(ConversionRateDoc.class);
-    conversionRateDoc.add(
-        Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE, lcm.getInvoiceLine().getInvoice()));
+    conversionRateDoc.addEqual(ConversionRateDoc.PROPERTY_INVOICE, lcm.getInvoiceLine().getInvoice());
     final ConversionRateDoc invoiceconversionrate = (ConversionRateDoc) conversionRateDoc
         .uniqueResult();
     final Currency currency = lcc.getOrganization().getCurrency() != null
@@ -354,8 +361,8 @@ public class LandedCostProcess {
     lcc.setMatched(Boolean.TRUE);
     lcc.setProcessed(Boolean.TRUE);
     final OBCriteria<LCMatched> critMatched = OBDal.getInstance().createCriteria(LCMatched.class);
-    critMatched.add(Restrictions.eq(LCMatched.PROPERTY_LANDEDCOSTCOST, lcc));
-    critMatched.setProjection(Projections.sum(LCMatched.PROPERTY_AMOUNT));
+    critMatched.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, lcc);
+    critMatched.setProjectionSum(LCMatched.PROPERTY_AMOUNT);
     BigDecimal matchedAmt = (BigDecimal) critMatched.uniqueResult();
     if (matchedAmt == null) {
       matchedAmt = lcc.getAmount();

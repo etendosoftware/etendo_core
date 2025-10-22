@@ -27,7 +27,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.costing.CostingServer.TrxType;
 import org.openbravo.dal.security.OrganizationStructureProvider;
@@ -241,16 +241,15 @@ public class PriceDifferenceProcess {
     OBCriteria<MaterialTransaction> mTrxs = OBDal.getInstance()
         .createCriteria(MaterialTransaction.class);
     if (date != null) {
-      mTrxs.add(Restrictions.le(MaterialTransaction.PROPERTY_MOVEMENTDATE, date));
+      mTrxs.addLessOrEqualThan(MaterialTransaction.PROPERTY_MOVEMENTDATE, date);
     }
     if (product != null) {
-      mTrxs.add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCT, product));
+      mTrxs.addEqual(MaterialTransaction.PROPERTY_PRODUCT, product);
     }
-    mTrxs.add(Restrictions.eq(MaterialTransaction.PROPERTY_CHECKPRICEDIFFERENCE, true));
-    mTrxs.add(Restrictions.eq(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, true));
-    mTrxs.add(
-        Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
-            new OrganizationStructureProvider().getChildTree(legalOrganization.getId(), true)));
+    mTrxs.addEqual(MaterialTransaction.PROPERTY_CHECKPRICEDIFFERENCE, true);
+    mTrxs.addEqual(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, true);
+    mTrxs.addInIds(MaterialTransaction.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
+            new OrganizationStructureProvider().getChildTree(legalOrganization.getId(), true));
     mTrxs.addOrderBy(MaterialTransaction.PROPERTY_MOVEMENTDATE, true);
     mTrxs.addOrderBy(MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE, true);
     ScrollableResults lines = mTrxs.scroll(ScrollMode.FORWARD_ONLY);
@@ -258,7 +257,7 @@ public class PriceDifferenceProcess {
     int i = 0;
     try {
       while (lines.next()) {
-        MaterialTransaction line = (MaterialTransaction) lines.get(0);
+        MaterialTransaction line = (MaterialTransaction) lines.get();
         costAdjCreated = calculateTransactionPriceDifference(legalOrganization, line);
         if (costAdjCreated) {
           count++;

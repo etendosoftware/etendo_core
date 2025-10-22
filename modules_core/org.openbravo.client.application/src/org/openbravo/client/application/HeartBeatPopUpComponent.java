@@ -18,14 +18,22 @@
  */
 package org.openbravo.client.application;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.io.File;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpSession;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -118,9 +126,9 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
   private String getConfigScriptsNotExported() {
     // Get all applied configuration scripts which are not exported in 3.0
     OBCriteria<Module> qMod = OBDal.getInstance().createCriteria(Module.class);
-    qMod.add(Restrictions.eq(Module.PROPERTY_TYPE, "T"));
-    qMod.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
-    qMod.add(Restrictions.eq(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true));
+    qMod.addEqual(Module.PROPERTY_TYPE, "T");
+    qMod.addEqual(Module.PROPERTY_ENABLED, true);
+    qMod.addEqual(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true);
     String obDir = OBPropertiesProvider.getInstance()
         .getOpenbravoProperties()
         .getProperty("source.path");

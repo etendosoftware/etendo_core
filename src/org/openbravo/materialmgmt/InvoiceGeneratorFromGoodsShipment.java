@@ -18,6 +18,14 @@
  */
 package org.openbravo.materialmgmt;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +42,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
@@ -224,8 +232,9 @@ public class InvoiceGeneratorFromGoodsShipment {
   private Invoice createInvoiceIfPossible() {
     try (ScrollableResults scrollShipmentLines = getShipmentLines()) {
       while (scrollShipmentLines.next()) {
-        final ShipmentInOutLine shipmentLine = (ShipmentInOutLine) scrollShipmentLines.get(0);
-        final OrderLine orderLine = (OrderLine) scrollShipmentLines.get(1);
+        final Object[] row = (Object[]) scrollShipmentLines.get();
+        final ShipmentInOutLine shipmentLine = (ShipmentInOutLine) row[0];
+        final OrderLine orderLine = (OrderLine) row[1];
         final Order order = orderLine == null ? null : orderLine.getSalesOrder();
         if (orderLine == null) {
           invoiceShipmentLineWithoutRelatedOrderLine(shipmentLine);
@@ -282,9 +291,9 @@ public class InvoiceGeneratorFromGoodsShipment {
     if (this.allowInvoicePOSOrder && POS_ORDER.equals(order.getDocumentType().getSOSubType())) {
       return InvoiceTerm.shouldInvoicePOSOrderLine(order.getInvoiceTerms());
     }
-    return !OBDao
-        .getFilteredCriteria(InvoiceCandidateV.class,
-            Restrictions.eq(InvoiceCandidateV.PROPERTY_ID, order.getId()))
+    return !OBDal.getInstance()
+        .createCriteria(InvoiceCandidateV.class)
+        .addEqual(InvoiceCandidateV.PROPERTY_ID, order.getId())
         .setMaxResults(1)
         .list()
         .isEmpty();
@@ -314,7 +323,7 @@ public class InvoiceGeneratorFromGoodsShipment {
   private void invoiceAllOrderLines(final Order order) {
     try (ScrollableResults scrollOrderShipmentLines = getAllShipmentLinesLinkedToOrder(order)) {
       while (scrollOrderShipmentLines.next()) {
-        final ShipmentInOutLine iol = (ShipmentInOutLine) scrollOrderShipmentLines.get()[0];
+        final ShipmentInOutLine iol = (ShipmentInOutLine) scrollOrderShipmentLines.get();
         final BigDecimal invoicedQuantity = getTotalInvoicedForShipmentLine(iol);
         if (invoicedQuantity.compareTo(iol.getMovementQuantity()) != 0) {
           createInvoiceLine(iol, iol.getMovementQuantity().subtract(invoicedQuantity));

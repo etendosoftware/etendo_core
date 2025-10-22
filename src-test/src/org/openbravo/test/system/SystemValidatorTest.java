@@ -74,7 +74,7 @@ public class SystemValidatorTest extends OBBaseTest {
   private List<String> setModulesInDev() {
     List<String> updatedModules = new ArrayList<String>();
     OBCriteria<Module> qModules = OBDal.getInstance().createCriteria(Module.class);
-    qModules.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, false));
+    qModules.addEqual(Module.PROPERTY_INDEVELOPMENT, false);
     for (Module mod : qModules.list()) {
       mod.setInDevelopment(true);
       updatedModules.add(mod.getId());

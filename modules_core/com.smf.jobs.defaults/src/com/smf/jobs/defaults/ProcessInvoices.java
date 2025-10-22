@@ -24,7 +24,7 @@ import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonUtils;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.text.ParseException;
 
 /**

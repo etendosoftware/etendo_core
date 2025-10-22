@@ -18,9 +18,17 @@
  */
 package com.etendoerp.legacy.advancedpaymentmngt;
 
+/**
+ * MIGRATED TO HIBERNATE 6
+ * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
+ * - This file was automatically migrated from Criteria API to JPA Criteria API
+ * - Review and test thoroughly before committing
+ */
+
+
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.utility.FIN_SequenceActionInterface;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -30,8 +38,8 @@ import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Default;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Default;
 
 @ApplicationScoped
 @Default
@@ -81,7 +89,7 @@ public class Fin_UtilityLegacy implements FIN_SequenceActionInterface {
             Sequence seq = docType.getDocumentSequence();
             if (seq == null && tableName != null) {
                 OBCriteria<Sequence> obcSeq = OBDal.getInstance().createCriteria(Sequence.class);
-                obcSeq.add(Restrictions.eq(Sequence.PROPERTY_NAME, tableName));
+                obcSeq.addEqual(Sequence.PROPERTY_NAME, tableName);
                 obcSeq.setMaxResults(1);
                 seq = (Sequence) obcSeq.uniqueResult();
             }
