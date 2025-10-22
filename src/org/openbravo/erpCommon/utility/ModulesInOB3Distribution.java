@@ -49,8 +49,6 @@ public class ModulesInOB3Distribution {
       add("EC356CEE3D46416CA1EBEEB9AB82EDB9"); // Smartclient
       add("F8D1B3ECB3474E8DA5C216473C840DF1"); // JSON REST Webservice
       add("FF8080812D842086012D844F3CC0003E"); // Widgets Collection
-      add("FF8080813129ADA401312CA1222A0005"); // Integration with Google APIs
-      add("FF8080813141B198013141B86DD70003"); // OpenID Service Integration
       add("FF8081812E008C6E012E00A613DC0019"); // Openbravo 3 Demo Sampledata API
       add("8A34B301DC524EA3A07513DF9F42CC90"); // Log Clean Up Utility
       add("8A098711BB324335A19833286BDB093D"); // Apache External Connection Pool
