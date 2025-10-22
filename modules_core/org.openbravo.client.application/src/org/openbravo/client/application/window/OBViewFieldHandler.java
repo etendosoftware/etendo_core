@@ -31,6 +31,7 @@ import java.util.Set;
 
 import javax.script.ScriptException;
 
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,6 +66,7 @@ import org.openbravo.model.ad.ui.Tab;
  * @author iperdomo
  */
 
+@RequestScoped
 public class OBViewFieldHandler {
 
   private static Logger log = LogManager.getLogger();

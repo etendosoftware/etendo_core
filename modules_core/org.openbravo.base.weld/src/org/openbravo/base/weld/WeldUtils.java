@@ -46,7 +46,8 @@ public class WeldUtils {
 
   private static BeanManager staticBeanManager = null;
   private static final Logger log = LogManager.getLogger();
-  private static final String BEAN_MANAGER_ATTRIBUTE_NAME = "org.jboss.weld.environment.servlet.javax.enterprise.inject.spi.BeanManager";
+  // Use the standard CDI attribute name for the BeanManager in Jakarta EE
+  private static final String BEAN_MANAGER_ATTRIBUTE_NAME = BeanManager.class.getName();
 
   public static BeanManager getStaticInstanceBeanManager() {
     if (staticBeanManager == null) {

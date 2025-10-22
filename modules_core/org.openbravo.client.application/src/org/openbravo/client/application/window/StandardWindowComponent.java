@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import jakarta.persistence.criteria.Order;
@@ -56,6 +57,7 @@ import org.openbravo.model.ad.ui.Window;
  * 
  * @author mtaal
  */
+@RequestScoped
 public class StandardWindowComponent extends BaseTemplateComponent {
   private static final Logger log = LogManager.getLogger();
   private static final String DEFAULT_TEMPLATE_ID = "ADD5EF45333C458098286D0E639B3290";

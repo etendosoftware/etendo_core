@@ -18,6 +18,8 @@
  */
 package org.openbravo.client.application.window;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import org.openbravo.client.kernel.BaseTemplateComponent;
 import org.openbravo.client.kernel.Template;
 import org.openbravo.dal.service.OBDal;
@@ -29,6 +31,7 @@ import org.openbravo.dal.service.OBDal;
  * @author iperdomo
  */
 
+@RequestScoped
 public class OBViewFormComponent extends BaseTemplateComponent {
 
   private static final String TEMPLATE_ID = "C1D176407A354A40815DC46D24D70EB8";

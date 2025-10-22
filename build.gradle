@@ -396,3 +396,9 @@ configurations.configureEach {
         exclude group: 'org.gjt.xpp'
     }
 }
+
+dependencies {
+    implementation("org.redisson:redisson-tomcat-11:3.52.0") {
+        exclude group: 'javax.cache'
+    }
+}

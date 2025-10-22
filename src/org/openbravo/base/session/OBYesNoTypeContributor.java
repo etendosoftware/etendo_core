@@ -13,8 +13,20 @@ public class OBYesNoTypeContributor implements TypeContributor {
 
   @Override
   public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-    BasicTypeRegistry registry =
-        typeContributions.getTypeConfiguration().getBasicTypeRegistry();
+    BasicTypeRegistry registry = typeContributions
+        .getTypeConfiguration()
+        .getBasicTypeRegistry();
+
     registry.register(OBYesNoType.INSTANCE);
+
+    typeContributions
+        .getTypeConfiguration()
+        .getBasicTypeRegistry()
+        .register(OBYesNoType.INSTANCE, "yes_no");
+
+    typeContributions
+        .getTypeConfiguration()
+        .getBasicTypeForJavaType(Boolean.class)
+        .getJdbcType();
   }
 }

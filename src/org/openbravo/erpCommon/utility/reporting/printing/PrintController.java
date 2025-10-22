@@ -84,7 +84,7 @@ import com.google.common.collect.HashBasedTable;
 
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
+import net.sf.jasperreports.pdf.SimplePdfExporterConfiguration;
 
 @SuppressWarnings("serial")
 public class PrintController extends HttpSecureAppServlet {

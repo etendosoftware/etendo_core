@@ -34,8 +34,7 @@ List<String> _dependenciesListCOMPILATION = [
   // Reporting and Document Generation
   'com.lowagie:itext:2.1.7',
   'jfree:jfreechart:1.0.12',
-  'net.sf.jasperreports:jasperreports:6.17.0',
-  'net.sf.jasperreports:jasperreports-fonts:6.17.0',
+  "net.sf.jasperreports:jasperreports-servlets:7.0.3",
 
   // Database Drivers and Persistence Connectors
   'com.oracle.database.jdbc:ojdbc8:23.9.0.25.07',
@@ -53,9 +52,10 @@ List<String> _dependenciesListCOMPILATION = [
   'nekohtml:nekohtml:0.9.5',
   'org.apache.xmlbeans:xmlbeans:5.1.1',
   'org.apache.poi:ooxml-schemas:1.4',
-  'org.codehaus.castor:castor-core:1.4.1',
-  'org.codehaus.castor:castor-xml:1.4.1',
-  'org.dom4j:dom4j:2.1.3',
+  //'org.codehaus.castor:castor-core:1.4.1',
+  //'org.codehaus.castor:castor-xml:1.4.1',
+  //'org.dom4j:dom4j:2.1.3',
+  'org.dom4j:dom4j:2.2.0',
   'xerces:xercesImpl:2.9.0',
 
   // Parsing, Query, and Expression Engines
@@ -80,10 +80,7 @@ List<String> _dependenciesListCOMPILATION = [
   'org.hibernate.orm:hibernate-core:6.5.2.Final',
 
   // JBoss and Weld CDI Implementation
-  'org.jboss.classfilewriter:jboss-classfilewriter:1.2.4.Final',
-  'org.jboss.logging:jboss-logging:3.3.2.Final',
   'org.jboss.weld.servlet:weld-servlet-shaded:5.1.2.Final',
-  'org.jboss:jandex:2.0.5.Final',
 
   // Apache Ant and Tomcat Runtime
   'org.apache.ant:ant:1.9.2',
@@ -114,9 +111,9 @@ List<String> _dependenciesListCOMPILATION = [
   'org.apache.tika:tika-core:0.9',
 
   // XML Binding and StAX Processing
-  'org.glassfish.jaxb:jaxb-runtime:2.3.1',
-  'org.glassfish.jaxb:txw2:2.3.1',
-  'org.jvnet.staxex:stax-ex:1.8',
+  //'org.glassfish.jaxb:jaxb-runtime:2.3.1',
+  //'org.glassfish.jaxb:txw2:2.3.1',
+  //'org.jvnet.staxex:stax-ex:1.8',
 
   // Template and Scripting Engines
   'org.freemarker:freemarker:2.3.16',
@@ -125,7 +122,6 @@ List<String> _dependenciesListCOMPILATION = [
 
   // Scheduling and Distributed Systems
   'org.quartz-scheduler:quartz:2.3.2',
-  'org.redisson:redisson:3.15.4',
 
   // Miscellaneous Utilities
   'oro:oro:2.0.8',
