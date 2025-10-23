@@ -13937,6 +13937,45 @@ and @insertion_point@]]></HQLQUERY>
 <!--F8EB5AF7244641B8838EA9C36EA0CBD7-->  <ISTREE><![CDATA[N]]></ISTREE>
 <!--F8EB5AF7244641B8838EA9C36EA0CBD7--></AD_TABLE>
 
+<!--F99379660FC24436839F70E195FFBD09--><AD_TABLE>
+<!--F99379660FC24436839F70E195FFBD09-->  <AD_TABLE_ID><![CDATA[F99379660FC24436839F70E195FFBD09]]></AD_TABLE_ID>
+<!--F99379660FC24436839F70E195FFBD09-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--F99379660FC24436839F70E195FFBD09-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--F99379660FC24436839F70E195FFBD09-->  <NAME><![CDATA[MaterialMgmtStDetailByRefInventoryHQL]]></NAME>
+<!--F99379660FC24436839F70E195FFBD09-->  <DESCRIPTION><![CDATA[HQL table of M_Storage_Detail that supplies the stock-selector grid, applying dynamic provider and user filters to show only eligible inventory lines for Box/Unbox operations.]]></DESCRIPTION>
+<!--F99379660FC24436839F70E195FFBD09-->  <HELP><![CDATA[When the selector is opened, the HQL of this view is first processed by StockSelectorDispatcherHQLTransformer, which:
+	1. Detects the Referenced Inventory type indicated in the request.
+	2. Chooses the highest-priority StockSelectorFilterProvider that supports that type (or falls back to the default provider).
+	3. Injects the provider’s optional JOIN clause and mandatory filter clause in place of the @joinClause@ and @whereClause@ tokens.
+
+After this transformation the query still adds any run-time criteria the user sets in the grid, so the final result shows only the storage-detail rows that are valid candidates for the current Box or Unbox action.]]></HELP>
+<!--F99379660FC24436839F70E195FFBD09-->  <TABLENAME><![CDATA[MaterialMgmtStDetailByRefInventoryHQL]]></TABLENAME>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISVIEW><![CDATA[N]]></ISVIEW>
+<!--F99379660FC24436839F70E195FFBD09-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISSECURITYENABLED><![CDATA[N]]></ISSECURITYENABLED>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISDELETEABLE><![CDATA[Y]]></ISDELETEABLE>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISHIGHVOLUME><![CDATA[N]]></ISHIGHVOLUME>
+<!--F99379660FC24436839F70E195FFBD09-->  <IMPORTTABLE><![CDATA[N]]></IMPORTTABLE>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISCHANGELOG><![CDATA[N]]></ISCHANGELOG>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISDEFAULTACCT><![CDATA[N]]></ISDEFAULTACCT>
+<!--F99379660FC24436839F70E195FFBD09-->  <DEVELOPMENTSTATUS><![CDATA[RE]]></DEVELOPMENTSTATUS>
+<!--F99379660FC24436839F70E195FFBD09-->  <AD_PACKAGE_ID><![CDATA[5A3ED54AB1F04B84E040007F01006125]]></AD_PACKAGE_ID>
+<!--F99379660FC24436839F70E195FFBD09-->  <DATAORIGINTYPE><![CDATA[HQL]]></DATAORIGINTYPE>
+<!--F99379660FC24436839F70E195FFBD09-->  <ISTREE><![CDATA[N]]></ISTREE>
+<!--F99379660FC24436839F70E195FFBD09-->  <HQLQUERY><![CDATA[select mgt.id,
+mgt.product,
+mgt.storageBin,
+mgt.attributeSetValue,
+mgt.uOM,
+mgt.quantityOnHand,
+mgt.quantityInDraftTransactions,
+mgt.reservedQty 
+from MaterialMgmtStorageDetail as mgt @joinClause@
+where mgt.quantityOnHand > 0 and @additional_filters@ @whereClause@]]></HQLQUERY>
+<!--F99379660FC24436839F70E195FFBD09-->  <ENTITY_ALIAS><![CDATA[mgt]]></ENTITY_ALIAS>
+<!--F99379660FC24436839F70E195FFBD09--></AD_TABLE>
+
 <!--FC90AED3E5ED45CAB28A1FF2D571FB99--><AD_TABLE>
 <!--FC90AED3E5ED45CAB28A1FF2D571FB99-->  <AD_TABLE_ID><![CDATA[FC90AED3E5ED45CAB28A1FF2D571FB99]]></AD_TABLE_ID>
 <!--FC90AED3E5ED45CAB28A1FF2D571FB99-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
