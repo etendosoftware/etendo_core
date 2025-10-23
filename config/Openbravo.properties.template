@@ -187,7 +187,8 @@ strict.template.application=false
 # defined by this property, note the value should be the complete path 
 # including the file name and extension.
 # hibernate.hbm.file=/tmp/hibernate.hbm.xml
-
+hibernate.type_contributors=org.openbravo.base.session.OBYesNoTypeContributor
+hibernate.type.preferred_boolean_jdbc_type=CHAR
 
 ###################
 # Log in security #

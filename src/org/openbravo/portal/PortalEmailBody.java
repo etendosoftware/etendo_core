@@ -24,6 +24,8 @@ import org.openbravo.email.EmailEventContentGenerator;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.PropertyException;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Convenience class that provides a set of common utilities for templates of emails sent by portal
  * events.
@@ -32,6 +34,7 @@ import org.openbravo.erpCommon.utility.PropertyException;
  * @author asier
  * 
  */
+@RequestScoped
 public abstract class PortalEmailBody extends BaseTemplateComponent {
   public String getClientName() {
     return OBContext.getOBContext().getCurrentClient().getName();

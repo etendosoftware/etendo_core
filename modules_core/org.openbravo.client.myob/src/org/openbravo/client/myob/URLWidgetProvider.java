@@ -32,6 +32,8 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.NonUniqueResultException;
+
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.service.*;
@@ -42,6 +44,7 @@ import org.openbravo.userinterface.selector.*;
  * 
  * @author mtaal
  */
+@RequestScoped
 public class URLWidgetProvider extends WidgetProvider {
   private static final Logger log = LogManager.getLogger();
 

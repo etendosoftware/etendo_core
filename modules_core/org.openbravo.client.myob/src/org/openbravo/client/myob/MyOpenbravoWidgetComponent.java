@@ -18,6 +18,7 @@
  */
 package org.openbravo.client.myob;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.codehaus.jettison.json.JSONObject;
@@ -33,6 +34,7 @@ import org.openbravo.dal.service.OBDal;
  * 
  * @author mtaal
  */
+@RequestScoped
 public class MyOpenbravoWidgetComponent extends BaseComponent {
 
   static final String COMPONENT_ID = "MyOpenbravoWidgetComponent";

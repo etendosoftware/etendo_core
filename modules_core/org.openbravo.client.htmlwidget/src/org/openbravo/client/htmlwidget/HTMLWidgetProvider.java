@@ -20,11 +20,14 @@ package org.openbravo.client.htmlwidget;
 
 import org.openbravo.client.myob.WidgetProvider;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Responsible for creating the HTML Widgets.
  * 
  * @author gorkaion
  */
+@RequestScoped
 public class HTMLWidgetProvider extends WidgetProvider {
   private static final String HTMLWIDGETCLASSNAME = "OBHTMLWidget";
 

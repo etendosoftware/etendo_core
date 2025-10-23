@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -88,6 +89,7 @@ import org.openbravo.service.json.JsonConstants;
  * 
  * @author mtaal
  */
+@RequestScoped
 public class SelectorComponent extends BaseTemplateComponent {
 
   public static final String SELECTOR_ITEM_PARAMETER = "IsSelectorItem";

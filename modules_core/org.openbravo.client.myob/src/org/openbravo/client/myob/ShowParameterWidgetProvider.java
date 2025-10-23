@@ -18,10 +18,13 @@
  */
 package org.openbravo.client.myob;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * The provider of the test parameter widget which tests different types of parameter types.
  * 
  * @author mtaal
  */
+@RequestScoped
 public class ShowParameterWidgetProvider extends WidgetProvider {
 }

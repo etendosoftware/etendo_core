@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.openbravo.base.provider.OBSingleton;
@@ -38,6 +39,7 @@ import org.openbravo.dal.service.OBDal;
  * This class generates the javascript code of the navigation bar components.
  * 
  */
+@RequestScoped
 public class NavigationBarComponentGenerator implements OBSingleton {
 
   @Inject

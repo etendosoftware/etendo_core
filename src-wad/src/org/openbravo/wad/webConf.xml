@@ -25,15 +25,14 @@
 
   <PARAMETER id="webapp1" name="webapp1" default="Y" />
   <PARAMETER id="webapp" name="webapp" default="Y" withId="webapp1"
-    boolean='xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-  version="3.1"' />
-  
+    boolean='xmlns="https://jakarta.ee/xml/ns/jakartaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+    version="6.0"' />
+
   <PARAMETER id="fieldSessionTimeOut" name="fieldSessionTimeOut" default="60"/>
 
   <structure name="structureListener">
-    <FIELD id="fieldListenerDisplayName">displayname</FIELD>
     <FIELD id="fieldListenerClassName">classname</FIELD>
     <SECTION id="sectionListener" />
   </structure>

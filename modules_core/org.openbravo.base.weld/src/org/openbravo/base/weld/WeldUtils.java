@@ -63,9 +63,30 @@ public class WeldUtils {
           ic = new InitialContext();
           String name = "java:comp/" + BeanManager.class.getSimpleName();
           staticBeanManager = (BeanManager) ic.lookup(name);
+          if (staticBeanManager == null) {
+            // Tomcat 10/11 + Weld 5 puede exponerlo bajo java:comp/env/BeanManager
+            try {
+              String envName = "java:comp/env/" + BeanManager.class.getSimpleName();
+              staticBeanManager = (BeanManager) ic.lookup(envName);
+              log.debug("BeanManager obtenido vía JNDI en {}", envName);
+            } catch (NamingException ignored) {
+              log.debug("BeanManager no encontrado en java:comp/env, intentando CDI.current().");
+            }
+          }
         } catch (NamingException e) {
-          log.error("Couldn't get beanManager through jndi lookup in InitialContext {}", ic, e);
-          throw new OBException(e);
+          log.warn("JNDI lookup de BeanManager falló: {}. Se intentará CDI.current() como fallback.", e.getMessage());
+        }
+
+        // Fallback final usando la API CDI portable (Weld 5 soporta CDI.current())
+        if (staticBeanManager == null) {
+          try {
+            jakarta.enterprise.inject.spi.CDI<Object> cdi = jakarta.enterprise.inject.spi.CDI.current();
+            staticBeanManager = cdi.getBeanManager();
+            log.debug("BeanManager obtenido vía CDI.current() fallback.");
+          } catch (IllegalStateException ise) {
+            log.error("No se pudo obtener BeanManager ni por ServletContext, ni JNDI ni CDI.current(): {}", ise.getMessage());
+            throw new OBException("BeanManager no disponible, abortando inicialización CDI", ise);
+          }
         }
       }
     }

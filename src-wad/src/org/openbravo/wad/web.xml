@@ -21,9 +21,6 @@
 <web-app id="webapp">
   <FIELDS_TMP id="sectionListener">
     <listener>
-      <display-name>
-        <FIELD_TMP id="fieldListenerDisplayName">codigo</FIELD_TMP>
-      </display-name>
       <listener-class>
         <FIELD_TMP id="fieldListenerClassName">codigo</FIELD_TMP>
       </listener-class>

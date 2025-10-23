@@ -313,9 +313,9 @@ public class MyOBUtils {
     String hql = 
             "select widgetClass.id " +
             "  from OBKMO_WidgetClass widgetClass " +
-            " where widgetClass.allowAnonymousAccess is true " +
-            "   and widgetClass.superclass is false " +
-            "   and widgetClass.availableInWorkspace is true";
+            " where widgetClass.allowAnonymousAccess = true " +
+            "   and widgetClass.superclass = false " +
+            "   and widgetClass.availableInWorkspace = true";
     //@formatter:on
     Query<String> query = OBDal.getInstance().getSession().createQuery(hql, String.class);
     return query.list();

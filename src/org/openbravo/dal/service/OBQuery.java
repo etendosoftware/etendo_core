@@ -301,7 +301,7 @@ public class OBQuery<E extends BaseOBObject> {
         queryProfile = SessionInfo.getQueryProfile();
       }
       if (queryProfile != null) {
-        QueryTimeOutUtil.getInstance().setQueryTimeOut((OBCriteria) qry, queryProfile);
+        QueryTimeOutUtil.getInstance().setQueryTimeOut(qry, queryProfile);
       }
       return qry;
     } catch (final Exception e) {

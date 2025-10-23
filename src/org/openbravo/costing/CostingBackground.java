@@ -84,10 +84,10 @@ public class CostingBackground extends DalBaseProcess implements KillableProcess
       final String where = " as o"
           + " where exists ("
           + "    select 1 from CostingRule as cr"
-          + "    where ad_isorgincluded(o.id, cr.organization.id, client.id) <> -1 "
-          + "      and cr.validated is true"
+          + "    where cast(ad_isorgincluded(o.id, cr.organization.id, o.client.id) as int) <> -1 "
+          + "      and cr.validated = true"
           + "    )"
-          + " and ad_isorgincluded(o.id, :orgId, :clientId) <> -1 ";
+          + " and cast(ad_isorgincluded(o.id, :orgId, :clientId) as int) <> -1 ";
       //@formatter:on
       OBQuery<Organization> orgQry = OBDal.getInstance().createQuery(Organization.class, where);
       orgQry.setNamedParameter("orgId", bundle.getContext().getOrganization());
@@ -219,7 +219,7 @@ public class CostingBackground extends DalBaseProcess implements KillableProcess
         + "   and p.stocked = true"
         + "   and trxtype.reference.id = :refid"
         + "   and trxtype.searchKey = trx.movementType"
-        + "   and trx.transactionProcessDate <= now()"
+        + "   and trx.transactionProcessDate <= current_timestamp"
         + "   and trx.organization.id in (:orgs)"
         + " order by trx.transactionProcessDate, trxtype.sequenceNumber, "
         + " trx.movementQuantity desc, trx.id";

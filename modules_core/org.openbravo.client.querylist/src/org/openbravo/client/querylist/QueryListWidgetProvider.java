@@ -21,6 +21,7 @@ package org.openbravo.client.querylist;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
@@ -42,6 +43,7 @@ import org.openbravo.service.datasource.DataSourceConstants;
  * 
  * @author gorkaion
  */
+@RequestScoped
 public class QueryListWidgetProvider extends WidgetProvider {
   private static final String DATASOURCEID = "DD17275427E94026AD721067C3C91C18";
   public static final String WIDGETCLASS_PARAMETER = "WIDGET_CLASS";

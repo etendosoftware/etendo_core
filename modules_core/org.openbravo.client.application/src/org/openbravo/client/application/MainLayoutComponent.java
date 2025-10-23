@@ -26,11 +26,14 @@ import org.openbravo.client.kernel.Template;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * This class generates the navigation bar components which are defined as dynamic.
  * 
  * @author iperdomo
  */
+@RequestScoped
 public class MainLayoutComponent extends BaseTemplateComponent {
 
   /*

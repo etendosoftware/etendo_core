@@ -21,6 +21,7 @@ package org.openbravo.client.kernel;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -34,6 +35,7 @@ import org.openbravo.model.ad.module.Module;
  * are loaded before the javascript content used in the application and they are provided by those
  * classes extending the {@link SessionDynamicTemplateComponent} class.
  */
+@RequestScoped
 public class SessionDynamicResourceComponent extends BaseComponent {
 
   private static final Logger log = LogManager.getLogger();

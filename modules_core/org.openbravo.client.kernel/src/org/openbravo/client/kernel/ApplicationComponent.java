@@ -38,11 +38,14 @@ import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * The component responsible for generating the static part of the application js file.
  * 
  * @author mtaal
  */
+@RequestScoped
 public class ApplicationComponent extends BaseTemplateComponent {
   private FormatDefinition formatDefinition = null;
 
