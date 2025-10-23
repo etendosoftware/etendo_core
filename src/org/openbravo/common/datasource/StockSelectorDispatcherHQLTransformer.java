@@ -50,10 +50,16 @@ public class StockSelectorDispatcherHQLTransformer extends HqlQueryTransformer {
   private final Instance<StockSelectorFilterProvider> providers;
 
   /**
-   * Injects the {@link StockSelectorFilterProvider} instance.
+   * Constructs a new StockSelectorDispatcherHQLTransformer with the given providers.
+   *
+   * @param providers
+   *     the instance of {@link StockSelectorFilterProvider} implementations to be used for filtering
    */
   @Inject
   public StockSelectorDispatcherHQLTransformer(@Any Instance<StockSelectorFilterProvider> providers) {
+    /**
+     * Injects the {@link StockSelectorFilterProvider} instance.
+     */
     this.providers = providers;
   }
 
