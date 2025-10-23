@@ -14035,8 +14035,13 @@ WARNING: This window is not supported anymore and it is only kept for backward c
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <NAME><![CDATA[Advanced Box Referenced Inventory P&E]]></NAME>
-<!--039AC8F4270B432EA41CB5E0B5355817-->  <DESCRIPTION><![CDATA[Show stock that can be boxed into a referenced inventory]]></DESCRIPTION>
-<!--039AC8F4270B432EA41CB5E0B5355817-->  <HELP><![CDATA[Show stock that can be boxed into a referenced inventory]]></HELP>
+<!--039AC8F4270B432EA41CB5E0B5355817-->  <DESCRIPTION><![CDATA[Stock-detail selector that lists M_Storage_Detail records with on-hand quantity, applying dynamic filters supplied by extensions for Box/Unbox operations.]]></DESCRIPTION>
+<!--039AC8F4270B432EA41CB5E0B5355817-->  <HELP><![CDATA[This chooser retrieves data from M_Storage_Detail through an HQL query containing the token @additional_filters@.
+	1. Base filter – Only rows with qtyOnHand > 0 are loaded.
+	2. Dynamic filter – At runtime the dispatcher asks every registered StockSelectorFilterProvider which one supports the current Referenced Inventory Type; the clause returned by the highest-priority provider replaces @additional_filters@. If none match, the default clause (and mgt.referencedInventory is null) is applied.
+	3. Displayed columns – Product, Locator, Attribute Set Instance / Lot, UOM, on-hand quantity, reserved quantity, and any extra properties defined in the grid.
+
+After the user confirms the selection, the chosen rows are passed to the corresponding Box/Unbox process, which creates the internal movement lines, clones Attribute Set Instances when needed, and relocates any reservations while keeping qtyOnHand and reservedQty consistent.]]></HELP>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <AD_TABLE_ID><![CDATA[F99379660FC24436839F70E195FFBD09]]></AD_TABLE_ID>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <AD_WINDOW_ID><![CDATA[B54E3CE0A4E546DAB266E347C18E975E]]></AD_WINDOW_ID>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <SEQNO><![CDATA[10]]></SEQNO>
@@ -14051,6 +14056,7 @@ WARNING: This window is not supported anymore and it is only kept for backward c
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <ISSORTTAB><![CDATA[N]]></ISSORTTAB>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <UIPATTERN><![CDATA[RO]]></UIPATTERN>
+<!--039AC8F4270B432EA41CB5E0B5355817-->  <HQLWHERECLAUSE><![CDATA[mgt.quantityOnHand > 0]]></HQLWHERECLAUSE>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <SHOWPARENTBUTTONS><![CDATA[Y]]></SHOWPARENTBUTTONS>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <DISABLE_PARENT_KEY_PROPERTY><![CDATA[N]]></DISABLE_PARENT_KEY_PROPERTY>
 <!--039AC8F4270B432EA41CB5E0B5355817-->  <ISREADONLYTREE><![CDATA[N]]></ISREADONLYTREE>
