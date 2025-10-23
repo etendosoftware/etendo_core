@@ -7,7 +7,6 @@ import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.filter.IsIDFilter;
-import org.openbravo.erpCommon.utility.OBMessageUtils;
 
 /**
  * Callout that keeps the Tax Amount (inptaxamt) consistent with the Tax Base Amount and
@@ -34,7 +33,7 @@ public class SL_InvoiceTax_Amt extends SimpleCallout {
     String invoiceId = info.getStringParameter("inpcInvoiceId", IsIDFilter.instance);
     BigDecimal taxAmt = info.getBigDecimalParameter(INPTAXAMT);
     BigDecimal taxBaseAmt = info.getBigDecimalParameter(INPTAXBASEAMT);
-    if (taxAmt == null){
+    if (taxAmt == null) {
       taxAmt = BigDecimal.ZERO;
     }
     if (taxBaseAmt == null) {
@@ -62,7 +61,6 @@ public class SL_InvoiceTax_Amt extends SimpleCallout {
         taxScale = 2;
       }
     }
-    BigDecimal sysTaxAmt = taxBaseAmt.multiply(taxRate).divide(new BigDecimal("100"), 12, RoundingMode.HALF_EVEN).setScale(taxScale, RoundingMode.HALF_UP);
 
     if (StringUtils.equals(INPTAXAMT, fieldChanged)) {
       final BigDecimal newTaxAmt = taxAmt.setScale(taxScale, RoundingMode.HALF_UP);
