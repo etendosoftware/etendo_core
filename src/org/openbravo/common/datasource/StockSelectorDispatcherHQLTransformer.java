@@ -44,8 +44,14 @@ public class StockSelectorDispatcherHQLTransformer extends HqlQueryTransformer {
   private static final String DEFAULT_JOIN_CLAUSE =
       "";
 
+  /**
+   * Instance of {@link StockSelectorFilterProvider} to be used for filtering the stock selector.
+   */
   private final Instance<StockSelectorFilterProvider> providers;
 
+  /**
+   * Injects the {@link StockSelectorFilterProvider} instance.
+   */
   @Inject
   public StockSelectorDispatcherHQLTransformer(@Any Instance<StockSelectorFilterProvider> providers) {
     this.providers = providers;

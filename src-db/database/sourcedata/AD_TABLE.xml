@@ -13943,6 +13943,13 @@ and @insertion_point@]]></HQLQUERY>
 <!--F99379660FC24436839F70E195FFBD09-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--F99379660FC24436839F70E195FFBD09-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--F99379660FC24436839F70E195FFBD09-->  <NAME><![CDATA[MaterialMgmtStDetailByRefInventoryHQL]]></NAME>
+<!--F99379660FC24436839F70E195FFBD09-->  <DESCRIPTION><![CDATA[HQL table of M_Storage_Detail that supplies the stock-selector grid, applying dynamic provider and user filters to show only eligible inventory lines for Box/Unbox operations.]]></DESCRIPTION>
+<!--F99379660FC24436839F70E195FFBD09-->  <HELP><![CDATA[When the selector is opened, the HQL of this view is first processed by StockSelectorDispatcherHQLTransformer, which:
+	1. Detects the Referenced Inventory type indicated in the request.
+	2. Chooses the highest-priority StockSelectorFilterProvider that supports that type (or falls back to the default provider).
+	3. Injects the provider’s optional JOIN clause and mandatory filter clause in place of the @joinClause@ and @whereClause@ tokens.
+
+After this transformation the query still adds any run-time criteria the user sets in the grid, so the final result shows only the storage-detail rows that are valid candidates for the current Box or Unbox action.]]></HELP>
 <!--F99379660FC24436839F70E195FFBD09-->  <TABLENAME><![CDATA[MaterialMgmtStDetailByRefInventoryHQL]]></TABLENAME>
 <!--F99379660FC24436839F70E195FFBD09-->  <ISVIEW><![CDATA[N]]></ISVIEW>
 <!--F99379660FC24436839F70E195FFBD09-->  <ACCESSLEVEL><![CDATA[3]]></ACCESSLEVEL>
@@ -13961,7 +13968,9 @@ mgt.product,
 mgt.storageBin,
 mgt.attributeSetValue,
 mgt.uOM,
-mgt.quantityOnHand
+mgt.quantityOnHand,
+mgt.quantityInDraftTransactions,
+mgt.reservedQty 
 from MaterialMgmtStorageDetail as mgt @joinClause@
 where mgt.quantityOnHand > 0 and @additional_filters@ @whereClause@]]></HQLQUERY>
 <!--F99379660FC24436839F70E195FFBD09-->  <ENTITY_ALIAS><![CDATA[mgt]]></ENTITY_ALIAS>
