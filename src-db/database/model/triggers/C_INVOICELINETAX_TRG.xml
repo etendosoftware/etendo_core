@@ -103,12 +103,14 @@ BEGIN
 
         UPDATE C_INVOICETAX
         SET TAXAMT = ROUND((v_Increment_Base) * v_Rate/100, v_Prec),
-        TAXBASEAMT = v_Increment_Base
+        TAXBASEAMT = v_Increment_Base,
+        ORIGTAXAMT = ROUND((v_Increment_Base) * v_Rate/100, v_Prec)
         WHERE C_InvoiceTax_ID = v_C_InvoiceTax_ID;
       ELSE
         UPDATE C_INVOICETAX
         SET TAXAMT = CASE WHEN v_DocTaxAmount='D' THEN ROUND(ROUND(TAXBASEAMT + v_Increment_Base, v_Prec) * v_Rate/100, v_Prec) ELSE (TAXAMT + v_Increment_Amount) END,
-        TAXBASEAMT = TAXBASEAMT + v_Increment_Base
+        TAXBASEAMT = TAXBASEAMT + v_Increment_Base,
+        ORIGTAXAMT = CASE WHEN v_DocTaxAmount='D' THEN ROUND(ROUND(TAXBASEAMT + v_Increment_Base, v_Prec) * v_Rate/100, v_Prec) ELSE (TAXAMT + v_Increment_Amount) END
         WHERE C_InvoiceTax_ID = v_C_InvoiceTax_ID;
       END IF;
     ELSE
@@ -120,11 +122,11 @@ BEGIN
       INTO C_INVOICETAX (
       C_InvoiceTax_ID, C_Invoice_ID, C_Tax_ID, AD_Client_ID, AD_Org_ID,
       IsActive, Created, CreatedBy, Updated,
-      UpdatedBy, TaxBaseAmt, TaxAmt, Line, Recalculate)
+      UpdatedBy, TaxBaseAmt, TaxAmt, Line, Recalculate, ORIGTAXAMT)
       VALUES (
       GET_UUID(), :NEW.C_Invoice_ID, :NEW.C_TAX_ID, :NEW.AD_CLIENT_ID, :NEW.AD_ORG_ID,
       'Y', now(), :NEW.UPDATEDBY, now(),
-      :NEW.UPDATEDBY, :NEW.TAXBASEAMT, :NEW.TAXAMT, v_LineNo, 'Y');
+      :NEW.UPDATEDBY, :NEW.TAXBASEAMT, :NEW.TAXAMT, v_LineNo, 'Y', :NEW.TAXAMT);
     END IF;
   ELSE
   IF (v_Processed='Y') THEN 
@@ -151,14 +153,16 @@ BEGIN
 
       UPDATE C_INVOICETAX
       SET TAXAMT = ROUND(v_Increment_Base * v_Rate/100, v_Prec),
-      TAXBASEAMT = v_Increment_Base
+      TAXBASEAMT = v_Increment_Base,
+      ORIGTAXAMT = ROUND(v_Increment_Base * v_Rate/100, v_Prec)
       WHERE C_Invoice_ID = :old.C_Invoice_ID
       AND C_Tax_ID = :old.C_Tax_ID
       AND Recalculate = 'Y';
     ELSE
       UPDATE C_INVOICETAX
       SET TAXAMT = CASE WHEN v_DocTaxAmount = 'D' THEN ROUND(ROUND(TAXBASEAMT - :OLD.TAXBASEAMT, v_Prec) * v_Rate/100, v_Prec) ELSE (TAXAMT - :OLD.TAXAMT) END,
-      TAXBASEAMT = TAXBASEAMT - :OLD.TAXBASEAMT
+      TAXBASEAMT = TAXBASEAMT - :OLD.TAXBASEAMT,
+      ORIGTAXAMT = CASE WHEN v_DocTaxAmount = 'D' THEN ROUND(ROUND(TAXBASEAMT - :OLD.TAXBASEAMT, v_Prec) * v_Rate/100, v_Prec) ELSE (TAXAMT - :OLD.TAXAMT) END
       WHERE C_Invoice_ID = :old.C_Invoice_ID
       AND C_Tax_ID = :old.C_Tax_ID
       AND Recalculate = 'Y';
