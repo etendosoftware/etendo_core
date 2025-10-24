@@ -1231,18 +1231,20 @@ public class Sqlc extends DefaultHandler {
       }
     } else {
       if (sql.sqlType.equals("preparedStatement")) {
-        aux.append("    st = connectionProvider.getPreparedStatement(");
+        aux.append("      st = connectionProvider.getPreparedStatement(");
         if (sql.sqlConnection.equals("true")) {
           aux.append("conn, ");
         }
         aux.append("strSql);\n");
+        aux.append("      st.getConnection().setAutoCommit(false);\n");
         aux.append(queryTimeoutStr);
       } else if (sql.sqlType.equals("statement")) {
-        aux.append("    st = connectionProvider.getStatement(");
+        aux.append("      st = connectionProvider.getStatement(");
         if (sql.sqlConnection.equals("true")) {
           aux.append("conn");
         }
         aux.append(");\n");
+        aux.append("      st.getConnection().setAutoCommit(false);\n");
         aux.append(queryTimeoutStr);
       } else if (sql.sqlType.equals("callableStatement")) {
         aux.append("      st = connectionProvider.getCallableStatement(");
@@ -1328,6 +1330,7 @@ public class Sqlc extends DefaultHandler {
     out2.append("      instance.result = st.executeQuery();\n");
     out2.append("      instance.hasData = instance.result.isBeforeFirst();\n");
     out2.append("      instance.countRecord = 0;\n");
+    out2.append("      st.getConnection().commit();\n");
     out2.append("    } catch (SQLException e) {\n");
     out2.append("      if (log4j.isDebugEnabled()) {\n");
     out2.append("        log4j.error(\"SQL error in query: \" + strSql, e);\n");
@@ -1420,6 +1423,7 @@ public class Sqlc extends DefaultHandler {
         out2.append("conn, ");
       }
       out2.append("strSql1);\n");
+      out2.append("      st.getConnection().setAutoCommit(false);\n");
       out2.append("      ResultSet resultKey;\n");
       out2.append("      resultKey = psl.executeQuery();\n");
       out2.append("      if(resultKey.next()){\n");
@@ -1427,6 +1431,7 @@ public class Sqlc extends DefaultHandler {
           + sql.strSequenceName.replace(".", "_") + "\");\n");
       out2.append("      }\n");
       out2.append("      resultKey.close();\n");
+      out2.append("      st.getConnection().commit();\n");
       out2.append("    } catch(SQLException e){\n");
       out2.append("      if (log4j.isDebugEnabled()) {\n");
       out2.append("        log4j.error(\"SQL error in query: \" + strSql, e);\n");
@@ -1535,6 +1540,7 @@ public class Sqlc extends DefaultHandler {
       }
       out2.append("      }\n");
       out2.append("      result.close();\n");
+      out2.append("      st.getConnection().commit();\n");
     } else if (sql.executeType.equals("executeUpdate")) {
       out2.append("      updateCount = st." + sql.executeType + "(");
       if (sql.sqlType.equals("statement")) {

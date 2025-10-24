@@ -117,6 +117,7 @@ List<String> _dependenciesListCOMPILATION = [
 
   // Miscellaneous Utilities
   'oro:oro:2.0.8',
+  'com.github.virtuald:curvesapi:1.08',
 
   // Testing Libraries
   'org.hamcrest:hamcrest-all:1.3',

@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -106,6 +107,7 @@ import org.openbravo.service.json.JsonUtils;
  * definition computes jsonobjects which contain a value as well as a classicValue, the latter is
  * placed in the request/session for subsequent callout computations.
  */
+@RequestScoped
 public class FormInitializationComponent extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

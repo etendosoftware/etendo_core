@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.http.HttpSession;
 
 import org.apache.logging.log4j.LogManager;
@@ -47,6 +48,7 @@ import org.openbravo.service.json.JsonUtils;
  * 
  * @author iperdomo
  */
+@RequestScoped
 public class OBBindings {
 
   private static final Logger log = LogManager.getLogger();

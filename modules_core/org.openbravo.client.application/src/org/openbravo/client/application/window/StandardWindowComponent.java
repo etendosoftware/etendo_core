@@ -216,8 +216,8 @@ public class StandardWindowComponent extends BaseTemplateComponent {
   public static Map<String, Optional<GCTab>> getTabsGridConfig(Window window) {
     // window comes from ADCS, we need to retrieve GC from DB as it might have changed
     OBQuery<GCTab> qGCTab = OBDal.getInstance()
-        .createQuery(GCTab.class, "as g where g.tab.window = :window");
-    qGCTab.setNamedParameter("window", window);
+        .createQuery(GCTab.class, "as g where g.tab.window.id = :window");
+    qGCTab.setNamedParameter("window", window.getId());
     Map<String, List<GCTab>> gcsByTab = qGCTab.stream() //
         .collect(groupingBy(gcTab -> gcTab.getTab().getId()));
 

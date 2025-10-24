@@ -20,12 +20,15 @@ package org.openbravo.client.application;
 
 import org.openbravo.base.secureApp.VariablesSecureApp;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * This class is used to evaluate the Javascript fixed expression assigned to a parameter
  * (OBUIAPP_Parameter) if it is marked as fixed.
  * 
  * @author gorkaion
  */
+@RequestScoped
 public class FixedValueExpressionCallout extends JSExpressionCallout {
 
   @Override

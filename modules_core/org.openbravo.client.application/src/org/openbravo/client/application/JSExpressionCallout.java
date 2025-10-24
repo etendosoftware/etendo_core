@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,6 +37,7 @@ import org.openbravo.erpCommon.utility.Utility;
  * 
  * @author gorkaion
  */
+@RequestScoped
 public abstract class JSExpressionCallout extends SimpleCallout {
   private static final String JS_ERROR_MSG_PREFIX = "sun.org.mozilla.javascript.internal.EcmaError:";
   private static final String JS_ERROR_EVAL = "in <eval>";

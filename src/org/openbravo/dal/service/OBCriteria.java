@@ -792,8 +792,7 @@ public class OBCriteria<E extends BaseOBObject> {
       }
       log.warn(
           "Detected multiple calls to initialize() in the same OBCriteria instance. "
-              + "This should be fixed in order to prevent adding duplicated filters in the query.",
-          new Exception());
+              + "This should be fixed in order to prevent adding duplicated filters in the query.");
     }
 
     final OBContext obContext = OBContext.getOBContext();
