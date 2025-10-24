@@ -3580,8 +3580,8 @@ You can also select if transactions are allowed or not for this organization typ
 <!--B54E3CE0A4E546DAB266E347C18E975E-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--B54E3CE0A4E546DAB266E347C18E975E-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--B54E3CE0A4E546DAB266E347C18E975E-->  <NAME><![CDATA[Advanced Box Referenced Inventory P&E]]></NAME>
-<!--B54E3CE0A4E546DAB266E347C18E975E-->  <DESCRIPTION><![CDATA[Show stock that can be boxed into a referenced inventory]]></DESCRIPTION>
-<!--B54E3CE0A4E546DAB266E347C18E975E-->  <HELP><![CDATA[Show stock that can be boxed into a referenced inventory]]></HELP>
+<!--B54E3CE0A4E546DAB266E347C18E975E-->  <DESCRIPTION><![CDATA[Show stock that can be boxed into a referenced inventory.]]></DESCRIPTION>
+<!--B54E3CE0A4E546DAB266E347C18E975E-->  <HELP><![CDATA[Show stock that can be boxed into a referenced inventory.]]></HELP>
 <!--B54E3CE0A4E546DAB266E347C18E975E-->  <WINDOWTYPE><![CDATA[OBUIAPP_PickAndExecute]]></WINDOWTYPE>
 <!--B54E3CE0A4E546DAB266E347C18E975E-->  <ISSOTRX><![CDATA[N]]></ISSOTRX>
 <!--B54E3CE0A4E546DAB266E347C18E975E-->  <PROCESSING><![CDATA[N]]></PROCESSING>

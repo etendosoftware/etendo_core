@@ -13971,6 +13971,7 @@ mgt.uOM,
 mgt.quantityOnHand,
 mgt.quantityInDraftTransactions,
 mgt.reservedQty 
+@selectClause@ 
 from MaterialMgmtStorageDetail as mgt @joinClause@
 where mgt.quantityOnHand > 0 and @additional_filters@ @whereClause@]]></HQLQUERY>
 <!--F99379660FC24436839F70E195FFBD09-->  <ENTITY_ALIAS><![CDATA[mgt]]></ENTITY_ALIAS>
