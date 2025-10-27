@@ -50,7 +50,7 @@
         <onCreateDefault/>
       </column>
       <column name="ISFORCEAUTOMATION" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
-        <default><![CDATA[N]]></default>
+        <default><![CDATA[Y]]></default>
         <onCreateDefault/>
       </column>
       <foreign-key foreignTable="C_BPARTNER" name="C_BPARTNER_DOCTYPE_BPARTNER">

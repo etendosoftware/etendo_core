@@ -56,8 +56,7 @@ BEGIN
          OR v_auto = 'N'
        )
        AND AD_ISORGINCLUDED(p_org_id, bpd.ad_org_id, bpd.ad_client_id) <> -1
-     ORDER BY AD_ISORGINCLUDED(p_org_id, bpd.ad_org_id, bpd.ad_client_id) ASC
-     LIMIT 1;
+     ORDER BY AD_ISORGINCLUDED(p_org_id, bpd.ad_org_id, bpd.ad_client_id) ASC;
 
     IF v_doctype_id IS NULL THEN
       SELECT bpd.c_doctype_id
@@ -73,8 +72,7 @@ BEGIN
            OR v_auto = 'N'
          )
          AND bpd.ad_org_id = '0'
-       ORDER BY 1
-       LIMIT 1;
+       ORDER BY 1;
     END IF;
   END IF;
 
