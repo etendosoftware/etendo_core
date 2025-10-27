@@ -55,6 +55,8 @@ import org.openbravo.materialmgmt.UOMUtil;
 import org.openbravo.model.procurement.RequisitionLine;
 import org.openbravo.utils.Replace;
 import org.openbravo.xmlEngine.XmlDocument;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeResolver;
+
 
 public class RequisitionToOrder extends HttpSecureAppServlet {
   private static final long serialVersionUID = 1L;
@@ -645,12 +647,10 @@ public class RequisitionToOrder extends HttpSecureAppServlet {
     try {
       conn = getTransactionConnection();
       String strCOrderId = SequenceIdData.getUUID();
-      String docTargetType = RequisitionToOrderData.cDoctypeTarget(conn, this, vars.getClient(),
-          strOrg);
-      String strDocumentNo = Utility.getDocumentNo(this, vars, "", "C_Order", docTargetType,
-          docTargetType, false, true);
+      String resolvedDocTypeId = resolvePurchaseDocTypeSafe(strOrg, strVendor);
+      String docTargetType = StringUtils.isNotBlank(resolvedDocTypeId) ? resolvedDocTypeId : RequisitionToOrderData.cDoctypeTarget(conn, this, vars.getClient(), strOrg);
+      String strDocumentNo = Utility.getDocumentNo(this, vars, "", "C_Order", docTargetType, docTargetType, false, true);
       String cCurrencyId = RequisitionToOrderData.selectCurrency(this, strPriceListId);
-
       try {
         RequisitionToOrderData.insertCOrder(conn, this, strCOrderId, vars.getClient(), strOrg,
             vars.getUser(), strDocumentNo, "DR", "CO", "0", docTargetType, strOrderDate,
@@ -664,6 +664,7 @@ public class RequisitionToOrder extends HttpSecureAppServlet {
             data1[0].deliveryrule.equals("") ? "A" : data1[0].deliveryrule, "I",
             data1[0].deliveryviarule.equals("") ? "D" : data1[0].deliveryviarule, strWarehouse,
             strPriceListId, "", "", "", data1[0].poPaymentmethodId);
+        BpDocTypeResolver.clearCache();
       } catch (ServletException ex) {
         myMessage = Utility.translateError(this, vars, vars.getLanguage(), ex.getMessage());
         releaseRollbackConnection(conn);
@@ -816,6 +817,25 @@ public class RequisitionToOrder extends HttpSecureAppServlet {
       myMessage.setType("Error");
       myMessage.setMessage(Utility.messageBD(this, "ProcessRunError", vars.getLanguage()));
       return myMessage;
+    }
+  }
+
+  /**
+   * Resolves the target purchase {@code C_DocType_ID} (DocBaseType {@code "POO"}) for a given
+   * organization and business partner using {@link BpDocTypeResolver}, handling failures safely.
+   * @param orgId the {@code AD_Org_ID} context used to resolve the document type; must not be blank
+   * @param bpId the {@code C_BPartner_ID} candidate for BP-specific mapping; may be {@code null} or blank
+   * @return the resolved {@code C_DocType_ID} for {@code "POO"}, or {@code null} if it cannot be determined
+   */
+  private String resolvePurchaseDocTypeSafe(String orgId, String bpId) {
+    try {
+      return new BpDocTypeResolver().resolveId(orgId, bpId, "POO", true);
+    } catch (Exception e) {
+      log4j.warn("Could not resolve C_DocType for purchase order; falling back to org default. "
+        + "org=" + orgId + ", bp=" + bpId, e);
+      return null;
+    } finally {
+      BpDocTypeResolver.clearCache();
     }
   }
 
