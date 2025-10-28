@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
@@ -83,7 +84,7 @@ import org.openbravo.utils.FormatUtilities;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class OBViewTab extends BaseTemplateComponent {
 
   private static final Logger log = LogManager.getLogger();

@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -72,6 +74,7 @@ import com.smf.securewebservices.utils.SecureJsonToData.JsonConversionError;
  * @deprecated TODO: This class needs to be refactored
  */
 @Deprecated
+@Dependent
 public class SecureJsonDataService implements JsonDataService {
 
   private static final String ADD_FLAG = "_doingAdd";

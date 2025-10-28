@@ -528,7 +528,7 @@ public class PersonalizationHandler {
       } else {
         hql += " (";
       }
-      hql += " coalesce(p.visibleAtClient, '0')='0') ";
+      hql += " (p.visibleAtClient IS NULL OR p.visibleAtClient.id = '0')) ";
 
       if (roleId != null) {
         hql += " and (p.visibleAtRole.id = :roleId or ";

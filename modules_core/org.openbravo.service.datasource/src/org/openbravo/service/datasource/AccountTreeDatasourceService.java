@@ -30,6 +30,8 @@ package org.openbravo.service.datasource;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -44,6 +46,7 @@ import org.openbravo.model.financialmgmt.accounting.coa.Element;
  * Tree Datasource for Account Tree
  * 
  */
+@Dependent
 public class AccountTreeDatasourceService extends ADTreeDatasourceService {
   private static final Logger logger = LogManager.getLogger();
   private static final String DATASOURCE_ID = "D2F94DC86DEC48D69E4BFCE59DC670CF";
