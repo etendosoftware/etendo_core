@@ -1,3 +1,19 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Etendo License
+ * (the "License"), you may not use this file except in compliance with
+ * the License.
+ * You may obtain a copy of the License at
+ * https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing rights
+ * and limitations under the License.
+ * All portions are Copyright © 2021–2025 FUTIT SERVICES, S.L
+ * All Rights Reserved.
+ * Contributor(s): Futit Services S.L.
+ *************************************************************************
+ */
 package org.openbravo.common.datasource;
 
 import java.util.Comparator;
@@ -42,6 +58,12 @@ public class StockSelectorDispatcherHQLTransformer extends HqlQueryTransformer {
    * Default join clause applied when no provider matches the inventory type.
    */
   private static final String DEFAULT_JOIN_CLAUSE =
+      "";
+
+  /**
+   * Default select clause applied when no provider matches the inventory type.
+   */
+  private static final String DEFAULT_SELECT_CLAUSE =
       "";
 
   /**
@@ -109,18 +131,24 @@ public class StockSelectorDispatcherHQLTransformer extends HqlQueryTransformer {
       provider = Optional.of(new DefaultBoxFilterProvider());
     }
 
+    // Get the select clause from the provider, or use the default
+    String selectClause = provider
+        .map(p -> p.getSelectClause(requestParams))
+        .orElse(DEFAULT_SELECT_CLAUSE);
+
+    hql = hql.replace("@selectClause@", selectClause);
+
     // Get the join clause from the provider, or use the default
     String joinClause = provider
         .map(p -> p.getJoinClause(requestParams))
         .orElse(DEFAULT_JOIN_CLAUSE);
 
+    hql = hql.replace("@joinClause@", joinClause);
 
     // Get the filter clause from the provider, or use the default
     String extraClause = provider
         .map(p -> p.getFilterClause(requestParams))
         .orElse(DEFAULT_FILTER);
-
-    hql = hql.replace("@joinClause@", joinClause);
 
     // Replace where clause placeholder with the selected filter clause
     return hql.replace("@whereClause@", extraClause);
