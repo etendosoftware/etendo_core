@@ -320,7 +320,7 @@ public class ADCachedMultiThreadTest extends OBBaseTest {
       doAction();
 
       SessionHandler.getInstance().commitAndClose();
-      OBDal.getInstance().getSession().disconnect();
+      OBDal.getInstance().getSession().close();
 
       log.debug("thread {} done in {} ms", this.getClass().getName(),
           System.currentTimeMillis() - t);

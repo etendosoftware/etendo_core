@@ -28,14 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
-import jakarta.servlet.AsyncContext;
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -127,6 +120,21 @@ public class HttpServletRequestMock implements HttpServletRequest {
   }
 
   @Override
+  public String getRequestId() {
+    return "";
+  }
+
+  @Override
+  public String getProtocolRequestId() {
+    return "";
+  }
+
+  @Override
+  public ServletConnection getServletConnection() {
+    return null;
+  }
+
+  @Override
   public ServletInputStream getInputStream() throws IOException {
     return null;
   }
@@ -187,11 +195,6 @@ public class HttpServletRequestMock implements HttpServletRequest {
   }
 
   @SuppressWarnings("deprecation")
-  @Override
-  public String getRealPath(String arg0) {
-    return null;
-  }
-
   @Override
   public String getRemoteAddr() {
     return null;
@@ -394,12 +397,6 @@ public class HttpServletRequestMock implements HttpServletRequest {
 
   @Override
   public boolean isRequestedSessionIdFromURL() {
-    return false;
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public boolean isRequestedSessionIdFromUrl() {
     return false;
   }
 

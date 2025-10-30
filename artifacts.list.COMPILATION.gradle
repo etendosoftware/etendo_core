@@ -78,6 +78,7 @@ List<String> _dependenciesListCOMPILATION = [
 
   // JBoss and Weld CDI Implementation
   'org.jboss.weld.servlet:weld-servlet-shaded:5.1.2.Final',
+  "org.jboss:jandex:3.3.1",
 
   // Apache Ant and Tomcat Runtime
   'org.apache.ant:ant:1.9.2',

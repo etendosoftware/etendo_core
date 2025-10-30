@@ -2,7 +2,6 @@ package org.openbravo.materialmgmt;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -14,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.criterion.Criterion;
+import jakarta.persistence.criteria.Predicate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -234,7 +233,7 @@ public class UOMUtilTest {
     when(mockUOM2.getName()).thenReturn("UOM Name 2");
 
     when(mockDal.createCriteria(ProductUOM.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Predicate.class))).thenReturn(mockCriteria);
     when(mockCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockCriteria);
     when(mockCriteria.list()).thenReturn(mockProductUOMList);
 
@@ -248,7 +247,7 @@ public class UOMUtilTest {
 
     mockedOBContext.verify(OBContext::restorePreviousMode, Mockito.atLeastOnce());
 
-    Mockito.verify(mockCriteria).add(any(Criterion.class));
+    Mockito.verify(mockCriteria).add(any(Predicate.class));
     Mockito.verify(mockCriteria).addOrderBy(eq("uOM.name"), eq(true));
     Mockito.verify(mockCriteria).list();
   }

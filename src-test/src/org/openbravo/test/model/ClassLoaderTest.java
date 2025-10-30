@@ -29,7 +29,6 @@ import jakarta.servlet.Servlet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.junit.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -92,7 +91,7 @@ public class ClassLoaderTest extends OBBaseTest {
     // "F" - "Filter"
     // "R" - "Resource"
 
-    final Object[] in = { "L", "F" };
+    final List<String> in = List.of(new String[] { "L", "F" });
 
     // Checking listener and filters classes
     OBCriteria<ModelImplementation> obc = OBDal.getInstance()
@@ -105,9 +104,9 @@ public class ClassLoaderTest extends OBBaseTest {
     // Checking manual servlets
     obc = OBDal.getInstance().createCriteria(ModelImplementation.class);
     obc.addEqual(ModelImplementation.PROPERTY_OBJECTTYPE, "S");
-    obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_SPECIALFORM));
-    obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_PROCESS));
-    obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_CALLOUT));
+    obc.addIsNull(ModelImplementation.PROPERTY_SPECIALFORM);
+    obc.addIsNull(ModelImplementation.PROPERTY_PROCESS);
+    obc.addIsNull(ModelImplementation.PROPERTY_CALLOUT);
 
     checkClasses("Manual Servlet", obc.list(), notFoundClasses, notServletClasses);
 

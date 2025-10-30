@@ -30,7 +30,6 @@ import jakarta.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.Filters;
@@ -123,28 +122,13 @@ public class WeldBaseTest extends OBBaseTest {
   @Before
   public void setUp() throws Exception {
     if (!initialized) {
-      initializeDalLayer(getSqlFunctions());
+      initializeDalLayer();
       WeldUtils.setStaticInstanceBeanManager(beanManager);
       kernelInitializer.setInterceptor();
       weldUtils.setBeanManager(beanManager);
       initialized = true;
     }
     super.setUp();
-  }
-
-  private Map<String, SQLFunction> getSqlFunctions() {
-    Map<String, SQLFunction> sqlFunctions = new HashMap<>();
-    if (sqlFunctionRegisters == null) {
-      return sqlFunctions;
-    }
-    for (SQLFunctionRegister register : sqlFunctionRegisters) {
-      Map<String, SQLFunction> registeredSqlFunctions = register.getSQLFunctions();
-      if (registeredSqlFunctions == null) {
-        continue;
-      }
-      sqlFunctions.putAll(registeredSqlFunctions);
-    }
-    return sqlFunctions;
   }
 
   /**

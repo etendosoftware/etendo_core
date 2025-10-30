@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.hibernate.criterion.Restrictions;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openbravo.dal.core.DalUtil;
@@ -120,7 +119,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
 
     final OBCriteria<InventoryCount> icObc = OBDal.getInstance()
         .createCriteria(InventoryCount.class);
-    icObc.add(Restrictions.like("name", NAME_PREFIX + "%"));
+    icObc.addLike("name", NAME_PREFIX + "%");
     int cnt = 0;
     int cntLine = 0;
     for (final InventoryCount ic : icObc.list()) {
@@ -153,7 +152,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
     addReadWriteAccess(InventoryCountLine.class);
     final OBCriteria<InventoryCount> icObc = OBDal.getInstance()
         .createCriteria(InventoryCount.class);
-    icObc.add(Restrictions.like("name", NAME_PREFIX + "%"));
+    icObc.addLike("name", NAME_PREFIX + "%");
     for (InventoryCount ic : icObc.list()) {
       OBDal.getInstance().remove(ic);
     }

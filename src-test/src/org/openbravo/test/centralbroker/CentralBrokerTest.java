@@ -26,7 +26,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.Test;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;

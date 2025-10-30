@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
 import org.junit.Test;
 import org.openbravo.base.exception.OBException;

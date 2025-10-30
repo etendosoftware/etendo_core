@@ -18,7 +18,6 @@ import java.util.concurrent.ExecutorService;
 
 import jakarta.enterprise.inject.Instance;
 
-import org.hibernate.criterion.Criterion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -126,7 +125,6 @@ public class ClusterServiceManagerTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.createCriteria(ADClusterService.class)).thenReturn(mockCriteria);
-      when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
       when(mockCriteria.list()).thenReturn(Collections.singletonList(mockADClusterService));
 
       serviceManager.shutdown();

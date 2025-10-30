@@ -17,9 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.criteria.Predicate;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Criterion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -156,8 +156,7 @@ public class ManagePrereservationActionHandlerTest {
 
     when(obDal.get(OrderLine.class, orderLineId)).thenReturn(orderLine);
 
-    mockedOBDao.when(() -> OBDao.getFilteredCriteria(eq(ReservationStock.class), any(Criterion.class),
-        any(Criterion.class))).thenReturn(reservationStockCriteria);
+    mockedOBDao.when(() -> OBDao.getFilteredCriteria(eq(ReservationStock.class), any(Map.class))).thenReturn(reservationStockCriteria);
 
     List<ReservationStock> emptyList = new ArrayList<>();
     when(reservationStockCriteria.list()).thenReturn(emptyList);

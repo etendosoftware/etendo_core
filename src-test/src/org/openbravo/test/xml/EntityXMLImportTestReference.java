@@ -26,7 +26,6 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.junit.Before;
 import org.junit.Ignore;

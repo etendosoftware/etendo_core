@@ -25,7 +25,6 @@ import java.util.Set;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Criterion;
 import org.hibernate.query.Query;
 import org.junit.After;
 import org.junit.Before;
@@ -173,7 +172,6 @@ public class RecordID2FillingTest {
         mockOBPaymentScheduleDetailQuery);
 
     when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockFinAccPMCriteria);
-    when(mockFinAccPMCriteria.add(any(Criterion.class))).thenReturn(mockFinAccPMCriteria);
     when(mockFinAccPMCriteria.setMaxResults(anyInt())).thenReturn(mockFinAccPMCriteria);
     when(mockFinAccPMCriteria.uniqueResult()).thenReturn(mockFinAccPM);
 

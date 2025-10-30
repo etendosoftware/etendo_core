@@ -24,7 +24,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
@@ -89,7 +88,7 @@ public class TestUtils {
   static int getNumberOfProducts(final String name) {
     try {
       final OBCriteria<Product> criteria = OBDal.getInstance().createCriteria(Product.class);
-      criteria.add(Restrictions.like(Product.PROPERTY_NAME, name + "-%"));
+      criteria.addLike(Product.PROPERTY_NAME, name + "-%");
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -134,7 +133,7 @@ public class TestUtils {
   static int getNumberOfOrders(final String docNo) {
     try {
       final OBCriteria<Order> criteria = OBDal.getInstance().createCriteria(Order.class);
-      criteria.add(Restrictions.like(Order.PROPERTY_DOCUMENTNO, docNo + "-%"));
+      criteria.addLike(Order.PROPERTY_DOCUMENTNO, docNo + "-%");
       return criteria.list().size();
     } catch (Exception e) {
       throw new OBException(e);
@@ -230,7 +229,7 @@ public class TestUtils {
     try {
       final OBCriteria<ShipmentInOut> criteria = OBDal.getInstance()
           .createCriteria(ShipmentInOut.class);
-      criteria.add(Restrictions.like(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%"));
+      criteria.addLike(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%");
       return criteria.list().size();
     } catch (Exception e) {
       throw new OBException(e);

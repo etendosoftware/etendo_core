@@ -391,6 +391,16 @@ public class AddPaymentReadOnlyLogicsExpressionTest {
     }
 
     @Override
+    public Handle<T> getHandle() {
+      return null;
+    }
+
+    @Override
+    public Iterable<? extends Handle<T>> handles() {
+      return null;
+    }
+
+    @Override
     public T get() {
       if (elements.length == 0) {
         throw new IllegalStateException("No instance available");

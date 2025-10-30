@@ -3,7 +3,6 @@ package com.etendoerp.base.weld
 import com.etendoerp.base.EBaseSpecification
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.hibernate.dialect.function.SQLFunction
 import org.jboss.arquillian.container.test.api.Deployment
 import org.jboss.arquillian.junit.Arquillian
 import org.jboss.shrinkwrap.api.Filters
@@ -99,21 +98,6 @@ class EWeldSpecification extends EBaseSpecification {
             weldUtils.setBeanManager(beanManager);
             initialized = true;
         }
-    }
-
-    private Map<String, SQLFunction> getSqlFunctions() {
-        Map<String, SQLFunction> sqlFunctions = new HashMap<>();
-        if (sqlFunctionRegisters == null) {
-            return sqlFunctions;
-        }
-        for (SQLFunctionRegister register : sqlFunctionRegisters) {
-            Map<String, SQLFunction> registeredSqlFunctions = register.getSQLFunctions();
-            if (registeredSqlFunctions == null) {
-                continue;
-            }
-            sqlFunctions.putAll(registeredSqlFunctions);
-        }
-        return sqlFunctions;
     }
 
     /**

@@ -5,7 +5,6 @@ import static org.openbravo.test.costing.utils.TestCostingConstants.EURO_ID;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;

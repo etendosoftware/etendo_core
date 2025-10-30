@@ -23,7 +23,6 @@ import static org.junit.Assert.assertFalse;
 
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.businessUtility.Preferences;

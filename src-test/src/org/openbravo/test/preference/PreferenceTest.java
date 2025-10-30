@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;

@@ -45,7 +45,6 @@ import org.dom4j.io.SAXReader;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.NativeQuery;
 import org.junit.Assert;
 import org.junit.Ignore;

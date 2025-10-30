@@ -13,11 +13,12 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.sql.Connection;
 
+import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.ServletException;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Criterion;
+import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -111,9 +112,11 @@ public class StockUtilsTest {
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
 
     when(mockOBDal.createCriteria(StockProposed.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Predicate.class))).thenReturn(mockCriteria);
     when(mockCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockCriteria);
-    when(mockCriteria.scroll(any(ScrollMode.class))).thenReturn(mockScrollableResults);
+    // TODO Check if ScrollableResultsImplementor can be mocked directly
+    when(mockCriteria.scroll(any(ScrollMode.class))).thenReturn(
+        (ScrollableResultsImplementor<StockProposed>) mockScrollableResults);
 
     when(mockOBDal.getConnection(anyBoolean())).thenReturn(mockConnection);
 
@@ -248,7 +251,7 @@ public class StockUtilsTest {
 
     // Verify that createCriteria and its methods were called correctly
     verify(mockOBDal).createCriteria(StockProposed.class);
-    verify(mockCriteria).add(any(Criterion.class));
+    verify(mockCriteria).add(any(Predicate.class));
     verify(mockCriteria).addOrderBy(anyString(), anyBoolean());
     verify(mockCriteria).scroll(ScrollMode.FORWARD_ONLY);
   }

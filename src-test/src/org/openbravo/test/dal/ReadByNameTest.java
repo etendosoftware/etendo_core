@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.UUID;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;

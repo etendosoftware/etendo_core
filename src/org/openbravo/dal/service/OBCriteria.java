@@ -441,6 +441,45 @@ public class OBCriteria<E extends BaseOBObject> {
   }
 
   /**
+   * Adds an NOT IN predicate using a {@link Collection} of values. Mirrors Hibernate 5 Restrictions.notIn.
+   *
+   * @param property
+   *     dot-path property name
+   * @param values
+   *     collection of values (ignored if null/empty producing a false/disjunction)
+   * @return this for chaining
+   */
+  public OBCriteria<E> addNotIn(String property, Collection<?> values) {
+    if (values == null || values.isEmpty()) {
+      // Un "NOT IN" con una lista vacía debe incluir todos los registros.
+      // Un cb.conjunction() (AND vacío) evalúa a "true".
+      predicates.add(cb.conjunction());
+    } else {
+      // Se crea el predicado "IN"
+      CriteriaBuilder.In<Object> in = cb.in(getPath(property));
+      for (Object value : values) {
+        in.value(value);
+      }
+      // Se niega el predicado "IN" para convertirlo en "NOT IN"
+      predicates.add(cb.not(in));
+    }
+    modified = true;
+    return this;
+  }
+
+  /**
+   * Adds an IS NOT EMPTY predicate for collection-valued properties.
+   *
+   * @param property
+   *     property path
+   * @return this
+   */
+  public OBCriteria<E> addIsNotEmpty(String property) {
+    predicates.add(cb.isNotEmpty(getPath(property)));
+    return this;
+  }
+
+  /**
    * Adds an IN predicate optimized for {@code List<String>}.
    *
    * @param property

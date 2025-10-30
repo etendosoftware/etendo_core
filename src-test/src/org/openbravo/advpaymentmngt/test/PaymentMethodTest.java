@@ -21,7 +21,6 @@ package org.openbravo.advpaymentmngt.test;
 
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
 import org.junit.Test;
 import org.openbravo.dal.service.OBCriteria;

@@ -151,7 +151,6 @@ public class ResetValuedStockAggregatedTest {
 
     // Configure criteria and query
     when(mockOBCriteria.add(any())).thenReturn(mockOBCriteria);
-    when(mockOBCriteria.setProjection(any())).thenReturn(mockOBCriteria);
     when(mockOBCriteria.uniqueResult()).thenReturn(null);
     when(mockOBCriteria.list()).thenReturn(new ArrayList<>());
 

@@ -26,16 +26,13 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalUtil;
@@ -100,11 +97,10 @@ class ReferencedInventoryTestUtils {
     Organization organization = OBDal.getInstance().get(Organization.class, ORG_STAR_ID);
     // Value property is defined as CLOB in Oracle, this is why it is needed this expression to
     // convert it to a char first
-    String valueISYes = " to_char(value) = 'Y' ";
-
     OBCriteria<Preference> criteria = OBDal.getInstance().createCriteria(Preference.class);
     criteria.addEqual(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE);
-    criteria.add(Restrictions.sqlRestriction(valueISYes));
+    // TODO: Check if addEqual works for CLOB fields in other databases
+    criteria.addEqual(Preference.PROPERTY_SEARCHKEY, "Y");
     criteria.addEqual(Preference.PROPERTY_CLIENT, client);
     criteria.addEqual(Preference.PROPERTY_ORGANIZATION, organization);
     return !criteria.list().isEmpty();
@@ -250,9 +246,10 @@ class ReferencedInventoryTestUtils {
   }
 
   static List<StorageDetail> getAvailableStorageDetailsOrderByQtyOnHand(final Product product) {
-    final OBCriteria<StorageDetail> crit = OBDao.getFilteredCriteria(StorageDetail.class,
-        Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, product),
-        Restrictions.gt(StorageDetail.PROPERTY_QUANTITYONHAND, BigDecimal.ZERO));
+    Map<String, Object> filters = new HashMap<>();
+    filters.put(StorageDetail.PROPERTY_PRODUCT, product);
+        filters.put(StorageDetail.PROPERTY_QUANTITYONHAND, BigDecimal.ZERO);
+    final OBCriteria<StorageDetail> crit = OBDao.getFilteredCriteria(StorageDetail.class, filters);
     crit.addOrderBy(StorageDetail.PROPERTY_QUANTITYONHAND, true);
     return crit.list();
   }

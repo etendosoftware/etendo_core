@@ -101,7 +101,7 @@ public class TransactionalSequenceUpdateNextTest extends WeldBaseTest {
 
             SessionHandler.getInstance().commitAndClose();
 
-            OBDal.getInstance().getSession().disconnect();
+            OBDal.getInstance().getSession().close();
             return sequenceNextVal;
         }
 

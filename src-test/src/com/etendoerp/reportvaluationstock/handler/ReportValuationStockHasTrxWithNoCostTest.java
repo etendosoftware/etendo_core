@@ -14,8 +14,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.SimpleExpression;
+import jakarta.persistence.criteria.Predicate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,20 +55,15 @@ public class ReportValuationStockHasTrxWithNoCostTest {
   private void setupMocks(
       OBDal mockOBDal,
       OBCriteria<MaterialTransaction> mockCriteria,
-      SimpleExpression mockLt,
-      SimpleExpression mockEq,
-      SimpleExpression mockIn,
       MaterialTransaction expectedResult
   ) throws Exception {
     when(mockOBDal.createCriteria(MaterialTransaction.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any())).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Predicate.class))).thenReturn(mockCriteria);
+
     when(mockCriteria.createAlias(anyString(), anyString())).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(1)).thenReturn(mockCriteria);
     when(mockCriteria.uniqueResult()).thenReturn(expectedResult);
 
-    when(Restrictions.lt(anyString(), any(Date.class))).thenReturn(mockLt);
-    when(Restrictions.eq(anyString(), any())).thenReturn(mockEq);
-    when(Restrictions.in(anyString(), any(Set.class))).thenReturn(mockIn);
 
     when(DateTimeData.nDaysAfter(any(), eq(TestUtils.TEST_DATE), eq("1")))
         .thenReturn(TestUtils.TEST_DATE);
@@ -85,17 +79,14 @@ public class ReportValuationStockHasTrxWithNoCostTest {
 
     OBDal mockOBDal = mock(OBDal.class);
     OBCriteria<MaterialTransaction> mockCriteria = mock(OBCriteria.class);
-    SimpleExpression mockLt = mock(SimpleExpression.class);
-    SimpleExpression mockEq = mock(SimpleExpression.class);
-    SimpleExpression mockIn = mock(SimpleExpression.class);
 
     try (
         MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-        MockedStatic<Restrictions> restrictionsMock = mockStatic(Restrictions.class);
+        MockedStatic<Predicate> restrictionsMock = mockStatic(Predicate.class);
         MockedStatic<DateTimeData> dateTimeDataMock = mockStatic(DateTimeData.class)
     ) {
       obDalMock.when(OBDal::getReadOnlyInstance).thenReturn(mockOBDal);
-      setupMocks(mockOBDal, mockCriteria, mockLt, mockEq, mockIn, new MaterialTransaction());
+      setupMocks(mockOBDal, mockCriteria, new MaterialTransaction());
 
       boolean result = (boolean) hasTrxWithNoCostMethod.invoke(
           reportValuationStock,
@@ -120,17 +111,14 @@ public class ReportValuationStockHasTrxWithNoCostTest {
 
     OBDal mockOBDal = mock(OBDal.class);
     OBCriteria<MaterialTransaction> mockCriteria = mock(OBCriteria.class);
-    SimpleExpression mockLt = mock(SimpleExpression.class);
-    SimpleExpression mockEq = mock(SimpleExpression.class);
-    SimpleExpression mockIn = mock(SimpleExpression.class);
 
     try (
         MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-        MockedStatic<Restrictions> restrictionsMock = mockStatic(Restrictions.class);
+        MockedStatic<Predicate> restrictionsMock = mockStatic(Predicate.class);
         MockedStatic<DateTimeData> dateTimeDataMock = mockStatic(DateTimeData.class)
     ) {
       obDalMock.when(OBDal::getReadOnlyInstance).thenReturn(mockOBDal);
-      setupMocks(mockOBDal, mockCriteria, mockLt, mockEq, mockIn, null);
+      setupMocks(mockOBDal, mockCriteria, null);
 
       boolean result = (boolean) hasTrxWithNoCostMethod.invoke(
           reportValuationStock,

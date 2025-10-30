@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;

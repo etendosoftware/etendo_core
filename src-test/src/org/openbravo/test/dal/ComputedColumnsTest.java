@@ -27,7 +27,6 @@ import java.util.Set;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.QueryException;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.stat.SessionStatistics;
 import org.junit.Test;
