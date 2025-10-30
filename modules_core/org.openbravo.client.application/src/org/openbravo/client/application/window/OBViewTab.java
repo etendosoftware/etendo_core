@@ -757,6 +757,7 @@ public class OBViewTab extends BaseTemplateComponent {
     return displayLogicFields;
   }
 
+  @Dependent
   public class ButtonField {
     private String id;
     private String label;
@@ -982,6 +983,7 @@ public class OBViewTab extends BaseTemplateComponent {
       this.windowTitle = windowTitle;
     }
 
+    @Dependent
     public class Value {
       private String value;
       private String labelValue;
@@ -1001,6 +1003,7 @@ public class OBViewTab extends BaseTemplateComponent {
     }
   }
 
+  @Dependent
   public class IconButton {
     protected String action;
     protected String type;
@@ -1089,6 +1092,7 @@ public class OBViewTab extends BaseTemplateComponent {
     return processUrl;
   }
 
+  @Dependent
   public class PrintButton extends IconButton {
     public boolean hasEmail;
 
@@ -1167,6 +1171,7 @@ public class OBViewTab extends BaseTemplateComponent {
 
   }
 
+  @Dependent
   public class OtherField {
     private Property property;
     private boolean session;

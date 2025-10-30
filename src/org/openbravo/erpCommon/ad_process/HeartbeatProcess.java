@@ -27,7 +27,6 @@ package org.openbravo.erpCommon.ad_process;
  */
 
 
-import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -45,6 +44,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -69,6 +69,10 @@ import org.openbravo.scheduling.ProcessBundle.Channel;
 import org.openbravo.scheduling.ProcessContext;
 import org.openbravo.scheduling.ProcessLogger;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+
+@Dependent
 public class HeartbeatProcess implements Process {
 
   public static final String HB_PROCESS_ID = "1005800000";

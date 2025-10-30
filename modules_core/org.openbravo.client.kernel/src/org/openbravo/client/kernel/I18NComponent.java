@@ -29,6 +29,7 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.ad.ui.Message;
 import org.openbravo.model.ad.ui.MessageTrl;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -37,7 +38,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class I18NComponent extends SessionDynamicTemplateComponent {
   private static Map<String, String> cachedLabels = new ConcurrentHashMap<>();
 

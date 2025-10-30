@@ -36,6 +36,9 @@ import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
 import org.quartz.JobExecutionException;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ExecutePendingPayments extends DalBaseProcess {
 
   private ProcessLogger logger;

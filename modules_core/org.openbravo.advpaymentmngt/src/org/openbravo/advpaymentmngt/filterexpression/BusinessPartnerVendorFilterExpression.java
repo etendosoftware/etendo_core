@@ -9,6 +9,9 @@ import org.openbravo.client.application.OBBindingsConstants;
 import org.openbravo.client.application.ParameterUtils;
 import org.openbravo.client.kernel.RequestContext;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class BusinessPartnerVendorFilterExpression implements FilterExpression {
   private Logger log = LogManager.getLogger();
   private Map<String, String> requestMap;

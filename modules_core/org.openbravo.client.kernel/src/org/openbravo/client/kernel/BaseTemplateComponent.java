@@ -18,6 +18,7 @@
  */
 package org.openbravo.client.kernel;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
@@ -32,7 +33,7 @@ import org.openbravo.dal.core.OBContext;
  * @see TemplateProcessor.Registry
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class BaseTemplateComponent extends BaseComponent {
   public static final String BASE_QUALIFIER = "Base";
 

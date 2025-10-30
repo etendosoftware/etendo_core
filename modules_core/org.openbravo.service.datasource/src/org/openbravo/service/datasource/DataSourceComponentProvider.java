@@ -23,12 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 /**
  * Provides {@link DataSourceComponent}. The component is initialized by reading the
@@ -36,7 +36,7 @@ import org.openbravo.client.kernel.ComponentProvider;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(DataSourceConstants.DS_COMPONENT_TYPE)
 public class DataSourceComponentProvider extends BaseComponentProvider {
   public final static String QUALIFIER = DataSourceConstants.DS_COMPONENT_TYPE;

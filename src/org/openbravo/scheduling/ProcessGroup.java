@@ -32,9 +32,12 @@ import org.openbravo.model.ad.ui.ProcessRequest;
 import org.openbravo.model.ad.ui.ProcessRun;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Process used to execute process groups
  */
+@Dependent
 public class ProcessGroup extends DalBaseProcess {
 
   @Override

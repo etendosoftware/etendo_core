@@ -21,10 +21,6 @@ package org.openbravo.advpaymentmngt.filterexpression;
 
 import java.util.Map;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -36,6 +32,12 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
+@Dependent
 public class AddPaymentReadOnlyLogicsExpression implements FilterExpression {
   private static final Logger log = LogManager.getLogger();
   @Inject

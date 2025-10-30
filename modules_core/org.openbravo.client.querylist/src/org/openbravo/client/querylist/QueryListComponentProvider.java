@@ -22,19 +22,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.dal.core.OBContext;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author gorkaion
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(QueryListComponentProvider.COMPONENT_TYPE)
 public class QueryListComponentProvider extends BaseComponentProvider {
   public static final String COMPONENT_TYPE = "OBCQL_QueryList";

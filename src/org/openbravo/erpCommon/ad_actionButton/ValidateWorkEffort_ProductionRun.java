@@ -35,6 +35,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ValidateWorkEffort_ProductionRun implements org.openbravo.scheduling.Process {
 
   private static final Logger log4j = LogManager.getLogger();

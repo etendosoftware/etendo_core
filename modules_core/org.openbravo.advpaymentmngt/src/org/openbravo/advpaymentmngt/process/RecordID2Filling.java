@@ -33,7 +33,6 @@ import java.util.Set;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -52,6 +51,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class RecordID2Filling extends DalBaseProcess {
 
   private ProcessLogger logger;

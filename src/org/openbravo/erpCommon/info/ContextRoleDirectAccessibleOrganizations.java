@@ -26,6 +26,8 @@ import org.openbravo.client.application.FilterExpression;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Filter expression for the "Context Role Direct Accessible Organizations" reference.
  * 
@@ -33,6 +35,7 @@ import org.openbravo.dal.service.OBDal;
  * explicitly defined for the role in the current context. It also takes into account if the access
  * level of the process definition allows to include the organization '*'.
  */
+@Dependent
 public class ContextRoleDirectAccessibleOrganizations implements FilterExpression {
 
   @Override

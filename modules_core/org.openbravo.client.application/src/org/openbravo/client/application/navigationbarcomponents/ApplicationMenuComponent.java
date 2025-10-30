@@ -20,6 +20,7 @@ package org.openbravo.client.application.navigationbarcomponents;
 
 import java.util.List;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
@@ -33,7 +34,7 @@ import org.openbravo.client.kernel.SessionDynamicTemplateComponent;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class ApplicationMenuComponent extends SessionDynamicTemplateComponent {
 
   @Inject

@@ -34,6 +34,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
@@ -66,7 +67,7 @@ import org.openbravo.service.db.DalConnectionProvider;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class OBViewGridComponent extends BaseTemplateComponent {
 
   private static final String DEFAULT_TEMPLATE_ID = "91DD63545B674BE8801E1FA4F48FF4C6";

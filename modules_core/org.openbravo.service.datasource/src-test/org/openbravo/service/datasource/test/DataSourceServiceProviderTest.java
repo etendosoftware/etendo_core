@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 import org.junit.Test;
@@ -89,6 +90,7 @@ public class DataSourceServiceProviderTest extends WeldBaseTest {
     OBDal.getInstance().rollbackAndClose();
   }
 
+  @Dependent
   public static class ExtendedDataSource extends DefaultDataSourceService {
 
     public Entity getEntity() {

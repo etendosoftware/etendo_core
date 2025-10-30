@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
@@ -45,7 +46,7 @@ import org.openbravo.model.ad.utility.AttachmentMethod;
 /**
  * The component which takes care of creating a class for a tab's Attachment popup.
  */
-@RequestScoped
+@Dependent
 public class AttachmentWindowComponent extends BaseTemplateComponent {
   private static final String DEFAULT_TEMPLATE_ID = "01E447F740584E02BA4612F6BDFB900D";
   private static final Logger log = LogManager.getLogger();

@@ -38,6 +38,7 @@ import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -45,7 +46,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class ApplicationComponent extends BaseTemplateComponent {
   private FormatDefinition formatDefinition = null;
 

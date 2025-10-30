@@ -41,6 +41,7 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.domain.ReferencedTable;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -49,7 +50,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class UIDefinitionController extends BaseTemplateComponent {
   private static final Logger log = LogManager.getLogger();
 

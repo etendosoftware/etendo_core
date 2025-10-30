@@ -21,13 +21,15 @@ package org.openbravo.advpaymentmngt.actionHandler;
 import java.util.Iterator;
 import java.util.List;
 
+import org.openbravo.advpaymentmngt.FundsTransferPostProcessHook;
+import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import org.openbravo.advpaymentmngt.FundsTransferPostProcessHook;
-import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
-
+@Dependent
 public class FundsTransferHookCaller {
 
   @Inject

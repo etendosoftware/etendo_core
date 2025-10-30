@@ -35,15 +35,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -73,12 +69,15 @@ import org.openbravo.service.datasource.DataSourceProperty;
 import org.openbravo.service.datasource.DataSourceProperty.RefListEntry;
 import org.openbravo.service.json.JsonConstants;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * The backing bean for generating the OBTreeReference client-side representation.
  * 
  * @author AugustoMauch
  */
-@RequestScoped
+@Dependent
 public class OBTreeReferenceComponent extends BaseTemplateComponent {
 
   private static final String TREE_REFERENCE_TEMPLATE = "9690A685A3D245899EA2A9C15D50D9FB";

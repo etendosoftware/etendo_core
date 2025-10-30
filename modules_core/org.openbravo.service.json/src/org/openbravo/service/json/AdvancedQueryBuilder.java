@@ -388,9 +388,9 @@ public class AdvancedQueryBuilder {
       if (getMainAlias() != null) {
         String organizationEntity = Organization.ENTITY_NAME.equals(entity.toString()) ? ".id"
             : ".organization";
-        buildOrgPart.append(" " + getMainAlias() + organizationEntity + " in (");
+        buildOrgPart.append(" " + getMainAlias() + organizationEntity + ".id in (");
       } else {
-        buildOrgPart.append(" organization in (");
+        buildOrgPart.append(" organization.id in (");
       }
       boolean addComma = false;
       for (String org : organizations) {

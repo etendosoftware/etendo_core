@@ -10,14 +10,15 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
 
-import jakarta.enterprise.inject.Instance;
-
 import org.codehaus.jettison.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.openbravo.client.kernel.ComponentProvider;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Instance;
 
 /**
  * Unit tests for the MatchStatementFilterExpressionHandler class.
@@ -141,6 +142,7 @@ public class MatchStatementFilterExpressionHandlerTest {
   /**
    * A test implementation of MatchStatementFilterExpressionHandler for testing purposes.
    */
+  @Dependent
   private static class TestMatchStatementFilterExpressionHandler extends MatchStatementFilterExpressionHandler {
     @Override
     protected long getSeq() {

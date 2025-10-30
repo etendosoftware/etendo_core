@@ -55,11 +55,11 @@ public class BusinessPartnerSelectorFilterExpression implements FilterExpression
       case C_INVOICELINE:
         String organizationId = StringUtils.defaultIfBlank(requestMap.get("inpadOrgId"), "0");
         String clientId = StringUtils.defaultIfBlank(requestMap.get("inpadClientId"), "0");
-        StringBuilder query = new StringBuilder(" ad_isorgincluded('")
+        StringBuilder query = new StringBuilder(" cast(ad_isorgincluded('")
             .append(OBDal.getInstance().getProxy(Organization.class, organizationId).getId())
             .append("', bp.organization.id, '")
             .append(clientId)
-            .append("') <> -1 ");
+            .append("') as int) <> -1 ");
         return query.toString();
       default:
         return StringUtils.EMPTY;

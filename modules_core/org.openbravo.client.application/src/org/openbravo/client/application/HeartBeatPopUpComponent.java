@@ -28,6 +28,7 @@ package org.openbravo.client.application;
 
 import java.io.File;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpSession;
@@ -56,7 +57,7 @@ import org.openbravo.service.db.DalConnectionProvider;
  * HeartBeat or any kind of registration pop-up should be displayed once the user has logged in into
  * the application.
  */
-@RequestScoped
+@Dependent
 public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
 
   private static final Logger log = LogManager.getLogger();

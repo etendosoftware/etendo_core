@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
@@ -61,7 +62,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class MyOpenbravoComponent extends SessionDynamicTemplateComponent {
 
   static final String COMPONENT_ID = "MyOpenbravo";

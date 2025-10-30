@@ -25,6 +25,9 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.Utility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class RMProductSelectorFilterExpression implements FilterExpression {
 
   final static String RETURN_FROM_CUSTOMER_WINDOW = "FF808081330213E60133021822E40007";

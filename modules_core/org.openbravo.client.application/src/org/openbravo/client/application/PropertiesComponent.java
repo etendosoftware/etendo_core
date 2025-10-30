@@ -31,6 +31,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.model.ad.domain.Preference;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -38,7 +39,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class PropertiesComponent extends SessionDynamicTemplateComponent {
   private static final Logger log = LogManager.getLogger();
 

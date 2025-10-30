@@ -24,7 +24,10 @@ import org.codehaus.jettison.json.JSONException;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
 import org.openbravo.client.kernel.ComponentProvider;
 
+import jakarta.enterprise.context.Dependent;
+
 @ComponentProvider.Qualifier(APRMConstants.TRANSACTION_WINDOW_ID)
+@Dependent
 public class MatchStatementDefaultFilterExpresion extends MatchStatementFilterExpressionHandler {
 
   private static final long SEQUENCE = 100l;

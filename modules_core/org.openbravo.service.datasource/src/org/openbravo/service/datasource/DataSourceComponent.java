@@ -23,6 +23,7 @@ import java.util.List;
 import org.openbravo.client.kernel.BaseTemplateComponent;
 import org.openbravo.client.kernel.Template;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -30,7 +31,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class DataSourceComponent extends BaseTemplateComponent {
 
   private DataSourceService dataSourceService;

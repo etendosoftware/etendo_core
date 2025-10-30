@@ -19,6 +19,9 @@
 
 package org.openbravo.dal.service;
 
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,6 +47,8 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.database.SessionInfo;
 import org.openbravo.service.db.QueryTimeOutUtil;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * The OBQuery supports querying in the Data Access Layer with free-format (HQL) where and order by
@@ -491,10 +496,16 @@ public class OBQuery<E extends BaseOBObject> {
     for (Entry<String, Object> entry : localNamedParameters.entrySet()) {
       final String name = entry.getKey();
       final Object value = entry.getValue();
-      if (value instanceof Collection<?>) {
-        qry.setParameterList(name, (Collection<?>) value);
-      } else if (value instanceof String[]) {
-        qry.setParameterList(name, (String[]) value);
+      if (value instanceof Collection<?> valueCollection) {
+        qry.setParameterList(name, valueCollection);
+      } else if (value instanceof String[] valueStringArray) {
+        qry.setParameterList(name, valueStringArray);
+      } else if (value instanceof Date valueDate) {
+        qry.setParameter(name, valueDate, TemporalType.DATE);
+      } else if (value instanceof Time valueTime) {
+        qry.setParameter(name, valueTime, TemporalType.TIME);
+      } else if (value instanceof Timestamp valueTimestamp) {
+        qry.setParameter(name, valueTimestamp, TemporalType.TIMESTAMP);
       } else {
         qry.setParameter(name, value);
       }

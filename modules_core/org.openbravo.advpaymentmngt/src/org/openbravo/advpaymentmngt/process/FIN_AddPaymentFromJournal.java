@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
@@ -39,6 +37,10 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpServletRequest;
+
+@Dependent
 public class FIN_AddPaymentFromJournal extends DalBaseProcess {
 
   @Override

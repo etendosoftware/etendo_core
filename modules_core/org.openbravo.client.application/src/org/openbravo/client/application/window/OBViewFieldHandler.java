@@ -31,7 +31,6 @@ import java.util.Set;
 
 import javax.script.ScriptException;
 
-import jakarta.enterprise.context.RequestScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,6 +58,8 @@ import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.FieldGroup;
 import org.openbravo.model.ad.ui.Tab;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * The backing bean for generating the fields in the tab.
  * 
@@ -66,7 +67,7 @@ import org.openbravo.model.ad.ui.Tab;
  * @author iperdomo
  */
 
-@RequestScoped
+@Dependent
 public class OBViewFieldHandler {
 
   private static Logger log = LogManager.getLogger();
@@ -645,6 +646,7 @@ public class OBViewFieldHandler {
     public boolean getIsComputedColumn();
   }
 
+  @Dependent
   public class OBViewFieldAudit implements OBViewFieldDefinition {
     private static final String SEARCH_REFERENCE = "30";
     private static final String DATETIME_REFERENCE = "16";
@@ -929,6 +931,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   public class OBClientClassField implements OBViewFieldDefinition {
     private Field field;
     private String label;
@@ -1242,6 +1245,7 @@ public class OBViewFieldHandler {
     return tabsGridConfig.get(tab.getId());
   }
 
+  @Dependent
   public class OBViewField implements OBViewFieldDefinition {
     private Field field;
     private Property property;
@@ -1750,6 +1754,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   public class DefaultVirtualField implements OBViewFieldDefinition {
 
     @Override
@@ -1953,6 +1958,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   public class OBViewFieldGroup extends DefaultVirtualField {
 
     private boolean expanded = true;
@@ -2047,6 +2053,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   public class AttachmentsCanvasField extends DefaultVirtualField {
 
     @Override
@@ -2060,6 +2067,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   public class AttachmentsField extends DefaultVirtualField {
 
     private OBViewFieldDefinition childField;
@@ -2112,6 +2120,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   public class LinkedItemsField extends DefaultVirtualField {
 
     private OBViewFieldDefinition childField;
@@ -2188,6 +2197,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   public class NotesField extends DefaultVirtualField {
 
     private OBViewFieldDefinition childField;
@@ -2240,6 +2250,7 @@ public class OBViewFieldHandler {
     }
   }
 
+  @Dependent
   private class NotesCanvasField extends DefaultVirtualField {
 
     @Override
@@ -2265,6 +2276,7 @@ public class OBViewFieldHandler {
 
   }
 
+  @Dependent
   public class OBViewFieldSpacer implements OBViewFieldDefinition {
     @Override
     public String getOnChangeFunction() {

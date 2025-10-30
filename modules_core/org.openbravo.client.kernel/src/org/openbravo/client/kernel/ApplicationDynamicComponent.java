@@ -37,6 +37,7 @@ import org.openbravo.model.ad.utility.Image;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -45,7 +46,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class ApplicationDynamicComponent extends SessionDynamicTemplateComponent {
 
   private ActivationKey activationKey;

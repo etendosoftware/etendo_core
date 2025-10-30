@@ -65,6 +65,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CostingRuleProcess implements Process {
   private ProcessLogger logger;
   private static final Logger log4j = LogManager.getLogger();

@@ -32,10 +32,13 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * @author mdejuana
  * 
  */
+@Dependent
 public class PriceDifferenceBackground extends DalBaseProcess {
   private static final Logger log4j = LogManager.getLogger();
   public static final String AD_PROCESS_ID = "BA574D8A4CF54AFF8B7BC2E6FACA161E";

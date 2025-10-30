@@ -26,6 +26,7 @@ import org.openbravo.client.kernel.Template;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -33,7 +34,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author iperdomo
  */
-@RequestScoped
+@Dependent
 public class MainLayoutComponent extends BaseTemplateComponent {
 
   /*

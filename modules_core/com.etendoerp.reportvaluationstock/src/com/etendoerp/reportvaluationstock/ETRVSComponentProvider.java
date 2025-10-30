@@ -1,12 +1,15 @@
 package com.etendoerp.reportvaluationstock;
 
-import org.openbravo.client.kernel.BaseComponentProvider;
-import org.openbravo.client.kernel.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.openbravo.client.kernel.BaseComponentProvider;
+import org.openbravo.client.kernel.Component;
+
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ETRVSComponentProvider extends BaseComponentProvider {
 
   @Override

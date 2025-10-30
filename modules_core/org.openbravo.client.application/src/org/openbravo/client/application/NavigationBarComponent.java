@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.openbravo.client.application.NavigationBarComponentGenerator.NBComponent;
 import org.openbravo.client.kernel.SessionDynamicTemplateComponent;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -30,7 +31,7 @@ import jakarta.enterprise.context.RequestScoped;
  * the current context.
  * 
  */
-@RequestScoped
+@Dependent
 public class NavigationBarComponent extends SessionDynamicTemplateComponent {
 
   @Override

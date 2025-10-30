@@ -15,6 +15,8 @@ import com.smf.jobs.Data;
 import com.smf.jobs.Result;
 import com.smf.jobs.defaults.CloneRecords;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class extends the CloneRecords class and is used to clone invoices in the system.
  * It overrides the run method to set the parameters for the clone records process before running it.
@@ -32,6 +34,7 @@ import com.smf.jobs.defaults.CloneRecords;
  *
  * If any exception occurs during the process, it is caught and rethrown as an OBException.
  */
+@Dependent
 public class CallCloneInvoice extends CloneRecords {
 
   /**

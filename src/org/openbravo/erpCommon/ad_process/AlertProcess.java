@@ -19,6 +19,7 @@
 
 package org.openbravo.erpCommon.ad_process;
 
+import java.net.InetAddress;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,12 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -59,8 +57,11 @@ import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.quartz.JobExecutionException;
-import java.net.InetAddress;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+
+@Dependent
 public class AlertProcess implements Process {
 
   private static final Logger log4j = LogManager.getLogger();

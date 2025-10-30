@@ -26,11 +26,9 @@ package org.openbravo.erpCommon.ad_process;
  */
 
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.ad.module.DataPackage;
@@ -41,10 +39,13 @@ import org.openbravo.model.ad.system.Language;
 import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This process creates a standard module for customization.
  * 
  */
+@Dependent
 public class CreateCustomModule implements Process {
   private static final String MODULE_NAME = "Custom Module";
   private static final String MODULE_PAKCAGE = "mySystem.customModule";

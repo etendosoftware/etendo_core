@@ -19,13 +19,13 @@
 
 package org.openbravo.common.hooks;
 
+import org.openbravo.model.materialmgmt.onhandquantity.InventoryStatus;
+import org.openbravo.model.materialmgmt.onhandquantity.StorageDetail;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-
-import org.openbravo.model.materialmgmt.onhandquantity.InventoryStatus;
-import org.openbravo.model.materialmgmt.onhandquantity.StorageDetail;
 
 @ApplicationScoped
 public class InventoryStatusHookManager {

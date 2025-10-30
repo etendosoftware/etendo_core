@@ -1,11 +1,10 @@
 package com.smf.securewebservices;
 
-import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.RequestScoped;
-import org.openbravo.service.datasource.BaseDataSourceService;
+import java.util.Map;
+
 import org.openbravo.service.datasource.DefaultDataSourceService;
 
-import java.util.Map;
+import jakarta.enterprise.context.Dependent;
 
 @Dependent
 public class SWSDataSourceService extends DefaultDataSourceService {

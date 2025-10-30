@@ -25,6 +25,7 @@ import org.openbravo.client.kernel.Template;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.User;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -33,7 +34,7 @@ import jakarta.enterprise.context.RequestScoped;
  * @author asier
  * 
  */
-@RequestScoped
+@Dependent
 public class NewUserEmailBody extends PortalEmailBody {
   private Map<String, Object> data;
 

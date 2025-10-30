@@ -27,6 +27,7 @@ import org.openbravo.client.kernel.reference.UIDefinition;
 import org.openbravo.client.kernel.reference.UIDefinitionController;
 import org.openbravo.dal.service.OBDal;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -35,7 +36,7 @@ import jakarta.enterprise.context.RequestScoped;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class TypesComponent extends BaseTemplateComponent {
 
   public static final String SC_TYPES_COMPONENT_ID = "SmartClientTypes";

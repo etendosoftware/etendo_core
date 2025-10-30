@@ -34,7 +34,10 @@ import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 
+import jakarta.enterprise.context.Dependent;
+
 //Public class to allow extend the functionality, for example Add Payment popup opening from menu
+@Dependent
 public class AddTransactionFilterExpression implements FilterExpression {
 
   private static final Logger log = LogManager.getLogger();

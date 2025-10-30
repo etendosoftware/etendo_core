@@ -37,6 +37,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class MRPManufacturingPlanProcess extends DalBaseProcess {
   private static final Logger log4j = LogManager.getLogger();
   private static final String NULL = null;

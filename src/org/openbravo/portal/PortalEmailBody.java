@@ -24,6 +24,7 @@ import org.openbravo.email.EmailEventContentGenerator;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.PropertyException;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 
 /**
@@ -34,7 +35,7 @@ import jakarta.enterprise.context.RequestScoped;
  * @author asier
  * 
  */
-@RequestScoped
+@Dependent
 public abstract class PortalEmailBody extends BaseTemplateComponent {
   public String getClientName() {
     return OBContext.getOBContext().getCurrentClient().getName();

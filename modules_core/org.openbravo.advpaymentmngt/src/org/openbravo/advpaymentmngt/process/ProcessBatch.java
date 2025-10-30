@@ -22,8 +22,6 @@ package org.openbravo.advpaymentmngt.process;
 import java.util.Date;
 import java.util.HashMap;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
@@ -36,6 +34,10 @@ import org.openbravo.model.financialmgmt.gl.GLJournal;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpServletRequest;
+
+@Dependent
 public class ProcessBatch extends DalBaseProcess {
 
   @Override

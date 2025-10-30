@@ -281,7 +281,7 @@ public class OrderLinePEHQLTransformer extends HqlQueryTransformer {
     String additionalFilters = transformedHql;
     additionalFilters = additionalFilters.replace("e.client.id in (",
         isSalesTransaction ? "ic.client.id in (" : "o.client.id in (");
-    additionalFilters = additionalFilters.replace("e.organization in (",
+    additionalFilters = additionalFilters.replace("e.organization.id in (",
         isSalesTransaction ? "ic.organization.id in (" : "o.organization.id in (");
     return additionalFilters;
   }

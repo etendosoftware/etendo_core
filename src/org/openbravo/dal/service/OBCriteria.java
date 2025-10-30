@@ -105,6 +105,7 @@ public class OBCriteria<E extends BaseOBObject> {
   private String projectionProperty = null;
   private String projectionType = null;
   private Selection<?>[] multipleProjections = null;
+  private boolean securityFiltersAdded = false;
 
   // -------------------- Public API --------------------
 
@@ -555,7 +556,6 @@ public class OBCriteria<E extends BaseOBObject> {
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public OBCriteria<E> addGreaterOrEqual(String property, Comparable value) {
-    initialize();
     predicates.add(cb.greaterThanOrEqualTo(getPath(property), value));
     modified = true;
     return this;
@@ -580,8 +580,8 @@ public class OBCriteria<E extends BaseOBObject> {
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
   public OBCriteria<E> addLessOrEqual(String property, Comparable value) {
-    Path<?> path = getPath(property);
-    Expression<Comparable> expr = path.as(Comparable.class);
+    Path path = getPath(property);
+    Expression expr = path.as(value.getClass());
     predicates.add(cb.lessThanOrEqualTo(expr, value));
     modified = true;
     return this;
@@ -829,7 +829,7 @@ public class OBCriteria<E extends BaseOBObject> {
       if (!modified) {
         return;
       }
-      log.warn(
+       log.warn(
           "Detected multiple calls to initialize() in the same OBCriteria instance. "
               + "This should be fixed in order to prevent adding duplicated filters in the query.");
     }
@@ -841,28 +841,31 @@ public class OBCriteria<E extends BaseOBObject> {
       OBContext.getOBContext().getEntityAccessChecker().checkReadable(e);
     }
 
-    // Organization readable filter
-    if (filterOnReadableOrganization && e != null && e.isOrganizationEnabled()) {
-      if (e.isOrganizationPartOfKey()) {
-        addInIds("id." + PROPERTY_ORGANIZATION + ".id", obContext.getReadableOrganizations());
-      } else {
-        addInIds(PROPERTY_ORGANIZATION + ".id", obContext.getReadableOrganizations());
+    if (!securityFiltersAdded && e != null) {
+      // Organization readable filter
+      if (filterOnReadableOrganization && e != null && e.isOrganizationEnabled()) {
+        if (e.isOrganizationPartOfKey()) {
+          addInIds("id." + PROPERTY_ORGANIZATION + ".id", obContext.getReadableOrganizations());
+        } else {
+          addInIds(PROPERTY_ORGANIZATION + ".id", obContext.getReadableOrganizations());
+        }
       }
-    }
 
-    // Client readable filter
-    if (filterOnReadableClients && e != null && e.isClientEnabled()) {
-      addInIds(PROPERTY_CLIENT + ".id", obContext.getReadableClients());
-    }
+      // Client readable filter
+      if (filterOnReadableClients && e != null && e.isClientEnabled()) {
+        addInIds(PROPERTY_CLIENT + ".id", obContext.getReadableClients());
+      }
 
-    // Active flag filter
-    if (filterOnActive && e != null && e.isActiveEnabled()) {
-      addEqual(Organization.PROPERTY_ACTIVE, true);
-    }
+      // Active flag filter
+      if (filterOnActive && e != null && e.isActiveEnabled()) {
+        addEqual(Organization.PROPERTY_ACTIVE, true);
+      }
 
-    // Profile-driven timeout
-    if (SessionInfo.getQueryProfile() != null) {
-      // It's applied in applyTimeout(query) when creating the query
+      securityFiltersAdded = true;
+      // Profile-driven timeout
+      if (SessionInfo.getQueryProfile() != null) {
+        // It's applied in applyTimeout(query) when creating the query
+      }
     }
 
     initialized = true;
@@ -1137,7 +1140,6 @@ public class OBCriteria<E extends BaseOBObject> {
    * Replaces Hibernate 5's Restrictions.ilike() functionality.
    */
   public OBCriteria<E> addIlike(String property, String value) {
-    initialize();
     predicates.add(cb.like(cb.upper(getPath(property).as(String.class)), value.toUpperCase()));
     modified = true;
     return this;
@@ -1148,7 +1150,6 @@ public class OBCriteria<E extends BaseOBObject> {
    * Replaces Hibernate 5's Restrictions.isNull() functionality.
    */
   public OBCriteria<E> addIsNull(String property) {
-    initialize();
     predicates.add(cb.isNull(getPath(property)));
     modified = true;
     return this;
@@ -1160,7 +1161,6 @@ public class OBCriteria<E extends BaseOBObject> {
    * Uses LEFT join by default for compatibility.
    */
   public OBCriteria<E> createAlias(String property, String alias) {
-    initialize();
     Join<?, ?> join = root.join(property, JoinType.LEFT);
     aliasMap.put(alias, join);
     modified = true;
@@ -1172,7 +1172,6 @@ public class OBCriteria<E extends BaseOBObject> {
    * Replaces Hibernate 5's createAlias() functionality.
    */
   public OBCriteria<E> createAlias(String property, String alias, JoinType joinType) {
-    initialize();
     Join<?, ?> join = root.join(property, joinType);
     aliasMap.put(alias, join);
     modified = true;

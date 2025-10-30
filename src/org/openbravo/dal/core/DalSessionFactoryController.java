@@ -26,11 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 
-import com.etendoerp.sequences.services.NonTransactionalSequenceService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.boot.model.TypeContributions;
@@ -44,6 +40,13 @@ import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.session.OBYesNoType;
 import org.openbravo.base.session.SessionFactoryController;
 
+import com.etendoerp.sequences.services.NonTransactionalSequenceService;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
 /**
  * Initializes and provides the session factory for the runtime dal layer. This
  * SessionFactoryController is initialized after the model has been read in-memory. The
@@ -53,6 +56,7 @@ import org.openbravo.base.session.SessionFactoryController;
  * @author mtaal
  */
 
+@Dependent
 public class DalSessionFactoryController extends SessionFactoryController {
   private static final Logger log = LogManager.getLogger();
 

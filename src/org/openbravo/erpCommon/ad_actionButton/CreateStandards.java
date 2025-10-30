@@ -52,6 +52,9 @@ import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.utils.Replace;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CreateStandards implements org.openbravo.scheduling.Process {
 
   private static final String lotSearchKey = "LOT";

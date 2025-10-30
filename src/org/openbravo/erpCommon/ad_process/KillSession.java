@@ -25,10 +25,13 @@ import org.openbravo.model.ad.access.Session;
 import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This process kills the session passed in the AD_Session_ID parameter.
  * 
  */
+@Dependent
 public class KillSession implements Process {
 
   @Override
