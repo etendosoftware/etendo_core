@@ -28,9 +28,6 @@ pipeline {
     UNSTABLE            = 'UNSTABLE'
     ABORTED             = 'ABORTED'
 
-    // Stack
-    JAVA_HOME           = '/usr/lib/jvm/jdk-17.0.13'
-    TOMCAT_URL          = 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz'
     POSTGRES_VERSION    = '16'
 
     CONTEXT_BUILD       = 'Unit Tests with Postgres Database'
@@ -170,8 +167,7 @@ spec:
         }
       }
     }
-    
-    stage ('Build Environment') { // MARK: Build Environment
+    stage ('Stack Configuration') { // MARK: Stack Configuration
       when {
         expression {
           currentBuild.result == SUCCESS
@@ -181,11 +177,41 @@ spec:
         container('compiler') {
           script {
             try {
-              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-
+              echo "--------------- Getting Backport Branch Information ---------------"
+              def pattern = /-Y\d{2}$/
+              env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
+              env.FROM_BACKPORT = FALSE
+              env.FROM_PRERELEASE = FALSE
+              def yearBackportBranch = (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)?.find() ? (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)[0][1] : null
+              def yearPrereleaseBranch = (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)?.find() ? (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)[0][1] : null
+              
+              // Extract backport branch information without using Matcher object
+              if (env.CONTAINS_Y_SUFFIX == TRUE) {
+                def yearCommitBranch = (env.GIT_BRANCH =~ /-Y(\d{2})/)?.find() ? (env.GIT_BRANCH =~ /-Y(\d{2})/)[0][1] : null
+                if (yearCommitBranch && yearBackportBranch && yearPrereleaseBranch) {
+                  env.FROM_BACKPORT = (yearCommitBranch == yearBackportBranch) ? env.TRUE : env.FALSE
+                  env.FROM_PRERELEASE = (yearCommitBranch == yearPrereleaseBranch) ? env.TRUE : env.FALSE
+                }
+              } else if (GIT_BRANCH.startsWith("release")) {
+                echo '-------------------------- Backport Branch Detected --------------------------'
+                env.FROM_BACKPORT = env.TRUE
+              } else if (GIT_BRANCH.startsWith("prerelease")) {
+                echo '-------------------------- Prerelease Branch Detected --------------------------'
+                env.FROM_PRERELEASE = env.TRUE
+              }
               echo "---------------- Stack Configuration ----------------"
               def rootDir = pwd()
               def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
+
+              def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
+              
+              env.JAVA_HOME = stackConfiguration.javaHome
+              env.TOMCAT_URL = stackConfiguration.tomcatUrl
+              env.STACK_TYPE = stackConfiguration.stackType
+
+              echo "Stack Type: ${env.STACK_TYPE}"
+              echo "Tomcat URL: ${env.TOMCAT_URL}"
+              echo "Java Home: ${env.JAVA_HOME}"
 
               sh "wget -O apache-tomcat.tar.gz ${TOMCAT_URL}"
               sh "tar -xvf apache-tomcat.tar.gz -C ${WORKSPACE}"
@@ -198,6 +224,28 @@ spec:
               echo "__________________________________________________"
               echo "${env.STACK_INFO}"
               echo "__________________________________________________"
+            } catch (Exception e) {
+              env.ERROR_MESSAGE = "Stack Configuration Failed"
+              echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+              echo "Exception occurred: " + e.toString()
+              currentBuild.result = FAILED
+              error(env.ERROR_MESSAGE)
+            }
+          }
+        }
+      }
+    }
+    stage ('Build Environment') { // MARK: Build Environment
+      when {
+        expression {
+          currentBuild.result == SUCCESS
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            try {
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
 
               withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
                 sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${URL_REPO_GIT} ${REPO_NAME}"
@@ -208,30 +256,9 @@ spec:
               dir(REPO_NAME) {
                 echo "---------------- Getting Commit Information ----------------"
                 sh "git checkout ${GIT_COMMIT}"
+                def rootDir = pwd()
                 def infoCommit = load "${rootDir}/pipelines/unittests/utils/infoCommit.groovy"
                 env.COMMIT_INFO = infoCommit.generateCommitInfo(env.URL_REPO)
-
-                echo "--------------- Getting Backport Branch Information ---------------"
-                def pattern = /-Y\d{2}$/
-                env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
-                
-                // Extract backport branch information without using Matcher object
-                if (env.CONTAINS_Y_SUFFIX == TRUE) {
-                  def branchParts = env.GIT_BRANCH.split('-Y')
-                  if (branchParts.length == 2 && branchParts[1].length() == 4) {
-                    def yearMonth = branchParts[1]
-                    def num1 = yearMonth.substring(0, 2)
-                    def num2 = yearMonth.substring(2, 4)
-                    env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
-                    echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"
-                  } else {
-                    env.BACKPORT_BRANCH = ""
-                    echo "No valid backport branch pattern matched."
-                  }
-                } else {
-                  env.BACKPORT_BRANCH = ""
-                  echo "No backport branch pattern matched."
-                }
 
                 echo "--------------- Getting Sonar projectKey of ${REPO_NAME} ---------------"
                 def propertiesContent = readFile "sonar-project.properties"
@@ -262,7 +289,8 @@ spec:
                 allow.root=true
                 org.gradle.jvmargs=-Dfile.encoding=UTF-8
                 org.gradle.daemon=false
-                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g" > gradle.properties
+                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g
+                java.version=11" > gradle.properties
                 """
 
                 sh """
@@ -646,7 +674,7 @@ spec:
             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Comparing Coverage Results\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
             def branchCompare = env.MAIN_BRANCH
             env.COMPARE_COVERAGE_STATUS = SUCCESS
-            if (CONTAINS_Y_SUFFIX == TRUE) {
+            if (env.FROM_BACKPORT == TRUE) {
               branchCompare = env.BACKPORT_BRANCH
             }
             echo "-------------------------- Comparing Coverage with ${branchCompare} Branch --------------------------"
