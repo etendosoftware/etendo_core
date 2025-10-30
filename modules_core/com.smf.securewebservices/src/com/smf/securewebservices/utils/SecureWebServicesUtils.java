@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
@@ -79,6 +80,7 @@ public class SecureWebServicesUtils {
 	private static final String EC = "EC";
 	private static final String HS256_ALGORITHM = "HS256";
     	private static final String MESSAGE_SMFSWS_USER_HAS_NO_ROLE = "SMFSWS_UserHasNoRole";
+	private static ThreadLocal<ServletConfig> servletConfig;
 
 	/**
 	 * Constructor for SecureWebServicesUtils.
@@ -713,5 +715,16 @@ public class SecureWebServicesUtils {
 				.withClaim("organization", selectedOrg.getId())
 				.withClaim("warehouse", selectedWarehouse.getId())
 				.withIssuedAt(new Date());
+	}
+
+	public static void setServletConfig(ServletConfig config) {
+		if(servletConfig == null) {
+			servletConfig = new ThreadLocal<>();
+		}
+		servletConfig.set(config);
+	}
+
+	public static ServletConfig getServletConfig() {
+		return servletConfig.get();
 	}
 }

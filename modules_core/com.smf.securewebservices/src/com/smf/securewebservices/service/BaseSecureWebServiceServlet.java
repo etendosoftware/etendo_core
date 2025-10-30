@@ -22,6 +22,7 @@ package com.smf.securewebservices.service;
 import java.io.IOException;
 import java.io.Writer;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -72,7 +73,13 @@ public class BaseSecureWebServiceServlet extends HttpServlet {
   private static final int DEFAULT_WS_INACTIVE_INTERVAL = 60;
 
   @Override
-  protected final void service(HttpServletRequest request, HttpServletResponse response)
+  public void init(ServletConfig config) throws ServletException {
+    super.init(config);
+    SecureWebServicesUtils.setServletConfig(config);
+  }
+
+  @Override
+  public final void service(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
     final boolean sessionExists = request.getSession(false) != null;
 
