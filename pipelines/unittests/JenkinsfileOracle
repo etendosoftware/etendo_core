@@ -33,6 +33,9 @@ pipeline {
         COMMIT_INPROGRESS_STATUS = 'pending'
         COMMIT_SUCCESS_STATUS    = 'success'
         COMMIT_FAILED_STATUS     = 'failure'
+
+        TRUE  = 'TRUE'
+        FALSE = 'FALSE'
     }
 
     agent {
@@ -193,7 +196,7 @@ spec:
                 script {
                     sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Configuring Stack\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
                     echo "--------------- Waiting for Oracle DB to be ready ---------------"
-                    sleep( time: 10, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
+                    sleep( time: 30, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
                 }
             }
         }
