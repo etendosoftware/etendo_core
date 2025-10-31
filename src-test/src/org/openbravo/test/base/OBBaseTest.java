@@ -31,7 +31,6 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.*;
 
-import org.apache.log4j.xml.DOMConfigurator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,8 +38,6 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
-// import org.hibernate.criterion.Restrictions; // TODO: Migrate to Hibernate 6 CriteriaBuilder
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -51,7 +48,6 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBConfigFileProvider;
-import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.DalContextListener;
 import org.openbravo.dal.core.DalLayerInitializer;
@@ -407,7 +403,10 @@ public class OBBaseTest {
   }
 
   protected static void staticInitializeDalLayer() throws Exception {
-    staticInitializeDalLayer();
+    DalLayerInitializer initializer = DalLayerInitializer.getInstance();
+    if (!initializer.isInitialized()) {
+      initializer.initialize(true);
+    }
   }
 
   protected static void initializeDisabledTestCases() {
