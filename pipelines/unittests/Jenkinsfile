@@ -315,11 +315,13 @@ pipeline {
 // __________________________________________________________________________________________
 // ------------------------------ WEB SERVICES TESTS ----------------------------------------
     stage ('Web Service Test Suite') { // MARK: Web Service Test Suite
+        /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
+        */
       steps {
         sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         container('compiler') {
@@ -368,11 +370,13 @@ pipeline {
 // __________________________________________________________________________________________
 // ------------------------------ com.smf.* TESTS ------------------------------------------
     stage ('Core Test Suite') { // MARK: CoreTestSuite Test Suite
+    /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
+      */
       steps {
         container('compiler') {
           script {
@@ -419,11 +423,13 @@ pipeline {
 // __________________________________________________________________________________________
 // ------------------------------- STANDALONE TESTS -----------------------------------------
     stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
+      /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
+      */
       steps {
         container('compiler') {
           script {
@@ -469,11 +475,13 @@ pipeline {
 // __________________________________________________________________________________________
 // ----------------------------------- com.etendoerp.* TESTS --------------------------------
     stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Test
+      /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
+      */
       steps {
         container('compiler') {
           script {
