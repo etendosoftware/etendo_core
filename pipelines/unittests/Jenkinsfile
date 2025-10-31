@@ -26,16 +26,12 @@ pipeline {
     PLUGIN_NAME         = 'buildSrc'
     PLUGIN_URL          = 'git@github.com:etendosoftware/com.etendoerp.gradleplugin.git'
 
-
     SUCCESS             = 'SUCCESS'
     FAILED              = 'FAILED'
     UNSTABLE            = 'UNSTABLE'
     ABORTED             = 'ABORTED'
 
-    // Stack
-    JAVA_HOME           = '/usr/lib/jvm/jdk-17.0.13'
-    TOMCAT_URL          = 'https://archive.apache.org/dist/tomcat/tomcat-11/v11.0.13/bin/apache-tomcat-11.0.13.tar.gz'
-    POSTGRES_VERSION    = '17'
+    POSTGRES_VERSION    = '16'
 
     CONTEXT_BUILD       = 'Unit Tests with Postgres Database'
 
@@ -46,7 +42,6 @@ pipeline {
     TRUE  = 'TRUE'
     FALSE = 'FALSE'
 
-    JIRA_BASE_URL             = credentials('jira-url')
     // Jenkins credential stored as base64-encoded string for another Atlassian user, not etendobot
     JIRA_ACCESS_TOKEN         = credentials('jira-access-token')
 
@@ -68,8 +63,8 @@ pipeline {
           try {
             echo "---------------------- Setting up Environment Variables ----------------------"
             env.JACOCO_REPORT_EXISTS = FALSE // Indicates whether the Jacoco report exists (TRUE/FALSE)
-            env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution. 
-            env.STATUS_BUILD = FAILED // Variable to track the status of the build. 
+            env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution.
+            env.STATUS_BUILD = FAILED // Variable to track the status of the build.
             env.ERROR_MESSAGE = "Build Failed"
             env.FAILED_SUITES = "" // List to collect failed test suites
             sh "printenv"
@@ -98,6 +93,7 @@ pipeline {
               echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
               currentBuild.result = SUCCESS
             }
+            
           } catch (Exception e) {
             echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
             env.ERROR_MESSAGE = "Pipeline Check Failed"
@@ -108,8 +104,7 @@ pipeline {
         }
       }
     }
-    
-    stage ('Build Environment') { // MARK: Build Environment
+    stage ('Stack Configuration') { // MARK: Stack Configuration
       when {
         expression {
           currentBuild.result == SUCCESS
@@ -119,11 +114,41 @@ pipeline {
         container('compiler') {
           script {
             try {
-              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+              echo "--------------- Getting Backport Branch Information ---------------"
+              def pattern = /-Y\d{2}$/
+              env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
+              env.FROM_BACKPORT = FALSE
+              env.FROM_PRERELEASE = FALSE
+              def yearBackportBranch = (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)?.find() ? (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)[0][1] : null
+              def yearPrereleaseBranch = (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)?.find() ? (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)[0][1] : null
 
+              // Extract backport branch information without using Matcher object
+              if (env.CONTAINS_Y_SUFFIX == TRUE) {
+                def yearCommitBranch = (env.GIT_BRANCH =~ /-Y(\d{2})/)?.find() ? (env.GIT_BRANCH =~ /-Y(\d{2})/)[0][1] : null
+                if (yearCommitBranch && yearBackportBranch && yearPrereleaseBranch) {
+                  env.FROM_BACKPORT = (yearCommitBranch == yearBackportBranch) ? env.TRUE : env.FALSE
+                  env.FROM_PRERELEASE = (yearCommitBranch == yearPrereleaseBranch) ? env.TRUE : env.FALSE
+                }
+              } else if (GIT_BRANCH.startsWith("release")) {
+                echo '-------------------------- Backport Branch Detected --------------------------'
+                env.FROM_BACKPORT = env.TRUE
+              } else if (GIT_BRANCH.startsWith("prerelease")) {
+                echo '-------------------------- Prerelease Branch Detected --------------------------'
+                env.FROM_PRERELEASE = env.TRUE
+              }
               echo "---------------- Stack Configuration ----------------"
               def rootDir = pwd()
               def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
+
+              def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
+
+              env.JAVA_HOME = stackConfiguration.javaHome
+              env.TOMCAT_URL = stackConfiguration.tomcatUrl
+              env.STACK_TYPE = stackConfiguration.stackType
+
+              echo "Stack Type: ${env.STACK_TYPE}"
+              echo "Tomcat URL: ${env.TOMCAT_URL}"
+              echo "Java Home: ${env.JAVA_HOME}"
 
               sh "wget -O apache-tomcat.tar.gz ${TOMCAT_URL}"
               sh "tar -xvf apache-tomcat.tar.gz -C ${WORKSPACE}"
@@ -136,6 +161,28 @@ pipeline {
               echo "__________________________________________________"
               echo "${env.STACK_INFO}"
               echo "__________________________________________________"
+            } catch (Exception e) {
+              env.ERROR_MESSAGE = "Stack Configuration Failed"
+              echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+              echo "Exception occurred: " + e.toString()
+              currentBuild.result = FAILED
+              error(env.ERROR_MESSAGE)
+            }
+          }
+        }
+      }
+    }
+    stage ('Build Environment') { // MARK: Build Environment
+      when {
+        expression {
+          currentBuild.result == SUCCESS
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            try {
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
 
               withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
                 sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${REPO_URL_GIT} ${REPO_NAME}"
@@ -146,30 +193,9 @@ pipeline {
               dir(REPO_NAME) {
                 echo "---------------- Getting Commit Information ----------------"
                 sh "git checkout ${GIT_COMMIT}"
+                def rootDir = pwd()
                 def infoCommit = load "${rootDir}/pipelines/unittests/utils/infoCommit.groovy"
                 env.COMMIT_INFO = infoCommit.generateCommitInfo(env.REPO_URL)
-
-                echo "--------------- Getting Backport Branch Information ---------------"
-                def pattern = /-Y\d{2}$/
-                env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
-
-                // Extract backport branch information without using Matcher object
-                if (env.CONTAINS_Y_SUFFIX == TRUE) {
-                    def branchParts = env.GIT_BRANCH.split('-Y')
-                    if (branchParts.length == 2 && branchParts[1].length() == 4) {
-                        def yearMonth = branchParts[1]
-                        def num1 = yearMonth.substring(0, 2)
-                        def num2 = yearMonth.substring(2, 4)
-                        env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
-                        echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"
-                    } else {
-                        env.BACKPORT_BRANCH = ""
-                        echo "No valid backport branch pattern matched."
-                    }
-                } else {
-                  env.BACKPORT_BRANCH = ""
-                  echo "No backport branch pattern matched."
-                }
 
                 echo "--------------- Getting Sonar projectKey of ${REPO_NAME} ---------------"
                 def propertiesContent = readFile "sonar-project.properties"
@@ -315,20 +341,18 @@ pipeline {
 // __________________________________________________________________________________________
 // ------------------------------ WEB SERVICES TESTS ----------------------------------------
     stage ('Web Service Test Suite') { // MARK: Web Service Test Suite
-        /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
-        */
       steps {
         sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "org.openbravo.test.WebserviceTestSuite"
               try {
-                def suiteName = "org.openbravo.test.WebserviceTestSuite"
                 echo "--------------- Running ${suiteName} ---------------"
                 sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test0.exec"
@@ -370,19 +394,17 @@ pipeline {
 // __________________________________________________________________________________________
 // ------------------------------ com.smf.* TESTS ------------------------------------------
     stage ('Core Test Suite') { // MARK: CoreTestSuite Test Suite
-    /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
-      */
       steps {
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "com.smf.test.CoreTestSuite"
               try {
-                def suiteName = "com.smf.test.CoreTestSuite"
                 echo "--------------- Running ${suiteName} ---------------"
                 sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test1.exec"
@@ -423,19 +445,17 @@ pipeline {
 // __________________________________________________________________________________________
 // ------------------------------- STANDALONE TESTS -----------------------------------------
     stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
-      /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
-      */
       steps {
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "org.openbravo.test.StandaloneTestSuite"
               try {
-                def suiteName = "org.openbravo.test.StandaloneTestSuite"
                 echo "--------------- Running ${suiteName} ---------------"
                 sh "./gradlew test --tests ${suiteName} --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test2.exec"
@@ -475,19 +495,17 @@ pipeline {
 // __________________________________________________________________________________________
 // ----------------------------------- com.etendoerp.* TESTS --------------------------------
     stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Test
-      /*
       when {
         expression {
           env.STATUS_BUILD == SUCCESS
         }
       }
-      */
       steps {
         container('compiler') {
           script {
             dir(REPO_NAME) {
+              def suiteName = "com.etendoerp.*"
               try {
-                def suiteName = "com.etendoerp.*"
                 echo "--------------- Running ${suiteName} Tests ---------------"
                 sh "./gradlew test --tests \"com.etendoerp.*\" --info"
                 sh "mv build/jacoco/test.exec build/jacoco/test3.exec"
@@ -673,7 +691,7 @@ pipeline {
             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Comparing Coverage Results\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
             def branchCompare = env.MAIN_BRANCH
             env.COMPARE_COVERAGE_STATUS = SUCCESS
-            if (CONTAINS_Y_SUFFIX == TRUE) {
+            if (env.FROM_BACKPORT == TRUE) {
               branchCompare = env.BACKPORT_BRANCH
             }
             echo "-------------------------- Comparing Coverage with ${branchCompare} Branch --------------------------"
