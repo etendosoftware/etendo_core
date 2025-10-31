@@ -1,12 +1,15 @@
 package com.etendoerp.sequences;
 
-import com.etendoerp.sequences.annotations.SequenceQualifier;
 import org.openbravo.base.weld.WeldUtils;
 
+import com.etendoerp.sequences.annotations.SequenceQualifier;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
+@Dependent
 public class NextSequenceValue {
 
     @Inject

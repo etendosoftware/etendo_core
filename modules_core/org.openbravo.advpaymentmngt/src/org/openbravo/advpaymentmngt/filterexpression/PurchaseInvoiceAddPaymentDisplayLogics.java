@@ -21,6 +21,7 @@ package org.openbravo.advpaymentmngt.filterexpression;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
@@ -32,6 +33,7 @@ import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.invoice.Invoice;
 
+@Dependent
 @ComponentProvider.Qualifier(APRMConstants.PURCHASE_INVOICE_WINDOW_ID)
 public class PurchaseInvoiceAddPaymentDisplayLogics extends AddPaymentDisplayLogicsHandler {
 

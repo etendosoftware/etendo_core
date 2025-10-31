@@ -23,9 +23,6 @@ import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
 import java.util.Locale;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletOutputStream;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.ConfigParameters;
@@ -41,6 +38,11 @@ import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.utils.Replace;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+
+@Dependent
 public class JasperProcess implements Process {
 
   static Logger log4j = LogManager.getLogger();

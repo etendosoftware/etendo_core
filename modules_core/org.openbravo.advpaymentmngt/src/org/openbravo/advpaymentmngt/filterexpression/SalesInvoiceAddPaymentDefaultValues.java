@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
@@ -30,6 +31,7 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.model.common.invoice.Invoice;
 
+@Dependent
 @ComponentProvider.Qualifier(APRMConstants.SALES_INVOICE_WINDOW_ID)
 public class SalesInvoiceAddPaymentDefaultValues extends AddPaymentDefaultValuesHandler {
 

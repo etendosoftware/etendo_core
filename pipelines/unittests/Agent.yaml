@@ -56,7 +56,13 @@ spec:
       env:
         - name: POSTGRES_PASSWORD
           value: syspass
-      resources: {}
+      resources:
+        requests:
+          cpu: 3072m
+          memory: 4000Mi
+        limits:
+          cpu: 3072m
+          memory: 6000Mi
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
@@ -65,4 +71,4 @@ spec:
   dnsPolicy: ClusterFirst
   serviceAccountName: default
   serviceAccount: default
-  securityContext: {}
+  securityContext: { }

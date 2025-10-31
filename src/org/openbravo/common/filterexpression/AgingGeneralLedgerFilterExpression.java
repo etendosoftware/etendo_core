@@ -25,6 +25,9 @@ import org.openbravo.client.application.ParameterUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.erpCommon.utility.OBLedgerUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AgingGeneralLedgerFilterExpression implements FilterExpression {
 
   @Override

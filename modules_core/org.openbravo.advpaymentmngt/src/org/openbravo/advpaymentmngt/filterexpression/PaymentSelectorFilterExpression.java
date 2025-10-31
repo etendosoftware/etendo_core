@@ -25,6 +25,9 @@ import org.openbravo.client.application.FilterExpression;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class PaymentSelectorFilterExpression implements FilterExpression {
   private Map<String, String> requestMap;
 

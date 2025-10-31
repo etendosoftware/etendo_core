@@ -6,10 +6,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +13,11 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 import com.google.common.collect.HashBasedTable;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * Manages the execution of print controller hooks. The {@link PrintControllerHookManager}
@@ -56,6 +57,7 @@ import com.google.common.collect.HashBasedTable;
  * @see JSONObject
  * @see JSONException
  */
+@Dependent
 public class PrintControllerHookManager {
   public static final String RESULTS = "results";
   public static final String FAILURES = "failures";

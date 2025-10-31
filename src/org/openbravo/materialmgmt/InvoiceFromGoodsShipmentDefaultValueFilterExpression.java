@@ -30,11 +30,14 @@ import org.openbravo.common.actionhandler.InvoiceFromShipmentActionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Class to set the default value of priceList parameter in {@link InvoiceFromShipmentActionHandler}
  * process definition
  *
  */
+@Dependent
 public class InvoiceFromGoodsShipmentDefaultValueFilterExpression implements FilterExpression {
 
   private static final Logger log = LogManager.getLogger();

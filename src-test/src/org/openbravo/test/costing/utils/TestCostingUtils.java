@@ -39,9 +39,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBConfigFileProvider;
@@ -269,7 +269,7 @@ public class TestCostingUtils {
   private static int getNumberOfCostingProducts(String name) {
     try {
       final OBCriteria<Product> criteria = OBDal.getInstance().createCriteria(Product.class);
-      criteria.add(Restrictions.like(Product.PROPERTY_NAME, name + "-%"));
+      criteria.addLike(Product.PROPERTY_NAME, name + "-%");
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -4358,7 +4358,7 @@ public class TestCostingUtils {
               OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
           criteria2.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
               OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
-          criteria2.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
+          criteria2.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
           criteria2.setMaxResults(1);
           BigDecimal rate = ((ConversionRate) criteria2.uniqueResult()).getMultipleRateBy();
 
@@ -4873,7 +4873,7 @@ public class TestCostingUtils {
                 OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
             criteria2.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
                 OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
-            criteria2.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
+            criteria2.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
             criteria2.setMaxResults(1);
             BigDecimal rate = ((ConversionRate) criteria2.uniqueResult()).getMultipleRateBy();
 
@@ -5387,7 +5387,7 @@ public class TestCostingUtils {
                 OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
             criteria.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
                 OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
-            criteria.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
+            criteria.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
             criteria.setMaxResults(1);
             rate = ((ConversionRate) criteria.uniqueResult()).getMultipleRateBy();
           }
@@ -5461,7 +5461,7 @@ public class TestCostingUtils {
               OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
           criteria.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
               OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
-          criteria.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
+          criteria.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
           criteria.setMaxResults(1);
           rate = ((ConversionRate) criteria.uniqueResult()).getMultipleRateBy();
         }

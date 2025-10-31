@@ -35,13 +35,15 @@ import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * The export client process is called from the ui. It exports all the data from one client using a
  * specific dataset. It again calls the {@link DataExportService} for the actual export.
  * 
  * @author mtaal
  */
-
+@Dependent
 public class ExportClientProcess implements org.openbravo.scheduling.Process {
 
   /** The filename of the export file with client data. */

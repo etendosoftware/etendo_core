@@ -24,16 +24,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.ConfigParameters;
@@ -45,11 +35,23 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.portal.PortalAccessible;
 import org.openbravo.service.web.WebServiceUtil;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 /**
  * The main servlet responsible for handling all the requests for components from the system.
  * 
  * @author mtaal
  */
+@Dependent
 public class KernelServlet extends BaseKernelServlet {
   // private static final Logger log = LogManager.getLogger();
   private static final Logger log = LogManager.getLogger();

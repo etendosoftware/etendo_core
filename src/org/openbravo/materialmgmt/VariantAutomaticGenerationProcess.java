@@ -54,6 +54,9 @@ import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class VariantAutomaticGenerationProcess implements Process {
   private static final Logger log4j = LogManager.getLogger();
   private static final int searchKeyLength = getSearchKeyColumnLength();

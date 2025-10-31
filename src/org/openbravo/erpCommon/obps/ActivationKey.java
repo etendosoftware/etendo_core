@@ -338,7 +338,7 @@ public class ActivationKey {
     }
 
     try {
-      log.info("Loading activation key from DB");
+      log.debug("Loading activation key from DB");
       org.openbravo.model.ad.system.System sys = getSystem();
       strPublicKey = sys.getInstanceKey();
       lastUpdateTimestamp = sys.getUpdated();

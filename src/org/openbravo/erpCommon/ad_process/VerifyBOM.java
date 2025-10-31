@@ -35,6 +35,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalBaseProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class VerifyBOM extends DalBaseProcess {
 
   static Logger log4j = LogManager.getLogger();

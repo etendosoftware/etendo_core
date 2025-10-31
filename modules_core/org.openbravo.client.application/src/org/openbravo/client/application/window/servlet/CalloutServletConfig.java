@@ -21,9 +21,11 @@ package org.openbravo.client.application.window.servlet;
 
 import java.util.Enumeration;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 
+@RequestScoped
 public class CalloutServletConfig implements ServletConfig {
 
   private String servletName;

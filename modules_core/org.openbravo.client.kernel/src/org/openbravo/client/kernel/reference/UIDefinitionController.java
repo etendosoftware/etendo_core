@@ -41,12 +41,16 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.domain.ReferencedTable;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Determines which type, editor type and filter editor type is used for a certain reference in the
  * system.
  * 
  * @author mtaal
  */
+@Dependent
 public class UIDefinitionController extends BaseTemplateComponent {
   private static final Logger log = LogManager.getLogger();
 

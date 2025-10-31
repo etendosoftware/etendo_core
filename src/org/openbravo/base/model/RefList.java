@@ -36,6 +36,32 @@ public class RefList extends ModelObject {
 
   private String value;
 
+  /**
+   * Intenta registrar el valor enumerado en el DomainType sólo cuando
+   * referencia y value están ya inicializados y el domain type es enumerado de String.
+   * Evita añadir valores null (que provocaban el [null] observado en la validación).
+   */
+  private void maybeRegisterEnumeratedValue() {
+    if (reference == null || value == null) {
+      return; // aún no están ambos disponibles
+    }
+    final DomainType domainType = reference.getDomainType();
+    if (domainType == null) {
+      if (log.isDebugEnabled()) {
+        log.debug("Reference {} aún no tiene domainType al intentar registrar valor {}", reference.getId(), value);
+      }
+      return;
+    }
+    if (domainType instanceof StringEnumerateDomainType) {
+      ((StringEnumerateDomainType) domainType).addEnumerateValue(value);
+      if (log.isTraceEnabled()) {
+        log.trace("Registrado valor enumerado '{}' para reference {}", value, reference.getId());
+      }
+    } else if (log.isDebugEnabled()) {
+      log.debug("Domain type de reference {} no es StringEnumerateDomainType: {}", reference.getId(), domainType.getClass().getName());
+    }
+  }
+
   public Reference getReference() {
     return reference;
   }
@@ -47,18 +73,8 @@ public class RefList extends ModelObject {
       return;
     }
     this.reference = reference;
-
-    final DomainType domainType = reference.getDomainType();
-    if (domainType == null) {
-      log.warn("Reference " + reference.getId() + " has no domainType defined.");
-      return;
-    }
-    if (!(domainType instanceof StringEnumerateDomainType)) {
-      log.error("Domain type of reference " + reference.getId() + " is not a TableDomainType but a "
-          + domainType);
-    } else {
-      ((StringEnumerateDomainType) domainType).addEnumerateValue(value);
-    }
+    // Registro diferido: sólo cuando también exista value (ver maybeRegisterEnumeratedValue)
+    maybeRegisterEnumeratedValue();
   }
 
 
@@ -68,6 +84,8 @@ public class RefList extends ModelObject {
 
   public void setValue(String value) {
     this.value = value;
+    // Si la referencia ya fue establecida, intentamos registrar ahora.
+    maybeRegisterEnumeratedValue();
   }
 
 }

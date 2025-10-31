@@ -22,11 +22,6 @@ package org.openbravo.client.kernel;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -35,6 +30,11 @@ import org.openbravo.client.kernel.event.PersistenceEventOBInterceptor;
 import org.openbravo.dal.core.OBInterceptor;
 import org.openbravo.database.ExternalConnectionPool;
 import org.openbravo.database.PoolInterceptorProvider;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * Class responsible for initializing the kernel layer. Can be used in a servlet as well as a

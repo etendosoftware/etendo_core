@@ -24,7 +24,6 @@ import static org.junit.Assert.assertThat;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

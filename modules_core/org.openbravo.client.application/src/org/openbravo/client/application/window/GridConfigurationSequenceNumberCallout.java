@@ -26,6 +26,7 @@ package org.openbravo.client.application.window;
  */
 
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.ServletException;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -44,6 +45,7 @@ import org.openbravo.model.ad.ui.Tab;
  *
  * @author NaroaIriarte
  */
+@RequestScoped
 public class GridConfigurationSequenceNumberCallout extends SimpleCallout {
 
   private static final String GC_SYSTEM_TAB_ID = "13FE911F7F684A47801DF55525BAD4A1";

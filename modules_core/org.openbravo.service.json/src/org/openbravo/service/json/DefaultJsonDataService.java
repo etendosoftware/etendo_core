@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -80,6 +83,7 @@ import org.openbravo.userinterface.selector.SelectorConstants;
  * 
  * @author mtaal
  */
+@ApplicationScoped
 public class DefaultJsonDataService implements JsonDataService {
   private static final Logger log = LogManager.getLogger();
 

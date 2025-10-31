@@ -23,11 +23,15 @@ import java.util.Collection;
 import org.openbravo.client.application.NavigationBarComponentGenerator.NBComponent;
 import org.openbravo.client.kernel.SessionDynamicTemplateComponent;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * This class generates the set of navigation bar components which are accessible for the user of
  * the current context.
  * 
  */
+@Dependent
 public class NavigationBarComponent extends SessionDynamicTemplateComponent {
 
   @Override

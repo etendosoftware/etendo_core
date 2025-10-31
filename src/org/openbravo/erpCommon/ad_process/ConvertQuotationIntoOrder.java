@@ -32,8 +32,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.time.DateUtils;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -63,6 +61,10 @@ import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DalBaseProcess;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpServletRequest;
+
+@Dependent
 public class ConvertQuotationIntoOrder extends DalBaseProcess {
 
   @Override

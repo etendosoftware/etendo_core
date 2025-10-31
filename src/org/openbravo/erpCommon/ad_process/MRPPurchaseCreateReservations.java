@@ -44,6 +44,9 @@ import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DalBaseProcess;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class MRPPurchaseCreateReservations extends DalBaseProcess {
 
   // private ProcessLogger logger;

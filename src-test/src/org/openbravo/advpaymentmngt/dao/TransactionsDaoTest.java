@@ -17,15 +17,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.criteria.Predicate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -302,7 +300,7 @@ public class TransactionsDaoTest {
   public void testGetLastReconciliationProcessed() {
     // GIVEN
     when(obDal.createCriteria(FIN_Reconciliation.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(org.mockito.ArgumentMatchers.any(org.hibernate.criterion.Criterion.class))).thenReturn(
+    when(mockCriteria.add(org.mockito.ArgumentMatchers.any(Predicate.class))).thenReturn(
         mockCriteria);
     when(mockCriteria.addOrderBy(anyString(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(1)).thenReturn(mockCriteria);
@@ -330,7 +328,7 @@ public class TransactionsDaoTest {
 
     when(obDal.createCriteria(AccountingFact.class)).thenReturn(mockAccountingFactCriteria);
     when(mockAccountingFactCriteria.add(
-        org.mockito.ArgumentMatchers.any(org.hibernate.criterion.Criterion.class))).thenReturn(
+        ArgumentMatchers.any(Predicate.class))).thenReturn(
         mockAccountingFactCriteria);
 
     when(obDal.get(Table.class, FIN_FINACC_TRANSACTION_TABLE)).thenReturn(mockTable);

@@ -32,14 +32,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -63,12 +59,17 @@ import org.openbravo.service.json.DefaultJsonDataService;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * Implements the a datasource filter request for the selectors. Used to generates Hibernate where
  * clauses based on dynamic expressions (JavaScript)
  * 
  * @author iperdomo
  */
+@Dependent
 public class SelectorDataSourceFilter implements DataSourceFilter {
 
   private static Logger log = LogManager.getLogger();

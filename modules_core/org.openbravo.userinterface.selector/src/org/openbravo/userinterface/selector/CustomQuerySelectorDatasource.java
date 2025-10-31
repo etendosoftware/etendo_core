@@ -40,6 +40,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
@@ -74,6 +76,7 @@ import org.openbravo.service.json.AdvancedQueryBuilder;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonUtils;
 
+@Dependent
 public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
 
   private static Logger log = LogManager.getLogger();

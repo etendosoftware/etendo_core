@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -80,6 +82,7 @@ import org.openbravo.service.json.DataToJsonConverter;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonUtils;
 
+@Dependent
 public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceService {
 
   private static Logger log4j = LogManager.getLogger();

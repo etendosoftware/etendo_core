@@ -22,8 +22,6 @@ package org.openbravo.erpCommon.obps;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,6 +48,10 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+
+@Dependent
 public class ActiveInstanceProcess implements Process {
 
   private static final Logger log = LogManager.getLogger();

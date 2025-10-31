@@ -45,6 +45,9 @@ import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallStoredProcedure;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class RMInsertOrphanLine implements org.openbravo.scheduling.Process {
 
   static final String ITEM = "I";

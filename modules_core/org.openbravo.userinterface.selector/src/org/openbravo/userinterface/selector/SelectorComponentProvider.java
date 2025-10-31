@@ -22,19 +22,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.client.kernel.KernelConstants;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Provides Selector Components.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(SelectorConstants.SELECTOR_COMPONENT_TYPE)
 public class SelectorComponentProvider extends BaseComponentProvider {
 

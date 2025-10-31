@@ -26,7 +26,6 @@ pipeline {
     PLUGIN_NAME         = 'buildSrc'
     PLUGIN_URL          = 'git@github.com:etendosoftware/com.etendoerp.gradleplugin.git'
 
-
     SUCCESS             = 'SUCCESS'
     FAILED              = 'FAILED'
     UNSTABLE            = 'UNSTABLE'
@@ -94,6 +93,7 @@ pipeline {
               echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
               currentBuild.result = SUCCESS
             }
+            
           } catch (Exception e) {
             echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
             env.ERROR_MESSAGE = "Pipeline Check Failed"
@@ -151,7 +151,7 @@ pipeline {
               def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
 
               def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
-              
+
               env.JAVA_HOME = stackConfiguration.javaHome
               env.TOMCAT_URL = stackConfiguration.tomcatUrl
               env.STACK_TYPE = stackConfiguration.stackType
@@ -317,8 +317,7 @@ pipeline {
                 allow.root=true
                 org.gradle.jvmargs=-Dfile.encoding=UTF-8
                 org.gradle.daemon=false
-                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g
-                java.version=11" > gradle.properties
+                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g" > gradle.properties
                 """
 
                 sh """

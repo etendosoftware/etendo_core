@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;

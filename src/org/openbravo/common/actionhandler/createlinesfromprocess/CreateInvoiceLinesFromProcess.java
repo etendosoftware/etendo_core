@@ -34,17 +34,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
@@ -57,6 +51,12 @@ import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
+@Dependent
 public class CreateInvoiceLinesFromProcess {
   private static final Logger log = LogManager.getLogger();
 

@@ -476,7 +476,7 @@ public class ApplicationDictionaryCachedStructures {
     //@formatter:off
     String where = "attachmentMethod.id = :attMethod" +
             "   and (tab is null or tab.id = :tab) " +
-            " order by case when fixed is true then 1 else 2 end , sequenceNumber";
+            " order by case when fixed = true then 1 else 2 end , sequenceNumber";
     //@formatter:on
     final OBQuery<Parameter> qryParams = OBDal.getInstance()
         .createQuery(Parameter.class, where)

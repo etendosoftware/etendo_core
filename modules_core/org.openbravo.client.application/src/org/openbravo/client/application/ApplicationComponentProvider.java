@@ -30,9 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
@@ -41,11 +38,13 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author iperdomo
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(ApplicationConstants.COMPONENT_TYPE)
 public class ApplicationComponentProvider extends BaseComponentProvider {
   public static final String QUALIFIER = ApplicationConstants.COMPONENT_TYPE;

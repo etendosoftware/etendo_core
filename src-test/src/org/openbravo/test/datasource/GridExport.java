@@ -60,7 +60,7 @@ public class GridExport extends WeldBaseTest {
     assertThat(writer.getResults(), equalTo(getExpectedResult()));
   }
 
-  private void exportGrid(TestQueryResultWriter writer) {
+  private void exportGrid(TestQueryResultWriter writer) throws JSONException {
     DefaultDataSourceService dataSource = (DefaultDataSourceService) dataSourceServiceProvider
         .getDataSource(writer.getEntityName());
 

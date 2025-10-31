@@ -35,7 +35,6 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

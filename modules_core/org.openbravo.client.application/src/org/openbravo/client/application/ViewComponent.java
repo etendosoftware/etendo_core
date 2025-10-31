@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
@@ -76,7 +77,7 @@ import org.openbravo.userinterface.selector.Selector;
  * 
  * @author mtaal
  */
-@RequestScoped
+@Dependent
 public class ViewComponent extends BaseComponent {
 
   private static final String BUTTON_REFERENCE_ID = "28";
@@ -494,9 +495,9 @@ public class ViewComponent extends BaseComponent {
         + " where p.propertyList = true" //
         + " and p.property in :properties" //
         + " and p.client.id = '0'" //
-        + " and p.organization = '0'" //
-        + " and coalesce(p.visibleAtClient, '0') = '0'" //
-        + " and coalesce(p.visibleAtOrganization, '0') = '0'";
+        + " and p.organization.id = '0'" //
+        + " and coalesce(p.visibleAtClient.id, '0') = '0'" //
+        + " and coalesce(p.visibleAtOrganization.id, '0') = '0'";
 
     Session session = OBDal.getInstance().getSession();
     Query<Date> query = session.createQuery(where, Date.class);
@@ -509,10 +510,10 @@ public class ViewComponent extends BaseComponent {
   private String getAuditStatus(Window window) {
     String where = "select t.table.isFullyAudited " //
         + "  from ADTab t " //
-        + " where t.window = :window " //
+        + " where t.window.id = :windowId " //
         + " order by t.sequenceNumber, t.id"; //
     Query<Boolean> q = OBDal.getInstance().getSession().createQuery(where, Boolean.class);
-    q.setParameter("window", window);
+    q.setParameter("windowId", window.getId());
 
     return Arrays.asList(q.list()).toString();
   }

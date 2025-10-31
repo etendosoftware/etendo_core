@@ -22,18 +22,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * ComponentProvider for declaring static resources
  * 
  * @author iperdomo
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(WidgetsCollectionComponentProvider.COMPONENT_TYPE)
 public class WidgetsCollectionComponentProvider extends BaseComponentProvider {
   public static final String COMPONENT_TYPE = "OBCWC_WIDGETS";

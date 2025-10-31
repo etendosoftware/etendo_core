@@ -256,30 +256,8 @@ public class ServletContextMock implements ServletContext {
 
   @SuppressWarnings("deprecation")
   @Override
-  public Servlet getServlet(String name) throws ServletException {
-    return null;
-  }
-
-  @Override
   public String getServletContextName() {
     return "ServletContextMock";
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public Enumeration<String> getServletNames() {
-    return null;
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public Enumeration<Servlet> getServlets() {
-    return null;
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public void log(Exception e, String msg) {
   }
 
   @Override
@@ -348,6 +326,11 @@ public class ServletContextMock implements ServletContext {
   @Override
   public jakarta.servlet.ServletRegistration.Dynamic addServlet(String servletName,
       Class<? extends Servlet> servletClass) {
+    return null;
+  }
+
+  @Override
+  public ServletRegistration.Dynamic addJspFile(String servletName, String jspFile) {
     return null;
   }
 
@@ -438,6 +421,36 @@ public class ServletContextMock implements ServletContext {
   @Override
   public String getVirtualServerName() {
     return null;
+  }
+
+  @Override
+  public int getSessionTimeout() {
+    return 0;
+  }
+
+  @Override
+  public void setSessionTimeout(int sessionTimeout) {
+
+  }
+
+  @Override
+  public String getRequestCharacterEncoding() {
+    return "";
+  }
+
+  @Override
+  public void setRequestCharacterEncoding(String encoding) {
+
+  }
+
+  @Override
+  public String getResponseCharacterEncoding() {
+    return "";
+  }
+
+  @Override
+  public void setResponseCharacterEncoding(String encoding) {
+
   }
 
 }

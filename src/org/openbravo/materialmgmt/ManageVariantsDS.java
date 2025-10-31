@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,6 +58,7 @@ import org.openbravo.service.datasource.DataSourceProperty;
 import org.openbravo.service.datasource.ReadOnlyDataSourceService;
 import org.openbravo.service.json.JsonUtils;
 
+@Dependent
 public class ManageVariantsDS extends ReadOnlyDataSourceService {
 
   private static final Logger log = LogManager.getLogger();

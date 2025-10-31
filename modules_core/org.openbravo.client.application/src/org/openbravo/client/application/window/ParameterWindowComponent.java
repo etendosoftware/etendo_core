@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +59,7 @@ import org.openbravo.client.application.process.dto.TrlButtonDTO;
  * 
  * @author alostale
  */
+@RequestScoped
 public class ParameterWindowComponent extends BaseTemplateComponent {
   private static final String DEFAULT_TEMPLATE_ID = "FF80818132F916130132F9357DE10016";
   private static final Logger log = LogManager.getLogger();

@@ -45,6 +45,9 @@ import org.openbravo.model.materialmgmt.transaction.ProductionPlan;
 import org.openbravo.model.materialmgmt.transaction.ProductionTransaction;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CreateWorkEffort implements org.openbravo.scheduling.Process {
 
   private static final Logger log4j = LogManager.getLogger();

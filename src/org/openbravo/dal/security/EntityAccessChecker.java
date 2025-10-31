@@ -167,7 +167,7 @@ public class EntityAccessChecker implements OBNotSingleton {
         + " from OBUISEL_Selector s"
         + "  left join s.reference r"
         + "  left join r.aDColumnReferenceSearchKeyList c "
-        + " where r.parentReference='" + SEARCH_REFERENCE + "'";
+        + " where r.parentReference.id='" + SEARCH_REFERENCE + "'";
     targetTablesIds.addAll(SessionHandler.getInstance().createQuery(hqlQry, Object[].class).list());
     
     hqlQry = "select p.id, c.table.id"
@@ -176,7 +176,7 @@ public class EntityAccessChecker implements OBNotSingleton {
         + "  inner join c.referenceSearchKey r"
         + "  inner join r.oBUISELSelectorList s"
         + "  inner join s.processDefintion p"
-        + " where r.parentReference='" + SELECTOR_REFERENCE + "'";
+        + " where r.parentReference.id='" + SELECTOR_REFERENCE + "'";
     processAccessSelectors.addAll(SessionHandler.getInstance()
         .createQuery(hqlQry, Object[].class)
         .list());
@@ -211,7 +211,7 @@ public class EntityAccessChecker implements OBNotSingleton {
         + " from ADField f"
         + "  inner join f.column c"
         + "  inner join c.referenceSearchKey r"
-        + " where r.parentReference='" + SELECTOR_REFERENCE + "'";
+        + " where r.parentReference.id='" + SELECTOR_REFERENCE + "'";
     selectorsFromWindowReferences.addAll(SessionHandler.getInstance()
         .createQuery(hqlQry, Object[].class)
         .list());

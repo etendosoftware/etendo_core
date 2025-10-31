@@ -21,6 +21,8 @@ package org.openbravo.client.application.navigationbarcomponents;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.http.HttpSession;
 
 import org.hibernate.query.Query;
@@ -38,6 +40,7 @@ import org.openbravo.model.ad.system.SystemInformation;
 /**
  * Component that provides the context information of the current user within the 'Profile' widget.
  */
+@Dependent
 public class UserInfoComponent extends SessionDynamicTemplateComponent {
   private static final String COMPONENT_ID = "UserInfo";
   private static final String TEMPLATE_ID = "CB89E38CF75545499BF0B91FA6B233E5";

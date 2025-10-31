@@ -37,8 +37,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-// TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -65,6 +63,9 @@ import org.openbravo.service.db.DalBaseProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.quartz.JobExecutionException;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FIN_PaymentMonitorProcess extends DalBaseProcess {
   private static ProcessLogger logger;
 

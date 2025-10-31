@@ -27,6 +27,9 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
 
+import jakarta.enterprise.context.RequestScoped;
+
+@RequestScoped
 public class GetNameGeneralLedger extends BaseActionHandler {
 
   @Override

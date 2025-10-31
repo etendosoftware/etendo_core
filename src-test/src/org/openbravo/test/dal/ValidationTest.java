@@ -25,7 +25,6 @@ import static org.junit.Assert.fail;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.Test;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.provider.OBProvider;

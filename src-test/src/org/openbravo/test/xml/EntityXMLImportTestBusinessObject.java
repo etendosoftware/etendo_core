@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -414,7 +413,7 @@ public class EntityXMLImportTestBusinessObject extends XMLBaseTest {
 
   private List<PaymentTerm> getPaymentTerms() {
     final OBCriteria<PaymentTerm> obc = OBDal.getInstance().createCriteria(PaymentTerm.class);
-    obc.add(Restrictions.ilike("name", PREFIX + "%"));
+    obc.addIlike("name", PREFIX + "%");
     OBDal.getInstance().flush();
     return obc.list();
   }

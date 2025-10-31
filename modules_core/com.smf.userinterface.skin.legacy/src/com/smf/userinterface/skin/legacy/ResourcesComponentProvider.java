@@ -23,18 +23,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author dbaz
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(ResourcesComponentProvider.COMPONENT_TYPE)
 public class ResourcesComponentProvider extends BaseComponentProvider {
   public static final String COMPONENT_TYPE = "com.smf.userinterface.skin.legacy_Resources";

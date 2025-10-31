@@ -21,11 +21,13 @@ package org.openbravo.common.datasource;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("CEA5D55DB2AC497D98B9C02A5E1EA0B6")
 public class ReturnToFromCustomerVendorOrphanHQLTransformer extends HqlQueryTransformer {
 

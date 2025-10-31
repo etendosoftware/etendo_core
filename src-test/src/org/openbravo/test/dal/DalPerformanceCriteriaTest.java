@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Restrictions;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openbravo.base.exception.OBException;

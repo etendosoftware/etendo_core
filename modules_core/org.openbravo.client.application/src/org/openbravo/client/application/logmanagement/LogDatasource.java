@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -46,6 +48,7 @@ import org.openbravo.service.json.JsonUtils;
 /**
  * This datasource retrieves a list of registered Loggers and their corresponding log level
  */
+@Dependent
 public class LogDatasource extends ReadOnlyDataSourceService {
   private static final org.apache.logging.log4j.Logger log = LogManager.getLogger();
 

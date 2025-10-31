@@ -1,12 +1,14 @@
 package com.smf.jobs.background;
 
-import com.smf.jobs.JobManager;
-import com.smf.jobs.Runner;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.openbravo.scheduling.KillableProcess;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalBaseProcess;
 
+import com.smf.jobs.JobManager;
+import com.smf.jobs.Runner;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -15,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * To execute a job from the UI or code, use the {@link Runner#doPost(String, HttpServletRequest, HttpServletResponse)} web service
  * or the {@link Runner} and {@link JobManager} classes.
  */
+@Dependent
 public class BackgroundRunner extends DalBaseProcess implements KillableProcess {
     private final MutableBoolean stopped = new MutableBoolean(false);
 

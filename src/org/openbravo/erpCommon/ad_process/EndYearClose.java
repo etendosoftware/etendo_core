@@ -31,6 +31,9 @@ import org.openbravo.model.financialmgmt.calendar.YearClose;
 import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class EndYearClose implements Process {
 
   @Override

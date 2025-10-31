@@ -36,6 +36,8 @@ import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.Image;
 import org.openbravo.portal.PortalAccessible;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * This ActionHandler implements the DELETE and GETSIZE actions which are used by the ImageBLOB
  * reference components in the OB3 windows.
@@ -48,6 +50,7 @@ import org.openbravo.portal.PortalAccessible;
  * MIME type if it hasn't yet been computed
  * 
  */
+@RequestScoped
 public class ImagesActionHandler extends BaseActionHandler implements PortalAccessible {
 
   private static final Logger log = LogManager.getLogger();

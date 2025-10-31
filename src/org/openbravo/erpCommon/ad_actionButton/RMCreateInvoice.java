@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import org.openbravo.advpaymentmngt.APRMPendingPaymentFromInvoice;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_ExecutePayment;
@@ -25,6 +24,9 @@ import org.openbravo.model.financialmgmt.payment.PaymentExecutionProcess;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallProcess;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class RMCreateInvoice implements org.openbravo.scheduling.Process {
 
   @Override

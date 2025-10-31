@@ -19,7 +19,6 @@ import java.util.Map;
 import jakarta.persistence.Tuple;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Criterion;
 import org.hibernate.query.Query;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -314,7 +313,6 @@ public class ServiceDeliverUtilityTest {
       // Mock criteria for BOM parent
       when(mockOBDal.createCriteria(ShipmentInOutLine.class)).thenReturn(mockCriteria);
 
-      when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
       when(mockCriteria.setMaxResults(1)).thenReturn(mockCriteria);
 
       ShipmentInOutLine mockParentShipmentLine = mock(ShipmentInOutLine.class);

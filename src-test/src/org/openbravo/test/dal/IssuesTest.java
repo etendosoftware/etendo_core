@@ -45,7 +45,6 @@ import org.dom4j.io.SAXReader;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.NativeQuery;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -100,6 +99,8 @@ import org.openbravo.service.json.DataEntityQueryService;
 import org.openbravo.service.json.DataToJsonConverter;
 import org.openbravo.test.base.Issue;
 import org.openbravo.test.base.OBBaseTest;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Tests for some issues.
@@ -779,6 +780,7 @@ public class IssuesTest extends OBBaseTest {
     assertTrue(ols.list().size() >= 0);
   }
 
+  @Dependent
   private static class Test22235 extends DalBaseProcess {
 
     private boolean errorOccured = true;

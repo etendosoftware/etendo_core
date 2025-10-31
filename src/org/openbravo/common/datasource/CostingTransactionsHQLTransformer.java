@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
 import org.hibernate.query.Query;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.ComponentProvider;
@@ -38,6 +39,7 @@ import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("DFF0A9F7C26C457FA8735A09ACFD5971")
 public class CostingTransactionsHQLTransformer extends HqlQueryTransformer {
 

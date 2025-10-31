@@ -214,7 +214,7 @@ public class ServicesTest extends WeldBaseTest {
 
     ScrollableResults olsrScroller = olsrQry.scroll(ScrollMode.FORWARD_ONLY);
     while (olsrScroller.next()) {
-      OrderlineServiceRelation orls = (OrderlineServiceRelation) olsrScroller.get(0);
+      OrderlineServiceRelation orls = (OrderlineServiceRelation) olsrScroller.get();
       serviceOrderLine.getOrderlineServiceRelationList().remove(orls);
       OBDal.getInstance().remove(orls);
       OBDal.getInstance().flush();
@@ -234,7 +234,7 @@ public class ServicesTest extends WeldBaseTest {
 
     ScrollableResults olsrScroller = olsrQry.scroll(ScrollMode.FORWARD_ONLY);
     while (olsrScroller.next()) {
-      OrderlineServiceRelation orls = (OrderlineServiceRelation) olsrScroller.get(0);
+      OrderlineServiceRelation orls = (OrderlineServiceRelation) olsrScroller.get();
       orls.setAmount(amount);
       orls.setQuantity(quantity);
       OBDal.getInstance().save(orls);

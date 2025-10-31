@@ -25,6 +25,7 @@ import java.util.UUID;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 // import org.hibernate.collection.internal.PersistentBag; // TODO: Migrate to Hibernate 6 equivalent
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.Query;
 import org.junit.Assert;
@@ -80,7 +81,8 @@ public class DalPerformanceExampleTest extends OBBaseTest {
 
     final OBCriteria<Product> productCriteria = OBDal.getInstance().createCriteria(Product.class);
     // 1000 is normally a good fetch size
-    productCriteria.setFetchSize(1000);
+    // TODO Find replacement
+    // productCriteria.setFetchSize(1000);
     final ScrollableResults productScroller1 = productCriteria.scroll(ScrollMode.FORWARD_ONLY);
     int i = 0;
     while (productScroller1.next()) {
@@ -212,7 +214,7 @@ public class DalPerformanceExampleTest extends OBBaseTest {
     final List<OrderLine> orderLineList = order.getOrderLineList();
 
     // is a hibernate special thing
-    Assert.assertTrue(orderLineList instanceof PersistentBag);
+    Assert.assertTrue(orderLineList instanceof PersistentCollection);
 
     // this will load the list, all OrderLines are loaded in Memory
     System.err.println(orderLineList.size());

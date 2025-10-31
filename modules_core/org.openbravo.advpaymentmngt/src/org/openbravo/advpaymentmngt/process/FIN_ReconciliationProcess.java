@@ -30,8 +30,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -49,6 +47,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 import org.openbravo.model.financialmgmt.payment.FIN_ReconciliationLine_v;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Process {
   private static AdvPaymentMngtDao dao;
   private static final Logger log = LogManager.getLogger();

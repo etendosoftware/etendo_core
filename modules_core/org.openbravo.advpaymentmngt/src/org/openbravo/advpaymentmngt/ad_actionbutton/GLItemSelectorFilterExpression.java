@@ -30,6 +30,9 @@ import org.openbravo.client.application.FilterExpression;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.Utility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class GLItemSelectorFilterExpression implements FilterExpression {
   private static final String INPAD_ORG_ID_PARAM = "inpadOrgId";
   private static final String AD_ORG_ID_PARAM = "ad_org_id";

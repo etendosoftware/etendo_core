@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Criterion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -120,7 +119,6 @@ public class PaymentMethodMulticurrencyActionHandlerTest {
     when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
     when(mockCriteria.setFilterOnReadableOrganization(false)).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(1)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
 
     // Setup date format
     mockDateFormat = mock(SimpleDateFormat.class);

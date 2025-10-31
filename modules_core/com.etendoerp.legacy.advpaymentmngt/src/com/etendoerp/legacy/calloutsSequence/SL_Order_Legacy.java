@@ -1,11 +1,15 @@
 package com.etendoerp.legacy.calloutsSequence;
 
-import org.apache.commons.lang3.StringUtils;
-import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
-import org.openbravo.erpCommon.calloutsSequence.SL_Order_SequenceActionInterface;
 import java.math.BigDecimal;
 import java.util.HashMap;
 
+import org.apache.commons.lang3.StringUtils;
+import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
+import org.openbravo.erpCommon.calloutsSequence.SL_Order_SequenceActionInterface;
+
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class SL_Order_Legacy implements SL_Order_SequenceActionInterface {
     @Override
     public String get_SL_Order_inpdocumentnoValue(SimpleCallout.CalloutInfo info, HashMap<String, Object> values) {

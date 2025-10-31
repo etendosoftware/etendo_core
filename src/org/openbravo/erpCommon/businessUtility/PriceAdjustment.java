@@ -24,10 +24,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.structure.BaseOBObject;
@@ -43,6 +39,11 @@ import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.pricing.pricelist.PriceList;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
 /**
  * This class is in charge of calculating prices for Discounts &amp; Promotions of Price Adjustment
  * type. It is intended to be used from callouts so final price can be seen in advance when
@@ -52,6 +53,7 @@ import org.openbravo.model.pricing.pricelist.PriceList;
  * @author alostale
  * 
  */
+@Dependent
 public class PriceAdjustment {
   private static final Logger log = LogManager.getLogger();
 
@@ -181,10 +183,10 @@ public class PriceAdjustment {
         .setNamedParameter("bpId",
             ((BusinessPartner) orderOrInvoice.get(Invoice.PROPERTY_BUSINESSPARTNER)).getId());
 
-    if (orderOrInvoice instanceof Invoice) {
-      hqlQuery.setNamedParameter("date", ((Invoice) orderOrInvoice).getInvoiceDate());
+    if (orderOrInvoice instanceof Invoice invoice) {
+      hqlQuery.setNamedParameter("date", java.sql.Timestamp.from(invoice.getInvoiceDate().toInstant()));
     } else {
-      hqlQuery.setNamedParameter("date", ((Order) orderOrInvoice).getOrderDate());
+      hqlQuery.setNamedParameter("date", java.sql.Timestamp.from(((Order) orderOrInvoice).getOrderDate().toInstant()));
     }
 
     final List<org.openbravo.model.pricing.priceadjustment.PriceAdjustment> queryList = hqlQuery
@@ -216,9 +218,9 @@ public class PriceAdjustment {
             "as p" +
             " where active = true" +
             "   and client.id = :clientId" +
-            "   and ad_isorgincluded(:orgId, p.organization.id, p.client.id) <> -1" +
-            "   and (endingDate is null or trunc(endingDate) + 1 > :date)" +
-            "   and trunc(startingDate)<=:date" +
+            "   and cast(ad_isorgincluded(:orgId, p.organization.id, p.client.id) as int) <> -1" +
+            "   and (endingDate is null or cast(add_days(date_trunc('day', endingDate), 1) as timestamp) > cast(:date as timestamp))" +
+            "   and cast(date_trunc('day', startingDate) as timestamp) <= cast(:date as timestamp)" +
             "   and p.discountType.id = '5D4BAF6BB86D4D2C9ED3D5A6FC051579'" +
             "   and (minQuantity is null or minQuantity <= :qty)" +
             "   and (maxQuantity is null or maxQuantity >= :qty)" +

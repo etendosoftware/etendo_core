@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.script.ScriptException;
+
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -58,6 +60,7 @@ import org.openbravo.model.ad.domain.Reference;
  * 
  * @author iperdomo
  */
+@RequestScoped
 public class ParameterUtils {
 
   private static Logger log = LogManager.getLogger();

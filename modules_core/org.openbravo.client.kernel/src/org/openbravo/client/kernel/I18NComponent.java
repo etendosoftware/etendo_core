@@ -29,12 +29,16 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.ad.ui.Message;
 import org.openbravo.model.ad.ui.MessageTrl;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Generates the client side javascript holding the labels defined in modules and the labels defined
  * in core which are configured to be forcibly available in the client.
  * 
  * @author mtaal
  */
+@Dependent
 public class I18NComponent extends SessionDynamicTemplateComponent {
   private static Map<String, String> cachedLabels = new ConcurrentHashMap<>();
 

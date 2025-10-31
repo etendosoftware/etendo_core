@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.Test;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;

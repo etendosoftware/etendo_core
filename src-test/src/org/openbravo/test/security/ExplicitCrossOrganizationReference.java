@@ -33,7 +33,6 @@ import java.util.Map;
 
 import org.apache.logging.log4j.Level;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;

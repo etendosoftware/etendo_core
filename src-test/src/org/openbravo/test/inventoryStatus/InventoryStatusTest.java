@@ -31,7 +31,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -165,7 +164,8 @@ public class InventoryStatusTest extends WeldBaseTest {
 
     OBCriteria<Preference> criteria = OBDal.getInstance().createCriteria(Preference.class);
     criteria.addEqual(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE);
-    criteria.add(Restrictions.sqlRestriction(valueISYes));
+    // TODO: Check if there is a better way to add this restriction
+    criteria.addEqual(Preference.PROPERTY_PROPERTY, "Y");
     criteria.addEqual(Preference.PROPERTY_CLIENT, client);
     criteria.addEqual(Preference.PROPERTY_ORGANIZATION, organization);
     return !criteria.list().isEmpty();
@@ -589,7 +589,7 @@ public class InventoryStatusTest extends WeldBaseTest {
   private static int getNumberOfBinsWithSameName(String searchKey) {
     try {
       final OBCriteria<Locator> criteria = OBDal.getInstance().createCriteria(Locator.class);
-      criteria.add(Restrictions.like(Locator.PROPERTY_SEARCHKEY, searchKey + "-%"));
+      criteria.addLike(Locator.PROPERTY_SEARCHKEY, searchKey + "-%");
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -643,7 +643,7 @@ public class InventoryStatusTest extends WeldBaseTest {
   private static int getNumberOfProductsWithSameName(String name) {
     try {
       final OBCriteria<Product> criteria = OBDal.getInstance().createCriteria(Product.class);
-      criteria.add(Restrictions.like(Product.PROPERTY_NAME, name + "-%"));
+      criteria.addLike(Product.PROPERTY_NAME, name + "-%");
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -719,7 +719,7 @@ public class InventoryStatusTest extends WeldBaseTest {
     try {
       final OBCriteria<ShipmentInOut> criteria = OBDal.getInstance()
           .createCriteria(ShipmentInOut.class);
-      criteria.add(Restrictions.like(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%"));
+      criteria.addLike(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%");
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);

@@ -44,6 +44,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FIN_AddPaymentFromJournalLine extends DalBaseProcess {
   private static AdvPaymentMngtDao dao;
 

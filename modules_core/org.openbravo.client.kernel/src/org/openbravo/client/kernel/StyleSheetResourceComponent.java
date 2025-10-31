@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.StringReader;
 import java.util.List;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -43,6 +45,7 @@ import org.openbravo.model.ad.module.Module;
  * @author mtaal
  * @author iperdomo
  */
+@Dependent
 public class StyleSheetResourceComponent extends BaseComponent {
   private static final Logger log = LogManager.getLogger();
   private static final String IMGURLHOLDER = "__URLHOLDER__";

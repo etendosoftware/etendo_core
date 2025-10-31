@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
@@ -56,6 +58,7 @@ import org.openbravo.service.json.DataResolvingMode;
 import org.openbravo.service.json.DataToJsonConverter;
 import org.openbravo.service.json.JsonUtils;
 
+@Dependent
 public class LinkToParentTreeDatasourceService extends TreeDatasourceService {
   private static final Logger logger = LogManager.getLogger();
   private static final String ID_SEPARATOR = "-";

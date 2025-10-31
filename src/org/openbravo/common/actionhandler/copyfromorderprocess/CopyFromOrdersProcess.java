@@ -32,18 +32,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import jakarta.persistence.criteria.CriteriaBuilder;
-
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.ComponentProvider;
@@ -56,6 +50,12 @@ import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.service.db.CallProcess;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
+@Dependent
 public class CopyFromOrdersProcess {
   @Inject
   @Any

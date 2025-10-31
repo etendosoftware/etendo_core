@@ -29,13 +29,15 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * The import client process is called from the ui. It imports the data of a new client (including
  * the client itself). It again calls the {@link DataImportService} for the actual import.
  * 
  * @author mtaal
  */
-
+@Dependent
 public class ImportClientProcess implements org.openbravo.scheduling.Process {
 
   private static final Logger log = LogManager.getLogger();

@@ -39,6 +39,8 @@ import org.openbravo.model.ad.ui.AuxiliaryInput;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.Tab;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Parses a dynamic expressions and extracts information, e.g. The expression is using a field or an
  * auxiliary input, etc.
@@ -52,6 +54,7 @@ import org.openbravo.model.ad.ui.Tab;
  * </ul>
  * 
  */
+@RequestScoped
 public class DynamicExpressionParser {
 
   private static final String[][] COMPARATIONS = { //

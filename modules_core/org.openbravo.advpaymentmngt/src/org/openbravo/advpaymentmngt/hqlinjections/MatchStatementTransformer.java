@@ -21,6 +21,7 @@ package org.openbravo.advpaymentmngt.hqlinjections;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.advpaymentmngt.dao.MatchTransactionDao;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
@@ -31,6 +32,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("BC21981DCF0846338D631887BEDFE7FA")
 public class MatchStatementTransformer extends HqlQueryTransformer {
 

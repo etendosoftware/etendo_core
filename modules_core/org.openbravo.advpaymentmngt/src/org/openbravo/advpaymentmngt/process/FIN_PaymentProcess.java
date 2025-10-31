@@ -40,7 +40,6 @@ import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.dao.TransactionsDao;
 import org.openbravo.advpaymentmngt.exception.NoExecutionProcessFoundException;
@@ -76,6 +75,9 @@ import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.model.financialmgmt.payment.PaymentExecutionProcess;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
   private static AdvPaymentMngtDao dao;
 

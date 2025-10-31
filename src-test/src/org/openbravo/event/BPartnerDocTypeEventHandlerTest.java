@@ -9,7 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import org.hibernate.criterion.Criterion;
+import jakarta.persistence.criteria.Predicate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -92,7 +92,7 @@ public class BPartnerDocTypeEventHandlerTest {
       OBCriteria<BusinessPartnerDocType> criteria = mock(OBCriteria.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.createCriteria(BusinessPartnerDocType.class)).thenReturn(criteria);
-      lenient().when(criteria.add(any(Criterion.class))).thenReturn(criteria);
+      lenient().when(criteria.add(any(Predicate.class))).thenReturn(criteria);
       when(criteria.uniqueResult()).thenReturn(null);
       when(newEvent.getTargetInstance()).thenReturn(bpDocType);
       assertDoesNotThrow(() -> handler.onSave(newEvent));
@@ -123,7 +123,7 @@ public class BPartnerDocTypeEventHandlerTest {
       OBCriteria<BusinessPartnerDocType> criteria = mock(OBCriteria.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.createCriteria(BusinessPartnerDocType.class)).thenReturn(criteria);
-      when(criteria.add(any(Criterion.class))).thenReturn(criteria);
+      when(criteria.add(any(Predicate.class))).thenReturn(criteria);
       when(criteria.uniqueResult()).thenReturn(mock(BusinessPartnerDocType.class));
       messageUtilsMock.when(() -> OBMessageUtils.messageBD(anyString()))
         .thenReturn("BPDocTypeUnique");
@@ -155,7 +155,7 @@ public class BPartnerDocTypeEventHandlerTest {
       OBCriteria<BusinessPartnerDocType> criteria = mock(OBCriteria.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.createCriteria(BusinessPartnerDocType.class)).thenReturn(criteria);
-      when(criteria.add(any(Criterion.class))).thenReturn(criteria);
+      when(criteria.add(any(Predicate.class))).thenReturn(criteria);
       when(criteria.uniqueResult()).thenReturn(null);
       when(updateEvent.getTargetInstance()).thenReturn(bpDocType);
       assertDoesNotThrow(() -> handler.onUpdate(updateEvent));

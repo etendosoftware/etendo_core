@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.OBUIAPPViewImplementation;

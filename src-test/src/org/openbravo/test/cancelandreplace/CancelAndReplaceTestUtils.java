@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.codec.binary.StringUtils;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentProcess;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -218,7 +217,7 @@ class CancelAndReplaceTestUtils {
     paymentScheduleDetailCriteria.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE, paymentSchedule);
     // There should be only one with null paymentDetails
     paymentScheduleDetailCriteria
-        .add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
+        .addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
     List<FIN_PaymentScheduleDetail> paymentScheduleDetailList = paymentScheduleDetailCriteria
         .list();
 

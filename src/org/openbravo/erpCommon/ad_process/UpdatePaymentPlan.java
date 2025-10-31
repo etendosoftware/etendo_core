@@ -35,6 +35,9 @@ import org.openbravo.model.financialmgmt.payment.PaymentPriority;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class UpdatePaymentPlan implements org.openbravo.scheduling.Process {
 
   private static final Logger log = LogManager.getLogger();

@@ -24,11 +24,15 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.TableTree;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * The backing bean for generating the OBTreeGridPopup client-side representation.
  * 
  * @author AugustoMauch
  */
+@Dependent
 public class OBTreeGridComponent extends BaseTemplateComponent {
 
   private static final String DEFAULT_TEMPLATE_ID = "74451C30650946FC855FCFDB4577070C";

@@ -29,13 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
-import org.apache.log4j.xml.DOMConfigurator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,8 +38,6 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
-// import org.hibernate.criterion.Restrictions; // TODO: Migrate to Hibernate 6 CriteriaBuilder
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -55,7 +48,6 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBConfigFileProvider;
-import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.DalContextListener;
 import org.openbravo.dal.core.DalLayerInitializer;
@@ -402,48 +394,17 @@ public class OBBaseTest {
   /**
    * Initializes the DAL layer, can be overridden to add specific initialization behavior.
    * 
-   * @param sqlFunctions
-   *          a Map with SQL functions to be registered in Hibernate during the DAL layer
-   *          initialization. It can be null if not needed.
    * @throws Exception
    */
-  protected void initializeDalLayer(Map<String, SQLFunction> sqlFunctions) throws Exception {
-    if (areAllSqlFunctionsRegistered(sqlFunctions)) {
-      // do not re-initialize the DAL layer, as the provided SQL functions are already registered
-      return;
-    }
+  protected void initializeDalLayer() throws Exception {
     DalLayerInitializer.getInstance().setInitialized(false);
     log.info("Creating custom DAL layer initialization...");
-    staticInitializeDalLayer(sqlFunctions);
-  }
-
-  private boolean areAllSqlFunctionsRegistered(Map<String, SQLFunction> sqlFunctions) {
-    if (sqlFunctions == null || sqlFunctions.isEmpty()) {
-      return true;
-    }
-    Map<String, SQLFunction> registeredFunctions = SessionFactoryController.getInstance()
-        .getConfiguration()
-        .getSqlFunctions();
-    if (registeredFunctions == null) {
-      return false;
-    }
-    for (String sqlFunction : sqlFunctions.keySet()) {
-      if (!registeredFunctions.containsKey(sqlFunction)) {
-        return false;
-      }
-    }
-    return true;
+    staticInitializeDalLayer();
   }
 
   protected static void staticInitializeDalLayer() throws Exception {
-    staticInitializeDalLayer(null);
-  }
-
-  private static void staticInitializeDalLayer(Map<String, SQLFunction> sqlFunctions)
-      throws Exception {
     DalLayerInitializer initializer = DalLayerInitializer.getInstance();
     if (!initializer.isInitialized()) {
-      initializer.setSQLFunctions(sqlFunctions);
       initializer.initialize(true);
     }
   }
@@ -534,15 +495,23 @@ public class OBBaseTest {
       setTestUserContext();
 
       String[] excludedUserIds = { "100", TEST_USER_ID };
-      OBCriteria<User> obc = OBDal.getInstance().createCriteria(User.class);
-      obc.add(Restrictions.not(Restrictions.in(User.PROPERTY_ID, (Object[]) excludedUserIds)));
-      obc.add(Restrictions.isNotEmpty(User.PROPERTY_ADUSERROLESLIST));
+      List<String> excludedList = Arrays.asList(excludedUserIds);
 
-      if (obc.count() == 0) {
+      String hql = "FROM User u " +
+          "WHERE u.id NOT IN (:excludedIds) " +
+          "AND u.adUserRolesList IS NOT EMPTY";
+
+      // 3. Crea y ejecuta la consulta
+      List<User> users = OBDal.getInstance()
+          .createQuery(User.class, hql)
+          .setNamedParameter("excludedIds", excludedList)
+          .list();
+
+      if (users.isEmpty()) {
         throw new RuntimeException("Unable to initialize the list of available users");
       }
-      userIds = new ArrayList<User>();
-      for (User u : obc.list()) {
+      userIds = new ArrayList<>();
+      for (User u : users) {
         userIds.add(u);
       }
     }

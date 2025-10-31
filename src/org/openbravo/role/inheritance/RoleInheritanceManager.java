@@ -26,15 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.base.structure.InheritedAccessEnabled;
@@ -46,6 +40,11 @@ import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleInheritance;
 import org.openbravo.role.inheritance.access.AccessTypeInjector;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * This class contains all the methods required to manage the Role Inheritance functionality. It is

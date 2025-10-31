@@ -25,13 +25,10 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.openbravo.client.application.FilterExpression;
 import org.openbravo.client.application.OBBindingsConstants;
 import org.openbravo.client.kernel.RequestContext;
@@ -43,6 +40,10 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.PriceListVersion;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpSession;
+
+@Dependent
 public class PriceListVersionFilterExpression implements FilterExpression {
   private Logger log = LogManager.getLogger();
   private Map<String, String> requestMap;

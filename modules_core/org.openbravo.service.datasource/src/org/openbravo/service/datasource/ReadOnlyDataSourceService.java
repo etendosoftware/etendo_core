@@ -23,6 +23,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -43,6 +45,7 @@ import org.openbravo.service.json.JsonUtils;
  * 
  * @author mtaal
  */
+@Dependent
 public abstract class ReadOnlyDataSourceService extends DefaultDataSourceService {
   private static final Logger log = LogManager.getLogger();
   private static final int MAX_PAGE_SIZE_INCREASE = 3;

@@ -21,6 +21,7 @@ package org.openbravo.advpaymentmngt.filterexpression;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
@@ -29,6 +30,7 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 
+@Dependent
 @ComponentProvider.Qualifier(APRMConstants.PAYMENT_IN_WINDOW_ID)
 public class PaymentInAddPaymentDefaultValues extends AddPaymentDefaultValuesHandler {
 

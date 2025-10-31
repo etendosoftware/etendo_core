@@ -28,7 +28,6 @@ import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -276,10 +275,10 @@ public class BaseTest extends TestCase {
     if (userIds == null) {
       setTestUserContext();
 
-      Object[] excludedUserIds = { "100", TEST_USER_ID };
+      var excludedUserIds = List.of(new String[] { "100", TEST_USER_ID });
       OBCriteria<User> obc = OBDal.getInstance().createCriteria(User.class);
-      obc.add(Restrictions.not(Restrictions.in(User.PROPERTY_ID, excludedUserIds)));
-      obc.add(Restrictions.isNotEmpty(User.PROPERTY_ADUSERROLESLIST));
+      obc.addNotIn(User.PROPERTY_ID, excludedUserIds);
+      obc.addIsNotEmpty(User.PROPERTY_ADUSERROLESLIST);
 
       if (obc.count() == 0) {
         throw new RuntimeException("Unable to initialize the list of available users");

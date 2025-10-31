@@ -20,6 +20,8 @@ package org.openbravo.client.kernel;
 
 import org.openbravo.dal.core.OBContext;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Uses a component to generate the component output and then postprocesses this output.
  * 
@@ -27,6 +29,7 @@ import org.openbravo.dal.core.OBContext;
  * @see JSCompressor
  * @author mtaal
  */
+@RequestScoped
 public class ComponentGenerator {
   private static ComponentGenerator instance = new ComponentGenerator();
 

@@ -18,11 +18,14 @@
  */
 package org.openbravo.client.myob;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Provides the community branding widget.
  * 
  * @author mtaal
  */
+@RequestScoped
 public class CommunityBrandingWidgetProvider extends WidgetProvider {
 
   private static final String WIDGETCLIENTCLASS = "OBCommunityBrandingWidget";

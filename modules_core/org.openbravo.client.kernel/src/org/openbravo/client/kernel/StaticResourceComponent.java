@@ -22,6 +22,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -46,6 +48,7 @@ import org.openbravo.service.web.WebServiceUtil;
  * @author mtaal
  * @author iperdomo
  */
+@Dependent
 public class StaticResourceComponent extends BaseComponent {
   private static final Logger log = LogManager.getLogger();
 

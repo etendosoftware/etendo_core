@@ -47,6 +47,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Session;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
@@ -93,7 +95,7 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-
+@Dependent
 public class FIN_Utility {
 
   private static final Logger log4j = LogManager.getLogger();

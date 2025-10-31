@@ -2,10 +2,12 @@ package org.openbravo.erpCommon.utilitySequence;
 
 import org.openbravo.base.weld.WeldUtils;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
+@Dependent
 public class UtilitySequence {
     @Inject
     @Any

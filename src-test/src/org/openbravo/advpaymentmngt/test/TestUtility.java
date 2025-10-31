@@ -31,7 +31,6 @@ import jakarta.persistence.PersistenceException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentProcess;
@@ -663,7 +662,7 @@ public class TestUtility extends OBBaseTest {
 
     for (Value value : values) {
       if (value.getValue() == null) {
-        obCriteria.add(Restrictions.isNull(value.getField()));
+        obCriteria.addIsNull(value.getField());
       } else {
         obCriteria.addEqual(value.getField(), value.getValue());
       }

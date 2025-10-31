@@ -22,7 +22,6 @@ package org.openbravo.test.costing;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.FixMethodOrder;

@@ -42,19 +42,12 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.Vector;
 
-import jakarta.inject.Inject;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
@@ -107,12 +100,20 @@ import org.openbravo.service.web.ResourceNotFoundException;
 import org.openbravo.service.web.WebServiceUtil;
 import org.openbravo.utils.Replace;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 /**
  * A web service which provides a JSON REST service using the {@link DataSourceService}
  * implementation. Retrieves the data source using the {@link DataSourceServiceProvider}.
  * 
  * @author mtaal
  */
+@Dependent
 public class DataSourceServlet extends BaseKernelServlet {
   private static final Logger log = LogManager.getLogger();
 

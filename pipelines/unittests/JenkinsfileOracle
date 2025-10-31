@@ -174,7 +174,7 @@ pipeline {
                             def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
 
                             def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
-                            
+
                             env.JAVA_HOME = stackConfiguration.javaHome
                             env.TOMCAT_URL = stackConfiguration.tomcatUrl
                             env.STACK_TYPE = stackConfiguration.stackType
@@ -224,28 +224,6 @@ pipeline {
                             dir(REPO_NAME) {
                                 echo "---------------- Getting Commit Information ----------------"
                                 sh "git checkout ${GIT_COMMIT}"
-
-                                echo "--------------- Getting Backport Branch Information ---------------"
-                                def pattern = /-Y\d{2}$/
-                                env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
-
-                                // Extract backport branch information without using Matcher object
-                                if (env.CONTAINS_Y_SUFFIX == TRUE) {
-                                    def branchParts = env.GIT_BRANCH.split('-Y')
-                                    if (branchParts.length == 2 && branchParts[1].length() == 4) {
-                                        def yearMonth = branchParts[1]
-                                        def num1 = yearMonth.substring(0, 2)
-                                        def num2 = yearMonth.substring(2, 4)
-                                        env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
-                                        echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"
-                                    } else {
-                                        env.BACKPORT_BRANCH = ""
-                                        echo "No valid backport branch pattern matched."
-                                    }
-                                } else {
-                                    env.BACKPORT_BRANCH = ""
-                                    echo "No backport branch pattern matched."
-                                }
 
                                 if (CLONE_PLUGIN == TRUE) {
                                     echo "---------------------- Clonning Etendo Plugin Repository ----------------------"
@@ -342,7 +320,6 @@ pipeline {
                                 bbdd.user=${BBDD_USER}\n
                                 bbdd.password=${BBDD_PASSWORD}\n
                                 bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
-                                java.version=11\n
 
                                 nexusUser=${NEXUS_USER}\n
                                 nexusPassword=${NEXUS_PASSWORD}\n

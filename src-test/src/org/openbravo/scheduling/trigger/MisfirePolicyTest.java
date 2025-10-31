@@ -65,6 +65,8 @@ import org.quartz.Trigger;
 import org.quartz.TriggerListener;
 import org.quartz.impl.StdSchedulerFactory;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Test cases to cover the expected behavior of the misfire policy applied to the background
  * processes.
@@ -398,6 +400,7 @@ public class MisfirePolicyTest extends OBBaseTest {
   }
 
   /** Empty process used to determine whether jobs are executed by the scheduler */
+  @Dependent
   public static class EmptyProcess extends DalBaseProcess {
     @Override
     protected void doExecute(ProcessBundle bundle) throws Exception {

@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.inject.Default;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.model.ModelProvider;
@@ -43,6 +45,8 @@ import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.ui.Window;
 import org.openbravo.userinterface.selector.reference.FKSelectorUIDefinition;
 
+@Default
+@RequestScoped
 public class OBViewParameterHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String WINDOW_REFERENCE_ID = "FF80818132D8F0F30132D9BC395D0038";

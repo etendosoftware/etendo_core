@@ -21,6 +21,8 @@ package org.openbravo.service.datasource;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,6 +47,7 @@ import org.openbravo.service.json.JsonUtils;
  * @author NaroaIriarte
  * 
  */
+@Dependent
 public class NoteDataSource extends DefaultDataSourceService {
   private static final Logger log = LogManager.getLogger();
 

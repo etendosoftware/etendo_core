@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -37,6 +38,7 @@ import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.materialmgmt.cost.CostAdjustmentLine;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 
+@Dependent
 @ComponentProvider.Qualifier("org.openbravo.costing.StandardAlgorithm")
 public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
 

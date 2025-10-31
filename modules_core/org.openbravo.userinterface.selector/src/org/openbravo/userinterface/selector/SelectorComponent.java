@@ -35,15 +35,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -66,8 +62,10 @@ import org.openbravo.client.kernel.reference.UIDefinition;
 import org.openbravo.client.kernel.reference.UIDefinitionController;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.*;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.OBQuery;
 import org.openbravo.data.Sqlc;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.domain.ReferencedTree;
@@ -81,6 +79,9 @@ import org.openbravo.service.datasource.DataSourceProperty.RefListEntry;
 import org.openbravo.service.datasource.DatasourceField;
 import org.openbravo.service.json.JsonConstants;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * Generates the javascript for a selector using parameters passed in as part of the request.
  * 
@@ -88,6 +89,7 @@ import org.openbravo.service.json.JsonConstants;
  * 
  * @author mtaal
  */
+@Dependent
 public class SelectorComponent extends BaseTemplateComponent {
 
   public static final String SELECTOR_ITEM_PARAMETER = "IsSelectorItem";

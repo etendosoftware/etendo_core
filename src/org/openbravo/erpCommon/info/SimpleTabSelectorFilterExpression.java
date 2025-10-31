@@ -28,6 +28,8 @@ import org.openbravo.client.kernel.KernelUtils;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.ui.Field;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Filter expression for Simple Tab Selector reference.
  * 
@@ -37,6 +39,7 @@ import org.openbravo.model.ad.ui.Field;
  * @author alostale
  *
  */
+@Dependent
 public class SimpleTabSelectorFilterExpression implements FilterExpression {
 
   @Override

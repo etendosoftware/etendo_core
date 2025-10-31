@@ -20,10 +20,12 @@ package org.openbravo.advpaymentmngt.filterexpression;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.codehaus.jettison.json.JSONException;
 import org.openbravo.advpaymentmngt.utility.APRMConstants;
 import org.openbravo.client.kernel.ComponentProvider;
 
+@Dependent
 @ComponentProvider.Qualifier(APRMConstants.PAYMENT_IN_WINDOW_ID)
 public class PaymentInAddPaymentReadOnlyLogics extends AddPaymentReadOnlyLogicsHandler {
 

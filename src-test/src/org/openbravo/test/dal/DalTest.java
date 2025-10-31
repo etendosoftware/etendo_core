@@ -44,7 +44,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.criterion.Restrictions;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;

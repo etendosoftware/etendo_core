@@ -30,6 +30,10 @@ import java.util.Map.Entry;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpSession;
 
+import net.sf.jasperreports.jakarta.servlets.ImageServlet;
+import net.sf.jasperreports.pdf.JRPdfExporter;
+import net.sf.jasperreports.pdf.SimplePdfExporterConfiguration;
+import net.sf.jasperreports.poi.export.JRXlsExporter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,10 +60,8 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.HtmlExporter;
 import net.sf.jasperreports.engine.export.JRCsvExporter;
-import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRTextExporter;
 import net.sf.jasperreports.engine.export.JRXlsAbstractExporter;
-import net.sf.jasperreports.engine.export.JRXlsExporter;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.engine.fill.JRSwapFileVirtualizer;
 import net.sf.jasperreports.engine.util.JRSwapFile;
@@ -68,14 +70,12 @@ import net.sf.jasperreports.export.SimpleExporterInput;
 import net.sf.jasperreports.export.SimpleHtmlExporterOutput;
 import net.sf.jasperreports.export.SimpleHtmlReportConfiguration;
 import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
-import net.sf.jasperreports.export.SimplePdfExporterConfiguration;
 import net.sf.jasperreports.export.SimpleTextExporterConfiguration;
 import net.sf.jasperreports.export.SimpleTextReportConfiguration;
 import net.sf.jasperreports.export.SimpleWriterExporterOutput;
 import net.sf.jasperreports.export.SimpleXlsReportConfiguration;
 import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import net.sf.jasperreports.export.type.HtmlSizeUnitEnum;
-import net.sf.jasperreports.j2ee.servlets.ImageServlet;
 import net.sf.jasperreports.web.util.WebHtmlResourceHandler;
 
 /** Utilities to generate jasper reports */
@@ -839,9 +839,7 @@ public class ReportingUtils {
     for (Entry<Object, Object> pair : params.entrySet()) {
       Object key = pair.getKey();
       String parameter;
-      if (key instanceof net.sf.jasperreports.engine.JRExporterParameter) {
-        parameter = ((net.sf.jasperreports.engine.JRExporterParameter) key).toString();
-      } else if (key instanceof String) {
+      if (key instanceof String) {
         parameter = (String) key;
       } else {
         parameter = "";
@@ -904,9 +902,7 @@ public class ReportingUtils {
     for (Entry<Object, Object> pair : params.entrySet()) {
       Object key = pair.getKey();
       String parameter;
-      if (key instanceof net.sf.jasperreports.engine.JRExporterParameter) {
-        parameter = ((net.sf.jasperreports.engine.JRExporterParameter) key).toString();
-      } else if (key instanceof String) {
+      if (key instanceof String) {
         parameter = (String) key;
       } else {
         parameter = "";

@@ -20,6 +20,7 @@ package org.openbravo.advpaymentmngt.filterexpression;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -30,6 +31,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 
+@Dependent
 @ComponentProvider.Qualifier(APRMConstants.TRANSACTION_WINDOW_ID)
 public class TransactionAddPaymentReadOnlyLogics extends AddPaymentReadOnlyLogicsHandler {
 

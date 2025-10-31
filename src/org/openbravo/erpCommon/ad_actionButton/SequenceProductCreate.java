@@ -38,6 +38,9 @@ import org.openbravo.model.manufacturing.processplan.OperationProductAttribute;
 import org.openbravo.scheduling.Process;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class SequenceProductCreate implements Process {
 
   private static final String LOT_SEARCHKEY = "LOT";

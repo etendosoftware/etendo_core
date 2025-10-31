@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
@@ -96,6 +98,7 @@ import org.openbravo.service.json.JsonUtils;
  * 
  * @author gorkaion
  */
+@Dependent
 public class QueryListDataSource extends ReadOnlyDataSourceService implements PortalAccessible {
   private static final String OPTIONAL_FILTERS = "@optional_filters@";
   private static final Logger log = LogManager.getLogger();

@@ -22,11 +22,14 @@ import java.util.Map;
 
 import org.openbravo.client.application.FilterExpression;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Simple sample expression for testing
  * 
  * @author iperdomo
  */
+@Dependent
 public class SampleFilterExpression implements FilterExpression {
 
   @Override

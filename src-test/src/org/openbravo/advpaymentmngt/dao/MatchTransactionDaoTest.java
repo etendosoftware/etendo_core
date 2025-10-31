@@ -20,8 +20,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Order;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,19 +54,13 @@ public class MatchTransactionDaoTest {
   private OBDal mockOBDal;
 
   @Mock
-  private OBCriteria<FIN_FinaccTransaction> mockFinaccTransactionCriteria;
-
-  @Mock
-  private OBCriteria<FIN_BankStatementLine> mockBankStatementLineCriteria;
-
-  @Mock
-  private OBCriteria<FIN_Reconciliation> mockReconciliationCriteria;
-
-  @Mock
   private OBQuery<FIN_BankStatementLine> mockBankStatementLineQuery;
 
   @Mock
   private OBQuery<FIN_FinaccTransaction> mockFinaccTransactionQuery;
+
+  @Mock
+  private OBQuery<FIN_Reconciliation> mockReconciliationQuery;
 
   @Mock
   private FIN_FinancialAccount mockFinancialAccount;
@@ -96,20 +88,21 @@ public class MatchTransactionDaoTest {
     when(mockOBDal.get(FIN_FinancialAccount.class, TestConstants.FINANCIAL_ACCOUNT_ID)).thenReturn(
         mockFinancialAccount);
     when(mockOBDal.get(FIN_Reconciliation.class, TestConstants.RECONCILIATION_ID)).thenReturn(mockReconciliation);
+
     when(mockFinancialAccount.getId()).thenReturn(TestConstants.FINANCIAL_ACCOUNT_ID);
     when(mockFinancialAccount.getInitialBalance()).thenReturn(TestConstants.INITIAL_BALANCE);
     when(mockReconciliation.getAccount()).thenReturn(mockFinancialAccount);
 
-    // Setup criteria mocks
-    when(mockOBDal.createCriteria(FIN_FinaccTransaction.class)).thenReturn(mockFinaccTransactionCriteria);
-    when(mockOBDal.createCriteria(FIN_BankStatementLine.class)).thenReturn(mockBankStatementLineCriteria);
-    when(mockOBDal.createCriteria(FIN_Reconciliation.class)).thenReturn(mockReconciliationCriteria);
-
     // Setup query mocks
     when(mockOBDal.createQuery(eq(FIN_BankStatementLine.class), anyString())).thenReturn(mockBankStatementLineQuery);
     when(mockOBDal.createQuery(eq(FIN_FinaccTransaction.class), anyString())).thenReturn(mockFinaccTransactionQuery);
+    when(mockOBDal.createQuery(eq(FIN_Reconciliation.class), anyString())).thenReturn(mockReconciliationQuery);
+
     when(mockBankStatementLineQuery.setNamedParameter(anyString(), any())).thenReturn(mockBankStatementLineQuery);
     when(mockFinaccTransactionQuery.setNamedParameters(any())).thenReturn(mockFinaccTransactionQuery);
+
+    when(mockReconciliationQuery.setNamedParameter(anyString(), any())).thenReturn(mockReconciliationQuery);
+    when(mockReconciliationQuery.setNamedParameters(any())).thenReturn(mockReconciliationQuery);
 
   }
 
@@ -157,16 +150,15 @@ public class MatchTransactionDaoTest {
   @Test
   public void testGetClearedLinesAmountWithEmptyLines() {
     // Given
-    when(mockFinaccTransactionCriteria.add(any(Criterion.class))).thenReturn(mockFinaccTransactionCriteria);
-    when(mockFinaccTransactionCriteria.list()).thenReturn(Collections.emptyList());
+    when(mockFinaccTransactionQuery.list()).thenReturn(Collections.emptyList());
 
     // When
     BigDecimal result = MatchTransactionDao.getClearedLinesAmount(TestConstants.RECONCILIATION_ID);
 
     // Then
     assertEquals("Should return zero for empty lines", BigDecimal.ZERO.setScale(0), result.setScale(0));
-    verify(mockFinaccTransactionCriteria, times(2)).add(any(Criterion.class));
-    verify(mockFinaccTransactionCriteria).list();
+
+    verify(mockFinaccTransactionQuery).list();
   }
 
   /**
@@ -186,16 +178,13 @@ public class MatchTransactionDaoTest {
 
     List<FIN_FinaccTransaction> transactions = Arrays.asList(transaction1, transaction2);
 
-    when(mockFinaccTransactionCriteria.add(any(Criterion.class))).thenReturn(mockFinaccTransactionCriteria);
-    when(mockFinaccTransactionCriteria.list()).thenReturn(transactions);
-
+    when(mockFinaccTransactionQuery.list()).thenReturn(transactions);
     // When
     BigDecimal result = MatchTransactionDao.getClearedLinesAmount(TestConstants.RECONCILIATION_ID);
 
     // Then
     assertEquals("Should return sum of deposit - payment amounts", new BigDecimal("130.00"), result);
-    verify(mockFinaccTransactionCriteria, times(2)).add(any(Criterion.class));
-    verify(mockFinaccTransactionCriteria).list();
+    verify(mockFinaccTransactionQuery).list();
   }
 
   /**
@@ -207,17 +196,18 @@ public class MatchTransactionDaoTest {
     // Given
     List<FIN_BankStatement> bankStatements = new ArrayList<>();
     when(mockFinancialAccount.getFINBankStatementList()).thenReturn(bankStatements);
-    when(mockBankStatementLineCriteria.add(any(Criterion.class))).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.setMaxResults(1)).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.list()).thenReturn(Collections.emptyList());
+
+    // REEMPLAZADO: Se mockea el OBQuery
+    when(mockBankStatementLineQuery.setMaxResult(1)).thenReturn(mockBankStatementLineQuery);
+    when(mockBankStatementLineQuery.list()).thenReturn(Collections.emptyList());
 
     // When
     boolean result = MatchTransactionDao.checkAllLinesCleared(TestConstants.FINANCIAL_ACCOUNT_ID);
 
     // Then
     assertTrue("Should return true when all lines are cleared", result);
-    verify(mockBankStatementLineCriteria).setMaxResults(1);
-    verify(mockBankStatementLineCriteria).list();
+    verify(mockBankStatementLineQuery).setMaxResult(1);
+    verify(mockBankStatementLineQuery).list();
   }
 
   /**
@@ -232,17 +222,18 @@ public class MatchTransactionDaoTest {
     List<FIN_BankStatementLine> unmatchedLines = Collections.singletonList(unmatched);
 
     when(mockFinancialAccount.getFINBankStatementList()).thenReturn(bankStatements);
-    when(mockBankStatementLineCriteria.add(any(Criterion.class))).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.setMaxResults(1)).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.list()).thenReturn(unmatchedLines);
+
+    // REEMPLAZADO: Se mockea el OBQuery
+    when(mockBankStatementLineQuery.setMaxResult(1)).thenReturn(mockBankStatementLineQuery);
+    when(mockBankStatementLineQuery.list()).thenReturn(unmatchedLines);
 
     // When
     boolean result = MatchTransactionDao.checkAllLinesCleared(TestConstants.FINANCIAL_ACCOUNT_ID);
 
     // Then
     assertFalse("Should return false when not all lines are cleared", result);
-    verify(mockBankStatementLineCriteria).setMaxResults(1);
-    verify(mockBankStatementLineCriteria).list();
+    verify(mockBankStatementLineQuery).setMaxResult(1);
+    verify(mockBankStatementLineQuery).list();
   }
 
   /**
@@ -252,8 +243,7 @@ public class MatchTransactionDaoTest {
   @Test
   public void testIsLastReconciliationTrue() {
     // Given
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.list()).thenReturn(Collections.emptyList());
+    when(mockReconciliationQuery.list()).thenReturn(Collections.emptyList());
 
     // When
     boolean result = MatchTransactionDao.islastreconciliation(mockReconciliation);
@@ -271,9 +261,7 @@ public class MatchTransactionDaoTest {
     // Given
     FIN_Reconciliation laterReconciliation = mock(FIN_Reconciliation.class);
     List<FIN_Reconciliation> laterReconciliations = Collections.singletonList(laterReconciliation);
-
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.list()).thenReturn(laterReconciliations);
+    when(mockReconciliationQuery.list()).thenReturn(laterReconciliations);
 
     // When
     boolean result = MatchTransactionDao.islastreconciliation(mockReconciliation);
@@ -367,11 +355,11 @@ public class MatchTransactionDaoTest {
     FIN_BankStatementLine latestLine = mock(FIN_BankStatementLine.class);
     List<FIN_BankStatementLine> lines = Collections.singletonList(latestLine);
 
-    when(mockBankStatementLineCriteria.createAlias(anyString(), anyString())).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.add(any(Criterion.class))).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.setMaxResults(1)).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.list()).thenReturn(lines);
+    when(mockBankStatementLineQuery.setWhereAndOrderBy(anyString())).thenReturn(
+        mockBankStatementLineQuery);
+    when(mockBankStatementLineQuery.setMaxResult(1)).thenReturn(mockBankStatementLineQuery);
+    when(mockBankStatementLineQuery.list()).thenReturn(lines);
+    when(latestLine.getTransactionDate()).thenReturn(maxDate);
     when(latestLine.getTransactionDate()).thenReturn(maxDate);
 
     // When
@@ -379,8 +367,8 @@ public class MatchTransactionDaoTest {
 
     // Then
     assertEquals("Should return the max transaction date", maxDate, result);
-    verify(mockBankStatementLineCriteria).setMaxResults(1);
-    verify(mockBankStatementLineCriteria).list();
+    verify(mockBankStatementLineQuery).setMaxResult(1);
+    verify(mockBankStatementLineQuery).list();
   }
 
   /**
@@ -394,10 +382,10 @@ public class MatchTransactionDaoTest {
     FIN_Reconciliation lastReconciliation = mock(FIN_Reconciliation.class);
     List<FIN_Reconciliation> reconciliations = Collections.singletonList(lastReconciliation);
 
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.setMaxResults(1)).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.list()).thenReturn(reconciliations);
+    when(mockReconciliationQuery.setWhereAndOrderBy(anyString())).thenReturn(
+        mockReconciliationQuery);
+    when(mockReconciliationQuery.setMaxResult(1)).thenReturn(mockReconciliationQuery);
+    when(mockReconciliationQuery.list()).thenReturn(reconciliations);
     when(lastReconciliation.getEndingBalance()).thenReturn(lastAmount);
 
     // When
@@ -405,8 +393,9 @@ public class MatchTransactionDaoTest {
 
     // Then
     assertEquals("Should return the last reconciliation amount", lastAmount, result);
-    verify(mockReconciliationCriteria).setMaxResults(1);
-    verify(mockReconciliationCriteria).list();
+    // REEMPLAZADO: Verificando el mock de Query
+    verify(mockReconciliationQuery).setMaxResult(1);
+    verify(mockReconciliationQuery).list();
   }
 
   /**
@@ -419,17 +408,18 @@ public class MatchTransactionDaoTest {
     BigDecimal previousEndingBalance = new BigDecimal("1500.00");
     FIN_Reconciliation previousReconciliation = mock(FIN_Reconciliation.class);
 
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.addOrder(any(Order.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.setMaxResults(1)).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.uniqueResult()).thenReturn(previousReconciliation);
+    when(mockReconciliationQuery.setWhereAndOrderBy(anyString())).thenReturn(
+        mockReconciliationQuery);
+    when(mockReconciliationQuery.setMaxResult(1)).thenReturn(mockReconciliationQuery);
+    when(mockReconciliationQuery.uniqueResult()).thenReturn(previousReconciliation);
     when(previousReconciliation.getEndingBalance()).thenReturn(previousEndingBalance);
 
     // When
     BigDecimal result = MatchTransactionDao.getStartingBalance(mockReconciliation);
 
     // Then
-    assertEquals("Should return the previous reconciliation ending balance", previousEndingBalance, result);
+    assertEquals("Should return the previous reconciliation ending balance", previousEndingBalance,
+        result);
   }
 
   /**
@@ -439,16 +429,17 @@ public class MatchTransactionDaoTest {
   @Test
   public void testGetStartingBalanceWithoutPreviousReconciliation() {
     // Given
-    when(mockReconciliationCriteria.add(any(Criterion.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.addOrder(any(Order.class))).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.setMaxResults(1)).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.uniqueResult()).thenReturn(null);
+    when(mockReconciliationQuery.setWhereAndOrderBy(anyString())).thenReturn(
+        mockReconciliationQuery);
+    when(mockReconciliationQuery.setMaxResult(1)).thenReturn(mockReconciliationQuery);
+    when(mockReconciliationQuery.uniqueResult()).thenReturn(null);
 
     // When
     BigDecimal result = MatchTransactionDao.getStartingBalance(mockReconciliation);
 
     // Then
-    assertEquals("Should return the financial account initial balance", TestConstants.INITIAL_BALANCE, result);
+    assertEquals("Should return the financial account initial balance",
+        TestConstants.INITIAL_BALANCE, result);
   }
 
   /**

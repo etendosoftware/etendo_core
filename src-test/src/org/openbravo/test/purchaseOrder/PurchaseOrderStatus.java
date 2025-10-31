@@ -10,7 +10,6 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

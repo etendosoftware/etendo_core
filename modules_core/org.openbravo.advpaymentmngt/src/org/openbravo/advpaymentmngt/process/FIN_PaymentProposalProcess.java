@@ -49,6 +49,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallStoredProcedure;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FIN_PaymentProposalProcess implements org.openbravo.scheduling.Process {
   private static AdvPaymentMngtDao dao;
 

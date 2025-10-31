@@ -483,4 +483,15 @@ public class CachedSet<E> implements Set<E> {
     public Stream<E> parallelStream() {
         return instance.parallelStream();
     }
+
+    /**
+     * Returns a string representation of the underlying set instance. This is helpful for debugging
+     * scenarios (like enumerate domain type validation) where the allowed values collection is printed.
+     * For in-memory HashSet it will list the elements. For Redis-backed sets it will delegate to Redisson's
+     * implementation.
+     */
+    @Override
+    public String toString() {
+        return instance.toString();
+    }
 }

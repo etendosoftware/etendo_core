@@ -29,8 +29,6 @@ import static org.junit.Assume.assumeTrue;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.inject.Inject;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.openbravo.base.weld.WeldUtils;
@@ -47,6 +45,9 @@ import org.openbravo.test.base.Issue;
 import org.openbravo.test.base.TestConstants.Tabs;
 import org.openbravo.test.base.TestConstants.Windows;
 import org.openbravo.test.base.mock.HttpServletRequestMock;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 /** Additional test cases for {@link ApplicationDictionaryCachedStructures} */
 public class ADCSTest extends WeldBaseTest {
@@ -140,6 +141,7 @@ public class ADCSTest extends WeldBaseTest {
     assertThat(anyColumnReference.getOBCLKERREFMASKList().size(), greaterThanOrEqualTo(0));
   }
 
+  @Dependent
   private static class WindowSettingsActionHandlerTest extends WindowSettingsActionHandler {
 
     public void execute(String windowId) {

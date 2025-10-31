@@ -37,12 +37,16 @@ import org.openbravo.model.ad.utility.Image;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * The component responsible for generating some dynamic elements of the application js file which
  * are related to the user of the current context.
  * 
  * @author mtaal
  */
+@Dependent
 public class ApplicationDynamicComponent extends SessionDynamicTemplateComponent {
 
   private ActivationKey activationKey;

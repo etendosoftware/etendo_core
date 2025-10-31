@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.junit.Test;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
