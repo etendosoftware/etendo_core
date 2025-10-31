@@ -26,8 +26,8 @@ import org.openbravo.client.kernel.ComponentProvider;
 
 import jakarta.enterprise.context.Dependent;
 
-@ComponentProvider.Qualifier(APRMConstants.TRANSACTION_WINDOW_ID)
 @Dependent
+@ComponentProvider.Qualifier(APRMConstants.TRANSACTION_WINDOW_ID)
 public class MatchStatementDefaultFilterExpresion extends MatchStatementFilterExpressionHandler {
 
   private static final long SEQUENCE = 100l;

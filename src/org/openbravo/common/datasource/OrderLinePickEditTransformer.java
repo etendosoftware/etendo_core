@@ -20,6 +20,7 @@ package org.openbravo.common.datasource;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.util.Check;
 import org.openbravo.client.kernel.ComponentProvider;
@@ -28,6 +29,7 @@ import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("213FE8C4AC5E4C95AFC09C80D5C3B663")
 public class OrderLinePickEditTransformer extends HqlQueryTransformer {
 

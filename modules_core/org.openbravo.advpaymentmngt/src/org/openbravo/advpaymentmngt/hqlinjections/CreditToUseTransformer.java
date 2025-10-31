@@ -21,9 +21,11 @@ package org.openbravo.advpaymentmngt.hqlinjections;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("59ED9B23854A4B048CBBAE38436B99C2")
 public class CreditToUseTransformer extends HqlQueryTransformer {
 

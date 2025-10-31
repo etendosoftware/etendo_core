@@ -22,7 +22,7 @@ package org.openbravo.common.datasource;
 import java.util.List;
 import java.util.Map;
 
-
+import jakarta.enterprise.context.Dependent;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
@@ -35,6 +35,7 @@ import org.openbravo.service.json.JsonConstants;
 /**
  * Transformer to enable Property Fields in Return to Customer and Return to Vendor P&amp;E grids
  */
+@Dependent
 @ComponentProvider.Qualifier("CDB9DC9655F24DF8AB41AA0ADBD04390")
 public class ReturnFromCustomerVendorPropertyFieldsTransformer
     extends ReturnToFromCustomerVendorHQLTransformer {

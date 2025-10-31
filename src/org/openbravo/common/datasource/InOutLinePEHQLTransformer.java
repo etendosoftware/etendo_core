@@ -20,6 +20,7 @@ package org.openbravo.common.datasource;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
@@ -30,6 +31,7 @@ import org.openbravo.model.ad.ui.Window;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("631D227DC83A4898BBD041D46D829D27")
 public class InOutLinePEHQLTransformer extends HqlQueryTransformer {
   protected static final String EMPTY_STRING = "";

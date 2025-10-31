@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -44,6 +45,7 @@ import org.openbravo.service.json.AdvancedQueryBuilder;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonUtils;
 
+@Dependent
 @ComponentProvider.Qualifier("58AF4D3E594B421A9A7307480736F03E")
 public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
   final static String RDBMS = new DalConnectionProvider(false).getRDBMS();

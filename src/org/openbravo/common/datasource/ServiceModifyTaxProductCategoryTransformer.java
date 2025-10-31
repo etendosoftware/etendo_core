@@ -21,10 +21,12 @@ package org.openbravo.common.datasource;
 
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("E42E75B452F545469E648BD84C9538E9")
 public class ServiceModifyTaxProductCategoryTransformer extends HqlQueryTransformer {
   private static final String MODIFY_TAX_PROD_CAT_PE = "B51960EFD3E04B79917A1277C751232F";
