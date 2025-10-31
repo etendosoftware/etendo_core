@@ -36,12 +36,12 @@ Map resolveStackConfiguration(String fromBackport, String fromPrerelease) {
     def tomcatUrl = env.TOMCAT_URL_DEFAULT
     def javaHome = env.JAVA_HOME_DEFAULT
     
-    if (fromPrerelease == 'true') {
+    if (fromPrerelease == env.TRUE) {
         stackType = "PRERELEASE"
         tomcatUrl = env.TOMCAT_URL_PRERELEASE
         javaHome = env.JAVA_HOME_PRERELEASE
         echo "✅ Using PRERELEASE stack configuration"
-    } else if (fromBackport == 'true') {
+    } else if (fromBackport == env.TRUE) {
         stackType = "BACKPORT"
         tomcatUrl = env.TOMCAT_URL_BACKPORT
         javaHome = env.JAVA_HOME_BACKPORT
