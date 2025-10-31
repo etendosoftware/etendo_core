@@ -40,8 +40,8 @@ pipeline {
     COMMIT_SUCCESS_STATUS    = 'success'
     COMMIT_FAILED_STATUS     = 'failure'
 
-    TRUE  = 'TRUE'
-    FALSE = 'FALSE'
+    TRUE  = 'true'
+    FALSE = 'false'
 
     // Jenkins credential stored as base64-encoded string for another Atlassian user, not etendobot
     JIRA_ACCESS_TOKEN         = credentials('jira-access-token')
@@ -115,19 +115,29 @@ pipeline {
           script {
             try {
               echo "--------------- Getting Backport Branch Information ---------------"
-              def pattern = /-Y\d{2}$/
-              env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
+              def pattern = /.*-Y\d{2}$/
+              def matches = (env.GIT_BRANCH ==~ pattern)
+              env.CONTAINS_Y_SUFFIX = matches ? TRUE : FALSE
+              echo "DEBUG: CONTAINS_Y_SUFFIX set to: ${env.CONTAINS_Y_SUFFIX}"
               env.FROM_BACKPORT = FALSE
               env.FROM_PRERELEASE = FALSE
               def yearBackportBranch = (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)?.find() ? (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)[0][1] : null
               def yearPrereleaseBranch = (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)?.find() ? (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)[0][1] : null
-              
+              echo "[DEBUG]: yearBackportBranch: ${yearBackportBranch}"
+              echo "[DEBUG]: yearPrereleaseBranch: ${yearPrereleaseBranch}"
+
               // Extract backport branch information without using Matcher object
               if (env.CONTAINS_Y_SUFFIX == TRUE) {
                 def yearCommitBranch = (env.GIT_BRANCH =~ /-Y(\d{2})/)?.find() ? (env.GIT_BRANCH =~ /-Y(\d{2})/)[0][1] : null
-                if (yearCommitBranch && yearBackportBranch && yearPrereleaseBranch) {
-                  env.FROM_BACKPORT = (yearCommitBranch == yearBackportBranch) ? env.TRUE : env.FALSE
-                  env.FROM_PRERELEASE = (yearCommitBranch == yearPrereleaseBranch) ? env.TRUE : env.FALSE
+                echo "[DEBUG]: yearCommitBranch: ${yearCommitBranch}"
+                if (yearCommitBranch) {
+                  if (yearBackportBranch && yearCommitBranch == yearBackportBranch) {
+                    env.FROM_BACKPORT = env.TRUE
+                    echo "[DEBUG]: Setting FROM_BACKPORT = TRUE (year match: ${yearCommitBranch})"
+                  } else if (yearPrereleaseBranch && yearCommitBranch == yearPrereleaseBranch) {
+                    env.FROM_PRERELEASE = env.TRUE
+                    echo "[DEBUG]: Setting FROM_PRERELEASE = TRUE (year match: ${yearCommitBranch})"
+                  }
                 }
               } else if (GIT_BRANCH.startsWith("release")) {
                 echo '-------------------------- Backport Branch Detected --------------------------'
