@@ -224,8 +224,6 @@ pipeline {
                             dir(REPO_NAME) {
                                 echo "---------------- Getting Commit Information ----------------"
                                 sh "git checkout ${GIT_COMMIT}"
-                                def infoCommit = load "${rootDir}/pipelines/unittests/utils/infoCommit.groovy"
-                                env.COMMIT_INFO = infoCommit.generateCommitInfo(env.REPO_URL)
 
                                 if (CLONE_PLUGIN == TRUE) {
                                     echo "---------------------- Clonning Etendo Plugin Repository ----------------------"
