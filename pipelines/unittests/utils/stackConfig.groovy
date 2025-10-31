@@ -25,4 +25,36 @@ String generateStackMessage() {
   return stackMessage
 }
 
+/**
+ * Resolves the stack configuration based on the values of FROM_BACKPORT and FROM_PRERELEASE
+ * @param fromBackport value of env.FROM_BACKPORT
+ * @param fromPrerelease value of env.FROM_PRERELEASE
+ * @return Map with stackType, tomcatUrl, javaHome
+ */
+Map resolveStackConfiguration(String fromBackport, String fromPrerelease) {
+    def stackType = "DEFAULT"
+    def tomcatUrl = env.TOMCAT_URL_DEFAULT
+    def javaHome = env.JAVA_HOME_DEFAULT
+    
+    if (fromPrerelease == 'true') {
+        stackType = "PRERELEASE"
+        tomcatUrl = env.TOMCAT_URL_PRERELEASE
+        javaHome = env.JAVA_HOME_PRERELEASE
+        echo "✅ Using PRERELEASE stack configuration"
+    } else if (fromBackport == 'true') {
+        stackType = "BACKPORT"
+        tomcatUrl = env.TOMCAT_URL_BACKPORT
+        javaHome = env.JAVA_HOME_BACKPORT
+        echo "✅ Using BACKPORT stack configuration"
+    } else {
+        echo "✅ Using DEFAULT stack configuration"
+    }
+    
+    return [
+        stackType: stackType,
+        tomcatUrl: tomcatUrl,
+        javaHome: javaHome
+    ]
+}
+
 return this

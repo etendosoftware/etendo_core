@@ -25,9 +25,6 @@ pipeline {
         UNSTABLE            = 'UNSTABLE'
         ABORTED             = 'ABORTED'
 
-        // Stack
-        JAVA_HOME           = '/usr/lib/jvm/jdk-17.0.13'
-        TOMCAT_URL          = 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz'
         ORCL_VERSION        = '19c'
 
         CONTEXT_BUILD       = 'Unit Tests with Oracle Database'
@@ -36,6 +33,9 @@ pipeline {
         COMMIT_INPROGRESS_STATUS = 'pending'
         COMMIT_SUCCESS_STATUS    = 'success'
         COMMIT_FAILED_STATUS     = 'failure'
+
+        TRUE  = 'TRUE'
+        FALSE = 'FALSE'
     }
 
     agent {
@@ -193,8 +193,79 @@ spec:
                 }
             }
             steps {
-                echo "--------------- Building Oracle DB ---------------"
-                sleep( time: 25, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
+                script {
+                    sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Configuring Stack\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                    echo "--------------- Waiting for Oracle DB to be ready ---------------"
+                    sleep( time: 30, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
+                }
+            }
+        }
+        stage ('Stack Configuration') { // MARK: Stack Configuration
+            when {
+                expression {
+                    currentBuild.result == SUCCESS
+                }
+            }
+            steps {
+                container('compiler') {
+                    script {
+                        try {
+                            echo "--------------- Getting Backport Branch Information ---------------"
+                            def pattern = /-Y\d{2}$/
+                            env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
+                            env.FROM_BACKPORT = FALSE
+                            env.FROM_PRERELEASE = FALSE
+                            def yearBackportBranch = (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)?.find() ? (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)[0][1] : null
+                            def yearPrereleaseBranch = (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)?.find() ? (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)[0][1] : null
+                            
+                            // Extract backport branch information without using Matcher object
+                            if (env.CONTAINS_Y_SUFFIX == TRUE) {
+                                def yearCommitBranch = (env.GIT_BRANCH =~ /-Y(\d{2})/)?.find() ? (env.GIT_BRANCH =~ /-Y(\d{2})/)[0][1] : null
+                                if (yearCommitBranch && yearBackportBranch && yearPrereleaseBranch) {
+                                env.FROM_BACKPORT = (yearCommitBranch == yearBackportBranch) ? env.TRUE : env.FALSE
+                                env.FROM_PRERELEASE = (yearCommitBranch == yearPrereleaseBranch) ? env.TRUE : env.FALSE
+                                }
+                            } else if (GIT_BRANCH.startsWith("release")) {
+                                echo '-------------------------- Backport Branch Detected --------------------------'
+                                env.FROM_BACKPORT = env.TRUE
+                            } else if (GIT_BRANCH.startsWith("prerelease")) {
+                                echo '-------------------------- Prerelease Branch Detected --------------------------'
+                                env.FROM_PRERELEASE = env.TRUE
+                            }
+                            echo "---------------- Stack Configuration ----------------"
+                            def rootDir = pwd()
+                            def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
+
+                            def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
+                            
+                            env.JAVA_HOME = stackConfiguration.javaHome
+                            env.TOMCAT_URL = stackConfiguration.tomcatUrl
+                            env.STACK_TYPE = stackConfiguration.stackType
+
+                            echo "Stack Type: ${env.STACK_TYPE}"
+                            echo "Tomcat URL: ${env.TOMCAT_URL}"
+                            echo "Java Home: ${env.JAVA_HOME}"
+
+                            sh "wget -O apache-tomcat.tar.gz ${TOMCAT_URL}"
+                            sh "tar -xvf apache-tomcat.tar.gz -C ${WORKSPACE}"
+
+                            env.TOMCAT_FOLDER = stackConfig.getTomcatFolder()
+                            env.CATALINA_HOME = "${WORKSPACE}/${TOMCAT_FOLDER}"
+                            env.CATALINA_BASE = "${WORKSPACE}/${TOMCAT_FOLDER}"
+
+                            env.STACK_INFO = stackConfig.generateStackMessage()
+                            echo "__________________________________________________"
+                            echo "${env.STACK_INFO}"
+                            echo "__________________________________________________"
+                        } catch (Exception e) {
+                            env.ERROR_MESSAGE = "Stack Configuration Failed"
+                            echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+                            echo "Exception occurred: " + e.toString()
+                            currentBuild.result = FAILED
+                            error(env.ERROR_MESSAGE)
+                        }
+                    }
+                }
             }
         }
         stage('Build Environment') { // MARK: Build Environment
@@ -208,17 +279,6 @@ spec:
                     script {
                         try {
                             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build Environment\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-
-                            echo "---------------- Stack Configuration ----------------"
-                            def rootDir = pwd()
-                            def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
-
-                            sh "wget -O apache-tomcat.tar.gz ${TOMCAT_URL}"
-                            sh "tar -xvf apache-tomcat.tar.gz -C ${WORKSPACE}"
-
-                            env.TOMCAT_FOLDER = stackConfig.getTomcatFolder()
-                            env.CATALINA_HOME = "${WORKSPACE}/${TOMCAT_FOLDER}"
-                            env.CATALINA_BASE = "${WORKSPACE}/${TOMCAT_FOLDER}"
 
                             sh "git clone ${REPO_URL} ${REPO_NAME}"
                             dir(REPO_NAME) {
@@ -235,6 +295,7 @@ spec:
                                 bbdd.user=${BBDD_USER}\n
                                 bbdd.password=${BBDD_PASSWORD}\n
                                 bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
+                                java.version=11\n
 
                                 nexusUser=${NEXUS_USER}\n
                                 nexusPassword=${NEXUS_PASSWORD}\n
