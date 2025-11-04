@@ -1,5 +1,9 @@
 package org.openbravo.materialmgmt;
 
+import java.math.BigDecimal;
+import java.sql.Connection;
+import jakarta.servlet.ServletException;
+
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -10,14 +14,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
-import java.sql.Connection;
-
-import jakarta.persistence.criteria.Predicate;
-import jakarta.servlet.ServletException;
-
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.junit.After;
 import org.junit.Before;
@@ -70,7 +67,7 @@ public class StockUtilsTest {
   private OBCriteria<StockProposed> mockCriteria;
 
   @Mock
-  private ScrollableResults mockScrollableResults;
+  private ScrollableResultsImplementor<StockProposed> mockScrollableResults;
 
   @Mock
   private Connection mockConnection;
@@ -112,11 +109,9 @@ public class StockUtilsTest {
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
 
     when(mockOBDal.createCriteria(StockProposed.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Predicate.class))).thenReturn(mockCriteria);
+    when(mockCriteria.addEqual(anyString(), any())).thenReturn(mockCriteria);
     when(mockCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockCriteria);
-    // TODO Check if ScrollableResultsImplementor can be mocked directly
-    when(mockCriteria.scroll(any(ScrollMode.class))).thenReturn(
-        (ScrollableResultsImplementor<StockProposed>) mockScrollableResults);
+    when(mockCriteria.scroll(ScrollMode.FORWARD_ONLY)).thenReturn(mockScrollableResults);
 
     when(mockOBDal.getConnection(anyBoolean())).thenReturn(mockConnection);
 
@@ -244,14 +239,14 @@ public class StockUtilsTest {
     BigDecimal quantity = new BigDecimal("10.0");
 
     // WHEN
-    ScrollableResults result = StockUtils.getStockProposed(mockOrderLine, quantity, mockWarehouse);
-
+    ScrollableResultsImplementor<StockProposed> result = (ScrollableResultsImplementor<StockProposed>) StockUtils.getStockProposed(
+        mockOrderLine, quantity, mockWarehouse);
     // THEN
     assertNotNull(SCROLLABLE_RESULTS_NOT_NULL, result);
 
     // Verify that createCriteria and its methods were called correctly
     verify(mockOBDal).createCriteria(StockProposed.class);
-    verify(mockCriteria).add(any(Predicate.class));
+    verify(mockCriteria).addEqual(anyString(), any());
     verify(mockCriteria).addOrderBy(anyString(), anyBoolean());
     verify(mockCriteria).scroll(ScrollMode.FORWARD_ONLY);
   }
@@ -268,7 +263,8 @@ public class StockUtilsTest {
     when(mockOrderLine.getAttributeSetValue()).thenReturn(null);
 
     // WHEN
-    ScrollableResults result = StockUtils.getStockProposed(mockOrderLine, quantity, mockWarehouse);
+    ScrollableResultsImplementor<StockProposed> result = (ScrollableResultsImplementor<StockProposed>) StockUtils.getStockProposed(
+        mockOrderLine, quantity, mockWarehouse);
 
     // THEN
     assertNotNull(SCROLLABLE_RESULTS_NOT_NULL, result);
@@ -293,7 +289,8 @@ public class StockUtilsTest {
     when(mockOrderLine.getWarehouseRule()).thenReturn(mockWarehouseRule);
 
     // WHEN
-    ScrollableResults result = StockUtils.getStockProposed(mockOrderLine, quantity, mockWarehouse);
+    ScrollableResultsImplementor<StockProposed> result = (ScrollableResultsImplementor<StockProposed>) StockUtils.getStockProposed(
+        mockOrderLine, quantity, mockWarehouse);
 
     // THEN
     assertNotNull(SCROLLABLE_RESULTS_NOT_NULL, result);

@@ -4,23 +4,20 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2014-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.test.base;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assume.assumeThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +26,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assume.assumeThat;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -68,9 +73,8 @@ import org.openbravo.test.base.mock.OBServletContextMock;
 /**
  * OBBaseTest class which can/should be extended by most other test classes which want to make use
  * of the Openbravo test infrastructure.
- * 
+ *
  * @author inigosanchez
- * 
  */
 
 public class OBBaseTest {
@@ -89,7 +93,7 @@ public class OBBaseTest {
 
   /**
    * Add a TestWatcher rule to be able to catch test failures allowing them to fail.
-   * 
+   * <p>
    * This will be used to commit or rollback DAL session after on test finalization. Note failed
    * method is invoked after invoking any method annotated with @After, that's why commit/rollback
    * is performed on this rule's finished method which is invoked after failed.
@@ -235,13 +239,13 @@ public class OBBaseTest {
   static {
 
     // "F&B International Group"
-    TEST_ORG_TREE.put("19404EAD144C49A0AF37D54377CF452D", new String[] { "" });
+    TEST_ORG_TREE.put("19404EAD144C49A0AF37D54377CF452D", new String[]{ "" });
 
     // "F&B España, S.A."
-    TEST_ORG_TREE.put("B843C30461EA4501935CB1D125C9C25A", new String[] { "" });
+    TEST_ORG_TREE.put("B843C30461EA4501935CB1D125C9C25A", new String[]{ "" });
 
     // "F&B US, Inc."
-    TEST_ORG_TREE.put("2E60544D37534C0B89E765FE29BC0B43", new String[] { "" });
+    TEST_ORG_TREE.put("2E60544D37534C0B89E765FE29BC0B43", new String[]{ "" });
 
   }
 
@@ -294,7 +298,7 @@ public class OBBaseTest {
    * Initializes DAL, it also creates a log appender that can be used to assert on logs. This log
    * appender is disabled by default, to activate it set the level with
    * {@link OBBaseTest#setTestLogAppenderLevel(Level)}.
-   * 
+   *
    * @see TestLogAppender
    */
   @BeforeClass
@@ -343,7 +347,7 @@ public class OBBaseTest {
 
   /**
    * @return {@code true} if the test case should mock the servlet context. Otherwise, return
-   *         {@code false}.
+   *     {@code false}.
    */
   protected boolean shouldMockServletContext() {
     return false;
@@ -381,19 +385,23 @@ public class OBBaseTest {
     context.updateLoggers();
   }
 
-  /** Include in messages possible stack traces for logged Throwables */
+  /**
+   * Include in messages possible stack traces for logged Throwables
+   */
   protected void setLogStackTraces(boolean log) {
     testLogAppender.setLogStackTraces(log);
   }
 
-  /** Returns log appender in order to be possible to do assertions on it */
+  /**
+   * Returns log appender in order to be possible to do assertions on it
+   */
   protected TestLogAppender getTestLogAppender() {
     return testLogAppender;
   }
 
   /**
    * Initializes the DAL layer, can be overridden to add specific initialization behavior.
-   * 
+   *
    * @throws Exception
    */
   protected void initializeDalLayer() throws Exception {
@@ -447,12 +455,16 @@ public class OBBaseTest {
     OBContext.setOBContext(TEST_USER_ID, TEST_ROLE_ID, TEST_CLIENT_ID, TEST_ORG_ID);
   }
 
-  /** Sets the current user to the 100 user as F&amp;B Group Admin */
+  /**
+   * Sets the current user to the 100 user as F&amp;B Group Admin
+   */
   protected void setTestAdminContext() {
     OBContext.setOBContext(Users.ADMIN, Roles.FB_GRP_ADMIN, Clients.FB_GRP, Orgs.MAIN);
   }
 
-  /** Sets the current user to the 100 user as QA Admin */
+  /**
+   * Sets the current user to the 100 user as QA Admin
+   */
   protected static void setQAAdminContext() {
     OBContext.setOBContext(Users.ADMIN, Roles.QA_ADMIN_ROLE, QA_TEST_CLIENT_ID, QA_TEST_ORG_ID);
   }
@@ -461,9 +473,9 @@ public class OBBaseTest {
    * Sets the current user. For the 0, 100 and 1000000 users this method should not be used. For
    * these users one of the other context-set methods should be used: {@link #setTestAdminContext()}
    * , {@link #setTestUserContext()} or {@link #setSystemAdministratorContext()}.
-   * 
+   *
    * @param userId
-   *          the id of the user to use.
+   *     the id of the user to use.
    */
   protected void setUserContext(String userId) {
     if (userId.equals("0")) {
@@ -487,7 +499,7 @@ public class OBBaseTest {
   /**
    * Gets a random User (Record ID) from the available ones in the test client. The ID is one
    * different than {@link #TEST_USER_ID}
-   * 
+   *
    * @return A record ID of a available user
    */
   protected User getRandomUser() {
@@ -497,11 +509,8 @@ public class OBBaseTest {
       String[] excludedUserIds = { "100", TEST_USER_ID };
       List<String> excludedList = Arrays.asList(excludedUserIds);
 
-      String hql = "FROM User u " +
-          "WHERE u.id NOT IN (:excludedIds) " +
-          "AND u.adUserRolesList IS NOT EMPTY";
+      String hql = "where id NOT IN (:excludedIds) and aDUserRolesList is not empty";
 
-      // 3. Crea y ejecuta la consulta
       List<User> users = OBDal.getInstance()
           .createQuery(User.class, hql)
           .setNamedParameter("excludedIds", excludedList)
@@ -510,10 +519,7 @@ public class OBBaseTest {
       if (users.isEmpty()) {
         throw new RuntimeException("Unable to initialize the list of available users");
       }
-      userIds = new ArrayList<>();
-      for (User u : users) {
-        userIds.add(u);
-      }
+      userIds = new ArrayList<>(users);
     }
 
     Random r = new Random();
@@ -524,9 +530,9 @@ public class OBBaseTest {
    * Prints the stacktrace of the exception to System.err. Handles the case that the exception is a
    * SQLException which has the real causing exception in the
    * {@link SQLException#getNextException()} method.
-   * 
+   *
    * @param e
-   *          the exception to report.
+   *     the exception to report.
    */
   protected void reportException(Exception e) {
     if (e == null) {
@@ -560,11 +566,11 @@ public class OBBaseTest {
    * Convenience method, gets an instance for the passed Class from the database. If there are no
    * records for that class then an exception is thrown. If there is more than one result then an
    * arbitrary instance is returned (the first one in the un-ordered resultset).
-   * 
+   *
    * @param <T>
-   *          the specific class to query for.
+   *     the specific class to query for.
    * @param clz
-   *          instances
+   *     instances
    * @return an instance of clz.
    */
   protected <T extends BaseOBObject> T getOneInstance(Class<T> clz) {
@@ -578,10 +584,10 @@ public class OBBaseTest {
   /**
    * Extends the read and write access of the current user to also include the passed class. This
    * can be used to circumvent restrictive access which is not usefull for the test itself.
-   * 
+   *
    * @param clz
-   *          after this call the current user (in the {@link OBContext}) will have read/write
-   *          access to this class.
+   *     after this call the current user (in the {@link OBContext}) will have read/write
+   *     access to this class.
    */
   protected void addReadWriteAccess(Class<?> clz) {
     final Entity entity = ModelProvider.getInstance().getEntity(clz);
@@ -596,11 +602,11 @@ public class OBBaseTest {
   /**
    * Counts the total occurences in the database for the passed class. Note that active, client and
    * organization filtering applies.
-   * 
+   *
    * @param <T>
-   *          a class type parameter
+   *     a class type parameter
    * @param clz
-   *          the class to count occurences for
+   *     the class to count occurences for
    * @return the number of occurences which are active and belong to the current client/organization
    */
   protected <T extends BaseOBObject> int count(Class<T> clz) {

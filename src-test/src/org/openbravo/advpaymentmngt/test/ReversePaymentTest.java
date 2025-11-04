@@ -1,21 +1,29 @@
 package org.openbravo.advpaymentmngt.test;
 
-import static org.junit.Assert.assertFalse;
-
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.openbravo.test.costing.utils.TestCostingConstants.EURO_ID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.jboss.weld.junit5.EnableWeld;
+import org.jboss.weld.junit5.WeldJunit5Extension;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.base.weld.WeldUtils;
+import org.openbravo.client.kernel.KernelInitializer;
 import org.openbravo.client.kernel.RequestContext;
+import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -40,13 +48,25 @@ import org.openbravo.model.pricing.pricelist.PriceList;
 
 /**
  * This class is used to test the reverse payment functionality in the system.
- *
+ * <p>
  * It includes methods to set up the data for an Invoice, pay the invoice completely, create a reverse payment for the processed payment,
  * process the reverse payment, check if all the payment schedule details of the invoice are not paid, and clean up the data related to the invoice and its payments.
  * It also includes methods to delete a Payment, reactivate an Invoice, delete an Invoice, and delete the payment configuration in the system.
  */
-public class ReversePaymentTest extends WeldBaseTest {
+@EnableWeld
+@ExtendWith(WeldJunit5Extension.class)
+public class ReversePaymentTest {
 
+  @Inject
+  BeanManager beanManager;
+
+  @Inject
+  WeldUtils weldUtils;
+
+  @Inject
+  KernelInitializer kernelInitializer;
+
+  private static boolean dalInitialized = false;
   private static final Logger log = LogManager.getLogger();
   private static final String MANUAL_EXECUTION = "M";
   private static final String AUTOMATIC_EXECUTION = "A";
@@ -69,14 +89,23 @@ public class ReversePaymentTest extends WeldBaseTest {
 
   /**
    * Initial Set up.
-   * 
+   * <p>
    * This before method is named setUpRP() to avoid overwriting the super setUp method that is
    * invoke automatically before this one.
-   * 
    */
-  @Before
-  public void setUpRP() throws Exception {
-    super.setUp();
+  @BeforeEach
+  void setUpRP() {
+    if (!dalInitialized) {
+      DalLayerInitializer.getInstance().setInitialized(false);
+      DalLayerInitializer.getInstance().initialize(true);
+
+      WeldUtils.setStaticInstanceBeanManager(beanManager);
+      kernelInitializer.setInterceptor();
+      weldUtils.setBeanManager(beanManager);
+
+      dalInitialized = true;
+    }
+
     TestUtility.setTestContext();
     VariablesSecureApp vsa = new VariablesSecureApp(
         OBContext.getOBContext().getUser().getId(),
@@ -90,9 +119,10 @@ public class ReversePaymentTest extends WeldBaseTest {
     vsa.setSessionValue("#DecimalSeparator|generalQtyEdition", ".");
   }
 
+
   /**
    * This test method is used to test the reverse payment functionality in the system.
-   *
+   * <p>
    * It first sets up the data for an Invoice and saves it in the database.
    * Then it pays the invoice completely and processes the payment.
    * After that, it creates a reverse payment for the processed payment and processes the reverse payment.
@@ -101,7 +131,8 @@ public class ReversePaymentTest extends WeldBaseTest {
    * After that, it cleans up the data related to the invoice and its payments.
    * Finally, it asserts that the exception flag is false, which means that the test has passed.
    *
-   * @throws Exception If there is an error during the test.
+   * @throws Exception
+   *     If there is an error during the test.
    */
   @Test
   public void testRunReversePayment() {
@@ -145,10 +176,10 @@ public class ReversePaymentTest extends WeldBaseTest {
           .getInvoicePendingScheduledPaymentDetails(invoice);
 
       for (FIN_PaymentScheduleDetail psd : scheduleDetails) {
-         if (psd.isInvoicePaid()){
-           exception = true;
-           break;
-         }
+        if (psd.isInvoicePaid()) {
+          exception = true;
+          break;
+        }
       }
 
       dataClean(invoice.getId(), payment.getId(), reversePayment.getId());
@@ -162,7 +193,7 @@ public class ReversePaymentTest extends WeldBaseTest {
 
   /**
    * This method is used to set up the data for an Invoice in the system.
-   *
+   * <p>
    * It first creates several BigDecimal objects representing the invoiced quantity, net unit price, net list price, line net amount, and price limit.
    * Then it retrieves several objects from the database, including a PriceList, BusinessPartner, Location, PaymentTerm, Currency, Product, UOM, TaxRate, and DocumentType.
    * It also creates a new FIN_FinancialAccount and associates it with a new FIN_PaymentMethod.
@@ -171,7 +202,8 @@ public class ReversePaymentTest extends WeldBaseTest {
    * Finally, it returns the created Invoice.
    *
    * @return Invoice The created Invoice object.
-   * @throws Exception If there is an error during the data setup.
+   * @throws Exception
+   *     If there is an error during the data setup.
    */
   private Invoice dataSetup() throws Exception {
     // DATA SETUP
@@ -196,7 +228,7 @@ public class ReversePaymentTest extends WeldBaseTest {
 
     FIN_FinancialAccount testAccount = TestUtility.insertFinancialAccount(REVERSE_FINACC_NAME,
         STANDARD_DESCRIPTION, testCurrency, CASH, false,
-        getOneInstance(org.openbravo.model.common.geography.Location.class), testBusinessPartner,
+        TestUtility.getOneInstance(org.openbravo.model.common.geography.Location.class), testBusinessPartner,
         null, null, null, null, null, null, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO,
         null, true, true);
 
@@ -230,17 +262,20 @@ public class ReversePaymentTest extends WeldBaseTest {
 
   /**
    * This method is used to clean up the data related to an invoice and its payments in the system.
-   *
+   * <p>
    * It first deletes the reverse payment associated with the invoice using the provided reversePaymentId.
    * Then it deletes the original payment associated with the invoice using the provided paymentId.
    * After that, it deletes the invoice itself using the provided invoiceId.
    * Finally, it deletes the payment configuration associated with the invoice.
    *
-   * @param invoiceId The String representing the ID of the Invoice to be deleted.
-   * @param paymentId The String representing the ID of the Payment to be deleted.
-   * @param reversePaymentId The String representing the ID of the Reverse Payment to be deleted.
+   * @param invoiceId
+   *     The String representing the ID of the Invoice to be deleted.
+   * @param paymentId
+   *     The String representing the ID of the Payment to be deleted.
+   * @param reversePaymentId
+   *     The String representing the ID of the Reverse Payment to be deleted.
    */
-  private void dataClean(String invoiceId, String  paymentId, String reversePaymentId) {
+  private void dataClean(String invoiceId, String paymentId, String reversePaymentId) {
     deletePayment(reversePaymentId);
     deletePayment(paymentId);
     deleteInvoice(invoiceId);
@@ -249,15 +284,17 @@ public class ReversePaymentTest extends WeldBaseTest {
 
   /**
    * This method is used to delete a Payment in the system.
-   *
+   * <p>
    * It first retrieves the FIN_Payment object with the provided paymentId.
    * Then it calls the ResetAccounting.delete method to delete the accounting entries related to the payment.
    * After that, it processes the payment with the status "R" (Reversed) and flushes the changes to the database.
    * Then it retrieves the FIN_Payment object again and removes it from the database.
    * Finally, it commits the changes and closes the session.
    *
-   * @param paymentId The String representing the ID of the Payment to be deleted.
-   * @throws OBException If there is an error during the deletion of the Payment.
+   * @param paymentId
+   *     The String representing the ID of the Payment to be deleted.
+   * @throws OBException
+   *     If there is an error during the deletion of the Payment.
    */
   private void deletePayment(String paymentId) {
     try {
@@ -278,15 +315,17 @@ public class ReversePaymentTest extends WeldBaseTest {
 
   /**
    * This method is used to reactivate an Invoice in the system.
-   *
+   * <p>
    * It first sets the document status of the invoice to "CO" (Complete),
    * the document action to "RE" (Reactivate), and the posted status to "N" (No).
    * Then it flushes the changes to the database.
    * Finally, it calls the TestUtility.processInvoice method to process the invoice.
    *
-   * @param invoice The Invoice object to be reactivated.
+   * @param invoice
+   *     The Invoice object to be reactivated.
    * @return boolean Returns true if the invoice is processed successfully, false otherwise.
-   * @throws OBException If there is an error during the reactivation of the Invoice.
+   * @throws OBException
+   *     If there is an error during the reactivation of the Invoice.
    */
   private boolean reactivateInvoice(Invoice invoice) {
     try {
@@ -302,15 +341,17 @@ public class ReversePaymentTest extends WeldBaseTest {
 
   /**
    * This method is used to delete an Invoice in the system.
-   *
+   * <p>
    * It first retrieves the Invoice object with the provided invoiceId.
    * Then it calls the ResetAccounting.delete method to delete the accounting entries related to the invoice.
    * After that, it reactivates the invoice and flushes the changes to the database.
    * Then it retrieves the Invoice object again and removes it from the database.
    * Finally, it flushes the changes and closes the session.
    *
-   * @param invoiceId The String representing the ID of the Invoice to be deleted.
-   * @throws OBException If there is an error during the deletion of the Invoice.
+   * @param invoiceId
+   *     The String representing the ID of the Invoice to be deleted.
+   * @throws OBException
+   *     If there is an error during the deletion of the Invoice.
    */
   private void deleteInvoice(String invoiceId) {
     try {
@@ -332,14 +373,15 @@ public class ReversePaymentTest extends WeldBaseTest {
 
   /**
    * This method is used to delete the payment configuration in the system.
-   *
+   * <p>
    * It first retrieves the payment method with the name REVERSE_PAYMENT_METHOD_NAME.
    * Then it retrieves the financial account with the id stored in the instance variable financialAccountId.
    * It also retrieves the association between the payment method and the financial account.
    * After that, it removes the association, the financial account, and the payment method from the database.
    * Finally, it flushes the changes and closes the session.
    *
-   * @throws OBException If there is an error during the deletion of the payment configuration.
+   * @throws OBException
+   *     If there is an error during the deletion of the payment configuration.
    */
   private void deletePaymentConfiguration() {
     try {

@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2014-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -251,9 +249,9 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
   /**
    * Returns the HQL table whose data is being fetched. It will be obtained either using the table
    * id, or the tab id
-   * 
+   *
    * @param parameters
-   *          the parameters sent in the fetch request
+   *     the parameters sent in the fetch request
    * @return the table whose data is being fetched
    */
   private Table getTableFromParameters(Map<String, String> parameters) {
@@ -411,16 +409,16 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
    * If the hql query has insertion points, resolve them using dependency injection. If some
    * insertion points are defined in the query but its definition is not injected, replace them with
    * dummy comparisons
-   * 
+   *
    * @param hqlQuery
-   *          hql query that might contain insertion points
+   *     hql query that might contain insertion points
    * @param queryNamedParameters
-   *          array with the named paremeters that will be set to the query. At this point it is
-   *          empty, is can be filled in by the insertion point implementators
+   *     array with the named paremeters that will be set to the query. At this point it is
+   *     empty, is can be filled in by the insertion point implementators
    * @param parameters
-   *          parameters of this request
+   *     parameters of this request
    * @return the updated hql query. Also, hqlParameters can contain the named parameters used in the
-   *         insertion points
+   *     insertion points
    */
   private String fillInInsertionPoints(String hqlQuery, Map<String, Object> queryNamedParameters,
       Map<String, String> parameters) {
@@ -446,13 +444,13 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
   /**
    * If there is any HQL Query Transformer defined, uses its transformHqlQuery to transform the
    * query
-   * 
+   *
    * @param hqlQuery
-   *          the original HQL query
+   *     the original HQL query
    * @param queryNamedParameters
-   *          the named parameters that will be used in the query
+   *     the named parameters that will be used in the query
    * @param parameters
-   *          the parameters of the request
+   *     the parameters of the request
    * @return the transformed query
    */
   private String transFormQuery(String hqlQuery, Map<String, Object> queryNamedParameters,
@@ -469,9 +467,9 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
   /**
    * Returns, if defined, an HQL Query Transformer for this table. If the are several transformers
    * defined, the one with the lowest priority will be chosen
-   * 
+   *
    * @param parameters
-   *          the parameters of the request
+   *     the parameters of the request
    * @return the HQL Query transformer that will be used to transform the query
    */
   private HqlQueryTransformer getTransformer(Map<String, String> parameters) {
@@ -494,11 +492,11 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
 
   /**
    * Returns, if defined, an HQL inserter for the insertion point with index id
-   * 
+   *
    * @param index
-   *          the index of the insertion point
+   *     the index of the insertion point
    * @param parameters
-   *          the parameters of the request
+   *     the parameters of the request
    * @return the HQL inserter with the lowest priority for the insertion point
    * @insertion_point_<index>@
    */
@@ -524,13 +522,13 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
 
   /**
    * Checks if the insertion point with id index exists in the provided hql query
-   * 
+   *
    * @param hqlQuery
-   *          hql query that can contain insertion points
+   *     hql query that can contain insertion points
    * @param index
-   *          index of the insertion point
+   *     index of the insertion point
    * @return true if the hql query contains an insertion point with the provided index, false
-   *         otherwise
+   *     otherwise
    */
   private boolean existsInsertionPoint(String hqlQuery, int index) {
     String insertionPointId = INSERTION_POINT_GENERIC_ID.replace(INSERTION_POINT_INDEX_PLACEHOLDER,
@@ -540,11 +538,11 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
 
   /**
    * This method replaces the column names with their alias
-   * 
+   *
    * @param table
-   *          the table being filtered
+   *     the table being filtered
    * @param whereClause
-   *          the filter criteria
+   *     the filter criteria
    * @return an updated filter criteria that uses the alias of the columns instead of their names
    */
   private String replaceParametersWithAlias(Table table, String whereClause) {
@@ -614,15 +612,15 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
   /**
    * Adds the additional filters to the hql query. The additional filters include the client filter,
    * the organization filter and the filter created from the grid criteria
-   * 
+   *
    * @param table
-   *          table being fetched
+   *     table being fetched
    * @param hqlQuery
-   *          hql query without the additional filters
+   *     hql query without the additional filters
    * @param filterWhereClause
-   *          filter created from the grid criteria
+   *     filter created from the grid criteria
    * @param parameters
-   *          parameters used for this request
+   *     parameters used for this request
    */
   private String addAdditionalFilters(Table table, String hqlQuery, String filterWhereClause,
       Map<String, String> parameters) {
@@ -685,14 +683,14 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
 
   /**
    * Returns a HQL sort by clause based on the parameters sent to the datasource
-   * 
+   *
    * @param parameters
-   *          parameters sent in the request. They can contain useful info like the property being
-   *          sorted, its table, etc
+   *     parameters sent in the request. They can contain useful info like the property being
+   *     sorted, its table, etc
    * @param includeMainEntityID
-   *          boolean that specifies if the id of the main entity should be included in the sort
-   *          clause. This parameter will be false when the HQL Query includes a GROUP BY clause,
-   *          for instance
+   *     boolean that specifies if the id of the main entity should be included in the sort
+   *     clause. This parameter will be false when the HQL Query includes a GROUP BY clause,
+   *     for instance
    * @return an HQL sort by clause or an empty string if the grid is not being filtered
    */
   private String getSortByClause(Map<String, String> parameters, boolean includeMainEntityID) {
@@ -750,7 +748,7 @@ public class HQLDataSourceService extends ReadOnlyDataSourceService {
 
   /**
    * @param entity
-   *          entity whose first identifier property name will be returned
+   *     entity whose first identifier property name will be returned
    * @return the name of the first identifier property of an entity
    */
   private String getNameOfFirstIdentifierProperty(Entity entity) {
