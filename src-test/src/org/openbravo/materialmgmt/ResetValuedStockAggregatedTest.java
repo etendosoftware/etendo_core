@@ -150,7 +150,8 @@ public class ResetValuedStockAggregatedTest {
     when(mockOBDal.createQuery(eq(CostingRule.class), anyString())).thenReturn(mockOBQueryCostingRule);
 
     // Configure criteria and query
-    when(mockOBCriteria.add(any())).thenReturn(mockOBCriteria);
+  // Hibernate 6 migration: replace generic add(Predicate) stubbing with addEqual
+  when(mockOBCriteria.addEqual(anyString(), any())).thenReturn(mockOBCriteria);
     when(mockOBCriteria.uniqueResult()).thenReturn(null);
     when(mockOBCriteria.list()).thenReturn(new ArrayList<>());
 
@@ -334,7 +335,7 @@ public class ResetValuedStockAggregatedTest {
     when(mockOBCriteria.list()).thenReturn(new ArrayList<>());
 
     // WHEN
-    boolean result = ResetValuedStockAggregated.noAggregatedDataForPeriod(mockPeriod);
+  boolean result = ResetValuedStockAggregated.noAggregatedDataForPeriod(mockPeriod);
 
     // THEN
     assertTrue(result);
@@ -351,7 +352,7 @@ public class ResetValuedStockAggregatedTest {
     when(mockOBCriteria.list()).thenReturn(aggregatedData);
 
     // WHEN
-    boolean result = ResetValuedStockAggregated.noAggregatedDataForPeriod(mockPeriod);
+  boolean result = ResetValuedStockAggregated.noAggregatedDataForPeriod(mockPeriod);
 
     // THEN
     assertFalse(result);
