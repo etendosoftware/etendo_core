@@ -28,6 +28,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.stat.SessionStatistics;
 import org.junit.Test;
 import org.openbravo.base.provider.OBProvider;
@@ -43,12 +44,11 @@ import org.openbravo.test.base.OBBaseTest;
 
 /**
  * Set of tests for computed columns lazy loading
- * 
+ *
  * @author alostale
- * 
  */
 public class ComputedColumnsTest extends OBBaseTest {
-  private static final String EXCEPTION_MSG = "could not resolve property: deliveryStatus of: Order";
+  private static final String EXCEPTION_MSG = "Could not resolve attribute 'deliveryStatus' of 'Order'";
 
   /**
    * Tests computed columns are lazily loaded
@@ -98,19 +98,18 @@ public class ComputedColumnsTest extends OBBaseTest {
   @Test
   public void testComputedColumnCriteriaFilter() {
     setTestUserContext();
-
-    // try to filter in Criteria by computed column...
-    OBCriteria<Order> qOrder = OBDal.getInstance().createCriteria(Order.class);
-    qOrder.addEqual(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100);
     boolean thrown = false;
     try {
+      // try to filter in Criteria by computed column...
+      OBCriteria<Order> qOrder = OBDal.getInstance().createCriteria(Order.class);
+      qOrder.addEqual(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100);
       qOrder.count();
-    } catch (QueryException e) {
+    } catch (QueryException | PathElementException e) {
       thrown = e.getMessage().startsWith(EXCEPTION_MSG);
     }
 
     // ... it shouldn't be possible
-    assertTrue("Computed columns sholdn't be usable in OBCriteria", thrown);
+    assertTrue("Computed columns shouldn't be usable in OBCriteria", thrown);
   }
 
   /**
@@ -149,7 +148,7 @@ public class ComputedColumnsTest extends OBBaseTest {
 
   /**
    * Tests issue #25862
-   * 
+   * <p>
    * Computed columns for a new object should be null when converting to JSON
    */
   @Test

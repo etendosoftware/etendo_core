@@ -18,8 +18,6 @@
  */
 package org.openbravo.financial;
 
-
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,11 +36,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
-import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -494,14 +490,14 @@ public class ResetAccounting {
       if (!table.isView()) {
         tableName = table.getName();
         dateAcct = ModelProvider.getInstance()
-                .getEntityByTableName(table.getDBTableName())
-                .getPropertyByColumnName(table.getAcctdateColumn().getDBColumnName())
-                .getName();
+            .getEntityByTableName(table.getDBTableName())
+            .getPropertyByColumnName(table.getAcctdateColumn().getDBColumnName())
+            .getName();
 
         StringBuilder strUpdate = new StringBuilder();
         strUpdate.append("update ")
-                .append(tableName)
-                .append(" t set t.posted='N'");
+            .append(tableName)
+            .append(" t set t.posted='N'");
 
         if (hasProcessingColumn(table.getId())) {
           strUpdate.append(", t.processNow='N'");
@@ -512,8 +508,8 @@ public class ResetAccounting {
         orgIds.append("(");
         while (orgIdsIterator.hasNext()) {
           orgIds.append("'")
-                  .append(orgIdsIterator.next())
-                  .append("'");
+              .append(orgIdsIterator.next())
+              .append("'");
           if (orgIdsIterator.hasNext()) {
             orgIds.append(",");
           }
@@ -521,25 +517,25 @@ public class ResetAccounting {
         orgIds.append(")");
 
         strUpdate.append(" where t.posted not in ('Y') and t.processed = 'Y' and t.organization.id in ")
-                .append(orgIds);
+            .append(orgIds);
 
         if (StringUtils.isNotEmpty(datefrom)) {
           strUpdate.append(" and t.")
-                  .append(dateAcct)
-                  .append(" >= '")
-                  .append(OBDateUtils.getDate(datefrom))
-                  .append("'");
+              .append(dateAcct)
+              .append(" >= '")
+              .append(OBDateUtils.getDate(datefrom))
+              .append("'");
         }
         if (StringUtils.isNotEmpty(dateto)) {
           strUpdate.append(" and t.")
-                  .append(dateAcct)
-                  .append(" <= '")
-                  .append(OBDateUtils.getDate(dateto))
-                  .append("'");
+              .append(dateAcct)
+              .append(" <= '")
+              .append(OBDateUtils.getDate(dateto))
+              .append("'");
         }
 
         @SuppressWarnings("rawtypes") final Query update = OBDal.getInstance()
-                .getSession().createQuery(strUpdate.toString());
+            .getSession().createQuery(strUpdate.toString());
 
         final int updated = update.executeUpdate();
         results.put("updated", updated);

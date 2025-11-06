@@ -1,14 +1,14 @@
 package org.openbravo.scheduling;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.junit.After;
@@ -64,7 +64,7 @@ public class ProcessGroupTest {
 
   /**
    * Sets up the test environment before each test.
-   * Initializes mocks and configures common behavior for the ProcessGroup tests.
+   * Initialize mocks and configures common behavior for the ProcessGroup tests.
    */
   @Before
   public void setUp() {
@@ -89,7 +89,7 @@ public class ProcessGroupTest {
 
       when(mockOBDal.createCriteria(ProcessGroupList.class)).thenReturn(mockCriteria);
 
-      when(mockCriteria.add(any())).thenReturn(mockCriteria);
+      when(mockCriteria.addEqual(any(), any())).thenReturn(mockCriteria);
       when(mockCriteria.addOrderBy(any(), anyBoolean())).thenReturn(mockCriteria);
     } catch (Exception e) {
       closeStaticMocks();

@@ -19,6 +19,9 @@
 
 package org.openbravo.test.base;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assume.assumeThat;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,9 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assume.assumeThat;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

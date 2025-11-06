@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):
  *   Martin Taal <martin.taal@openbravo.com>,
  *   Ivan Perdomo <ivan.perdomo@openbravo.com>,
@@ -44,6 +44,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.query.Query;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,9 +76,9 @@ import org.openbravo.test.base.OBBaseTest;
 
 /**
  * Test different parts of the DAL API: {@link OBDal}, {@link OBQuery} and {@link OBCriteria}.
- * 
+ * <p>
  * Note the test cases assume that they are run in the order defined in this class.
- * 
+ *
  * @author mtaal
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -501,7 +502,7 @@ public class DalTest extends OBBaseTest {
     final OBCriteria<Currency> obc = OBDal.getInstance()
         .createCriteria(Currency.class);
     obc.addOr((cb, obc_inner) -> cb.equal(obc_inner.getPath(Currency.PROPERTY_ISOCODE), EURO),
-              (cb, obc_inner) -> cb.equal(obc_inner.getPath(Currency.PROPERTY_ISOCODE), DOLLAR));
+        (cb, obc_inner) -> cb.equal(obc_inner.getPath(Currency.PROPERTY_ISOCODE), DOLLAR));
     if (obc.count() > 0) {
       obc.addOrderBy(Currency.PROPERTY_ISOCODE, false);
     }
@@ -686,12 +687,12 @@ public class DalTest extends OBBaseTest {
       OBDal.getInstance().save(user);
       OBDal.getInstance().flush();
       // ...and now delete it using an OBQuery instance
-      String hql = "id = :id";
-      deletions = OBDal.getInstance()
-          .createQuery(User.class, hql)
-          .setNamedParameter("id", user.getId())
-          .deleteQuery()
-          .executeUpdate();
+      String hql = "DELETE FROM ADUser WHERE id = :id";
+      Query<?> q = OBDal.getInstance()
+          .getSession()
+          .createQuery(hql);
+      deletions = q.setParameter("id", user.getId()).executeUpdate();
+
     } finally {
       OBDal.getInstance().rollbackAndClose();
     }

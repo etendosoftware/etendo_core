@@ -40,14 +40,12 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetup;
 import org.openbravo.model.ad.process.ProcessInstance;
-import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.OrganizationTree;
 import org.openbravo.service.db.CallProcess;
 
 /**
  * Tests related to AD_Org_Tree table
- * 
  */
 public class ADOrgTreeTest extends Ad_isorgincludedTest {
   private static final Logger log = LogManager.getLogger();
@@ -327,7 +325,7 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
   /**
    * Test performance of new function is equivalent to legacy one when using individually. 300
    * consecutive calls done in a batch to have better range.
-   * 
+   * <p>
    * Verify we get the same results
    */
   @Ignore("This test is ignored because it might create false positive in CI machines due to different server load.")

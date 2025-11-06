@@ -1,23 +1,22 @@
 package org.openbravo.common.actionhandler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.criteria.Predicate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
@@ -156,10 +155,12 @@ public class ManagePrereservationActionHandlerTest {
 
     when(obDal.get(OrderLine.class, orderLineId)).thenReturn(orderLine);
 
-    mockedOBDao.when(() -> OBDao.getFilteredCriteria(eq(ReservationStock.class), any(Map.class))).thenReturn(reservationStockCriteria);
-
+    OBCriteria<ReservationStock> critRS = mock(OBCriteria.class);
+    when(obDal.createCriteria(ReservationStock.class)).thenReturn(critRS);
+    when(critRS.addEqual(anyString(), any())).thenReturn(critRS);
+    when(critRS.addIsNull(anyString())).thenReturn(critRS);
     List<ReservationStock> emptyList = new ArrayList<>();
-    when(reservationStockCriteria.list()).thenReturn(emptyList);
+    when(critRS.list()).thenReturn(emptyList);
 
     JSONObject result = handlerUnderTest.doExecute(parameters, jsonContent.toString());
 

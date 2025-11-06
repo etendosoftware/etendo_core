@@ -180,14 +180,14 @@ public class OrderLinePEHQLTransformerTest {
     requestParameters.put(SALES_TRANSACTION_PARAM, "true");
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
-    String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization in ('1')";
+    String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization.id in ('1')";
 
     String result = transformer.transformHqlQuery(queryWithFilters, requestParameters, queryNamedParameters);
 
     assertTrue(result.contains("ic.client.id in ('1')"));
     assertTrue(result.contains("ic.organization.id in ('1')"));
     assertFalse(result.contains("e.client.id in"));
-    assertFalse(result.contains("e.organization in"));
+    assertFalse(result.contains("e.organization.id in"));
   }
 
   /**
@@ -199,13 +199,13 @@ public class OrderLinePEHQLTransformerTest {
     requestParameters.put(SALES_TRANSACTION_PARAM, "false");
     staticUOMUtil.when(UOMUtil::isUomManagementEnabled).thenReturn(false);
 
-    String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization in ('1')";
+    String queryWithFilters = baseHqlQuery + " AND e.client.id in ('1') AND e.organization.id in ('1')";
 
     String result = transformer.transformHqlQuery(queryWithFilters, requestParameters, queryNamedParameters);
 
     assertTrue(result.contains("o.client.id in ('1')"));
     assertTrue(result.contains("o.organization.id in ('1')"));
     assertFalse(result.contains("e.client.id in"));
-    assertFalse(result.contains("e.organization in"));
+    assertFalse(result.contains("e.organization.id in"));
   }
 }
