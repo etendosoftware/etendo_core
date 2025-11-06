@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -793,6 +794,11 @@ public class TaxesTest extends OBBaseTest {
         }
 
         OBDal.getInstance().refresh(linetax);
+        List<OrderLineTax> linetaxList = new ArrayList<OrderLineTax>();
+        linetaxList.add(linetax);
+        testOrderLine.setOrderLineTaxList(linetaxList);
+        OBDal.getInstance().save(linetax);
+        OBDal.getInstance().save(testOrderLine);
         // Assert line taxes
         BigDecimal expectedTaxableAmount = new BigDecimal(isUpdated
             ? (isCompleted ? linesData[i].getLineTaxes().get(linetax.getTax().getId())[6]
@@ -820,6 +826,7 @@ public class TaxesTest extends OBBaseTest {
       // Temp change OBDal.getInstance().refresh(testOrderLine);
       // Because an exception comes up due to the object to refresh doesn't exist
       testOrderLine = OBDal.getInstance().get(OrderLine.class, testOrderLine.getId());
+      OBDal.getInstance().refresh(testOrderLine);
       // Assert line amounts
       BigDecimal expectedGrossAmount = new BigDecimal(isUpdated
           ? (isCompleted ? linesData[i].getLineAmounts()[6] : linesData[i].getLineAmounts()[4])
@@ -949,12 +956,13 @@ public class TaxesTest extends OBBaseTest {
       obc2.addEqual(InvoiceLineTax.PROPERTY_INVOICELINE, testInvoiceLine);
       obc2.addOrderBy(InvoiceLineTax.PROPERTY_LINENO, true);
       for (InvoiceLineTax linetax : obc2.list()) {
+        OBDal.getInstance().getSession().clear();
         linetax = OBDal.getInstance().get(InvoiceLineTax.class, linetax.getId());
 
-        log.debug(linetax.getTax().getIdentifier());
-        log.debug(linetax.getTax().getId());
-        log.debug(linetax.getTaxableAmount().toString());
-        log.debug(linetax.getTaxAmount().toString());
+        log.info(linetax.getTax().getIdentifier());
+        log.info(linetax.getTax().getId());
+        log.info(linetax.getTaxableAmount().toString());
+        log.info(linetax.getTaxAmount().toString());
 
         if (!linesData[i].getLineTaxes().containsKey(linetax.getTax().getId())) {
           assertTrue(
@@ -962,7 +970,16 @@ public class TaxesTest extends OBBaseTest {
               false);
         }
 
-        OBDal.getInstance().refresh(linetax);
+        List<InvoiceLineTax> linetaxList = new ArrayList<>();
+        linetaxList.add(linetax);
+        testInvoiceLine.setInvoiceLineTaxList(null);
+        testInvoiceLine.setInvoiceLineTaxList(linetaxList);
+        OBDal.getInstance().save(linetax);
+        OBDal.getInstance().save(testInvoiceLine);
+        List<InvoiceLine> lineList = new ArrayList<>();
+        lineList.add(testInvoiceLine);
+        testInvoice.setInvoiceLineList(lineList);
+        OBDal.getInstance().save(testInvoice);
         // Assert line taxes
         BigDecimal expectedTaxableAmount = new BigDecimal(isUpdated
             ? (isCompleted ? linesData[i].getLineTaxes().get(linetax.getTax().getId())[6]
@@ -981,6 +998,9 @@ public class TaxesTest extends OBBaseTest {
             comparesEqualTo(expectedTaxAmount));
 
         n++;
+        OBDal.getInstance().refresh(linetax);
+        OBDal.getInstance().refresh(testInvoiceLine);
+        OBDal.getInstance().refresh(testInvoice);
       }
 
       if (linesData[i].getLineTaxes().size() != n) {
@@ -989,7 +1009,8 @@ public class TaxesTest extends OBBaseTest {
       }
       // Temp change OBDal.getInstance().refresh(testInvoiceLine);
       // Because an exception comes up due to the object to refresh doesn't exist
-      testInvoiceLine = OBDal.getInstance().get(InvoiceLine.class, testInvoiceLine.getId());
+//      testInvoiceLine = OBDal.getInstance().get(InvoiceLine.class, testInvoiceLine.getId());
+//      OBDal.getInstance().refresh(testInvoiceLine);
       // Assert line amounts
       BigDecimal expectedGrossAmount = new BigDecimal(isUpdated
           ? (isCompleted ? linesData[i].getLineAmounts()[6] : linesData[i].getLineAmounts()[4])
@@ -1025,6 +1046,12 @@ public class TaxesTest extends OBBaseTest {
       }
 
       OBDal.getInstance().refresh(tax);
+      List<InvoiceTax> linetaxList = new ArrayList<>();
+      linetaxList.add(tax);
+      testInvoice.setInvoiceTaxList(linetaxList);
+      OBDal.getInstance().save(tax);
+      OBDal.getInstance().save(testInvoice);
+      List<InvoiceLine> lineList = new ArrayList<>();
       // Assert header taxes
       BigDecimal expectedTaxableAmount = new BigDecimal(isUpdated
           ? (isCompleted ? docTaxes.get(tax.getTax().getId())[6]
@@ -1043,6 +1070,7 @@ public class TaxesTest extends OBBaseTest {
           comparesEqualTo(expectedTaxAmount));
 
       n++;
+      OBDal.getInstance().refresh(testInvoice);
     }
 
     if (docTaxes.size() != n) {
@@ -1051,7 +1079,7 @@ public class TaxesTest extends OBBaseTest {
     }
     // Temp change OBDal.getInstance().refresh(testInvoice);
     // Because an exception comes up due to the object to refresh doesn't exist
-    testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
+    //testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
     // Assert header amounts
     BigDecimal expectedGrossAmount = new BigDecimal(
         isUpdated ? (isCompleted ? docAmounts[6] : docAmounts[4])
