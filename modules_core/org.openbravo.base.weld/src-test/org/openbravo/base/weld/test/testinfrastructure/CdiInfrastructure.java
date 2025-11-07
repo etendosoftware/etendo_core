@@ -34,8 +34,8 @@ import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import org.jboss.arquillian.junit.InSequence;
 import org.junit.Test;
+import org.junit.jupiter.api.Order;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
 
@@ -72,7 +72,7 @@ public class CdiInfrastructure extends WeldBaseTest {
 
   /** starts application and session scopes */
   @Test
-  @InSequence(1)
+  @Order(1)
   public void start() {
     applicationBean.setValue("application");
     sessionBean.setValue("session");
@@ -85,7 +85,7 @@ public class CdiInfrastructure extends WeldBaseTest {
 
   /** application and session scopes are preserved but not request scope */
   @Test
-  @InSequence(2)
+  @Order(2)
   public void applicationAndSessionShouldBeKept() {
     assertThat(applicationBean.getValue(), equalTo("application"));
     assertThat(sessionBean.getValue(), equalTo("session"));

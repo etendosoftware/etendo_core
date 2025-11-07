@@ -31,15 +31,12 @@ import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.Filters;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.*;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.weld.WeldUtils;
@@ -47,13 +44,16 @@ import org.openbravo.client.kernel.KernelInitializer;
 import org.openbravo.dal.core.OBInterceptor;
 import org.openbravo.dal.core.SQLFunctionRegister;
 import org.openbravo.test.base.OBBaseTest;
+import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Base test for weld, provides access to the weld container.
- * 
+ *
  * @author mtaal
  */
-@RunWith(Arquillian.class)
+@ExtendWith(ArquillianExtension.class)
+@ExtendWith(WeldInitializerExtension.class)
 public class WeldBaseTest extends OBBaseTest {
   private static final Logger log = LogManager.getLogger();
 
@@ -119,16 +119,44 @@ public class WeldBaseTest extends OBBaseTest {
    * point because we require of beanManager to be injected.
    */
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
-    if (!initialized) {
-      initializeDalLayer();
-      WeldUtils.setStaticInstanceBeanManager(beanManager);
-      kernelInitializer.setInterceptor();
-      weldUtils.setBeanManager(beanManager);
-      initialized = true;
-    }
     super.setUp();
+    // Note: beanManager, kernelInitializer, weldUtils are still null here in JUnit 5
+    // They will be injected by Arquillian after this method completes
+  }
+
+  /**
+   * Ensures Weld components are initialized. This is called automatically before each test.
+   * With JUnit 5 + Arquillian, CDI injection happens between @BeforeEach and @Test,
+   * so this method checks if beans are available and initializes if needed.
+   *
+   * Child classes that override setUp() don't need to call this manually - it's called
+   * automatically via @BeforeEach with higher priority.
+   */
+  @BeforeEach
+  protected void ensureWeldInitialized() {
+    initializeWeldComponents();
+  }
+
+  /**
+   * Initialize Weld components once the CDI beans have been injected.
+   * This is safe to call multiple times - it only initializes once.
+   */
+  protected void initializeWeldComponents() {
+    if (!initialized && beanManager != null && kernelInitializer != null && weldUtils != null) {
+      try {
+        initializeDalLayer();
+        WeldUtils.setStaticInstanceBeanManager(beanManager);
+        kernelInitializer.setInterceptor();
+        weldUtils.setBeanManager(beanManager);
+        initialized = true;
+        log.info("Weld components initialized successfully");
+      } catch (Exception e) {
+        log.error("Error initializing Weld components", e);
+        throw new RuntimeException("Failed to initialize Weld components", e);
+      }
+    }
   }
 
   /**
@@ -136,7 +164,7 @@ public class WeldBaseTest extends OBBaseTest {
    * executing a suite it will reuse the container created for the previous classes instead of the
    * new one.
    */
-  @AfterClass
+  @AfterAll
   public static void resetOBInterceptors() {
     if (SessionFactoryController.getInstance() != null) {
       final OBInterceptor interceptor = (OBInterceptor) SessionFactoryController.getInstance()

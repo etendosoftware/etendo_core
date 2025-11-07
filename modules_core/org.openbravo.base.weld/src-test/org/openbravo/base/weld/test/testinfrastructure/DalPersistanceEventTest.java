@@ -24,9 +24,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import org.jboss.arquillian.junit.InSequence;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.Order;
 import org.junit.rules.ExpectedException;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -53,21 +53,21 @@ public class DalPersistanceEventTest extends ObserverBaseTest {
   public ExpectedException exception = ExpectedException.none();
 
   @Test
-  @InSequence(1)
+  @Order(1)
   public void beginTrxObserversShouldBeExecutedOnFirstTest() {
     assertThat("begin transaction observer executions",
         OrderLineTestObserver.getNumberOfStartedTrxs(), is(1));
   }
 
   @Test
-  @InSequence(2)
+  @Order(2)
   public void beginTrxObserversShouldBeExecutedOnSubsequentTests() {
     assertThat("begin transaction observer executions",
         OrderLineTestObserver.getNumberOfStartedTrxs(), is(1));
   }
 
   @Test
-  @InSequence(3)
+  @Order(3)
   public void endTrxObserversShouldBeExecuted() {
     int initiallyClosedTrxs = OrderLineTestObserver.getNumberOfClosedTrxs();
 
@@ -79,7 +79,7 @@ public class DalPersistanceEventTest extends ObserverBaseTest {
   }
 
   @Test
-  @InSequence(4)
+  @Order(4)
   public void persistanceObserversShouldBeExecuted() {
     try {
       setSystemAdministratorContext();
@@ -103,7 +103,7 @@ public class DalPersistanceEventTest extends ObserverBaseTest {
   }
 
   @Test
-  @InSequence(5)
+  @Order(5)
   @Issue("45341")
   public void persistenceObserversShouldBeExecutedOnModifiedCreatedBy() {
     try {

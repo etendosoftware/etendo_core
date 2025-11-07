@@ -43,12 +43,10 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -91,94 +89,40 @@ public class OBBaseTest {
   private static List<String> disabledTestCases;
   private boolean disabledTestCase = false;
 
-  /**
-   * Add a TestWatcher rule to be able to catch test failures allowing them to fail.
-   * <p>
-   * This will be used to commit or rollback DAL session after on test finalization. Note failed
-   * method is invoked after invoking any method annotated with @After, that's why commit/rollback
-   * is performed on this rule's finished method which is invoked after failed.
-   */
-  @Rule
-  public TestWatcher watchFailures = new TestWatcher() {
-    @Override
-    protected void starting(Description description) {
-      disabledTestCase = isDisabled(description);
-      if (!disabledTestCase) {
-        log.info("*** Starting test case: " + getTestName(description));
-      }
+  @AfterEach
+  protected void cleanupDalSession() {
+    // Lógica para resetear el admin mode (ya la tenías en finished)
+    if (OBContext.getOBContext() != null
+        && !OBContext.getOBContext().getUser().getId().equals("0")
+        && !OBContext.getOBContext().getRole().getId().equals("0")
+        && OBContext.getOBContext().isInAdministratorMode()) {
+      OBContext.clearAdminModeStack();
+      OBContext.restorePreviousMode();
+      log.warn("The test left the OBContext in administrator mode, it has been restored.");
     }
 
-    private boolean isDisabled(Description description) {
-      boolean fullClassDisabled = disabledTestCases.contains(description.getClassName());
-      if (fullClassDisabled) {
-        return true;
+    // Logic to rollback the test session
+    try {
+      if (SessionHandler.isSessionHandlerPresent()) {
+        log.debug("Doing rollback of the test session.");
+        SessionHandler.getInstance().rollback();
       }
-      String methodName = description.getMethodName();
-      if (methodName.endsWith("]")) {
-        // parameterized tests cases suffix [desc] to method name, let's remove it
-        methodName = methodName.substring(0, methodName.indexOf("["));
-
-      }
-      return disabledTestCases.contains(description.getClassName() + "." + methodName);
-    }
-
-    @Override
-    protected void failed(Throwable e, Description description) {
-      errorOccured = true;
-    }
-
-    @Override
-    protected void finished(Description description) {
-      log.info("*** " + (disabledTestCase ? "Skipped" : "Finished") + " test case: "
-          + getTestName(description) + (errorOccured ? " - with errors" : ""));
-
-      // if not an administrator but still admin mode set throw an exception
-      if (OBContext.getOBContext() != null
-          && !OBContext.getOBContext().getUser().getId().equals("0")
-          && !OBContext.getOBContext().getRole().getId().equals("0")
-          && OBContext.getOBContext().isInAdministratorMode()) {
-        OBContext.clearAdminModeStack();
-        OBContext.restorePreviousMode();
-        throw new IllegalStateException(
-            "Test case should take care of reseting admin mode correctly in a finally block, use OBContext.restorePreviousMode");
-      }
+    } catch (final Exception e) {
+      log.error("Error rolling back the test session", e);
+    } finally {
       try {
-        if (SessionHandler.isSessionHandlerPresent()) {
-          if (SessionHandler.getInstance().getDoRollback()) {
-            SessionHandler.getInstance().rollback();
-          } else if (isErrorOccured()) {
-            SessionHandler.getInstance().rollback();
-          } else if (SessionHandler.getInstance().getSession().getTransaction().isActive()) {
-            SessionHandler.getInstance().commitAndClose();
-          } else {
-            SessionHandler.getInstance().getSession().close();
-          }
+        if (SessionHandler.isSessionHandlerPresent(ExternalConnectionPool.READONLY_POOL)) {
+          SessionHandler.getInstance().commitAndClose(ExternalConnectionPool.READONLY_POOL);
         }
-      } catch (final Exception e) {
-        reportException(e);
-        throw new OBException(e);
-      } finally {
-        try {
-          if (SessionHandler.isSessionHandlerPresent(ExternalConnectionPool.READONLY_POOL)) {
-            SessionHandler.getInstance().commitAndClose(ExternalConnectionPool.READONLY_POOL);
-          }
-        } catch (Exception ex) {
-          log.error("Error cleaning up read-only session", ex);
-        }
-        SessionHandler.deleteSessionHandler();
-        OBContext.setOBContext((OBContext) null);
+      } catch (Exception ex) {
+        log.error("Error cleaning up read-only session", ex);
       }
 
-      super.finished(description);
+      SessionHandler.deleteSessionHandler();
+      OBContext.setOBContext((OBContext) null);
+      log.debug("SessionHandler and OBContext cleaned up after test execution.");
     }
-
-    private String getTestName(Description description) {
-      return description.getClassName() + "." + description.getMethodName();
-    }
-
-  };
-
-  private boolean errorOccured = false;
+  }
 
   /**
    * Record ID of Client "F&amp;B International Group"
@@ -301,7 +245,7 @@ public class OBBaseTest {
    *
    * @see TestLogAppender
    */
-  @BeforeClass
+  @BeforeAll
   public static void classSetUp() throws Exception {
     initializeTestLogAppender();
     staticInitializeDalLayer();
@@ -319,11 +263,10 @@ public class OBBaseTest {
    * Sets the current user to the {@link #TEST_USER_ID} user. This method also mocks the servlet
    * context through the {@link DalContextListener} if the test case is configured to do so.
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     // clear the session otherwise it keeps the old model
     setTestUserContext();
-    errorOccured = false;
     if (shouldMockServletContext()) {
       setMockServletContext();
     }
@@ -334,8 +277,9 @@ public class OBBaseTest {
    * Test log appender is reset and switched off. This method also cleans the mock servlet context
    * when it applies.
    */
-  @After
-  public void testDone() {
+  @AfterEach
+  public void testDone(TestInfo testInfo) {
+    log.info("*** Ending test case " + testInfo.getDisplayName() + " ***");
     if (testLogAppender != null) {
       testLogAppender.reset();
       setTestLogAppenderLevel(Level.OFF);
@@ -353,7 +297,7 @@ public class OBBaseTest {
     return false;
   }
 
-  private void setMockServletContext() {
+  protected void setMockServletContext() {
     OBServletContextMock mockServletContext = new OBServletContextMock();
     DalContextListener.setServletContext(mockServletContext);
   }
@@ -542,10 +486,6 @@ public class OBBaseTest {
     if (e instanceof SQLException) {
       reportException(((SQLException) e).getNextException());
     }
-  }
-
-  public boolean isErrorOccured() {
-    return errorOccured;
   }
 
   /**
