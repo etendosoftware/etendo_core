@@ -21,14 +21,11 @@ package org.openbravo.portal;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
@@ -43,12 +40,16 @@ import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.access.UserRoles;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * This process grants the user the given role and resets her password
  * 
  * @author alostale
  * 
  */
+@Dependent
 public class GrantPortalAccessProcess extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();

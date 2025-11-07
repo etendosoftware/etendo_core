@@ -1,5 +1,9 @@
 package com.smf.jobs.defaults;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -11,10 +15,9 @@ import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_actionButton.ActionButtonUtility;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class ProcessShipmentDefaults extends BaseActionHandler {
     public static final String DOCUMENT_ACTION_REFERENCE_ID = "135";
     public static final String AD_TABLE_ID = "319";

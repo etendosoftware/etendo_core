@@ -29,6 +29,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBLedgerUtils;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AgingGeneralLedgerByOrganizationActionHandler extends BaseActionHandler {
 
   private static final Logger log = LogManager.getLogger();

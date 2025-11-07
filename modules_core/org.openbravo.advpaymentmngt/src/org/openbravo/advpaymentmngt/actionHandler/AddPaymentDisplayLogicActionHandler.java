@@ -24,8 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -39,6 +37,10 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpSession;
+
+@Dependent
 public class AddPaymentDisplayLogicActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

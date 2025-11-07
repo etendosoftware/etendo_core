@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,12 +44,16 @@ import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.ui.Window;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpSession;
+
 /**
  * This ActionHandler is invoked when opening a Process Definition window. It is in charge of
  * computing default values for the parameters in the window.
  * 
  * @author alostale
  */
+@Dependent
 public class DefaultsProcessActionHandler extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();

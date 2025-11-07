@@ -40,10 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
-import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
@@ -91,6 +87,11 @@ import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.utils.Replace;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 @Dependent
 public class FIN_Utility {
@@ -1228,9 +1229,9 @@ public class FIN_Utility {
         + " where p.client.id = :clientId"
         + "   and pc.documentCategory = :documentType"
         + "   and pc.periodStatus = 'O' "
-        + "   and pc.organization = ad_org_getcalendarowner(:org) "
-        + "   and to_date(:dateAcct) >= p.startingDate "
-        + "   and to_date(:dateAcct) < p.endingDate + 1 ";
+        + "   and pc.organization.id = ad_org_getcalendarowner(:org) "
+        + "   and to_date(cast(:dateAcct as timestamp)) >= p.startingDate "
+        + "   and to_date(cast(:dateAcct as timestamp)) < p.endingDate + 1 ";
     // @formatter:on
     final Query<String> qry = session.createQuery(hql, String.class);
     qry.setParameter("clientId", client);

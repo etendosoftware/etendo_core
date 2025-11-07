@@ -22,10 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,6 +49,9 @@ import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.portal.PortalAccessible;
 import org.openbravo.service.db.DalConnectionProvider;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 @Dependent
 public class MyOpenbravoActionHandler extends BaseActionHandler implements PortalAccessible {

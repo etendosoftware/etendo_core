@@ -20,9 +20,12 @@ package org.openbravo.common.actionhandler.createlinesfromprocess;
 
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Implementation for Create Invoice Lines From InOut Lines
  */
+@Dependent
 public class CreateInvoiceLinesFromInOutLines
     extends CreateInvoiceLinesFromHandler<ShipmentInOutLine> {
   @Override

@@ -41,6 +41,9 @@ import org.openbravo.model.manufacturing.processplan.Version;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CopyProcessPlanVersion extends BaseProcessActionHandler {
   final static private Logger log = LogManager.getLogger();
 

@@ -37,6 +37,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CostingRuleProcessActionHandler extends BaseProcessActionHandler {
   private static final Logger log4j = LogManager.getLogger();
   private static final String costingRuleTabId = "6868B706DA8340158DE353A6C252A564";

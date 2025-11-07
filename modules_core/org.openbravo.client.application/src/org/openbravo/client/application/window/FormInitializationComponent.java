@@ -25,7 +25,6 @@ package org.openbravo.client.application.window;
  * - Review and test thoroughly before committing
  */
 
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -35,19 +34,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
-import com.etendoerp.sequences.SequenceUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -71,7 +62,6 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.SecurityChecker;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.OBDao;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.data.Sqlc;
 import org.openbravo.erpCommon.ad_callouts.CalloutConstants;
@@ -90,6 +80,13 @@ import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonToDataConverter;
 import org.openbravo.service.json.JsonUtils;
+
+import com.etendoerp.sequences.SequenceUtils;
+
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * This class computes all the required information in Openbravo 3 forms. Basically, this can be

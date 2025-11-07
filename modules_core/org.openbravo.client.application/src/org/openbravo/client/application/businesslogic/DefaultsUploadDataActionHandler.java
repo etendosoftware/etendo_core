@@ -27,9 +27,12 @@ import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Action handler for the upload popup. Standard behavior is to return an empty defaults object.
  */
+@Dependent
 public class DefaultsUploadDataActionHandler extends BaseActionHandler {
 
   private static final Logger log = LogManager.getLogger();

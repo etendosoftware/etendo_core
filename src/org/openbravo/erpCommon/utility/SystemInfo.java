@@ -49,13 +49,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
-
-
 import org.hibernate.query.Query;
 import org.openbravo.base.ServerVersionChecker;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -72,6 +68,8 @@ import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.system.SystemInformation;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.service.db.DalConnectionProvider;
+
+import jakarta.servlet.ServletException;
 
 public class SystemInfo {
   private static final Logger log4j = LogManager.getLogger();
@@ -788,7 +786,7 @@ public class SystemInfo {
             "select count(*) " +
             "  from ADSession " +
             " where loginStatus = :type " +
-            "   and creationDate > :firstDay " +
+            "   and creationDate > cast(:firstDay as timestamp) " +
             " group by day(creationDate), month(creationDate), year(creationDate) ";
     //@formatter:on
     Query<Long> qWs = OBDal.getInstance()

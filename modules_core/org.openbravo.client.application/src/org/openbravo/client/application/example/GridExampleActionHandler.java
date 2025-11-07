@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.query.Query;
@@ -31,6 +29,8 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * The backing bean for a grid example. This backing bean does 2 things: 1) read data from the

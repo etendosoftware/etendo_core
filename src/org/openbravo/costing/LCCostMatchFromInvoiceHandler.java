@@ -45,6 +45,9 @@ import org.openbravo.model.materialmgmt.cost.LCMatched;
 import org.openbravo.model.materialmgmt.cost.LandedCostCost;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class LCCostMatchFromInvoiceHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

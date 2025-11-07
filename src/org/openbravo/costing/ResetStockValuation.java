@@ -34,6 +34,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.service.db.CallStoredProcedure;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ResetStockValuation extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();

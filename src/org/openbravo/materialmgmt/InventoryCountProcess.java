@@ -533,7 +533,7 @@ public class InventoryCountProcess implements Process {
                   "    , Locator as l" +
                   "    , MaterialMgmtInventoryStatus as invs" +
                   " where icl.physInventory.id = :physInventoryId" +
-                  "   and sd.product = icl.product" +
+                  "   and sd.product.id = icl.product.id" +
                   "   and " +
                   "     (" +
                   "       sd.quantityOnHand < 0" +

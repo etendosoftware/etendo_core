@@ -31,7 +31,6 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.BaseActionHandler;
@@ -57,6 +56,9 @@ import org.openbravo.model.materialmgmt.transaction.InventoryCount;
 import org.openbravo.model.materialmgmt.transaction.InventoryCountLine;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class InventoryAmountUpdateProcess extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 
@@ -264,7 +266,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
       if (backdatedTransactionsFixed) {
         //@formatter:off
         hqlSelect +=
-            "   and trx.movementDate <= :date";
+            "   and trx.movementDate <= cast(:date as timestamp)";
         //@formatter:on
       } else {
         //@formatter:off
@@ -281,7 +283,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
         //@formatter:off
         hqlSubSelect +=
                 " where trx.product.id = :productId" +
-                "   and trx.movementDate > :date" +
+                "   and trx.movementDate > cast(:date as timestamp)" +
         // Include only transactions that have its cost calculated
                 "   and trx.isCostCalculated = true";
         //@formatter:on
@@ -309,12 +311,12 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
           localDate = trxprocessDate;
           //@formatter:off
           hqlSelect +=
-                "   and trx.transactionProcessDate < :date";
+                "   and trx.transactionProcessDate < cast(:date as timestamp)";
           //@formatter:on
         } else {
           //@formatter:off
           hqlSelect +=
-                "   and trx.movementDate <= :date";
+                "   and trx.movementDate <= cast(:date as timestamp)";
           //@formatter:on
         }
       }

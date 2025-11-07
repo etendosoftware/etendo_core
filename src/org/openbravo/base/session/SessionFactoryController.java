@@ -40,6 +40,8 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalSessionFactory;
 
+import com.etendoerp.hibernate.EtendoPostgreSQLDialect;
+
 /**
  * Initializes and provides the session factory to the rest of the application. There are subclasses
  * for for the bootstrap process and the runtime process.
@@ -276,7 +278,7 @@ public abstract class SessionFactoryController {
   private Properties getPostgresHbProps(Properties obProps) {
     isPostgresDatabase = true;
     final Properties props = new Properties();
-    props.setProperty(AvailableSettings.DIALECT, PostgreSQLDialect.class.getName());
+    props.setProperty(AvailableSettings.DIALECT, EtendoPostgreSQLDialect.class.getName());
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {

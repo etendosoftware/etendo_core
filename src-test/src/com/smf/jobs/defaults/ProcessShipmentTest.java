@@ -43,6 +43,8 @@ import com.smf.jobs.ActionResult;
 import com.smf.jobs.Data;
 import com.smf.jobs.Result;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Unit tests for the {@code ProcessShipment} class.
  * Tests functionality related to shipment processing, covering:
@@ -56,6 +58,7 @@ public class ProcessShipmentTest {
   /**
    * A testable subclass of {@code ProcessShipment} that exposes methods for testing.
    */
+  @Dependent
   public static class TestableProcessShipment extends ProcessShipment {
 
     /**

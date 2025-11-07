@@ -43,6 +43,8 @@ import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
 import com.smf.jobs.Data;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Unit tests for the ProcessInvoices class.
  * This class contains tests to validate the behavior of processing invoices
@@ -206,6 +208,7 @@ public class ProcessInvoicesTest {
    * A testable subclass of ProcessInvoices that exposes certain protected
    * or private methods for testing purposes.
    */
+  @Dependent
   public static class TestableProcessInvoices extends ProcessInvoices {
     @Override
     public Data getInput() {

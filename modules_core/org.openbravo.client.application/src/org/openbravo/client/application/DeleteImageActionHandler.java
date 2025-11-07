@@ -20,8 +20,6 @@ package org.openbravo.client.application;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -32,6 +30,8 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.CsrfUtil;
 import org.openbravo.model.ad.utility.Image;
 import org.openbravo.service.json.JsonUtils;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Action handler which can delete an image by its id. Used on create a new record, upload an image

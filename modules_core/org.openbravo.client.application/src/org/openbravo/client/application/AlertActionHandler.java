@@ -26,12 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -49,6 +43,12 @@ import org.openbravo.model.ad.alert.AlertRule;
 import org.openbravo.portal.PortalAccessible;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonConstants;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Action handler checks if there are alerts and if so returns these as a json object.

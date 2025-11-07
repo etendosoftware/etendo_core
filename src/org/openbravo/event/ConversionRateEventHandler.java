@@ -20,8 +20,6 @@ package org.openbravo.event;
 
 import java.util.Date;
 
-import jakarta.enterprise.event.Observes;
-
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
@@ -34,6 +32,8 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.currency.ConversionRate;
 import org.openbravo.model.common.currency.Currency;
+
+import jakarta.enterprise.event.Observes;
 
 class ConversionRateEventHandler extends EntityPersistenceEventObserver {
   private static final Entity[] entities = {
@@ -86,13 +86,13 @@ class ConversionRateEventHandler extends EntityPersistenceEventObserver {
                   "   and" +
                   "     (" +
                   "       (" +
-                  "         :validFrom between t.validFromDate and t.validToDate" +
-                  "         or :validTo between t.validFromDate and t.validToDate" +
+                  "         cast(:validFrom as timestamp) between t.validFromDate and t.validToDate" +
+                  "         or cast(:validTo as timestamp) between t.validFromDate and t.validToDate" +
                   "       )" +
                   "       or" +
                   "         (" +
-                  "           :validFrom < t.validFromDate" +
-                  "           and :validTo > t.validToDate" +
+                  "           cast(:validFrom as timestamp) < t.validFromDate" +
+                  "           and cast(:validTo as timestamp) > t.validToDate" +
                   "         )" +
                   "     )";
     //@formatter:on

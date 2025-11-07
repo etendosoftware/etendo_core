@@ -44,11 +44,14 @@ import org.openbravo.model.materialmgmt.onhandquantity.Reservation;
 import org.openbravo.model.materialmgmt.onhandquantity.ReservationStock;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author gorkaion
  * 
  */
+@Dependent
 public class ManageReservationActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String STR_ALLOCATED = "allocated";

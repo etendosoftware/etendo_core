@@ -36,10 +36,13 @@ import org.openbravo.materialmgmt.refinventory.BoxProcessor;
 import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Action handler for boxing storage details into a Referenced Inventory
  *
  */
+@Dependent
 public class ReferencedInventoryBoxHandler extends BaseProcessActionHandler {
   private static final Logger logger = LogManager.getLogger();
 

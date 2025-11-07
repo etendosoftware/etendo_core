@@ -25,9 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -42,6 +39,9 @@ import org.openbravo.model.ad.ui.Menu;
 import org.openbravo.model.ad.ui.MenuTrl;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.TreeNode;
+
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
 
 /**
  * Configures cached global menu (@see {@link GlobalMenu}) to adapt it to the current session's
@@ -140,13 +140,13 @@ public class MenuManager {
   private void linkProcesses() {
     final String allowedProcessHql = "select pa.process.id " + //
         " from ADProcessAccess pa " + //
-        "where pa.role = :role" + //
+        "where pa.role.id = :roleId" + //
         "  and pa.active = true";
 
     final Query<String> allowedProcessQry = OBDal.getInstance()
         .getSession()
         .createQuery(allowedProcessHql, String.class);
-    allowedProcessQry.setParameter("role", OBContext.getOBContext().getRole());
+    allowedProcessQry.setParameter("roleId", OBContext.getOBContext().getRole().getId());
 
     for (String processId : allowedProcessQry.list()) {
       MenuOption option = getMenuOptionByType(MenuEntryType.Process, processId);
@@ -163,12 +163,12 @@ public class MenuManager {
   private void linkProcessDefinition() {
     final String processHql = "select pa.obuiappProcess.id " + //
         " from OBUIAPP_Process_Access pa " + //
-        "where pa.role = :role" + //
+        "where pa.role.id = :roleId" + //
         "  and pa.active = true ";
     final Query<String> processQry = OBDal.getInstance()
         .getSession()
         .createQuery(processHql, String.class);
-    processQry.setParameter("role", OBContext.getOBContext().getRole());
+    processQry.setParameter("roleId", OBContext.getOBContext().getRole().getId());
 
     for (String processId : processQry.list()) {
       MenuOption option = getMenuOptionByType(MenuEntryType.ProcessDefinition, processId);
@@ -181,12 +181,12 @@ public class MenuManager {
   private void linkViewDefinition() {
     final String processHql = "select va.viewImplementation.id " + //
         " from obuiapp_ViewRoleAccess va " + //
-        "where va.role = :role" + //
+        "where va.role.id = :roleId" + //
         "  and va.active = true ";
     final Query<String> processQry = OBDal.getInstance()
         .getSession()
         .createQuery(processHql, String.class);
-    processQry.setParameter("role", OBContext.getOBContext().getRole());
+    processQry.setParameter("roleId", OBContext.getOBContext().getRole().getId());
 
     for (String processId : processQry.list()) {
       MenuOption option = getMenuOptionByType(MenuEntryType.View, processId);
@@ -201,14 +201,14 @@ public class MenuManager {
         " from ADWindowAccess wa " + //
         " left join wa.aDTabAccessList as ta " + //
         " left join ta.tab as t with t.tabLevel = 0 " + //
-        " where wa.role = :role" + //
+        " where wa.role.id = :roleId" + //
         " and wa.active = true " + //
         " and (ta.active = true or ta.active is null) " + //
         " order by wa.id, t.sequenceNumber DESC ";
     final Query<Object[]> windowsQry = OBDal.getInstance()
         .getSession()
         .createQuery(windowsHql, Object[].class);
-    windowsQry.setParameter("role", OBContext.getOBContext().getRole());
+    windowsQry.setParameter("roleId", OBContext.getOBContext().getRole().getId());
 
     for (Object[] row : windowsQry.list()) {
       final String windowId = (String) row[0];

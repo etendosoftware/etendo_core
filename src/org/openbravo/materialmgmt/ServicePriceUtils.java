@@ -42,7 +42,6 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.order.OrderlineServiceRelation;
 import org.openbravo.model.common.plm.Product;
-import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.ServicePriceRule;
 import org.openbravo.model.pricing.pricelist.ServicePriceRuleRange;
@@ -323,7 +322,7 @@ public class ServicePriceUtils {
           + " join pp.priceListVersion as plv "
           + " join plv.priceList as pl "
           + " where pp.product.id = :productId "
-          + " and plv.validFromDate <= :date "
+          + " and plv.validFromDate <= cast(:date as timestamp) "
           + " and pl.id = :pricelistId "
           + " and pl.active = true "
           + " and pp.active = true "
@@ -381,7 +380,7 @@ public class ServicePriceUtils {
                  + " left join sprv.relatedProduct rp "
                  + " left join sprv.relatedProductCategory rpc "
                  + " where sprv.product.id = :serviceProductId "
-                 + " and sprv.validFromDate <= :orderDate "
+                 + " and sprv.validFromDate <= cast(:orderDate as timestamp) "
                  + " and sprv.active = true "
                  + "";
 

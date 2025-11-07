@@ -20,8 +20,6 @@ package org.openbravo.client.application;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
@@ -37,6 +35,8 @@ import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.ui.Window;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.portal.PortalAccessible;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Is responsible for storing a preference.

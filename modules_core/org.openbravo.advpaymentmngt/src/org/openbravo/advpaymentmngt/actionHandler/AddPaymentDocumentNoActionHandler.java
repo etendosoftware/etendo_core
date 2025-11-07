@@ -29,6 +29,9 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AddPaymentDocumentNoActionHandler extends BaseActionHandler {
 
   @Override

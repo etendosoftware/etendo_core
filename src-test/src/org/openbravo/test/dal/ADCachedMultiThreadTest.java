@@ -172,7 +172,7 @@ public class ADCachedMultiThreadTest extends OBBaseTest {
     // tabs with property fields that are linked to a different table than tab's one
     String hql = "select distinct f.tab.id " //
         + "from ADField f "//
-        + "where f.column.table != f.tab.table";
+        + "where f.column.table.id != f.tab.table.id";
     Query<String> qTabs = OBDal.getInstance().getSession().createQuery(hql, String.class);
 
     // Force using cache even there are mods in dev

@@ -34,6 +34,9 @@ import org.openbravo.model.materialmgmt.cost.LCReceiptLineAmt;
 import org.openbravo.model.materialmgmt.cost.LandedCostCost;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class LCMatchingCancelHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

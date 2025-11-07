@@ -34,10 +34,13 @@ import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Action handler to generate Invoice from Goods Shipment
  * 
  */
+@Dependent
 public class InvoiceFromShipmentActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

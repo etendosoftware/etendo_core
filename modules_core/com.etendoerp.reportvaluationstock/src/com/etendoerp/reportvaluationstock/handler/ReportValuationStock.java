@@ -7,13 +7,24 @@ package com.etendoerp.reportvaluationstock.handler;
  * - Review and test thoroughly before committing
  */
 
+import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import net.sf.jasperreports.engine.JRDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.domaintype.DateDomainType;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -22,14 +33,12 @@ import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.client.application.ReportDefinition;
 import org.openbravo.client.application.report.BaseReportActionHandler;
 import org.openbravo.client.kernel.RequestContext;
-
 import org.openbravo.costing.AverageAlgorithm;
 import org.openbravo.costing.CostingUtils;
 import org.openbravo.costing.StandardAlgorithm;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -48,21 +57,11 @@ import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletException;
-import java.math.BigDecimal;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import net.sf.jasperreports.engine.JRDataSource;
 
+@Dependent
 public class ReportValuationStock extends BaseReportActionHandler {
   private static final String PARAM_SUB_REPORT = "SUMMARY_DATASET";
   private static final String PARAM_FORMAT = "OUTPUT_FORMAT";

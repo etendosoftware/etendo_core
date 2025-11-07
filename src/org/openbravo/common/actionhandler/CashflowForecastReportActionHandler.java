@@ -25,8 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.codehaus.jettison.json.JSONObject;
@@ -43,11 +41,14 @@ import org.openbravo.erpCommon.utility.JRFieldProviderDataSource;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
 import net.sf.jasperreports.engine.JRDataSource;
 
 /**
  * Cashflow Forecast Action Handler for the Process Definition
  */
+@Dependent
 public class CashflowForecastReportActionHandler extends BaseReportActionHandler {
 
   private static final String BREAK_BY_DATE2 = "breakByDate";

@@ -37,6 +37,9 @@ import org.openbravo.model.common.plm.CharacteristicValue;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AddProductsToChValue extends BaseProcessActionHandler {
   final static private Logger log = LogManager.getLogger();
 

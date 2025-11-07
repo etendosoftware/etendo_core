@@ -9,6 +9,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.plm.ProductCategory;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class OfferAddProductCategory extends OfferBaseActionHandler {
 
   private static final Logger log = Logger.getLogger(OfferAddProductCategory.class);

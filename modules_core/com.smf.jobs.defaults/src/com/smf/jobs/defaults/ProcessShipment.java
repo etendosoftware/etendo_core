@@ -1,9 +1,6 @@
 package com.smf.jobs.defaults;
 
-import com.smf.jobs.Action;
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Result;
-import com.smf.jobs.defaults.Utils.ProcessUtils;
+import java.text.ParseException;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -18,14 +15,19 @@ import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import java.text.ParseException;
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Result;
+import com.smf.jobs.defaults.Utils.ProcessUtils;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 /**
  * Action for processing shipment.
  * Allows for the same actions available in the UI as part of a Job.
  */
+@Dependent
 public class ProcessShipment extends Action {
   Logger log = LogManager.getLogger();
 

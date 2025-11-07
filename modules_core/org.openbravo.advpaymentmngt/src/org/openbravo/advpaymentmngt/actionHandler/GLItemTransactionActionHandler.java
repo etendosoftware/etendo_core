@@ -32,6 +32,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class GLItemTransactionActionHandler extends BaseActionHandler {
 
   @Override

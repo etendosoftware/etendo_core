@@ -37,6 +37,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FindTransactionsToMatchActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

@@ -45,6 +45,8 @@ import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.json.DataResolvingMode;
 import org.openbravo.service.json.DataToJsonConverter;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * When user on the Sales Order window and have a Sales Order displayed / selected, you then click a
  * button on the toolbar (where the 'new' order button is, among other buttons) called 'Clone
@@ -55,6 +57,7 @@ import org.openbravo.service.json.DataToJsonConverter;
  * 
  */
 @Deprecated
+@Dependent
 public class CloneOrderActionHandler extends BaseActionHandler {
 
   @Override

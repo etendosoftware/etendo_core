@@ -38,6 +38,9 @@ import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ManualCostAdjustmentProcessHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

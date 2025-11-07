@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 
-import jakarta.enterprise.context.Dependent;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -37,6 +36,8 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.materialmgmt.cost.CostAdjustmentLine;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
+
+import jakarta.enterprise.context.Dependent;
 
 @Dependent
 @ComponentProvider.Qualifier("org.openbravo.costing.StandardAlgorithm")
@@ -150,8 +151,8 @@ public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
             "   and trx.organization.id in (:orgIds)" +
             "   and trx.product.id = :productId" +
             "   and trx.isCostCalculated = true" +
-            "   and trx.movementDate > :date" +
-            "   and trx.transactionProcessDate > :startdate" +
+            "   and trx.movementDate > cast(:date as timestamp)" +
+            "   and trx.transactionProcessDate > cast(:startdate as timestamp)" +
             "   and i.inventoryType = 'O'";
     //@formatter:on
     if (warehouse != null) {
@@ -195,7 +196,7 @@ public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
             "   and trx.product.id = :productId" +
             "   and coalesce(iaui.caInventoryamtline.id, '0') <> :inventoryAmountUpdateLineId" +
             "   and trx.isCostCalculated = true" +
-            "   and trx.transactionProcessDate > :startdate" +
+            "   and trx.transactionProcessDate > cast(:startdate as timestamp)" +
             "   and coalesce(i.inventoryType, 'N') <> 'O'";
     //@formatter:on
     if (warehouse != null) {
@@ -207,12 +208,12 @@ public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
     if (areBackdatedTrxFixed) {
       //@formatter:off
       hqlWhere +=
-            "   and trx.movementDate > :dateFrom";
+            "   and trx.movementDate > cast(:dateFrom as timestamp)";
       //@formatter:on
       if (date != null) {
         //@formatter:off
         hqlWhere +=
-            "   and trx.movementDate <= :dateTo";
+            "   and trx.movementDate <= cast(:dateTo as timestamp)";
         //@formatter:on
       }
       //@formatter:off
@@ -225,7 +226,7 @@ public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
             "   and case when coalesce(i.inventoryType, 'N') <> 'N' " +
             "       then trx.movementDate " +
             "       else trx.transactionProcessDate " +
-            "       end > :dateFrom";
+            "       end > cast(:dateFrom as timestamp)";
       //@formatter:on
       if (date != null) {
         //@formatter:off
@@ -233,7 +234,7 @@ public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
             "   and case when coalesce(i.inventoryType, 'N') <> 'N' " +
             "       then trx.movementDate " +
             "       else trx.transactionProcessDate " +
-            "       end <= :dateTo";
+            "       end <= cast(:dateTo as timestamp)";
         //@formatter:on
       }
       //@formatter:off
@@ -294,8 +295,8 @@ public class StandardCostAdjustment extends CostingAlgorithmAdjustmentImp {
             "   and trx.organization.id in (:orgIds)" +
             "   and trx.product.id = :productId" +
             "   and trx.isCostCalculated = true" +
-            "   and trx.movementDate > :date" +
-            "   and trx.transactionProcessDate > :startdate" +
+            "   and trx.movementDate > cast(:date as timestamp)" +
+            "   and trx.transactionProcessDate > cast(:startdate as timestamp)" +
             "   and i.inventoryType = 'O'";
     //@formatter:on
     if (warehouse != null) {

@@ -1,10 +1,11 @@
 package com.smf.jobs.defaults;
 
-import com.smf.jobs.Action;
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Result;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,13 +38,13 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.procurement.ReceiptInvoiceMatch;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Result;
 
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class Post extends Action {
   Logger log = LogManager.getLogger();
 

@@ -184,9 +184,9 @@ public class PriceAdjustment {
             ((BusinessPartner) orderOrInvoice.get(Invoice.PROPERTY_BUSINESSPARTNER)).getId());
 
     if (orderOrInvoice instanceof Invoice invoice) {
-      hqlQuery.setNamedParameter("date", java.sql.Timestamp.from(invoice.getInvoiceDate().toInstant()));
+      hqlQuery.setNamedParameter("date", invoice.getInvoiceDate());
     } else {
-      hqlQuery.setNamedParameter("date", java.sql.Timestamp.from(((Order) orderOrInvoice).getOrderDate().toInstant()));
+      hqlQuery.setNamedParameter("date", ((Order) orderOrInvoice).getOrderDate());
     }
 
     final List<org.openbravo.model.pricing.priceadjustment.PriceAdjustment> queryList = hqlQuery
@@ -218,9 +218,9 @@ public class PriceAdjustment {
             "as p" +
             " where active = true" +
             "   and client.id = :clientId" +
-            "   and cast(ad_isorgincluded(:orgId, p.organization.id, p.client.id) as int) <> -1" +
-            "   and (endingDate is null or cast(add_days(date_trunc('day', endingDate), 1) as timestamp) > cast(:date as timestamp))" +
-            "   and cast(date_trunc('day', startingDate) as timestamp) <= cast(:date as timestamp)" +
+            "   and ad_isorgincluded(:orgId, p.organization.id, p.client.id) <> -1" +
+            "   and (endingDate is null or add_days(trunc(endingDate), 1) > cast(:date as timestamp))" +
+            "   and trunc(startingDate) <= cast(:date as timestamp)" +
             "   and p.discountType.id = '5D4BAF6BB86D4D2C9ED3D5A6FC051579'" +
             "   and (minQuantity is null or minQuantity <= :qty)" +
             "   and (maxQuantity is null or maxQuantity >= :qty)" +

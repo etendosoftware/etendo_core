@@ -52,6 +52,7 @@ import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
 import net.sf.jasperreports.engine.JRDataSource;
 
 /**
@@ -59,6 +60,7 @@ import net.sf.jasperreports.engine.JRDataSource;
  * @author Nono Carballo
  * 
  */
+@Dependent
 public class AgingBalanceReportActionHandler extends BaseReportActionHandler {
 
   private static final String KEY_REPORT_DATA = "REPORT_DATA";

@@ -30,6 +30,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AddPaymentOrganizationActionHandler extends BaseActionHandler {
 
   @Override

@@ -1,10 +1,6 @@
 package com.smf.jobs.defaults;
 
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Data;
-import com.smf.jobs.Result;
-import com.smf.jobs.Action;
-import com.smf.jobs.defaults.Utils.ProcessUtils;
+import java.text.ParseException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -24,13 +20,20 @@ import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonUtils;
 
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Data;
+import com.smf.jobs.Result;
+import com.smf.jobs.defaults.Utils.ProcessUtils;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
-import java.text.ParseException;
 
 /**
  * Action for processing invoices.
  * Allows for the same actions available in the UI as part of a Job.
  */
+@Dependent
 public class ProcessInvoices extends Action {
     Logger log = LogManager.getLogger();
     private static final String VOIDDATE = "VoidDate";

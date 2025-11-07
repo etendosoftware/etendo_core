@@ -112,14 +112,14 @@ public class CostAdjustmentProcess {
     final String hql =
                   "select min(accountingDate) as mindate" +
                   "  from CostAdjustmentLine" +
-                  " where costAdjustment = :ca" +
+                  " where costAdjustment.id = :ca" +
                   "   and isSource = true";
     //@formatter:on
 
     final Date minDate = OBDal.getInstance()
         .getSession()
         .createQuery(hql, Date.class)
-        .setParameter("ca", costAdjustment)
+        .setParameter("ca", costAdjustment.getId())
         .uniqueResult();
     try {
       Date maxDate = CostingUtils.getMaxTransactionDate(costAdjustment.getOrganization());

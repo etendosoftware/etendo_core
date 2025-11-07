@@ -23,10 +23,13 @@ import org.codehaus.jettison.json.JSONArray;
 import org.openbravo.materialmgmt.refinventory.UnboxProcessor;
 import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Action handler for unboxing storage details from a Referenced Inventory
  *
  */
+@Dependent
 public class ReferencedInventoryUnBoxHandler extends ReferencedInventoryBoxHandler {
 
   @Override

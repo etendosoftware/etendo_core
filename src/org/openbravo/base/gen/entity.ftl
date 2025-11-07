@@ -121,6 +121,9 @@ public class ${entity.simpleClassName} extends BaseOBObject ${entity.implementsS
     <#if p.name?matches("Id")>
     @Override
     </#if>
+    <#if p.shorterTypeName?matches("Date")>
+    @Temporal(TemporalType.TIMESTAMP)
+    </#if>
     public ${p.shorterTypeName} ${getter(p)}() {
     <#if p.partOfCompositeId>
         return ((Id)getId()).«getter((Property)p)»();

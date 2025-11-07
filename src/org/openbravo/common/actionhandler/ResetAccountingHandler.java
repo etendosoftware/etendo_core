@@ -35,6 +35,9 @@ import org.openbravo.financial.ResetAccounting;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ResetAccountingHandler extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.Dependent;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -44,6 +43,8 @@ import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.AdvancedQueryBuilder;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonUtils;
+
+import jakarta.enterprise.context.Dependent;
 
 @Dependent
 @ComponentProvider.Qualifier("58AF4D3E594B421A9A7307480736F03E")
@@ -225,13 +226,13 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
     } else {
       whereClause.append(" psd.paymentDetails is null");
     }
-    whereClause.append(" and coalesce(ips,ops) is not null ");
+    whereClause.append(" and (ips.id is not null or ops.id is not null)");
 
     if (strOrganizationId != null) {
       whereClause.append(" and psd.organization.id in :orgIds ");
     }
 
-    whereClause.append(" and (oinfo is null or oinfo.active = true) ");
+    whereClause.append(" and (oinfo.id is null or oinfo.active = true) ");
     whereClause.append("  and ( ");
     if (!selectedPSDs.isEmpty()) {
       whereClause.append(" psd.id in (");
@@ -342,13 +343,13 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
   private List<String> getOrderByClauses(String transactionType, List<String> selectedPSDs,
       Map<String, String> requestParameters) {
     List<String> orderByClauses = new ArrayList<String>();
-    if (selectedPSDs.size() == 0) {
+    if (selectedPSDs.isEmpty()) {
       String strInvoiceId = requestParameters.get("c_invoice_id");
       String strOrderId = requestParameters.get("c_order_id");
       if (strInvoiceId != null) {
-        orderByClauses.add(" CASE WHEN MAX(inv.id) = '" + strInvoiceId + "' THEN 0 ELSE 1 END ");
+        orderByClauses.add(" CASE WHEN CAST(MAX(inv.id) AS text) = '" + strInvoiceId + "' THEN 0 ELSE 1 END ");
       } else if (strOrderId != null) {
-        orderByClauses.add(" CASE WHEN MAX(ord.id) = '" + strOrderId + "' THEN 0 ELSE 1 END ");
+        orderByClauses.add(" CASE WHEN CAST(MAX(ord.id) AS text) = '" + strOrderId + "' THEN 0 ELSE 1 END ");
       } else {
         orderByClauses.add(" CASE WHEN MAX(fp.id) IS NOT NULL THEN 0 ELSE 1 END ");
       }

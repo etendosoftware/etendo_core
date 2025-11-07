@@ -48,12 +48,15 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class implements the ability to transfer funds among financial accounts in a simple and
  * quick way. The idea is to have a button in the Financial Account window to transfer money.
  * 
  * @author Daniel Martins
  */
+@Dependent
 public class FundsTransferActionHandler extends BaseProcessActionHandler {
   private static final String ERROR_IN_PROCESS = "Error in process";
   private static final Logger log = LogManager.getLogger();

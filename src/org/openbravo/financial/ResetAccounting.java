@@ -199,11 +199,11 @@ public class ResetAccounting {
                 String consDate =
                     "   and e.documentCategory = :dbt" +
                         "   and e.organization.id = :organizationId" +
-                        "   and e.accountingDate >= :dateFrom" +
-                        "   and e.accountingDate <= :dateTo";
+                        "   and e.accountingDate >= cast(:dateFrom as timestamp)" +
+                        "   and e.accountingDate <= cast(:dateTo as timestamp)";
                 final String exceptionsSql = myQuery + consDate;
-                consDate += " and e.accountingDate >= :periodStartDate " +
-                    " and e.accountingDate <= :periodEndDate ";
+                consDate += " and e.accountingDate >= cast(:periodStartDate as timestamp) " +
+                    " and e.accountingDate <= cast(:periodEndDate as timestamp) ";
                 final Query<String> query = OBDal.getInstance()
                     .getSession()
                     .createQuery(myQuery + consDate, String.class)
@@ -678,18 +678,18 @@ public class ResetAccounting {
     if (!("".equals(strParameters.get(5))) && !("".equals(strParameters.get(6)))) {
       //@formatter:off
       myQuery +=
-          "   and p.startingDate <= :dateTo" +
-              "   and p.endingDate >= :dateFrom";
+          "   and p.startingDate <= cast(:dateTo as timestamp)" +
+              "   and p.endingDate >= cast(:dateFrom as timestamp)";
       //@formatter:on
     } else if (!("".equals(strParameters.get(5))) && ("".equals(strParameters.get(6)))) {
       //@formatter:off
       myQuery +=
-          "   and p.endingDate >= :dateFrom";
+          "   and p.endingDate >= cast(:dateFrom as timestamp)";
       //@formatter:on
     } else if (("".equals(strParameters.get(5))) && !("".equals(strParameters.get(6)))) {
       //@formatter:off
       myQuery +=
-          "   and p.startingDate <= :dateTo";
+          "   and p.startingDate <= cast(:dateTo as timestamp)";
       //@formatter:on
     }
     final Query<Period> query = OBDal.getInstance()

@@ -1,8 +1,10 @@
 package com.smf.jobs.defaults.invoices;
 
-import com.smf.jobs.Action;
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Result;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -20,16 +22,16 @@ import org.openbravo.service.db.CallProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonUtils;
 
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Result;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+@Dependent
 public class CreateFromOrder extends Action {
   Logger log = LogManager.getLogger();
 

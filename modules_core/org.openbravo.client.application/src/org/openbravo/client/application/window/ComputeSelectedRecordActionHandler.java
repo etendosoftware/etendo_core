@@ -22,11 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -41,6 +36,11 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.ui.Window;
 import org.openbravo.service.json.JsonConstants;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Is used to compute which records to select in a set of tabs of a certain window. It receives the

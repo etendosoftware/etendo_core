@@ -29,6 +29,9 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.domain.Preference;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class MatchStatementOnLoadGetPreferenceActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

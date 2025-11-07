@@ -27,6 +27,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.businessUtility.CancelAndReplaceUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ConfirmCancelAndReplaceSalesOrder extends BaseProcessActionHandler {
 
   @Override

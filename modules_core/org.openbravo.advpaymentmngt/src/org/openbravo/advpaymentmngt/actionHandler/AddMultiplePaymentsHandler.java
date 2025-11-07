@@ -26,10 +26,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -47,6 +43,13 @@ import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
+
+@Dependent
 public class AddMultiplePaymentsHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final SimpleDateFormat jsDateFormat = JsonUtils.createDateFormat();

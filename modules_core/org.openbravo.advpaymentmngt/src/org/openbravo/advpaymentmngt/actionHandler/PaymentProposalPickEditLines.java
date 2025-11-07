@@ -41,6 +41,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentPropDetail;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentProposal;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class PaymentProposalPickEditLines extends BaseProcessActionHandler {
   private static Logger log = LogManager.getLogger();
 

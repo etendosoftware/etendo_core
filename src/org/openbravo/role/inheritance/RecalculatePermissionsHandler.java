@@ -20,8 +20,6 @@ package org.openbravo.role.inheritance;
 
 import java.util.Map;
 
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,10 +38,14 @@ import org.openbravo.role.inheritance.RoleInheritanceManager.CalculationResult;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * Handler for the Recalculate Permissions process which is intended to launch that process to one
  * or multiple roles
  */
+@Dependent
 public class RecalculatePermissionsHandler extends BaseActionHandler {
   final static private Logger log = LogManager.getLogger();
   @Inject

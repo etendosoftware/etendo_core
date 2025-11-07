@@ -149,10 +149,10 @@ public class DalComplexQueryTestOrderLine extends OBBaseTest {
       // C_ORDERLINE.QTYORDERED-SUM(COALESCE(M_MATCHPO.QTY,0)) AS QTYORDERED, '-1' AS ISACTIVE
       // todo this we have to repeat the sum query, we use direct hql for this
       final String hql = "select sum(quantity) from ProcurementPOInvoiceMatch "
-          + "where goodsShipmentLine is not null and salesOrderLine=:orderLine";
+          + "where goodsShipmentLine is not null and salesOrderLine.id=:orderLineId";
       final Session session = OBDal.getInstance().getSession();
       final Query<BigDecimal> query = session.createQuery(hql, BigDecimal.class);
-      query.setParameter("orderLine", ol);
+      query.setParameter("orderLineId", ol.getId());
       final BigDecimal sum = query.uniqueResult();
       log.debug(sum);
     }

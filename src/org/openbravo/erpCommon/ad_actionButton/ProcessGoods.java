@@ -29,10 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.openbravo.base.filter.IsIDFilter;
@@ -62,6 +58,10 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.service.db.CallProcess;
 import org.openbravo.xmlEngine.XmlDocument;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class ProcessGoods extends HttpSecureAppServlet {
   private static final String GOODS_SHIPMENT_WINDOW = "169";
@@ -584,7 +584,7 @@ public class ProcessGoods extends HttpSecureAppServlet {
     String hql = 
             "  from PricingPriceList pl" +
             " where pl.client.id = :clientId" +
-            "   and Ad_Isorgincluded(:shipmentOrgId, pl.organization.id, :clientId) <> -1 " +
+            "   and ad_isorgincluded(:shipmentOrgId, pl.organization.id, :clientId) <> -1 " +
             "   and pl.salesPriceList = true";
     //@formatter:on
 

@@ -21,8 +21,6 @@ package org.openbravo.client.application;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
@@ -37,6 +35,8 @@ import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.ui.WindowTrl;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Computes information to open a classic window for a record in the new layout.

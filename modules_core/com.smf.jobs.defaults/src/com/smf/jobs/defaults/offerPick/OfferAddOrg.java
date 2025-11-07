@@ -10,6 +10,9 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.pricing.priceadjustment.OrganizationFilter;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class OfferAddOrg extends OfferBaseActionHandler {
 
   private static final Logger log = Logger.getLogger(OfferAddOrg.class);

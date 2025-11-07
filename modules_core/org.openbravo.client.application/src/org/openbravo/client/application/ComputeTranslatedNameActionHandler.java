@@ -20,14 +20,14 @@ package org.openbravo.client.application;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.client.kernel.StaticResourceComponent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Computes information to open a classic window for a record in the new layout.

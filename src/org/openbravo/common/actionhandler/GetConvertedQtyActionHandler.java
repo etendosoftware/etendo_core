@@ -29,10 +29,13 @@ import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.materialmgmt.UOMUtil;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Action handler to be invoked from javascript for conversions between quantity and aum quantity
  *
  */
+@Dependent
 public class GetConvertedQtyActionHandler extends BaseActionHandler {
   private static final Logger log4j = LogManager.getLogger();
 

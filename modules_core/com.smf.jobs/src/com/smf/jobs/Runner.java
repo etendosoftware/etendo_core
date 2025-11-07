@@ -1,5 +1,7 @@
 package com.smf.jobs;
 
+import java.util.Map;
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -12,15 +14,16 @@ import org.openbravo.service.web.WebService;
 import org.openbravo.service.web.WebServiceUtil;
 import org.quartz.SchedulerException;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Map;
 
 /**
  * Utility class that runs a Job
  * It can be used to run a Job from the smartclient UI as a Process Definition, or via a webservice call.
  */
+@Dependent
 public class Runner extends BaseProcessActionHandler implements WebService {
 
     /**

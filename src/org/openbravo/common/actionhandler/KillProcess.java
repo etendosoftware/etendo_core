@@ -18,6 +18,9 @@
  */
 package org.openbravo.common.actionhandler;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
@@ -35,8 +38,7 @@ import org.openbravo.service.db.DbUtility;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 
-import java.util.List;
-import java.util.Map;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * 
@@ -44,6 +46,7 @@ import java.util.Map;
  * the kill method in the process instance.
  * 
  */
+@Dependent
 public class KillProcess extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();

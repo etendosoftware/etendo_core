@@ -35,6 +35,9 @@ import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AddPaymentOnProcessActionHandler extends BaseActionHandler {
   private static Logger log = LogManager.getLogger();
 

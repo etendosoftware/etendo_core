@@ -37,6 +37,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class MatchStatementActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String OK_ACTION = "OK";

@@ -146,9 +146,9 @@ public class DataSourceProperty {
   public static Set<String> getAllowedValues(Reference reference) {
     Set<String> allowedValues = new HashSet<>();
 
-    final String hql = "select al.searchKey from ADList al" + " where al.reference=:ref";
+    final String hql = "select al.searchKey from ADList al" + " where al.reference.id=:ref";
     final Query<String> qry = OBDal.getInstance().getSession().createQuery(hql, String.class);
-    qry.setParameter("ref", reference);
+    qry.setParameter("ref", reference.getId());
     for (String value : qry.list()) {
       allowedValues.add(value);
     }

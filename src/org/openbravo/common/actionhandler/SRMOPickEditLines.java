@@ -56,11 +56,14 @@ import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author gorkaion
  * 
  */
+@Dependent
 public class SRMOPickEditLines extends BaseProcessActionHandler {
   private static Logger log = LogManager.getLogger();
 

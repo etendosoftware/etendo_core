@@ -30,15 +30,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.Check;
 import org.openbravo.base.util.CheckException;
@@ -48,10 +45,12 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.OBDao;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.Attachment;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 /**
  * Action handler to manage attachments.<br>
@@ -60,6 +59,7 @@ import org.openbravo.model.ad.utility.Attachment;
  * attachment.
  *
  */
+@Dependent
 public class AttachmentAH extends BaseActionHandler {
 
   private static final Logger log = LogManager.getLogger();

@@ -35,7 +35,6 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBCriteria;
@@ -48,6 +47,8 @@ import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.common.plm.ProductCharacteristic;
 import org.openbravo.model.common.plm.ProductCharacteristicValue;
 import org.openbravo.service.db.DbUtility;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Process in charge of updating the product characteristics
@@ -62,6 +63,7 @@ import org.openbravo.service.db.DbUtility;
  * @author augusto.mauch
  * 
  */
+@Dependent
 public class UpdateInvariantCharacteristicsHandler extends BaseActionHandler {
   final static private Logger log = LogManager.getLogger();
   private static final String NO_SUBSET = "-1";

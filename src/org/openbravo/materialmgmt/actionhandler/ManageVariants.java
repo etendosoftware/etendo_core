@@ -49,6 +49,9 @@ import org.openbravo.model.common.plm.ProductCharacteristicValue;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ManageVariants extends BaseProcessActionHandler {
   final static private Logger log = LogManager.getLogger();
   private static final String SALES_PRICELIST = "SALES";

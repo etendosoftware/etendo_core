@@ -25,7 +25,6 @@ package org.openbravo.common.actionhandler;
  * - Review and test thoroughly before committing
  */
 
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +36,11 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.OBDao;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.common.order.OrderLine;
@@ -52,11 +49,14 @@ import org.openbravo.model.materialmgmt.onhandquantity.Reservation;
 import org.openbravo.model.materialmgmt.onhandquantity.ReservationStock;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author gorkaion
  * 
  */
+@Dependent
 public class ManagePrereservationActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

@@ -35,9 +35,12 @@ import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Action to set the log level to one or more Loggers
  */
+@Dependent
 public class LogManagementActionHandler extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();

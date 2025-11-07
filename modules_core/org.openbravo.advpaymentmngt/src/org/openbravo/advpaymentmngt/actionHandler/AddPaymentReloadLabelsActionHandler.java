@@ -33,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.application.Parameter;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
@@ -45,6 +44,9 @@ import org.openbravo.model.ad.ui.Element;
 import org.openbravo.model.ad.ui.ElementTrl;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AddPaymentReloadLabelsActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

@@ -46,6 +46,9 @@ import org.openbravo.model.common.order.OrderlineServiceRelation;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ServiceOrderLineRelate extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String UNIQUE_QUANTITY = "UQ";

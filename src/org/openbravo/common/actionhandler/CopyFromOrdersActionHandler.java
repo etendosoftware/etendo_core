@@ -37,7 +37,7 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.DbUtility;
 
-import jakarta.servlet.ServletException;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Action Handler to manage the Copy From Orders process
@@ -45,6 +45,7 @@ import jakarta.servlet.ServletException;
  * @author Mark
  *
  */
+@Dependent
 public class CopyFromOrdersActionHandler extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();
