@@ -297,7 +297,7 @@ public class OBBaseTest {
     return false;
   }
 
-  protected void setMockServletContext() {
+  private void setMockServletContext() {
     OBServletContextMock mockServletContext = new OBServletContextMock();
     DalContextListener.setServletContext(mockServletContext);
   }
