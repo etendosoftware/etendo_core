@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import junit.framework.Assert;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
@@ -46,9 +47,8 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Reference;
@@ -424,7 +424,7 @@ public class IssuesTest extends OBBaseTest {
     assertEquals("130", OBContext.getOBContext().getLanguage().getId());
   }
 
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   @Issue({ "13281", "13283" })
   public void test13281And13283() throws Exception {

@@ -31,9 +31,9 @@ import java.util.Collection;
 import org.codehaus.jettison.json.JSONObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -65,7 +65,7 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
    * Execute these test cases only if there is no custom grid config as it could make unstable
    * results
    */
-  @BeforeClass
+  @BeforeAll
   public static void shouldExecuteOnlyIfThereIsNoGridConfig() {
     // Try to ensure the environment is clean. Log counts before/after cleanup to diagnose skips.
     OBContext.setAdminMode(true);
@@ -111,7 +111,7 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
     }
   }
 
-  @AfterClass
+  @AfterAll
   public static void cleanUp() {
     // Only restore core module flag if we changed it; skip if new configs were created during test (unlikely) or core already was in development.
     if (getNumberOfGridConfigurations() > 0 || Boolean.TRUE.equals(coreWasInDevelopment)) {

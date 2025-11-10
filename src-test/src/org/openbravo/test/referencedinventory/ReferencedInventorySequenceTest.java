@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.UUID;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.utility.Sequence;

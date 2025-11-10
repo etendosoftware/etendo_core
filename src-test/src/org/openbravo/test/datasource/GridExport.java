@@ -19,7 +19,7 @@
 package org.openbravo.test.datasource;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.openbravo.test.base.TestConstants.Entities.COUNTRY;
 
 import java.util.Arrays;
@@ -32,7 +32,7 @@ import jakarta.inject.Inject;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;

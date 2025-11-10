@@ -2,9 +2,10 @@ package com.smf.securewebservices.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.service.OBCriteria;
@@ -23,7 +24,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 
 import com.smf.securewebservices.SWSConfig;
 import com.smf.securewebservices.data.SMFSWSConfig;
-import spock.util.mop.Use;
 
 /**
  * Test class for SecureWebServicesUtils.
@@ -47,7 +47,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * @throws Exception if an error occurs during setup
    */
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
@@ -93,7 +93,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * Test the generation and decoding of a token with the HS256 algorithm.
    */
   @Test
-  public void testGenerateAndDecodeTokenWithHS256Algorithm() throws Exception {
+  void testGenerateAndDecodeTokenWithHS256Algorithm() throws Exception {
     configSWSConfig(HS256_PRIVATE_KEY_MOCK);
     configAlgorithmPreference(ENCRYPTION_ALGORITHM_HS256);
     User user = OBContext.getOBContext().getUser();
@@ -113,7 +113,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * Test the generation and decoding of a token with the ES256 algorithm.
    */
   @Test
-  public void testGenerateAndDecodeTokenWithES256Algorithm() throws Exception {
+  void testGenerateAndDecodeTokenWithES256Algorithm() throws Exception {
     configSWSConfig(ES256_PRIVATE_KEY_MOCK);
     configAlgorithmPreference(ENCRYPTION_ALGORITHM_ES256);
     User user = OBContext.getOBContext().getUser();
@@ -134,7 +134,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * the token is invalid.
    */
   @Test
-  public void testDecodeTokenThrowsExceptionWithUnsupportedAlgorithm() {
+  void testDecodeTokenThrowsExceptionWithUnsupportedAlgorithm() {
     String tokenRS = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiMTIzNCIsInJvbGUiOiJST0xFXzEiLCJvcmdhbml6YXRpb24iOiJPUkdfMSIsIndhcmVob3VzZSI6IldIXzEifQ.MEYCIQDKz5V+Oq8Qwp/AvpxT8Kv6nY1sIFfmC6sLYdCHdQIGKQIhAKngT4VLyPo1R9FeUt9TxxAzWY3zDuWr8zitjwX/gHVl";
     configSWSConfig(ES256_PRIVATE_KEY_MOCK);
     configAlgorithmPreference(ENCRYPTION_ALGORITHM_ES256);
@@ -148,7 +148,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * @throws Exception
    */
   @Test
-  public void testLegacyPrivKeyES256() throws Exception {
+  void testLegacyPrivKeyES256() throws Exception {
     configSWSConfig(HS256_PRIVATE_KEY_MOCK_LEGACY);
     configAlgorithmPreference(ENCRYPTION_ALGORITHM_ES256);
     User user = OBContext.getOBContext().getUser();
@@ -170,7 +170,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    * @throws Exception
    */
   @Test
-  public void testLegacyPrivKeyHS256() throws Exception {
+  void testLegacyPrivKeyHS256() throws Exception {
     configSWSConfig(HS256_PRIVATE_KEY_MOCK_LEGACY);
     configAlgorithmPreference(ENCRYPTION_ALGORITHM_HS256);
     User user = OBContext.getOBContext().getUser();
@@ -188,7 +188,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
   /**
    * Cleans up the test environment.
    */
-  @After
+  @AfterEach
   public void cleanUp() {
     try {
       OBContext.setAdminMode();

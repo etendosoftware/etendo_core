@@ -23,10 +23,8 @@ import static java.util.Map.entry;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
 import static org.openbravo.test.base.TestConstants.Orgs.ESP;
 import static org.openbravo.test.base.TestConstants.Orgs.ESP_NORTE;
 import static org.openbravo.test.base.TestConstants.Orgs.ESP_SUR;
@@ -36,20 +34,17 @@ import static org.openbravo.test.base.TestConstants.Orgs.US;
 import static org.openbravo.test.base.TestConstants.Orgs.US_EST;
 import static org.openbravo.test.base.TestConstants.Orgs.US_WEST;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBDal;
@@ -60,14 +55,12 @@ import org.openbravo.test.base.OBBaseTest;
 /**
  * Tests computation of natural tree of an organization. This is used to compute the readable
  * organizations of a user.
- * 
+ *
  * @see OrganizationStructureProvider
  * @see OBContext#getReadableOrganizations()
- * 
+ *
  * @author mtaal
  */
-
-@RunWith(Parameterized.class)
 public class AllowedOrganizationsTest extends OBBaseTest {
 
   //@formatter:off
@@ -96,33 +89,18 @@ public class AllowedOrganizationsTest extends OBBaseTest {
       );
   //@formatter:on
 
-  @Parameter(0)
-  public String testingOrgName;
-
-  @Parameter(1)
-  public String testingOrgId;
-
-  @Parameter(2)
-  public List<TestOrg> expectedNaturalTree;
-
   private OrganizationStructureProvider osp;
 
-  @Parameters(name = "Tree for organization {0}")
-  public static Collection<Object[]> parameters() throws IOException {
-    final Collection<Object[]> allTrees = new ArrayList<>();
-
-    for (Entry<String, List<TestOrg>> tree : ORG_TREES.entrySet()) {
-      allTrees.add(new Object[] { //
-          ORG_NAMES.get(tree.getKey()), //
-          tree.getKey(), //
-          tree.getValue() //
-      });
-    }
-
-    return allTrees;
+  static Stream<Arguments> parameters() {
+    return ORG_TREES.entrySet().stream()
+        .map(tree -> Arguments.of(
+            ORG_NAMES.get(tree.getKey()),
+            tree.getKey(),
+            tree.getValue()
+        ));
   }
 
-  @Before
+  @BeforeEach
   public void setOSP() {
     setTestAdminContext();
     osp = new OrganizationStructureProvider();
@@ -132,8 +110,9 @@ public class AllowedOrganizationsTest extends OBBaseTest {
   /**
    * Tests valid organizations trees for different organizations.
    */
-  @Test
-  public void testOrganizationTree() {
+  @ParameterizedTest(name = "Tree for organization {0}")
+  @MethodSource("parameters")
+  void testOrganizationTree(String testingOrgName, String testingOrgId, List<TestOrg> expectedNaturalTree) {
     Set<String> naturalTree = osp.getNaturalTree(testingOrgId);
     assertThat("Natural tree for " + ORG_NAMES.get(testingOrgId), naturalTree,
         hasItems(TestOrg.getIDs(expectedNaturalTree)));
@@ -148,9 +127,10 @@ public class AllowedOrganizationsTest extends OBBaseTest {
     }
   }
 
-  @Test
-  public void parentOrganization() {
-    assumeThat(testingOrgId, not("Dummy"));
+  @ParameterizedTest(name = "Parent organization for {0}")
+  @MethodSource("parameters")
+  void parentOrganization(String testingOrgName, String testingOrgId, List<TestOrg> expectedNaturalTree) {
+    Assumptions.assumeFalse("Dummy".equals(testingOrgId));
 
     String org = osp.getParentOrg(OBDal.getInstance().getProxy(Organization.class, testingOrgId))
         .getId();
@@ -158,9 +138,10 @@ public class AllowedOrganizationsTest extends OBBaseTest {
     assertThat(ORG_NAMES.get(testingOrgId) + "'s parent", org, is(expectedNaturalTree.get(0).id));
   }
 
-  @Test
-  public void legalOrganization() {
-    assumeThat(testingOrgId, not("Dummy"));
+  @ParameterizedTest(name = "Legal organization for {0}")
+  @MethodSource("parameters")
+  void legalOrganization(String testingOrgName, String testingOrgId, List<TestOrg> expectedNaturalTree) {
+    Assumptions.assumeFalse("Dummy".equals(testingOrgId));
     Organization org = OBDal.getInstance().getProxy(Organization.class, testingOrgId);
 
     if (!FB_GROUP.equals(testingOrgId)) {
@@ -172,9 +153,10 @@ public class AllowedOrganizationsTest extends OBBaseTest {
     }
   }
 
-  @Test
-  public void legalOrBUOrganization() {
-    assumeThat(testingOrgId, not("Dummy"));
+  @ParameterizedTest(name = "Legal or BU organization for {0}")
+  @MethodSource("parameters")
+  void legalOrBUOrganization(String testingOrgName, String testingOrgId, List<TestOrg> expectedNaturalTree) {
+    Assumptions.assumeFalse("Dummy".equals(testingOrgId));
     Organization org = OBDal.getInstance().getProxy(Organization.class, testingOrgId);
 
     if (!FB_GROUP.equals(testingOrgId)) {
@@ -187,9 +169,10 @@ public class AllowedOrganizationsTest extends OBBaseTest {
     }
   }
 
-  @Test
-  public void periodControlOrganization() {
-    assumeThat(testingOrgId, not("Dummy"));
+  @ParameterizedTest(name = "Period control organization for {0}")
+  @MethodSource("parameters")
+  void periodControlOrganization(String testingOrgName, String testingOrgId, List<TestOrg> expectedNaturalTree) {
+    Assumptions.assumeFalse("Dummy".equals(testingOrgId));
     Organization org = OBDal.getInstance().getProxy(Organization.class, testingOrgId);
 
     if (!FB_GROUP.equals(testingOrgId)) {

@@ -93,10 +93,13 @@ public class DefaultJsonDataService implements JsonDataService {
   @Inject
   private CachedPreference cachedPreference;
 
-  private static DefaultJsonDataService instance = WeldUtils
-      .getInstanceFromStaticBeanManager(DefaultJsonDataService.class);
+  private static DefaultJsonDataService instance = null;
 
   public static DefaultJsonDataService getInstance() {
+    if (instance == null) {
+      // Delay the lookup until first use
+      instance = WeldUtils.getInstanceFromStaticBeanManager(DefaultJsonDataService.class);
+    }
     return instance;
   }
 

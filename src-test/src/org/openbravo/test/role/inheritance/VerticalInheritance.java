@@ -24,10 +24,10 @@ import static org.junit.Assert.assertThat;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.test.ParameterCdiTest;
 import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -76,12 +76,12 @@ public class VerticalInheritance extends WeldBaseTest {
   /** this field will take the values defined by parameterValuesRule field. */
   private @ParameterCdiTest String parameter;
 
-  @Before
+  @BeforeEach
   public void createDummyView() {
     RoleInheritanceTestUtils.createDummyView();
   }
 
-  @After
+  @AfterEach
   public void removeDummyView() {
     RoleInheritanceTestUtils.removeDummyView();
   }

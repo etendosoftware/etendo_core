@@ -22,7 +22,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.openbravo.test.base.TestConstants.Users.ADMIN;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.authentication.basic.DefaultAuthenticationManager;
 import org.openbravo.test.base.OBBaseTest;
 

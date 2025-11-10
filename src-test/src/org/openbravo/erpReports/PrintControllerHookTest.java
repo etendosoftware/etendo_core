@@ -17,10 +17,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -148,7 +148,7 @@ public class PrintControllerHookTest extends WeldBaseTest {
   }
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     MockitoAnnotations.openMocks(this);
@@ -273,7 +273,7 @@ public class PrintControllerHookTest extends WeldBaseTest {
     throw new NoSuchFieldException("Field " + fieldName + " not found in class hierarchy");
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     weldUtilsMock.close();
   }

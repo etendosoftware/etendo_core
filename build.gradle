@@ -387,8 +387,22 @@ dependencies {
   implementation("org.redisson:redisson-tomcat-11:3.52.0") {
     exclude group: 'javax.cache'
   }
-  testImplementation 'org.jboss.weld:weld-junit5:3.0.0.Final'
+  //testImplementation 'org.jboss.weld:weld-junit5:3.0.0.Final'
   testImplementation 'org.jboss.weld.se:weld-se-core:5.1.2.Final'
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+  testImplementation 'junit:junit:4.13.2'
+  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.10.2'
+  //testImplementation 'org.jboss.weld:weld-junit5:5.0.3.Final'
+  testImplementation("org.jboss.arquillian.junit5:arquillian-junit5-container:1.10.0.Final")
+  testImplementation("org.jboss.arquillian.container:arquillian-weld-embedded:3.0.2.Final")
 }
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    events "passed", "skipped", "failed"
+    exceptionFormat "full"
+  }
+}
+

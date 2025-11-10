@@ -11,8 +11,6 @@ import static org.openbravo.test.costing.utils.TestCostingConstants.EURO_ID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jboss.weld.junit5.EnableWeld;
-import org.jboss.weld.junit5.WeldJunit5Extension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,8 +51,6 @@ import org.openbravo.model.pricing.pricelist.PriceList;
  * process the reverse payment, check if all the payment schedule details of the invoice are not paid, and clean up the data related to the invoice and its payments.
  * It also includes methods to delete a Payment, reactivate an Invoice, delete an Invoice, and delete the payment configuration in the system.
  */
-@EnableWeld
-@ExtendWith(WeldJunit5Extension.class)
 public class ReversePaymentTest {
 
   @Inject

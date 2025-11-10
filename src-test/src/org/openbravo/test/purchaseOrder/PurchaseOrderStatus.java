@@ -10,10 +10,10 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
-import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -50,7 +50,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
    *     if setup fails
    */
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     Utils.initializeTestContext();
@@ -130,7 +130,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
   /**
    * Cleans up the test environment by rolling back the transaction and closing the session.
    */
-  @After
+  @AfterEach
   public void cleanUp() {
     OBDal.getInstance().rollbackAndClose();
   }

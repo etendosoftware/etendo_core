@@ -4,13 +4,11 @@ import com.etendoerp.base.EBaseSpecification
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jboss.arquillian.container.test.api.Deployment
-import org.jboss.arquillian.junit.Arquillian
 import org.jboss.shrinkwrap.api.Filters
 import org.jboss.shrinkwrap.api.ShrinkWrap
 import org.jboss.shrinkwrap.api.asset.EmptyAsset
 import org.jboss.shrinkwrap.api.importer.ExplodedImporter
 import org.jboss.shrinkwrap.api.spec.JavaArchive
-import org.junit.runner.RunWith
 import org.openbravo.base.session.OBPropertiesProvider
 import org.openbravo.base.session.SessionFactoryController
 import org.openbravo.base.weld.WeldUtils

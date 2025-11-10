@@ -9,10 +9,10 @@ import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -53,7 +53,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
    * @throws Exception
    *     if an error occurs during setup
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
     transformer = new MatchStatementTransformer();
@@ -75,7 +75,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
    * @throws Exception
    *     if an error occurs during teardown
    */
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     if (mockedOBDal != null) {
       mockedOBDal.close();
