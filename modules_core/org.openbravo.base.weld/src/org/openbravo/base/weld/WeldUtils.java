@@ -55,7 +55,6 @@ public class WeldUtils {
           .getAttribute(BEAN_MANAGER_ATTRIBUTE_NAME);
 
       if (staticBeanManager == null) {
-        // In wildfly, bean manager is not saved in servlet context.
         log.debug("BeanManager not present in ServletContext, trying to get it with a jndi lookup");
 
         InitialContext ic = null;
@@ -64,28 +63,26 @@ public class WeldUtils {
           String name = "java:comp/" + BeanManager.class.getSimpleName();
           staticBeanManager = (BeanManager) ic.lookup(name);
           if (staticBeanManager == null) {
-            // Tomcat 10/11 + Weld 5 puede exponerlo bajo java:comp/env/BeanManager
             try {
               String envName = "java:comp/env/" + BeanManager.class.getSimpleName();
               staticBeanManager = (BeanManager) ic.lookup(envName);
-              log.debug("BeanManager obtenido vía JNDI en {}", envName);
+              log.debug("Using BeanManager from JNDI in {}", envName);
             } catch (NamingException ignored) {
-              log.debug("BeanManager no encontrado en java:comp/env, intentando CDI.current().");
+              log.debug("BeanManager not found in java:comp/env, using CDI.current().");
             }
           }
         } catch (NamingException e) {
-          log.warn("JNDI lookup de BeanManager falló: {}. Se intentará CDI.current() como fallback.", e.getMessage());
+          log.warn("JNDI lookup of BeanManager failed: {}. CDI.current() will be attempted as fallback.", e.getMessage());
         }
 
-        // Fallback final usando la API CDI portable (Weld 5 soporta CDI.current())
         if (staticBeanManager == null) {
           try {
             jakarta.enterprise.inject.spi.CDI<Object> cdi = jakarta.enterprise.inject.spi.CDI.current();
             staticBeanManager = cdi.getBeanManager();
-            log.debug("BeanManager obtenido vía CDI.current() fallback.");
+            log.debug("BeanManager obtained via CDI.current() fallback.");
           } catch (IllegalStateException ise) {
-            log.error("No se pudo obtener BeanManager ni por ServletContext, ni JNDI ni CDI.current(): {}", ise.getMessage());
-            throw new OBException("BeanManager no disponible, abortando inicialización CDI", ise);
+            log.error("Could not obtain BeanManager via ServletContext, JNDI, or CDI.current(): {}", ise.getMessage());
+            throw new OBException("BeanManager not available, aborting CDI initialization", ise);
           }
         }
       }
