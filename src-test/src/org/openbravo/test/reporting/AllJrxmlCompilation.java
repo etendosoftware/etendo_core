@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.weld.test.ParameterCdiTest;
 import org.openbravo.base.weld.test.ParameterCdiTestRule;

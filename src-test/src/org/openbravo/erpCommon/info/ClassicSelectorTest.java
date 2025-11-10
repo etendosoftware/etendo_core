@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 import jakarta.servlet.ServletException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.erpCommon.utility.TableSQLData;
 import org.openbravo.test.base.OBBaseTest;
 

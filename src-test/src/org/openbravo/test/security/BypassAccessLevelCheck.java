@@ -24,10 +24,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertThat;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.dal.core.OBContext;
@@ -53,7 +53,7 @@ public class BypassAccessLevelCheck extends OBBaseTest {
   @Rule
   public ExpectedException exception = ExpectedException.none();
 
-  @BeforeClass
+  @BeforeAll
   public static void createOrgLevelRole() {
     Role role = ExplicitCrossOrganizationReference.createOrgUserLevelRole();
     ORG_LEVEL_ROLE = role.getId();
@@ -86,7 +86,7 @@ public class BypassAccessLevelCheck extends OBBaseTest {
     assertThat("Visible currencies", q.count(), is(greaterThan(0)));
   }
 
-  @AfterClass
+  @AfterAll
   public static void cleanUpCreatedObjects() {
     CrossOrganizationReference.removeCreatedObjects();
   }

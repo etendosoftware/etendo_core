@@ -19,27 +19,23 @@
 
 package org.openbravo.test.taxes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.openbravo.base.structure.BaseOBObject;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -65,7 +61,6 @@ import org.openbravo.test.taxes.data.*;
 /**
  * Tests cases to check taxes computation
  */
-@RunWith(Parameterized.class)
 public class TaxesTest extends OBBaseTest {
   final static private Logger log = LogManager.getLogger();
 
@@ -105,7 +100,7 @@ public class TaxesTest extends OBBaseTest {
   private String[] docAmounts;
   private TaxesLineTestData[] linesData;
 
-  public TaxesTest(String testNumber, String testDescription, TaxesTestData data) {
+  private void initializeTestData(String testNumber, String testDescription, TaxesTestData data) {
     this.testNumber = testNumber;
     this.testDescription = testDescription;
     this.isTaxDocumentLevel = data.isTaxDocumentLevel();
@@ -118,9 +113,8 @@ public class TaxesTest extends OBBaseTest {
   /**
    * parameterized possible combinations for taxes computation
    */
-  @Parameters(name = "idx:{0} name:{1}")
-  public static Collection<Object[]> params() {
-    return Arrays.asList(new Object[][]{
+  public static Stream<Object[]> params() {
+    return Arrays.stream(new Object[][]{
         { "01", "PriceExcludingTaxes 01: Line Exempt positive", new TaxesTestData1() }, //
         { "02", "PriceExcludingTaxes 02: Line Exempt negative", new TaxesTestData2() }, //
         { "03", "PriceExcludingTaxes 03: Line 10% positive", new TaxesTestData3() }, //
@@ -324,23 +318,33 @@ public class TaxesTest extends OBBaseTest {
     });
   }
 
-  @Test
-  public void testPurchaseOrderTaxes() {
+  @ParameterizedTest(name = "idx:{0} name:{1} - Purchase order taxes")
+  @MethodSource("params")
+  public void testPurchaseOrderTaxes(String testNumber, String testDescription,
+      TaxesTestData data) {
+    initializeTestData(testNumber, testDescription, data);
     testOrderTaxes(false);
   }
 
-  @Test
-  public void testSalesOrderTaxes() {
+  @ParameterizedTest(name = "idx:{0} name:{1} - Sales order taxes")
+  @MethodSource("params")
+  public void testSalesOrderTaxes(String testNumber, String testDescription, TaxesTestData data) {
+    initializeTestData(testNumber, testDescription, data);
     testOrderTaxes(true);
   }
 
-  @Test
-  public void testPurchaseInvoiceTaxes() {
+  @ParameterizedTest(name = "idx:{0} name:{1} - Purchase invoice taxes")
+  @MethodSource("params")
+  public void testPurchaseInvoiceTaxes(String testNumber, String testDescription,
+      TaxesTestData data) {
+    initializeTestData(testNumber, testDescription, data);
     testInvoiceTaxes(false);
   }
 
-  @Test
-  public void testSalesInvoiceTaxes() {
+  @ParameterizedTest(name = "idx:{0} name:{1} - Sales invoice taxes")
+  @MethodSource("params")
+  public void testSalesInvoiceTaxes(String testNumber, String testDescription, TaxesTestData data) {
+    initializeTestData(testNumber, testDescription, data);
     testInvoiceTaxes(true);
   }
 
@@ -372,7 +376,7 @@ public class TaxesTest extends OBBaseTest {
       log.info("Test Completed successfully");
     } catch (Exception e) {
       log.error("Error when executing testOrderTaxes", e);
-      assertFalse(true);
+      fail("Error when executing testOrderTaxes", e);
     } finally {
       updateTax(false);
     }
@@ -406,7 +410,7 @@ public class TaxesTest extends OBBaseTest {
       log.info("Test Completed successfully");
     } catch (Exception e) {
       log.error("Error when executing testInvoiceTaxes", e);
-      assertFalse(true);
+      fail("Error when executing testInvoiceTaxes", e);
     } finally {
       updateTax(false);
     }
@@ -788,9 +792,8 @@ public class TaxesTest extends OBBaseTest {
         log.debug(linetax.getTaxAmount().toString());
 
         if (!linesData[i].getLineTaxes().containsKey(linetax.getTax().getId())) {
-          assertTrue(
-              testDescription + ". Tax Should not be present: " + linetax.getTax().getIdentifier(),
-              false);
+          fail(testDescription + ". Tax Should not be present: "
+              + linetax.getTax().getIdentifier());
         }
 
         OBDal.getInstance().refresh(linetax);
@@ -820,8 +823,8 @@ public class TaxesTest extends OBBaseTest {
       }
 
       if (linesData[i].getLineTaxes().size() != n) {
-        assertTrue(testDescription + ". Number of lines obtained("
-            + linesData[i].getLineTaxes().size() + ") different than expected (" + n + ")", false);
+        fail(testDescription + ". Number of lines obtained("
+            + linesData[i].getLineTaxes().size() + ") different than expected (" + n + ")");
       }
       // Temp change OBDal.getInstance().refresh(testOrderLine);
       // Because an exception comes up due to the object to refresh doesn't exist
@@ -857,8 +860,7 @@ public class TaxesTest extends OBBaseTest {
       log.debug(tax.getTaxAmount().toString());
 
       if (!docTaxes.containsKey(tax.getTax().getId())) {
-        assertTrue(testDescription + ". Tax Should not be present: " + tax.getTax().getIdentifier(),
-            false);
+        fail(testDescription + ". Tax Should not be present: " + tax.getTax().getIdentifier());
       }
       OBDal.getInstance().refresh(tax);
       // Assert header taxes
@@ -882,8 +884,8 @@ public class TaxesTest extends OBBaseTest {
     }
 
     if (docTaxes.size() != n) {
-      assertTrue(testDescription + ". Number of lines obtained(" + docTaxes.size()
-          + ") different than expected (" + n + ")", false);
+      fail(testDescription + ". Number of lines obtained(" + docTaxes.size()
+          + ") different than expected (" + n + ")");
     }
     OBDal.getInstance().refresh(testOrder);
     // Assert header amounts
@@ -965,9 +967,8 @@ public class TaxesTest extends OBBaseTest {
         log.info(linetax.getTaxAmount().toString());
 
         if (!linesData[i].getLineTaxes().containsKey(linetax.getTax().getId())) {
-          assertTrue(
-              testDescription + ". Tax Should not be present: " + linetax.getTax().getIdentifier(),
-              false);
+          fail(testDescription + ". Tax Should not be present: "
+              + linetax.getTax().getIdentifier());
         }
 
         List<InvoiceLineTax> linetaxList = new ArrayList<>();
@@ -1004,8 +1005,8 @@ public class TaxesTest extends OBBaseTest {
       }
 
       if (linesData[i].getLineTaxes().size() != n) {
-        assertTrue(testDescription + ". Number of lines obtained("
-            + linesData[i].getLineTaxes().size() + ") different than expected (" + n + ")", false);
+        fail(testDescription + ". Number of lines obtained("
+            + linesData[i].getLineTaxes().size() + ") different than expected (" + n + ")");
       }
       // Temp change OBDal.getInstance().refresh(testInvoiceLine);
       // Because an exception comes up due to the object to refresh doesn't exist
@@ -1041,8 +1042,7 @@ public class TaxesTest extends OBBaseTest {
       log.debug(tax.getTaxAmount().toString());
 
       if (!docTaxes.containsKey(tax.getTax().getId())) {
-        assertTrue(testDescription + ". Tax Should not be present: " + tax.getTax().getIdentifier(),
-            false);
+        fail(testDescription + ". Tax Should not be present: " + tax.getTax().getIdentifier());
       }
 
       OBDal.getInstance().refresh(tax);
@@ -1074,8 +1074,8 @@ public class TaxesTest extends OBBaseTest {
     }
 
     if (docTaxes.size() != n) {
-      assertTrue(testDescription + ". Number of lines obtained(" + docTaxes.size()
-          + ") different than expected (" + n + ")", false);
+      fail(testDescription + ". Number of lines obtained(" + docTaxes.size()
+          + ") different than expected (" + n + ")");
     }
     // Temp change OBDal.getInstance().refresh(testInvoice);
     // Because an exception comes up due to the object to refresh doesn't exist

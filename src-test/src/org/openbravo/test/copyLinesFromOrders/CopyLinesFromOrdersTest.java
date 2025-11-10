@@ -36,10 +36,10 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.ParameterCdiTest;
@@ -166,7 +166,7 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
 
   private static UOMManagementUtil uomUtil = new UOMManagementUtil();
 
-  @BeforeClass
+  @BeforeAll
   public static void executeBeforeTests() {
     OBContext.setAdminMode();
     try {
@@ -180,7 +180,7 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
     }
   }
 
-  @AfterClass
+  @AfterAll
   public static void executeAfterTests() {
     OBContext.setAdminMode();
     try {

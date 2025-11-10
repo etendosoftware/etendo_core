@@ -20,9 +20,9 @@
 package org.openbravo.client.application.test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.query.Query;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.attachment.AttachmentUtils;
@@ -61,7 +61,7 @@ public class ADCSInitialization extends WeldBaseTest {
 
   @Test
   public void aDCSshouldBeCorrectlyInitialized() {
-    assumeTrue("Cache can be used (no modules in development)", adcs.useCache());
+    assumeTrue(adcs.useCache(), "Cache can be used (no modules in development)");
 
     int maxThreads = Runtime.getRuntime().availableProcessors() * 2;
     log.info("Starting ADCS initialization with {} threads.", maxThreads);

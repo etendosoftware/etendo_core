@@ -28,8 +28,8 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
@@ -81,7 +81,7 @@ public class PaymentTest_11 extends WeldBaseTest {
    * invoke automatically before this one.
    * 
    */
-  @Before
+  @BeforeEach
   public void setUpP11() throws Exception {
     TestUtility.setTestContextSpain();
   }

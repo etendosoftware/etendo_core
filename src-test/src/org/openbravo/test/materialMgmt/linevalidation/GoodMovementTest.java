@@ -4,9 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.openbravo.test.materialMgmt.linevalidation.GoodMovementUtils.createGoodsMovement;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
@@ -29,7 +29,7 @@ public class GoodMovementTest extends OBBaseTest {
    * @throws Exception
    *     if an error occurs during setup.
    */
-  @Before
+  @BeforeEach
   @Override
   public void setUp() throws Exception {
     super.setUp();
@@ -64,7 +64,7 @@ public class GoodMovementTest extends OBBaseTest {
    * Cleans up the database state after each test execution.
    * Ensures that no data is persisted between tests.
    */
-  @After
+  @AfterEach
   public void cleanUp() {
     OBDal.getInstance().rollbackAndClose();
   }

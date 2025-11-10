@@ -12,8 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.test.TestUtility;
 import org.openbravo.advpaymentmngt.test.Value;
 import org.openbravo.base.exception.OBException;
@@ -64,7 +64,7 @@ public class CloneInvoiceTest extends WeldBaseTest {
 
   /**
    * This method is used to set up the context for the invoice cloning test.
-   * It is annotated with @Before, meaning it is run before each test method in this class.
+   * It is annotated with @BeforeEach, meaning it is run before each test method in this class.
    * <p>
    * It first calls the setUp method of the superclass to perform any setup operations defined there.
    * Then it calls the TestUtility.setTestContext method to set up the test context.
@@ -78,7 +78,7 @@ public class CloneInvoiceTest extends WeldBaseTest {
    * @throws Exception
    *     If there is an error during the setup.
    */
-  @Before
+  @BeforeEach
   public void setUpCloneInvoice() throws Exception {
     super.setUp();
     TestUtility.setTestContext();

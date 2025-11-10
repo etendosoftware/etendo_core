@@ -19,7 +19,7 @@
 
 package org.openbravo.test.dal;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.erpCommon.businessUtility.Tax;
 import org.openbravo.erpCommon.utility.DateTimeData;
 import org.openbravo.service.db.DalConnectionProvider;

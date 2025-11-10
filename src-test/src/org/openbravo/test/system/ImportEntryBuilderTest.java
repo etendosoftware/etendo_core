@@ -18,19 +18,20 @@
  */
 package org.openbravo.test.system;
 
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Hibernate;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -67,9 +68,9 @@ public class ImportEntryBuilderTest extends WeldBaseTest {
 
   /**
    * Create two sample import entries. One for ImportEntry table and the other for
-   * ImportEntryArchive Those entries will be removed in @AfterClass
+   * ImportEntryArchive Those entries will be removed in @AfterAll
    */
-  @BeforeClass
+  @BeforeAll
   public static void createImportEntries() {
     OBContext.setOBContext("100", "0", TEST_CLIENT_ID, TEST_ORG_ID);
 
@@ -122,22 +123,26 @@ public class ImportEntryBuilderTest extends WeldBaseTest {
    * Before creating an ImportEntry, if ID is provided, builder will check whether this entry exists
    * in ImportEntry table
    */
-  @Test(expected = ImportEntryAlreadyExistsException.class)
+  @Test
   public void whenGivenIdExistsImportEntryBuilderThrowsException() {
-    createdEntry = ImportEntryBuilder.newInstance(TYPE_OF_DATA, JSON_DATA) //
-        .setId(existingImportEntry.getId()) //
-        .create();
+    assertThrows(ImportEntryAlreadyExistsException.class, () -> {
+      createdEntry = ImportEntryBuilder.newInstance(TYPE_OF_DATA, JSON_DATA) //
+          .setId(existingImportEntry.getId()) //
+          .create();
+    });
   }
 
   /**
    * Before creating an ImportEntry, if ID is provided, builder will check whether this entry exists
    * in ImportEntryArchive table
    */
-  @Test(expected = ImportEntryAlreadyExistsException.class)
+  @Test
   public void whenGivenIdExistsAsArchivedImportEntryBuilderThrowsException() {
-    createdEntry = ImportEntryBuilder.newInstance(TYPE_OF_DATA, JSON_DATA) //
-        .setId(existingImportEntryArchive.getId()) //
-        .create();
+    assertThrows(ImportEntryAlreadyExistsException.class, () -> {
+      createdEntry = ImportEntryBuilder.newInstance(TYPE_OF_DATA, JSON_DATA) //
+          .setId(existingImportEntryArchive.getId()) //
+          .create();
+    });
   }
 
   /**
@@ -150,18 +155,20 @@ public class ImportEntryBuilderTest extends WeldBaseTest {
         .setProperty("active", false) //
         .create();
 
-    assertFalse("Created object should be inactive", createdEntry.isActive());
+    assertFalse(createdEntry.isActive(), "Created object should be inactive");
   }
 
   /**
    * Check that the builder throws an exception when attempting to set a non existing field in
    * setProperties
    */
-  @Test(expected = OBException.class)
+  @Test
   public void whenCustomPropertyToInsertDoesNotExistImportEntryCreationFails() {
-    createdEntry = ImportEntryBuilder.newInstance(TYPE_OF_DATA, JSON_DATA) //
-        .setProperty("customData", "") //
-        .create();
+    assertThrows(OBException.class, () -> {
+      createdEntry = ImportEntryBuilder.newInstance(TYPE_OF_DATA, JSON_DATA) //
+          .setProperty("customData", "") //
+          .create();
+    });
   }
 
   /**
@@ -175,8 +182,9 @@ public class ImportEntryBuilderTest extends WeldBaseTest {
     Client client = OBContext.getOBContext().getCurrentClient();
     Organization organization = OBContext.getOBContext().getCurrentOrganization();
     Role role = OBContext.getOBContext().getRole();
-    assertTrue("Created entry values matches default values",
-        checkImportEntryValues(createdEntry, client, organization, role, TYPE_OF_DATA, JSON_DATA));
+    assertTrue(
+        checkImportEntryValues(createdEntry, client, organization, role, TYPE_OF_DATA, JSON_DATA),
+        "Created entry values matches default values");
   }
 
   /**
@@ -190,8 +198,9 @@ public class ImportEntryBuilderTest extends WeldBaseTest {
         .setRole(QA_TESTING_ADMIN_ROLE) //
         .create();
 
-    assertTrue("Created entry values matches defined values", checkImportEntryValues(createdEntry,
-        QA_TESTING_CLIENT, SPAIN_ORG, QA_TESTING_ADMIN_ROLE, TYPE_OF_DATA, JSON_DATA));
+    assertTrue(checkImportEntryValues(createdEntry,
+            QA_TESTING_CLIENT, SPAIN_ORG, QA_TESTING_ADMIN_ROLE, TYPE_OF_DATA, JSON_DATA),
+        "Created entry values matches defined values");
   }
 
   private boolean checkImportEntryValues(ImportEntry entry, Client client,
@@ -203,7 +212,7 @@ public class ImportEntryBuilderTest extends WeldBaseTest {
         && (StringUtils.equals(jsonData, entry.getJsonInfo()));
   }
 
-  @After
+  @AfterEach
   public void removeImportEntryWhenCreated() {
     OBContext.setAdminMode(false);
     try {
@@ -218,7 +227,7 @@ public class ImportEntryBuilderTest extends WeldBaseTest {
 
   }
 
-  @AfterClass
+  @AfterAll
   public static void disposeImportEntries() {
     OBContext.setOBContext("100", "0", TEST_CLIENT_ID, TEST_ORG_ID);
 
