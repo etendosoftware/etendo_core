@@ -19,8 +19,7 @@
 
 package org.openbravo.test.base;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +46,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.TestWatcher;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -87,28 +91,78 @@ public class OBBaseTest {
   private static final String TEST_LOG_APPENDER_NAME = "TestLogAppender";
   private static TestLogAppender testLogAppender;
   private static List<String> disabledTestCases;
+
+  // State that will be managed by the TestWatcher
+  private boolean errorOccured = false;
   private boolean disabledTestCase = false;
 
-  @AfterEach
-  protected void cleanupDalSession() {
-    // Lógica para resetear el admin mode (ya la tenías en finished)
+  /**
+   * This extension replaces the @Rule TestWatcher logic from JUnit 4.
+   * Implements TestWatcher to capture success/failure and AfterEachCallback
+   * to execute cleanup *after* the state is known.
+   * Uses BeforeTestExecutionCallback to ensure it runs after @BeforeEach (including setUp()).
+   * 
+   * Note: This extension is only active for JUnit 5 tests. JUnit 4 tests that extend
+   * OBBaseTest will continue to work but won't use this extension.
+   */
+  @RegisterExtension
+  final DalCleanupExtension dalCleanupWatcher = new DalCleanupExtension();
+
+  /**
+   * Called by the extension after @BeforeEach has completed and OBContext is initialized.
+   * This ensures the test environment is fully ready before the test executes.
+   */
+  protected void beforeTestExecution(ExtensionContext context) {
+    // Reset the error state
+    errorOccured = false;
+
+    // Check if the test is disabled
+    disabledTestCase = isDisabledTest(context);
+    if (!disabledTestCase) {
+      log.info("*** Starting test case: " + getTestName(context));
+    }
+    
+    // Ensure OBContext is set if setUp() wasn't called (shouldn't happen in normal flow)
+    if (OBContext.getOBContext() == null) {
+      log.warn("OBContext was null before test execution, initializing it now");
+      setTestUserContext();
+    }
+  }
+
+  /**
+   * Called by the extension after the test completes to perform cleanup based on test result.
+   */
+  protected void afterTestExecution(ExtensionContext context) {
+    log.info("*** " + (disabledTestCase ? "Skipped" : "Finished") + " test case: "
+        + getTestName(context) + (errorOccured ? " - with errors" : ""));
+
+    // Admin Mode cleanup logic (from original 'finished')
     if (OBContext.getOBContext() != null
         && !OBContext.getOBContext().getUser().getId().equals("0")
         && !OBContext.getOBContext().getRole().getId().equals("0")
         && OBContext.getOBContext().isInAdministratorMode()) {
       OBContext.clearAdminModeStack();
       OBContext.restorePreviousMode();
-      log.warn("The test left the OBContext in administrator mode, it has been restored.");
+      // Cannot throw an exception here, but log an error
+      log.error("Test case should take care of reseting admin mode correctly in a finally block, use OBContext.restorePreviousMode");
     }
 
-    // Logic to rollback the test session
+    // Session and transaction cleanup logic (from original 'finished')
     try {
       if (SessionHandler.isSessionHandlerPresent()) {
-        log.debug("Doing rollback of the test session.");
-        SessionHandler.getInstance().rollback();
+        if (SessionHandler.getInstance().getDoRollback()) {
+          SessionHandler.getInstance().rollback();
+        } else if (errorOccured) { // <--- RESTORED CONDITIONAL LOGIC
+          SessionHandler.getInstance().rollback();
+        } else if (SessionHandler.getInstance().getSession().getTransaction().isActive()) {
+          SessionHandler.getInstance().commitAndClose();
+        } else {
+          SessionHandler.getInstance().getSession().close();
+        }
       }
     } catch (final Exception e) {
-      log.error("Error rolling back the test session", e);
+      reportException(e); // Use the base class method
+      throw new OBException(e);
     } finally {
       try {
         if (SessionHandler.isSessionHandlerPresent(ExternalConnectionPool.READONLY_POOL)) {
@@ -117,10 +171,84 @@ public class OBBaseTest {
       } catch (Exception ex) {
         log.error("Error cleaning up read-only session", ex);
       }
-
       SessionHandler.deleteSessionHandler();
       OBContext.setOBContext((OBContext) null);
-      log.debug("SessionHandler and OBContext cleaned up after test execution.");
+    }
+
+    // Log appender cleanup logic (from original 'testDone')
+    if (testLogAppender != null) {
+      testLogAppender.reset();
+      setTestLogAppenderLevel(Level.OFF);
+    }
+
+    // Mock Servlet cleanup logic (from original 'testDone')
+    if (shouldMockServletContext()) {
+      cleanMockServletContext();
+    }
+  }
+
+  private String getTestName(ExtensionContext context) {
+    return context.getRequiredTestClass().getName() + "." + context.getRequiredTestMethod().getName();
+  }
+
+  private boolean isDisabledTest(ExtensionContext context) {
+    // Ensure disabledTestCases is initialized
+    if (disabledTestCases == null) {
+      initializeDisabledTestCases();
+    }
+    
+    String className = context.getRequiredTestClass().getName();
+    boolean fullClassDisabled = disabledTestCases.contains(className);
+    if (fullClassDisabled) {
+      return true;
+    }
+    String methodName = context.getRequiredTestMethod().getName();
+    if (methodName.endsWith("]")) {
+      // parameterized tests cases suffix [desc] to method name, let's remove it
+      methodName = methodName.substring(0, methodName.indexOf("["));
+    }
+    return disabledTestCases.contains(className + "." + methodName);
+  }
+
+  // Inner class that handles the lifecycle
+  class DalCleanupExtension implements TestWatcher, BeforeTestExecutionCallback, AfterEachCallback {
+
+    @Override
+    public void beforeTestExecution(ExtensionContext context) throws Exception {
+      OBBaseTest.this.beforeTestExecution(context);
+    }
+
+    @Override
+    public void testSuccessful(ExtensionContext context) {
+      // The test succeeded
+      errorOccured = false;
+    }
+
+    @Override
+    public void testFailed(ExtensionContext context, Throwable cause) {
+      // The test failed
+      errorOccured = true;
+    }
+
+    @Override
+    public void testAborted(ExtensionContext context, Throwable cause) {
+      // Treat 'aborted' as an error for rollback
+      errorOccured = true;
+    }
+
+    @Override
+    public void testDisabled(ExtensionContext context, java.util.Optional<String> reason) {
+      // The test was disabled (e.g., @Disabled)
+      disabledTestCase = true;
+    }
+
+    /**
+     * This is the key logic. It runs *after* testSuccessful or testFailed
+     * have set the 'errorOccured' flag.
+     */
+    @Override
+    public void afterEach(ExtensionContext context) throws Exception {
+      OBBaseTest.this.afterTestExecution(context);
     }
   }
 
@@ -270,28 +398,30 @@ public class OBBaseTest {
     if (shouldMockServletContext()) {
       setMockServletContext();
     }
-    assumeThat("Disabled test case by configuration ", disabledTestCase, is(false));
+    assumeTrue(!disabledTestCase, "Disabled test case by configuration");
   }
 
   /**
-   * Test log appender is reset and switched off. This method also cleans the mock servlet context
-   * when it applies.
+   * THESE @AfterEach METHODS ARE NOW EMPTY.
+   * All cleanup logic (commit/rollback, admin mode, appender, etc.)
+   * has been moved to the 'DalCleanupExtension.afterEach()' extension
+   * to ensure it runs AFTER knowing the test result.
+   *
+   * We keep them (or remove them) but their original content is no longer needed here.
    */
   @AfterEach
+  protected void cleanupDalSession() {
+    // THIS LOGIC IS NOW IN DalCleanupExtension.afterEach()
+  }
+
+  @AfterEach
   public void testDone(TestInfo testInfo) {
-    log.info("*** Ending test case " + testInfo.getDisplayName() + " ***");
-    if (testLogAppender != null) {
-      testLogAppender.reset();
-      setTestLogAppenderLevel(Level.OFF);
-    }
-    if (shouldMockServletContext()) {
-      cleanMockServletContext();
-    }
+    // THIS LOGIC IS NOW IN DalCleanupExtension.afterEach()
   }
 
   /**
    * @return {@code true} if the test case should mock the servlet context. Otherwise, return
-   *     {@code false}.
+   * {@code false}.
    */
   protected boolean shouldMockServletContext() {
     return false;
@@ -419,7 +549,7 @@ public class OBBaseTest {
    * , {@link #setTestUserContext()} or {@link #setSystemAdministratorContext()}.
    *
    * @param userId
-   *     the id of the user to use.
+   * the id of the user to use.
    */
   protected void setUserContext(String userId) {
     if (userId.equals("0")) {
@@ -476,7 +606,7 @@ public class OBBaseTest {
    * {@link SQLException#getNextException()} method.
    *
    * @param e
-   *     the exception to report.
+   * the exception to report.
    */
   protected void reportException(Exception e) {
     if (e == null) {

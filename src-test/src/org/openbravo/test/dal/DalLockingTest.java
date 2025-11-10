@@ -21,9 +21,10 @@ package org.openbravo.test.dal;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,11 +42,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
@@ -64,11 +63,11 @@ public class DalLockingTest extends OBBaseTest {
 
   private List<String> executionOrder;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
-  @BeforeClass
-  public static void createTestEnvironment() {
+  @BeforeAll
+  public static void createTestEnvironment() throws Exception {
+    // Call parent initialization first
+    OBBaseTest.classSetUp();
+    
     OBContext.setAdminMode(true);
     try {
       AlertRule newAlertRule = OBProvider.getInstance().get(AlertRule.class);
@@ -97,8 +96,9 @@ public class DalLockingTest extends OBBaseTest {
 
     // originalInstance is now detached from DAL session. If any of its proxies is tried to be
     // initialized, it should fail.
-    thrown.expect(LazyInitializationException.class);
-    originalInstance.getADAlertRecipientList().size();
+    assertThrows(LazyInitializationException.class, () -> {
+      originalInstance.getADAlertRecipientList().size();
+    });
   }
 
   @Test
@@ -165,10 +165,10 @@ public class DalLockingTest extends OBBaseTest {
   public void dalLockIsNotAHibernateLock() {
     AlertRule lockedRule = acquireLock();
     LockMode lm = OBDal.getInstance().getSession().getCurrentLockMode(lockedRule);
-    assertTrue("Hibernate lock mode doesn't match DAL's one", lm.lessThan(LockMode.WRITE));
+    assertTrue(lm.lessThan(LockMode.WRITE), "Hibernate lock mode doesn't match DAL's one");
   }
 
-  @AfterClass
+  @AfterAll
   public static void cleanUpTestEnvironment() {
     OBContext.setAdminMode();
     try {
