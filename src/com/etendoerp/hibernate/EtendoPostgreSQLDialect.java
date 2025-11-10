@@ -164,7 +164,7 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
         functionContributions.getFunctionRegistry(),
         "hqlagg",
         FunctionKind.AGGREGATE,
-        "string_agg(cast(?1 as text), ',')"
+        "array_to_string(array_agg(?1), ',')"
     );
     patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
     patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();

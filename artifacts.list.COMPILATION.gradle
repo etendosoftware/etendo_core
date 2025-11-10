@@ -34,7 +34,7 @@ List<String> _dependenciesListCOMPILATION = [
   // Reporting and Document Generation
   'com.lowagie:itext:2.1.7',
   'jfree:jfreechart:1.0.12',
-  "net.sf.jasperreports:jasperreports-servlets:7.0.3",
+  'net.sf.jasperreports:jasperreports-servlets:7.0.3',
 
   // Database Drivers and Persistence Connectors
   'com.oracle.database.jdbc:ojdbc8:23.9.0.25.07',
@@ -78,7 +78,7 @@ List<String> _dependenciesListCOMPILATION = [
 
   // JBoss and Weld CDI Implementation
   'org.jboss.weld.servlet:weld-servlet-shaded:5.1.2.Final',
-  "org.jboss:jandex:3.3.1",
+  'org.jboss:jandex:3.3.1',
 
   // Apache Ant and Tomcat Runtime
   'org.apache.ant:ant:1.9.2',

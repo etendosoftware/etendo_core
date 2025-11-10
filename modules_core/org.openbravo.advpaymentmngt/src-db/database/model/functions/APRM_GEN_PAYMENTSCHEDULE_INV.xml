@@ -515,7 +515,7 @@ BEGIN
 
                UPDATE FIN_PAYMENT_SCHEDULEDETAIL
               SET isinvoicepaid=(select CASE WHEN fpsd.fin_payment_detail_id is null then 'N'
-                  WHEN ((aprm_seqnumberpaymentstatus(fp.status))>= (aprm_seqnumberpaymentstatus((CASE WHEN fp.isreceipt='Y' 
+                  WHEN (to_number(aprm_seqnumberpaymentstatus(fp.status))>= to_number(aprm_seqnumberpaymentstatus((CASE WHEN fp.isreceipt='Y'
                   THEN Payin_Invoicepaidstatus ELSE Payout_Invoicepaidstatus END)))) THEN 'Y' ELSE 'N' END
                   from fin_payment_scheduledetail fpsd
                   left join fin_payment_detail fpd on fpsd.fin_payment_detail_id=fpd.fin_payment_detail_id
@@ -890,7 +890,7 @@ BEGIN
               LOOP
               UPDATE FIN_PAYMENT_SCHEDULEDETAIL
               SET isinvoicepaid=(select CASE WHEN fpsd.fin_payment_detail_id is null then 'N'
-                  WHEN ((aprm_seqnumberpaymentstatus(fp.status))>= (aprm_seqnumberpaymentstatus((CASE WHEN fp.isreceipt='Y' 
+                  WHEN (to_number(aprm_seqnumberpaymentstatus(fp.status))>= to_number(aprm_seqnumberpaymentstatus((CASE WHEN fp.isreceipt='Y'
                   THEN Payin_Invoicepaidstatus ELSE Payout_Invoicepaidstatus END)))) THEN 'Y' ELSE 'N' END
                   from fin_payment_scheduledetail fpsd
                   left join fin_payment_detail fpd on fpsd.fin_payment_detail_id=fpd.fin_payment_detail_id

@@ -121,71 +121,71 @@ public class AddPaymentOrderInvoicesTransformer extends HqlQueryTransformer {
   protected StringBuffer getSelectClause(String transactionType, boolean hasSelectedIds) {
     StringBuffer selectClause = new StringBuffer();
     // Create Select Clause
-    selectClause.append(getAggregatorFunction("psd.id") + " as paymentScheduleDetail, ");
+    selectClause.append(getAggregatorFunction("psd.id") + " AS paymentScheduleDetail, ");
     if ("I".equals(transactionType)) {
-      selectClause.append(getAggregatorFunction("ord.documentNo") + " as salesOrderNo, ");
-      selectClause.append(" case when (inv." + Invoice.PROPERTY_SALESTRANSACTION
-          + " = false and oinfo is not null and oinfo."
+      selectClause.append(getAggregatorFunction("ord.documentNo") + " AS salesOrderNo, ");
+      selectClause.append(" CASE WHEN (inv." + Invoice.PROPERTY_SALESTRANSACTION
+          + " = false AND oinfo IS NOT null AND oinfo."
           + OrganizationInformation.PROPERTY_APRMPAYMENTDESCRIPTION
-          + " like 'Supplier Reference') then inv." + Invoice.PROPERTY_ORDERREFERENCE + " else inv."
-          + Invoice.PROPERTY_DOCUMENTNO + " end as invoiceNo, ");
+          + " like 'Supplier Reference') THEN inv." + Invoice.PROPERTY_ORDERREFERENCE + " ELSE inv."
+          + Invoice.PROPERTY_DOCUMENTNO + " END AS invoiceNo, ");
       selectClause
-          .append(" COALESCE(ips.finPaymentmethod.id, ops.finPaymentmethod.id) as paymentMethod, ");
-      selectClause.append(" COALESCE(ipsfp.name, opsfp.name) as paymentMethodName, ");
-      selectClause.append(" COALESCE(ips.expectedDate, ops.expectedDate) as expectedDate, ");
-      selectClause.append(" max(COALESCE(ips.amount, ops.amount)) as expectedAmount, ");
-      selectClause.append(" max(COALESCE(inv.grandTotalAmount, 0)) as invoicedAmount, ");
-      selectClause.append(" inv.createdBy.username as createdBy, ");
-      selectClause.append(" inv.updatedBy.username as updatedBy, ");
-      selectClause.append(" inv.creationDate as created, ");
-      selectClause.append(" inv.updated as updated, ");
+          .append(" MAX(COALESCE(ips.finPaymentmethod.id, ops.finPaymentmethod.id)) AS paymentMethod, ");
+      selectClause.append(" MAX(COALESCE(ipsfp.name, opsfp.name)) AS paymentMethodName, ");
+      selectClause.append(" MAX(COALESCE(ips.expectedDate, ops.expectedDate)) AS expectedDate, ");
+      selectClause.append(" MAX(COALESCE(ips.amount, ops.amount)) AS expectedAmount, ");
+      selectClause.append(" MAX(COALESCE(inv.grandTotalAmount, 0)) AS invoicedAmount, ");
+      selectClause.append(" inv.createdBy.username AS createdBy, ");
+      selectClause.append(" inv.updatedBy.username AS updatedBy, ");
+      selectClause.append(" inv.creationDate AS created, ");
+      selectClause.append(" inv.updated AS updated, ");
     } else if ("O".equals(transactionType)) {
-      selectClause.append(" ord.documentNo as salesOrderNo, ");
-      selectClause.append(getAggregatorFunction(" case when (inv."
-          + Invoice.PROPERTY_SALESTRANSACTION + " = false and oinfo is not null and oinfo."
+      selectClause.append(" ord.documentNo AS salesOrderNo, ");
+      selectClause.append(getAggregatorFunction(" CASE WHEN (inv."
+          + Invoice.PROPERTY_SALESTRANSACTION + " = false AND oinfo IS NOT null AND oinfo."
           + OrganizationInformation.PROPERTY_APRMPAYMENTDESCRIPTION
-          + " like 'Supplier Reference') then inv." + Invoice.PROPERTY_ORDERREFERENCE + " else inv."
-          + Invoice.PROPERTY_DOCUMENTNO + " end") + " as invoiceNo, ");
+          + " like 'Supplier Reference') then inv." + Invoice.PROPERTY_ORDERREFERENCE + " ELSE inv."
+          + Invoice.PROPERTY_DOCUMENTNO + " END") + " AS invoiceNo, ");
       selectClause
-          .append(" COALESCE(ops.finPaymentmethod.id, ips.finPaymentmethod.id) as paymentMethod, ");
-      selectClause.append(" COALESCE(opsfp.name, ipsfp.name) as paymentMethodName, ");
-      selectClause.append(" COALESCE(ops.expectedDate, ips.expectedDate) as expectedDate, ");
-      selectClause.append(" max(COALESCE(ips.amount, ops.amount)) as expectedAmount, ");
-      selectClause.append(" sum(COALESCE(inv.grandTotalAmount, 0)) as invoicedAmount, ");
-      selectClause.append(" ord.createdBy.username as createdBy, ");
-      selectClause.append(" ord.updatedBy.username as updatedBy, ");
-      selectClause.append(" ord.creationDate as created, ");
-      selectClause.append(" ord.updated as updated, ");
+          .append(" MAX(COALESCE(ops.finPaymentmethod.id, ips.finPaymentmethod.id)) AS paymentMethod, ");
+      selectClause.append(" MAX(COALESCE(opsfp.name, ipsfp.name)) AS paymentMethodName, ");
+      selectClause.append(" MAX(COALESCE(ops.expectedDate, ips.expectedDate)) AS expectedDate, ");
+      selectClause.append(" MAX(COALESCE(ips.amount, ops.amount)) AS expectedAmount, ");
+      selectClause.append(" SUM(COALESCE(inv.grandTotalAmount, 0)) AS invoicedAmount, ");
+      selectClause.append(" ord.createdBy.username AS createdBy, ");
+      selectClause.append(" ord.updatedBy.username AS updatedBy, ");
+      selectClause.append(" ord.creationDate AS created, ");
+      selectClause.append(" ord.updated AS updated, ");
     } else {
-      selectClause.append(" ord.documentNo as salesOrderNo, ");
-      selectClause.append(" case when (inv." + Invoice.PROPERTY_SALESTRANSACTION
-          + " = false and oinfo is not null and oinfo."
+      selectClause.append(" ord.documentNo AS salesOrderNo, ");
+      selectClause.append(" CASE WHEN (inv." + Invoice.PROPERTY_SALESTRANSACTION
+          + " = false AND oinfo IS NOT null AND oinfo."
           + OrganizationInformation.PROPERTY_APRMPAYMENTDESCRIPTION
-          + " like 'Supplier Reference') then inv." + Invoice.PROPERTY_ORDERREFERENCE + " else inv."
-          + Invoice.PROPERTY_DOCUMENTNO + " end as invoiceNo, ");
+          + " like 'Supplier Reference') THEN inv." + Invoice.PROPERTY_ORDERREFERENCE + " ELSE inv."
+          + Invoice.PROPERTY_DOCUMENTNO + " END AS invoiceNo, ");
       selectClause
-          .append(" COALESCE(ips.finPaymentmethod.id, ops.finPaymentmethod.id) as paymentMethod, ");
-      selectClause.append(" COALESCE(ipsfp.name, opsfp.name) as paymentMethodName, ");
-      selectClause.append(" COALESCE(ips.expectedDate, ops.expectedDate) as expectedDate, ");
-      selectClause.append(" max(COALESCE(ips.amount, ops.amount)) as expectedAmount, ");
-      selectClause.append(" max(COALESCE(inv.grandTotalAmount, 0)) as invoicedAmount, ");
-      selectClause.append(" COALESCE(invCreatedBy.username, ordCreatedBy.username) as createdBy, ");
-      selectClause.append(" COALESCE(invUpdatedBy.username, ordUpdatedBy.username) as updatedBy, ");
-      selectClause.append(" COALESCE(inv.creationDate, ord.creationDate) as created, ");
-      selectClause.append(" COALESCE(inv.updated, ord.updated) as updated, ");
+          .append(" MAX(COALESCE(ips.finPaymentmethod.id, ops.finPaymentmethod.id)) AS paymentMethod, ");
+      selectClause.append(" MAX(COALESCE(ipsfp.name, opsfp.name)) AS paymentMethodName, ");
+      selectClause.append(" MAX(COALESCE(ips.expectedDate, ops.expectedDate)) AS expectedDate, ");
+      selectClause.append(" MAX(COALESCE(ips.amount, ops.amount)) AS expectedAmount, ");
+      selectClause.append(" MAX(COALESCE(inv.grandTotalAmount, 0)) AS invoicedAmount, ");
+      selectClause.append(" MAX(COALESCE(invCreatedBy.username, ordCreatedBy.username)) AS createdBy, ");
+      selectClause.append(" MAX(COALESCE(invUpdatedBy.username, ordUpdatedBy.username)) AS updatedBy, ");
+      selectClause.append(" MAX(COALESCE(inv.creationDate, ord.creationDate)) AS created, ");
+      selectClause.append(" MAX(COALESCE(inv.updated, ord.updated)) AS updated, ");
     }
-    selectClause.append(" bp.id as businessPartner, ");
-    selectClause.append(" bp.name as businessPartnerName, ");
-    selectClause.append(" SUM(psd.amount + psd.writeoffAmount) as outstandingAmount, ");
-    selectClause.append(" COALESCE(sum(pd.amount), 0) as amount, ");
+    selectClause.append(" bp.id AS businessPartner, ");
+    selectClause.append(" bp.name AS businessPartnerName, ");
+    selectClause.append(" SUM(psd.amount + psd.writeoffAmount) AS outstandingAmount, ");
+    selectClause.append(" COALESCE(SUM(pd.amount), 0) AS amount, ");
     selectClause
-        .append(" case when sum(psd.writeoffAmount) <> 0 then true else false end as writeoff, ");
+        .append(" CASE WHEN SUM(psd.writeoffAmount) <> 0 THEN true ELSE false END AS writeoff, ");
     if (hasSelectedIds) {
       // if there are selected ids selection is done in the client.
-      selectClause.append(" case when 1 < 0 then true else false end as OB_Selected ");
+      selectClause.append(" CASE WHEN 1 < 0 THEN true ELSE false END AS OB_Selected ");
     } else {
       selectClause
-          .append(" case when max(fp.id) is not null then true else false end as OB_Selected ");
+          .append(" CASE WHEN MAX(fp.id) IS NOT null THEN true ELSE false END AS OB_Selected ");
     }
 
     return selectClause;
