@@ -1,7 +1,7 @@
 package org.openbravo.scheduling.quartz;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -19,12 +19,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.SimplePropertiesTriggerProperties;
@@ -36,7 +36,7 @@ import org.quartz.spi.OperableTrigger;
  * Test class for the OpenbravoDailyTimeIntervalTriggerPersistenceDelegate.
  * Tests CRUD operations for trigger persistence.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
 
   private static final String STRING_1 = "string1";
@@ -85,7 +85,7 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
    *
    * @throws SQLException if a database access error occurs during setup
    */
-  @Before
+  @BeforeEach
   public void setUp() throws SQLException {
     delegate = spy(new TestableDelegate(properties));
 
@@ -167,7 +167,7 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
 
       int result = delegate.insertExtendedTriggerProperties(connection, trigger, "WAITING", jobDetail);
 
-      assertEquals("The method should return 1 as the number of rows affected.", 1, result);
+      assertEquals(1, result, "The method should return 1 as the number of rows affected.");
       verify(preparedStatement).setString(1, TEST_TRIGGER_NAME);
       verify(preparedStatement).setString(2, TEST_TRIGGER_GROUP);
       verify(preparedStatement).setString(3, STRING_1);
@@ -227,11 +227,8 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
 
       when(resultSet.next()).thenReturn(false);
 
-      try {
-        delegate.loadExtendedTriggerProperties(connection, triggerKey);
-        fail("Should throw IllegalStateException when no record is found");
-      } catch (IllegalStateException e) {
-      }
+      assertThrows(IllegalStateException.class,
+          () -> delegate.loadExtendedTriggerProperties(connection, triggerKey));
     }
   }
 
@@ -253,7 +250,7 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
 
       int result = delegate.updateExtendedTriggerProperties(connection, trigger, "WAITING", jobDetail);
 
-      assertEquals("Method should return 1 as number of affected rows", 1, result);
+      assertEquals(1, result, "Method should return 1 as number of affected rows");
       verify(preparedStatement).setString(1, STRING_1);
       verify(preparedStatement).setString(12, TEST_TRIGGER_NAME);
       verify(preparedStatement).setString(13, TEST_TRIGGER_GROUP);

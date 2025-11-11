@@ -19,24 +19,20 @@
 package org.openbravo.test.security;
 
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.ComboTableData;
@@ -54,7 +50,6 @@ import org.openbravo.userinterface.selector.SelectorConstants;
  * Tests to ensure different references don't apply organization filter when applied in a field that
  * allows cross organization references and apply them if it does not allow it.
  */
-@RunWith(Parameterized.class)
 public class CrossOrganizationUI extends OBBaseTest {
   private static final String ORDER_PRICELIST_FIELD = "1077";
   private static final String ORDER_ORGTRX_FIELD = "7038";
@@ -66,26 +61,19 @@ public class CrossOrganizationUI extends OBBaseTest {
   private static final List<String> COLUMNS_TO_ALLOW_CROSS_ORG = Arrays
       .asList(ORDER_PRICELIST_COLUMN, ORDER_ORGTRX_COLUMN, ORDER_BP_COLUMN);
 
-  private boolean useCrossOrgColumns;
-
-  public CrossOrganizationUI(boolean useCrossOrgColumns) {
-    this.useCrossOrgColumns = useCrossOrgColumns;
-  }
-
-  @Parameters(name = "Cross org refrence:{0}")
-  public static Collection<Object[]> params() {
-    return Arrays.asList(new Object[][] { //
-        { true }, { false } });
-  }
-
-  @Test
-  public void tableDirShouldAlwaysShowReferenceableOrgs() throws Exception {
+  @ParameterizedTest(name = "tableDirShouldAlwaysShowReferenceableOrgs crossOrg={0}")
+  @ValueSource(booleans = { true, false })
+  public void tableDirShouldAlwaysShowReferenceableOrgs(boolean useCrossOrgColumns) throws Exception {
+    prepareCrossOrgContext(useCrossOrgColumns);
     List<String> rows = getComboValues(OBDal.getInstance().get(Field.class, ORDER_PRICELIST_FIELD));
     assertThat(rows, hasItem("Tarifa de ventas"));
   }
 
-  @Test
-  public void tableDirShouldShowNonReferenceableOrgsIfAllowed() throws Exception {
+  @ParameterizedTest(name = "tableDirShouldShowNonReferenceableOrgsIfAllowed crossOrg={0}")
+  @ValueSource(booleans = { true, false })
+  public void tableDirShouldShowNonReferenceableOrgsIfAllowed(boolean useCrossOrgColumns)
+      throws Exception {
+    prepareCrossOrgContext(useCrossOrgColumns);
     List<String> rows = getComboValues(OBDal.getInstance().get(Field.class, ORDER_PRICELIST_FIELD));
     if (useCrossOrgColumns) {
       assertThat(rows, hasItem("General Sales"));
@@ -94,14 +82,19 @@ public class CrossOrganizationUI extends OBBaseTest {
     }
   }
 
-  @Test
-  public void tableShouldAlwaysShowReferenceableOrgs() throws Exception {
+  @ParameterizedTest(name = "tableShouldAlwaysShowReferenceableOrgs crossOrg={0}")
+  @ValueSource(booleans = { true, false })
+  public void tableShouldAlwaysShowReferenceableOrgs(boolean useCrossOrgColumns) throws Exception {
+    prepareCrossOrgContext(useCrossOrgColumns);
     List<String> rows = getComboValues(OBDal.getInstance().get(Field.class, ORDER_ORGTRX_FIELD));
     assertThat(rows, hasItem("F&B España - Región Norte - F&B España - Región Norte"));
   }
 
-  @Test
-  public void tableShouldShowNonReferenceableOrgsIfAllowed() throws Exception {
+  @ParameterizedTest(name = "tableShouldShowNonReferenceableOrgsIfAllowed crossOrg={0}")
+  @ValueSource(booleans = { true, false })
+  public void tableShouldShowNonReferenceableOrgsIfAllowed(boolean useCrossOrgColumns)
+      throws Exception {
+    prepareCrossOrgContext(useCrossOrgColumns);
     List<String> rows = getComboValues(OBDal.getInstance().get(Field.class, ORDER_ORGTRX_FIELD));
     if (useCrossOrgColumns) {
       assertThat(rows, hasItem("F&B US West Coast - F&B US West Coast"));
@@ -110,14 +103,21 @@ public class CrossOrganizationUI extends OBBaseTest {
     }
   }
 
-  @Test
-  public void customQuerySelectorAlwaysShowReferenceableOrgs() throws Exception {
+  @ParameterizedTest(name = "customQuerySelectorAlwaysShowReferenceableOrgs crossOrg={0}")
+  @ValueSource(booleans = { true, false })
+  public void customQuerySelectorAlwaysShowReferenceableOrgs(boolean useCrossOrgColumns)
+      throws Exception {
+    prepareCrossOrgContext(useCrossOrgColumns);
     List<String> rows = getSelectorValues();
     assertThat(rows, hasItem("Bebidas Alegres, S.L."));
   }
 
-  @Test
-  public void customQuerySelectorShouldShowNonReferenceableOrgsIfAllowed() throws Exception {
+  @ParameterizedTest(
+      name = "customQuerySelectorShouldShowNonReferenceableOrgsIfAllowed crossOrg={0}")
+  @ValueSource(booleans = { true, false })
+  public void customQuerySelectorShouldShowNonReferenceableOrgsIfAllowed(boolean useCrossOrgColumns)
+      throws Exception {
+    prepareCrossOrgContext(useCrossOrgColumns);
     List<String> rows = getSelectorValues();
     if (useCrossOrgColumns) {
       assertThat(rows, hasItem("Be Soft Drinker, Inc."));
@@ -180,13 +180,12 @@ public class CrossOrganizationUI extends OBBaseTest {
     return values;
   }
 
-  @Before
-  public void setUpAllowedCrossOrg() throws Exception {
+  private void prepareCrossOrgContext(boolean useCrossOrgColumns) throws Exception {
     CrossOrganizationReference.setUpAllowedCrossOrg(COLUMNS_TO_ALLOW_CROSS_ORG, useCrossOrgColumns);
     setTestUserContext();
   }
 
-  @AfterClass
+  @AfterAll
   public static void resetAD() throws Exception {
     CrossOrganizationReference.setUpAllowedCrossOrg(COLUMNS_TO_ALLOW_CROSS_ORG, false);
     OBDal.getInstance().commitAndClose();

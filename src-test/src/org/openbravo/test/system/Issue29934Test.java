@@ -19,7 +19,7 @@
 
 package org.openbravo.test.system;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;

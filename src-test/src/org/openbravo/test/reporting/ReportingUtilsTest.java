@@ -19,7 +19,7 @@
 package org.openbravo.test.reporting;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -29,8 +29,8 @@ import java.util.HashMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.application.report.ReportingUtils.ExportType;
@@ -50,7 +50,7 @@ public class ReportingUtilsTest extends WeldBaseTest {
     return true;
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     File report = getTmpFile();
     if (report.exists()) {

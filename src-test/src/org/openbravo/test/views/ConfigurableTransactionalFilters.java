@@ -19,14 +19,13 @@
 
 package org.openbravo.test.views;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.GCSystem;
 import org.openbravo.client.application.window.StandardWindowComponent;
@@ -47,10 +46,10 @@ public class ConfigurableTransactionalFilters extends ViewGenerationTest {
 
   private static final String FILTER_NAME = "This grid is filtered using a transactional filter <i\\>(only draft & modified documents in the last 1 day(s))</i\\>.";
 
-  @Before
+  @BeforeEach
   public void shouldExecuteOnlyIfThereIsNoGridConfigAtSystemLevel() {
-    assumeThat("Exists grid config at system level", existsSystemGridConfig(),
-        equalTo(Boolean.FALSE));
+    assumeTrue(Boolean.FALSE.equals(existsSystemGridConfig()),
+        "Exists grid config at system level");
   }
 
   private boolean existsSystemGridConfig() {

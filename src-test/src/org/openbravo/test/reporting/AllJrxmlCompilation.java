@@ -30,12 +30,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.session.OBPropertiesProvider;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.report.ReportingUtils;
 
@@ -50,24 +49,18 @@ import net.sf.jasperreports.engine.JRException;
  */
 public class AllJrxmlCompilation extends WeldBaseTest {
 
-  private static final List<Path> REPORTS = parameters();
-
-  @Rule
-  public ParameterCdiTestRule<Path> reportRule = new ParameterCdiTestRule<Path>(REPORTS);
-
-  private @ParameterCdiTest Path report;
-
   @Override
   protected boolean shouldMockServletContext() {
     return true;
   }
 
-  @Test
-  public void jrxmlShouldCompile() throws JRException {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("parameters")
+  public void jrxmlShouldCompile(Path report) throws JRException {
     ReportingUtils.compileReport(report.toString());
   }
 
-  private static List<Path> parameters() {
+  private static Stream<Path> parameters() {
     final List<Path> allJasperFiles = new ArrayList<>();
     try {
       allJasperFiles.addAll(getJrxmlTemplates("src"));
@@ -75,7 +68,7 @@ public class AllJrxmlCompilation extends WeldBaseTest {
     } catch (IOException ioex) {
 
     }
-    return allJasperFiles;
+    return allJasperFiles.stream();
   }
 
   private static Collection<Path> getJrxmlTemplates(String dir) throws IOException {

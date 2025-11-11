@@ -19,8 +19,8 @@
 
 package org.openbravo.test.costing;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 /**
  * Test cases to verify Cost Adjustment Project
@@ -28,8 +28,8 @@ import org.junit.runners.Suite;
  * @author aferraz
  */
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({ TestCostingSourceAdjustments.class, //
+@Suite
+@SelectClasses({ TestCostingSourceAdjustments.class, //
     TestCostingNoSourceAdjustments.class, //
     TestCostingLandedCost.class, //
     TestIssue37033.class, //

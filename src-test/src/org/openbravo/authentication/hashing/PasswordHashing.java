@@ -19,15 +19,16 @@
 
 package org.openbravo.authentication.hashing;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Date;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.test.base.OBBaseTest;
@@ -50,9 +51,9 @@ public class PasswordHashing extends OBBaseTest {
         is("SHA512Salt"));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void unknownAlgorithmsThrowException() {
-    PasswordHash.getAlgorithm("2$salt$hash");
+    assertThrows(IllegalStateException.class, () -> PasswordHash.getAlgorithm("2$salt$hash"));
   }
 
   @Test

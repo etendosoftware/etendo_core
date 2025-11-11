@@ -18,9 +18,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,8 +29,6 @@ import org.openbravo.base.ConfigParameters;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.weld.WeldUtils;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.window.ApplicationDictionaryCachedStructures;
 import org.openbravo.client.kernel.RequestContext;
@@ -50,6 +45,8 @@ import org.openbravo.test.base.TestConstants;
 import org.openbravo.test.base.mock.HttpServletRequestMock;
 import org.openbravo.test.base.mock.ServletContextMock;
 import org.openbravo.xmlEngine.XmlEngine;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Test class for the {@link PrintController} that verifies the behavior of print hooks
@@ -114,8 +111,6 @@ public class PrintControllerHookTest extends WeldBaseTest {
    * the behavior of the print process and ensure that pre- and post-processing hooks
    * are executed correctly.
    */
-  @Rule
-  public ParameterCdiTestRule<String> parameterCdiTestRule = new ParameterCdiTestRule<>(PARAMS);
   MockedStatic<WeldUtils> weldUtilsMock;
   @Spy
   private Instance<PrintControllerHook> hooksInstancesMock;
@@ -134,8 +129,6 @@ public class PrintControllerHookTest extends WeldBaseTest {
   @Spy
   @InjectMocks
   private PrintController printControllerMock;
-  private @ParameterCdiTest
-  String printCommandType;
 
   private static void setupContextAndVars() {
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
@@ -147,9 +140,7 @@ public class PrintControllerHookTest extends WeldBaseTest {
     RequestContext.get().setVariableSecureApp(vars);
   }
 
-  @Override
-  @BeforeEach
-  public void setUp() throws Exception {
+  private void setUp(String commandType) throws Exception {
     super.setUp();
     MockitoAnnotations.openMocks(this);
     weldUtilsMock = Mockito.mockStatic(WeldUtils.class);
@@ -164,7 +155,7 @@ public class PrintControllerHookTest extends WeldBaseTest {
     DalContextListener.setServletContext(servletContextMock);
 
     setupConfigParams(contextPath);
-    setupPrintControllerMock(conn, servletContextMock);
+    setupPrintControllerMock(conn, servletContextMock, commandType);
 
     // Mock hooksInstancesMock to return our mocked hook
     Mockito.when(hooksInstancesMock.iterator())
@@ -182,11 +173,11 @@ public class PrintControllerHookTest extends WeldBaseTest {
   }
 
   private void setupPrintControllerMock(ConnectionProvider conn,
-      ServletContextMock servletContextMock) throws Exception {
+      ServletContextMock servletContextMock, String commandType) throws Exception {
     setInaccessibleField(printControllerMock, "globalParameters", configParametersMock);
     printControllerMock.xmlEngine = new XmlEngine(conn);
     Mockito.doReturn(conn.getRDBMS()).when(printControllerMock).getRDBMS();
-    if (StringUtils.equals(COMMAND_ARCHIVE, printCommandType)) {
+    if (StringUtils.equals(COMMAND_ARCHIVE, commandType)) {
       Mockito.doNothing().when(printControllerMock).buildReport(any(), any(), anyString(), any(), any());
     }
     servletContextMock.setAttribute("openbravoConfig", configParametersMock);
@@ -199,15 +190,17 @@ public class PrintControllerHookTest extends WeldBaseTest {
     setInaccessibleField(configParametersMock, "prefix", contextPath + "/WebContent/");
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = { COMMAND_PRINT, COMMAND_ARCHIVE })
   @DisplayName("The print process should execute pre and post process methods from all hooks available")
-  public void testPrintingExecutesHooks() throws Exception {
+  public void testPrintingExecutesHooks(String commandType) throws Exception {
+    setUp(commandType);
     // Stub response output stream
     Mockito.doReturn(outputStreamMock).when(responseMock).getOutputStream();
 
     HttpServletRequest request = new HttpServletRequestMock();
     RequestContext.get().setRequest(request);
-    VariablesSecureApp vars = setVarsForTest(printCommandType);
+    VariablesSecureApp vars = setVarsForTest(commandType);
 
     // Mock WeldUtils static methods
     weldUtilsMock.when(() -> WeldUtils.getInstanceFromStaticBeanManager(PrintControllerHookManager.class))

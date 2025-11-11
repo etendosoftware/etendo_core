@@ -19,8 +19,8 @@
 package org.openbravo.test.expression;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -33,8 +33,8 @@ import javax.script.ScriptException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mozilla.javascript.NativeArray;
 import org.openbravo.base.expression.OBScriptEngine;
 import org.openbravo.client.application.OBBindings;
@@ -54,7 +54,7 @@ public class OBBindingsTest extends OBBaseTest {
   private OBScriptEngine engine;
   private Map<String, Object> bindings;
 
-  @Before
+  @BeforeEach
   public void initScriptEngine() throws Exception {
     HttpServletRequestMock request = new HttpServletRequestMock();
     Map<String, String> parameters = new HashMap<>();

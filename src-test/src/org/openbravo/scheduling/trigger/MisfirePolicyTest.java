@@ -18,16 +18,15 @@
  */
 package org.openbravo.scheduling.trigger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,11 +34,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.scheduling.Frequency;
@@ -71,7 +69,6 @@ import jakarta.enterprise.context.Dependent;
  * Test cases to cover the expected behavior of the misfire policy applied to the background
  * processes.
  */
-@RunWith(Parameterized.class)
 public class MisfirePolicyTest extends OBBaseTest {
   private static final DateTimeFormatter DEFAULT_FORMATTER = DateTimeFormatter
       .ofPattern("dd-MM-yyyy HH:mm:ss");
@@ -81,64 +78,49 @@ public class MisfirePolicyTest extends OBBaseTest {
   private Scheduler scheduler;
   private TestProcessMonitor processMonitor;
   private TestTriggerMonitor triggerMonitor;
+  private String currentConfig;
 
-  private Properties properties;
-
-  @Parameterized.Parameters(name = "{0}")
-  public static List<String> configOptions() {
-    return Arrays.asList("non-clustered", "clustered");
-  }
-
-  /**
-   * Constructor that will set the necessary config for clustered or non-clustered execution
-   * 
-   * @param configOption
-   *          clustered or non-clustered
-   */
-  public MisfirePolicyTest(String configOption) {
-    // Initialize properties
-    properties = new Properties();
-
-    // Set common properties
-    properties.setProperty("org.quartz.scheduler.instanceName", "DefaultQuartzScheduler");
-    properties.setProperty("org.quartz.scheduler.instanceId", "AUTO");
-    properties.setProperty("org.quartz.scheduler.instanceIdGenerator.class",
+  private Properties createProperties(String configOption) {
+    Properties props = new Properties();
+    props.setProperty("org.quartz.scheduler.instanceName", "DefaultQuartzScheduler");
+    props.setProperty("org.quartz.scheduler.instanceId", "AUTO");
+    props.setProperty("org.quartz.scheduler.instanceIdGenerator.class",
         "org.openbravo.scheduling.quartz.OpenbravoInstanceIdGenerator");
-    properties.setProperty("org.quartz.scheduler.rmi.export", "false");
-    properties.setProperty("org.quartz.scheduler.rmi.proxy", "false");
-    properties.setProperty("org.quartz.scheduler.wrapJobExecutionInUserTransaction", "false");
-    properties.setProperty("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-    properties.setProperty("org.quartz.threadPool.threadCount", "10");
-    properties.setProperty("org.quartz.threadPool.threadPriority", "5");
-    properties.setProperty(
+    props.setProperty("org.quartz.scheduler.rmi.export", "false");
+    props.setProperty("org.quartz.scheduler.rmi.proxy", "false");
+    props.setProperty("org.quartz.scheduler.wrapJobExecutionInUserTransaction", "false");
+    props.setProperty("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
+    props.setProperty("org.quartz.threadPool.threadCount", "10");
+    props.setProperty("org.quartz.threadPool.threadPriority", "5");
+    props.setProperty(
         "org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread", "true");
-    properties.setProperty("org.quartz.jobStore.misfireThreshold", "500");
+    props.setProperty("org.quartz.jobStore.misfireThreshold", "500");
 
-    // Set different properties for clustered and non-clustered execution
     if ("non-clustered".equals(configOption)) {
-      properties.setProperty("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
+      props.setProperty("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
     } else if ("clustered".equals(configOption)) {
-      properties.setProperty("org.quartz.jobStore.class",
+      props.setProperty("org.quartz.jobStore.class",
           "org.openbravo.scheduling.quartz.OpenbravoPersistentJobStore");
-      properties.setProperty("org.quartz.jobStore.driverDelegateClass",
+      props.setProperty("org.quartz.jobStore.driverDelegateClass",
           "org.openbravo.scheduling.quartz.OpenbravoDriverDelegate");
-      properties.setProperty("org.quartz.jobStore.useProperties", "false");
-      properties.setProperty("org.quartz.jobStore.dataSource", "quartzDS");
-      properties.setProperty("org.quartz.jobStore.tablePrefix", "OBSCHED_");
-      properties.setProperty("org.quartz.jobStore.isClustered", "true");
-      properties.setProperty("org.quartz.jobStore.acquireTriggersWithinLock", "true");
-      properties.setProperty("org.quartz.jobStore.clusterCheckinInterval", "10000");
-      properties.setProperty("org.quartz.dataSource.quartzDS.connectionProvider.class",
+      props.setProperty("org.quartz.jobStore.useProperties", "false");
+      props.setProperty("org.quartz.jobStore.dataSource", "quartzDS");
+      props.setProperty("org.quartz.jobStore.tablePrefix", "OBSCHED_");
+      props.setProperty("org.quartz.jobStore.isClustered", "true");
+      props.setProperty("org.quartz.jobStore.acquireTriggersWithinLock", "true");
+      props.setProperty("org.quartz.jobStore.clusterCheckinInterval", "10000");
+      props.setProperty("org.quartz.dataSource.quartzDS.connectionProvider.class",
           "org.openbravo.scheduling.quartz.QuartzConnectionProvider");
-      properties.setProperty("org.quartz.plugin.shutdownhook.class",
+      props.setProperty("org.quartz.plugin.shutdownhook.class",
           "org.quartz.plugins.management.ShutdownHookPlugin");
-      properties.setProperty("org.quartz.plugin.shutdownhook.cleanShutdown", "false");
+      props.setProperty("org.quartz.plugin.shutdownhook.cleanShutdown", "false");
     }
+    return props;
   }
 
-  @Before
-  public void startScheduler() throws SchedulerException {
-    scheduler = new StdSchedulerFactory(properties).getScheduler();
+  private void startScheduler(String configOption) throws SchedulerException {
+    currentConfig = configOption;
+    scheduler = new StdSchedulerFactory(createProperties(configOption)).getScheduler();
     processMonitor = new TestProcessMonitor();
     triggerMonitor = new TestTriggerMonitor();
     scheduler.getListenerManager().addJobListener(processMonitor);
@@ -146,19 +128,24 @@ public class MisfirePolicyTest extends OBBaseTest {
     scheduler.start();
   }
 
-  @After
+  @AfterEach
   public void stopScheduler() throws SchedulerException {
-    scheduler.clear();
-    scheduler.shutdown();
+    if (scheduler != null) {
+      scheduler.clear();
+      scheduler.shutdown();
+      scheduler = null;
+    }
   }
 
   /**
    * Check that the misfire policy is fulfilled: don't execute on misfire and wait for next regular
    * execution time.
    */
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = { "non-clustered", "clustered" })
   @Issue("23767")
-  public void checkMisfirePolicy() throws SchedulerException, InterruptedException {
+  public void checkMisfirePolicy(String configOption) throws SchedulerException, InterruptedException {
+    startScheduler(configOption);
     TriggerData data = new TriggerData();
     data.timingOption = TimingOption.SCHEDULED.getLabel();
     data.frequency = Frequency.WEEKLY.getLabel();
@@ -182,7 +169,7 @@ public class MisfirePolicyTest extends OBBaseTest {
 
     // wait for the Misfire handler to detect a misfire
     waitUntilMisfiredJob(name);
-    assertTrue("Trigger should have been misfired", triggerMonitor.hasMisfiredJob(name));
+    assertTrue(triggerMonitor.hasMisfiredJob(name), "Trigger should have been misfired");
 
     // Wait to make sure job is not executed
     Thread.sleep(500);
@@ -192,9 +179,11 @@ public class MisfirePolicyTest extends OBBaseTest {
         is(nextExecutionDate));
   }
 
-  @Test
-  public void checkMisfirePolicyWithSecondlySchedule()
+  @ParameterizedTest
+  @ValueSource(strings = { "non-clustered", "clustered" })
+  public void checkMisfirePolicyWithSecondlySchedule(String configOption)
       throws InterruptedException, SchedulerException {
+    startScheduler(configOption);
     TriggerData data = new TriggerData();
     data.timingOption = TimingOption.SCHEDULED.getLabel();
     data.frequency = Frequency.SECONDLY.getLabel();
@@ -207,7 +196,7 @@ public class MisfirePolicyTest extends OBBaseTest {
     scheduleJob(name, data);
 
     waitUntilMisfiredJob(name);
-    assertTrue("Trigger should have been misfired", triggerMonitor.hasMisfiredJob(name));
+    assertTrue(triggerMonitor.hasMisfiredJob(name), "Trigger should have been misfired");
 
     // wait for the 2 job executions (2.5 seconds for executions)
     Thread.sleep(2500);
@@ -234,7 +223,7 @@ public class MisfirePolicyTest extends OBBaseTest {
 
     // wait until the job has misfired
     waitUntilMisfiredJob(name);
-    assertTrue("Trigger should have been misfired", triggerMonitor.hasMisfiredJob(name));
+    assertTrue(triggerMonitor.hasMisfiredJob(name), "Trigger should have been misfired");
 
     // Wait to make sure the job is not executed
     Thread.sleep(500);

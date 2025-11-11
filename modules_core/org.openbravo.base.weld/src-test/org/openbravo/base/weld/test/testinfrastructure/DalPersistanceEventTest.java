@@ -19,15 +19,14 @@
 
 package org.openbravo.base.weld.test.testinfrastructure;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.jupiter.api.Order;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.test.event.ObserverBaseTest;
@@ -49,8 +48,6 @@ import org.openbravo.test.base.TestConstants;
  *
  */
 public class DalPersistanceEventTest extends ObserverBaseTest {
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
 
   @Test
   @Order(1)
@@ -92,11 +89,12 @@ public class DalPersistanceEventTest extends ObserverBaseTest {
 
       // expecting exception thrown by by persistance observer, it will be thrown only if it is
       // executed
-      exception.expect(OBException.class);
-      exception.expectMessage(OBMessageUtils.messageBD("InvalidDateFormat"));
-
-      OBDal.getInstance().save(newCountry);
-      OBDal.getInstance().flush();
+      OBException ex = assertThrows(OBException.class, () -> {
+        OBDal.getInstance().save(newCountry);
+        OBDal.getInstance().flush();
+      });
+      assertThat("Invalid date format error is propagated", ex.getMessage(),
+          is(OBMessageUtils.messageBD("InvalidDateFormat")));
     } finally {
       OBDal.getInstance().rollbackAndClose();
     }

@@ -1,6 +1,6 @@
 package org.openbravo.test.purchaseOrder;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openbravo.test.costing.utils.TestCostingUtils.reactivateInvoice;
 import static org.openbravo.test.purchaseOrder.PurchaseOrderUtils.createPurchaseOrder;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
@@ -121,7 +121,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
       assertEquals(Long.valueOf(100), goodsReceipt.getInvoiceStatus());
 
     } catch (Exception e) {
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     } finally {
       cleanUpData(purchaseOrder, goodsReceipt, purchaseInvoice);
     }
@@ -248,7 +248,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     }
   }
 
@@ -287,7 +287,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     }
   }
 
@@ -339,7 +339,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     } finally {
       if (TriggerHandler.getInstance().isDisabled()) {
         TriggerHandler.getInstance().enable();

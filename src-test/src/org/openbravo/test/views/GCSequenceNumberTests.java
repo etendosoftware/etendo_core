@@ -20,13 +20,13 @@
 package org.openbravo.test.views;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.GCTab;
 import org.openbravo.client.application.window.OBViewUtil;
@@ -58,9 +58,9 @@ public class GCSequenceNumberTests extends GridConfigurationTest {
    * Execute these test cases only if there is no custom grid config as it could make unstable
    * results
    */
-  @Before
+  @BeforeEach
   public void shouldExecuteOnlyIfThereIsNoGridConfig() {
-    assumeThat("Number of custom grid configs", getNumberOfGridConfigurations(), is(0));
+    assumeTrue(0 == getNumberOfGridConfigurations(), "Number of custom grid configs");
   }
 
   /**

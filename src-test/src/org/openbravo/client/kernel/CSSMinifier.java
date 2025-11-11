@@ -19,12 +19,12 @@
 
 package org.openbravo.client.kernel;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.util.regex.Pattern;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.test.base.Issue;
 
 /** Tests CSS minification */

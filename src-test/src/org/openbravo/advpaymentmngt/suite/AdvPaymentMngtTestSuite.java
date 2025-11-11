@@ -1,7 +1,7 @@
 package org.openbravo.advpaymentmngt.suite;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 import org.openbravo.advpaymentmngt.APRMActionHandlerTest;
 import org.openbravo.advpaymentmngt.APRMApplicationProviderTest;
 import org.openbravo.advpaymentmngt.actionHandler.AddMultiplePaymentsHandlerTest;
@@ -89,8 +89,8 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
  * The suite includes tests for action handlers, application providers, and HQL injections.
  * </p>
  */
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
 
     // actionHandler
     CheckExistsOverissueBinForRFCShipmentWHTest.class,

@@ -19,11 +19,12 @@
 
 package org.openbravo.test.security;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -39,13 +40,11 @@ import org.openbravo.model.common.order.Order;
 public class StandardCrossOrganizationReference extends CrossOrganizationReference {
   /** References from org Spain to USA should not be allowed on insertion */
   @Test
-  @Ignore("Expected exception is not thrown on insert, see issue #32063")
+  @Disabled("Expected exception is not thrown on insert, see issue #32063")
   public void crossOrgRefShouldBeIllegalOnInsert() {
     createOrder(SPAIN_ORG, USA_WAREHOUSE);
 
-    exception.expect(OBSecurityException.class);
-
-    OBDal.getInstance().commitAndClose();
+    assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
   }
 
   /** References from org Spain to USA should not be allowed on update */
@@ -54,9 +53,7 @@ public class StandardCrossOrganizationReference extends CrossOrganizationReferen
     Order order = createOrder(SPAIN_ORG, SPAIN_WAREHOUSE);
     order.setWarehouse(OBDal.getInstance().getProxy(Warehouse.class, USA_WAREHOUSE));
 
-    exception.expect(OBSecurityException.class);
-
-    OBDal.getInstance().commitAndClose();
+    assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
   }
 
   @Test

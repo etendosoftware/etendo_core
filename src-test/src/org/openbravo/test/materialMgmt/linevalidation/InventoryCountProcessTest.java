@@ -17,13 +17,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
@@ -42,7 +42,7 @@ import org.openbravo.scheduling.ProcessContext;
  * - Error when inventory has no lines.
  * - Successful processing when inventory has lines.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class InventoryCountProcessTest {
 
   private static final String PHYSICAL_INVENTORY_WITHOUT_LINES = "PhysicalInventoryWithoutLines";
@@ -62,7 +62,7 @@ public class InventoryCountProcessTest {
    * Sets up the test environment before each test.
    * Initializes the InventoryCountProcess instance and configures common behavior.
    */
-  @Before
+  @BeforeEach
   public void setUp() {
     inventoryCountProcess = spy(new InventoryCountProcess());
   }

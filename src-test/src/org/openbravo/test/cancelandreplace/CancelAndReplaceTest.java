@@ -19,10 +19,10 @@
 
 package org.openbravo.test.cancelandreplace;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,11 +36,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
@@ -107,13 +105,9 @@ public class CancelAndReplaceTest extends WeldBaseTest {
       new CancelAndReplaceTestData21(), new CancelAndReplaceTestData22(),
       new CancelAndReplaceTestData23());
 
-  /** Defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<CancelAndReplaceTestData> parameterValuesRule = new ParameterCdiTestRule<>(
-      PARAMS);
-
-  /** This field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest CancelAndReplaceTestData testData;
+  public static List<CancelAndReplaceTestData> params() {
+    return PARAMS;
+  }
 
   /**
    * Verifies Cancel and Replace functionality API with one or more than one replacement. Clone and
@@ -122,8 +116,9 @@ public class CancelAndReplaceTest extends WeldBaseTest {
    * orders. Different check points have been added in each stage to verify the results of the
    * processes.
    */
-  @Test
-  public void cancelAndReplaceTest() {
+  @ParameterizedTest
+  @MethodSource("params")
+  public void cancelAndReplaceTest(CancelAndReplaceTestData testData) {
     // Set QA context
     OBContext.setAdminMode();
     try {
@@ -195,7 +190,7 @@ public class CancelAndReplaceTest extends WeldBaseTest {
           newOrders.stream().map(Order::getDocumentNo).collect(Collectors.toList()));
       log.debug(testData.getTestDescription());
 
-      updateNewOrders(newOrders);
+      updateNewOrders(testData, newOrders);
       OBDal.getInstance().flush();
       OBDal.getInstance().commitAndClose();
 
@@ -265,11 +260,10 @@ public class CancelAndReplaceTest extends WeldBaseTest {
     List<OrderReplacement> orderReplacements = getOrderReplacement(oldOrder);
     assertThat("Order replacement should be " + newOrders.size(), orderReplacements.size(),
         equalTo(newOrders.size()));
-    newOrders.forEach(newOrder -> assertTrue(
-        "Order " + newOrder.getDocumentNo() + " should be in replacement list",
-        orderReplacements.stream()
-            .anyMatch(orderReplacement -> StringUtils
-                .equals(orderReplacement.getReplacement().getId(), newOrder.getId()))));
+    newOrders.forEach(newOrder -> assertTrue(orderReplacements.stream()
+                .anyMatch(orderReplacement -> StringUtils
+                    .equals(orderReplacement.getReplacement().getId(), newOrder.getId())),
+        "Order " + newOrder.getDocumentNo() + " should be in replacement list"));
   }
 
   private List<Order> refreshOrders(List<Order> newOrders) {
@@ -285,7 +279,7 @@ public class CancelAndReplaceTest extends WeldBaseTest {
     }
   }
 
-  private void updateNewOrders(List<Order> newOrders) {
+  private void updateNewOrders(CancelAndReplaceTestData testData, List<Order> newOrders) {
     for (int i = 0; i < newOrders.size(); i++) {
       updateOrder(i, newOrders.get(i), testData.getNewOrders().get(i).getLines()[0]);
     }

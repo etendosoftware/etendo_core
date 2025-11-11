@@ -19,7 +19,7 @@
 
 package org.openbravo.test.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -85,7 +85,7 @@ public class TrlColumnsOraTypeTest extends OBBaseTest {
       for (String error : errors) {
         log.error(error);
       }
-      assertEquals("There are columns in TRL tables not matching Oracle types", 0, errors.size());
+      assertEquals(0, errors.size(), "There are columns in TRL tables not matching Oracle types");
     } catch (Exception e) {
       log.error("Error executing query", e);
     } finally {

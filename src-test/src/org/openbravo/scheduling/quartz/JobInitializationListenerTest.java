@@ -8,14 +8,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.scheduling.OBScheduler;
 import org.openbravo.scheduling.ProcessBundle;
@@ -28,7 +28,7 @@ import org.quartz.JobExecutionContext;
  * Unit tests for the JobInitializationListener class.
  * Tests the initialization of jobs with different ProcessBundle configurations.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class JobInitializationListenerTest {
 
   @InjectMocks
@@ -56,7 +56,7 @@ public class JobInitializationListenerTest {
    * Sets up the test environment before each test.
    * Initialize mocks and configures common behavior.
    */
-  @Before
+  @BeforeEach
   public void setUp() {
     mockedOBScheduler = mockStatic(OBScheduler.class);
     mockScheduler = mock(OBScheduler.class);
@@ -71,7 +71,7 @@ public class JobInitializationListenerTest {
    * Cleans up resources after each test.
    * Closes the static mock to prevent memory leaks.
    */
-  @After
+  @AfterEach
   public void tearDown() {
     if (mockedOBScheduler != null) {
       mockedOBScheduler.close();

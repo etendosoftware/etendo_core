@@ -21,8 +21,8 @@ package org.openbravo.advpaymentmngt.test;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
@@ -42,7 +42,7 @@ public class PaymentMethodTest extends OBBaseTest {
    * This before method is named setUpP() to avoid overwriting the super setUp method that is invoke
    * automatically before this one.
    */
-  @Before
+  @BeforeEach
   public void setUpP() throws Exception {
     TestUtility.setTestContext();
   }

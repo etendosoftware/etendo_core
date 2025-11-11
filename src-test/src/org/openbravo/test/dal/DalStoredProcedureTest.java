@@ -19,9 +19,9 @@
 
 package org.openbravo.test.dal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBDal;
@@ -71,8 +71,8 @@ public class DalStoredProcedureTest extends OBBaseTest {
 
     final org.openbravo.model.ad.ui.Process process = OBDal.getInstance()
         .get(org.openbravo.model.ad.ui.Process.class, "114");
-    assertNotNull("No copy test line process defined with id 114", process);
-    assertNotNull("id of attest not set", tabtest.getId());
+    assertNotNull(process, "No copy test line process defined with id 114");
+    assertNotNull(tabtest.getId(), "No copy test line process defined with id 114");
     final int fieldsNo = tabtest.getADFieldList().size();
     assertTrue(fieldsNo > 0);
 

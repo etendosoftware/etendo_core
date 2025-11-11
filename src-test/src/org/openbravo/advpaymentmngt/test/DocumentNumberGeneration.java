@@ -1,11 +1,10 @@
 package org.openbravo.advpaymentmngt.test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -14,12 +13,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
@@ -43,71 +40,70 @@ import org.openbravo.service.db.DalConnectionProvider;
  * @author alostale
  */
 public class DocumentNumberGeneration extends WeldBaseTest {
-  public static final List<Boolean> PARAMS = Arrays.asList(false, true);
-
-  @Rule
-  public ParameterCdiTestRule<Boolean> parameterValuesRule = new ParameterCdiTestRule<Boolean>(PARAMS);
-
   private static final String DOC_TYPE_ID = "466AF4B0136A4A3F9F84129711DA8BD3";
   private static final String TABLE_NAME = "C_Order";
   private static final int WAIT_MS = 200;
-  private @ParameterCdiTest boolean commitTrx;
 
   public DocumentNumberGeneration() {
   }
 
   /** 2 concurrent dal calls */
-  @Test
-  public void twoDalCalls() throws InterruptedException, ExecutionException {
+  @ParameterizedTest
+  @ValueSource(booleans = { false, true })
+  public void twoDalCalls(boolean commitTrx) throws InterruptedException, ExecutionException {
     List<DocumentNumberGetter> threads = new ArrayList<DocumentNumberGetter>();
     threads.add(new DALDocumentNumberGetter().setThreadNo(1).commitTrx(commitTrx));
     threads.add(
         new DALDocumentNumberGetter().setThreadNo(2).waitBeforeStartMs(100).commitTrx(commitTrx));
-    test(threads);
+    test(threads, commitTrx);
   }
 
   /** 2 concurrent PL calls */
-  @Test
-  public void twoPLCalls() throws InterruptedException, ExecutionException {
+  @ParameterizedTest
+  @ValueSource(booleans = { false, true })
+  public void twoPLCalls(boolean commitTrx) throws InterruptedException, ExecutionException {
     List<DocumentNumberGetter> threads = new ArrayList<DocumentNumberGetter>();
     threads.add(new DBDocumentNumberGetter().setThreadNo(1).commitTrx(commitTrx));
     threads.add(new DBDocumentNumberGetter().setThreadNo(2).commitTrx(commitTrx));
-    test(threads);
+    test(threads, commitTrx);
   }
 
   /** one dal, wait till it finishes, another dal call */
-  @Test
-  public void twoDalCallsSequential() throws InterruptedException, ExecutionException {
+  @ParameterizedTest
+  @ValueSource(booleans = { false, true })
+  public void twoDalCallsSequential(boolean commitTrx) throws InterruptedException, ExecutionException {
     List<DocumentNumberGetter> threads = new ArrayList<DocumentNumberGetter>();
     threads.add(new DALDocumentNumberGetter().setThreadNo(1).commitTrx(commitTrx));
     threads.add(new DALDocumentNumberGetter().setThreadNo(2)
         .waitBeforeStartMs(WAIT_MS + 100)
         .commitTrx(commitTrx));
-    test(threads);
+    test(threads, commitTrx);
   }
 
   /** dal and pl concurrently, dal starts */
-  @Test
-  public void dalFirstThenPL() throws InterruptedException, ExecutionException {
+  @ParameterizedTest
+  @ValueSource(booleans = { false, true })
+  public void dalFirstThenPL(boolean commitTrx) throws InterruptedException, ExecutionException {
     List<DocumentNumberGetter> threads = new ArrayList<DocumentNumberGetter>();
     threads.add(new DALDocumentNumberGetter().setThreadNo(1).commitTrx(commitTrx));
     threads.add(
         new DBDocumentNumberGetter().setThreadNo(2).waitBeforeStartMs(100).commitTrx(commitTrx));
-    test(threads);
+    test(threads, commitTrx);
   }
 
   /** pl and dal concurrently, pl starts */
-  @Test
-  public void plFirstThenDal() throws InterruptedException, ExecutionException {
+  @ParameterizedTest
+  @ValueSource(booleans = { false, true })
+  public void plFirstThenDal(boolean commitTrx) throws InterruptedException, ExecutionException {
     List<DocumentNumberGetter> threads = new ArrayList<DocumentNumberGetter>();
     threads.add(new DALDocumentNumberGetter().setThreadNo(1).commitTrx(commitTrx));
     threads.add(
         new DBDocumentNumberGetter().setThreadNo(2).waitBeforeStartMs(100).commitTrx(commitTrx));
-    test(threads);
+    test(threads, commitTrx);
   }
 
   /** executes all the threads and asserts the results */
-  private void test(List<DocumentNumberGetter> threads)
+  private void test(List<DocumentNumberGetter> threads, boolean commitTrx)
       throws InterruptedException, ExecutionException {
     ExecutorService executor = Executors.newFixedThreadPool(threads.size());
     List<Future<String>> r = executor.invokeAll(threads, 5, TimeUnit.HOURS);

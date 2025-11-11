@@ -1,7 +1,7 @@
 package org.openbravo.test.accounting;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -11,8 +11,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBConfigFileProvider;
 import org.openbravo.base.provider.OBProvider;
@@ -69,7 +69,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
   private static final Logger log4j = Logger.getLogger(PostedNoDocConfigTest.class);
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,

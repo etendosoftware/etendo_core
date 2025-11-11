@@ -1,16 +1,15 @@
 package org.openbravo.scheduling;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
@@ -22,7 +21,7 @@ import org.quartz.Trigger;
  * Test class for ProcessMonitor functionality.
  * Tests job execution veto logic and duration formatting.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ProcessMonitorTest {
 
   private ProcessMonitor processMonitor;
@@ -48,10 +47,8 @@ public class ProcessMonitorTest {
    *
    * @throws Exception if there's an error initializing the mocks or configuring the trigger
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
-    MockitoAnnotations.openMocks(this);
-
     // Setup the ProcessMonitor
     processMonitor = new ProcessMonitor("TestMonitor", schedulerContext);
 

@@ -19,13 +19,12 @@
 package org.openbravo.test.reporting;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.weld.WeldUtils;
@@ -43,8 +42,7 @@ import net.sf.jasperreports.engine.JasperReport;
  */
 public class CompiledReportsCacheTest extends WeldBaseTest {
 
-  @Rule
-  public ParameterCdiTestRule<Boolean> reportRule = new ParameterCdiTestRule<Boolean>(
+    public ParameterCdiTestRule<Boolean> reportRule = new ParameterCdiTestRule<Boolean>(
       Arrays.asList(Boolean.TRUE, Boolean.FALSE));
 
   private @ParameterCdiTest Boolean isCacheEnabled;

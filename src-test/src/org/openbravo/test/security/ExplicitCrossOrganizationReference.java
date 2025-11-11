@@ -19,10 +19,11 @@
 package org.openbravo.test.security;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,10 +34,10 @@ import java.util.Map;
 
 import org.apache.logging.log4j.Level;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
@@ -80,13 +81,11 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
    * it if not in admin mode
    */
   @Test
-  @Ignore("Expected exception is not thrown on insert, see issue #32063")
+  @Disabled("Expected exception is not thrown on insert, see issue #32063")
   public void shouldBeIllegalOnInsert() {
     createOrder(SPAIN_ORG, USA_WAREHOUSE);
 
-    exception.expect(OBSecurityException.class);
-
-    OBDal.getInstance().commitAndClose();
+    assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
   }
 
   /**
@@ -98,9 +97,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
     Order order = createOrder(SPAIN_ORG, SPAIN_WAREHOUSE);
     order.setWarehouse(OBDal.getInstance().getProxy(Warehouse.class, USA_WAREHOUSE));
 
-    exception.expect(OBSecurityException.class);
-
-    OBDal.getInstance().commitAndClose();
+    assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
   }
 
   /**
@@ -142,7 +139,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
    */
   @SuppressWarnings("serial")
   @Test
-  @Ignore("Expected exception is not thrown on insert, see issue #32063")
+  @Disabled("Expected exception is not thrown on insert, see issue #32063")
   public void shouldBeIllegalOnInsertAdminModeIfColumnNotSet() {
     OBContext.setCrossOrgReferenceAdminMode();
     try {
@@ -153,9 +150,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
         }
       });
 
-      exception.expect(OBSecurityException.class);
-
-      OBDal.getInstance().commitAndClose();
+      assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
     } finally {
       OBContext.restorePreviousCrossOrgReferenceMode();
     }
@@ -170,23 +165,19 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
     Order order = createOrder(SPAIN_ORG, SPAIN_WAREHOUSE);
     OBContext.setCrossOrgReferenceAdminMode();
     try {
-      exception.expect(OBSecurityException.class);
-
       order.setCancelledorder(OBDal.getInstance().getProxy(Order.class, USA_ORDER));
-      OBDal.getInstance().commitAndClose();
+      assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
     } finally {
       OBContext.restorePreviousCrossOrgReferenceMode();
     }
   }
 
   @Test
-  @Ignore("Expected exception is not thrown on insert, see issue #32063")
+  @Disabled("Expected exception is not thrown on insert, see issue #32063")
   public void shouldBeIllegalOnChildInsert() {
     createCrossOrgOrderOrderLine();
 
-    exception.expect(OBSecurityException.class);
-
-    OBDal.getInstance().commitAndClose();
+    assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
   }
 
   @Test
@@ -196,9 +187,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
 
     ol.setOrganization(OBDal.getInstance().getProxy(Organization.class, USA_ORG));
 
-    exception.expect(OBSecurityException.class);
-
-    OBDal.getInstance().commitAndClose();
+    assertThrows(OBSecurityException.class, () -> OBDal.getInstance().commitAndClose());
   }
 
   @Test
@@ -417,8 +406,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
       Column orderCreatedBy = OBDal.getInstance().get(Column.class, ORDER_CREATEDBY_COLUMN);
       orderCreatedBy.setAllowedCrossOrganizationReference(true);
 
-      exception.expect(Exception.class);
-      OBDal.getInstance().commitAndClose();
+      assertThrows(Exception.class, () -> OBDal.getInstance().commitAndClose());
     } finally {
       OBDal.getInstance().rollbackAndClose();
       OBContext.setOBContext(prevCtxt);
@@ -468,7 +456,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
     OBContext.setOBContext("100", QA_ONLY_SPAIN_ROLE, QA_TEST_CLIENT_ID, SPAIN_ORG);
   }
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpAllowedCrossOrg() throws Exception {
     CrossOrganizationReference.setUpAllowedCrossOrg(COLUMNS_TO_ALLOW_CROSS_ORG, true);
 
@@ -520,7 +508,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
     createdObjects.add(windowAccess);
   }
 
-  @AfterClass
+  @AfterAll
   public static void resetAD() throws Exception {
     CrossOrganizationReference.setUpAllowedCrossOrg(COLUMNS_TO_ALLOW_CROSS_ORG, false);
 

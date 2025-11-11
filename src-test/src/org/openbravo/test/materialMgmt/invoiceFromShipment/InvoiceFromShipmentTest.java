@@ -20,8 +20,8 @@
 package org.openbravo.test.materialMgmt.invoiceFromShipment;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -34,10 +34,11 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.query.Query;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Test;
+
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.WeldUtils;
@@ -65,7 +66,7 @@ import org.openbravo.service.db.DalConnectionProvider;
  * Test class for Automatic Invoice From Goods Shipment test cases
  *
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   private static final Logger log = LogManager.getLogger();
@@ -85,7 +86,7 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   private static final String AFTER_ORDER_DELIVERY = "O";
   private static final String PRICE_LIST_SALES_ID = "4028E6C72959682B01295ADC1D55022B";
 
-  @Before
+  @BeforeEach
   public void initialize() {
     log.info("Initializing Invoice From Shipment Tests ...");
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID);
@@ -902,8 +903,7 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
       PriceList priceList, String status) {
     assertThat("Invoice status should have been " + status, invoice.getDocumentStatus(),
         equalTo(status));
-    assertTrue("Invoice date should have been " + invoiceDate,
-        DateUtils.truncatedEquals(invoice.getInvoiceDate(), invoiceDate, Calendar.DATE));
+    assertTrue(DateUtils.truncatedEquals(invoice.getInvoiceDate(), invoiceDate, Calendar.DATE), "Invoice date should have been " + invoiceDate);
     assertThat("Price List should have been " + priceList.getId(), invoice.getPriceList().getId(),
         equalTo(priceList.getId()));
   }

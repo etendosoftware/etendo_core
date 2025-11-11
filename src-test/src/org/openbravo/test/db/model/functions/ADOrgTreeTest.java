@@ -19,9 +19,11 @@
 
 package org.openbravo.test.db.model.functions;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,8 +35,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
@@ -88,19 +90,19 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
       final String newOrgId = createOrganization("Test_" + number, ORGTYPE_ORGANIZATION, ORG_0);
 
       List<OrganizationTree> orgTreeRecords = getOrganizationTreeRecords(newOrgId, null);
-      assertEquals("Records found at OrgTree at this point", 0, orgTreeRecords.size());
+      assertEquals(0, orgTreeRecords.size(), "Records found at OrgTree at this point");
 
       setAsReady(newOrgId, isCascade);
       orgTreeRecords = getOrganizationTreeRecords(newOrgId, null);
-      assertEquals("Records found at OrgTree at this point", 2, orgTreeRecords.size());
+      assertEquals(2, orgTreeRecords.size(), "Records found at OrgTree at this point");
 
       orgTreeRecords = getOrganizationTreeRecords(newOrgId, newOrgId);
-      assertEquals("Records found at OrgTree at this point", 1, orgTreeRecords.size());
-      assertEquals("Level found", 1, orgTreeRecords.get(0).getLevelno().longValue());
+      assertEquals(1, orgTreeRecords.size(), "Records found at OrgTree at this point");
+      assertEquals(1, orgTreeRecords.get(0).getLevelno().longValue(), "Level found");
 
       orgTreeRecords = getOrganizationTreeRecords(newOrgId, ORG_0);
-      assertEquals("Records found at OrgTree at this point", 1, orgTreeRecords.size());
-      assertEquals("Level found", 2, orgTreeRecords.get(0).getLevelno().longValue());
+      assertEquals(1, orgTreeRecords.size(), "Records found at OrgTree at this point");
+      assertEquals(2, orgTreeRecords.get(0).getLevelno().longValue(), "Level found");
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -140,7 +142,7 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
       final String firstOrgId = createOrganization("Test_" + number, ORGTYPE_ORGANIZATION, ORG_0);
 
       List<OrganizationTree> orgTreeRecords = getOrganizationTreeRecords(firstOrgId, null);
-      assertEquals("Records found at OrgTree at this point", 0, orgTreeRecords.size());
+      assertEquals(0, orgTreeRecords.size(), "Records found at OrgTree at this point");
 
       String secondOrgId = null;
       if (!isCascade) {
@@ -150,22 +152,22 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
         secondOrgId = createOrganization("Test_" + number, ORGTYPE_ORGANIZATION, firstOrgId);
 
         orgTreeRecords = getOrganizationTreeRecords(secondOrgId, null);
-        assertEquals("Records found at OrgTree at this point", 0, orgTreeRecords.size());
+        assertEquals(0, orgTreeRecords.size(), "Records found at OrgTree at this point");
 
         setAsReady(firstOrgId, "Y");
       }
 
       // First org checks
       orgTreeRecords = getOrganizationTreeRecords(firstOrgId, null);
-      assertEquals("Records found at OrgTree at this point", 2, orgTreeRecords.size());
+      assertEquals(2, orgTreeRecords.size(), "Records found at OrgTree at this point");
 
       orgTreeRecords = getOrganizationTreeRecords(firstOrgId, firstOrgId);
-      assertEquals("Records found at OrgTree at this point", 1, orgTreeRecords.size());
-      assertEquals("Level found", 1, orgTreeRecords.get(0).getLevelno().longValue());
+      assertEquals(1, orgTreeRecords.size(), "Records found at OrgTree at this point");
+      assertEquals(1, orgTreeRecords.get(0).getLevelno().longValue(), "Level found");
 
       orgTreeRecords = getOrganizationTreeRecords(firstOrgId, ORG_0);
-      assertEquals("Records found at OrgTree at this point", 1, orgTreeRecords.size());
-      assertEquals("Level found", 2, orgTreeRecords.get(0).getLevelno().longValue());
+      assertEquals(1, orgTreeRecords.size(), "Records found at OrgTree at this point");
+      assertEquals(2, orgTreeRecords.get(0).getLevelno().longValue(), "Level found");
 
       // Second org checks
       if (!isCascade) {
@@ -173,25 +175,25 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
         secondOrgId = createOrganization("Test_" + number, ORGTYPE_ORGANIZATION, firstOrgId);
 
         orgTreeRecords = getOrganizationTreeRecords(secondOrgId, null);
-        assertEquals("Records found at OrgTree at this point", 0, orgTreeRecords.size());
+        assertEquals(0, orgTreeRecords.size(), "Records found at OrgTree at this point");
 
         setAsReady(secondOrgId, "N");
       }
 
       orgTreeRecords = getOrganizationTreeRecords(secondOrgId, null);
-      assertEquals("Records found at OrgTree at this point", 3, orgTreeRecords.size());
+      assertEquals(3, orgTreeRecords.size(), "Records found at OrgTree at this point");
 
       orgTreeRecords = getOrganizationTreeRecords(secondOrgId, secondOrgId);
-      assertEquals("Records found at OrgTree at this point", 1, orgTreeRecords.size());
-      assertEquals("Level found", 1, orgTreeRecords.get(0).getLevelno().longValue());
+      assertEquals(1, orgTreeRecords.size(), "Records found at OrgTree at this point");
+      assertEquals(1, orgTreeRecords.get(0).getLevelno().longValue(), "Level found");
 
       orgTreeRecords = getOrganizationTreeRecords(secondOrgId, firstOrgId);
-      assertEquals("Records found at OrgTree at this point", 1, orgTreeRecords.size());
-      assertEquals("Level found", 2, orgTreeRecords.get(0).getLevelno().longValue());
+      assertEquals(1, orgTreeRecords.size(), "Records found at OrgTree at this point");
+      assertEquals(2, orgTreeRecords.get(0).getLevelno().longValue(), "Level found");
 
       orgTreeRecords = getOrganizationTreeRecords(secondOrgId, ORG_0);
-      assertEquals("Records found at OrgTree at this point", 1, orgTreeRecords.size());
-      assertEquals("Level found", 3, orgTreeRecords.get(0).getLevelno().longValue());
+      assertEquals(1, orgTreeRecords.size(), "Records found at OrgTree at this point");
+      assertEquals(3, orgTreeRecords.get(0).getLevelno().longValue(), "Level found");
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -250,7 +252,7 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
       String superParentOrgId = createOrganizationTree(totalOrgs, maxLevel);
       setAsReady(superParentOrgId, "Y");
       List<OrganizationTree> orgTreeRecords = getOrganizationTreeRecords(null, superParentOrgId);
-      assertEquals("Records found at OrgTree at this point", totalOrgs, orgTreeRecords.size());
+      assertEquals(totalOrgs, orgTreeRecords.size(), "Records found at OrgTree at this point");
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -267,22 +269,22 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
       for (final String organizationChild : allOrganizations) {
         for (final String organizationParent : allOrganizations) {
           assertEquals(
-              "Failed combination with parameters: " + organizationChild + ", " + organizationParent
-                  + ", " + client,
               isOrgIncludedLegacy(organizationChild, organizationParent, client),
-              isOrgIncluded(organizationChild, organizationParent, client));
+              isOrgIncluded(organizationChild, organizationParent, client),
+              "Failed combination with parameters: " + organizationChild + ", " + organizationParent
+                  + ", " + client);
           i++;
         }
       }
     }
-    assertEquals("Combinations tested", ALL_COMBINATIONS, i);
+    assertEquals(ALL_COMBINATIONS, i, "Combinations tested");
   }
 
   /**
    * Test performance of new function is better than legacy one when used as a filter criteria in
    * the where clause. Verify we get the same results.
    */
-  @Ignore("This test is ignored because it might create false positive in CI machines due to different server load.")
+  @Disabled("This test is ignored because it might create false positive in CI machines due to different server load.")
   @Test
   public void testPerformanceI() {
     try {
@@ -306,16 +308,12 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
       long hqlLegacyTime = System.currentTimeMillis() - start;
       log.info("AD_IsOrgIncluded_TreeNode time: " + hqlLegacyTime);
 
-      assertEquals(hqlCount, hqlLegacyCount);
-      assertTrue(
-          "ad_isorgincluded_treenode ( " + hqlLegacyTime
-              + ") should be slower than ad_isorgincluded (" + hqlTime + ")",
-          hqlLegacyTime > hqlTime);
+      assertEquals(hqlLegacyCount, hqlCount);
+      assertTrue(hqlLegacyTime > hqlTime, "ad_isorgincluded_treenode ( " + hqlLegacyTime
+              + ") should be slower than ad_isorgincluded (" + hqlTime + ")");
       // Set to 2 to be conservative (in local testing about 2,70x)
-      assertTrue(
-          "ad_isorgincluded_treenode ( " + hqlLegacyTime
-              + ") should be much slower than ad_isorgincluded (" + hqlTime + ")",
-          hqlLegacyTime > hqlTime * 2);
+      assertTrue(hqlLegacyTime > hqlTime * 2, "ad_isorgincluded_treenode ( " + hqlLegacyTime
+              + ") should be much slower than ad_isorgincluded (" + hqlTime + ")");
       log.info(String.format("Performance gain: %.2fx", (double) hqlLegacyTime / hqlTime));
     } finally {
       OBContext.restorePreviousMode();
@@ -328,7 +326,7 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
    * <p>
    * Verify we get the same results
    */
-  @Ignore("This test is ignored because it might create false positive in CI machines due to different server load.")
+  @Disabled("This test is ignored because it might create false positive in CI machines due to different server load.")
   @Test
   public void testPerformanceII() {
     final int numberOfCalls = 300;
@@ -369,10 +367,9 @@ public class ADOrgTreeTest extends Ad_isorgincludedTest {
 
     assertTrue(Arrays.equals(result, resultLegacy));
     // Set to < 50 ms to be conservative (in local testing about -5ms)
-    assertTrue(
+    assertTrue(time - legacyTime < 50,
         "ad_isorgincluded_treenode ( " + legacyTime
-            + ") should be more or less equal than ad_isorgincluded (" + time + ")",
-        time - legacyTime < 50);
+            + ") should be more or less equal than ad_isorgincluded (" + time + ")");
     log.info(
         "Difference actual (" + time + ") - legacy (" + legacyTime + ") = " + (time - legacyTime));
   }

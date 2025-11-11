@@ -19,12 +19,10 @@
 
 package org.openbravo.test.system;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
@@ -41,9 +39,10 @@ public class ErrorTextParserTest extends OBBaseTest {
 
   @Test
   public void testPGSpanish() throws Exception {
-    // only test on pgsql, as specifically testing against es_ES/pgsql error messsage
-    assumeThat("Executing only in PostgreSQL", getConnectionProvider().getRDBMS(),
-        is(equalTo("POSTGRE")));
+    // only test on pgsql, as specifically testing against es_ES/pgsql error message
+    assumeTrue("POSTGRE".equals(getConnectionProvider().getRDBMS()),
+        "Executing only in PostgreSQL");
+    assumeTrue("POSTGRE".equals(getConnectionProvider().getRDBMS()), "Executing only in PostgreSQL");
     String expectedMessage = "This record cannot be deleted because it is associated with other existing elements. Please see Linked Items";
     String errorMessage = "inserción o actualización en la tabla «c_bpartner» viola la llave foránea «c_bpartner_c_bp_group»";
     doErrorTextParserTestWithoutDB(errorMessage, expectedMessage);
