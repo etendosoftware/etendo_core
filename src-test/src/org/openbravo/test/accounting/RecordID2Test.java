@@ -4,24 +4,24 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2014 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2014 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.test.accounting;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -30,12 +30,10 @@ import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.Date;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -51,10 +49,10 @@ import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.test.base.OBBaseTest;
 
+import jakarta.servlet.ServletException;
+
 /**
  * Tests cases to check RecordID2-DateBalanced functionality (Open balances Project)
- * 
- * 
  */
 public class RecordID2Test extends OBBaseTest {
   final static private Logger log = LogManager.getLogger();
@@ -78,47 +76,50 @@ public class RecordID2Test extends OBBaseTest {
     try {
       Invoice invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
       String strRecordID2 = invoice.getFINPaymentScheduleList().get(0).getId();
-      assertEquals("Invoice Not Posted", "Y", invoice.getPosted());
+      assertEquals("Y", invoice.getPosted(), "Invoice Not Posted");
       ResetAccounting.delete(invoice.getClient().getId(), invoice.getOrganization().getId(), "318",
           invoice.getId(), "", "");
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
       String strReceivablesAccountId = getReceivablesAccount(invoice.getBusinessPartner(),
           strCAcctSchemaId);
-      assertEquals("Invoice Could Not Be Unposted", "N", invoice.getPosted());
-      assertTrue("RecordID2 not updated after unposting invoice", BigDecimal.ZERO.compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
+      assertEquals("N", invoice.getPosted(), "Invoice Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after unposting invoice");
       postDocument(strCInvoiceId, "318", invoice.getClient().getId(),
           invoice.getOrganization().getId());
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
-      assertTrue("RecordID2 not updated after posting invoice", new BigDecimal("100").compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertEquals("Invoice Could Not be Posted", "Y", invoice.getPosted());
+      assertTrue(new BigDecimal("100").compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after posting invoice");
+      assertEquals("Y", invoice.getPosted(), "Invoice Could Not be Posted");
 
       // Reconciliation: 1000032 - 02-07-2011 from QA Dataset. Paying previous invoice
       String strFINReconciliationId = "FF808081328278B5013282A3F67700C5";
       FIN_Reconciliation reconciliation = OBDal.getInstance()
           .get(FIN_Reconciliation.class, strFINReconciliationId);
-      assertEquals("Reconciliation Not Posted", "Y", reconciliation.getPosted());
+      assertEquals("Y", reconciliation.getPosted(), "Reconciliation Not Posted");
       ResetAccounting.delete(reconciliation.getClient().getId(),
           reconciliation.getOrganization().getId(), TABLE_RECONCILIATION, reconciliation.getId(),
           "", "");
       reconciliation = OBDal.getInstance().get(FIN_Reconciliation.class, strFINReconciliationId);
-      assertEquals("Reconciliation Could Not Be Unposted", "N", reconciliation.getPosted());
-      assertTrue("RecordID2 not updated after unposting reconciliation",
+      assertEquals("N", reconciliation.getPosted(), "Reconciliation Could Not Be Unposted");
+      assertTrue(
           BigDecimal.ZERO.compareTo(getBalance(strRecordID2, TABLE_RECONCILIATION, strCAcctSchemaId,
-              strReceivablesAccountId)) == 0);
+                    strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after unposting reconciliation");
       postDocument(strFINReconciliationId, TABLE_RECONCILIATION, reconciliation.getClient().getId(),
           reconciliation.getOrganization().getId());
       reconciliation = OBDal.getInstance().get(FIN_Reconciliation.class, strFINReconciliationId);
-      assertTrue("RecordID2 not updated after posting reconciliation",
-          new BigDecimal("-100").compareTo(getBalance(strRecordID2, TABLE_RECONCILIATION,
-              strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertEquals("Reconciliation Could Not be Posted", "Y", reconciliation.getPosted());
-      assertEquals("Entry Not Balanced",
+      assertTrue(new BigDecimal("-100").compareTo(getBalance(strRecordID2, TABLE_RECONCILIATION,
+                    strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after posting reconciliation");
+      assertEquals("Y", reconciliation.getPosted(), "Reconciliation Could Not be Posted");
+      assertEquals(
           DateUtils.truncate(
               reconciliation.getAPRMFinaccTransactionVList().get(0).getTransactionDate(),
               Calendar.DATE),
-          getBalancedDate(strRecordID2, strReceivablesAccountId));
+          getBalancedDate(strRecordID2, strReceivablesAccountId), "Entry Not Balanced");
     } catch (Exception e) {
       assertFalse(true);
       log.error("Error when executing query", e);
@@ -143,44 +144,47 @@ public class RecordID2Test extends OBBaseTest {
     try {
       Invoice invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
       String strRecordID2 = invoice.getFINPaymentScheduleList().get(0).getId();
-      assertEquals("Invoice Not Posted", "Y", invoice.getPosted());
+      assertEquals("Y", invoice.getPosted(), "Invoice Not Posted");
       ResetAccounting.delete(invoice.getClient().getId(), invoice.getOrganization().getId(), "318",
           invoice.getId(), "", "");
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
       String strReceivablesAccountId = getReceivablesAccount(invoice.getBusinessPartner(),
           strCAcctSchemaId);
-      assertEquals("Invoice Could Not Be Unposted", "N", invoice.getPosted());
-      assertTrue("RecordID2 not updated after unposting invoice", BigDecimal.ZERO.compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
+      assertEquals("N", invoice.getPosted(), "Invoice Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after unposting invoice");
       postDocument(strCInvoiceId, "318", invoice.getClient().getId(),
           invoice.getOrganization().getId());
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
-      assertTrue("RecordID2 not updated after posting invoice", new BigDecimal("146").compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertEquals("Invoice Could Not be Posted", "Y", invoice.getPosted());
+      assertTrue(new BigDecimal("146").compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after posting invoice");
+      assertEquals("Y", invoice.getPosted(), "Invoice Could Not be Posted");
 
       // Transaction: 1000032 - 02-07-2011 from QA Dataset. Paying previous invoice
       String strFINFinaccTransactionId = "FF8080813285D49A013287518E1C033E";
       FIN_FinaccTransaction transaction = OBDal.getInstance()
           .get(FIN_FinaccTransaction.class, strFINFinaccTransactionId);
-      assertEquals("Transaction Not Posted", "Y", transaction.getPosted());
+      assertEquals("Y", transaction.getPosted(), "Transaction Not Posted");
       ResetAccounting.delete(transaction.getClient().getId(), transaction.getOrganization().getId(),
           TABLE_TRANSACTION, transaction.getId(), "", "");
       transaction = OBDal.getInstance().get(FIN_FinaccTransaction.class, strFINFinaccTransactionId);
-      assertEquals("Transaction Could Not Be Unposted", "N", transaction.getPosted());
-      assertTrue("RecordID2 not updated after unposting transaction",
+      assertEquals("N", transaction.getPosted(), "Transaction Could Not Be Unposted");
+      assertTrue(
           BigDecimal.ZERO.compareTo(getBalance(strRecordID2, TABLE_TRANSACTION, strCAcctSchemaId,
-              strReceivablesAccountId)) == 0);
+                    strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after unposting transaction");
       postDocument(strFINFinaccTransactionId, TABLE_TRANSACTION, transaction.getClient().getId(),
           transaction.getOrganization().getId());
       transaction = OBDal.getInstance().get(FIN_FinaccTransaction.class, strFINFinaccTransactionId);
-      assertTrue("RecordID2 not updated after posting transaction",
-          new BigDecimal("-146").compareTo(getBalance(strRecordID2, TABLE_TRANSACTION,
-              strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertEquals("Transaction Could Not be Posted", "Y", transaction.getPosted());
-      assertEquals("Entry Not Balanced",
+      assertTrue(new BigDecimal("-146").compareTo(getBalance(strRecordID2, TABLE_TRANSACTION,
+                    strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after posting transaction");
+      assertEquals("Y", transaction.getPosted(), "Transaction Could Not be Posted");
+      assertEquals(
           DateUtils.truncate(transaction.getTransactionDate(), Calendar.DATE),
-          getBalancedDate(strRecordID2, strReceivablesAccountId));
+          getBalancedDate(strRecordID2, strReceivablesAccountId), "Entry Not Balanced");
     } catch (Exception e) {
       assertFalse(true);
       log.error("Error when executing query", e);
@@ -211,68 +215,71 @@ public class RecordID2Test extends OBBaseTest {
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
       String strReceivablesAccountId = getReceivablesAccount(invoice.getBusinessPartner(),
           strCAcctSchemaId);
-      assertEquals("Invoice Could Not Be Unposted", "N", invoice.getPosted());
-      assertTrue("RecordID2 not updated after unposting invoice", BigDecimal.ZERO.compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
+      assertEquals("N", invoice.getPosted(), "Invoice Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after unposting invoice");
       postDocument(strCInvoiceId, "318", invoice.getClient().getId(),
           invoice.getOrganization().getId());
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
 
-      assertTrue("RecordID2 not updated after posting invoice", new BigDecimal("30").compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertEquals("Invoice Could Not be Posted", "Y", invoice.getPosted());
+      assertTrue(new BigDecimal("30").compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after posting invoice");
+      assertEquals("Y", invoice.getPosted(), "Invoice Could Not be Posted");
 
       // Payment: 400013 - 02-04-2011 - Customer A - 30.00 from QA Dataset. Paying previous invoice
       String strFINPaymentId = "FF8080813285D49A0132875DB5780380";
       FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, strFINPaymentId);
       String strRecordID2InTransit = payment.getId();
       String strInTransitAccountId = getInTransitAccount(payment.getAccount(), strCAcctSchemaId);
-      assertEquals("Payment Not Posted", "Y", payment.getPosted());
+      assertEquals("Y", payment.getPosted(), "Payment Not Posted");
       ResetAccounting.delete(payment.getClient().getId(), payment.getOrganization().getId(),
           TABLE_PAYMENT, payment.getId(), "", "");
       payment = OBDal.getInstance().get(FIN_Payment.class, strFINPaymentId);
 
-      assertEquals("Payment Could Not Be Unposted", "N", payment.getPosted());
-      assertTrue("RecordID2 for receivables not updated after unposting Payment",
-          BigDecimal.ZERO.compareTo(getBalance(strRecordID2, TABLE_PAYMENT, strCAcctSchemaId,
-              strReceivablesAccountId)) == 0);
-      assertTrue("RecordID2 for In Transit not updated after unposting Payment",
-          BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+      assertEquals("N", payment.getPosted(), "Payment Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(getBalance(strRecordID2, TABLE_PAYMENT, strCAcctSchemaId,
+                    strReceivablesAccountId)) == 0,
+          "RecordID2 for receivables not updated after unposting Payment");
+      assertTrue(BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for In Transit not updated after unposting Payment");
 
       postDocument(strFINPaymentId, TABLE_PAYMENT, payment.getClient().getId(),
           payment.getOrganization().getId());
       payment = OBDal.getInstance().get(FIN_Payment.class, strFINPaymentId);
 
-      assertTrue("RecordID2 for receivables not updated after posting Payment",
+      assertTrue(
           new BigDecimal("-30").compareTo(getBalance(strRecordID2, TABLE_PAYMENT, strCAcctSchemaId,
-              strReceivablesAccountId)) == 0);
-      assertTrue("RecordID2 for In Transit not updated after posting Payment",
-          new BigDecimal("30").compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
-      assertEquals("Payment Could Not be Posted", "Y", payment.getPosted());
-      assertEquals("Entry Not Balanced for Receivables",
+                    strReceivablesAccountId)) == 0,
+          "RecordID2 for receivables not updated after posting Payment");
+      assertTrue(new BigDecimal("30").compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for In Transit not updated after posting Payment");
+      assertEquals("Y", payment.getPosted(), "Payment Could Not be Posted");
+      assertEquals(
           DateUtils.truncate(payment.getPaymentDate(), Calendar.DATE),
-          getBalancedDate(strRecordID2, strReceivablesAccountId));
+          getBalancedDate(strRecordID2, strReceivablesAccountId), "Entry Not Balanced for Receivables");
       FIN_FinaccTransaction transaction = payment.getFINFinaccTransactionList().get(0);
-      assertEquals("Transaction Not Posted", "Y", transaction.getPosted());
+      assertEquals("Y", transaction.getPosted(), "Transaction Not Posted");
       ResetAccounting.delete(transaction.getClient().getId(), transaction.getOrganization().getId(),
           TABLE_TRANSACTION, transaction.getId(), "", "");
       transaction = OBDal.getInstance().get(FIN_FinaccTransaction.class, transaction.getId());
-      assertEquals("Transaction Could Not Be Unposted", "N", transaction.getPosted());
-      assertTrue("RecordID2 not updated after unposting transaction",
-          BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+      assertEquals("N", transaction.getPosted(), "Transaction Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 not updated after unposting transaction");
       postDocument(transaction.getId(), TABLE_TRANSACTION, transaction.getClient().getId(),
           transaction.getOrganization().getId());
       transaction = OBDal.getInstance().get(FIN_FinaccTransaction.class, transaction.getId());
-      assertTrue("RecordID2 not updated after posting transaction",
-          new BigDecimal("-30").compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+      assertTrue(new BigDecimal("-30").compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 not updated after posting transaction");
       assertEquals("Transaction Could Not be Posted", "Y", transaction.getPosted());
-      assertEquals("Entry Not Balanced for In Transit ",
+      assertEquals(
           DateUtils.truncate(transaction.getTransactionDate(), Calendar.DATE),
-          getBalancedDate(strRecordID2InTransit, strInTransitAccountId));
+          getBalancedDate(strRecordID2InTransit, strInTransitAccountId), "Entry Not Balanced for In Transit ");
     } catch (Exception e) {
       assertFalse(true);
       log.error("Error when executing query", e);
@@ -304,15 +311,17 @@ public class RecordID2Test extends OBBaseTest {
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
       String strReceivablesAccountId = getReceivablesAccount(invoice.getBusinessPartner(),
           strCAcctSchemaId);
-      assertEquals("Invoice Could Not Be Unposted", "N", invoice.getPosted());
-      assertTrue("RecordID2 not updated after unposting invoice", BigDecimal.ZERO.compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
+      assertEquals("N", invoice.getPosted(), "Invoice Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after unposting invoice");
       postDocument(strCInvoiceId, "318", invoice.getClient().getId(),
           invoice.getOrganization().getId());
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
-      assertTrue("RecordID2 not updated after posting invoice", new BigDecimal("50").compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertEquals("Invoice Could Not be Posted", "Y", invoice.getPosted());
+      assertTrue(new BigDecimal("50").compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after posting invoice");
+      assertEquals("Y", invoice.getPosted(), "Invoice Could Not be Posted");
 
       // Payment: 400016 - 02-04-2011 - Customer A - 40.00 from QA Dataset. Paying previous invoice
       String strFINPaymentId = "FF808081328B2FE901328B5D698000B1";
@@ -320,52 +329,54 @@ public class RecordID2Test extends OBBaseTest {
       String strInTransitAccountId = getDepositAccount(payment.getAccount(), strCAcctSchemaId);
       FIN_FinaccTransaction transaction = payment.getFINFinaccTransactionList().get(0);
       String strRecordID2InTransit = transaction.getId();
-      assertEquals("Transaction Not Posted", "Y", transaction.getPosted());
+      assertEquals("Y", transaction.getPosted(), "Transaction Not Posted");
       ResetAccounting.delete(transaction.getClient().getId(), transaction.getOrganization().getId(),
           TABLE_TRANSACTION, transaction.getId(), "", "");
       transaction = OBDal.getInstance().get(FIN_FinaccTransaction.class, transaction.getId());
-      assertEquals("Transaction Could Not Be Unposted", "N", transaction.getPosted());
-      assertTrue("RecordID2 for receivables not updated after unposting transaction",
+      assertEquals( "N", transaction.getPosted(), "Transaction Could Not Be Unposted");
+      assertTrue(
           BigDecimal.ZERO.compareTo(getBalance(strRecordID2, TABLE_TRANSACTION, strCAcctSchemaId,
-              strReceivablesAccountId)) == 0);
-      assertTrue("RecordID2 for in transit not updated after unposting transaction",
-          BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+                    strReceivablesAccountId)) == 0,
+          "RecordID2 for receivables not updated after unposting transaction");
+      assertTrue(BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for in transit not updated after unposting transaction");
       postDocument(transaction.getId(), TABLE_TRANSACTION, transaction.getClient().getId(),
           transaction.getOrganization().getId());
       transaction = OBDal.getInstance().get(FIN_FinaccTransaction.class, transaction.getId());
-      assertTrue("RecordID2 for receivables not updated after posting transaction",
-          new BigDecimal("-50").compareTo(getBalance(strRecordID2, TABLE_TRANSACTION,
-              strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertTrue("RecordID2 for in transit not updated after posting transaction",
-          new BigDecimal("40").compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
-      assertEquals("Transaction Could Not be Posted", "Y", transaction.getPosted());
-      assertEquals("Entry Not Balanced",
+      assertTrue(new BigDecimal("-50").compareTo(getBalance(strRecordID2, TABLE_TRANSACTION,
+                    strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 for receivables not updated after posting transaction");
+      assertTrue(new BigDecimal("40").compareTo(getBalance(strRecordID2InTransit, TABLE_TRANSACTION,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for in transit not updated after posting transaction");
+      assertEquals("Y", transaction.getPosted(), "Transaction Could Not be Posted");
+      assertEquals(
           DateUtils.truncate(transaction.getTransactionDate(), Calendar.DATE),
-          getBalancedDate(strRecordID2, strReceivablesAccountId));
+          getBalancedDate(strRecordID2, strReceivablesAccountId), "Entry Not Balanced");
       FIN_Reconciliation reconciliation = transaction.getReconciliation();
-      assertEquals("Reconciliation Not Posted", "Y", reconciliation.getPosted());
+      assertEquals("Y", reconciliation.getPosted(), "Reconciliation Not Posted");
       ResetAccounting.delete(reconciliation.getClient().getId(),
           reconciliation.getOrganization().getId(), TABLE_RECONCILIATION, reconciliation.getId(),
           "", "");
       reconciliation = OBDal.getInstance().get(FIN_Reconciliation.class, reconciliation.getId());
-      assertEquals("Reconciliation Could Not Be Unposted", "N", reconciliation.getPosted());
-      assertTrue("RecordID2 for in transit not updated after unposting reconciliation",
-          BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_RECONCILIATION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+      assertEquals("N", reconciliation.getPosted(), "Reconciliation Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_RECONCILIATION,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for in transit not updated after unposting reconciliation");
       postDocument(reconciliation.getId(), TABLE_RECONCILIATION, reconciliation.getClient().getId(),
           reconciliation.getOrganization().getId());
       reconciliation = OBDal.getInstance().get(FIN_Reconciliation.class, reconciliation.getId());
-      assertTrue("RecordID2 for in transit not updated after posting reconciliation",
+      assertTrue(
           new BigDecimal("-40").compareTo(getBalance(strRecordID2InTransit, TABLE_RECONCILIATION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for in transit not updated after posting reconciliation");
       assertEquals("Reconciliation Could Not be Posted", "Y", reconciliation.getPosted());
-      assertEquals("Entry Not Balanced",
+      assertEquals(
           DateUtils.truncate(
               reconciliation.getAPRMFinaccTransactionVList().get(0).getTransactionDate(),
               Calendar.DATE),
-          getBalancedDate(strRecordID2InTransit, strInTransitAccountId));
+          getBalancedDate(strRecordID2InTransit, strInTransitAccountId), "Entry Not Balanced");
 
     } catch (Exception e) {
       assertFalse(true);
@@ -397,15 +408,16 @@ public class RecordID2Test extends OBBaseTest {
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
       String strReceivablesAccountId = getReceivablesAccount(invoice.getBusinessPartner(),
           strCAcctSchemaId);
-      assertEquals("Invoice Could Not Be Unposted", "N", invoice.getPosted());
-      assertTrue("RecordID2 not updated after unposting invoice", BigDecimal.ZERO.compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
+      assertEquals( "N", invoice.getPosted(), "Invoice Could Not Be Unposted");
+      assertTrue(BigDecimal.ZERO.compareTo(
+          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0, "RecordID2 not updated after unposting invoice");
       postDocument(strCInvoiceId, "318", invoice.getClient().getId(),
           invoice.getOrganization().getId());
       invoice = OBDal.getInstance().get(Invoice.class, strCInvoiceId);
-      assertTrue("RecordID2 not updated after posting invoice", new BigDecimal("100").compareTo(
-          getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0);
-      assertEquals("Invoice Could Not be Posted", "Y", invoice.getPosted());
+      assertTrue(new BigDecimal("100").compareTo(
+                getBalance(strRecordID2, TABLE_INVOICE, strCAcctSchemaId, strReceivablesAccountId)) == 0,
+          "RecordID2 not updated after posting invoice");
+      assertEquals("Y", invoice.getPosted(), "Invoice Could Not be Posted" );
 
       // Payment: 400002 - 02-04-2011 - Customer A - 100.00 from QA Dataset. Paying previous invoice
       String strFINPaymentId = "FF8080813282F9FE013283022F3E0030";
@@ -416,47 +428,49 @@ public class RecordID2Test extends OBBaseTest {
       ResetAccounting.delete(payment.getClient().getId(), payment.getOrganization().getId(),
           TABLE_PAYMENT, payment.getId(), "", "");
       payment = OBDal.getInstance().get(FIN_Payment.class, strFINPaymentId);
-      assertEquals("Payment Could Not Be Unposted", "N", payment.getPosted());
-      assertTrue("RecordID2 for receivables not updated after unposting Payment",
-          BigDecimal.ZERO.compareTo(getBalance(strRecordID2, TABLE_PAYMENT, strCAcctSchemaId,
-              strReceivablesAccountId)) == 0);
-      assertTrue("RecordID2 for In Transit not updated after unposting Payment",
-          BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+      assertEquals("N", payment.getPosted(), "Payment Could Not Be Unposted" );
+      assertTrue(BigDecimal.ZERO.compareTo(getBalance(strRecordID2, TABLE_PAYMENT, strCAcctSchemaId,
+                    strReceivablesAccountId)) == 0,
+          "RecordID2 for receivables not updated after unposting Payment");
+      assertTrue(BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for In Transit not updated after unposting Payment");
       postDocument(strFINPaymentId, TABLE_PAYMENT, payment.getClient().getId(),
           payment.getOrganization().getId());
       payment = OBDal.getInstance().get(FIN_Payment.class, strFINPaymentId);
-      assertTrue("RecordID2 for receivables not updated after posting Payment",
+      assertTrue(
           new BigDecimal("-100").compareTo(getBalance(strRecordID2, TABLE_PAYMENT, strCAcctSchemaId,
-              strReceivablesAccountId)) == 0);
-      assertTrue("RecordID2 for In Transit not updated after posting Payment",
-          new BigDecimal("100").compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
-      assertEquals("Payment Could Not be Posted", "Y", payment.getPosted());
-      assertEquals("Entry Not Balanced for Receivables",
+                    strReceivablesAccountId)) == 0,
+          "RecordID2 for receivables not updated after posting Payment");
+      assertTrue(new BigDecimal("100").compareTo(getBalance(strRecordID2InTransit, TABLE_PAYMENT,
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for In Transit not updated after posting Payment");
+      assertEquals("Y", payment.getPosted(), "Payment Could Not be Posted");
+      assertEquals(
           DateUtils.truncate(payment.getPaymentDate(), Calendar.DATE),
-          getBalancedDate(strRecordID2, strReceivablesAccountId));
+          getBalancedDate(strRecordID2, strReceivablesAccountId), "Entry Not Balanced for Receivables");
       FIN_FinaccTransaction transaction = payment.getFINFinaccTransactionList().get(0);
       FIN_Reconciliation reconciliation = transaction.getReconciliation();
-      assertEquals("Reconciliation Not Posted", "Y", reconciliation.getPosted());
+      assertEquals("Y", reconciliation.getPosted(), "Reconciliation Not Posted");
       ResetAccounting.delete(reconciliation.getClient().getId(),
           reconciliation.getOrganization().getId(), TABLE_RECONCILIATION, reconciliation.getId(),
           "", "");
       reconciliation = OBDal.getInstance().get(FIN_Reconciliation.class, reconciliation.getId());
-      assertEquals("Reconciliation Could Not Be Unposted", "N", reconciliation.getPosted());
-      assertTrue("RecordID2 for in transit not updated after unposting reconciliation",
+      assertEquals("N", reconciliation.getPosted(), "Reconciliation Could Not Be Unposted");
+      assertTrue(
           BigDecimal.ZERO.compareTo(getBalance(strRecordID2InTransit, TABLE_RECONCILIATION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
+              strCAcctSchemaId, strInTransitAccountId)) == 0, "Reconciliation Could Not Be Unposted");
       postDocument(reconciliation.getId(), TABLE_RECONCILIATION, reconciliation.getClient().getId(),
           reconciliation.getOrganization().getId());
       reconciliation = OBDal.getInstance().get(FIN_Reconciliation.class, reconciliation.getId());
-      assertTrue("RecordID2 for in transit not updated after posting reconciliation",
+      assertTrue(
           new BigDecimal("-100").compareTo(getBalance(strRecordID2InTransit, TABLE_RECONCILIATION,
-              strCAcctSchemaId, strInTransitAccountId)) == 0);
-      assertEquals("Reconciliation Could Not be Posted", "Y", reconciliation.getPosted());
-      assertEquals("Entry Not Balanced",
+                    strCAcctSchemaId, strInTransitAccountId)) == 0,
+          "RecordID2 for in transit not updated after posting reconciliation");
+      assertEquals("Y", reconciliation.getPosted(), "Reconciliation Could Not be Posted");
+      assertEquals(
           DateUtils.truncate(transaction.getTransactionDate(), Calendar.DATE),
-          getBalancedDate(strRecordID2InTransit, strInTransitAccountId));
+          getBalancedDate(strRecordID2InTransit, strInTransitAccountId), "Entry Not Balanced");
 
     } catch (Exception e) {
       assertFalse(true);

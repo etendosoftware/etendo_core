@@ -20,10 +20,13 @@ package org.openbravo.client.widgets;
 
 import org.openbravo.client.myob.WidgetProvider;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * 
  * @author iperdomo
  */
+@RequestScoped
 public class TwitterWidgetProvider extends WidgetProvider {
   private static final String TWITTERWIDGETCLASSNAME = "OBTwitterWidget";
 

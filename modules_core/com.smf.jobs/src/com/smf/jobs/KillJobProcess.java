@@ -1,6 +1,7 @@
 package com.smf.jobs;
 
-import com.smf.jobs.model.JobResult;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
@@ -8,8 +9,11 @@ import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.dal.service.OBDal;
 
-import java.util.Map;
+import com.smf.jobs.model.JobResult;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class KillJobProcess extends BaseProcessActionHandler {
     private static final Logger log = LogManager.getLogger();
 

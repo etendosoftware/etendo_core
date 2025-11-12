@@ -28,10 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.provider.OBProvider;
@@ -79,9 +77,6 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
   private static final String TAX = "3271411A5AFB490A91FB618B6B789C24";
 
   protected static List<BaseOBObject> createdObjects = new ArrayList<BaseOBObject>();
-
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
 
   /** Creates a default order */
   protected Order createOrder(String orgId) {
@@ -163,12 +158,12 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
     }
   }
 
-  @Before
+  @BeforeEach
   public void setRole() {
     setQAAdminContext();
   }
 
-  @AfterClass
+  @AfterAll
   public static void removeCreatedObjects() {
     OBContext.setOBContext("0");
     OBContext.setAdminMode(false);

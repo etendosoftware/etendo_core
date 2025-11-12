@@ -33,6 +33,9 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CalculatePromotions extends DalBaseProcess {
   final private static Logger log = LogManager.getLogger();
 

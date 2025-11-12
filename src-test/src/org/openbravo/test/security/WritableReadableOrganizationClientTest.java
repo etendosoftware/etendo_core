@@ -20,20 +20,19 @@
 package org.openbravo.test.security;
 
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.criterion.Restrictions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -88,7 +87,7 @@ public class WritableReadableOrganizationClientTest extends OBBaseTest {
           break;
         }
       }
-      assertTrue("Org " + wo + " not present in readableOrglist " + sb.toString(), found);
+      assertTrue(found, "Org " + wo + " not present in readableOrglist " + sb.toString());
     }
   }
 
@@ -114,7 +113,7 @@ public class WritableReadableOrganizationClientTest extends OBBaseTest {
         break;
       }
     }
-    assertTrue("Current client " + cid + " not found in clienttlist " + sb.toString(), found);
+    assertTrue(found, "Current client " + cid + " not found in clienttlist " + sb.toString());
   }
 
   /**
@@ -163,8 +162,8 @@ public class WritableReadableOrganizationClientTest extends OBBaseTest {
       commitTransaction();
     } catch (final OBException e) {
       rollback();
-      assertTrue("Invalid exception " + e.getMessage(),
-          e.getMessage().indexOf("is not present in ClientList") != -1);
+      assertTrue(e.getMessage().indexOf("is not present in ClientList") != -1,
+          "Invalid exception " + e.getMessage());
     }
   }
 

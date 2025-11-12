@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * 
  * @author androettop
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(SCFeaturesComponentProvider.COMPONENT_TYPE)
 public class SCFeaturesComponentProvider extends BaseComponentProvider {
 	public static final String COMPONENT_TYPE = "SMFSCDT_CompProvider";

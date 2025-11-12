@@ -227,7 +227,7 @@
 <!--2E64F551C7C4470C80C29DBA24B34A5F-->  <NAME><![CDATA[Product]]></NAME>
 <!--2E64F551C7C4470C80C29DBA24B34A5F-->  <AD_REFERENCE_ID><![CDATA[800060]]></AD_REFERENCE_ID>
 <!--2E64F551C7C4470C80C29DBA24B34A5F-->  <AD_TABLE_ID><![CDATA[FF8080812DFFA1CF012DFFB889F40016]]></AD_TABLE_ID>
-<!--2E64F551C7C4470C80C29DBA24B34A5F-->  <WHERECLAUSE><![CDATA[e.active='Y' AND (AD_ORG_ISINNATURALTREE(e.orgwarehouse, @AD_Org_Id@, @AD_Client_Id@)='Y') AND e.productPrice.priceListVersion.active='Y' AND (AD_ORG_ISINNATURALTREE(e.productPrice.organization.id, @AD_Org_Id@, @AD_Client_Id@)='Y')]]></WHERECLAUSE>
+<!--2E64F551C7C4470C80C29DBA24B34A5F-->  <WHERECLAUSE><![CDATA[e.active='Y' and (cast(ad_org_isinnaturaltree(e.orgwarehouse, @AD_Org_Id@, @AD_Client_Id@) as string)='Y') and e.productPrice.priceListVersion.active='Y' and (cast(ad_org_isinnaturaltree(e.productPrice.organization.id, @AD_Org_Id@, @AD_Client_Id@) as string)='Y')]]></WHERECLAUSE>
 <!--2E64F551C7C4470C80C29DBA24B34A5F-->  <FILTER_EXPRESSION><![CDATA[if (OB.getParameters().get('inpcCurrencyId') && (OB.getWindowId() == '207' || OB.getWindowId() == '94EAA455D2644E04AB25D93BE5157B6D')) { " e.productPrice.priceListVersion.priceList.currency.id = '" + OB.getParameters().get('inpcCurrencyId') + "'" } else if (OB.getParameters().get('inpcCurrencyId')) { " e.productPrice.priceListVersion.priceList.salesPriceList = " + OB.isSalesTransaction()  + " AND e.productPrice.priceListVersion.priceList.currency.id = '" + OB.getParameters().get('inpcCurrencyId') + "'" }]]></FILTER_EXPRESSION>
 <!--2E64F551C7C4470C80C29DBA24B34A5F-->  <OBCLKER_TEMPLATE_ID><![CDATA[9314DE8599AD44E7BFC4CC50699042AB]]></OBCLKER_TEMPLATE_ID>
 <!--2E64F551C7C4470C80C29DBA24B34A5F-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>

@@ -23,10 +23,10 @@ import java.math.BigDecimal;
 
 import jakarta.persistence.PersistenceException;
 
-import org.jboss.arquillian.junit.InSequence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Order;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.currency.ConversionRateDoc;
@@ -74,7 +74,7 @@ public abstract class ConversionRateDocUniqueTest extends OBBaseTest {
   }
 
   @Test
-  @InSequence(1)
+  @Order(1)
   public void testTwoConversionsForDifferentCurrenciesAndTheSameDocIsAllowed() {
     createDummyConversionRate(getPropertyName(), getDocumentId(), "100", "103",
         new BigDecimal("1.25"));
@@ -84,7 +84,7 @@ public abstract class ConversionRateDocUniqueTest extends OBBaseTest {
   }
 
   @Test(expected = PersistenceException.class)
-  @InSequence(2)
+  @Order(2)
   public void testTwoConversionsForTheSameCurrenciesAndDocIsNotAllowed() {
     createDummyConversionRate(getPropertyName(), getDocumentId(), "100", "102",
         new BigDecimal("1.25"));

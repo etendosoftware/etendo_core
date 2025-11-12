@@ -1016,6 +1016,11 @@ public class Entity {
         lastImport = getFirstPartOfPackage(packageName);
       }
     }
+
+    result.add("");
+    result.add("import jakarta.enterprise.context.Dependent;");
+    result.add("import jakarta.persistence.Temporal;");
+    result.add("import jakarta.persistence.TemporalType;");
     return result;
   }
 

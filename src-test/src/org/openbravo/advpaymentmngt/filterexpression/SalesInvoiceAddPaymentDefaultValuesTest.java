@@ -1,7 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -13,11 +13,9 @@ import java.util.Map;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -37,11 +35,6 @@ import org.openbravo.test.base.TestConstants;
  */
 public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
 
-  /**
-   * Rule for handling expected exceptions in tests.
-   */
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
   @InjectMocks
   private SalesInvoiceAddPaymentDefaultValues classUnderTest;
   @Mock
@@ -61,7 +54,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
    * @throws Exception
    *     if an error occurs during setup
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     // Initialize mocks
     mocks = MockitoAnnotations.openMocks(this);
@@ -94,7 +87,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
    * @throws Exception
    *     if an error occurs during teardown
    */
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     if (mockedOBDal != null) {
       mockedOBDal.close();

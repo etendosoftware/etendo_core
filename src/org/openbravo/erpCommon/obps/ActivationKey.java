@@ -54,13 +54,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.CRC32;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpSession;
 
 import javax.crypto.Cipher;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -93,6 +89,12 @@ import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.xmlEngine.XmlEngine;
+
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpSession;
 
 public class ActivationKey {
   private final static String OB_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3KuCsRC3ZxmTTryRAX99SJfwtjfTahW+dtXXpI0CQ87A8XxcL4xhhsH4WhyE+sSxji+vSlZLm7kpcJivbrzX2qy1nmM6OpFX4teo65jk3ccxMVx74ZeT/2aHcFNXUVD8jXxSv2U/5PVH//Q3KJyyay73YbkIKIwQWznWrgj2O3Gy2v1VRoUaeaWlEdS8pKEnfW4DkCJtqM3p6ZbRg6pdNUnGDjo1Ck6V9GuNubxkSvAu5vQQbeJurNFBk4Smwm6tJj6XSyefaOrXjcHFqwe4kU3VRu3nnkOl3aR8PUgHS7IS16LtB6C2AR9sIURS7FnoWp5aiCpNPescfFJQn3+VUQIDAQAB";
@@ -338,7 +340,7 @@ public class ActivationKey {
     }
 
     try {
-      log.info("Loading activation key from DB");
+      log.debug("Loading activation key from DB");
       org.openbravo.model.ad.system.System sys = getSystem();
       strPublicKey = sys.getInstanceKey();
       lastUpdateTimestamp = sys.getUpdated();
@@ -1640,7 +1642,7 @@ public class ActivationKey {
             "select min(creationDate) " +
             "  from ADSession " +
             " where loginStatus = 'WS' " +
-            "   and creationDate > :firstDay " +
+            "   and creationDate > cast(:firstDay as timestamp) " +
             " group by day(creationDate), month(creationDate), year(creationDate) " +
             "   having count(*) > :maxWsPerDay " +
             " order by 1";

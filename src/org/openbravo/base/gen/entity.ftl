@@ -37,6 +37,7 @@ package ${entity.packageName};
 <#list entity.javaImports as i>
 ${i}
 </#list>
+
 /**
  * Entity class for entity ${entity.name} (stored in table ${entity.tableName}).<#if entity.help??>
  * <br>
@@ -49,6 +50,7 @@ ${i}
 <#if util.isDeprecated(entity)>
 @Deprecated
 </#if>
+@Dependent
 public class ${entity.simpleClassName} extends BaseOBObject ${entity.implementsStatement} {
     private static final long serialVersionUID = 1L;
     public static final String TABLE_NAME = "${entity.tableName}";
@@ -118,6 +120,9 @@ public class ${entity.simpleClassName} extends BaseOBObject ${entity.implementsS
     <@addDeprecationTagIfNeeded property=p />
     <#if p.name?matches("Id")>
     @Override
+    </#if>
+    <#if p.shorterTypeName?matches("Date")>
+    @Temporal(TemporalType.TIMESTAMP)
     </#if>
     public ${p.shorterTypeName} ${getter(p)}() {
     <#if p.partOfCompositeId>

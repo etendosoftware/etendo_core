@@ -12,9 +12,9 @@ import java.util.Map;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.application.ReportDefinition;
 import org.openbravo.client.kernel.RequestContext;
@@ -36,14 +36,14 @@ public class ReportValuationStockTest extends OBBaseTest {
 
   private static Warehouse warehouse;
 
-  @AfterClass
+  @AfterAll
   public static void cleanup() {
     OBContext.restorePreviousMode();
     deleteTestWarehouse(warehouse.getId());
   }
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,

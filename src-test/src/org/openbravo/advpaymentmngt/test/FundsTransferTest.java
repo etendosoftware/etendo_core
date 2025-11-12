@@ -28,10 +28,10 @@ import java.math.RoundingMode;
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
-import org.jboss.arquillian.junit.InSequence;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.Order;
 import org.openbravo.advpaymentmngt.actionHandler.FundsTransferActionHandler;
 import org.openbravo.advpaymentmngt.process.FIN_TransactionProcess;
 import org.openbravo.base.exception.OBException;
@@ -123,7 +123,7 @@ public class FundsTransferTest extends WeldBaseTest {
   }
 
   @Test
-  @InSequence(1)
+  @Order(1)
   public void testFundsTransferSameCurrency() {
     FundsTransferActionHandler.createTransfer(TODAY, caja_clone, banco_clone, glitem,
         TRANSACTION_AMT, null, null, null);
@@ -132,7 +132,7 @@ public class FundsTransferTest extends WeldBaseTest {
   }
 
   @Test
-  @InSequence(2)
+  @Order(2)
   public void testFundsTransferBankFee() {
     FundsTransferActionHandler.createTransfer(TODAY, caja_clone, banco_clone, glitem,
         TRANSACTION_AMT, null, FEE_AMT_FROM, null);
@@ -141,14 +141,14 @@ public class FundsTransferTest extends WeldBaseTest {
   }
 
   @Test(expected = OBException.class)
-  @InSequence(4)
+  @Order(4)
   public void testFundsTransferConversionRateError() {
     FundsTransferActionHandler.createTransfer(TODAY, caja_clone, banco_gbp, glitem, TRANSACTION_AMT,
         null, null, null);
   }
 
   @Test
-  @InSequence(5)
+  @Order(5)
   public void testFundsTransferManualConversionRate() {
     FundsTransferActionHandler.createTransfer(TODAY, caja_clone, banco_gbp, glitem, TRANSACTION_AMT,
         CONVERSION_RATE, null, null);
@@ -160,7 +160,7 @@ public class FundsTransferTest extends WeldBaseTest {
   }
 
   @Test
-  @InSequence(7)
+  @Order(7)
   public void testFundsTransferSystemConversionRate() {
     createConversionRate(caja_clone.getCurrency(), banco_gbp.getCurrency());
 
@@ -174,7 +174,7 @@ public class FundsTransferTest extends WeldBaseTest {
   }
 
   @Test
-  @InSequence(8)
+  @Order(8)
   public void testFundsTransferTargetFee() {
     FundsTransferActionHandler.createTransfer(TODAY, caja_clone, banco_gbp, glitem, TRANSACTION_AMT,
         CONVERSION_RATE, null, FEE_AMT_TO);

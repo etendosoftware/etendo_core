@@ -105,10 +105,10 @@ public class SelectorDomainType extends BaseForeignKeyDomainType {
     String hql = 
             "select c " +
             "  from Column as c " +
-            " where c.table = :table " +
+            " where c.table.id = :tableId " +
             " order by c.position asc";
     //@formatter:on
-    Query<Column> query = session.createQuery(hql, Column.class).setParameter("table", table);
+    Query<Column> query = session.createQuery(hql, Column.class).setParameter("tableId", table.getId());
     return query.list();
   }
 

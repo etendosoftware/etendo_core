@@ -1,5 +1,9 @@
 package org.openbravo.scheduling;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyList;
@@ -7,18 +11,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.Hibernate;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -32,7 +33,7 @@ import org.openbravo.model.ad.ui.ProcessRun;
  * Unit tests for the ProcessGroup class.
  * Tests the execution of process groups and their error handling.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ProcessGroupTest {
 
   @InjectMocks
@@ -64,9 +65,9 @@ public class ProcessGroupTest {
 
   /**
    * Sets up the test environment before each test.
-   * Initializes mocks and configures common behavior for the ProcessGroup tests.
+   * Initialize mocks and configures common behavior for the ProcessGroup tests.
    */
-  @Before
+  @BeforeEach
   public void setUp() {
     try {
       mockedOBDal = mockStatic(OBDal.class);
@@ -89,7 +90,7 @@ public class ProcessGroupTest {
 
       when(mockOBDal.createCriteria(ProcessGroupList.class)).thenReturn(mockCriteria);
 
-      when(mockCriteria.add(any())).thenReturn(mockCriteria);
+      when(mockCriteria.addEqual(any(), any())).thenReturn(mockCriteria);
       when(mockCriteria.addOrderBy(any(), anyBoolean())).thenReturn(mockCriteria);
     } catch (Exception e) {
       closeStaticMocks();
@@ -101,7 +102,7 @@ public class ProcessGroupTest {
    * Cleans up resources after each test.
    * Closes static mocks to prevent memory leaks.
    */
-  @After
+  @AfterEach
   public void tearDown() {
     closeStaticMocks();
   }
@@ -128,7 +129,7 @@ public class ProcessGroupTest {
    * @throws Exception
    *     if an unexpected error occurs
    */
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testDoExecuteHibernateInitializationError() throws Exception {
     // GIVEN
     List<ProcessGroupList> mockProcessList = new ArrayList<>();
@@ -140,10 +141,7 @@ public class ProcessGroupTest {
         new RuntimeException("Initialization error"));
 
     // WHEN
-    processGroup.doExecute(mockBundle);
-
-    // THEN
-    // Exception is expected
+    assertThrows(RuntimeException.class, () -> processGroup.doExecute(mockBundle));
   }
 
   /**
@@ -153,7 +151,7 @@ public class ProcessGroupTest {
    * @throws Exception
    *     if an unexpected error occurs
    */
-  @Test(expected = RuntimeException.class)
+  @Test
   public void testDoExecuteGroupExecutionError() throws Exception {
     // GIVEN
     List<ProcessGroupList> mockProcessList = new ArrayList<>();
@@ -171,10 +169,7 @@ public class ProcessGroupTest {
               any(ConnectionProvider.class))).thenReturn(mockGroupInfo);
 
       // WHEN
-      processGroup.doExecute(mockBundle);
-
-      // THEN
-      // Exception is expected
+      assertThrows(RuntimeException.class, () -> processGroup.doExecute(mockBundle));
     }
   }
 }

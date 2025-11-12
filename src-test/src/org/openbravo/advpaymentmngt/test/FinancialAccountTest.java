@@ -22,9 +22,8 @@ package org.openbravo.advpaymentmngt.test;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -44,7 +43,7 @@ public class FinancialAccountTest extends OBBaseTest {
    * This before method is named setUpF() to avoid overwriting the super setUp method that is invoke
    * automatically before this one.
    */
-  @Before
+  @BeforeEach
   public void setUpF() throws Exception {
     TestUtility.setTestContext();
   }

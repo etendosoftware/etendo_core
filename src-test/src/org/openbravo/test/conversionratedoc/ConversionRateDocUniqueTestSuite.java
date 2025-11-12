@@ -19,20 +19,18 @@
 
 package org.openbravo.test.conversionratedoc;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 /**
  * Tests all the possible conversion rate at document level scenarios
  *
  */
-@RunWith(Suite.class)
-//@formatter:off
-@Suite.SuiteClasses({ 
+@Suite
+@SelectClasses({
     ConversionRateDocUniqueInvoiceTest.class,
-    ConversionRateDocUniquePaymentTest.class, 
+    ConversionRateDocUniquePaymentTest.class,
     ConversionRateDocUniqueGLJournalTest.class,
     ConversionRateDocUniqueFinTransactionTest.class })
-//@formatter:on
 public class ConversionRateDocUniqueTestSuite {
 }

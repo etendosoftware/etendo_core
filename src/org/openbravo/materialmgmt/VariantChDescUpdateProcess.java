@@ -36,6 +36,9 @@ import org.openbravo.model.common.plm.ProductCharacteristicValue;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class VariantChDescUpdateProcess extends DalBaseProcess {
   private static final Logger log4j = LogManager.getLogger();
   public static final String AD_PROCESS_ID = "58591E3E0F7648E4A09058E037CE49FC";

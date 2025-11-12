@@ -20,11 +20,14 @@ package org.openbravo.client.myob;
 
 import org.openbravo.client.kernel.KernelConstants;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Responsible for creating the Calendar Widget.
  * 
  * @author dbaz
  */
+@RequestScoped
 public class CalendarWidgetProvider extends WidgetProvider {
 
   public static final String WIDGETCLASS_PARAMETER = "WIDGET_CLASS";

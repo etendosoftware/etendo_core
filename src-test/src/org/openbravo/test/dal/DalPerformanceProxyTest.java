@@ -24,8 +24,10 @@ import java.util.UUID;
 
 import org.hibernate.StatelessSession;
 import org.hibernate.proxy.HibernateProxy;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.SessionFactoryController;
@@ -74,11 +76,9 @@ public class DalPerformanceProxyTest extends OBBaseTest {
         // only check the first time as after the first loop
         // the category is loaded because of the refresh below.
         if (i == 0) {
-          Assert.assertTrue(
-              ((HibernateProxy) category).getHibernateLazyInitializer().isUninitialized());
+          assertTrue(((HibernateProxy) category).getHibernateLazyInitializer().isUninitialized());
         } else {
-          Assert.assertFalse(
-              ((HibernateProxy) category).getHibernateLazyInitializer().isUninitialized());
+          assertFalse(((HibernateProxy) category).getHibernateLazyInitializer().isUninitialized());
         }
 
         OBDal.getInstance().save(bp);
@@ -88,11 +88,10 @@ public class DalPerformanceProxyTest extends OBBaseTest {
           // this all works
           // note: this loads the category proxy
           OBDal.getInstance().refresh(bp);
-          Assert.assertTrue(bp.getId() != null);
+          assertTrue(bp.getId() != null);
 
           // check that if really loading that still the proxy object is returned
-          Assert.assertTrue(
-              category == OBDal.getInstance().get(Category.ENTITY_NAME, TEST_BP_CATEGORY_ID));
+          assertTrue(category == OBDal.getInstance().get(Category.ENTITY_NAME, TEST_BP_CATEGORY_ID));
         }
       }
       OBDal.getInstance().commitAndClose();
@@ -135,7 +134,7 @@ public class DalPerformanceProxyTest extends OBBaseTest {
 
         session.insert(BusinessPartner.ENTITY_NAME, bp);
         // session.refresh(BusinessPartner.ENTITY_NAME, bp);
-        Assert.assertTrue(bp.getId() != null);
+        assertTrue(bp.getId() != null);
       }
       session.getTransaction().commit();
     } catch (Exception e) {

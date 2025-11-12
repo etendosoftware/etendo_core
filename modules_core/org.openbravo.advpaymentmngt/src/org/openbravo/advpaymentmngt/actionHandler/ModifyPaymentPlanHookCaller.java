@@ -21,14 +21,16 @@ package org.openbravo.advpaymentmngt.actionHandler;
 import java.util.Iterator;
 import java.util.List;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.openbravo.advpaymentmngt.ModifyPaymentPlanHook;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
+@Dependent
 public class ModifyPaymentPlanHookCaller {
 
   @Inject

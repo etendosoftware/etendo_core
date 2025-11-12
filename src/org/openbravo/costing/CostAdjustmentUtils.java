@@ -31,7 +31,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
@@ -492,7 +491,7 @@ public class CostAdjustmentUtils {
             "   left join trx.physicalInventoryLine as il" +
             "   left join il.physInventory as i" +
             " where trx.product.id = :productId" +
-            "   and trx.movementDate > :date" +
+            "   and trx.movementDate > cast(:date as timestamp)" +
     // Include only transactions that have its cost calculated
             "   and trx.isCostCalculated = true";
     //@formatter:on
@@ -547,12 +546,12 @@ public class CostAdjustmentUtils {
               " where case when coalesce(i.inventoryType, 'N') <> 'N' " + 
               "       then trx.movementDate " + 
               "       else trx.transactionProcessDate " + 
-              "       end < :date";
+              "       end < cast(:date as timestamp)";
       //@formatter:on
     } else {
       //@formatter:off
       hqlSelect +=
-              " where trx.movementDate <= :date";
+              " where trx.movementDate <= cast(:date as timestamp)";
       //@formatter:on
     }
 
@@ -673,14 +672,14 @@ public class CostAdjustmentUtils {
       if (costingRule.isBackdatedTransactionsFixed()) {
         //@formatter:off
         hql +=
-            "   and (trx.movementDate > :cmvtdate" +
-            "   or (trx.movementDate = :cmvtdate";
+            "   and (trx.movementDate > cast(:cmvtdate as timestamp)" +
+            "   or (trx.movementDate = cast(:cmvtdate as timestamp)";
         //@formatter:on
       }
       //@formatter:off
       hql +=
-            "   and (trx.transactionProcessDate > :ctrxdate" +
-            "   or (trx.transactionProcessDate = :ctrxdate";
+            "   and (trx.transactionProcessDate > cast(:ctrxdate as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:ctrxdate as timestamp)";
       //@formatter:on
       // If the costing Transaction is an M- exclude the M+ Transactions with same movementDate and
       // TrxProcessDate due to how data is going to be ordered in further queries using the priority
@@ -718,7 +717,7 @@ public class CostAdjustmentUtils {
     if (costingRule.isBackdatedTransactionsFixed()) {
       //@formatter:off
       hql +=
-            "   (trx.transactionProcessDate < :fixbdt" +
+            "   (trx.transactionProcessDate < cast(:fixbdt as timestamp)" +
             "   and  (";
       //@formatter:on
     }
@@ -727,8 +726,8 @@ public class CostAdjustmentUtils {
     // priority and / or higher quantity.
     //@formatter:off
     hql +=
-            "   trx.transactionProcessDate < :trxdate" +
-            "   or (trx.transactionProcessDate = :trxdate" +
+            "   trx.transactionProcessDate < cast(:trxdate as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:trxdate as timestamp)" +
             "   and (trxtype.sequenceNumber < :trxtypeprio" +
             "   or (trxtype.sequenceNumber = :trxtypeprio" +
             "   and trx.movementQuantity > :trxqty" +
@@ -741,13 +740,13 @@ public class CostAdjustmentUtils {
       //@formatter:off
       hql +=
             "   )) or (" +
-            "   trx.transactionProcessDate >= :fixbdt" +
-            "   and (trx.movementDate < :mvtdate" +
-            "   or (trx.movementDate = :mvtdate" +
+            "   trx.transactionProcessDate >= cast(:fixbdt as timestamp)" +
+            "   and (trx.movementDate < cast(:mvtdate as timestamp)" +
+            "   or (trx.movementDate = cast(:mvtdate as timestamp)" +
       // If there are more than one trx on the same trx process date filter out those types with
       // less priority and / or higher quantity.
-            "   and (trx.transactionProcessDate < :trxdate" +
-            "   or (trx.transactionProcessDate = :trxdate" +
+            "   and (trx.transactionProcessDate < cast(:trxdate as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:trxdate as timestamp)" +
             "   and (trxtype.sequenceNumber < :trxtypeprio" +
             "   or (trxtype.sequenceNumber = :trxtypeprio" +
             "   and trx.movementQuantity > :trxqty" +
@@ -870,7 +869,7 @@ public class CostAdjustmentUtils {
         "   left join trx.physicalInventoryLine as il" +
         "   left join il.physInventory as i" +
         " where trx.product.id = :productId" +
-        "   and trx.movementDate > :date" +
+        "   and trx.movementDate > cast(:date as timestamp)" +
     // Include only transactions that have its cost calculated
         "   and trx.isCostCalculated = true";
     //@formatter:on
@@ -933,12 +932,12 @@ public class CostAdjustmentUtils {
             " where case when coalesce(i.inventoryType, 'N') <> 'N' " + 
             "       then trx.movementDate " + 
             "       else trx.transactionProcessDate " + 
-            "       end < :date";
+            "       end < cast(:date as timestamp)";
       //@formatter:on
     } else {
       //@formatter:off
       hqlSelect +=
-            " where trx.movementDate <= :date";
+            " where trx.movementDate <= cast(:date as timestamp)";
       //@formatter:on
     }
     //@formatter:off
@@ -1113,14 +1112,14 @@ public class CostAdjustmentUtils {
       if (costingRule.isBackdatedTransactionsFixed()) {
         //@formatter:off
         hql +=
-            "   and (trx.movementDate > :cmvtdate" +
-            "   or (trx.movementDate = :cmvtdate";
+            "   and (trx.movementDate > cast(:cmvtdate as timestamp)" +
+            "   or (trx.movementDate = cast(:cmvtdate as timestamp)";
         //@formatter:on
       }
       //@formatter:off
       hql +=
-            "   and (trx.transactionProcessDate > :ctrxdate" +
-            "   or (trx.transactionProcessDate = :ctrxdate";
+            "   and (trx.transactionProcessDate > cast(:ctrxdate as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:ctrxdate as timestamp)";
       //@formatter:on
       // If the costing Transaction is an M- exclude the M+ Transactions with same movementDate and
       // TrxProcessDate due to how data is going to be ordered in further queries using the priority
@@ -1158,7 +1157,7 @@ public class CostAdjustmentUtils {
     if (costingRule.isBackdatedTransactionsFixed()) {
       //@formatter:off
       hql +=
-            "   ( trx.transactionProcessDate < :fixbdt" +
+            "   ( trx.transactionProcessDate < cast(:fixbdt as timestamp)" +
             "   and (";
       //@formatter:on
     }
@@ -1166,8 +1165,8 @@ public class CostAdjustmentUtils {
     // priority and / or higher quantity.
     //@formatter:off
     hql +=
-            "   trx.transactionProcessDate < :trxdate" +
-            "   or (trx.transactionProcessDate = :trxdate" +
+            "   trx.transactionProcessDate < cast(:trxdate as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:trxdate as timestamp)" +
             "   and (trxtype.sequenceNumber < :trxtypeprio" +
             "   or (trxtype.sequenceNumber = :trxtypeprio" +
             "   and trx.movementQuantity > :trxqty" +
@@ -1180,13 +1179,13 @@ public class CostAdjustmentUtils {
       //@formatter:off
       hql +=
             "   )) or (" +
-            "   trx.transactionProcessDate >= :fixbdt" +
-            "   and (trx.movementDate < :mvtdate" +
-            "   or (trx.movementDate = :mvtdate" +
+            "   trx.transactionProcessDate >= cast(:fixbdt as timestamp)" +
+            "   and (trx.movementDate < cast(:mvtdate as timestamp)" +
+            "   or (trx.movementDate = cast(:mvtdate as timestamp)" +
       // If there are more than one trx on the same trx process date filter out those types with
       // less priority and / or higher quantity.
-            "   and (trx.transactionProcessDate < :trxdate" +
-            "   or (trx.transactionProcessDate = :trxdate" +
+            "   and (trx.transactionProcessDate < cast(:trxdate as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:trxdate as timestamp)" +
             "   and (trxtype.sequenceNumber < :trxtypeprio" +
             "   or (trxtype.sequenceNumber = :trxtypeprio" +
             "   and trx.movementQuantity > :trxqty" +
@@ -1303,7 +1302,7 @@ public class CostAdjustmentUtils {
             " where trx.isCostCalculated = true" +
             "   and trx.organization.id in (:orgIds)" +
             "   and trx.product.id = :productId" +
-            "   and trx.movementDate > :mvntdate";
+            "   and trx.movementDate > cast(:mvntdate as timestamp)";
     //@formatter:on
 
     if (wh != null) {
@@ -1346,8 +1345,8 @@ public class CostAdjustmentUtils {
             " where trx.isCostCalculated = true" +
             "   and trx.organization.id in (:orgIds)" +
             "   and trx.product.id = :productId" +
-            "   and trx.movementDate <= :mvntdate" +
-            "   and trx.transactionProcessDate < :trxdate";
+            "   and trx.movementDate <= cast(:mvntdate as timestamp)" +
+            "   and trx.transactionProcessDate < cast(:trxdate as timestamp)";
     //@formatter:on
     if (wh != null) {
       //@formatter:off

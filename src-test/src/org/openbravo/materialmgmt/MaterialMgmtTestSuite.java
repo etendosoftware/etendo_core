@@ -1,7 +1,7 @@
 package org.openbravo.materialmgmt;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 import org.openbravo.materialmgmt.actionhandler.AddProductsToChValueTest;
 import org.openbravo.materialmgmt.actionhandler.ManageVariantsTest;
 import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest;
@@ -23,8 +23,8 @@ import org.openbravo.test.materialMgmt.invoiceFromShipment.InvoiceFromGoodsShipm
  * </ul>
  * </p>
  */
-@RunWith(Suite.class)
-@Suite.SuiteClasses({ ManageVariantsCustomProductCharacteristicWhereClauseTest.class,
+@Suite
+@SelectClasses({ ManageVariantsCustomProductCharacteristicWhereClauseTest.class,
     InvoiceFromGoodsShipmentPriceListFilterExpressionTest.class,
     InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest.class,
     GenerateAggregatedDataBackgroundTest.class,

@@ -38,6 +38,9 @@ import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 @ComponentProvider.Qualifier("DFF0A9F7C26C457FA8735A09ACFD5971")
 public class CostingTransactionsHQLTransformer extends HqlQueryTransformer {
 
@@ -131,10 +134,10 @@ public class CostingTransactionsHQLTransformer extends HqlQueryTransformer {
             "   and trxtype.reference.id = :refid" +
             "   and trxtype.searchKey = trx.movementType" +
             "   and trx.isCostCalculated = true" +
-            "   and (trx.movementDate < :movementDate" +
-            "     or (trx.movementDate = :movementDate" +
-            "       and (trx.transactionProcessDate < :trxProcessDate" +
-            "         or (trx.transactionProcessDate = :trxProcessDate" +
+            "   and (trx.movementDate < cast(:movementDate as timestamp)" +
+            "     or (trx.movementDate = cast(:movementDate as timestamp)" +
+            "       and (trx.transactionProcessDate < cast(:trxProcessDate as timestamp)" +
+            "         or (trx.transactionProcessDate = cast(:trxProcessDate as timestamp)" +
             "           and (trxtype.sequenceNumber < :trxtypeprio" +
             "             or (trxtype.sequenceNumber = :trxtypeprio" +
             "               and (trx.movementQuantity > :trxqty" +
@@ -224,10 +227,10 @@ public class CostingTransactionsHQLTransformer extends HqlQueryTransformer {
             "                 or (trx.movementQuantity = :trxqty" +
             "                   and trx.id <> :trxid" +
             " )))))))) " +
-            " and (trx.movementDate > :prevCostMovementDate" +
-            "   or (trx.movementDate = :prevCostMovementDate" +
-            "     and (trx.transactionProcessDate > :prevCostTrxProcessDate" +
-            "       or (trx.transactionProcessDate = :prevCostTrxProcessDate" +
+            " and (trx.movementDate > cast(:prevCostMovementDate as timestamp)" +
+            "   or (trx.movementDate = cast(:prevCostMovementDate as timestamp)" +
+            "     and (trx.transactionProcessDate > cast(:prevCostTrxProcessDate as timestamp)" +
+            "       or (trx.transactionProcessDate = cast(:prevCostTrxProcessDate as timestamp)" +
             "         and (trxtype.sequenceNumber > :prevtrxtypeprio" +
             "           or (trxtype.sequenceNumber = :prevtrxtypeprio" +
             "             and (trx.movementQuantity < :prevtrxqty" +

@@ -29,10 +29,13 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.application.ExtraWindowSettingsInjector;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * This class checks when Data Pool Selection screen loads that read-only pool is configured and
  * shows a message when it's not.
  */
+@RequestScoped
 public class DataPoolSelectionWindowInjector implements ExtraWindowSettingsInjector {
 
   private static final String DATA_POOL_SEL_WINDOW_ID = "48B7215F9BF6458E813E6B280DEDB958";

@@ -32,6 +32,9 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CancelAndReplaceSalesOrder extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

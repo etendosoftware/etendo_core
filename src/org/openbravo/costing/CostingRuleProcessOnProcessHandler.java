@@ -41,6 +41,9 @@ import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CostingRuleProcessOnProcessHandler extends BaseActionHandler {
   private static final Logger log4j = LogManager.getLogger();
 

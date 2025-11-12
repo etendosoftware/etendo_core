@@ -28,6 +28,9 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.enterprise.Locator;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CheckExistsOverissueBinForRFCShipmentWH extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

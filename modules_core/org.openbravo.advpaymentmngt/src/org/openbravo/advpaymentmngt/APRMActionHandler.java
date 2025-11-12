@@ -29,6 +29,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class APRMActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String BANK_TRANSITORY_CALLOUT_RESPONSE = "bankTransitoryCalloutResponse";

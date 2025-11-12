@@ -1,7 +1,7 @@
 package org.openbravo.test.productStatus;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -9,10 +9,9 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -54,12 +53,12 @@ public class ProductStatusTest extends OBBaseTest {
   private static final String LOCKED_ERROR = "@CannotUseLockedProduct@";
   private static final String DISCONTINUED_ERROR = "@CannotUseDiscontinuedProduct@";
 
-  @Before
+  @BeforeEach
   public void executeBeforeTests() {
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
   }
 
-  @AfterClass
+  @AfterAll
   public static void executeAfterTests() {
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
     setProductStatus(COSTING_PRODUCT_1, null);

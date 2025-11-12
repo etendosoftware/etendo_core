@@ -19,11 +19,12 @@
 
 package org.openbravo.test.db.model.functions;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,13 +33,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.junit.Test;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.DocumentNoData;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.test.base.Issue;
 import org.openbravo.test.base.OBBaseTest;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test cases for sqlc callable statements.
@@ -53,7 +54,7 @@ public class SqlCallableStatement extends OBBaseTest {
   @Issue("30891")
   public void transactionalCallableStatemetsShouldBeClosed() throws Exception {
     DalConnectionProvider cp = new DalConnectionProvider(false);
-    assumeThat("Executing only in Oracle", cp.getRDBMS(), is(equalTo("ORACLE")));
+    assumeTrue(() -> "ORACLE".equals(cp.getRDBMS()), "Executing only in Oracle");
 
     Connection conn = OBDal.getInstance().getConnection(false);
     for (int i = 0; i < 200; i++) {
@@ -70,7 +71,7 @@ public class SqlCallableStatement extends OBBaseTest {
   public void noTransactionalCallableStatemetsShouldBeClosedCallableStatemetsShouldBeClosed()
       throws Exception {
     DalConnectionProvider cp = new DalConnectionProvider(false);
-    assumeThat("Executing only in Oracle", cp.getRDBMS(), is(equalTo("ORACLE")));
+    assumeTrue(() -> "ORACLE".equals(cp.getRDBMS()), "Executing only in Oracle");
 
     for (int i = 0; i < 200; i++) {
       DocumentNoData.nextDocType(cp, "466AF4B0136A4A3F9F84129711DA8BD3",

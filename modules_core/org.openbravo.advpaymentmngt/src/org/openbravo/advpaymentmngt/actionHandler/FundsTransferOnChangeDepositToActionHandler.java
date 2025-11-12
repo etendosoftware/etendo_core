@@ -27,6 +27,9 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FundsTransferOnChangeDepositToActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

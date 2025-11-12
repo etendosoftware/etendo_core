@@ -38,6 +38,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.scheduling.ProcessBundle;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FIN_DoubtfulDebtProcess implements org.openbravo.scheduling.Process {
   private static AdvPaymentMngtDao dao;
   private static final Logger log4j = LogManager.getLogger();

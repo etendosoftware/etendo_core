@@ -19,15 +19,14 @@
 
 package org.openbravo.test.xml;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -209,21 +208,21 @@ public class DatasetExportTest extends OBBaseTest {
         // add the < in front to prevent accidental matches
         final String xmlCheckName = "<" + p.getName();
         if (excludedList.contains(p.getName())) {
-          assertFalse("Fail: property " + p.getName() + " present in xml",
-              xml.indexOf(xmlCheckName) != -1);
+          assertFalse(xml.indexOf(xmlCheckName) != -1,
+              "Fail: property " + p.getName() + " present in xml");
         } else if (!auditInfo && p.isAuditInfo()) {
-          assertFalse("Fail: property " + p.getName() + " present in xml",
-              xml.indexOf(xmlCheckName) != -1);
+          assertFalse(xml.indexOf(xmlCheckName) != -1,
+              "Fail: property " + p.getName() + " present in xml");
         } else if ((!includeChildren && p.isOneToMany() && p.isChild())) {
-          assertFalse("Fail: property " + p.getName() + " present in xml",
-              xml.indexOf(xmlCheckName) != -1);
+          assertFalse(xml.indexOf(xmlCheckName) != -1,
+              "Fail: property " + p.getName() + " present in xml");
         } else if (p.isOneToMany() && !p.isChild()) {
           // OneToMany columns which are not child should never be in the xml file
-          assertFalse("Fail: property " + p.getName() + " present in xml",
-              xml.indexOf(xmlCheckName) != -1);
+          assertFalse(xml.indexOf(xmlCheckName) != -1,
+              "Fail: property " + p.getName() + " present in xml");
         } else {
-          assertTrue("Fail: property " + p.getName() + " NOT present in xml",
-              xml.indexOf(xmlCheckName) != -1);
+          assertTrue(xml.indexOf(xmlCheckName) != -1,
+              "Fail: property " + p.getName() + " NOT present in xml");
         }
       }
     }

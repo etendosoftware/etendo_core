@@ -31,11 +31,14 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Will trigger the import process.
  * 
  * @author mtaal
  */
+@Dependent
 public class ProcessImportEntriesProcessActionHandler extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

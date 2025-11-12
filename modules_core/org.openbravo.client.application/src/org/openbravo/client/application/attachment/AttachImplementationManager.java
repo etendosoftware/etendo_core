@@ -42,17 +42,12 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.HibernateException;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Entity;
@@ -69,7 +64,6 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.SecurityChecker;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.OBDao;
 import org.openbravo.erpCommon.utility.MimeTypeUtil;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.datamodel.Table;
@@ -83,6 +77,11 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.service.json.JsonUtils;
 import org.openbravo.userinterface.selector.Selector;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
 /**
  * Class that centralizes the Attachment Management. Any action to manage an attachment in Openbravo
  * should be done through this class.
@@ -90,6 +89,7 @@ import org.openbravo.userinterface.selector.Selector;
  * The class checks what is the Attachment Method to use and calls the needed handler on each case.
  *
  */
+@Dependent
 public class AttachImplementationManager {
 
   private static final Logger log = LogManager.getLogger();

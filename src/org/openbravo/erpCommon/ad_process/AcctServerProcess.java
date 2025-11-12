@@ -30,11 +30,8 @@ package org.openbravo.erpCommon.ad_process;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -47,6 +44,10 @@ import org.openbravo.scheduling.ProcessContext;
 import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+
+@Dependent
 public class AcctServerProcess extends DalBaseProcess {
 
   private final static String BATCH_SIZE = "50";

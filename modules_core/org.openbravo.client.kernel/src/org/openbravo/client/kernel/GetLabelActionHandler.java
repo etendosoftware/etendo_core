@@ -20,11 +20,11 @@ package org.openbravo.client.kernel;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Retrieves a label from the server.

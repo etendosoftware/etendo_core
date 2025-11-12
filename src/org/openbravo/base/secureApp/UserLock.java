@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.hibernate.query.Query;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
@@ -128,11 +127,11 @@ public class UserLock {
             "  from ADSession s " +
             " where s.loginStatus = 'F' " +
             "   and s.username = :name " +
-            "   and s.creationDate > :lastFail";
+            "   and s.creationDate > cast(:lastFail as timestamp)";
     //@formatter:on
     Query<Long> q = OBDal.getInstance()
         .getSession()
-        .createQuery(hql, Long.class)
+        . createQuery(hql, Long.class)
         .setParameter("name", userName)
         .setParameter("lastFail", lastFailedAttempt);
 

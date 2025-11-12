@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
@@ -89,6 +90,7 @@ public interface TemplateProcessor {
    * @author mtaal
    */
   @SuppressWarnings("all")
+  @RequestScoped
   public static class Selector extends AnnotationLiteral<TemplateProcessor.Qualifier>
       implements TemplateProcessor.Qualifier {
     private static final long serialVersionUID = 1L;

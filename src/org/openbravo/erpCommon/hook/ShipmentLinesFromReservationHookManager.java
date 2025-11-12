@@ -4,15 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONObject;
 
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.Result;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * Manager responsible for executing all registered {@link ShipmentLinesFromReservationHook}
@@ -21,6 +22,7 @@ import com.smf.jobs.Result;
  * Hooks are executed in order of their defined priority.
  * </p>
  */
+@Dependent
 public class ShipmentLinesFromReservationHookManager {
 
   @Inject

@@ -27,12 +27,16 @@ import org.openbravo.client.kernel.reference.UIDefinition;
 import org.openbravo.client.kernel.reference.UIDefinitionController;
 import org.openbravo.dal.service.OBDal;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * The component responsible for creating Smartclient simple type representations used by other
  * modules.
  * 
  * @author mtaal
  */
+@Dependent
 public class TypesComponent extends BaseTemplateComponent {
 
   public static final String SC_TYPES_COMPONENT_ID = "SmartClientTypes";

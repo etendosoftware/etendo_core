@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -41,6 +39,10 @@ import org.openbravo.model.financialmgmt.calendar.Period;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+
+@Dependent
 public class PriceDifferenceByDateProcess extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

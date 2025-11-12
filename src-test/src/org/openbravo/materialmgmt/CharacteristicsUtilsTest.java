@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -14,7 +15,6 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.criterion.Criterion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,11 +92,11 @@ public class CharacteristicsUtilsTest {
     when(mockOBDal.createCriteria(ProductCharacteristicValue.class)).thenReturn(mockPCVCriteria);
     when(mockOBDal.createCriteria(ProductCharacteristic.class)).thenReturn(mockPCCriteria);
 
-    when(mockPCVCriteria.add(any(Criterion.class))).thenReturn(mockPCVCriteria);
-    when(mockPCVCriteria.setMaxResults(anyInt())).thenReturn(mockPCVCriteria);
+  when(mockPCVCriteria.addEqual(anyString(), any())).thenReturn(mockPCVCriteria);
+  when(mockPCVCriteria.setMaxResults(anyInt())).thenReturn(mockPCVCriteria);
 
-    when(mockPCCriteria.add(any(Criterion.class))).thenReturn(mockPCCriteria);
-    when(mockPCCriteria.setMaxResults(anyInt())).thenReturn(mockPCCriteria);
+  when(mockPCCriteria.addEqual(anyString(), any())).thenReturn(mockPCCriteria);
+  when(mockPCCriteria.setMaxResults(anyInt())).thenReturn(mockPCCriteria);
 
     when(mockProduct.getOrganization()).thenReturn(mockOrganization);
     List<ProductCharacteristic> pcList = new ArrayList<>();
@@ -138,7 +138,7 @@ public class CharacteristicsUtilsTest {
     // THEN
     assertEquals(mockCharacteristicValue, result);
     verify(mockOBDal).createCriteria(ProductCharacteristicValue.class);
-    verify(mockPCVCriteria, times(2)).add(any(Criterion.class));
+  verify(mockPCVCriteria, times(2)).addEqual(anyString(), any());
     verify(mockPCVCriteria).setMaxResults(1);
     verify(mockPCVCriteria).uniqueResult();
   }
@@ -159,7 +159,7 @@ public class CharacteristicsUtilsTest {
     // THEN
     assertNull(result);
     verify(mockOBDal).createCriteria(ProductCharacteristicValue.class);
-    verify(mockPCVCriteria, times(2)).add(any(Criterion.class));
+  verify(mockPCVCriteria, times(2)).addEqual(anyString(), any());
     verify(mockPCVCriteria).setMaxResults(1);
     verify(mockPCVCriteria).uniqueResult();
   }

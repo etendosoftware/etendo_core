@@ -1,5 +1,11 @@
 package org.openbravo.cluster;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Date;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,13 +19,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.query.Query;
@@ -121,7 +120,6 @@ public class ClusterServiceThreadTest {
   /**
    * Sets up the test environment before each test.
    * Initializes the `ClusterServiceThread` instance and mocks required dependencies.
-   *
    */
   @Test
   public void testRegisterService() {
@@ -215,7 +213,7 @@ public class ClusterServiceThreadTest {
 
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.createCriteria(ADClusterService.class)).thenReturn(mockCriteria);
-      when(mockCriteria.add(any())).thenReturn(mockCriteria);
+      when(mockCriteria.addEqual(any(), any())).thenReturn(mockCriteria);
       when(mockCriteria.uniqueResult()).thenReturn(mockADClusterService);
 
       Method method = clusterServiceThread.getClass().getDeclaredMethod("getService", String.class);
@@ -224,7 +222,7 @@ public class ClusterServiceThreadTest {
 
       assertEquals(mockADClusterService, result);
       verify(mockOBDal).createCriteria(ADClusterService.class);
-      verify(mockCriteria).add(any());
+      verify(mockCriteria).addEqual(any(), any());
       verify(mockCriteria).uniqueResult();
     }
   }

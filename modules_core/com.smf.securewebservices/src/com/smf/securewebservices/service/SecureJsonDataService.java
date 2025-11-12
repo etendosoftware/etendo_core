@@ -8,12 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
-import com.smf.securewebservices.utils.SecureWebServicesUtils;
-
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -53,6 +47,12 @@ import com.smf.securewebservices.rsql.OBRestConstants;
 import com.smf.securewebservices.utils.SecureDataToJson;
 import com.smf.securewebservices.utils.SecureJsonToData;
 import com.smf.securewebservices.utils.SecureJsonToData.JsonConversionError;
+import com.smf.securewebservices.utils.SecureWebServicesUtils;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 
 /**
  * Implements generic data operations which have parameters and json as an input and return results
@@ -72,6 +72,7 @@ import com.smf.securewebservices.utils.SecureJsonToData.JsonConversionError;
  * @deprecated TODO: This class needs to be refactored
  */
 @Deprecated
+@Dependent
 public class SecureJsonDataService implements JsonDataService {
 
   private static final String ADD_FLAG = "_doingAdd";

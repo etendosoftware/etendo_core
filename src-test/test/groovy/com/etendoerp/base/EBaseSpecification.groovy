@@ -7,7 +7,6 @@ import org.apache.logging.log4j.core.LoggerContext
 import org.apache.logging.log4j.core.config.Configuration
 import org.apache.logging.log4j.core.config.LoggerConfig
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager
-import org.hibernate.dialect.function.SQLFunction
 import org.openbravo.base.provider.OBConfigFileProvider
 import org.openbravo.base.session.SessionFactoryController
 import org.openbravo.dal.core.DalContextListener
@@ -199,42 +198,23 @@ class EBaseSpecification extends Specification {
      *          initialization. It can be null if not needed.
      * @throws Exception
      */
-    protected void initializeDalLayer(Map<String, SQLFunction> sqlFunctions) throws Exception {
+    protected void initializeDalLayer() throws Exception {
         if (areAllSqlFunctionsRegistered(sqlFunctions)) {
             // do not re-initialize the DAL layer, as the provided SQL functions are already registered
             return;
         }
         DalLayerInitializer.getInstance().setInitialized(false);
         log.info("Creating custom DAL layer initialization...");
-        staticInitializeDalLayer(sqlFunctions);
     }
 
-    private boolean areAllSqlFunctionsRegistered(Map<String, SQLFunction> sqlFunctions) {
-        if (sqlFunctions == null || sqlFunctions.isEmpty()) {
-            return true;
-        }
-        Map<String, SQLFunction> registeredFunctions = SessionFactoryController.getInstance()
-                .getConfiguration()
-                .getSqlFunctions();
-        if (registeredFunctions == null) {
-            return false;
-        }
-        for (String sqlFunction : sqlFunctions.keySet()) {
-            if (!registeredFunctions.containsKey(sqlFunction)) {
-                return false;
-            }
-        }
-        return true;
-    }
     protected static void staticInitializeDalLayer() throws Exception {
         staticInitializeDalLayer2(null);
     }
 
-    private static void staticInitializeDalLayer2(Map<String, SQLFunction> sqlFunctions)
+    private static void staticInitializeDalLayer2()
             throws Exception {
         DalLayerInitializer initializer = DalLayerInitializer.getInstance();
         if (!initializer.isInitialized()) {
-            initializer.setSQLFunctions(sqlFunctions);
             initializer.initialize(true);
         }
     }

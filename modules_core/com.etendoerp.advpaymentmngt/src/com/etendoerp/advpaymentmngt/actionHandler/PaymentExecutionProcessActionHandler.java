@@ -1,5 +1,8 @@
 package com.etendoerp.advpaymentmngt.actionHandler;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -8,9 +11,9 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.payment.PaymentExecutionProcess;
 
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class PaymentExecutionProcessActionHandler extends BaseActionHandler {
 
     private static final Logger log = Logger.getLogger(PaymentExecutionProcessActionHandler.class);

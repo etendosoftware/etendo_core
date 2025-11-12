@@ -33,7 +33,10 @@ import org.openbravo.model.ad.module.Module;
 import org.openbravo.service.centralrepository.CentralRepository;
 import org.openbravo.service.centralrepository.CentralRepository.Service;
 
+import jakarta.enterprise.context.Dependent;
+
 /** Process to register a module in Central Repository */
+@Dependent
 public class RegisterModuleActionHandler extends BaseProcessActionHandler {
 
   @Override

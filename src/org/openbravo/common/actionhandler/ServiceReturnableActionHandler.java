@@ -39,6 +39,9 @@ import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ServiceReturnableActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String PRODUCT = "@Product@ '";

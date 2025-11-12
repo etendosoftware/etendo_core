@@ -27,14 +27,13 @@ package org.openbravo.advpaymentmngt.dao;
  */
 
 
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Selection;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.openbravo.base.structure.BaseOBObject;
@@ -49,6 +48,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
+
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Selection;
 
 public class MatchTransactionDao {
 
@@ -429,7 +431,7 @@ public class MatchTransactionDao {
           + "       select 1 "
           + "       from FIN_BankStatementLine as bsl "
           + "       where bsl.financialAccountTransaction = e)"
-          + "   and e.transactionDate <= :date";
+          + "   and e.transactionDate <= cast(:date as timestamp)";
       
       //@formatter:on
       final Session session = OBDal.getInstance().getSession();

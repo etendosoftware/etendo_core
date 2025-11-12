@@ -20,15 +20,15 @@ package org.openbravo.client.application;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.client.kernel.BaseKernelServlet.KernelHttpServletResponse;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.client.kernel.StaticResourceComponent;
 import org.openbravo.portal.PortalAccessible;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Is responsible for logging out from the application.

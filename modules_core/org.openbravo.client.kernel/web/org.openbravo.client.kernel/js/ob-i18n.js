@@ -29,7 +29,7 @@
 OB.I18N.getLabel = function(key, params, object, property) {
   var label, i;
 
-  if (!OB.I18N.labels[key]) {
+  if (!OB.I18N.labels || !OB.I18N.labels[key]) {
     if (object && property) {
       OB.I18N.getLabelFromServer(key, params, object, property);
     }

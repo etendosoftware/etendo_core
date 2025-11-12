@@ -1,5 +1,7 @@
 package com.smf.jobs.defaults;
 
+import java.util.Map;
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.advpaymentmngt.ProcessInvoiceUtil;
@@ -8,8 +10,9 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import java.util.Map;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class ProcessInvoicesDefaults extends BaseActionHandler {
     @Override
     protected JSONObject execute(Map<String, Object> parameters, String content) {

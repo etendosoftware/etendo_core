@@ -1,6 +1,6 @@
 package org.openbravo.test.purchaseOrder;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openbravo.test.costing.utils.TestCostingUtils.reactivateInvoice;
 import static org.openbravo.test.purchaseOrder.PurchaseOrderUtils.createPurchaseOrder;
 
@@ -10,11 +10,10 @@ import java.util.List;
 
 import jakarta.inject.Inject;
 
-import org.hibernate.criterion.Restrictions;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -51,7 +50,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
    *     if setup fails
    */
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     Utils.initializeTestContext();
@@ -122,7 +121,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
       assertEquals(Long.valueOf(100), goodsReceipt.getInvoiceStatus());
 
     } catch (Exception e) {
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     } finally {
       cleanUpData(purchaseOrder, goodsReceipt, purchaseInvoice);
     }
@@ -131,7 +130,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
   /**
    * Cleans up the test environment by rolling back the transaction and closing the session.
    */
-  @After
+  @AfterEach
   public void cleanUp() {
     OBDal.getInstance().rollbackAndClose();
   }
@@ -249,7 +248,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     }
   }
 
@@ -288,7 +287,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     }
   }
 
@@ -340,7 +339,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      Assert.fail(e.getMessage());
+      Assertions.fail(e.getMessage());
     } finally {
       if (TriggerHandler.getInstance().isDisabled()) {
         TriggerHandler.getInstance().enable();

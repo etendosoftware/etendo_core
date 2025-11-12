@@ -18,11 +18,11 @@
  */
 package org.openbravo.test.materialMgmt.iscompletelyinvoicedshipment;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({ IsCompletelyInvoicedShipmentOneLineTest.class, //
+@Suite
+@SelectClasses({ IsCompletelyInvoicedShipmentOneLineTest.class,
     IsCompletelyInvoicedShipmentMultiLineTest.class })
 public class IsCompletelyInvoicedShipment {
   // No content is required, this is just the definition of a test suite.

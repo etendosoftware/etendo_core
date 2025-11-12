@@ -1,18 +1,17 @@
 package com.etendoerp.sequences;
 
-import com.etendoerp.sequences.transactional.TransactionalSequenceUtils;
-import com.smf.jobs.Action;
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Result;
+import static org.openbravo.dal.core.OBContext.restorePreviousMode;
+import static org.openbravo.dal.core.OBContext.setAdminMode;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-
-
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBProvider;
@@ -30,12 +29,14 @@ import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
 
-import java.util.List;
-import java.util.Set;
+import com.etendoerp.sequences.transactional.TransactionalSequenceUtils;
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Result;
 
-import static org.openbravo.dal.core.OBContext.*;
+import jakarta.enterprise.context.Dependent;
 
-
+@Dependent
 public class SequencesGenerator extends Action {
   Logger log = LogManager.getLogger(SequencesGenerator.class);
 

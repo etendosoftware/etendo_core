@@ -1,8 +1,9 @@
 package org.openbravo.materialmgmt;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -21,11 +22,11 @@ import jakarta.enterprise.inject.Instance;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
@@ -50,12 +51,6 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
 
   private static final String ORG_ID = "1000000";
 
-  /**
-   * Rule to verify that a specific exception is expected during test execution.
-   */
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
   @InjectMocks
   private ProductCharacteristicsDS productCharacteristicsDS;
 
@@ -75,7 +70,7 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
    *
    * @throws Exception if an error occurs during setup
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     // Initialize mocks
     mocks = MockitoAnnotations.openMocks(this);
@@ -107,8 +102,8 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
    *
    * @throws Exception if an error occurs during teardown
    */
-  @After
-  public void tearDown() throws Exception {
+  @AfterEach
+  void tearDown() throws Exception {
     if (mockedOBContext != null) {
       mockedOBContext.close();
     }
@@ -127,7 +122,7 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
    * Test the checkFetchDatasourceAccess method when access is granted
    */
   @Test
-  public void testCheckFetchDatasourceAccessAccessGranted() {
+  void testCheckFetchDatasourceAccessAccessGranted() {
     // Given
     Map<String, String> parameters = new HashMap<>();
     Entity mockEntity = mock(Entity.class);
@@ -146,7 +141,7 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
    * Tests the checkFetchDatasourceAccess method when access is denied.
    */
   @Test
-  public void testCheckFetchDatasourceAccessAccessDenied() {
+  void testCheckFetchDatasourceAccessAccessDenied() {
     // Given
     Map<String, String> parameters = new HashMap<>();
     Entity mockEntity = mock(Entity.class);
@@ -165,18 +160,17 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
       }
     };
 
-    // Expect exception
-    expectedException.expect(OBSecurityException.class);
-
-    // When
-    testDS.checkFetchDatasourceAccess(parameters);
+    // When & Then
+    assertThrows(OBSecurityException.class, () -> {
+      testDS.checkFetchDatasourceAccess(parameters);
+    });
   }
 
   /**
    * Test the getOrgFilter method
    */
   @Test
-  public void testGetOrgFilter() {
+  void testGetOrgFilter() {
     // Given
     Role mockRole = mock(Role.class);
     Organization mockOrg = mock(Organization.class);
@@ -209,7 +203,7 @@ public class ProductCharacteristicsDSTest extends WeldBaseTest {
    * @throws Exception if an error occurs during the test
    */
   @Test
-  public void testFetchBasicParameters() throws Exception {
+  void testFetchBasicParameters() throws Exception {
     // Given
     Map<String, String> parameters = new HashMap<>();
     parameters.put("_parentDSIdentifier", "Product");

@@ -36,6 +36,9 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class RelateProductsToServiceProduct extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

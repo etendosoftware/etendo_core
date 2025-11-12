@@ -19,10 +19,7 @@
 package org.openbravo.costing;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-
-import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,10 +45,14 @@ import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+
 /**
  * @author gorkaion
  * 
  */
+@Dependent
 public class CostingBackground extends DalBaseProcess implements KillableProcess {
   private static final Logger log4j = LogManager.getLogger();
   public static final String AD_PROCESS_ID = "3F2B4AAC707B4CE7B98D2005CF7310B5";
@@ -84,8 +85,8 @@ public class CostingBackground extends DalBaseProcess implements KillableProcess
       final String where = " as o"
           + " where exists ("
           + "    select 1 from CostingRule as cr"
-          + "    where ad_isorgincluded(o.id, cr.organization.id, client.id) <> -1 "
-          + "      and cr.validated is true"
+          + "    where ad_isorgincluded(o.id, cr.organization.id, o.client.id) <> -1 "
+          + "      and cr.validated = true"
           + "    )"
           + " and ad_isorgincluded(o.id, :orgId, :clientId) <> -1 ";
       //@formatter:on

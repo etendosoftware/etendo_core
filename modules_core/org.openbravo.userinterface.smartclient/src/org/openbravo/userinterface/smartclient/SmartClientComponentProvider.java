@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
@@ -32,13 +30,15 @@ import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.client.kernel.KernelUtils;
 import org.openbravo.client.kernel.StaticResourceComponent;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Is used to provide the global resources needed for smartclient.
  * 
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(SmartClientComponentProvider.QUALIFIER)
 public class SmartClientComponentProvider extends BaseComponentProvider {
   public static final String SC_COMPONENT_TYPE = "OBUISC_Smartclient";

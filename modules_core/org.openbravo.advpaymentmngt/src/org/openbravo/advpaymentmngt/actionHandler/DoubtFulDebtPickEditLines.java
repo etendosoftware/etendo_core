@@ -48,6 +48,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class DoubtFulDebtPickEditLines extends BaseProcessActionHandler {
   private static final Logger log = LogManager.getLogger();
 

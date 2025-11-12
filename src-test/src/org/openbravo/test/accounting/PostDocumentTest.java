@@ -19,10 +19,11 @@
 
 package org.openbravo.test.accounting;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -33,12 +34,8 @@ import jakarta.servlet.ServletException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -55,7 +52,6 @@ import org.openbravo.test.base.OBBaseTest;
  * 
  * 
  */
-@RunWith(Parameterized.class)
 public class PostDocumentTest extends OBBaseTest {
   final static private Logger log = LogManager.getLogger();
   // User Openbravo
@@ -105,27 +101,7 @@ public class PostDocumentTest extends OBBaseTest {
   private static String PRETTY_CASH = "627A1291274F4BCF838588BB2F2102AD";
   private static String BANK_ACCOUNT = "58D66F384F7549D995523BF116F29BA0";
 
-  @SuppressWarnings("unused")
-  private String testNumber; // It is used to show the test number when the test is run.
-  @SuppressWarnings("unused")
-  private String testDescription; // It is used to show the test description when the test is run.
-  private String keyId;
-  private String tableId;
-  private String orgId;
-  private String[][] resultTest;
-
-  public PostDocumentTest(String testNumber, String testDescription, String keyId, String tableId,
-      String orgId, String[][] resultTest) {
-    this.testDescription = testDescription;
-    this.testNumber = testNumber;
-    this.keyId = keyId;
-    this.tableId = tableId;
-    this.orgId = orgId;
-    this.resultTest = resultTest;
-  }
-
   /** parameterized: Documents to be posted together with results expected */
-  @Parameters(name = "idx:{0} name:{1}")
   public static Collection<Object[]> params() {
     // { "Ledger", "Account", "date", "currency", "amtsourcedr", "amtsourcecr", "amtacctdr",
     // "amtacctcr"
@@ -212,16 +188,15 @@ public class PostDocumentTest extends OBBaseTest {
     });
   }
 
-  /*
-   * Posts a document and verifies entries are correct
-   */
-  @Test
-  public void testPostDocument() {
+  @ParameterizedTest(name = "idx:{0} name:{1}")
+  @MethodSource("params")
+  public void testPostDocument(String testNumber, String testDescription, String keyId,
+      String tableId, String orgId, String[][] resultTest) {
     try {
       OBContext.setAdminMode(false);
       ResetAccounting.delete(CLIENT_ID, orgId, tableId, keyId, "", "");
-      postDocument();
-      checkResults();
+      postDocument(keyId, tableId, orgId);
+      checkResults(keyId, tableId, resultTest);
     } catch (ServletException e) {
       log.error("Error posting document", e);
     } finally {
@@ -229,7 +204,7 @@ public class PostDocumentTest extends OBBaseTest {
     }
   }
 
-  private void checkResults() {
+  private void checkResults(String keyId, String tableId, String[][] resultTest) {
     OBCriteria<AccountingFact> obc = OBDal.getInstance().createCriteria(AccountingFact.class);
     obc.addEqual(AccountingFact.PROPERTY_RECORDID, keyId);
     obc.addEqual(AccountingFact.PROPERTY_TABLE + ".id", tableId);
@@ -278,11 +253,10 @@ public class PostDocumentTest extends OBBaseTest {
       assertThat("Wrong Account", accountId, equalTo(fact.getAccount().getId()));
       assertThat("Wrong Currency", currencyId, equalTo(fact.getCurrency().getId()));
     }
-    assertTrue("Wrong number of entries. Expected: " + resultTest.length + " obtained: " + counter,
-        resultTest.length == counter);
+    assertEquals(resultTest.length, counter, "Wrong number of entries.");
   }
 
-  private void postDocument() throws ServletException {
+  private void postDocument(String keyId, String tableId, String orgId) throws ServletException {
     ConnectionProvider conn = getConnectionProvider();
     Connection con = null;
     try {

@@ -31,11 +31,14 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Handler in Match Statement window | Add new transaction, that controls the Payment field on
  * change event
  * 
  */
+@Dependent
 public class AddTransactionOnChangePaymentActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

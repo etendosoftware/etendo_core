@@ -120,7 +120,7 @@ public class TransactionalSequenceUtilsTest extends WeldBaseTest {
                 SessionHandler.getInstance().rollback();
             }
 
-            OBDal.getInstance().getSession().disconnect();
+            OBDal.getInstance().getSession().close();
             return sequenceNextVal;
         }
 

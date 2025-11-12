@@ -20,11 +20,13 @@ package org.openbravo.client.application;
 
 import org.codehaus.jettison.json.JSONObject;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * 
  * @author iperdomo
  */
-
+@RequestScoped
 public class ApplicationConstants {
   public static final String TAB_TITLE = "tabTitle";
   public static final String VIEWID = "viewId";

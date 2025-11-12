@@ -47,7 +47,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Session;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
@@ -89,11 +88,12 @@ import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.utils.Replace;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-
+@Dependent
 public class FIN_Utility {
 
   private static final Logger log4j = LogManager.getLogger();
@@ -134,12 +134,12 @@ public class FIN_Utility {
 
   /**
    * Parses the string of comma separated id's to return a List object of the given class
-   * 
+   *
    * @param <T>
    * @param t
-   *          class of the OBObject the id's belong to
+   *     class of the OBObject the id's belong to
    * @param _strSelectedIds
-   *          String containing a comma separated list of id's
+   *     String containing a comma separated list of id's
    * @return a List object containing the parsed OBObjects
    */
   public static <T extends BaseOBObject> List<T> getOBObjectList(Class<T> t,
@@ -163,9 +163,8 @@ public class FIN_Utility {
   }
 
   /**
-   * 
    * @param _strSelectedIds
-   *          Identifiers string list with the following structure: ('ID', 'ID', 'ID')
+   *     Identifiers string list with the following structure: ('ID', 'ID', 'ID')
    * @return Map&lt;K,V&gt; using the ID as key and value &lt;ID,ID&gt; for each identifier.
    */
   public static Map<String, String> getMapFromStringList(String _strSelectedIds) {
@@ -187,12 +186,12 @@ public class FIN_Utility {
 
   /**
    * Returns a FieldProvider object containing the Scheduled Payments.
-   * 
+   *
    * @param vars
    * @param selectedScheduledPayments
-   *          List of FIN_PaymentSchedule that need to be selected by default
+   *     List of FIN_PaymentSchedule that need to be selected by default
    * @param filteredScheduledPayments
-   *          List of FIN_PaymentSchedule that need to unselected by default
+   *     List of FIN_PaymentSchedule that need to unselected by default
    */
   public static FieldProvider[] getShownScheduledPayments(VariablesSecureApp vars,
       List<FIN_PaymentSchedule> selectedScheduledPayments,
@@ -251,14 +250,14 @@ public class FIN_Utility {
 
   /**
    * Returns the cause of a trigger exception (BatchupdateException).
-   * 
+   * <p>
    * Hibernate and JDBC will wrap the exception thrown by the trigger in another exception (the
    * java.sql.BatchUpdateException) and this exception is sometimes wrapped again. Also the
    * java.sql.BatchUpdateException stores the underlying trigger exception in the nextException and
    * not in the cause property.
-   * 
+   *
    * @param t
-   *          exception.
+   *     exception.
    * @return the underlying trigger message.
    */
   public static String getExceptionMessage(Throwable t) {
@@ -269,12 +268,12 @@ public class FIN_Utility {
   /**
    * Returns the DocumentType defined for the Organization (or parent organization tree) and
    * document category.
-   * 
+   *
    * @param org
-   *          the Organization for which the Document Type is defined. The Document Type can belong
-   *          to the parent organization tree of the specified Organization.
+   *     the Organization for which the Document Type is defined. The Document Type can belong
+   *     to the parent organization tree of the specified Organization.
    * @param docCategory
-   *          the document category of the Document Type.
+   *     the document category of the Document Type.
    * @return the Document Type
    */
   public static DocumentType getDocumentType(Organization org, String docCategory) {
@@ -322,12 +321,12 @@ public class FIN_Utility {
    * category. The current number of the sequence is also updated.
    *
    * @param docType
-   *          Document type of the document
+   *     Document type of the document
    * @param tableName
-   *          the name of the table from which the sequence will be taken if the Document Type does
-   *          not have any sequence associated.
+   *     the name of the table from which the sequence will be taken if the Document Type does
+   *     not have any sequence associated.
    * @return the next sequence number of the Document Type defined for the Organization and document
-   *         category. Null if no sequence is found.
+   *     category. Null if no sequence is found.
    */
   public static String getDocumentNo(DocumentType docType, String tableName) {
     return getDocumentNo(docType, tableName, true);
@@ -338,14 +337,14 @@ public class FIN_Utility {
    * category.
    *
    * @param docType
-   *          Document type of the document
+   *     Document type of the document
    * @param tableName
-   *          the name of the table from which the sequence will be taken if the Document Type does
-   *          not have any sequence associated.
+   *     the name of the table from which the sequence will be taken if the Document Type does
+   *     not have any sequence associated.
    * @param updateNext
-   *          Flag to update the current number of the sequence
+   *     Flag to update the current number of the sequence
    * @return the next sequence number of the Document Type defined for the Organization and document
-   *         category. Null if no sequence is found.
+   *     category. Null if no sequence is found.
    */
   public static String getDocumentNo(DocumentType docType, String tableName, boolean updateNext) {
     if (getInstance().sequenceAction.get() != null) {
@@ -355,37 +354,37 @@ public class FIN_Utility {
   }
 
   public static String getDocumentNo(boolean updateNext, Sequence seqParam) {
-    if(getInstance().sequenceAction.get() != null) {
+    if (getInstance().sequenceAction.get() != null) {
       return getInstance().sequenceAction.get().getDocumentNo(updateNext, seqParam);
     }
     return null;
   }
 
   private static Sequence getSequenceAndLockIfUpdateNext(final boolean updateNext,
-                                                         final Sequence seqParam) {
-    if(getInstance().sequenceAction.get() != null) {
+      final Sequence seqParam) {
+    if (getInstance().sequenceAction.get() != null) {
       return getInstance().sequenceAction.get().getSequenceAndLockIfUpdateNext(updateNext, seqParam);
     }
     return null;
   }
 
   private static Sequence lockSequence(String sequenceId) {
-    if(getInstance().sequenceAction.get() != null) {
+    if (getInstance().sequenceAction.get() != null) {
       return getInstance().sequenceAction.get().lockSequence(sequenceId);
     }
     return null;
   }
 
   private static String getNextDocNumberAndIncrementSeqIfUpdateNext(final boolean updateNext,
-                                                                    final Sequence seq) {
-    if(getInstance().sequenceAction.get() != null) {
+      final Sequence seq) {
+    if (getInstance().sequenceAction.get() != null) {
       return getInstance().sequenceAction.get().getNextDocNumberAndIncrementSeqIfUpdateNext(updateNext, seq);
     }
     return null;
   }
 
   private static void incrementSeqIfUpdateNext(final boolean updateNext, final Sequence seq) {
-    if(getInstance().sequenceAction.get() != null) {
+    if (getInstance().sequenceAction.get() != null) {
       getInstance().sequenceAction.get().incrementSeqIfUpdateNext(updateNext, seq);
     }
   }
@@ -395,18 +394,18 @@ public class FIN_Utility {
    * category. The current number of the sequence is also updated.
    *
    * @param org
-   *          the Organization for which the Document Type is defined. The Document Type can belong
-   *          to the parent organization tree of the specified Organization.
+   *     the Organization for which the Document Type is defined. The Document Type can belong
+   *     to the parent organization tree of the specified Organization.
    * @param docCategory
-   *          the document category of the Document Type.
+   *     the document category of the Document Type.
    * @param tableName
-   *          the name of the table from which the sequence will be taken if the Document Type does
-   *          not have any sequence associated.
+   *     the name of the table from which the sequence will be taken if the Document Type does
+   *     not have any sequence associated.
    * @return the next sequence number of the Document Type defined for the Organization and document
-   *         category. Null if no sequence is found.
+   *     category. Null if no sequence is found.
    */
   public static String getDocumentNo(Organization org, String docCategory, String tableName) {
-    if(getInstance().sequenceAction.get() != null) {
+    if (getInstance().sequenceAction.get() != null) {
       return getInstance().sequenceAction.get().getDocumentNo(org, docCategory, tableName);
     }
     return null;
@@ -417,19 +416,19 @@ public class FIN_Utility {
    * category.
    *
    * @param org
-   *          the Organization for which the Document Type is defined. The Document Type can belong
-   *          to the parent organization tree of the specified Organization.
+   *     the Organization for which the Document Type is defined. The Document Type can belong
+   *     to the parent organization tree of the specified Organization.
    * @param docCategory
-   *          the document category of the Document Type.
+   *     the document category of the Document Type.
    * @param tableName
-   *          the name of the table from which the sequence will be taken if the Document Type does
-   *          not have any sequence associated.
+   *     the name of the table from which the sequence will be taken if the Document Type does
+   *     not have any sequence associated.
    * @return the next sequence number of the Document Type defined for the Organization and document
-   *         category. Null if no sequence is found.
+   *     category. Null if no sequence is found.
    */
   public static String getDocumentNo(Organization org, String docCategory, String tableName,
-                                     boolean updateNext) {
-    if(getInstance().sequenceAction.get() != null) {
+      boolean updateNext) {
+    if (getInstance().sequenceAction.get() != null) {
       return getInstance().sequenceAction.get().getDocumentNo(org, docCategory, tableName, updateNext);
     }
     return null;
@@ -439,24 +438,24 @@ public class FIN_Utility {
    * Gets the available Payment Methods and returns in a String the html code containing all the
    * Payment Methods in the natural tree of the given organization filtered by the Financial
    * Account.
-   * 
+   *
    * @param strPaymentMethodId
-   *          the Payment Method id that will be selected by default in case it is present in the
-   *          list.
+   *     the Payment Method id that will be selected by default in case it is present in the
+   *     list.
    * @param strFinancialAccountId
-   *          optional Financial Account id to filter the Payment Methods.
+   *     optional Financial Account id to filter the Payment Methods.
    * @param strOrgId
-   *          the Organization id the record belongs to.
+   *     the Organization id the record belongs to.
    * @param isMandatory
-   *          boolean parameter to add an extra blank option if the drop-down is optional.
+   *     boolean parameter to add an extra blank option if the drop-down is optional.
    * @param excludePaymentMethodWithoutAccount
-   *          if the strPaymentMethodId is empty or null then depending on this parameter the list
-   *          will include payment methods with no Financial Accounts associated or only show the
-   *          Payment Methods that belongs to at least on Financial Account
+   *     if the strPaymentMethodId is empty or null then depending on this parameter the list
+   *     will include payment methods with no Financial Accounts associated or only show the
+   *     Payment Methods that belongs to at least on Financial Account
    * @param isInPayment
-   *          specifies the type of payment to get payment methods for. If true, will return payment
-   *          methods with Payment In enabled, if false will return payment methods with Payment Out
-   *          enabled.
+   *     specifies the type of payment to get payment methods for. If true, will return payment
+   *     methods with Payment In enabled, if false will return payment methods with Payment Out
+   *     enabled.
    * @return a String with the html code with the options to fill the drop-down of Payment Methods.
    */
   public static String getPaymentMethodList(String strPaymentMethodId, String strFinancialAccountId,
@@ -480,22 +479,22 @@ public class FIN_Utility {
    * Gets the available Financial Accounts and returns in a String the html code containing all the
    * Financial Accounts in the natural tree of the given organization filtered by the Payment
    * Method.
-   * 
+   *
    * @param strPaymentMethodId
-   *          optional Payment Method id to filter the Financial Accounts.
+   *     optional Payment Method id to filter the Financial Accounts.
    * @param strFinancialAccountId
-   *          the Financial Account id that will be selected by default in case it is present in the
-   *          list.
+   *     the Financial Account id that will be selected by default in case it is present in the
+   *     list.
    * @param strOrgId
-   *          the Organization id the record belongs to.
+   *     the Organization id the record belongs to.
    * @param strCurrencyId
-   *          optional Currency id to filter the Financial Accounts.
+   *     optional Currency id to filter the Financial Accounts.
    * @param isInPayment
-   *          specifies the type of payment to that is being made. If true, will return accounts
-   *          with payment methods that have Payment In enabled, if false will return accounts with
-   *          payment methods that have Payment Out enabled.
+   *     specifies the type of payment to that is being made. If true, will return accounts
+   *     with payment methods that have Payment In enabled, if false will return accounts with
+   *     payment methods that have Payment Out enabled.
    * @return a String with the html code with the options to fill the drop-down of Financial
-   *         Accounts.
+   *     Accounts.
    */
   public static String getFinancialAccountList(String strPaymentMethodId,
       String strFinancialAccountId, String strOrgId, boolean isMandatory, String strCurrencyId,
@@ -517,15 +516,15 @@ public class FIN_Utility {
   /**
    * Returns a String containing the html code with the options based on the given List of
    * BaseOBObjects
-   * 
+   *
    * @param <T>
-   *          Class that extends BaseOBObject.
+   *     Class that extends BaseOBObject.
    * @param obObjectList
-   *          List containing the values to be included in the options.
+   *     List containing the values to be included in the options.
    * @param selectedValue
-   *          value to set as selected by default.
+   *     value to set as selected by default.
    * @param isMandatory
-   *          boolean to add a blank option in the options list.
+   *     boolean to add a blank option in the options list.
    * @return a String containing the html code with the options. *
    */
   public static <T extends BaseOBObject> String getOptionsList(List<T> obObjectList,
@@ -536,18 +535,18 @@ public class FIN_Utility {
   /**
    * Returns a String containing the html code with the options based on the given List of
    * BaseOBObjects
-   * 
+   *
    * @param <T>
-   *          Class that extends BaseOBObject.
+   *     Class that extends BaseOBObject.
    * @param obObjectList
-   *          List containing the values to be included in the options.
+   *     List containing the values to be included in the options.
    * @param selectedValue
-   *          value to set as selected by default.
+   *     value to set as selected by default.
    * @param isMandatory
-   *          boolean to add a blank option in the options list.
+   *     boolean to add a blank option in the options list.
    * @param isRefList
-   *          boolean to let know if the options belong to a refList. In that case, the value must
-   *          be the search key of the list item instead of it's id.
+   *     boolean to let know if the options belong to a refList. In that case, the value must
+   *     be the search key of the list item instead of it's id.
    * @return a String containing the html code with the options. *
    */
   public static <T extends BaseOBObject> String getOptionsList(List<T> obObjectList,
@@ -593,9 +592,9 @@ public class FIN_Utility {
   /**
    * Method to replace special characters to print properly in an html. Changes are: ">" to "&gt"
    * and "<" to "&lt"
-   * 
+   *
    * @param toEscape
-   *          String to be replaced.
+   *     String to be replaced.
    * @return the given String with the special characters replaced.
    */
   private static String escape(String toEscape) {
@@ -606,9 +605,9 @@ public class FIN_Utility {
 
   /**
    * Method used to calculate the Day still due for the payment.
-   * 
+   *
    * @param date
-   *          . Due date of the payment.
+   *     . Due date of the payment.
    * @return dayStillDue. Calculated Day Still due.
    */
   public static Long getDaysToDue(Date date) {
@@ -657,17 +656,17 @@ public class FIN_Utility {
 
   /**
    * Generic OBCriteria.
-   * 
+   *
    * @param clazz
-   *          Class (entity).
+   *     Class (entity).
    * @param setFilterClient
-   *          If true then only objects from readable clients are returned, if false then objects
-   *          from all clients are returned
+   *     If true then only objects from readable clients are returned, if false then objects
+   *     from all clients are returned
    * @param setFilterOrg
-   *          If true then when querying (for example call list()) a filter on readable
-   *          organizations is added to the query, if false then this is not done
+   *     If true then when querying (for example call list()) a filter on readable
+   *     organizations is added to the query, if false then this is not done
    * @param values
-   *          Value. Property, value and operator.
+   *     Value. Property, value and operator.
    * @return All the records that satisfy the conditions.
    */
   public static <T extends BaseOBObject> List<T> getAllInstances(
@@ -708,11 +707,11 @@ public class FIN_Utility {
 
   /**
    * Generic OBCriteria with filter on readable clients and organizations active.
-   * 
+   *
    * @param clazz
-   *          Class (entity).
+   *     Class (entity).
    * @param values
-   *          Value. Property, value and operator.
+   *     Value. Property, value and operator.
    * @return All the records that satisfy the conditions.
    */
   public static <T extends BaseOBObject> List<T> getAllInstances(Class<T> clazz, Value... values) {
@@ -721,7 +720,7 @@ public class FIN_Utility {
 
   /**
    * Generic OBCriteria.
-   * 
+   *
    * @param clazz
    *          Class (entity).
    * @param values
@@ -732,9 +731,9 @@ public class FIN_Utility {
    * Generic OBCriteria.
    *
    * @param clazz
-   *          Class (entity).
+   *     Class (entity).
    * @param values
-   *          Value. Property, value and operator.
+   *     Value. Property, value and operator.
    * @return One record that satisfies the conditions.
    */
   public static <T extends BaseOBObject> T getOneInstance(Class<T> clazz, Value... values) {
@@ -804,15 +803,15 @@ public class FIN_Utility {
   /**
    * Convert a multi currency amount to a string for display in the UI. If amount has been converted
    * to a different currency, then output that converted amount and currency as well
-   * 
+   *
    * @param amt
-   *          Amount of payment
+   *     Amount of payment
    * @param currency
-   *          Currency payment was made in
+   *     Currency payment was made in
    * @param convertedAmt
-   *          Amount of payment in converted currency
+   *     Amount of payment in converted currency
    * @param convertedCurrency
-   *          Currency payment was converted to/from
+   *     Currency payment was converted to/from
    * @return String version of amount formatted for display to user
    */
   public static String multiCurrencyAmountToDisplay(BigDecimal amt, Currency currency,
@@ -857,13 +856,13 @@ public class FIN_Utility {
   /**
    * Determine the conversion rate from one currency to another on a given date. Will use the spot
    * conversion rate defined by the system for that date
-   * 
+   *
    * @param fromCurrency
-   *          Currency to convert from
+   *     Currency to convert from
    * @param toCurrency
-   *          Currency being converted to
+   *     Currency being converted to
    * @param conversionDate
-   *          Date conversion is being performed
+   *     Date conversion is being performed
    * @return A valid conversion rate for the parameters, or null if no conversion rate can be found
    */
   public static ConversionRate getConversionRate(Currency fromCurrency, Currency toCurrency,
@@ -909,15 +908,15 @@ public class FIN_Utility {
   /**
    * Determine the conversion rate from one currency to another on a given date and given
    * documentId. Will use the spot conversion rate defined by the system for that date
-   * 
+   *
    * @param fromCurrency
-   *          Currency to convert from
+   *     Currency to convert from
    * @param toCurrency
-   *          Currency being converted to
+   *     Currency being converted to
    * @param documentId
-   *          DocumentId to find the value in table c_conversion_rate_document
+   *     DocumentId to find the value in table c_conversion_rate_document
    * @param entity
-   *          Entity type of the document
+   *     Entity type of the document
    * @return A valid conversion rate for the parameters, or null if no conversion rate can be found
    */
   public static ConversionRateDoc getConversionRateDoc(Currency fromCurrency, Currency toCurrency,
@@ -961,21 +960,21 @@ public class FIN_Utility {
     } catch (Exception e) {
       log4j.error("Error getting conversion rate precission", e);
       return 6; // by default precision of 6 decimals as is defaulted in
-                // Format.xml
+      // Format.xml
     }
   }
 
   /**
    * Formats a number using the given format, decimal and grouping separator.
-   * 
+   *
    * @param number
-   *          Number to be formatted.
+   *     Number to be formatted.
    * @param javaFormat
-   *          Java number format pattern.
+   *     Java number format pattern.
    * @param _decimalSeparator
-   *          Symbol used as decimal separator.
+   *     Symbol used as decimal separator.
    * @param _groupingSeparator
-   *          Symbol used as grouping separator.
+   *     Symbol used as grouping separator.
    * @return Formatted string.
    */
   public static String formatNumber(BigDecimal number, String javaFormat, String _decimalSeparator,
@@ -1005,9 +1004,9 @@ public class FIN_Utility {
 
   /**
    * Formats a number using the euroEdition (see Format.xml) format.
-   * 
+   *
    * @param number
-   *          Number to be formatted.
+   *     Number to be formatted.
    * @return Formatted string.
    */
   public static String formatNumber(BigDecimal number) {
@@ -1016,13 +1015,13 @@ public class FIN_Utility {
 
   /**
    * Formats a number using the provided formatId and qualifier (see Format.xml) format.
-   * 
+   *
    * @param number
-   *          Number to be formatted.
+   *     Number to be formatted.
    * @param formatId
-   *          euro, price, qty, etc.
+   *     euro, price, qty, etc.
    * @param qualifier
-   *          Edition, Relation, etc,
+   *     Edition, Relation, etc,
    * @return Formatted string.
    */
   public static String formatNumber(BigDecimal number, String formatId, String qualifier) {
@@ -1054,10 +1053,10 @@ public class FIN_Utility {
    * Returns either the Invoice's Document Number or the Invoice's Supplier Reference based on the
    * Organization's configuration. In case the Supplier Reference is empty, the invoice's document
    * number is returned
-   * 
+   *
    * @param organization
-   *          to get its configuration. In case no configuration is available, the invoice's
-   *          document number is returned
+   *     to get its configuration. In case no configuration is available, the invoice's
+   *     document number is returned
    */
   public static String getDesiredDocumentNo(final Organization organization,
       final Invoice invoice) {
@@ -1087,7 +1086,6 @@ public class FIN_Utility {
   /**
    * Returns if given payment status and related payment schedule detail belong to a confirmed
    * payment
-   * 
    */
   public static boolean isPaymentConfirmed(String status, FIN_PaymentScheduleDetail psd) {
     List<Object> parameters = new ArrayList<Object>();
@@ -1102,7 +1100,6 @@ public class FIN_Utility {
   /**
    * Returns a list of Payment Status. If isConfirmed equals true, then the status returned are
    * confirmed payments. Else they are pending of execution
-   * 
    */
   private static List<String> getListPaymentConfirmedOrNot(Boolean isConfirmed) {
 
@@ -1130,7 +1127,6 @@ public class FIN_Utility {
   /**
    * Returns a list of Payment Status. If isConfirmed equals true, then the status returned are
    * confirmed payments. Else they are pending of execution
-   * 
    */
   private static List<String> getListPaymentConfirmedOrNot(Boolean isConfirmed,
       FIN_PaymentScheduleDetail psd) {
@@ -1158,7 +1154,6 @@ public class FIN_Utility {
 
   /**
    * Returns a list confirmed Payment Status
-   * 
    */
   public static List<String> getListPaymentConfirmed() {
     return getListPaymentConfirmedOrNot(true);
@@ -1166,7 +1161,6 @@ public class FIN_Utility {
 
   /**
    * Returns a list confirmed Payment Status
-   * 
    */
   public static List<String> getListPaymentConfirmed(FIN_PaymentScheduleDetail psd) {
     return getListPaymentConfirmedOrNot(true, psd);
@@ -1174,7 +1168,6 @@ public class FIN_Utility {
 
   /**
    * Returns a list not confirmed Payment Status
-   * 
    */
   public static List<String> getListPaymentNotConfirmed() {
     return getListPaymentConfirmedOrNot(false);
@@ -1182,7 +1175,6 @@ public class FIN_Utility {
 
   /**
    * Returns a list not confirmed Payment Status
-   * 
    */
   public static List<String> getListPaymentNotConfirmed(FIN_PaymentScheduleDetail psd) {
     return getListPaymentConfirmedOrNot(false, psd);
@@ -1190,9 +1182,9 @@ public class FIN_Utility {
 
   /**
    * Returns the legal entity of the given organization
-   * 
+   *
    * @param org
-   *          organization to get its legal entity
+   *     organization to get its legal entity
    * @return legal entity (with or without accounting) organization or null if not found
    */
   public static Organization getLegalEntityOrg(final Organization org) {
@@ -1214,15 +1206,15 @@ public class FIN_Utility {
 
   /**
    * Return true if the period is open for a client, document type, organization and accounting date
-   * 
+   *
    * @param client
-   *          the client for which it wants to know if the period is open
+   *     the client for which it wants to know if the period is open
    * @param documentType
-   *          It is the docbasetype from the document type
+   *     It is the docbasetype from the document type
    * @param org
-   *          the Organization for which it wants to know if the period is open
+   *     the Organization for which it wants to know if the period is open
    * @param dateAcct
-   *          The accounting date from the document
+   *     The accounting date from the document
    * @return boolean
    */
   public static boolean isPeriodOpen(String client, String documentType, String org,
@@ -1237,9 +1229,9 @@ public class FIN_Utility {
         + " where p.client.id = :clientId"
         + "   and pc.documentCategory = :documentType"
         + "   and pc.periodStatus = 'O' "
-        + "   and pc.organization = ad_org_getcalendarowner(:org) "
-        + "   and to_date(:dateAcct) >= p.startingDate "
-        + "   and to_date(:dateAcct) < p.endingDate + 1 ";
+        + "   and pc.organization.id = ad_org_getcalendarowner(:org) "
+        + "   and to_date(cast(:dateAcct as timestamp)) >= p.startingDate "
+        + "   and to_date(cast(:dateAcct as timestamp)) < p.endingDate + 1 ";
     // @formatter:on
     final Query<String> qry = session.createQuery(hql, String.class);
     qry.setParameter("clientId", client);
@@ -1269,13 +1261,13 @@ public class FIN_Utility {
 
   /**
    * Returns true if the Business Partner is blocked for the document type selected.
-   * 
+   *
    * @param strBPartnerId
-   *          . Business Partner Id.
+   *     . Business Partner Id.
    * @param issotrx
-   *          . True if Sales, False if Purchase.
+   *     . True if Sales, False if Purchase.
    * @param docType
-   *          1: Order. 2: Goods Receipt / Shipment. 3: Invoice. 4: Payment.
+   *     1: Order. 2: Goods Receipt / Shipment. 3: Invoice. 4: Payment.
    */
   public static boolean isBlockedBusinessPartner(String strBPartnerId, boolean issotrx,
       int docType) {
@@ -1331,8 +1323,8 @@ public class FIN_Utility {
           + "   inner join pd.fINPaymentScheduleDetailList as psd"
           + " where pd.finPayment.id = :paymentId "
           + "   and pd.active = true"
-          + " order by psd.invoicePaymentSchedule"
-          + "   , coalesce(psd.orderPaymentSchedule"
+          + " order by psd.invoicePaymentSchedule.id"
+          + "   , coalesce(psd.orderPaymentSchedule.id"
           + "   ,'0')";
       // @formatter:on
       Query<String> query = OBDal.getInstance().getSession().createQuery(whereClause, String.class);
@@ -1454,8 +1446,6 @@ public class FIN_Utility {
 
   /**
    * Returns the sequence number of payment status in reference list
-   * 
-   * 
    */
   public static int seqnumberpaymentstatus(String status) {
     List<Object> parameters = new ArrayList<Object>();
@@ -1518,9 +1508,9 @@ public class FIN_Utility {
   /**
    * Method used to update the credit used when the user doing invoice processing or payment
    * processing
-   * 
+   *
    * @param amount
-   *          Payment amount
+   *     Payment amount
    */
   private static void updateCustomerCredit(BusinessPartner businessPartner, BigDecimal amount,
       boolean add) {
@@ -1650,14 +1640,15 @@ public class FIN_Utility {
 
   /**
    * Get the default document for a payment based on the transaction type.
-   *
+   * <p>
    * If the transaction type is BP Deposit, the default document is RCIN.
    * If the transaction type is BP Withdrawal, the default document is PDOUT.
    * If the transaction type is neither BP Deposit nor BP Withdrawal, an empty string is returned.
    *
-   * @param context the JSON context object
+   * @param context
+   *     the JSON context object
    * @return the default document for the payment, or an empty string if the transaction type is
-   *         neither BP Deposit nor BP Withdrawal
+   *     neither BP Deposit nor BP Withdrawal
    */
   public static String getDefaultAddPaymentDocument(JSONObject context) {
     String docType = getFirstNonEmpty(context, APRMConstants.TRXTYPE, APRMConstants.INPTRXTYPE);
@@ -1678,11 +1669,12 @@ public class FIN_Utility {
 
   /**
    * Gets the default organization for a payment based on the given context.
-   *
+   * <p>
    * If the context contains the organization ID, that ID is returned. Otherwise, the organization of the default financial account is returned.
    * If no default financial account is found, null is returned.
    *
-   * @param context the JSON context object
+   * @param context
+   *     the JSON context object
    * @return the default organization for the payment, or null if no default financial account is found
    */
   public static String getDefaultOrganization(JSONObject context) {
@@ -1697,12 +1689,13 @@ public class FIN_Utility {
 
   /**
    * Retrieves the default financial account from the given JSON context.
-   *
+   * <p>
    * This method checks for financial account identifiers within the context and returns
    * the corresponding financial account if found. It searches for identifiers using
    * specific keys defined in APRMConstants.
    *
-   * @param context the JSON context object containing potential financial account identifiers
+   * @param context
+   *     the JSON context object containing potential financial account identifiers
    * @return the FIN_FinancialAccount object if a valid identifier is found, otherwise null
    */
   public static FIN_FinancialAccount getDefaultFinancialAccount(JSONObject context) {
@@ -1718,8 +1711,10 @@ public class FIN_Utility {
   /**
    * Retrieves the first non-empty value from the given keys in the given context.
    *
-   * @param context the JSON context
-   * @param keys the keys to look up
+   * @param context
+   *     the JSON context
+   * @param keys
+   *     the keys to look up
    * @return the first non-empty value, or null
    */
   public static String getFirstNonEmpty(JSONObject context, String... keys) {

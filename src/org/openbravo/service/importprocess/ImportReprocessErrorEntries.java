@@ -27,12 +27,15 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * For all {@link ImportEntry} with importstatus Error sets it back to Initial and notifies the
  * ImportEntryManager to process them.
  * 
  * @author mtaal
  */
+@Dependent
 public class ImportReprocessErrorEntries extends DalBaseProcess {
   private ProcessLogger logger;
 

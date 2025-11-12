@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -2012,7 +2013,7 @@ public class InitialSetupUtility {
    * @return ADClientModule object with the created element
    * @throws Exception
    */
-  public static ADClientModule insertClientModule(Client client, Module module) throws Exception {
+  public static ADClientModule insertClientModule(Client client, Module module) {
     OBContext.setAdminMode();
     try {
       final ADClientModule newADClientModule = OBProvider.getInstance().get(ADClientModule.class);
@@ -2028,7 +2029,7 @@ public class InitialSetupUtility {
     }
   }
 
-  public static boolean existsOrgName(Client client, String strOrgName) throws Exception {
+  public static boolean existsOrgName(Client client, String strOrgName) {
     OBContext.setAdminMode();
     try {
       final OBCriteria<Organization> obcOrg = OBDal.getInstance()
@@ -2036,7 +2037,7 @@ public class InitialSetupUtility {
       obcOrg.setFilterOnReadableOrganization(false);
       obcOrg.addEqual(Organization.PROPERTY_CLIENT, client);
       obcOrg.addEqual(Organization.PROPERTY_NAME, strOrgName);
-      return obcOrg.count() > 0;
+      return !obcOrg.list().isEmpty();
     } finally {
       OBContext.restorePreviousMode();
     }

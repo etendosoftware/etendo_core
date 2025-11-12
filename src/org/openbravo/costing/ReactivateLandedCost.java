@@ -40,6 +40,9 @@ import org.openbravo.model.materialmgmt.cost.LandedCost;
 import org.openbravo.model.materialmgmt.cost.LandedCostCost;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ReactivateLandedCost extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

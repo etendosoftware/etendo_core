@@ -1,14 +1,15 @@
 package org.openbravo.scheduling;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for SchedulerTimeUtils.
@@ -71,16 +72,13 @@ public class SchedulerTimeUtilsTest {
    * @throws ParseException when attempting to parse an invalid date format,
    *                       which is the expected behavior for this test case
    */
-  @Test(expected = ParseException.class)
-  public void testTimestampInvalidDateTime() throws ParseException {
+  @Test
+  public void testTimestampInvalidDateTime() {
     // GIVEN
     String dateTime = "invalid-date";
 
     // WHEN
-    SchedulerTimeUtils.timestamp(dateTime);
-
-    // THEN
-    // Expect ParseException
+    assertThrows(ParseException.class, () -> SchedulerTimeUtils.timestamp(dateTime));
   }
 
   /**
@@ -110,16 +108,13 @@ public class SchedulerTimeUtilsTest {
    * @throws ParseException when attempting to parse an invalid date string,
    *                       which is the expected behavior for this test case
    */
-  @Test(expected = ParseException.class)
-  public void testParseInvalidDateTime() throws ParseException {
+  @Test
+  public void testParseInvalidDateTime() {
     // GIVEN
     String dateTime = "invalid-date";
 
     // WHEN
-    SchedulerTimeUtils.parse(dateTime);
-
-    // THEN
-    // Expect ParseException
+    assertThrows(ParseException.class, () -> SchedulerTimeUtils.parse(dateTime));
   }
 
   /**

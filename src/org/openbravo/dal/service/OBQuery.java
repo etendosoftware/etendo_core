@@ -4,21 +4,24 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.dal.service;
 
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -45,14 +48,16 @@ import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.database.SessionInfo;
 import org.openbravo.service.db.QueryTimeOutUtil;
 
+import jakarta.persistence.TemporalType;
+
 /**
  * The OBQuery supports querying in the Data Access Layer with free-format (HQL) where and order by
  * clauses. The OBQuery automatically adds applicable client and organization filters and handles
  * joining of entities for orderby clauses.
- * 
+ *
+ * @author mtaal
  * @see OBCriteria
  * @see OBDal
- * @author mtaal
  */
 
 public class OBQuery<E extends BaseOBObject> {
@@ -90,10 +95,10 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Queries the database using the where clauses and additional active, client and organization
    * filters.
-   * 
+   *
    * @return single result or null
    * @throws HibernateException
-   *           if the query returns more than one result
+   *     if the query returns more than one result
    * @see OBQuery#uniqueResultObject() uniqueResultObject for a version returning an Object
    */
   public E uniqueResult() {
@@ -103,10 +108,10 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Queries the database using the where clauses and additional active, client and organization
    * filters.
-   * 
+   *
    * @return single result of type Object or null
    * @throws HibernateException
-   *           if the query returns more than one result
+   *     if the query returns more than one result
    * @see OBQuery#uniqueResult() uniqueResult for a type-safe version
    */
   public Object uniqueResultObject() {
@@ -116,7 +121,7 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Queries the database using the where clauses and additional active, client and organization
    * filters. The order in the list is determined by order by clause.
-   * 
+   *
    * @return list of objects retrieved from the database
    */
   public List<E> list() {
@@ -127,7 +132,7 @@ public class OBQuery<E extends BaseOBObject> {
    * Makes it possible to get a {@link Stream} over the underlying Query object. Note that the
    * {@link java.util.stream.Stream#close()} method should be invoked after processing the stream so
    * that the underlying resources are deallocated right away.
-   * 
+   *
    * @return a {@link Stream} over the underlying Query object.
    */
   public Stream<E> stream() {
@@ -138,7 +143,7 @@ public class OBQuery<E extends BaseOBObject> {
    * Queries the database using the where clauses and addition active, client and organization
    * filters. The order in the list is determined by order by clause. Returns an iterator over the
    * data.
-   * 
+   *
    * @return iterator which walks over the list of objects in the db
    * @deprecated
    */
@@ -161,11 +166,11 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Makes it possible to get a {@link ScrollableResults} from the underlying Query object.
-   * 
+   *
    * @param scrollMode
-   *          the scroll mode to be used
+   *     the scroll mode to be used
    * @return the scrollable results which can be scrolled in the direction supported by the
-   *         scrollMode
+   *     scrollMode
    */
   public ScrollableResults scroll(ScrollMode scrollMode) {
     return createQuery().scroll(scrollMode);
@@ -173,7 +178,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Counts the number of objects in the database on the basis of the whereclause of the query.
-   * 
+   *
    * @return the number of objects in the database taking into account the where and orderby clause
    */
   public int count() {
@@ -193,9 +198,9 @@ public class OBQuery<E extends BaseOBObject> {
    * Computes the row number of a record which has the id which is passed in as a parameter. The
    * rownumber computation takes into account the filter and sorting settings of the the OBQuery
    * object.
-   * 
+   *
    * @param targetId
-   *          the record id
+   *     the record id
    * @return the row number or -1 if not found
    */
   public int getRowNumber(String targetId) {
@@ -230,9 +235,9 @@ public class OBQuery<E extends BaseOBObject> {
    * Creates a Hibernate Query object intended to delete records of the Entity associated to the
    * OBQuery instance. To generate the criteria of the deletion, it makes use of the whereclause and
    * extra filters (for readable organizations etc.).
-   * 
+   *
    * @return a new Hibernate Query object. Note that it does not have an specific type because
-   *         delete queries can not be typed.
+   *     delete queries can not be typed.
    */
   @SuppressWarnings("rawtypes")
   public Query deleteQuery() {
@@ -251,7 +256,7 @@ public class OBQuery<E extends BaseOBObject> {
       deleteClause.append("DELETE FROM ");
       deleteClause.append(getEntity().getName()).append(" ");
       deleteClause.append(whereClause);
-      final Query<?> qry = getSession().createQuery(deleteClause.toString(), Object.class);
+      final Query<?> qry = getSession().createQuery(deleteClause.toString());
       setParameters(qry);
       return qry;
     } catch (final Exception e) {
@@ -262,7 +267,7 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Creates a Hibernate Query object using the where clause and extra filters (for readable
    * organizations etc.).
-   * 
+   *
    * @return a new Hibernate Query object
    */
   @SuppressWarnings("unchecked")
@@ -276,14 +281,19 @@ public class OBQuery<E extends BaseOBObject> {
    * a specific select clause is provided using the {@link #setSelectClause(String)} method).
    *
    * @param clz
-   *          the class of the query's resulting objects
-   * 
+   *     the class of the query's resulting objects
    * @return a new Hibernate Query object
    */
   public <T extends Object> Query<T> createQuery(Class<T> clz) {
     final String qryStr = createQueryString();
     try {
-      final Query<T> qry = getSession().createQuery(qryStr, clz);
+      // Hibernate 6 do not allow results type on DELETE, UPDATE or INSERT
+      final boolean isSelect = qryStr.trim().toUpperCase().startsWith("SELECT");
+
+      final Query<?> qry = isSelect
+          ? getSession().createQuery(qryStr, clz)
+          : getSession().createQuery(qryStr);
+
       setParameters(qry);
       if (fetchSize > -1) {
         qry.setFetchSize(fetchSize);
@@ -301,9 +311,10 @@ public class OBQuery<E extends BaseOBObject> {
         queryProfile = SessionInfo.getQueryProfile();
       }
       if (queryProfile != null) {
-        QueryTimeOutUtil.getInstance().setQueryTimeOut((OBCriteria) qry, queryProfile);
+        QueryTimeOutUtil.getInstance().setQueryTimeOut(qry, queryProfile);
       }
-      return qry;
+      @SuppressWarnings("unchecked") final Query<T> casted = (Query<T>) qry;
+      return casted;
     } catch (final Exception e) {
       throw new OBException("Exception when creating query " + qryStr, e);
     }
@@ -491,10 +502,16 @@ public class OBQuery<E extends BaseOBObject> {
     for (Entry<String, Object> entry : localNamedParameters.entrySet()) {
       final String name = entry.getKey();
       final Object value = entry.getValue();
-      if (value instanceof Collection<?>) {
-        qry.setParameterList(name, (Collection<?>) value);
-      } else if (value instanceof String[]) {
-        qry.setParameterList(name, (String[]) value);
+      if (value instanceof Collection<?> valueCollection) {
+        qry.setParameterList(name, valueCollection);
+      } else if (value instanceof String[] valueStringArray) {
+        qry.setParameterList(name, valueStringArray);
+      } else if (value instanceof Date valueDate) {
+        qry.setParameter(name, valueDate, TemporalType.DATE);
+      } else if (value instanceof Time valueTime) {
+        qry.setParameter(name, valueTime, TemporalType.TIME);
+      } else if (value instanceof Timestamp valueTimestamp) {
+        qry.setParameter(name, valueTimestamp, TemporalType.TIMESTAMP);
       } else {
         qry.setParameter(name, value);
       }
@@ -504,7 +521,7 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Controls if the readable organizations should be used as a filter in the query. The default is
    * true.
-   * 
+   *
    * @return if false then readable organizations are not added as a filter to the query
    */
   public boolean isFilterOnReadableOrganization() {
@@ -514,10 +531,9 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Controls if the readable organizations should be used as a filter in the query. The default is
    * true.
-   * 
+   *
    * @param filterOnReadableOrganizations
-   *          if set to false then readable organizations are not added as a filter to the query
-   * 
+   *     if set to false then readable organizations are not added as a filter to the query
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setFilterOnReadableOrganization(boolean filterOnReadableOrganizations) {
@@ -527,7 +543,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Controls if the isActive column is used as a filter (isActive == 'Y'). The default is true.
-   * 
+   *
    * @return if false then isActive is not used as a filter for the query
    */
   public boolean isFilterOnActive() {
@@ -536,11 +552,10 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Controls if the isActive column is used as a filter (isActive == 'Y'). The default is true.
-   * 
+   *
    * @param filterOnActive
-   *          if false then isActive is not used as a filter for the query, if true (the default)
-   *          then isActive='Y' is added as a filter to the query
-   * 
+   *     if false then isActive is not used as a filter for the query, if true (the default)
+   *     then isActive='Y' is added as a filter to the query
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setFilterOnActive(boolean filterOnActive) {
@@ -559,10 +574,9 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Sets the where and order by clause in the query.
-   * 
+   *
    * @param queryString
-   *          the where and order by parts of the query
-   * 
+   *     the where and order by parts of the query
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setWhereAndOrderBy(String queryString) {
@@ -581,13 +595,12 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Set the non-named parameters ('?') in the query by converting them to named parameters. This
    * conversion is done because legacy-style query parameters are no longer supported in Hibernate.
-   * 
+   * <p>
    * Note that this method also parses the where and order by clauses of the query to make use of
    * the newly generated named parameters.
-   * 
+   *
    * @param parameters
-   *          the parameters which are set in the query without a name (e.g. as :?)
-   * 
+   *     the parameters which are set in the query without a name (e.g. as :?)
    * @deprecated use {@link #setNamedParameters(Map)} instead.
    */
   @Deprecated
@@ -618,9 +631,9 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Filter the results on readable clients (@see OBContext#getReadableClients()). The default is
    * true.
-   * 
+   *
    * @return if true then only objects from readable clients are returned, if false then objects
-   *         from all clients are returned
+   *     from all clients are returned
    */
   public boolean isFilterOnReadableClients() {
     return filterOnReadableClients;
@@ -629,11 +642,10 @@ public class OBQuery<E extends BaseOBObject> {
   /**
    * Filter the results on readable clients (@see OBContext#getReadableClients()). The default is
    * true.
-   * 
+   *
    * @param filterOnReadableClients
-   *          if true then only objects from readable clients are returned by this Query, if false
-   *          then objects from all clients are returned
-   * 
+   *     if true then only objects from readable clients are returned by this Query, if false
+   *     then objects from all clients are returned
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setFilterOnReadableClients(boolean filterOnReadableClients) {
@@ -643,7 +655,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * The named parameters used in the query.
-   * 
+   *
    * @return the map of named parameters which are being used in the query
    */
   public Map<String, Object> getNamedParameters() {
@@ -652,10 +664,9 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Set the named parameters used in the query.
-   * 
+   *
    * @param namedParameters
-   *          the list of named parameters (string, value pair)
-   * 
+   *     the list of named parameters (string, value pair)
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setNamedParameters(Map<String, Object> namedParameters) {
@@ -665,12 +676,11 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Sets one named parameter used in the query.
-   * 
+   *
    * @param paramName
-   *          name of the parameter
+   *     name of the parameter
    * @param value
-   *          value which should be used for this parameter
-   * 
+   *     value which should be used for this parameter
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setNamedParameter(String paramName, Object value) {
@@ -683,7 +693,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Returns the position of the first row to be retrieved by the underlying query.
-   * 
+   *
    * @return the position of the first row to be retrieved
    */
   public int getFirstResult() {
@@ -692,10 +702,9 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Sets the position of the first row to retrieve.
-   * 
-   * @param firstResult
-   *          the position of the first row to retrieve
    *
+   * @param firstResult
+   *     the position of the first row to retrieve
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setFirstResult(int firstResult) {
@@ -705,7 +714,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Returns the maximum number of rows to be retrieved by the underlying query.
-   * 
+   *
    * @return the maximum number of rows to be retrieved
    */
   public int getMaxResult() {
@@ -714,10 +723,9 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Sets the maximum number of rows to retrieve.
-   * 
+   *
    * @param maxResult
-   *          the maximum number of rows to retrieve
-   * 
+   *     the maximum number of rows to retrieve
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setMaxResult(int maxResult) {
@@ -727,7 +735,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Returns the fetch size of the underlying query.
-   * 
+   *
    * @return the fetch size of the underlying query
    */
   public int getFetchSize() {
@@ -736,10 +744,9 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Sets a fetch size for the underlying query.
-   * 
-   * @param fetchSize
-   *          the fetch size for the underlying query
    *
+   * @param fetchSize
+   *     the fetch size for the underlying query
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setFetchSize(int fetchSize) {
@@ -749,7 +756,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Returns the select clause defined for the underlying query.
-   * 
+   *
    * @return the select clause defined for the underlying query
    */
   public String getSelectClause() {
@@ -760,10 +767,9 @@ public class OBQuery<E extends BaseOBObject> {
    * Defines a select clause for the underlying query. <b>Important Note</b>: this method can change
    * the type of the object returned by the query, which is previously defined when instantiating
    * the OBQuery object.
-   * 
+   *
    * @param selectClause
-   *          the select clause to be used by the underlying query.
-   * 
+   *     the select clause to be used by the underlying query.
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setSelectClause(String selectClause) {
@@ -773,10 +779,9 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Sets the type of the underlying query.
-   * 
+   *
    * @param queryType
-   *          the type of the underlying query
-   * 
+   *     the type of the underlying query
    * @return this OBQuery instance, for method chaining.
    */
   public OBQuery<E> setQueryType(String queryType) {
@@ -786,7 +791,7 @@ public class OBQuery<E extends BaseOBObject> {
 
   /**
    * Returns the type of the underlying query.
-   * 
+   *
    * @return a String with the type of the underlying query
    */
   public String getQueryType() {

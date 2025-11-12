@@ -19,18 +19,18 @@
 
 package org.openbravo.test.dal;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.QueryException;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.stat.SessionStatistics;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
@@ -44,12 +44,11 @@ import org.openbravo.test.base.OBBaseTest;
 
 /**
  * Set of tests for computed columns lazy loading
- * 
+ *
  * @author alostale
- * 
  */
 public class ComputedColumnsTest extends OBBaseTest {
-  private static final String EXCEPTION_MSG = "could not resolve property: deliveryStatus of: Order";
+  private static final String EXCEPTION_MSG = "Could not resolve attribute 'deliveryStatus' of 'Order'";
 
   /**
    * Tests computed columns are lazily loaded
@@ -64,16 +63,16 @@ public class ComputedColumnsTest extends OBBaseTest {
     Order order = (Order) qOrder.uniqueResult();
 
     // check it is in memory but computed columns are not already loaded
-    assertTrue("DAL Order loaded", dalObjectLoaded(Order.ENTITY_NAME, order.getId()));
-    assertFalse("DAL Order computed columns shouldn't be loaded",
-        dalObjectLoaded(Order_ComputedColumns.ENTITY_NAME, order.getId()));
+    assertTrue(dalObjectLoaded(Order.ENTITY_NAME, order.getId()), "DAL Order loaded");
+    assertFalse(dalObjectLoaded(Order_ComputedColumns.ENTITY_NAME, order.getId()),
+        "DAL Order computed columns shouldn't be loaded");
 
     // load computed columns
     order.getDeliveryStatus();
 
     // check they are now loaded in memory
-    assertTrue("DAL Order computed columns should be loaded",
-        dalObjectLoaded(Order_ComputedColumns.ENTITY_NAME, order.getId()));
+    assertTrue(dalObjectLoaded(Order_ComputedColumns.ENTITY_NAME, order.getId()),
+        "DAL Order computed columns should be loaded");
   }
 
   /**
@@ -99,19 +98,18 @@ public class ComputedColumnsTest extends OBBaseTest {
   @Test
   public void testComputedColumnCriteriaFilter() {
     setTestUserContext();
-
-    // try to filter in Criteria by computed column...
-    OBCriteria<Order> qOrder = OBDal.getInstance().createCriteria(Order.class);
-    qOrder.addEqual(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100);
     boolean thrown = false;
     try {
+      // try to filter in Criteria by computed column...
+      OBCriteria<Order> qOrder = OBDal.getInstance().createCriteria(Order.class);
+      qOrder.addEqual(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100);
       qOrder.count();
-    } catch (QueryException e) {
+    } catch (QueryException | PathElementException e) {
       thrown = e.getMessage().startsWith(EXCEPTION_MSG);
     }
 
     // ... it shouldn't be possible
-    assertTrue("Computed columns sholdn't be usable in OBCriteria", thrown);
+    assertTrue(thrown, "Computed columns shouldn't be usable in OBCriteria");
   }
 
   /**
@@ -134,7 +132,7 @@ public class ComputedColumnsTest extends OBBaseTest {
     }
 
     // ... it shouldn't be possible, proxy should be used to reach it
-    assertTrue("Computed columns can't be directly used in HQL", thrown);
+    assertTrue(thrown, "Computed columns can't be directly used in HQL");
   }
 
   @SuppressWarnings("unchecked")
@@ -150,7 +148,7 @@ public class ComputedColumnsTest extends OBBaseTest {
 
   /**
    * Tests issue #25862
-   * 
+   * <p>
    * Computed columns for a new object should be null when converting to JSON
    */
   @Test
@@ -159,7 +157,7 @@ public class ComputedColumnsTest extends OBBaseTest {
     DataToJsonConverter toJsonConverter = OBProvider.getInstance().get(DataToJsonConverter.class);
     JSONObject json = toJsonConverter.toJsonObject(myOrder, DataResolvingMode.FULL);
 
-    assertTrue("delivery status property should be present and null",
-        json.isNull(Order.COMPUTED_COLUMN_DELIVERYSTATUS));
+    assertTrue(json.isNull(Order.COMPUTED_COLUMN_DELIVERYSTATUS),
+        "delivery status property should be present and null");
   }
 }

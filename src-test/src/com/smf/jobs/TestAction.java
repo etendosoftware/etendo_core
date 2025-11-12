@@ -4,11 +4,14 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.structure.BaseOBObject;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * TestAction class that extends the Action class.
  * <p>
  * This class represents a test action that sets a metadata property and returns a success result.
  */
+@Dependent
 public class TestAction extends Action {
 
   /**

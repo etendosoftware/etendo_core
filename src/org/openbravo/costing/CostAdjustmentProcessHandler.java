@@ -31,6 +31,9 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.materialmgmt.cost.CostAdjustment;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CostAdjustmentProcessHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

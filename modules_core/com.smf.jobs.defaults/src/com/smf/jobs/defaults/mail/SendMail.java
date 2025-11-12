@@ -7,18 +7,19 @@ package com.smf.jobs.defaults.mail;
  * - Review and test thoroughly before committing
  */
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import com.smf.jobs.Action;
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Data;
-import com.smf.jobs.Result;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.ConfigParameters;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -31,7 +32,11 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;
-import org.openbravo.erpCommon.utility.reporting.*;
+import org.openbravo.erpCommon.utility.reporting.DocumentType;
+import org.openbravo.erpCommon.utility.reporting.Report;
+import org.openbravo.erpCommon.utility.reporting.ReportManager;
+import org.openbravo.erpCommon.utility.reporting.ReportingException;
+import org.openbravo.erpCommon.utility.reporting.TemplateInfo;
 import org.openbravo.erpCommon.utility.reporting.printing.EmailUtilities;
 import org.openbravo.erpCommon.utility.reporting.printing.PocData;
 import org.openbravo.model.ad.datamodel.Table;
@@ -39,10 +44,15 @@ import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Data;
+import com.smf.jobs.Result;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletException;
-import java.util.*;
 
-
+@Dependent
 public class SendMail extends Action {
     Logger log = LogManager.getLogger();
     private String tabId = null;

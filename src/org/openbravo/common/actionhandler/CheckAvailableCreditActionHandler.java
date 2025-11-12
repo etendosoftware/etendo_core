@@ -28,6 +28,9 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.financial.FinancialUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CheckAvailableCreditActionHandler extends BaseActionHandler {
 
   @Override

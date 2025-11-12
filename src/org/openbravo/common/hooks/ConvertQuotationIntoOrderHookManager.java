@@ -24,13 +24,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.openbravo.client.kernel.ComponentProvider;
+import org.openbravo.model.common.order.Order;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-
-import org.openbravo.client.kernel.ComponentProvider;
-import org.openbravo.model.common.order.Order;
 
 @ApplicationScoped
 public class ConvertQuotationIntoOrderHookManager {

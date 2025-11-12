@@ -27,6 +27,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class AgingOrganizationFilterExpression implements FilterExpression {
 
   @Override

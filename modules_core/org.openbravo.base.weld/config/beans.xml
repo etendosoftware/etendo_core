@@ -1,31 +1,16 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!--
- *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
- * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
- * Version 1.1  with a permitted attribution clause; you may not  use this
- * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html
- * Software distributed under the License  is  distributed  on  an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific  language  governing  rights  and  limitations
- * under the License.
- * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU
- * All portions are Copyright (C) 2019 Openbravo SLU
- * All Rights Reserved.
- * Contributor(s):  ______________________________________.
- ************************************************************************
--->
-<beans xmlns="http://java.sun.com/xml/ns/javaee" 
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-        xmlns:weld="http://jboss.org/schema/weld/beans"
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="https://jakarta.ee/xml/ns/jakartaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:weld="http://jboss.org/schema/weld/beans"
        xsi:schemaLocation="
-           http://java.sun.com/xml/ns/javaee http://jboss.org/schema/cdi/beans_1_0.xsd
-           http://jboss.org/schema/weld/beans http://jboss.org/schema/weld/beans_1_1.xsd">
-    
+           https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd
+           http://jboss.org/schema/weld/beans http://jboss.org/schema/weld/beans_4_0.xsd"
+       version="4.0"
+       bean-discovery-mode="annotated">
+
     <weld:scan>
         <weld:include name="**"/>
+
         <weld:exclude name="org.openbravo.erpCommon.info.**"/>
         <weld:exclude name="org.openbravo.erpCommon.modules.**"/>
         <weld:exclude name="org.openbravo.erpCommon.obps.**"/>
@@ -63,9 +48,7 @@
         <weld:exclude name="org.openbravo.**.ad_forms.**"/>
         <weld:exclude name="org.openbravo.**.ad_help.**"/>
         <weld:exclude name="org.openbravo.**.ad_reports.**"/>
-        <weld:exclude name="org.openbravo.**.test.**">
-          <weld:if-class-available name="!org.jboss.ejb3.api.spi.EJBContainerWrapper"/>
-        </weld:exclude>
+        <weld:exclude name="org.openbravo.**.test.**"/>
     </weld:scan>
 
 </beans>

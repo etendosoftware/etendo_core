@@ -19,18 +19,17 @@
 
 package org.openbravo.test.modularity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.criterion.Restrictions;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -43,7 +42,7 @@ import org.openbravo.test.base.OBBaseTest;
  * to follow modularity rules
  * 
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class DBPrefixTest extends OBBaseTest {
 
   /**
@@ -133,7 +132,7 @@ public class DBPrefixTest extends OBBaseTest {
     final OBCriteria<Module> obCriteria = OBDal.getInstance().createCriteria(Module.class);
     obCriteria.addEqual(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix");
     final List<Module> modules = obCriteria.list();
-    assertEquals("Not a single module obtained", 1, modules.size());
+    assertEquals(1, modules.size(), "Not a single module obtained");
     return modules.get(0);
   }
 
@@ -161,9 +160,9 @@ public class DBPrefixTest extends OBBaseTest {
       OBDal.getInstance().rollbackAndClose();
     }
     if (isValid) {
-      assertFalse("Not inserted a valid prefix:" + name, exception);
+      assertFalse(exception, "Not inserted a valid prefix:" + name);
     } else {
-      assertTrue("Inserted a non-valid prefix:" + name, exception);
+      assertTrue(exception, "Inserted a non-valid prefix:" + name);
     }
     OBDal.getInstance().flush();
   }

@@ -19,7 +19,7 @@
 
 package org.openbravo.test.dal;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.DalMappingGenerator;
 import org.openbravo.test.base.OBBaseTest;
 

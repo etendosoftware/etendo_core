@@ -19,13 +19,13 @@
 
 package org.openbravo.test.xml;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.dal.core.OBContext;
@@ -115,9 +115,9 @@ public class EntityXMLImportTestWarning extends XMLBaseTest {
     OBContext.getOBContext().getEntityAccessChecker().getWritableEntities().remove(entity);
 
     final ImportResult ir = DataImportService.getInstance().importDataFromXML(c, o, xml);
-    assertTrue("No error messages, error messages expected", ir.getErrorMessages() != null);
-    assertTrue("Incorrect error", ir.getErrorMessages().indexOf("Object Warehouse") != -1);
-    assertTrue("Incorrect error", ir.getErrorMessages().indexOf("is new but not writable") != -1);
+    assertTrue(ir.getErrorMessages() != null, "No error messages, error messages expected");
+    assertTrue(ir.getErrorMessages().indexOf("Object Warehouse") != -1, "Incorrect error");
+    assertTrue(ir.getErrorMessages().indexOf("is new but not writable") != -1, "Incorrect error");
     // force a rollback, so that the db is not changed
     rollback();
   }
@@ -127,7 +127,7 @@ public class EntityXMLImportTestWarning extends XMLBaseTest {
    * then the one passed in during the import. This can happen if an object belongs in organization
    * * (0), while the update/import is in another organization.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void testUpdatingOtherOrganizationWarning() {
     cleanRefDataLoaded();

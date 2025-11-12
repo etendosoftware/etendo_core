@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,6 +62,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * 
  * @author mtaal
  */
+@Dependent
 public class MyOpenbravoComponent extends SessionDynamicTemplateComponent {
 
   static final String COMPONENT_ID = "MyOpenbravo";
@@ -92,14 +95,14 @@ public class MyOpenbravoComponent extends SessionDynamicTemplateComponent {
 
   List<String> getAvailableWorkspaceWidgetClasses(String roleId) throws Exception {
     List<String> filters = new ArrayList<String>();
-    filters.add("widgetClassAccess.widgetClass.availableInWorkspace IS true");
-    filters.add("widgetClassAccess.widgetClass.superclass IS false");
+    filters.add("widgetClassAccess.widgetClass.availableInWorkspace = true");
+    filters.add("widgetClassAccess.widgetClass.superclass = false");
     return getAccessibleWidgetClasses(roleId, filters);
   }
 
   List<String> getAvailableWidgetClasses(String roleId) throws Exception {
     List<String> filters = new ArrayList<String>();
-    filters.add("widgetClassAccess.widgetClass.superclass IS false");
+    filters.add("widgetClassAccess.widgetClass.superclass = false");
     return getAccessibleWidgetClasses(roleId, filters);
   }
 

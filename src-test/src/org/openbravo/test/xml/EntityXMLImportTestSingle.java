@@ -19,19 +19,18 @@
 
 package org.openbravo.test.xml;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.openbravo.model.ad.system.Client.PROPERTY_ORGANIZATION;
 
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
@@ -52,7 +51,7 @@ import org.openbravo.service.db.ImportResult;
  * @author mtaal
  */
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class EntityXMLImportTestSingle extends XMLBaseTest {
 
   private static final Logger log = LogManager.getLogger();
@@ -74,7 +73,7 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     final ImportResult ir = DataImportService.getInstance().importDataFromXML(c, o, xml);
 
     log.debug("WARNING>>>>");
-    assertTrue(ir.getWarningMessages(), ir.getWarningMessages() == null);
+    assertTrue(ir.getWarningMessages() == null, ir.getWarningMessages());
     assertEquals(0, ir.getUpdatedObjects().size());
     assertEquals(0, ir.getInsertedObjects().size());
     if (ir.hasErrorOccured()) {

@@ -46,7 +46,8 @@ public class WeldUtils {
 
   private static BeanManager staticBeanManager = null;
   private static final Logger log = LogManager.getLogger();
-  private static final String BEAN_MANAGER_ATTRIBUTE_NAME = "org.jboss.weld.environment.servlet.javax.enterprise.inject.spi.BeanManager";
+  // Use the standard CDI attribute name for the BeanManager in Jakarta EE
+  private static final String BEAN_MANAGER_ATTRIBUTE_NAME = BeanManager.class.getName();
 
   public static BeanManager getStaticInstanceBeanManager() {
     if (staticBeanManager == null) {
@@ -54,7 +55,6 @@ public class WeldUtils {
           .getAttribute(BEAN_MANAGER_ATTRIBUTE_NAME);
 
       if (staticBeanManager == null) {
-        // In wildfly, bean manager is not saved in servlet context.
         log.debug("BeanManager not present in ServletContext, trying to get it with a jndi lookup");
 
         InitialContext ic = null;
@@ -62,9 +62,28 @@ public class WeldUtils {
           ic = new InitialContext();
           String name = "java:comp/" + BeanManager.class.getSimpleName();
           staticBeanManager = (BeanManager) ic.lookup(name);
+          if (staticBeanManager == null) {
+            try {
+              String envName = "java:comp/env/" + BeanManager.class.getSimpleName();
+              staticBeanManager = (BeanManager) ic.lookup(envName);
+              log.debug("Using BeanManager from JNDI in {}", envName);
+            } catch (NamingException ignored) {
+              log.debug("BeanManager not found in java:comp/env, using CDI.current().");
+            }
+          }
         } catch (NamingException e) {
-          log.error("Couldn't get beanManager through jndi lookup in InitialContext {}", ic, e);
-          throw new OBException(e);
+          log.warn("JNDI lookup of BeanManager failed: {}. CDI.current() will be attempted as fallback.", e.getMessage());
+        }
+
+        if (staticBeanManager == null) {
+          try {
+            jakarta.enterprise.inject.spi.CDI<Object> cdi = jakarta.enterprise.inject.spi.CDI.current();
+            staticBeanManager = cdi.getBeanManager();
+            log.debug("BeanManager obtained via CDI.current() fallback.");
+          } catch (IllegalStateException ise) {
+            log.error("Could not obtain BeanManager via ServletContext, JNDI, or CDI.current(): {}", ise.getMessage());
+            throw new OBException("BeanManager not available, aborting CDI initialization", ise);
+          }
         }
       }
     }

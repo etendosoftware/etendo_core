@@ -36,6 +36,9 @@ import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.common.plm.ProductServiceLinked;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ServicesModifyTaxCopyConfiguration extends BaseProcessActionHandler {
   private static final String MESSAGE = "message";
   private static final String SEVERITY = "severity";

@@ -31,6 +31,8 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -52,6 +54,7 @@ import org.openbravo.model.ad.ui.Tab;
  * 
  * @author iperdomo
  */
+@RequestScoped
 public class ApplicationUtils {
 
   private static Logger log = LogManager.getLogger();

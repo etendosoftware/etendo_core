@@ -42,11 +42,14 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author gorkaion
  * 
  */
+@Dependent
 public class RMShipmentPickEditLines extends BaseProcessActionHandler {
   private static Logger log = LogManager.getLogger();
   private boolean setRefNo = false;

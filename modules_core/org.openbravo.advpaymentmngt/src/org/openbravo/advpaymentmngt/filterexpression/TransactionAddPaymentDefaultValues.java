@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.enterprise.context.Dependent;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -38,6 +39,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
 import org.openbravo.service.json.JsonUtils;
 
+@Dependent
 @ComponentProvider.Qualifier(APRMConstants.TRANSACTION_WINDOW_ID)
 public class TransactionAddPaymentDefaultValues extends AddPaymentDefaultValuesHandler {
 

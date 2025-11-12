@@ -19,16 +19,13 @@
 
 package org.openbravo.scheduling;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 
-import jakarta.inject.Inject;
-import jakarta.servlet.ServletException;
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.base.weld.test.testinfrastructure.ApplicationScopedBean;
@@ -38,6 +35,10 @@ import org.openbravo.model.ad.ui.ProcessRun;
 import org.openbravo.service.db.DalBaseProcess;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.test.base.Issue;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
 
 /**
  * Test cases for process schedule and process runner
@@ -135,6 +136,7 @@ public class ProcessSchedulingTest extends WeldBaseTest {
   }
 
   /** Fake process with CDI */
+  @Dependent
   public static class MyCDIProcess extends DalBaseProcess {
     @Inject
     private ApplicationScopedBean appScopedBean;
@@ -146,6 +148,7 @@ public class ProcessSchedulingTest extends WeldBaseTest {
   }
 
   /** Fake DAL base process to get a translation with OBMessageUtils */
+  @Dependent
   public static class ParseTranslationDalBaseProcess extends DalBaseProcess {
     @Override
     protected void doExecute(ProcessBundle bundle) throws Exception {
@@ -155,6 +158,7 @@ public class ProcessSchedulingTest extends WeldBaseTest {
   }
 
   /** Fake process to get a translation with OBMessageUtils */
+  @Dependent
   public static class ParseTranslationProcess implements Process {
     @Override
     public void execute(ProcessBundle bundle) throws Exception {

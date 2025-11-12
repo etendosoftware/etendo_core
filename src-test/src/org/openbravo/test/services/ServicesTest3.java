@@ -19,22 +19,21 @@
 
 package org.openbravo.test.services;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.exception.OBException;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
@@ -84,13 +83,11 @@ public class ServicesTest3 extends WeldBaseTest {
   public static final List<ServiceTestData> PARAMS = Arrays.asList(new ServiceTestData9(),
       new ServiceTestData10(), new ServiceTestData11());
 
-  /** defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<ServiceTestData> parameterValuesRule = new ParameterCdiTestRule<ServiceTestData>(
-      PARAMS);
+  private static Stream<ServiceTestData> serviceParameters() {
+    return PARAMS.stream();
+  }
 
-  /** this field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest ServiceTestData parameter;
+  private ServiceTestData parameter;
 
   /**
    * Tests cases to check ServicePriceUtils.getServiceAmount method. All possible errors are
@@ -98,8 +95,10 @@ public class ServicesTest3 extends WeldBaseTest {
    * executes ServicePriceUtils .getServiceAmount method preparing scenarios on which certain type
    * of error is obtained.
    */
-  @Test
-  public void ServiceTest3() {
+  @ParameterizedTest(name = "Service test {0}")
+  @MethodSource("serviceParameters")
+  public void serviceTest(ServiceTestData parameter) {
+    this.parameter = parameter;
     // Set QA context
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
     String testOrderId = null;
@@ -158,7 +157,7 @@ public class ServicesTest3 extends WeldBaseTest {
         }
       }
 
-      assertTrue("Not properly handled error obtained", error);
+      assertTrue(error, "Not properly handled error obtained");
     } catch (Exception e) {
       log.error("Error when executing: " + parameter.getTestDescription(), e);
       assertFalse(true);

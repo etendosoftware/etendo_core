@@ -19,18 +19,21 @@
 
 package org.openbravo.advpaymentmngt.test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.math.BigDecimal;
 import java.util.Date;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
+import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.dal.core.DalSessionFactoryController;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -72,10 +75,14 @@ public class PaymentTest_01 extends WeldBaseTest {
    * <p>
    * This before method is named setUpP01() to avoid overwriting the super setUp method that is
    * invoked automatically before this one.
-   *
    */
-  @Before
+  @BeforeEach
   public void setUpP01() {
+    if (SessionFactoryController.getInstance() == null) {
+      DalSessionFactoryController controller = new DalSessionFactoryController();
+      controller.initialize();
+      SessionFactoryController.setInstance(controller);
+    }
     TestUtility.setTestContext();
   }
 
@@ -109,24 +116,26 @@ public class PaymentTest_01 extends WeldBaseTest {
             new Value(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
                 invoice.getFINPaymentScheduleList().get(0)));
 
-        assertTrue("Payment Schedule Outstanding Amount (" + invoice.getFINPaymentScheduleList().get(0).getOutstandingAmount().toPlainString() +
-            ") != 0", BigDecimal.ZERO
-            .compareTo(invoice.getFINPaymentScheduleList().get(0).getOutstandingAmount()) == 0);
-        assertTrue("Payment Schedule Received Amount != Total Amount", invoice.getGrandTotalAmount()
-            .compareTo(invoice.getFINPaymentScheduleList().get(0).getPaidAmount()) == 0);
+        assertTrue(BigDecimal.ZERO
+                .compareTo(invoice.getFINPaymentScheduleList().get(0).getOutstandingAmount()) == 0,
+            "Payment Schedule Outstanding Amount (" + invoice.getFINPaymentScheduleList().get(
+                0).getOutstandingAmount().toPlainString() +
+                ") != 0");
+        assertTrue(invoice.getGrandTotalAmount()
+                .compareTo(invoice.getFINPaymentScheduleList().get(0).getPaidAmount()) == 0,
+            "Payment Schedule Received Amount != Total Amount");
 
-        assertTrue("Payment Schedule Deatail Amount != Total Amount",
-            invoice.getGrandTotalAmount().compareTo(psd.getAmount()) == 0);
-        assertTrue("Payment Schedule Detail Write-off Amount != 0",
-            BigDecimal.ZERO.compareTo(psd.getWriteoffAmount()) == 0);
+        assertTrue(invoice.getGrandTotalAmount().compareTo(psd.getAmount()) == 0,
+            "Payment Schedule Deatail Amount != Total Amount");
+        assertTrue(BigDecimal.ZERO.compareTo(psd.getWriteoffAmount()) == 0,
+            "Payment Schedule Detail Write-off Amount != 0");
 
-        assertTrue("Payment Amount != Total Amount",
-            invoice.getGrandTotalAmount().compareTo(payment.getAmount()) == 0);
-        assertTrue("Status != Payment Received", "RPR".equals(payment.getStatus()));
-        assertTrue("Payment Line Amount != Total Amount",
-            invoice.getGrandTotalAmount().compareTo(psd.getPaymentDetails().getAmount()) == 0);
-        assertTrue("Payment Line Write-off Amount != 0",
-            BigDecimal.ZERO.compareTo(psd.getPaymentDetails().getWriteoffAmount()) == 0);
+        assertEquals(0, invoice.getGrandTotalAmount().compareTo(payment.getAmount()), "Payment Amount != Total Amount");
+        assertTrue("RPR".equals(payment.getStatus()), "Status != Payment Received");
+        assertTrue(invoice.getGrandTotalAmount().compareTo(psd.getPaymentDetails().getAmount()) == 0,
+            "Payment Line Amount != Total Amount");
+        assertTrue(BigDecimal.ZERO.compareTo(psd.getPaymentDetails().getWriteoffAmount()) == 0,
+            "Payment Line Write-off Amount != 0");
 
       } finally {
         OBContext.restorePreviousMode();
@@ -142,24 +151,26 @@ public class PaymentTest_01 extends WeldBaseTest {
             new Value(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
                 invoice.getFINPaymentScheduleList().get(0)));
 
-        assertTrue("Expected Amount != Total Amount", invoice.getGrandTotalAmount()
-            .compareTo(invoice.getFINPaymentScheduleList().get(0).getAmount()) == 0);
-        assertTrue("Outstanding Amount != Total Amount", invoice.getGrandTotalAmount()
-            .compareTo(invoice.getFINPaymentScheduleList().get(0).getOutstandingAmount()) == 0);
-        assertTrue("Received Amount != 0", BigDecimal.ZERO
-            .compareTo(invoice.getFINPaymentScheduleList().get(0).getPaidAmount()) == 0);
+        assertTrue(invoice.getGrandTotalAmount()
+                .compareTo(invoice.getFINPaymentScheduleList().get(0).getAmount()) == 0,
+            "Expected Amount != Total Amount");
+        assertTrue(invoice.getGrandTotalAmount()
+                .compareTo(invoice.getFINPaymentScheduleList().get(0).getOutstandingAmount()) == 0,
+            "Outstanding Amount != Total Amount");
+        assertTrue(BigDecimal.ZERO
+            .compareTo(invoice.getFINPaymentScheduleList().get(0).getPaidAmount()) == 0, "Received Amount != 0");
 
-        assertTrue("Payment Schedule Deatail Amount != 0",
-            invoice.getGrandTotalAmount().compareTo(psd.getAmount()) == 0);
-        assertTrue("Payment Schedule Detail Write-off Amount != 0",
-            BigDecimal.ZERO.compareTo(psd.getWriteoffAmount()) == 0);
+        assertTrue(invoice.getGrandTotalAmount().compareTo(psd.getAmount()) == 0,
+            "Payment Schedule Deatail Amount != 0");
+        assertTrue(BigDecimal.ZERO.compareTo(psd.getWriteoffAmount()) == 0,
+            "Payment Schedule Detail Write-off Amount != 0");
 
-        assertTrue("Payment Amount != 0", BigDecimal.ZERO.compareTo(payment.getAmount()) == 0);
-        assertTrue("Status != Awaiting Payment", "RPAP".equals(payment.getStatus()));
+        assertTrue(BigDecimal.ZERO.compareTo(payment.getAmount()) == 0, "Payment Amount != 0");
+        assertTrue("RPAP".equals(payment.getStatus()), "Status != Awaiting Payment");
 
-        assertTrue("There are Payment Lines for this payment",
-            TestUtility.getOneInstance(FIN_PaymentDetail.class,
-                new Value(FIN_PaymentDetail.PROPERTY_FINPAYMENT, payment)) == null);
+        assertTrue(TestUtility.getOneInstance(FIN_PaymentDetail.class,
+                new Value(FIN_PaymentDetail.PROPERTY_FINPAYMENT, payment)) == null,
+            "There are Payment Lines for this payment");
       } finally {
         OBContext.restorePreviousMode();
       }
@@ -178,7 +189,8 @@ public class PaymentTest_01 extends WeldBaseTest {
    * Sets up the data for the test.
    *
    * @return the created invoice
-   * @throws Exception if an error occurs during data setup
+   * @throws Exception
+   *     if an error occurs during data setup
    */
   private Invoice dataSetup() throws Exception {
 

@@ -22,12 +22,14 @@ package org.openbravo.advpaymentmngt.hqlinjections;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.service.datasource.hql.HqlQueryTransformer;
 
+@Dependent
 @ComponentProvider.Qualifier("D56CF1065EF14D52ADAD2AAB0CB63EFC")
 public class TransactionsToMatchTransformer extends HqlQueryTransformer {
 

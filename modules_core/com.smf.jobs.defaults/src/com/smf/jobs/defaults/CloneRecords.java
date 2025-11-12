@@ -1,10 +1,8 @@
 package com.smf.jobs.defaults;
 
-import com.smf.jobs.Action;
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Data;
-import com.smf.jobs.Result;
-import com.smf.jobs.hooks.CloneRecordHook;
+import java.util.ArrayList;
+import java.util.Map;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,17 +16,23 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.service.json.DataResolvingMode;
 import org.openbravo.service.json.DataToJsonConverter;
 
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Data;
+import com.smf.jobs.Result;
+import com.smf.jobs.hooks.CloneRecordHook;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * An action that clones any record.
  * It will use {@link DalUtil#copy(BaseOBObject)} by default.
  * To customize the copy behaviour, implement a hook of type {@link CloneRecordHook}
  */
+@Dependent
 public class CloneRecords extends Action {
     Logger log = LogManager.getLogger();
 

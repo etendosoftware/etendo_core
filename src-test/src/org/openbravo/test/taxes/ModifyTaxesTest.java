@@ -19,8 +19,8 @@
 
 package org.openbravo.test.taxes;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
-import static org.junit.Assert.assertThat;
 
 import java.math.BigDecimal;
 import java.text.DateFormat;
@@ -30,11 +30,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -55,7 +55,6 @@ import org.openbravo.test.taxes.data.OrderLineRelTestData;
 import org.openbravo.test.taxes.data.OrderLineTestData;
 import org.openbravo.test.taxes.data.OrderTestData;
 
-@RunWith(Parameterized.class)
 public class ModifyTaxesTest extends OBBaseTest {
 
   private final static DateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
@@ -82,12 +81,7 @@ public class ModifyTaxesTest extends OBBaseTest {
   private final static String TAX_VAT10 = "F9D9AF81F4FA459C9CE7A2D9697DF1E4";
   private final static String TAX_VAT21 = "DBFCCC14B64147168F0F516F82FAF38B";
 
-  private final String testNumber;
-  private final String testDescription;
-  private final OrderTestData data;
-
-  @Parameters(name = "idx:{0} name:{1}")
-  public static Collection<Object[]> params() {
+  private static Collection<Object[]> rawParams() {
     return Arrays.asList(new Object[][] { //
         { "0001", "Modify Taxes. Test 1.", new OrderTestData(
             //
@@ -132,15 +126,14 @@ public class ModifyTaxesTest extends OBBaseTest {
     });
   }
 
-  public ModifyTaxesTest(final String testNumber, final String testDescription,
-      final OrderTestData data) {
-    this.testNumber = testNumber;
-    this.testDescription = testDescription;
-    this.data = data;
+  private static Stream<Arguments> params() {
+    return rawParams().stream().map(p -> Arguments.of(p[0], p[1], p[2]));
   }
 
-  @Test
-  public void testModifyTaxes() throws ParseException {
+  @ParameterizedTest(name = "idx:{0} name:{1}")
+  @MethodSource("params")
+  public void testModifyTaxes(String testNumber, String testDescription, OrderTestData data)
+      throws ParseException {
 
     OBContext.setOBContext(USER_OPENBRAVO, ROLE_QA_ADMIN, CLIENT_QA_TESTING, ORGANIZATION_SPAIN);
 

@@ -31,11 +31,15 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.model.ad.domain.Preference;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Creates the properties list which is initially loaded in the client.
  * 
  * @author mtaal
  */
+@Dependent
 public class PropertiesComponent extends SessionDynamicTemplateComponent {
   private static final Logger log = LogManager.getLogger();
 

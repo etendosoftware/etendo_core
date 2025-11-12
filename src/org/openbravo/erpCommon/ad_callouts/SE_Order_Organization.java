@@ -80,13 +80,9 @@ public class SE_Order_Organization extends SimpleCallout {
 
         OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
         orgWarehouseCriteria.addEqual(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId));
-        orgWarehouseCriteria.setProjectionProperty(OrgWarehouse.PROPERTY_WAREHOUSE);
-
         List<String> warehouseIds = new ArrayList<>();
-        List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();
-        for (Object obj : warehouseList) {
-            Warehouse warehouse = (Warehouse) obj;
-            warehouseIds.add(warehouse.getId());
+        for (OrgWarehouse orgWarehouse : orgWarehouseCriteria.list()) {
+            warehouseIds.add(orgWarehouse.getWarehouse().getId());
         }
 
         if (warehouseIds.isEmpty()) {

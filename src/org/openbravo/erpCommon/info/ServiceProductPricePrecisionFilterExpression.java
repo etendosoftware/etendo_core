@@ -29,6 +29,9 @@ import org.openbravo.client.application.FilterExpression;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.order.OrderLine;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ServiceProductPricePrecisionFilterExpression implements FilterExpression {
   private Logger log = LogManager.getLogger();
 

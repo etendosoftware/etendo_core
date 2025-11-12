@@ -2503,7 +2503,7 @@ public abstract class AcctServer {
   }
 
   public boolean checkDocuments(String dateFrom, String dateTo) throws ServletException {
-    if (m_as.length == 0) {
+    if (m_as == null || m_as.length == 0) {
       return false;
     }
     AcctServerData[] docTypes = AcctServerData.selectDocTypes(connectionProvider, AD_Table_ID,

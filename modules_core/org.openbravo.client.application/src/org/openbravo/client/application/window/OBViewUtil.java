@@ -41,11 +41,14 @@ import org.openbravo.model.ad.ui.Element;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.FieldTrl;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Utility methods used in generating Openbravo view representations.
  * 
  * @author mtaal
  */
+@RequestScoped
 public class OBViewUtil {
   public static final Element createdElement;
   public static final Element createdByElement;

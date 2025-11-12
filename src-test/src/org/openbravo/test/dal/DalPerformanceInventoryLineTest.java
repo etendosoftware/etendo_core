@@ -24,9 +24,8 @@ import java.math.BigDecimal;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.hibernate.criterion.Restrictions;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -55,7 +54,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
    * {@link InventoryCountLine} objects. These objects are stored in the database and the timing is
    * reported.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void testACreateInventoryLine() {
     setTestUserContext();
@@ -100,7 +99,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
    * Reads the {@link InventoryCountLine} objects created in the above tests and adds one new line
    * and updates one line. The timings are reported in the log.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void testBReadAndAddLine() {
     setTestUserContext(); // make sure our user can do this
@@ -120,7 +119,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
 
     final OBCriteria<InventoryCount> icObc = OBDal.getInstance()
         .createCriteria(InventoryCount.class);
-    icObc.add(Restrictions.like("name", NAME_PREFIX + "%"));
+    icObc.addLike("name", NAME_PREFIX + "%");
     int cnt = 0;
     int cntLine = 0;
     for (final InventoryCount ic : icObc.list()) {
@@ -153,7 +152,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
     addReadWriteAccess(InventoryCountLine.class);
     final OBCriteria<InventoryCount> icObc = OBDal.getInstance()
         .createCriteria(InventoryCount.class);
-    icObc.add(Restrictions.like("name", NAME_PREFIX + "%"));
+    icObc.addLike("name", NAME_PREFIX + "%");
     for (InventoryCount ic : icObc.list()) {
       OBDal.getInstance().remove(ic);
     }

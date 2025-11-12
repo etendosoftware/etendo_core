@@ -1,15 +1,16 @@
 package com.smf.jobs.defaults.provider;
 
-import org.openbravo.client.kernel.BaseComponentProvider;
-import org.openbravo.client.kernel.Component;
-import org.openbravo.client.kernel.ComponentProvider;
-
-import jakarta.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@ApplicationScoped
+import org.openbravo.client.kernel.BaseComponentProvider;
+import org.openbravo.client.kernel.Component;
+import org.openbravo.client.kernel.ComponentProvider;
+
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 @ComponentProvider.Qualifier(com.smf.jobs.defaults.provider.JobsComponentProvider.COMPONENT_TYPE)
 public class JobsComponentProvider extends BaseComponentProvider {
 

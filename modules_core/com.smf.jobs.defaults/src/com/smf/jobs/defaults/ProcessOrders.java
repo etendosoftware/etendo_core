@@ -2,13 +2,6 @@ package com.smf.jobs.defaults;
 
 import java.text.ParseException;
 
-import jakarta.inject.Inject;
-
-import com.smf.jobs.ActionResult;
-import com.smf.jobs.Result;
-import com.smf.jobs.Action;
-import com.smf.jobs.defaults.Utils.ProcessUtils;
-
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.logging.log4j.LogManager;
@@ -22,10 +15,19 @@ import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import com.smf.jobs.Action;
+import com.smf.jobs.ActionResult;
+import com.smf.jobs.Result;
+import com.smf.jobs.defaults.Utils.ProcessUtils;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * Action for processing orders.
  * Allows for the same actions available in the UI as part of a Job.
  */
+@Dependent
 public class ProcessOrders extends Action {
   Logger log = LogManager.getLogger();
 

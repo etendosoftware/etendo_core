@@ -20,7 +20,7 @@
 package org.openbravo.test.system;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import jakarta.servlet.http.HttpSessionEvent;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.erpCommon.security.SessionListener;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.test.base.mock.HttpSessionMock;

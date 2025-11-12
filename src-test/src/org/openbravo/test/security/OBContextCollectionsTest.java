@@ -18,18 +18,14 @@
  */
 package org.openbravo.test.security;
 
-import static org.junit.Assert.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.test.base.OBBaseTest;
 
@@ -37,27 +33,16 @@ import org.openbravo.test.base.OBBaseTest;
  * This test is intended to check that the different collections that can be retrieved using the
  * OBContext class are always returned in a new instance.
  */
-@RunWith(Parameterized.class)
 public class OBContextCollectionsTest extends OBBaseTest {
-  private String method;
-
-  public OBContextCollectionsTest(String method) {
-    this.method = method;
-  }
-
-  @Parameters(name = "{index}: method = {0}")
-  public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { { "getReadableOrganizations" },
-        { "getWritableOrganizations" }, { "getDeactivatedOrganizations" }, { "getReadableClients" },
-        { "getNaturalTree" }, { "getParentTree" }, { "getParentList" }, { "getChildTree" } });
-  }
-
-  @Test
-  public void methodReturnsNewCollectionInstance() throws Exception {
+  @ParameterizedTest(name = "{index}: method = {0}")
+  @ValueSource(strings = { "getReadableOrganizations", "getWritableOrganizations",
+      "getDeactivatedOrganizations", "getReadableClients", "getNaturalTree", "getParentTree",
+      "getParentList", "getChildTree" })
+  public void methodReturnsNewCollectionInstance(String method) throws Exception {
     OBContextCollectionProvider provider = new OBContextCollectionProvider();
     Object o1 = provider.invokeMethod(method);
     Object o2 = provider.invokeMethod(method);
-    assertNotSame("Method " + method + " returns a new instance of the collection", o1, o2);
+    assertNotSame(o1, o2, "Method " + method + " returns a new instance of the collection");
   }
 
   @SuppressWarnings("unused")
@@ -69,7 +54,7 @@ public class OBContextCollectionsTest extends OBBaseTest {
     }
 
     public Object invokeMethod(String methodName) throws Exception {
-      Method m = this.getClass().getMethod(method);
+      Method m = this.getClass().getMethod(methodName);
       return m.invoke(this);
     }
 

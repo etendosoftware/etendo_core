@@ -19,9 +19,6 @@
 
 package org.openbravo.test.views;
 
-import static org.hibernate.criterion.Restrictions.in;
-import static org.hibernate.criterion.Restrictions.not;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +49,7 @@ public class GridConfigurationTest extends OBBaseTest {
     try {
       OBCriteria<GCSystem> systemGridConfig = OBDal.getInstance().createCriteria(GCSystem.class);
       OBCriteria<GCTab> tabGridConfig = OBDal.getInstance().createCriteria(GCTab.class);
-      tabGridConfig.add(not(in(GCTab.PROPERTY_ID, CORE_DEFAULT_GRID_CONFIGS)));
+      tabGridConfig.addNotIn(GCTab.PROPERTY_ID, CORE_DEFAULT_GRID_CONFIGS);
       return systemGridConfig.count() + tabGridConfig.count();
     } finally {
       OBContext.restorePreviousMode();

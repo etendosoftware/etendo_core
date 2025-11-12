@@ -58,7 +58,6 @@ import org.openbravo.service.json.JsonConstants;
  * Test cases to ensure that mechanism of security DataSource access is working properly.
  *
  * @author inigo.sanchez
- *
  */
 @RunWith(Parameterized.class)
 public class DataSourceSecurity extends BaseDataSourceTestDal {
@@ -172,29 +171,29 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
     Alert("DB9F062472294F12A0291A7BD203F922", JSONObjectURL.NO_APPLIED, OPERATION_FETCH), //
     ProductByPriceAndWarehouse("ProductByPriceAndWarehouse", JSONObjectURL.NO_APPLIED,
         OPERATION_FETCH, new HashMap<String, String>() {
-          {
-            try {
-              put("_selectorDefinitionId", "2E64F551C7C4470C80C29DBA24B34A5F");
-              put("filterClass", "org.openbravo.userinterface.selector.SelectorDataSourceFilter");
-              put("_sortBy", "_identifier");
-              put("_requestType", "Window");
-              put("_distinct", "productPrice");
+      {
+        try {
+          put("_selectorDefinitionId", "2E64F551C7C4470C80C29DBA24B34A5F");
+          put("filterClass", "org.openbravo.userinterface.selector.SelectorDataSourceFilter");
+          put("_sortBy", "_identifier");
+          put("_requestType", "Window");
+          put("_distinct", "productPrice");
 
-              // To reproduce this problem is important not to add the targetProperty parameter. For
-              // this reason targetProperty=null.
-              put("_inpTableId", "293");
-              put("_textMatchStyle", "substring");
+          // To reproduce this problem is important not to add the targetProperty parameter. For
+          // this reason targetProperty=null.
+          put("_inpTableId", "293");
+          put("_textMatchStyle", "substring");
 
-              // Filter selector
-              JSONObject criteria = new JSONObject();
-              criteria.put("fieldName", "productPrice$priceListVersion$_identifier");
-              criteria.put("operator", "iContains");
-              criteria.put("value", "Tarifa");
-              put("criteria", criteria.toString());
-            } catch (Exception ignore) {
-            }
-          }
-        }), //
+          // Filter selector
+          JSONObject criteria = new JSONObject();
+          criteria.put("fieldName", "productPrice$priceListVersion$_identifier");
+          criteria.put("operator", "iContains");
+          criteria.put("value", "Tarifa");
+          put("criteria", criteria.toString());
+        } catch (Exception ignore) {
+        }
+      }
+    }), //
     PropertySelector("83B60C4C19AE4A9EBA947B948C5BA04D", JSONObjectURL.NO_APPLIED, OPERATION_FETCH,
         new HashMap<String, String>() {
           {
@@ -235,13 +234,13 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
         }), //
     CustomQuerySelectorDatasource("F8DD408F2F3A414188668836F84C21AF", JSONObjectURL.NO_APPLIED,
         OPERATION_FETCH, new HashMap<String, String>() {
-          {
-            // Sales Invoice > Selector Business Partner
-            put("_selectorDefinitionId", "862F54CB1B074513BD791C6789F4AA42");
-            put("inpTableId", "318");
-            put("targetProperty", "businessPartner");
-          }
-        }), //
+      {
+        // Sales Invoice > Selector Business Partner
+        put("_selectorDefinitionId", "862F54CB1B074513BD791C6789F4AA42");
+        put("inpTableId", "318");
+        put("targetProperty", "businessPartner");
+      }
+    }), //
     CustomQuerySelectorDatasourceProcess("ADList", JSONObjectURL.NO_APPLIED, OPERATION_FETCH,
         new HashMap<String, String>() {
           {
@@ -354,60 +353,62 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
           : JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR;
       int accessForAdminAndSystemOnly = (type == RoleType.NO_ACCESS_ROLE
           || type == RoleType.EMPLOYEE_ROLE) ? JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR
-              : JsonConstants.RPCREQUEST_STATUS_SUCCESS;
+          : JsonConstants.RPCREQUEST_STATUS_SUCCESS;
       int accessForAdminAndSystemAndEmployee = type == RoleType.NO_ACCESS_ROLE
           ? JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR
           : JsonConstants.RPCREQUEST_STATUS_SUCCESS;
 
-      testCases.add(new Object[] { type, DataSource.Order, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.ManageVariants, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.ProductCharacteristics, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.Combo, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.CustomQuerySelectorDatasource,
+      testCases.add(new Object[]{ type, DataSource.Order, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.ManageVariants, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.ProductCharacteristics, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.Combo, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.CustomQuerySelectorDatasource,
           accessForAdminAndSystemAndEmployee });
-      testCases.add(new Object[] { type, DataSource.CustomQuerySelectorDatasourceProcess,
+      testCases.add(new Object[]{ type, DataSource.CustomQuerySelectorDatasourceProcess,
           accessForAdminAndSystemOnly });
 
-      testCases.add(new Object[] { type, DataSource.HQLDataSource, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.ADTree, accessForAdminAndSystemOnly });
-      testCases.add(new Object[] { type, DataSource.AccountTree, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.StockReservations, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.HQLDataSource, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.ADTree, accessForAdminAndSystemOnly });
+      testCases.add(new Object[]{ type, DataSource.AccountTree, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.StockReservations, accessForAdminOnly });
 
       // QueryList ds is accessible if current role has access to widgetId
-      testCases.add(new Object[] { type, DataSource.QueryList,
+      testCases.add(new Object[]{ type, DataSource.QueryList,
           JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR });
-      testCases.add(new Object[] { type, DataSource.PropertySelector,
+      testCases.add(new Object[]{ type, DataSource.PropertySelector,
           type == RoleType.SYSTEM_ROLE ? JsonConstants.RPCREQUEST_STATUS_SUCCESS
               : JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR });
 
       // Alert ds should be always accessible
       testCases
-          .add(new Object[] { type, DataSource.Alert, JsonConstants.RPCREQUEST_STATUS_SUCCESS });
+          .add(new Object[]{ type, DataSource.Alert, JsonConstants.RPCREQUEST_STATUS_SUCCESS });
 
       // Note ds is accessible if current role has access to entity of the notes. This note is
       // invocated from a record in Windows, Tabs and Fields.
-      testCases.add(new Object[] { type, DataSource.Note, accessForAdminAndSystemOnly });
+      testCases.add(new Object[]{ type, DataSource.Note, accessForAdminAndSystemOnly });
 
       // Selector into a datasource into a P&E Window.
       testCases.add(
-          new Object[] { type, DataSource.SelectorGLItemDatasource, accessForAdminAndSystemOnly });
+          new Object[]{ type, DataSource.SelectorGLItemDatasource, accessForAdminAndSystemOnly });
 
       // Moving a tree node : https://issues.openbravo.com/view.php?id=32833
-      testCases.add(new Object[] { type, DataSource.AccountTreeMovement, accessForAdminOnly });
+      testCases.add(new Object[]{ type, DataSource.AccountTreeMovement, accessForAdminOnly });
 
       // Testing a problem detected in how permissions for the entities of the selectors with Search
       // parent reference are calculated. See issue https://issues.openbravo.com/view.php?id=34823
       testCases.add(
-          new Object[] { type, DataSource.ProductStockView, accessForAdminAndSystemAndEmployee });
+          new Object[]{ type, DataSource.ProductStockView, accessForAdminAndSystemAndEmployee });
     }
     // testing a problem detected in how properties are initialized.
-    testCases.add(new Object[] { RoleType.ADMIN_ROLE, DataSource.ProductByPriceAndWarehouse,
+    testCases.add(new Object[]{ RoleType.ADMIN_ROLE, DataSource.ProductByPriceAndWarehouse,
         JsonConstants.RPCREQUEST_STATUS_SUCCESS });
 
     return testCases;
   }
 
-  /** Creates dummy role without any access for testing purposes */
+  /**
+   * Creates dummy role without any access for testing purposes
+   */
   @BeforeClass
   public static void createNoAccessRoleAndGenericProduct() {
     OBContext.setOBContext(CONTEXT_USER);
@@ -421,11 +422,11 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
     noAccessRole.setUserLevel(" CO");
     OBDal.getInstance().save(noAccessRole);
 
-    RoleOrganization noAcessRoleOrg = OBProvider.getInstance().get(RoleOrganization.class);
-    noAcessRoleOrg.setOrganization(
+    RoleOrganization noAccessRoleOrg = OBProvider.getInstance().get(RoleOrganization.class);
+    noAccessRoleOrg.setOrganization(
         (Organization) OBDal.getInstance().getProxy(Organization.ENTITY_NAME, ESP_ORG));
-    noAcessRoleOrg.setRole(noAccessRole);
-    OBDal.getInstance().save(noAcessRoleOrg);
+    noAccessRoleOrg.setRole(noAccessRole);
+    OBDal.getInstance().save(noAccessRoleOrg);
 
     UserRoles noAccessRoleUser = OBProvider.getInstance().get(UserRoles.class);
     noAccessRoleUser.setOrganization(noAccessRole.getOrganization());
@@ -472,7 +473,9 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
     OBDal.getInstance().commitAndClose();
   }
 
-  /** Tests datasource allows or denies fetch action based on role access */
+  /**
+   * Tests datasource allows or denies fetch action based on role access
+   */
   @Test
   public void fetchShouldBeAllowedOnlyIfRoleIsGranted() throws Exception {
     OBContext.setOBContext(CONTEXT_USER);
@@ -525,7 +528,9 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
     return new JSONObject(response).getJSONObject("response");
   }
 
-  /** Deletes dummy testing role and product */
+  /**
+   * Deletes dummy testing role and product
+   */
   @AfterClass
   public static void cleanUp() {
     OBContext.setOBContext(CONTEXT_USER);

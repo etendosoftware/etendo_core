@@ -25,19 +25,14 @@ package org.openbravo.client.application.attachment;
  * - Review and test thoroughly before committing
  */
 
-
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Map;
-
-import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.application.Parameter;
 import org.openbravo.client.application.ParameterUtils;
 import org.openbravo.client.application.ParameterValue;
@@ -50,10 +45,15 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.model.ad.utility.Attachment;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpSession;
+
 /**
  * This ActionHandler is invoked when opening a Attachment window. It is in charge of computing
  * default values for the parameters in the window.
  */
+@Dependent
 public class DefaultsAttachmentActionHandler extends BaseActionHandler {
 
   private static final Logger log = LogManager.getLogger();

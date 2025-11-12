@@ -19,16 +19,16 @@
 
 package org.openbravo.test.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.criterion.Restrictions;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -42,7 +42,7 @@ import org.openbravo.test.base.OBBaseTest;
  * 
  * @author iperdomo
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class OneToManyTest extends OBBaseTest {
 
   private static final Logger log = LogManager.getLogger();
@@ -73,7 +73,7 @@ public class OneToManyTest extends OBBaseTest {
    * Tests adding an {@link OrderLine} to an {@link Order} without explicitly saving the order line,
    * the cascade behavior defined in the hibernate mapping should take care of that.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void testBAddOrderLine() {
     setTestUserContext();
@@ -112,7 +112,7 @@ public class OneToManyTest extends OBBaseTest {
   /**
    * Now the order line from the previous test case is deleted.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void testCDeleteChild() {
     setTestUserContext();

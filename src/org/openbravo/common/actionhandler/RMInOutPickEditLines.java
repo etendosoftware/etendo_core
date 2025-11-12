@@ -44,11 +44,14 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.sales.ConditionGoods;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * @author gorkaion
  * 
  */
+@Dependent
 public class RMInOutPickEditLines extends BaseProcessActionHandler {
   private static Logger log = LogManager.getLogger();
 

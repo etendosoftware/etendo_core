@@ -36,6 +36,9 @@ import org.openbravo.model.financialmgmt.accounting.BudgetLine;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalBaseProcess;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class UpdateActuals extends DalBaseProcess {
   private static final Logger log4j = LogManager.getLogger();
 

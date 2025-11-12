@@ -49,6 +49,8 @@ import com.smf.jobs.ActionResult;
 import com.smf.jobs.Data;
 import com.smf.jobs.Result;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Unit tests for the Post class.
  * Tests the functionality related to posting and posting documents.
@@ -481,6 +483,7 @@ public class PostTest {
   /**
    * TestablePost inner class to allow testing protected methods.
    */
+  @Dependent
   private static class TestablePost extends Post {
     private Data data;
     private List<BaseOBObject> inputContents;

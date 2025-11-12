@@ -19,12 +19,12 @@
 
 package org.openbravo.client.application.test.db.model.triggers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.test.TestUtility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.application.Process;
@@ -55,7 +55,7 @@ public class ProcessTest extends OBBaseTest {
    *
    * @throws Exception if an error occurs during setup
    */
-  @Before
+  @BeforeEach
   public void setUpRP() throws Exception {
     super.setUp();
     TestUtility.setTestContext();
@@ -87,7 +87,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setActive(false);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -111,7 +111,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setSearchKey("Demo Search Key");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -135,7 +135,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setName("TestName");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -159,7 +159,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setDescription("TestDescription");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -183,7 +183,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setHelpComment("TestHelpComment");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -207,7 +207,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setDataAccessLevel("7");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -231,7 +231,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setJavaClassName("org.openbravo.client.application.businesslogic.DemoClassName");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -255,7 +255,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setBackground(true);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -279,7 +279,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setUIPattern("M");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -303,7 +303,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setMultiRecord(true);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -328,7 +328,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setRequiresExplicitAccessPermission(true);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -352,7 +352,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setClientSideValidation("DemoClientSideValidation");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -376,7 +376,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setGridlegacy(true);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -400,7 +400,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setLoadFunction("DemoLoadFunction");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -425,7 +425,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setCanAddRecordsToASelector(true);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -449,7 +449,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setRefreshFunction("DemoRefreshFunction");
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -473,7 +473,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setSmfmuScan(true);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -498,7 +498,7 @@ public class ProcessTest extends OBBaseTest {
         registerModuleProcess.setModule(coreModule);
         OBDal.getInstance().save(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_MOVE_TO_MODULE_NOT_IN_DEVELOPMENT);
       }
@@ -521,7 +521,7 @@ public class ProcessTest extends OBBaseTest {
       try {
         OBDal.getInstance().remove(registerModuleProcess);
         OBDal.getInstance().flush();
-        Assert.fail(ERROR_MESSAGE);
+        fail(ERROR_MESSAGE);
       } catch (Exception e) {
         checkTriggerException(e, MESSAGE_INSERT_OR_DELETE_MODULE_NOT_IN_DEVELOPMENT);
       }

@@ -37,6 +37,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import jakarta.persistence.criteria.Order;
@@ -56,6 +58,7 @@ import org.openbravo.model.ad.ui.Window;
  * 
  * @author mtaal
  */
+@Dependent
 public class StandardWindowComponent extends BaseTemplateComponent {
   private static final Logger log = LogManager.getLogger();
   private static final String DEFAULT_TEMPLATE_ID = "ADD5EF45333C458098286D0E639B3290";
@@ -214,8 +217,8 @@ public class StandardWindowComponent extends BaseTemplateComponent {
   public static Map<String, Optional<GCTab>> getTabsGridConfig(Window window) {
     // window comes from ADCS, we need to retrieve GC from DB as it might have changed
     OBQuery<GCTab> qGCTab = OBDal.getInstance()
-        .createQuery(GCTab.class, "as g where g.tab.window = :window");
-    qGCTab.setNamedParameter("window", window);
+        .createQuery(GCTab.class, "as g where g.tab.window.id = :window");
+    qGCTab.setNamedParameter("window", window.getId());
     Map<String, List<GCTab>> gcsByTab = qGCTab.stream() //
         .collect(groupingBy(gcTab -> gcTab.getTab().getId()));
 

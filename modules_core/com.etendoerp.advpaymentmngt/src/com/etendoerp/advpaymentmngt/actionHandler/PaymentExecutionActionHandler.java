@@ -1,20 +1,27 @@
 package com.etendoerp.advpaymentmngt.actionHandler;
 
+import java.util.Map;
+import java.util.Objects;
+
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.client.application.process.BaseProcessActionHandler;
-import org.apache.log4j.Logger;
 import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
-import org.openbravo.model.financialmgmt.payment.*;
+import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
+import org.openbravo.model.financialmgmt.payment.FIN_Payment;
+import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
+import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
+import org.openbravo.model.financialmgmt.payment.PaymentExecutionProcess;
 
-import java.util.Map;
-import java.util.Objects;
+import jakarta.enterprise.context.Dependent;
 
+@Dependent
 public class PaymentExecutionActionHandler extends BaseProcessActionHandler {
 
   private static final Logger log = Logger.getLogger(PaymentExecutionActionHandler.class);

@@ -27,14 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.servlet.ServletException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
@@ -65,6 +62,8 @@ import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.service.db.DalConnectionProvider;
+
+import jakarta.servlet.ServletException;
 
 public class CostingUtils {
   private static Logger log4j = LogManager.getLogger();
@@ -400,7 +399,7 @@ public class CostingUtils {
     //@formatter:off
     hql +=
             " where trx.product.id = :productId" +
-            "   and trx.transactionProcessDate <= :dateTo";
+            "   and trx.transactionProcessDate <= cast(:dateTo as timestamp)";
     //@formatter:on
     if (existsCumulatedStock) {
       //@formatter:off
@@ -411,15 +410,15 @@ public class CostingUtils {
       if (costingRule.isBackdatedTransactionsFixed()) {
         //@formatter:off
         hql +=
-            "   and  trx.transactionProcessDate >= :fixbdt" +
-            "   and (trx.movementDate > :mvtdate" +
-            "   or (trx.movementDate = :mvtdate";
+            "   and  trx.transactionProcessDate >= cast(:fixbdt as timestamp)" +
+            "   and (trx.movementDate > cast(:mvtdate as timestamp)" +
+            "   or (trx.movementDate = cast(:mvtdate as timestamp)";
         //@formatter:on
       }
       //@formatter:off
       hql +=
-            "   and (trx.transactionProcessDate > :dateFrom" +
-            "   or (trx.transactionProcessDate = :dateFrom";
+            "   and (trx.transactionProcessDate > cast(:dateFrom as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:dateFrom as timestamp)";
       //@formatter:on
 
       // If the costing Transaction is an M- exclude the M+ Transactions with same movementDate and
@@ -567,7 +566,7 @@ public class CostingUtils {
     //@formatter:off
     hql +=
             " where trx.product.id = :productId" +
-            "   and trx.transactionProcessDate <= :dateTo";
+            "   and trx.transactionProcessDate <= cast(:dateTo as timestamp)";
     //@formatter:on
 
     if (existsCumulatedValuation) {
@@ -579,15 +578,15 @@ public class CostingUtils {
       if (costingRule.isBackdatedTransactionsFixed()) {
         //@formatter:off
         hql +=
-            "   and  trx.transactionProcessDate >= :fixbdt" +
-            "   and (trx.movementDate > :mvtdate" +
-            "   or (trx.movementDate = :mvtdate";
+            "   and  trx.transactionProcessDate >= cast(:fixbdt as timestamp)" +
+            "   and (trx.movementDate > cast(:mvtdate as timestamp)" +
+            "   or (trx.movementDate = cast(:mvtdate as timestamp)";
         //@formatter:on
       }
       //@formatter:off
       hql +=
-            "   and (trx.transactionProcessDate > :dateFrom" +
-            "   or (trx.transactionProcessDate = :dateFrom";
+            "   and (trx.transactionProcessDate > cast(:dateFrom as timestamp)" +
+            "   or (trx.transactionProcessDate = cast(:dateFrom as timestamp)";
       //@formatter:on
       // If the costing Transaction is an M- exclude the M+ Transactions with same movementDate and
       // TrxProcessDate due to how data is going to be ordered in further queries using the priority
@@ -759,9 +758,9 @@ public class CostingUtils {
     final String hql =
                   "   organization.id = :organizationId" +
                   "   and (startingDate is null " +
-                  "   or startingDate <= :startdate)" +
+                  "   or startingDate <= cast(:startdate as timestamp))" +
                   "   and (endingDate is null" +
-                  "   or endingDate >= :enddate )" +
+                  "   or endingDate >= cast(:enddate as timestamp) )" +
                   "   and validated = true" +
                   " order by case when startingDate is null " +
                   "          then 1 " +

@@ -20,11 +20,12 @@ package org.openbravo.erpCommon.businessUtility;
 
 import java.util.Iterator;
 
+import org.openbravo.model.common.order.Order;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-
-import org.openbravo.model.common.order.Order;
 
 /**
  * Public class implemented to execute all hooks of type CloneOrderHook. This class is called from
@@ -33,6 +34,7 @@ import org.openbravo.model.common.order.Order;
  * @author Andy Armaignac Collazo
  *
  */
+@Dependent
 public class CloneOrderHookCaller {
 
   @Inject

@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 
+@RequestScoped
 public class CalloutHttpServletResponse extends HttpServletResponseWrapper {
   StringWriter sWriter = new StringWriter();
   PrintWriter writer = new PrintWriter(sWriter);

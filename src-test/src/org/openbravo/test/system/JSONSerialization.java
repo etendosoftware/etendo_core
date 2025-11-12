@@ -19,8 +19,9 @@
 package org.openbravo.test.system;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +30,7 @@ import java.util.List;
 
 import jakarta.servlet.ServletException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
@@ -148,7 +149,7 @@ public class JSONSerialization extends OBBaseTest {
    * 
    * @throws ServletException
    */
-  @Test(expected = ParameterSerializationException.class)
+  @Test
   public void exceptionIsThrownWhenSerializationFails() throws ServletException {
     ProcessBundle pb = new ProcessBundle(AD_PROCESS_ID, getVars())
         .init(new DalConnectionProvider(false));
@@ -157,7 +158,7 @@ public class JSONSerialization extends OBBaseTest {
     parameters.put("unsupportedParam", Collections.emptyList());
     pb.setParams(parameters);
 
-    pb.getParamsDeflated(); // should throw ParameterSerializationException
+    assertThrows(ParameterSerializationException.class, pb::getParamsDeflated);
 
   }
 
@@ -166,12 +167,14 @@ public class JSONSerialization extends OBBaseTest {
    * 
    * @throws ServletException
    */
-  @Test(expected = ParameterSerializationException.class)
+  @Test
   public void exceptionIsThrownWhenDeserializationFails() throws ServletException {
     String processRequestId = null;
     try {
       processRequestId = createProcessRequest(PB_PARAMS_WRONG);
-      ProcessBundle.request(processRequestId, getVars(), new DalConnectionProvider(false));
+      String requestId = processRequestId;
+      assertThrows(ParameterSerializationException.class,
+          () -> ProcessBundle.request(requestId, getVars(), new DalConnectionProvider(false)));
     } finally {
       removeProcessRequest(processRequestId);
     }

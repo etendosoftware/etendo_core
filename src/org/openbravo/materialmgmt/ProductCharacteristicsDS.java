@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -74,6 +76,7 @@ import org.openbravo.userinterface.selector.SelectorField;
  * @author alostale
  * 
  */
+@Dependent
 public class ProductCharacteristicsDS extends DefaultDataSourceService {
   static final Logger log = LogManager.getLogger();
 

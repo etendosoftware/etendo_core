@@ -1,11 +1,11 @@
 package com.etendoerp.legacy.eventSequence;
 
+import jakarta.enterprise.context.Dependent;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.client.application.eventSequence.DocumentNoHandlerSequenceActionInterface;
 import org.openbravo.client.kernel.event.EntityPersistenceEvent;
-import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.model.common.order.Order;
 
 import java.util.ArrayList;
@@ -17,6 +17,7 @@ import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.service.db.DalConnectionProvider;
 
+@Dependent
 public class DocumentNoHandlerLegacy implements DocumentNoHandlerSequenceActionInterface {
     private static Entity[] entities = null;
     private static Property[] documentNoProperties = null;

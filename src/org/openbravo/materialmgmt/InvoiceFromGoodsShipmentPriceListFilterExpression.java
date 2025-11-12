@@ -24,11 +24,14 @@ import org.openbravo.common.actionhandler.InvoiceFromShipmentActionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Class to filter the values in priceLists parameter in {@link InvoiceFromShipmentActionHandler}.
  * Considers the price list used by the orders linked to shipment lines.
  *
  */
+@Dependent
 public class InvoiceFromGoodsShipmentPriceListFilterExpression implements FilterExpression {
 
   @Override

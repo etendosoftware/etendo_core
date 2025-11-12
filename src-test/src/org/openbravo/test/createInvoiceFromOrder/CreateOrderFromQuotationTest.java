@@ -1,7 +1,7 @@
 package org.openbravo.test.createInvoiceFromOrder;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTestUtils.createOrder;
 import static org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTestUtils.createOrderLine;
 
@@ -9,9 +9,9 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
@@ -37,7 +37,7 @@ import org.openbravo.test.base.TestConstants;
 public class CreateOrderFromQuotationTest extends WeldBaseTest {
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
@@ -62,7 +62,7 @@ public class CreateOrderFromQuotationTest extends WeldBaseTest {
     }
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     OBDal.getInstance().rollbackAndClose();
   }

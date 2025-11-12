@@ -2,19 +2,18 @@ package org.openbravo.test.stockReservation;
 
 import static org.openbravo.materialmgmt.ReservationUtils.processReserve;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createInventoryCount;
-import static org.openbravo.test.stockReservation.StockReservationTestUtils.stockReservationPreference;
 import static org.openbravo.test.stockReservation.StockReservationTestUtils.createOrder;
+import static org.openbravo.test.stockReservation.StockReservationTestUtils.stockReservationPreference;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.Restrictions;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -45,7 +44,7 @@ public class StockReservationTest extends WeldBaseTest {
    *     if an error occurs during setup
    */
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     Utils.initializeTestContext();
@@ -87,7 +86,7 @@ public class StockReservationTest extends WeldBaseTest {
       StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN,
           BigDecimal.valueOf(1000));
     } catch (Exception e) {
-      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
+      fail(StockReservationTestUtils.ERROR + e.getMessage());
     } finally {
       cleanUpData(reservation, salesOrder, null, null);
     }
@@ -134,7 +133,7 @@ public class StockReservationTest extends WeldBaseTest {
       StockReservationTestUtils.verifyAutomaticReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RS,
           BigDecimal.valueOf(1000));
     } catch (Exception e) {
-      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
+      fail(StockReservationTestUtils.ERROR + e.getMessage());
     } finally {
       cleanUpData(reservation, salesOrder, warehouseRn, warehouseRs);
     }
@@ -175,7 +174,7 @@ public class StockReservationTest extends WeldBaseTest {
       StockReservationTestUtils.verifyManualReservationDetails(reservation, StockReservationTestUtils.LOCATOR_RN,
           BigDecimal.valueOf(1000));
     } catch (Exception e) {
-      Assert.fail(StockReservationTestUtils.ERROR + e.getMessage());
+      fail(StockReservationTestUtils.ERROR + e.getMessage());
     } finally {
       cleanUpData(reservation, salesOrder, null, null);
     }
@@ -184,7 +183,7 @@ public class StockReservationTest extends WeldBaseTest {
   /**
    * Cleans up the test environment by rolling back the transaction and closing the session.
    */
-  @After
+  @AfterEach
   public void cleanUp() {
     Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).addEqual(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY).addEqual(Preference.PROPERTY_SELECTED, true).uniqueResult();
     OBDal.getInstance().remove(pref);

@@ -1,6 +1,6 @@
 package org.openbravo.scheduling;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -13,9 +13,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
@@ -70,7 +70,7 @@ public class GroupInfoTest {
    * @throws Exception
    *     if there's an error during mock initialization
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     MockitoAnnotations.openMocks(this);
 
@@ -107,7 +107,7 @@ public class GroupInfoTest {
    * Cleans up resources after each test.
    * Closes static mocks to prevent memory leaks.
    */
-  @After
+  @AfterEach
   public void tearDown() {
     if (mockedOBMessageUtils != null) {
       mockedOBMessageUtils.close();

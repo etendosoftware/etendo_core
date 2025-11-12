@@ -18,10 +18,13 @@
  */
 package org.openbravo.client.application;
 
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * 
  * @author iperdomo
  */
+@RequestScoped
 public class OBBindingsConstants {
 
   // Request parameter names

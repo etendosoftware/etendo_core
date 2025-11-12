@@ -1,20 +1,23 @@
 plugins {
-    id 'java'
-    id 'maven-publish'
-    id "org.sonarqube" version "5.0.0.4638"
-    id 'war'
-    id 'idea'
-    id 'groovy'
-    id 'jacoco'
-    id 'com.etendoerp.gradleplugin' version '3.0.0-SNAPSHOT'
-    id 'com.etendoerp.testing.gradleplugin' version '3.0.0-SNAPSHOT'
+  id 'java'
+  id 'maven-publish'
+  id "org.sonarqube" version "5.0.0.4638"
+  id 'war'
+  id 'idea'
+  id 'groovy'
+  id 'jacoco'
+  id 'com.etendoerp.gradleplugin' version '3.0.0-SNAPSHOT'
+  id 'com.etendoerp.testing.gradleplugin' version '3.0.0-SNAPSHOT'
 }
 compileJava.options.encoding = "UTF-8"
 apply from: "artifacts.list.COMPILATION.gradle"
 
 repositories {
-    gradlePluginPortal()
-    mavenCentral()
+  gradlePluginPortal()
+  mavenCentral()
+  maven {
+    url "https://repository.jboss.org/nexus/content/repositories/public/"
+  }
 }
 
 final String CURRENT_VERSION = "25.3.0"
@@ -27,23 +30,23 @@ final String PROD_URL = uri("https://maven.pkg.github.com/etendosoftware/etendo_
 group = 'com.etendoerp.platform'
 def versionTs = 0;
 if (file('version.properties').exists()) {
-    def props = new Properties()
-    props.load(new FileInputStream(file('version.properties')))
-    if (props != null && props.containsKey('version.ts') && props.containsKey('version.ts')) {
-        versionTs = props['version.ts']
-    }
+  def props = new Properties()
+  props.load(new FileInputStream(file('version.properties')))
+  if (props != null && props.containsKey('version.ts') && props.containsKey('version.ts')) {
+    versionTs = props['version.ts']
+  }
 }
 
 static def getVersionSuffix(versionTs) {
-    def branch = ""
-    def proc = "git rev-parse --abbrev-ref HEAD".execute()
-    proc.in.eachLine { line -> branch = line }
-    proc.err.eachLine { line -> println line }
-    proc.waitFor()
-    if ("main" != branch && !branch.contains("release")) {
-        return '.' + versionTs + "-SNAPSHOT"
-    }
-    return ""
+  def branch = ""
+  def proc = "git rev-parse --abbrev-ref HEAD".execute()
+  proc.in.eachLine { line -> branch = line }
+  proc.err.eachLine { line -> println line }
+  proc.waitFor()
+  if ("main" != branch && !branch.contains("release")) {
+    return '.' + versionTs + "-SNAPSHOT"
+  }
+  return ""
 }
 
 version = CURRENT_VERSION + getVersionSuffix(versionTs)
@@ -52,171 +55,172 @@ def artifactID = 'etendo-core'
 def javaPackage = group + '.' + artifactID
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
-    archiveBaseName.set("${javaPackage}")
-    zip64 = true
+  archiveBaseName.set("${javaPackage}")
+  zip64 = true
 }
 
 def whiteSyncCoreList = [
-        'legal/**',
-        'lib/**',
-        'modules_core/**',
-        'referencedata/**',
-        'src/**',
-        'src-db/**',
-        'src-test/**',
-        'src-core/**',
-        'src-trl/**',
-        'src-util/**',
-        'src-wad/**',
-        'web/**',
-        '*.template',
-        'config/*.template',
-        'gradlew',
-        'gradle.bat',
-        'build.xml',
-        'artifacts.list.COMPILATION.gradle'
+    'legal/**',
+    'lib/**',
+    'modules_core/**',
+    'referencedata/**',
+    'src/**',
+    'src-db/**',
+    'src-test/**',
+    'src-core/**',
+    'src-trl/**',
+    'src-util/**',
+    'src-wad/**',
+    'web/**',
+    '*.template',
+    'config/*.template',
+    'gradlew',
+    'gradle.bat',
+    'build.xml',
+    'artifacts.list.COMPILATION.gradle'
 ]
 
 publishing {
-    publications {
-        core(MavenPublication) {
-            artifactId = artifactID
-            groupId = group
-            version = project.version
-        }
+  publications {
+    core(MavenPublication) {
+      artifactId = artifactID
+      groupId = group
+      version = project.version
     }
+  }
 
-    repositories {
-        maven {
-            url = ''
-        }
+  repositories {
+    maven {
+      url = ''
     }
+  }
 }
 
 jacoco {
-    toolVersion = "0.8.10"
+  toolVersion = "0.8.10"
 }
 
 task jacocoRootReport(type: JacocoReport) {
-    group = "Verification"
-    description = "Generates a JaCoCo report including core and modules"
+  group = "Verification"
+  description = "Generates a JaCoCo report including core and modules"
 
-    outputs.upToDateWhen { false }
+  outputs.upToDateWhen { false }
 
-    sourceDirectories.setFrom(files([
-        "src", "modules_core", "modules"
-    ].collect { fileTree(dir: it, include: "**/*.java") }))
-    classDirectories.setFrom(fileTree(dir: "$buildDir/classes", include: "**/*.class"))
+  sourceDirectories.setFrom(files([
+      "src", "modules_core", "modules"
+  ].collect { fileTree(dir: it, include: "**/*.java") }))
+  classDirectories.setFrom(fileTree(dir: "$buildDir/classes", include: "**/*.class"))
 
-    executionData.setFrom(fileTree(dir: "$buildDir/jacoco", include: "**/*.exec"))
+  executionData.setFrom(fileTree(dir: "$buildDir/jacoco", include: "**/*.exec"))
 
-    reports {
-        xml.required = true
-        html.required = true
-    }
+  reports {
+    xml.required = true
+    html.required = true
+  }
 }
 
 jacocoTestReport {
-    executionData fileTree(dir: "$buildDir/jacoco", include: "**/*.exec")
-    reports {
-        xml.required = true
-        html.required = true
-    }
+  executionData fileTree(dir: "$buildDir/jacoco", include: "**/*.exec")
+  reports {
+    xml.required = true
+    html.required = true
+  }
 }
 
 task exportProjectVersion doLast {
-    ant.propertyfile(file: "version.properties") {
-        entry(key: "version.tag", value: project.version)
-    }
+  ant.propertyfile(file: "version.properties") {
+    entry(key: "version.tag", value: project.version)
+  }
 }
 
 /**
  * Configuration for running static code analysis with SonarQube and generating code quality reports.
  */
 sonar {
-    properties {
-        property "sonar.host.url", "$sonarHostUrl"
-        property "sonar.token", "$sonarToken"
-        property "sonar.projectBaseDir", "$sonarProjectBaseDir"
-        property "sonar.projectName", "$sonarProjectName"
-        property "sonar.projectKey", "$sonarProjectKey"
-        property "sonar.sourceEncoding", "UTF-8"
-        property "sonar.sources", "$sonarSources"
-        property "sonar.tests", "src-test/src"
-        property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.coverage.jacoco.xmlReportPaths", "$buildDir"+"/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
-        property "sonar.projectVersion", "$sonarVersion"
-        property "sonar.branch.name", "$sonarBranchName"
-        property "sonar.scm.disabled", "true"
-        property "sonar.exclusions", "src-gen"
-    }
+  properties {
+    property "sonar.host.url", "$sonarHostUrl"
+    property "sonar.token", "$sonarToken"
+    property "sonar.projectBaseDir", "$sonarProjectBaseDir"
+    property "sonar.projectName", "$sonarProjectName"
+    property "sonar.projectKey", "$sonarProjectKey"
+    property "sonar.sourceEncoding", "UTF-8"
+    property "sonar.sources", "$sonarSources"
+    property "sonar.tests", "src-test/src"
+    property "sonar.java.coveragePlugin", "jacoco"
+    property "sonar.coverage.jacoco.xmlReportPaths", "$buildDir" + "/reports/jacoco/jacocoRootReport/jacocoRootReport.xml"
+    property "sonar.projectVersion", "$sonarVersion"
+    property "sonar.branch.name", "$sonarBranchName"
+    property "sonar.scm.disabled", "true"
+    property "sonar.exclusions", "src-gen"
+  }
 }
 
 task upgradeCoreVersion {
-    final String RELEASE = 'release'
-    final String HOTFIX = 'hotfix'
-    doLast {
-        def versionType = project.hasProperty('type') ? project.getProperty('type') : RELEASE
-        def nextVersion
-        def nextRelease = NEXT_RELEASE
-        def nextHotfix = NEXT_HOTFIX
+  final String RELEASE = 'release'
+  final String HOTFIX = 'hotfix'
+  doLast {
+    def versionType = project.hasProperty('type') ? project.getProperty('type') : RELEASE
+    def nextVersion
+    def nextRelease = NEXT_RELEASE
+    def nextHotfix = NEXT_HOTFIX
 
-        if (versionType == RELEASE) {
-            nextVersion = NEXT_RELEASE
-        } else if (versionType == HOTFIX) {
-            nextVersion = NEXT_HOTFIX
-        } else {
-            throw new GradleException("The parameter value '${versionType}' is not valid, the options should be 'release' or 'hotfix'")
-        }
-
-        def versionParts = nextVersion.trim().split("\\.")
-        if (versionParts.length != 3) {
-            throw new GradleException("The version must be in the format major.minor.patch")
-        }
-
-        int major = versionParts[0].toInteger()
-        int minor = versionParts[1].toInteger()
-        int patch = versionParts[2].toInteger()
-        def files = ['src-db/database/sourcedata/AD_MODULE.xml', 'modules_core/org.openbravo.v3/src-db/database/sourcedata/AD_MODULE.xml']
-
-        //Update versions in AD_MODULE.xml files
-        for (filePath in files) {
-            def adModuleContent = file(filePath).text
-            if (!adModuleContent.contains("<VERSION><![CDATA[") && !adModuleContent.contains("<VERSION_LABEL><![CDATA[") && !adModuleContent.contains("<UPDATEINFO><![CDATA[")) {
-                throw new GradleException(" The format of the ${filePath} file was changed, and it will not be possible to update the versions automatically")
-            }
-            adModuleContent = adModuleContent.replaceAll(/<VERSION><!\[CDATA\[\d+.\d+.\d+/, "<VERSION><![CDATA[${major}.${minor}.${patch}")
-            adModuleContent = adModuleContent.replaceAll(/<VERSION_LABEL><!\[CDATA\[\d+Q\d+.\d+/, "<VERSION_LABEL><![CDATA[${major}Q${minor}.${patch}")
-            adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/github.com\/etendosoftware\/etendo_core\/releases\/tag\/\d+\.\d+\.\d+/, "<UPDATEINFO><![CDATA[https://github.com/etendosoftware/etendo_core/releases/tag/${major}.${minor}.${patch}")
-            file(filePath).write(adModuleContent)
-        }
-
-        // Recalculate the constants CURRENT_VERSION, NEXT_RELEASE and NEXT_HOTFIX
-        if (versionType == RELEASE) {
-            nextHotfix = "${major}.${minor}.1"
-            if (minor == 4) {
-                major++
-                minor = 1
-            } else {
-                minor++
-            }
-            nextRelease = "${major}.${minor}.0"
-        } else if (versionType == HOTFIX) {
-            patch++
-            nextHotfix = "${major}.${minor}.${patch}"
-        }
-
-        //Rewrite build.gradle file with new values
-        def buildGradleContent = file("build.gradle").text
-        buildGradleContent = buildGradleContent.replace("CURRENT_VERSION = \"${CURRENT_VERSION}\"", "CURRENT_VERSION = \"${nextVersion}\"")
-        buildGradleContent = buildGradleContent.replace("NEXT_RELEASE = \"${NEXT_RELEASE}\"", "NEXT_RELEASE = \"${nextRelease}\"")
-        buildGradleContent = buildGradleContent.replace("NEXT_HOTFIX = \"${NEXT_HOTFIX}\"", "NEXT_HOTFIX = \"${nextHotfix}\"")
-        file('build.gradle').write(buildGradleContent)
+    if (versionType == RELEASE) {
+      nextVersion = NEXT_RELEASE
+    } else if (versionType == HOTFIX) {
+      nextVersion = NEXT_HOTFIX
+    } else {
+      throw new GradleException("The parameter value '${versionType}' is not valid, the options should be 'release' or 'hotfix'")
     }
+
+    def versionParts = nextVersion.trim().split("\\.")
+    if (versionParts.length != 3) {
+      throw new GradleException("The version must be in the format major.minor.patch")
+    }
+
+    int major = versionParts[0].toInteger()
+    int minor = versionParts[1].toInteger()
+    int patch = versionParts[2].toInteger()
+    def files = ['src-db/database/sourcedata/AD_MODULE.xml', 'modules_core/org.openbravo.v3/src-db/database/sourcedata/AD_MODULE.xml']
+
+    //Update versions in AD_MODULE.xml files
+    for (filePath in files) {
+      def adModuleContent = file(filePath).text
+      if (!adModuleContent.contains("<VERSION><![CDATA[") && !adModuleContent.contains("<VERSION_LABEL><![CDATA[") && !adModuleContent.contains("<UPDATEINFO><![CDATA[")) {
+        throw new GradleException(" The format of the ${filePath} file was changed, and it will not be possible to update the versions automatically")
+      }
+      adModuleContent = adModuleContent.replaceAll(/<VERSION><!\[CDATA\[\d+.\d+.\d+/, "<VERSION><![CDATA[${major}.${minor}.${patch}")
+      adModuleContent = adModuleContent.replaceAll(/<VERSION_LABEL><!\[CDATA\[\d+Q\d+.\d+/, "<VERSION_LABEL><![CDATA[${major}Q${minor}.${patch}")
+      adModuleContent = adModuleContent.replaceAll(/<UPDATEINFO><!\[CDATA\[https:\/\/github.com\/etendosoftware\/etendo_core\/releases\/tag\/\d+\.\d+\.\d+/, "<UPDATEINFO><![CDATA[https://github.com/etendosoftware/etendo_core/releases/tag/${major}.${minor}.${patch}")
+      file(filePath).write(adModuleContent)
+    }
+
+    // Recalculate the constants CURRENT_VERSION, NEXT_RELEASE and NEXT_HOTFIX
+    if (versionType == RELEASE) {
+      nextHotfix = "${major}.${minor}.1"
+      if (minor == 4) {
+        major++
+        minor = 1
+      } else {
+        minor++
+      }
+      nextRelease = "${major}.${minor}.0"
+    } else if (versionType == HOTFIX) {
+      patch++
+      nextHotfix = "${major}.${minor}.${patch}"
+    }
+
+    //Rewrite build.gradle file with new values
+    def buildGradleContent = file("build.gradle").text
+    buildGradleContent = buildGradleContent.replace("CURRENT_VERSION = \"${CURRENT_VERSION}\"", "CURRENT_VERSION = \"${nextVersion}\"")
+    buildGradleContent = buildGradleContent.replace("NEXT_RELEASE = \"${NEXT_RELEASE}\"", "NEXT_RELEASE = \"${nextRelease}\"")
+    buildGradleContent = buildGradleContent.replace("NEXT_HOTFIX = \"${NEXT_HOTFIX}\"", "NEXT_HOTFIX = \"${nextHotfix}\"")
+    file('build.gradle').write(buildGradleContent)
+  }
 }
 
 
@@ -224,128 +228,127 @@ task upgradeCoreVersion {
  * This task makes zip file, and configure publication parameters.
  */
 task assembleArtifact(type: Zip) {
-    System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
-    archiveFileName.set(artifactID + "-" + project.version + '.zip')
-    destinationDirectory.set(file("$buildDir/libs/"))
-    include(whiteSyncCoreList)
-    exclude("src-test/build/**")
-    from "."
-    into "."
+  System.setProperty("org.gradle.internal.publish.checksums.insecure", "true")
+  archiveFileName.set(artifactID + "-" + project.version + '.zip')
+  destinationDirectory.set(file("$buildDir/libs/"))
+  include(whiteSyncCoreList)
+  exclude("src-test/build/**")
+  from "."
+  into "."
 }
 
-task configPublishZIP(){
-    doLast {
-        def publishTask = tasks.findByName("publishCorePublicationToMavenRepository") as AbstractPublishToMaven
-        publishTask.publication.artifact( file("$buildDir/libs/" + "$artifactID" + "-" + "$version"+ ".zip"))
-        publishTask.publication.version(project.version +'-ZIP')
-        if(project.version.endsWith('-SNAPSHOT')) {
-            publishing.repositories.maven.url = DEV_URL
-            publishing.repositories.maven.credentials {
-                username = "$nexusUser"
-                password = "$nexusPassword"
-            }
-        }
-        else {
-            publishing.repositories.maven.url = PROD_URL
-            publishing.repositories.maven.credentials {
-                username = "$githubUser"
-                password = "$githubToken"
-            }
-        }
+task configPublishZIP() {
+  doLast {
+    def publishTask = tasks.findByName("publishCorePublicationToMavenRepository") as AbstractPublishToMaven
+    publishTask.publication.artifact(file("$buildDir/libs/" + "$artifactID" + "-" + "$version" + ".zip"))
+    publishTask.publication.version(project.version + '-ZIP')
+    if (project.version.endsWith('-SNAPSHOT')) {
+      publishing.repositories.maven.url = DEV_URL
+      publishing.repositories.maven.credentials {
+        username = "$nexusUser"
+        password = "$nexusPassword"
+      }
+    } else {
+      publishing.repositories.maven.url = PROD_URL
+      publishing.repositories.maven.credentials {
+        username = "$githubUser"
+        password = "$githubToken"
+      }
     }
+  }
 }
 
 Node generateCoreDependenciesNode() {
-    List<String> dependenciesCompilation = project.findProperty("dependenciesListCOMPILATION") as List<String>
-    List<String> dependenciesTest = project.findProperty("dependenciesListTEST") as List<String>
+  List<String> dependenciesCompilation = project.findProperty("dependenciesListCOMPILATION") as List<String>
+  List<String> dependenciesTest = project.findProperty("dependenciesListTEST") as List<String>
 
-    def dependenciesNode = new Node(null, "dependencies")
+  def dependenciesNode = new Node(null, "dependencies")
 
-    if (dependenciesCompilation) {
-        loadCoreDependenciesNode(dependenciesCompilation, dependenciesNode)
-    }
+  if (dependenciesCompilation) {
+    loadCoreDependenciesNode(dependenciesCompilation, dependenciesNode)
+  }
 
-    if (dependenciesTest) {
-        loadCoreDependenciesNode(dependenciesTest, dependenciesNode, "test")
-    }
+  if (dependenciesTest) {
+    loadCoreDependenciesNode(dependenciesTest, dependenciesNode, "test")
+  }
 
-    return dependenciesNode
+  return dependenciesNode
 }
 
 static void loadCoreDependenciesNode(List<String> dependencies, Node dependenciesNode, String scope = null) {
-    for (String dependency : dependencies) {
-        def splitId = dependency.split(":")
+  for (String dependency : dependencies) {
+    def splitId = dependency.split(":")
 
-        def dependencyNode = dependenciesNode.appendNode("dependency")
-        dependencyNode.appendNode("groupId", splitId[0])
-        dependencyNode.appendNode("artifactId", splitId[1])
-        dependencyNode.appendNode("version", splitId[2])
+    def dependencyNode = dependenciesNode.appendNode("dependency")
+    dependencyNode.appendNode("groupId", splitId[0])
+    dependencyNode.appendNode("artifactId", splitId[1])
+    dependencyNode.appendNode("version", splitId[2])
 
-        if (scope) {
-            dependencyNode.appendNode("scope", scope)
-        }
-
-        // Exclude transitive dependencies
-        dependencyNode.append(generateExclusionNode())
+    if (scope) {
+      dependencyNode.appendNode("scope", scope)
     }
+
+    // Exclude transitive dependencies
+    dependencyNode.append(generateExclusionNode())
+  }
 }
 
 static Node generateExclusionNode() {
-    def exclusionsNode = new Node(null, "exclusions")
-    def exclusionNode = exclusionsNode.appendNode("exclusion")
+  def exclusionsNode = new Node(null, "exclusions")
+  def exclusionNode = exclusionsNode.appendNode("exclusion")
 
-    exclusionNode.appendNode("groupId", "*")
-    exclusionNode.appendNode("artifactId", "*")
+  exclusionNode.appendNode("groupId", "*")
+  exclusionNode.appendNode("artifactId", "*")
 
-    return exclusionsNode
+  return exclusionsNode
 }
 
 
-task configPublishJAR(){
-    dependsOn(assembleArtifact)
-    doLast {
-        def publishTask = tasks.findByName("publishCorePublicationToMavenRepository") as AbstractPublishToMaven
-        publishTask.publication.artifact(file("$buildDir/libs/$artifactID-$version"+".zip"))
-        publishTask.publication.artifact jar
-        publishTask.publication.artifact sourcesJar
+task configPublishJAR() {
+  dependsOn(assembleArtifact)
+  doLast {
+    def publishTask = tasks.findByName("publishCorePublicationToMavenRepository") as AbstractPublishToMaven
+    publishTask.publication.artifact(file("$buildDir/libs/$artifactID-$version" + ".zip"))
+    publishTask.publication.artifact jar
+    publishTask.publication.artifact sourcesJar
 
-        // Generate the dependencies node.
-        List<String> dependenciesCompilation = project.findProperty("dependenciesListCOMPILATION") as List<String>
-        List<String> dependenciesTest = project.findProperty("dependenciesListTEST") as List<String>
-        if (dependenciesCompilation || dependenciesTest) {
-            Node dependenciesNode = generateCoreDependenciesNode()
-            publishTask.publication.pom.withXml {
-                it.asNode().append(dependenciesNode)
-            }
-        }
-
-        if(project.version.endsWith('-SNAPSHOT')) {
-            publishing.repositories.maven.url = DEV_URL
-            publishing.repositories.maven.credentials {
-                username = "$nexusUser"
-                password = "$nexusPassword"
-            }
-        } else {
-            publishing.repositories.maven.url = PROD_URL
-            publishing.repositories.maven.credentials {
-                username = "$githubUser"
-                password = "$githubToken"
-            }
-        }
+    // Generate the dependencies node.
+    List<String> dependenciesCompilation = project.findProperty("dependenciesListCOMPILATION") as List<String>
+    List<String> dependenciesTest = project.findProperty("dependenciesListTEST") as List<String>
+    if (dependenciesCompilation || dependenciesTest) {
+      Node dependenciesNode = generateCoreDependenciesNode()
+      publishTask.publication.pom.withXml {
+        it.asNode().append(dependenciesNode)
+      }
     }
+
+    if (project.version.endsWith('-SNAPSHOT')) {
+      publishing.repositories.maven.url = DEV_URL
+      publishing.repositories.maven.credentials {
+        username = "$nexusUser"
+        password = "$nexusPassword"
+      }
+    } else {
+      publishing.repositories.maven.url = PROD_URL
+      publishing.repositories.maven.credentials {
+        username = "$githubUser"
+        password = "$githubToken"
+      }
+    }
+  }
 }
 
 task publishCoreJar(dependsOn: [sourcesJar, jar, configPublishJAR, publishCorePublicationToMavenRepository]) {
-    mustRunAfter sourcesJar, jar
+  mustRunAfter sourcesJar, jar
 }
 
 //Deprecated
-task publishCoreZip(dependsOn: [assembleArtifact,configPublishZIP, publishCorePublicationToMavenRepository]) { }
+task publishCoreZip(dependsOn: [assembleArtifact, configPublishZIP, publishCorePublicationToMavenRepository]) {}
 
 idea {
-    module {
-        excludeDirs += [file('${env.CATALINA_HOME}'), file('.githooks'), file('.idea'), file('.settings'), file('.build.apply')]
-    }
+  module {
+    excludeDirs += [file('${env.CATALINA_HOME}'), file('.githooks'), file('.idea'), file('.settings'), file('.build.apply')]
+  }
 }
 
 task call_sass(type: Exec) {}
@@ -355,44 +358,51 @@ task deploySkin(dependsOn: ["cssCompile", "deploy.skin"]) doLast {
 }
 
 tasks.named('publishCorePublicationToMavenRepository') {
-    dependsOn tasks.named('assembleArtifact')
-    dependsOn tasks.named('jar')
-    dependsOn tasks.named('sourcesJar')
+  dependsOn tasks.named('assembleArtifact')
+  dependsOn tasks.named('jar')
+  dependsOn tasks.named('sourcesJar')
 }
 
 tasks.named('jar') {
-    dependsOn tasks.named('compileJavaDummy')
+  dependsOn tasks.named('compileJavaDummy')
 }
 
 def loadedDeps = ext.dependenciesListCOMPILATION
 
 dependencies {
-    // --- Logging ---
-    implementation enforcedPlatform("org.apache.logging.log4j:log4j-bom:2.22.1")
-    implementation 'org.apache.logging.log4j:log4j-api'
-    implementation 'org.apache.logging.log4j:log4j-core'
-    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
-    implementation 'org.apache.logging.log4j:log4j-web'
-    implementation 'org.apache.logging.log4j:log4j-1.2-api'
+  if (loadedDeps != null) {
+    loadedDeps.each { String dependency ->
+      implementation(dependency) {
+        exclude group: 'org.jboss.weld'
+        exclude group: 'org.jboss.weld.module'
+        exclude group: 'org.jboss.weld.environment'
+      }
+    }
+  } else {
+    throw new GradleException("Does not have dependencies to load.")
+  }
 }
 
 dependencies {
-    if (loadedDeps != null) {
-        loadedDeps.each { String dependency ->
-            implementation(dependency) {
-                exclude group: 'org.jboss.weld'
-                exclude group: 'org.jboss.weld.module'
-                exclude group: 'org.jboss.weld.environment'
-            }
-        }
-    } else {
-        throw new GradleException("Does not have dependencies to load.")
-    }
+  implementation("org.redisson:redisson-tomcat-11:3.52.0") {
+    exclude group: 'javax.cache'
+  }
+  //testImplementation 'org.jboss.weld:weld-junit5:3.0.0.Final'
+  testImplementation 'org.jboss.weld.se:weld-se-core:5.1.2.Final'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+  testImplementation 'junit:junit:4.13.2'
+  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.10.2'
+  //testImplementation 'org.jboss.weld:weld-junit5:5.0.3.Final'
+  testImplementation("org.jboss.arquillian.junit5:arquillian-junit5-container:1.10.0.Final")
+  testImplementation("org.jboss.arquillian.container:arquillian-weld-embedded:3.0.2.Final")
 }
 
-configurations.configureEach {
-    if (name != "antClasspath") { // evita mutar configuraciones internas
-        exclude group: 'xpp3'
-        exclude group: 'org.gjt.xpp'
-    }
+test {
+  useJUnitPlatform()
+  testLogging {
+    events "passed", "skipped", "failed"
+    exceptionFormat "full"
+  }
 }
+

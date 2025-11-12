@@ -30,6 +30,9 @@ import org.openbravo.client.application.process.ResponseActionsBuilder.MessageTy
 import org.openbravo.erpCommon.utility.InventoryStatusUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ChangeInventoryStatusActionHandler extends BaseProcessActionHandler {
 
   private static final Logger log4j = LogManager.getLogger();

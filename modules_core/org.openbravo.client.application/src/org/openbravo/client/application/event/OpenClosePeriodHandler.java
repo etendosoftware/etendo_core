@@ -44,6 +44,9 @@ import org.openbravo.model.financialmgmt.calendar.PeriodControlLog;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class OpenClosePeriodHandler extends BaseActionHandler {
   private static final Logger log4j = LogManager.getLogger();
 

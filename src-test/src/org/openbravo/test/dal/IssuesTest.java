@@ -19,11 +19,14 @@
 
 package org.openbravo.test.dal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,11 +48,9 @@ import org.dom4j.io.SAXReader;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.NativeQuery;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Reference;
@@ -100,6 +101,8 @@ import org.openbravo.service.json.DataEntityQueryService;
 import org.openbravo.service.json.DataToJsonConverter;
 import org.openbravo.test.base.Issue;
 import org.openbravo.test.base.OBBaseTest;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Tests for some issues.
@@ -423,7 +426,7 @@ public class IssuesTest extends OBBaseTest {
     assertEquals("130", OBContext.getOBContext().getLanguage().getId());
   }
 
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   @Issue({ "13281", "13283" })
   public void test13281And13283() throws Exception {
@@ -671,7 +674,7 @@ public class IssuesTest extends OBBaseTest {
   public void test20611() {
     OBCriteria<BusinessPartner> c = OBDal.getInstance().createCriteria(BusinessPartner.class);
     ScrollableResults iterator = c.scroll(ScrollMode.FORWARD_ONLY);
-    Assert.assertTrue(iterator.next());
+    assertTrue(iterator.next());
   }
 
   /**
@@ -721,9 +724,9 @@ public class IssuesTest extends OBBaseTest {
       connection = connectionProvider.getConnection();
       otherConnection = connectionProvider.getTransactionConnection();
       yetAnotherConnection = connectionProvider.getTransactionConnection();
-      Assert.assertNotSame(connection, yetAnotherConnection);
-      Assert.assertNotSame(connection, otherConnection);
-      Assert.assertNotSame(otherConnection, yetAnotherConnection);
+      assertNotSame(connection, yetAnotherConnection);
+      assertNotSame(connection, otherConnection);
+      assertNotSame(otherConnection, yetAnotherConnection);
     } finally {
       connectionProvider.releaseCommitConnection(otherConnection);
       connectionProvider.releaseCommitConnection(yetAnotherConnection);
@@ -750,9 +753,9 @@ public class IssuesTest extends OBBaseTest {
 
     final Test22235 test22235 = new Test22235();
     // default is true
-    Assert.assertTrue(test22235.isErrorOccured());
+    assertTrue(test22235.isErrorOccured());
     test22235.execute(processBundle);
-    Assert.assertFalse(test22235.isErrorOccured());
+    assertFalse(test22235.isErrorOccured());
   }
 
   @Test
@@ -779,6 +782,7 @@ public class IssuesTest extends OBBaseTest {
     assertTrue(ols.list().size() >= 0);
   }
 
+  @Dependent
   private static class Test22235 extends DalBaseProcess {
 
     private boolean errorOccured = true;

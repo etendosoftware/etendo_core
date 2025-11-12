@@ -4,34 +4,38 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2014 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2014 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.test.webservice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.FileNotFoundException;
 import java.net.HttpURLConnection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.provider.OBProvider;
+import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -39,23 +43,40 @@ import org.openbravo.model.common.geography.City;
 import org.openbravo.model.common.geography.Country;
 import org.openbravo.model.common.geography.Region;
 import org.openbravo.test.base.Issue;
+import org.openbravo.test.base.TestConstants;
 
 /**
  * Test webservice for reading, updating and posting. The test cases here require a running
  * Openbravo at http://localhost:8080/openbravo.
- * 
+ * <p>
  * IMPORTANT: Test cases are called by one of them called testContent(). The name of the rest of the
  * test cases NOT begin by "test...".
- * 
+ *
  * @author mtaal
  */
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class WSUpdateTest extends BaseWSTest {
 
   private static final Logger log = LogManager.getLogger();
 
   private static String cityId = null;
+
+  @BeforeAll
+  public static void classSetUp() throws Exception {
+    BaseWSTest.classSetUp();
+  }
+
+  @BeforeEach
+  public void setUp() throws Exception {
+    super.setUp();
+    OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.SYS_ADMIN,
+        TestConstants.Clients.FB_GRP, TestConstants.Orgs.MAIN);
+    VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
+        OBContext.getOBContext().getCurrentClient().getId(),
+        OBContext.getOBContext().getCurrentOrganization().getId());
+    RequestContext.get().setVariableSecureApp(vars);
+  }
 
   /**
    * Creates a city through a webservice calls. This test must be run before the others because it
@@ -67,7 +88,6 @@ public class WSUpdateTest extends BaseWSTest {
     // the city must be stored using the client/org of the 100 user
     // this ensures that webservice calls will be able to find the city
     // again
-    OBContext.setOBContext("100");
 
     // first delete the current cities, as we should start fresh
     final OBCriteria<City> obc = OBDal.getInstance().createCriteria(City.class);
@@ -90,7 +110,7 @@ public class WSUpdateTest extends BaseWSTest {
 
   /**
    * test case order execution cannot be warrantied, so check if city has already been created
-   * 
+   *
    * @throws Exception
    */
   private void initializeCreateCity() throws Exception {
@@ -101,7 +121,7 @@ public class WSUpdateTest extends BaseWSTest {
 
   /**
    * Read the created city using a webservice and make a small change and post it back.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -128,7 +148,7 @@ public class WSUpdateTest extends BaseWSTest {
 
   /**
    * Test is an error is returned if an incorrect message is posted.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -146,7 +166,7 @@ public class WSUpdateTest extends BaseWSTest {
    * Test case executes the following steps: 1) get a city, 2) create a city, 3) count the cities,
    * 4) retrieve the cities through a query, 5) delete the new city, 6) check that it has been
    * deleted.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -230,7 +250,9 @@ public class WSUpdateTest extends BaseWSTest {
     }
   }
 
-  /** DalWebServiceServlet does not report errors which occur at commit time */
+  /**
+   * DalWebServiceServlet does not report errors which occur at commit time
+   */
   @Test
   @Issue("14973")
   public void testFDoTest14973() throws Exception {
@@ -241,7 +263,7 @@ public class WSUpdateTest extends BaseWSTest {
 
   /**
    * Add a new city using the wrong HTTP method.
-   * 
+   *
    * @throws Exception
    */
   @Test
@@ -263,7 +285,7 @@ public class WSUpdateTest extends BaseWSTest {
   /**
    * Cleans up the database by removing the city. Is run as last therefore the use of the Z
    * character in the name.
-   * 
+   *
    * @throws Exception
    */
   @Test

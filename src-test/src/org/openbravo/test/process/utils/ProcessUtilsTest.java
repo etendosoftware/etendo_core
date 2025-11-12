@@ -1,14 +1,14 @@
 package org.openbravo.test.process.utils;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
@@ -31,7 +31,7 @@ public class ProcessUtilsTest extends OBBaseTest {
   public static final String SUCCESS = "success";
 
   @Override
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     super.setUp();
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
@@ -44,7 +44,7 @@ public class ProcessUtilsTest extends OBBaseTest {
     MockitoAnnotations.initMocks(this);
   }
 
-  @After
+  @AfterEach
   public void cleanUp() throws Exception {
     OBContext.setOBContext((OBContext) null);
   }

@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2009-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -65,7 +65,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 /**
  * Translates an advanced criteria/filter object into a HQL query. Also takes into account session
  * and other parameters.
- * 
+ *
  * @author mtaal
  */
 public class AdvancedQueryBuilder {
@@ -201,7 +201,7 @@ public class AdvancedQueryBuilder {
    * {@link #getNamedParameters()} can be called. Note that currently only filtering on string and
    * boolean properties is supported. Also filtering on the identifier of a referenced business
    * object is supported.
-   * 
+   *
    * @return a valid where clause or an empty string if not set.
    */
   public String getWhereClause() {
@@ -384,13 +384,15 @@ public class AdvancedQueryBuilder {
 
   private StringBuilder buildOrgPartWhereClause(Set<String> organizations) {
     StringBuilder buildOrgPart = new StringBuilder();
-    if (organizations.size() > 0) {
+    if (!organizations.isEmpty()) {
       if (getMainAlias() != null) {
-        String organizationEntity = Organization.ENTITY_NAME.equals(entity.toString()) ? ".id"
-            : ".organization";
-        buildOrgPart.append(" " + getMainAlias() + organizationEntity + " in (");
+        String organizationEntity = "";
+        if (!StringUtils.equals(Organization.ENTITY_NAME, entity.toString())) {
+          organizationEntity = ".organization";
+        }
+        buildOrgPart.append(" " + getMainAlias() + organizationEntity + ".id in (");
       } else {
-        buildOrgPart.append(" organization in (");
+        buildOrgPart.append(" organization.id in (");
       }
       boolean addComma = false;
       for (String org : organizations) {
@@ -488,7 +490,8 @@ public class AdvancedQueryBuilder {
 
     // translate to a OR for each value
     // inSet or notInSet operators should not be translated to an OR for each value
-    if (value instanceof JSONArray && !(OPERATOR_INSET.equals(jsonCriteria.getString(OPERATOR_KEY)) || OPERATOR_NOTINSET.equals(jsonCriteria.getString(OPERATOR_KEY)))) {
+    if (value instanceof JSONArray && !(OPERATOR_INSET.equals(
+        jsonCriteria.getString(OPERATOR_KEY)) || OPERATOR_NOTINSET.equals(jsonCriteria.getString(OPERATOR_KEY)))) {
       final JSONArray jsonArray = (JSONArray) value;
       final JSONObject advancedCriteria = new JSONObject();
       advancedCriteria.put(OPERATOR_KEY, OPERATOR_OR);
@@ -631,7 +634,7 @@ public class AdvancedQueryBuilder {
           sb.append(prop.getName());
         }
         throw new OBException(OBMessageUtils.getI18NMessage("OBJSON_InvalidProperty",
-            new String[] { value.toString(), sb.toString() }));
+            new String[]{ value.toString(), sb.toString() }));
       }
       final Property fieldProperty = properties.get(properties.size() - 1);
       if (property == null) {
@@ -818,7 +821,7 @@ public class AdvancedQueryBuilder {
       localValue = getTypeSafeValue(operator, property, localValue);
     } catch (IllegalArgumentException e) {
       throw new OBException(OBMessageUtils.getI18NMessage("OBJSON_InvalidFilterValue",
-          new String[] { Objects.toString(value, "") }));
+          new String[]{ Objects.toString(value, "") }));
     }
     typedParameters.add(localValue);
     return clause;
@@ -1330,7 +1333,7 @@ public class AdvancedQueryBuilder {
 
   /**
    * @return an empty String if there is no join clause, in other cases a String like the following
-   *         is returned " as e left join e.bank as alias_1"
+   *     is returned " as e left join e.bank as alias_1"
    */
   public String getJoinClause() {
     if (joinClause != null) {
@@ -1370,7 +1373,7 @@ public class AdvancedQueryBuilder {
    * Converts the value of the sortBy member into a valid order by clause in a HQL query. The method
    * handles special cases as sorting by the identifier properties and descending which is
    * controlled with a minus sign before the property name.
-   * 
+   *
    * @return a valid order by clause (or an empty string if no sorting)
    */
   public String getOrderByClause() {
@@ -1741,11 +1744,11 @@ public class AdvancedQueryBuilder {
   /**
    * Add a filter parameter, the method {@link #getWhereClause()} will try to convert the String
    * value to a typed parameter.
-   * 
+   *
    * @param key
-   *          the filter key, can be direct property or a referenced property.
+   *     the filter key, can be direct property or a referenced property.
    * @param value
-   *          the value as a String
+   *     the value as a String
    */
   public void addFilterParameter(String key, String value) {
     // ignore these
@@ -2045,7 +2048,7 @@ public class AdvancedQueryBuilder {
   /**
    * Returns the appropriate display column property for table references instead of the identifier
    * properties. Used in cases when filtering data in grid, based on the data of table reference.
-   * 
+   *
    * @param properties
    * @return properties with the proper display column property
    */
@@ -2087,10 +2090,9 @@ public class AdvancedQueryBuilder {
    * Allows preventing the creation of new join alias when the where clause is built. This is useful
    * when the AdvancedQueryBuilder is used to obtain the WHERE clause, but when the FROM clause
    * built is not used (i.e. en HQLDataSourceService)
-   * 
+   *
    * @param preventedCreatingJoinsInWhereClause
-   *          If true, the creation of new join alias is prevented when the where clause is built
-   * 
+   *     If true, the creation of new join alias is prevented when the where clause is built
    */
   public void preventCreatingJoinsInWhereClause(boolean preventedCreatingJoinsInWhereClause) {
     this.creatingJoinsInWhereClauseIsPrevented = preventedCreatingJoinsInWhereClause;

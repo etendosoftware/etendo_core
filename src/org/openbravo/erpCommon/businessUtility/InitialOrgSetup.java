@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
@@ -71,9 +70,8 @@ public class InitialOrgSetup {
   private static final String ACCOUNT_TREE_TABLE_ID = "188";
 
   /**
-   * 
    * @param clientProvided
-   *          the new organization will belong to the provided client
+   *     the new organization will belong to the provided client
    */
   public InitialOrgSetup(Client clientProvided) {
     strHeaderLog = new StringBuffer();
@@ -84,42 +82,41 @@ public class InitialOrgSetup {
   }
 
   /**
-   * 
    * @param strOrgName
-   *          Name of the new organization
+   *     Name of the new organization
    * @param strOrgUser
-   *          Name of the user that will be created for the organization
+   *     Name of the user that will be created for the organization
    * @param strOrgType
-   *          Organization Type code, according to: 0-Organization, 1-Legal with accounting,
-   *          2-Generic, 3-Legal without accounting.
+   *     Organization Type code, according to: 0-Organization, 1-Legal with accounting,
+   *     2-Generic, 3-Legal without accounting.
    * @param strParentOrg
-   *          New organization will belong to the provided one, in the organization tree
+   *     New organization will belong to the provided one, in the organization tree
    * @param strcLocationId
-   *          Location (if any)
+   *     Location (if any)
    * @param strPassword
-   *          Password for the user to be created
+   *     Password for the user to be created
    * @param strModules
-   *          Reference data (datasets) to be applied to the new organization
+   *     Reference data (datasets) to be applied to the new organization
    * @param boCreateAccounting
-   *          If true, a new accounting schema will be created (but not the fiscal calendar and
-   *          year)
+   *     If true, a new accounting schema will be created (but not the fiscal calendar and
+   *     year)
    * @param fileCoAFilePath
-   *          Path to the csv file with the chart of accounts to be used to create the accounting
-   *          schema (it can also be provided through an accounting type module)
+   *     Path to the csv file with the chart of accounts to be used to create the accounting
+   *     schema (it can also be provided through an accounting type module)
    * @param strCurrency
-   *          Currency for the new accounting schema
+   *     Currency for the new accounting schema
    * @param bBPartner
-   *          If true, the Business Partner accounting dimension will be added to the new accounting
-   *          schema
+   *     If true, the Business Partner accounting dimension will be added to the new accounting
+   *     schema
    * @param bProduct
-   *          If true, the Product accounting dimension will be added to the new accounting schema
+   *     If true, the Product accounting dimension will be added to the new accounting schema
    * @param bProject
-   *          If true, the Project accounting dimension will be added to the new accounting schema
+   *     If true, the Project accounting dimension will be added to the new accounting schema
    * @param bCampaign
-   *          If true, the Campaign accounting dimension will be added to the new accounting schema
+   *     If true, the Campaign accounting dimension will be added to the new accounting schema
    * @param bSalesRegion
-   *          If true, the Sales Region accounting dimension will be added to the new accounting
-   *          schema
+   *     If true, the Sales Region accounting dimension will be added to the new accounting
+   *     schema
    */
   public OBError createOrganization(String strOrgName, String strOrgUser, String strOrgType,
       String strParentOrg, String strcLocationId, String strPassword, String strModules,
@@ -755,9 +752,9 @@ public class InitialOrgSetup {
 
   /**
    * Adds a message to the log to be returned
-   * 
+   *
    * @param strMessage
-   *          Message to be added to the log returned (will be translated)
+   *     Message to be added to the log returned (will be translated)
    */
   private void logEvent(String strMessage) {
     strLog.append(strMessage).append(NEW_LINE);
@@ -770,14 +767,14 @@ public class InitialOrgSetup {
 
   /**
    * This functions registers an error occurred in any of the functions of the class
-   * 
+   *
    * @param strMessage
-   *          Message to be shown in the title of the returned web page (will be translated)
+   *     Message to be shown in the title of the returned web page (will be translated)
    * @param strLogError
-   *          (Optional) Message to be added to the log4j (not translated)
+   *     (Optional) Message to be added to the log4j (not translated)
    * @param e
-   *          (Optional) Exception: optional parameter, just in case the error was caused by an
-   *          exception
+   *     (Optional) Exception: optional parameter, just in case the error was caused by an
+   *     exception
    */
   private OBError logErrorAndRollback(String strMessage, String strLogError, Exception e) {
     OBError obeResult = new OBError();

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +48,7 @@ import org.openbravo.service.json.JsonConstants;
 /**
  * Datasource used by the Alert Management window
  */
+@Dependent
 public class ADAlertDatasourceService extends DefaultDataSourceService {
   private static final String AD_TABLE_ID = "594";
   private static final String ALERT_STATUS = "_alertStatus";

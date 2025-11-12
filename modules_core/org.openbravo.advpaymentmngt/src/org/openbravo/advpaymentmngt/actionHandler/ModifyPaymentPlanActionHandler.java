@@ -41,7 +41,6 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.exception.ConstraintViolationException;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_PaymentMonitorProcess;
@@ -61,6 +60,9 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.service.json.JsonToDataConverter;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ModifyPaymentPlanActionHandler extends BaseProcessActionHandler {
 
   private final AdvPaymentMngtDao dao = new AdvPaymentMngtDao();

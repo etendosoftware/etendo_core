@@ -34,8 +34,7 @@ List<String> _dependenciesListCOMPILATION = [
   // Reporting and Document Generation
   'com.lowagie:itext:2.1.7',
   'jfree:jfreechart:1.0.12',
-  'net.sf.jasperreports:jasperreports:6.17.0',
-  'net.sf.jasperreports:jasperreports-fonts:6.17.0',
+  'net.sf.jasperreports:jasperreports-servlets:7.0.3',
 
   // Database Drivers and Persistence Connectors
   'com.oracle.database.jdbc:ojdbc8:23.9.0.25.07',
@@ -53,9 +52,7 @@ List<String> _dependenciesListCOMPILATION = [
   'nekohtml:nekohtml:0.9.5',
   'org.apache.xmlbeans:xmlbeans:5.1.1',
   'org.apache.poi:ooxml-schemas:1.4',
-  'org.codehaus.castor:castor-core:1.4.1',
-  'org.codehaus.castor:castor-xml:1.4.1',
-  'org.dom4j:dom4j:2.1.3',
+  'org.dom4j:dom4j:2.2.0',
   'xerces:xercesImpl:2.9.0',
 
   // Parsing, Query, and Expression Engines
@@ -80,10 +77,8 @@ List<String> _dependenciesListCOMPILATION = [
   'org.hibernate.orm:hibernate-core:6.5.2.Final',
 
   // JBoss and Weld CDI Implementation
-  'org.jboss.classfilewriter:jboss-classfilewriter:1.2.4.Final',
-  'org.jboss.logging:jboss-logging:3.3.2.Final',
   'org.jboss.weld.servlet:weld-servlet-shaded:5.1.2.Final',
-  'org.jboss:jandex:2.0.5.Final',
+  'org.jboss:jandex:3.3.1',
 
   // Apache Ant and Tomcat Runtime
   'org.apache.ant:ant:1.9.2',
@@ -93,11 +88,12 @@ List<String> _dependenciesListCOMPILATION = [
   'org.apache.tomcat:tomcat-servlet-api:8.5.47',
 
   // Logging Frameworks
-  'org.apache.logging.log4j:log4j-1.2-api:2.16.0',
-  'org.apache.logging.log4j:log4j-api:2.16.0',
-  'org.apache.logging.log4j:log4j-core:2.16.0',
-  'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0',
-  'org.apache.logging.log4j:log4j-web:2.16.0',
+  'org.apache.logging.log4j:log4j-1.2-api:2.25.2',
+  'org.apache.logging.log4j:log4j-api:2.25.2',
+  'org.apache.logging.log4j:log4j-bom:2.25.2',
+  'org.apache.logging.log4j:log4j-core:2.25.2',
+  'org.apache.logging.log4j:log4j-slf4j2-impl:2.25.2',
+  'org.apache.logging.log4j:log4j-web:2.25.2',
   'org.slf4j:slf4j-api:1.7.25',
 
   // HTTP and Networking Libraries
@@ -113,22 +109,17 @@ List<String> _dependenciesListCOMPILATION = [
   // File and Content Analysis
   'org.apache.tika:tika-core:0.9',
 
-  // XML Binding and StAX Processing
-  'org.glassfish.jaxb:jaxb-runtime:2.3.1',
-  'org.glassfish.jaxb:txw2:2.3.1',
-  'org.jvnet.staxex:stax-ex:1.8',
-
   // Template and Scripting Engines
-  'org.freemarker:freemarker:2.3.16',
+  'org.freemarker:freemarker:2.3.34',
   'org.mozilla:rhino:1.8.0',
   'org.mozilla:rhino-engine:1.8.0',
 
   // Scheduling and Distributed Systems
   'org.quartz-scheduler:quartz:2.3.2',
-  'org.redisson:redisson:3.15.4',
 
   // Miscellaneous Utilities
   'oro:oro:2.0.8',
+  'com.github.virtuald:curvesapi:1.08',
 
   // Testing Libraries
   'org.hamcrest:hamcrest-all:1.3',
@@ -136,5 +127,5 @@ List<String> _dependenciesListCOMPILATION = [
 ]
 
 ext {
-   dependenciesListCOMPILATION = _dependenciesListCOMPILATION
+  dependenciesListCOMPILATION = _dependenciesListCOMPILATION
 }

@@ -21,9 +21,6 @@ package org.openbravo.client.application.personalization;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.inject.Inject;
-
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.application.UIPersonalization;
@@ -35,6 +32,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.model.ad.ui.Tab;
+
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
 
 /**
  * Is the entry point for the UI to store and retrieve personalization settings and form definition.

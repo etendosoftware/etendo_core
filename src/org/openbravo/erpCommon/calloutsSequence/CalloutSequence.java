@@ -2,10 +2,12 @@ package org.openbravo.erpCommon.calloutsSequence;
 
 import org.openbravo.base.weld.WeldUtils;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
+@Dependent
 public class CalloutSequence {
 
     public static CalloutSequence getInstance() {

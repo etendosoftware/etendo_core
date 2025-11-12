@@ -21,8 +21,8 @@ package org.openbravo.test.process.order;
 
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -228,6 +228,6 @@ public class OrderProcessTest extends OBBaseTest {
         equalTo(documentStatusFinal));
     assertThat("Order Total amount should be " + totalAmount, testOrder.getGrandTotalAmount(),
         comparesEqualTo(totalAmount));
-    assertFalse("Order should not be delived", testOrder.isDelivered());
+    assertFalse(testOrder.isDelivered(), "Order should not be delived");
   }
 }

@@ -18,8 +18,8 @@
  */
 package org.openbravo.test.modularity;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -78,16 +78,13 @@ public class MergePropertiesTest {
     createNewFile1();
 
     boolean modified = Utility.mergeOpenbravoProperties(ORIGINAL_FILE, NEW_FILE);
-    assertTrue("File has not been modified while it should be", modified);
+    assertTrue(modified, "File has not been modified while it should be");
 
     Properties prop = new Properties();
     prop.load(new FileInputStream(ORIGINAL_FILE));
-    assertTrue("Not correctly merged test1 property",
-        prop.getProperty("test1").equals("value1.custom"));
-    assertTrue("Not correctly merged test2 property",
-        prop.getProperty("test2").equals("value2.custom"));
-    assertTrue("Not correctly merged test3 property",
-        prop.getProperty("test3").equals("value3.default"));
+    assertTrue(prop.getProperty("test1").equals("value1.custom"), "Not correctly merged test1 property");
+    assertTrue(prop.getProperty("test2").equals("value2.custom"), "Not correctly merged test2 property");
+    assertTrue(prop.getProperty("test3").equals("value3.default"), "Not correctly merged test3 property");
 
     testDeleteFiles1();
   }
@@ -96,8 +93,8 @@ public class MergePropertiesTest {
    * deletes testing files
    */
   private void testDeleteFiles1() {
-    assertTrue("couldn't delete " + ORIGINAL_FILE, new File(ORIGINAL_FILE).delete());
-    assertTrue("couldn't delete " + ORIGINAL_FILE, new File(NEW_FILE).delete());
+    assertTrue(new File(ORIGINAL_FILE).delete(), "couldn't delete " + ORIGINAL_FILE);
+    assertTrue(new File(NEW_FILE).delete(), "couldn't delete " + ORIGINAL_FILE);
   }
 
   /**
@@ -139,14 +136,12 @@ public class MergePropertiesTest {
     createNewFile2();
 
     boolean modified = Utility.mergeOpenbravoProperties(ORIGINAL_FILE, NEW_FILE);
-    assertFalse("File has been modified while it shouldn't be", modified);
+    assertFalse(modified, "File has been modified while it shouldn't be");
 
     Properties prop = new Properties();
     prop.load(new FileInputStream(ORIGINAL_FILE));
-    assertTrue("Not correctly merged test1 property",
-        prop.getProperty("test1").equals("value1.custom"));
-    assertTrue("Not correctly merged test2 property",
-        prop.getProperty("test2").equals("value2.custom"));
+    assertTrue(prop.getProperty("test1").equals("value1.custom"), "Not correctly merged test1 property");
+    assertTrue(prop.getProperty("test2").equals("value2.custom"), "Not correctly merged test2 property");
 
     deleteFiles2();
   }
@@ -155,7 +150,7 @@ public class MergePropertiesTest {
    * deletes testing files
    */
   private void deleteFiles2() {
-    assertTrue("couldn't delete " + ORIGINAL_FILE, new File(ORIGINAL_FILE).delete());
-    assertTrue("couldn't delete " + ORIGINAL_FILE, new File(NEW_FILE).delete());
+    assertTrue(new File(ORIGINAL_FILE).delete(), "couldn't delete " + ORIGINAL_FILE);
+    assertTrue(new File(NEW_FILE).delete(), "couldn't delete " + ORIGINAL_FILE);
   }
 }

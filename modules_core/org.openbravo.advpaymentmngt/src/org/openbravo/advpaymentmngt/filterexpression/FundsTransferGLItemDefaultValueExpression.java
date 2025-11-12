@@ -31,11 +31,13 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class returns the default value for the GL Item Parameter of the Funds Transfer Process in
  * Financial Account Window
  */
-
+@Dependent
 public class FundsTransferGLItemDefaultValueExpression implements FilterExpression {
   private static final String INPAD_ORG_ID_PARAM = "inpadOrgId";
   private static final String AD_ORG_ID_PARAM = "ad_org_id";

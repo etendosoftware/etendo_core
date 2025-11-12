@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2015-2018 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2015-2018 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -20,13 +20,13 @@
 package org.openbravo.test.views;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.GCTab;
 import org.openbravo.client.application.window.OBViewUtil;
@@ -39,9 +39,8 @@ import org.openbravo.model.common.enterprise.Organization;
 /**
  * Test cases with different combinations of grid configurations at tab level with different
  * combinations of sequence numbers.
- * 
- * @author NaroaIriarte
  *
+ * @author NaroaIriarte
  */
 public class GCSequenceNumberTests extends GridConfigurationTest {
   private static final String CLIENT_FOR_GC_SYSTEM_FIELD_TAB = "0";
@@ -59,9 +58,9 @@ public class GCSequenceNumberTests extends GridConfigurationTest {
    * Execute these test cases only if there is no custom grid config as it could make unstable
    * results
    */
-  @Before
+  @BeforeEach
   public void shouldExecuteOnlyIfThereIsNoGridConfig() {
-    assumeThat("Number of custom grid configs", getNumberOfGridConfigurations(), is(0));
+    assumeTrue(0 == getNumberOfGridConfigurations(), "Number of custom grid configs");
   }
 
   /**

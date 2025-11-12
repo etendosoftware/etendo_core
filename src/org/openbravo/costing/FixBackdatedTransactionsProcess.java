@@ -46,6 +46,9 @@ import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 import org.openbravo.service.db.DbUtility;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class FixBackdatedTransactionsProcess extends BaseProcessActionHandler {
   private static final String BEGINNING_OF_TIMES = "01-01-1900";
   private static final Logger log4j = LogManager.getLogger();
@@ -199,13 +202,13 @@ public class FixBackdatedTransactionsProcess extends BaseProcessActionHandler {
             "  from MaterialMgmtMaterialTransaction as trx" +
             " where trx.organization.id in (:orgIds)" +
             "   and trx.isCostCalculated = true" +
-            "   and trx.transactionProcessDate >= (:startDate)";
+            "   and trx.transactionProcessDate >= (cast(:startDate as timestamp))";
     //@formatter:on
 
     if (endDate != null) {
       //@formatter:off
       hql +=
-            " and trx.transactionProcessDate < (:endDate)";
+            " and trx.transactionProcessDate < (cast(:endDate as timestamp))";
       //@formatter:on
     }
     //@formatter:off

@@ -19,20 +19,18 @@
 
 package org.openbravo.client.application.test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.inject.Inject;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.WindowSettingsActionHandler;
@@ -48,6 +46,9 @@ import org.openbravo.test.base.TestConstants.Tabs;
 import org.openbravo.test.base.TestConstants.Windows;
 import org.openbravo.test.base.mock.HttpServletRequestMock;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /** Additional test cases for {@link ApplicationDictionaryCachedStructures} */
 public class ADCSTest extends WeldBaseTest {
   @Inject
@@ -56,9 +57,9 @@ public class ADCSTest extends WeldBaseTest {
   @Inject
   private StandardWindowComponent component;
 
-  @Before
+  @BeforeEach
   public void doChecks() {
-    assumeTrue("Cache can be used (no modules in development)", adcs.useCache());
+    assumeTrue(adcs.useCache(), "Cache can be used (no modules in development)");
     setSystemAdministratorContext();
   }
 
@@ -140,6 +141,7 @@ public class ADCSTest extends WeldBaseTest {
     assertThat(anyColumnReference.getOBCLKERREFMASKList().size(), greaterThanOrEqualTo(0));
   }
 
+  @Dependent
   private static class WindowSettingsActionHandlerTest extends WindowSettingsActionHandler {
 
     public void execute(String windowId) {

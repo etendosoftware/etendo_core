@@ -25,12 +25,16 @@ import org.openbravo.client.kernel.Template;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.User;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.RequestScoped;
+
 /**
  * Generates the body for {@link NewUserEmailGenerator}
  * 
  * @author asier
  * 
  */
+@Dependent
 public class NewUserEmailBody extends PortalEmailBody {
   private Map<String, Object> data;
 

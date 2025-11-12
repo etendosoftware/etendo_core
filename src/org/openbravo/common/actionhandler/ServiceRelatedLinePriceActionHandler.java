@@ -34,6 +34,9 @@ import org.openbravo.materialmgmt.ServicePriceUtils;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class ServiceRelatedLinePriceActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String RFC_ORDERLINE_TAB_ID = "AF4090093D471431E040007F010048A5";

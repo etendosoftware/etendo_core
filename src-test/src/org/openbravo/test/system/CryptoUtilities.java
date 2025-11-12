@@ -21,7 +21,7 @@ package org.openbravo.test.system;
 
 import static org.apache.commons.lang3.math.NumberUtils.DOUBLE_ZERO;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.test.base.Issue;
 import org.openbravo.utils.CryptoUtility;
 

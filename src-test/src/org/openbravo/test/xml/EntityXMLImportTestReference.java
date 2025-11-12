@@ -19,18 +19,17 @@
 
 package org.openbravo.test.xml;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.query.Query;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
@@ -75,7 +74,7 @@ public class EntityXMLImportTestReference extends XMLBaseTest {
    * This before method is named setUpE() to avoid overwriting the super setUp method that is invoke
    * automatically before this one.
    */
-  @Before
+  @BeforeEach
   public void setUpE() throws Exception {
     Location l = null;
     setTestUserContext();
@@ -97,7 +96,7 @@ public class EntityXMLImportTestReference extends XMLBaseTest {
    * Exports {@link Warehouse} objects from client/org {@link #TEST_CLIENT_ID} and imports them in
    * {@link #QA_TEST_CLIENT_ID}. Also the referenced {@link Location} objects are imported.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void test1Warehouse() {
     cleanRefDataLoaded();
@@ -129,7 +128,7 @@ public class EntityXMLImportTestReference extends XMLBaseTest {
    * Remove the imported {@link Warehouse} objects from the {@link #QA_TEST_CLIENT_ID} client. The
    * imported {@link Location} objects should still remain.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void test2Warehouse() {
     setUserContext(QA_TEST_ADMIN_USER_ID);
@@ -149,7 +148,7 @@ public class EntityXMLImportTestReference extends XMLBaseTest {
    * the {@link Location} objects are also exported but not imported as they already exist in
    * {@link #QA_TEST_CLIENT_ID}.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void test3Warehouse() {
     setTestUserContext();
@@ -180,7 +179,7 @@ public class EntityXMLImportTestReference extends XMLBaseTest {
    * Clean up by removing both the imported {@link Warehouse} and {@link Location} objects from
    * {@link #QA_TEST_CLIENT_ID} client.
    */
-  @Ignore("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
+  @Disabled("This test is currently disabled because it didn't work with the new Openbravo demo data. More info: https://issues.openbravo.com/view.php?id=20264")
   @Test
   public void test4Warehouse() {
 

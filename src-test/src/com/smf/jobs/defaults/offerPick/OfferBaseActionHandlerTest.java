@@ -30,6 +30,8 @@ import com.smf.jobs.Data;
 import com.smf.jobs.Result;
 import com.smf.jobs.defaults.Utility;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Unit tests for the OfferBaseActionHandler class.
  * Tests the functionality of the action handler for offer pick actions.
@@ -168,6 +170,7 @@ public class OfferBaseActionHandlerTest {
    * A testable version of the abstract OfferBaseActionHandler class.
    * Allows for controlled testing of the abstract class's behavior.
    */
+  @Dependent
   private class TestableOfferBaseActionHandler extends OfferBaseActionHandler {
 
     public TestableOfferBaseActionHandler() {

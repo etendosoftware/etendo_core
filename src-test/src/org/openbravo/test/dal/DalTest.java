@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):
  *   Martin Taal <martin.taal@openbravo.com>,
  *   Ivan Perdomo <ivan.perdomo@openbravo.com>,
@@ -25,16 +25,16 @@ package org.openbravo.test.dal;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +44,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.criterion.Restrictions;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runners.MethodSorters;
+import org.hibernate.query.Query;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.provider.OBProvider;
@@ -76,17 +75,14 @@ import org.openbravo.test.base.OBBaseTest;
 
 /**
  * Test different parts of the DAL API: {@link OBDal}, {@link OBQuery} and {@link OBCriteria}.
- * 
+ * <p>
  * Note the test cases assume that they are run in the order defined in this class.
- * 
+ *
  * @author mtaal
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class DalTest extends OBBaseTest {
   private static final Logger log = LogManager.getLogger();
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   /**
    * Test to assert save false in a null char(1) column - Part I.
@@ -461,9 +457,8 @@ public class DalTest extends OBBaseTest {
   public void populatingProxyOfInexistentObjShouldFail() {
     BusinessPartner bpProxy = OBDal.getInstance().getProxy(BusinessPartner.class, "DummyId");
 
-    thrown.expect(ObjectNotFoundException.class);
-    // getting any property causes proxy population from db
-    bpProxy.getName();
+    assertThrows(ObjectNotFoundException.class, () -> bpProxy.getName(),
+        "Accessing proxy property should trigger ObjectNotFoundException");
   }
 
   @Test
@@ -502,7 +497,7 @@ public class DalTest extends OBBaseTest {
     final OBCriteria<Currency> obc = OBDal.getInstance()
         .createCriteria(Currency.class);
     obc.addOr((cb, obc_inner) -> cb.equal(obc_inner.getPath(Currency.PROPERTY_ISOCODE), EURO),
-              (cb, obc_inner) -> cb.equal(obc_inner.getPath(Currency.PROPERTY_ISOCODE), DOLLAR));
+        (cb, obc_inner) -> cb.equal(obc_inner.getPath(Currency.PROPERTY_ISOCODE), DOLLAR));
     if (obc.count() > 0) {
       obc.addOrderBy(Currency.PROPERTY_ISOCODE, false);
     }
@@ -594,7 +589,7 @@ public class DalTest extends OBBaseTest {
   public void readOnlyPoolCanNotInsert() {
     setTestLogAppenderLevel(Level.OFF);
 
-    assumeThat("read-only pool is configured", isReadOnlyPoolDefined(), is(true));
+    Assumptions.assumeTrue(isReadOnlyPoolDefined(), "read-only pool is configured");
     setTestUserContext();
     try {
       final Category category = OBProvider.getInstance().get(Category.class);
@@ -618,7 +613,7 @@ public class DalTest extends OBBaseTest {
   public void readOnlyPoolCanNotUpdate() {
     setTestLogAppenderLevel(Level.OFF);
 
-    assumeThat("read-only pool is configured", isReadOnlyPoolDefined(), is(true));
+    Assumptions.assumeTrue(isReadOnlyPoolDefined(), "read-only pool is configured");
     setTestUserContext();
     final String newDescription = "ro_testdescription";
     try {
@@ -635,7 +630,7 @@ public class DalTest extends OBBaseTest {
   public void readOnlyPoolCanNotDelete() {
     setTestLogAppenderLevel(Level.OFF);
 
-    assumeThat("read-only pool is configured", isReadOnlyPoolDefined(), is(true));
+    Assumptions.assumeTrue(isReadOnlyPoolDefined(), "read-only pool is configured");
     setTestUserContext();
     try {
       Category category = OBDal.getReadOnlyInstance().get(Category.class, TEST_BP_CATEGORY_ID);
@@ -687,12 +682,12 @@ public class DalTest extends OBBaseTest {
       OBDal.getInstance().save(user);
       OBDal.getInstance().flush();
       // ...and now delete it using an OBQuery instance
-      String hql = "id = :id";
-      deletions = OBDal.getInstance()
-          .createQuery(User.class, hql)
-          .setNamedParameter("id", user.getId())
-          .deleteQuery()
-          .executeUpdate();
+      String hql = "DELETE FROM ADUser WHERE id = :id";
+      Query<?> q = OBDal.getInstance()
+          .getSession()
+          .createQuery(hql);
+      deletions = q.setParameter("id", user.getId()).executeUpdate();
+
     } finally {
       OBDal.getInstance().rollbackAndClose();
     }

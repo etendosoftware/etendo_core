@@ -42,7 +42,6 @@ import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
@@ -53,11 +52,10 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromProcess;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.OBDao;
-import org.openbravo.model.common.businesspartner.BusinessPartner;
-import org.openbravo.model.common.businesspartner.Location;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
+import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.businesspartner.Location;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
@@ -469,10 +467,10 @@ public class InvoiceGeneratorFromGoodsShipment {
   }
 
   private String getOneInvoiceBPartnerAddress(BusinessPartner businessPartner) {
-    final String hql = "select max(bpl.id) from BusinessPartnerLocation bpl where bpl.invoiceToAddress = true and bpl.businessPartner = :bp";
+    final String hql = "select max(bpl.id) from BusinessPartnerLocation bpl where bpl.invoiceToAddress = true and bpl.businessPartner.id = :bpId";
 
     final Query<String> query = OBDal.getInstance().getSession().createQuery(hql, String.class);
-    query.setParameter("bp", businessPartner);
+    query.setParameter("bpId", businessPartner.getId());
     query.setMaxResults(1);
 
     return query.uniqueResult();

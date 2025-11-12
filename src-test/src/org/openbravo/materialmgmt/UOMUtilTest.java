@@ -1,20 +1,17 @@
 package org.openbravo.materialmgmt;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.criterion.Criterion;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -234,12 +231,12 @@ public class UOMUtilTest {
     when(mockUOM2.getName()).thenReturn("UOM Name 2");
 
     when(mockDal.createCriteria(ProductUOM.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-    when(mockCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockCriteria);
+    when(mockCriteria.addEqual(eq("product.id"), eq(TEST_PRODUCT_ID))).thenReturn(mockCriteria);
+    when(mockCriteria.addOrderBy(eq("uOM.name"), eq(true))).thenReturn(mockCriteria);
     when(mockCriteria.list()).thenReturn(mockProductUOMList);
 
-    mockedFieldProviderFactory.when(() -> FieldProviderFactory.getFieldProviderArray(any(List.class))).thenReturn(
-        expectedFieldProviders);
+    mockedFieldProviderFactory.when(() -> FieldProviderFactory.getFieldProviderArray(any(List.class)))
+        .thenReturn(expectedFieldProviders);
 
     FieldProvider[] result = UOMUtil.selectUOM(TEST_PRODUCT_ID);
 
@@ -248,8 +245,8 @@ public class UOMUtilTest {
 
     mockedOBContext.verify(OBContext::restorePreviousMode, Mockito.atLeastOnce());
 
-    Mockito.verify(mockCriteria).add(any(Criterion.class));
-    Mockito.verify(mockCriteria).addOrderBy(eq("uOM.name"), eq(true));
+    Mockito.verify(mockCriteria).addEqual("product.id", TEST_PRODUCT_ID);
+    Mockito.verify(mockCriteria).addOrderBy("uOM.name", true);
     Mockito.verify(mockCriteria).list();
   }
 

@@ -24,12 +24,15 @@ import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessContext;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * A pInstance procedure process.
  * 
  * @author awolski
  * 
  */
+@Dependent
 public class PinstanceProcedure extends ProcedureProcess {
 
   private String pinstanceId;

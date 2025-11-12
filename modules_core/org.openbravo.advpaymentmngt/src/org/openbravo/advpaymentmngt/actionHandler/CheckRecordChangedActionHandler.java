@@ -37,6 +37,9 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.service.json.JsonUtils;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class CheckRecordChangedActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 
