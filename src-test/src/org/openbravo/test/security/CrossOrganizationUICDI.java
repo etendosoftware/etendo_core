@@ -20,9 +20,9 @@ package org.openbravo.test.security;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasItems;
-import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,12 +33,9 @@ import jakarta.inject.Inject;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.assetmgmt.Asset;
@@ -62,16 +59,11 @@ public class CrossOrganizationUICDI extends WeldBaseTest {
   @Inject
   private DataSourceServiceProvider dataSourceServiceProvider;
 
-  /** defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<Boolean> parameterValuesRule = new ParameterCdiTestRule<>(
-      Arrays.asList(true, false));
-
-  /** this field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest Boolean useCrossOrgColumns;
-
-  @Test
-  public void stdSelectorShouldShowNonReferenceableOrgsIfAllowed() throws Exception {
+  @ParameterizedTest(name = "stdSelectorShouldShowNonReferenceableOrgsIfAllowed crossOrg={0}")
+  @ValueSource(booleans = { true, false })
+  public void stdSelectorShouldShowNonReferenceableOrgsIfAllowed(boolean useCrossOrgColumns)
+      throws Exception {
+    prepareCrossOrgContext(useCrossOrgColumns);
     HttpServletRequestMock.setRequestMockInRequestContext();
     final DataSourceService dataSource = dataSourceServiceProvider.getDataSource(Asset.ENTITY_NAME);
 
@@ -104,13 +96,12 @@ public class CrossOrganizationUICDI extends WeldBaseTest {
     }
   }
 
-  @Before
-  public void setUpAllowedCrossOrg() throws Exception {
+  private void prepareCrossOrgContext(boolean useCrossOrgColumns) throws Exception {
     CrossOrganizationReference.setUpAllowedCrossOrg(COLUMNS_TO_ALLOW_CROSS_ORG, useCrossOrgColumns);
     setTestUserContext();
   }
 
-  @AfterClass
+  @AfterAll
   public static void resetAllowedCrossOrg() throws Exception {
     CrossOrganizationReference.setUpAllowedCrossOrg(COLUMNS_TO_ALLOW_CROSS_ORG, false);
     OBDal.getInstance().commitAndClose();

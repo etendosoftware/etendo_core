@@ -19,8 +19,8 @@
 
 package org.openbravo.test.db.model.functions;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -120,10 +120,10 @@ public class Ad_isorgincludedTest extends OBBaseTest {
   public void testIsOrgIncluded() {
 
     // Case I
-    assertEquals("Level 1 Organization", 1, isOrgIncluded(ORG_0, ORG_0, CLIENT_FB));
-    assertEquals("Level 2 Organization", 2, isOrgIncluded(ORG_FB_FBGROUP, ORG_0, CLIENT_FB));
-    assertEquals("Level 3 Organization", 3, isOrgIncluded(ORG_FB_US, ORG_0, CLIENT_FB));
-    assertEquals("Level 4 Organization", 4, isOrgIncluded(ORG_FB_WEST, ORG_0, CLIENT_FB));
+    assertEquals(1, isOrgIncluded(ORG_0, ORG_0, CLIENT_FB), "Level 1 Organization");
+    assertEquals(2, isOrgIncluded(ORG_FB_FBGROUP, ORG_0, CLIENT_FB), "Level 2 Organization");
+    assertEquals(3, isOrgIncluded(ORG_FB_US, ORG_0, CLIENT_FB), "Level 3 Organization");
+    assertEquals(4, isOrgIncluded(ORG_FB_WEST, ORG_0, CLIENT_FB), "Level 4 Organization");
 
     // Case II
     assertTrue(isOrgIncluded(ORG_FB_WEST, ORG_FB_SPAIN, CLIENT_QA) == -1);

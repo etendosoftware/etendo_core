@@ -1,7 +1,7 @@
 package org.openbravo.scheduling;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -17,9 +17,9 @@ import java.util.Properties;
 
 import jakarta.servlet.ServletException;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.openbravo.base.ConfigParameters;
 import org.openbravo.base.ConnectionProviderContextListener;
@@ -72,7 +72,7 @@ public class OBSchedulerTest {
    * @throws Exception
    *     if any error occurs during setup
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     // Initialize normal mocks
     mockScheduler = mock(Scheduler.class);
@@ -151,7 +151,7 @@ public class OBSchedulerTest {
    * <p>
    * Static mocks need to be explicitly closed since they're not automatically closed by Mockito.
    */
-  @After
+  @AfterEach
   public void tearDown() {
     // Close static mocks to prevent memory leaks
     if (staticOBPropertiesProvider != null) staticOBPropertiesProvider.close();
@@ -171,7 +171,7 @@ public class OBSchedulerTest {
     // Verify that getInstance always returns the same instance
     OBScheduler instance1 = OBScheduler.getInstance();
     OBScheduler instance2 = OBScheduler.getInstance();
-    assertEquals("getInstance should always return the same instance", instance1, instance2);
+    assertEquals(instance1, instance2, "getInstance should always return the same instance");
   }
 
   /**
@@ -223,7 +223,7 @@ public class OBSchedulerTest {
     boolean result = obScheduler.isSchedulingAllowed();
 
     // Verify result
-    assertTrue("isSchedulingAllowed should return true when the scheduler is active", result);
+    assertTrue(result, "isSchedulingAllowed should return true when the scheduler is active");
   }
 
   /**
@@ -247,7 +247,8 @@ public class OBSchedulerTest {
     boolean result = obScheduler.isSchedulingAllowed();
 
     // Verify result
-    assertTrue("isSchedulingAllowed should return true when in a cluster with scheduling allowed", result);
+    assertTrue(result,
+        "isSchedulingAllowed should return true when in a cluster with scheduling allowed");
   }
 
   /**
@@ -263,7 +264,8 @@ public class OBSchedulerTest {
     boolean result = OBScheduler.isNoExecuteBackgroundPolicy();
 
     // Verify result
-    assertTrue("isNoExecuteBackgroundPolicy should return true when the policy is 'no-execute'", result);
+    assertTrue(result,
+        "isNoExecuteBackgroundPolicy should return true when the policy is 'no-execute'");
   }
 
   /**

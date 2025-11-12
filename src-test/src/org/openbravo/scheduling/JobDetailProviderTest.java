@@ -1,19 +1,19 @@
 package org.openbravo.scheduling;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.openbravo.scheduling.OBScheduler.OB_GROUP;
 
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.service.db.DalConnectionProvider;
@@ -36,7 +36,7 @@ public class JobDetailProviderTest {
    * Sets up the test environment before each test.
    * Initializes the JobDetailProvider, test data, and mocks.
    */
-  @Before
+  @BeforeEach
   public void setup() {
     provider = JobDetailProvider.getInstance();
     testJobName = "testJob";
@@ -110,15 +110,10 @@ public class JobDetailProviderTest {
 
   /**
    * Tests that creating a JobDetail with a null bundle throws an exception.
-   *
-   * @throws SchedulerException
-   *     expected to be thrown when bundle is null
    */
-  @Test(expected = SchedulerException.class)
-  public void testCreateJobDetailWithNullBundle() throws SchedulerException {
-    // Test that passing a null bundle throws SchedulerException
-    provider.createJobDetail(testJobName, null);
-    fail("Should have thrown SchedulerException");
+  @Test
+  public void testCreateJobDetailWithNullBundle() {
+    assertThrows(SchedulerException.class, () -> provider.createJobDetail(testJobName, null));
   }
 
   /**

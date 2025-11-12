@@ -19,13 +19,13 @@
 
 package org.openbravo.test.dal;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
@@ -106,8 +106,7 @@ public class ValidationTest extends OBBaseTest {
             + " for value of type " + value.getClass().getName());
       }
     } catch (final ValidationException e) {
-      assertTrue("Unexpected exception " + e.getMessage(),
-          e.getMessage().indexOf(expectedMessage) != -1);
+      assertTrue(e.getMessage().indexOf(expectedMessage) != -1, "Unexpected exception " + e.getMessage());
     }
   }
 
@@ -123,8 +122,7 @@ public class ValidationTest extends OBBaseTest {
         ar.setType("A");
         fail("List value check not performed");
       } catch (final ValidationException ve) {
-        assertTrue("Illegal exception " + ve.getMessage(),
-            ve.getMessage().contains("it should be one of the following values"));
+        assertTrue(ve.getMessage().contains("it should be one of the following values"), "Illegal exception " + ve.getMessage());
         break;
         // success
       }

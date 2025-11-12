@@ -20,23 +20,22 @@
 package org.openbravo.test.views;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.codehaus.jettison.json.JSONObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jettison.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.GCField;
 import org.openbravo.client.application.GCSystem;
@@ -55,7 +54,6 @@ import org.openbravo.model.common.enterprise.Organization;
  * properties in grid configurations at tab, field, system and column level are correct.
  * 
  */
-@RunWith(Parameterized.class)
 public class SortingFilteringGridConfiguration extends GridConfigurationTest {
 
   private static Boolean coreWasInDevelopment;
@@ -96,7 +94,7 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
     }
     // Keep the assumption for now, but with improved logging so we can see if it is the reason for 0 tests executed.
     log.info("[GridConfigTest] Applying assumption check. Current count={} (before cleanup={}).", after, before);
-    assumeThat("Number of custom grid configs after cleanup", after, is(0));
+    assumeTrue(after == 0, "Number of custom grid configs after cleanup");
 
     OBContext.setAdminMode(true);
     try {
@@ -211,10 +209,7 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
   private static final String BUSINESS_PARTNER_TAB_ID = "220";
   private static final String BUSINESS_PARTNER_CATEGORY_FIELD_ID = "3955";
 
-  private ConfigSetting setting;
-
-  @Parameters(name = "{0}")
-  public static Collection<Object[]> parameters() {
+  private static Collection<Object[]> parameterData() {
     Collection<Object[]> params = new ArrayList<Object[]>();
     int skippedCombinations = 0;
     for (SysLevel sysLevel : SysLevel.values()) {
@@ -237,12 +232,13 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
     return params;
   }
 
-  public SortingFilteringGridConfiguration(ConfigSetting setting) {
-    this.setting = setting;
+  private static java.util.stream.Stream<Arguments> parameters() {
+    return parameterData().stream().map(param -> Arguments.of(param[0]));
   }
 
-  @Test
-  public void gridConfigurationShouldBeApplied() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("parameters")
+  public void gridConfigurationShouldBeApplied(ConfigSetting setting) {
     assertThat("Grid configuration at field level:", setting.computeResultForField(), allOf(
         containsString(setting.getExpectedFilter()), containsString(setting.getExpectedSort())));
   }

@@ -38,12 +38,10 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.WeldUtils;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.common.actionhandler.copyfromorderprocess.CopyFromOrdersProcess;
 import org.openbravo.dal.core.OBContext;
@@ -133,12 +131,13 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
   private String[] expectedOrderAmounts;
   // Expected order lines data
   private HashMap<String, String[]> expectedOrderLinesData;
+  private CopyLinesFromOrdersTestData data;
 
   public CopyLinesFromOrdersTest() {
 
   }
 
-  private void setData() {
+  private void setData(CopyLinesFromOrdersTestData data) {
     this.testNumber = data.getTestNumber();
     this.testDescription = data.getTestDescription();
     this.executeAsQAAdmin = data.isExecuteAsQAAdmin();
@@ -158,11 +157,9 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
       new CLFOTestDataPO_19(), new CLFOTestDataPO_20(), new CLFOTestDataSO_AUM_21(),
       new CLFOTestDataSO_AUM_22());
 
-  @Rule
-  public ParameterCdiTestRule<CopyLinesFromOrdersTestData> parameterValuesRule = new ParameterCdiTestRule<CopyLinesFromOrdersTestData>(
-      PARAMS);
-
-  private @ParameterCdiTest CopyLinesFromOrdersTestData data;
+  public static List<CopyLinesFromOrdersTestData> params() {
+    return PARAMS;
+  }
 
   private static UOMManagementUtil uomUtil = new UOMManagementUtil();
 
@@ -200,8 +197,10 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
    * <li>Validate that copied lines and order amounts are correct</li>
    * </ul>
    */
-  @Test
-  public void testCopyLinesFromOrders() {
+  @ParameterizedTest
+  @MethodSource("params")
+  public void testCopyLinesFromOrders(CopyLinesFromOrdersTestData testData) {
+    this.data = testData;
     setUpTest();
 
     try {
@@ -230,7 +229,7 @@ public class CopyLinesFromOrdersTest extends WeldBaseTest {
   }
 
   private void setUpTest() {
-    setData();
+    setData(this.data);
     log.info("Test Started {}: {} ", this.testNumber, this.testDescription);
     setOBContext();
     OBContext.setAdminMode();

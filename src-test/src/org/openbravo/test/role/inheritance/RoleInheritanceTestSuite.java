@@ -19,8 +19,8 @@
 
 package org.openbravo.test.role.inheritance;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 /**
  * 
@@ -28,8 +28,8 @@ import org.junit.runners.Suite;
  * 
  */
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
+@Suite
+@SelectClasses({
 
     // Propagation Tests
     AccessPropagationNotInherited.class, //

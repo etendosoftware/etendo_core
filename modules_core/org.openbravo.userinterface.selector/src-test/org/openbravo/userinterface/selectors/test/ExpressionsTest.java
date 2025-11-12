@@ -18,7 +18,7 @@
  */
 package org.openbravo.userinterface.selectors.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -28,8 +28,8 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.expression.OBScriptEngine;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.OBBindings;
@@ -54,7 +54,7 @@ public class ExpressionsTest extends WeldBaseTest {
    * This before method is named setUpEt() to avoid overwriting the super setUp method that is
    * invoke automatically before this one.
    */
-  @Before
+  @BeforeEach
   public void setUpEt() throws Exception {
     // Everything runs as System Admin user
     setSystemAdministratorContext();

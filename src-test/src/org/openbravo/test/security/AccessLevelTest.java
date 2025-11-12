@@ -19,15 +19,15 @@
 
 package org.openbravo.test.security;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.model.AccessLevel;
@@ -236,8 +236,7 @@ public class AccessLevelTest extends OBBaseTest {
       fail();
     } catch (final OBException e) {
       // no fail!
-      assertTrue("Invalid exception: " + e.getMessage(),
-          e.getMessage().indexOf(" may only have instances with organization *") != -1);
+      assertTrue(e.getMessage().indexOf(" may only have instances with organization *") != -1, "Invalid exception: " + e.getMessage());
       rollback();
     }
   }
@@ -257,8 +256,7 @@ public class AccessLevelTest extends OBBaseTest {
       fail();
     } catch (final OBException e) {
       // no fail!
-      assertTrue("Invalid exception " + e.getMessage(),
-          e.getMessage().indexOf(" may not have instances with organization *") != -1);
+      assertTrue(e.getMessage().indexOf(" may not have instances with organization *") != -1, "Invalid exception " + e.getMessage());
       rollback();
     }
   }
@@ -278,8 +276,7 @@ public class AccessLevelTest extends OBBaseTest {
       fail("The organization of a system client may not be set to a non-zero org.");
     } catch (final OBException e) {
       // no fail!
-      assertTrue("Invalid exception " + e.getMessage(),
-          e.getMessage().indexOf("may only have instances with organization *") != -1);
+      assertTrue(e.getMessage().indexOf("may only have instances with organization *") != -1, "Invalid exception " + e.getMessage());
       rollback();
     }
   }

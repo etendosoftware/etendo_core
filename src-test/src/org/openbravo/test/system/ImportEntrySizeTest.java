@@ -22,8 +22,8 @@ package org.openbravo.test.system;
 import java.util.Date;
 import java.util.UUID;
 
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.service.importprocess.ImportEntry;
@@ -94,16 +94,16 @@ public class ImportEntrySizeTest extends OBBaseTest {
     OBDal.getInstance().commitAndClose();
 
     // check the result
-    Assert.assertEquals(json, importEntry.getJsonInfo());
-    Assert.assertEquals(error, importEntry.getErrorinfo());
+    Assertions.assertEquals(json, importEntry.getJsonInfo());
+    Assertions.assertEquals(error, importEntry.getErrorinfo());
 
-    Assert.assertEquals(json, importEntryArchive.getJsonInfo());
-    Assert.assertEquals(error, importEntryArchive.getErrorinfo());
+    Assertions.assertEquals(json, importEntryArchive.getJsonInfo());
+    Assertions.assertEquals(error, importEntryArchive.getErrorinfo());
 
     // and check that we actually checked big sizes
-    Assert.assertTrue(importEntry.getJsonInfo().length() > (SIZE - 100));
-    Assert.assertTrue(importEntry.getErrorinfo().length() > (SIZE - 100));
-    Assert.assertTrue(importEntryArchive.getJsonInfo().length() > (SIZE - 100));
-    Assert.assertTrue(importEntryArchive.getErrorinfo().length() > (SIZE - 100));
+    Assertions.assertTrue(importEntry.getJsonInfo().length() > (SIZE - 100));
+    Assertions.assertTrue(importEntry.getErrorinfo().length() > (SIZE - 100));
+    Assertions.assertTrue(importEntryArchive.getJsonInfo().length() > (SIZE - 100));
+    Assertions.assertTrue(importEntryArchive.getErrorinfo().length() > (SIZE - 100));
   }
 }

@@ -19,16 +19,16 @@
 
 package org.openbravo.test.xml;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
@@ -42,7 +42,7 @@ import org.openbravo.utility.cleanup.log.LogCleanUpConfig;
  * @author alostale
  *
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class DefaultsDataset extends XMLBaseTest {
   private static final Logger log = LogManager.getLogger();
 
@@ -54,7 +54,7 @@ public class DefaultsDataset extends XMLBaseTest {
 
   private static final Long NEW_VALUE = 100L;
 
-  @Before
+  @BeforeEach
   public void setAdmin() {
     setSystemAdministratorContext();
   }

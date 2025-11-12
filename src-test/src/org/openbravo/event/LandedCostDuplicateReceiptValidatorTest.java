@@ -1,6 +1,7 @@
 package org.openbravo.event;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -11,12 +12,12 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -35,7 +36,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
  * when handling new and update events for {@link LCReceipt} entities.
  * It ensures that duplicate receipt lines in the Landed Cost window are detected correctly.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class LandedCostDuplicateReceiptValidatorTest {
 
   public static final String ID = "12345";
@@ -68,7 +69,7 @@ public class LandedCostDuplicateReceiptValidatorTest {
    * Sets up the test environment before each test execution.
    * Initializes the validator and configures lenient stubbing for common mock interactions.
    */
-  @Before
+  @BeforeEach
   public void setUp() {
     validator = new LandedCostDuplicateReceiptValidator() {
       @Override
@@ -123,8 +124,7 @@ public class LandedCostDuplicateReceiptValidatorTest {
       when(lcReceipt.getGoodsShipmentLine()).thenReturn(shipmentLine);
 
       OBException exception = assertThrows(OBException.class, () -> validator.onSave(newEvent));
-
-      assert (exception.getMessage().equals(errorMessage));
+      assertEquals(errorMessage, exception.getMessage());
     }
 
   }

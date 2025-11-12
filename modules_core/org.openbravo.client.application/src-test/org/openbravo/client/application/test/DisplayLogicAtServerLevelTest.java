@@ -20,13 +20,13 @@
 package org.openbravo.client.application.test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.CachedPreference;
 import org.openbravo.client.application.DynamicExpressionParser;
@@ -49,7 +49,7 @@ public class DisplayLogicAtServerLevelTest extends WeldBaseTest {
   /**
    * Initializes the global variables for the rest of the tests
    */
-  @Before
+  @BeforeEach
   public void initializeTest() {
     setSystemAdministratorContext();
 

@@ -19,9 +19,8 @@
 
 package org.openbravo.test.system;
 
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +55,7 @@ public class SystemValidatorTest extends OBBaseTest {
   @Test
   public void testModulesValidation() {
     String postPublication = System.getProperty("post.publication");
-    assumeThat("Ignoring test case during post publication cycle", postPublication, not("true"));
+    assumeTrue(!"true".equals(postPublication), "Ignoring test case during post publication cycle");
 
     setSystemAdministratorContext();
     List<String> updatedModules = null;

@@ -20,13 +20,13 @@
 package org.openbravo.test.model;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -246,8 +246,7 @@ public class RuntimeModelTest extends OBBaseTest {
             || Entity.COMPUTED_COLUMNS_PROXY_PROPERTY.equals(property.getName())) {
           continue;
         }
-        assertNotNull("Property " + property + " does not have a columnid ",
-            property.getColumnId());
+        assertNotNull(property.getColumnId(), "Property " + property + " does not have a columnid ");
       }
     }
   }
@@ -274,8 +273,9 @@ public class RuntimeModelTest extends OBBaseTest {
       }
     }
 
-    assertEquals(columns.size() + " columns set as *isParent* errors (wrong reference): "
-        + columns.toString(), 0, columns.size());
+    assertEquals(0, columns.size(),
+        columns.size() + " columns set as *isParent* errors (wrong reference): "
+            + columns.toString());
   }
 
   /**
@@ -293,8 +293,8 @@ public class RuntimeModelTest extends OBBaseTest {
       }
     }
 
-    assertEquals(columns.size() + " columns set as *isParent* and are *primitive type*: "
-        + columns.toString(), 0, columns.size());
+    assertEquals(0, columns.size(), columns.size() + " columns set as *isParent* and are *primitive type*: "
+        + columns.toString());
   }
 
   /**

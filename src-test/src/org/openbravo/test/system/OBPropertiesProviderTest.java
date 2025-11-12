@@ -19,10 +19,7 @@
 
 package org.openbravo.test.system;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
@@ -34,8 +31,8 @@ import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.test.base.OBBaseTest;
 
@@ -51,7 +48,7 @@ public class OBPropertiesProviderTest extends OBBaseTest {
   /**
    * Set up the test environment by initializing the OBPropertiesProvider instance.
    */
-  @Before
+  @BeforeEach
   public void setUp() {
     propertiesProvider = OBPropertiesProvider.getInstance();
   }
@@ -178,8 +175,7 @@ public class OBPropertiesProviderTest extends OBBaseTest {
     setSystemAdministratorContext();
 
     OBPropertiesProvider.setInstance(new OBPropertiesProvider());
-    assertNotNull("FormatXML document should be null if no file is found",
-        propertiesProvider.getFormatXMLDocument());
+    assertNotNull(propertiesProvider.getFormatXMLDocument(), "FormatXML document should be null if no file is found");
   }
 
   /**
@@ -215,7 +211,7 @@ public class OBPropertiesProviderTest extends OBBaseTest {
    * <p>
    * This test verifies that the method throws a NullPointerException when an environment variable with a null key is encountered.
    */
-  @Test(expected = NullPointerException.class)
+  @Test
   public void test_env_vars_with_null_key() {
     // Arrange
     OBPropertiesProvider provider = spy(OBPropertiesProvider.getInstance());
@@ -225,8 +221,7 @@ public class OBPropertiesProviderTest extends OBBaseTest {
     mockEnvVars.put(null, "some_value");
     doReturn(mockEnvVars).when(provider).getEnvVariables();
     // Act & Assert
-    provider.loadEnvProperties();
+    assertThrows(NullPointerException.class, provider::loadEnvProperties);
   }
 }
-
 

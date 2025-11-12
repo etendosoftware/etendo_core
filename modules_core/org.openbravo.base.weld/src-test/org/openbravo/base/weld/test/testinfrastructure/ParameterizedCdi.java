@@ -21,16 +21,14 @@ package org.openbravo.base.weld.test.testinfrastructure;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.base.weld.test.WeldBaseTest;
 
 /**
@@ -42,30 +40,24 @@ import org.openbravo.base.weld.test.WeldBaseTest;
 public class ParameterizedCdi extends WeldBaseTest {
   public static final List<String> PARAMS = Arrays.asList("param1", "param2", "param3");
 
-  /** defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<String> parameterValuesRule = new ParameterCdiTestRule<String>(
-      PARAMS);
-
-  /** this field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest String parameter;
-
   private static int counterTest1 = 0;
   private static int counterTest2 = 0;
   private static String test1Execution = "";
   private static String test2Execution = "";
 
   /** Test case to be executed once per parameter value */
-  @Test
-  public void test1() {
+  @ParameterizedTest
+  @ValueSource(strings = { "param1", "param2", "param3" })
+  public void test1(String parameter) {
     assertThat("parameter value", parameter, equalTo(PARAMS.get(counterTest1)));
     counterTest1++;
     test1Execution += parameter;
   }
 
   /** Test case to be executed once per parameter value */
-  @Test
-  public void test2() {
+  @ParameterizedTest
+  @ValueSource(strings = { "param1", "param2", "param3" })
+  public void test2(String parameter) {
     assertThat("parameter value", parameter, equalTo(PARAMS.get(counterTest2)));
 
     counterTest2++;
@@ -73,7 +65,7 @@ public class ParameterizedCdi extends WeldBaseTest {
   }
 
   /** Checks the previous test cases were executed as many times as parameter values in the list. */
-  @AfterClass
+  @AfterAll
   public static void testsShouldBeExecutedOncePerParameter() {
     String expectedValue = "";
     for (String paramValue : PARAMS) {

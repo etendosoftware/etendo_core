@@ -19,7 +19,7 @@
 
 package org.openbravo.test.createlinesfrom;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,13 +31,9 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.weld.WeldUtils;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromProcess;
 import org.openbravo.dal.core.OBContext;
@@ -81,12 +77,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
   private String testNumber;
   private String testDescription;
   private SimpleDateFormat dateFormat;
-
-  @Rule
-  public ParameterCdiTestRule<CreateLinesFromTestData> parameterValuesRule = new ParameterCdiTestRule<>(
-      PARAMS);
-
-  private @ParameterCdiTest CreateLinesFromTestData data;
+  private CreateLinesFromTestData data;
 
   public CreateLinesFromTest() {
     this.dateFormat = new SimpleDateFormat("dd-MM-yyyy");
@@ -95,8 +86,11 @@ public class CreateLinesFromTest extends WeldBaseTest {
   public static final List<CreateLinesFromTestData> PARAMS = Arrays.asList(new CLFTestDataSO_01(),
       new CLFTestDataPO_02());
 
-  @Before
-  public void before() {
+  public static List<CreateLinesFromTestData> params() {
+    return PARAMS;
+  }
+
+  private void beforeTest(CreateLinesFromTestData data) {
     this.testNumber = data.getTestNumber();
     this.testDescription = data.getTestDescription();
     log.info("Test Started {}: {} ", this.testNumber, this.testDescription);
@@ -104,8 +98,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
   }
 
-  @After
-  public void after() {
+  private void afterTest() {
     // Reset invoice line data identifiers to avoid wrong data check
     for (InvoiceLineData lineData : data.getInvoiceLineData()) {
       lineData.setOrderLineIdentifier(null);
@@ -127,8 +120,11 @@ public class CreateLinesFromTest extends WeldBaseTest {
    * <li>Check invoice header and lines</li>
    * </ul>
    */
-  @Test
-  public void testCreateLinesFromOrders() {
+  @ParameterizedTest
+  @MethodSource("params")
+  public void testCreateLinesFromOrders(CreateLinesFromTestData testData) {
+    this.data = testData;
+    beforeTest(testData);
     Order order = data.createOrder();
     data.assertDraftOrder(order);
     order.setDocumentAction("CO");
@@ -149,6 +145,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
     data.assertDraftInvoice(invoice);
     invoice = processInvoice(invoice);
     data.assertCompletedInvoice(invoice);
+    afterTest();
   }
 
   /**
@@ -165,8 +162,11 @@ public class CreateLinesFromTest extends WeldBaseTest {
    * <li>Check invoice header and lines</li>
    * </ul>
    */
-  @Test
-  public void testCreateLinesFromShipment() {
+  @ParameterizedTest
+  @MethodSource("params")
+  public void testCreateLinesFromShipment(CreateLinesFromTestData testData) {
+    this.data = testData;
+    beforeTest(testData);
     ShipmentInOut shipmentInOut = data.createShipmentInOut();
     data.assertDraftShipmentInOut(shipmentInOut);
     shipmentInOut.setDocumentAction("CO");
@@ -187,6 +187,7 @@ public class CreateLinesFromTest extends WeldBaseTest {
     data.assertDraftInvoice(invoice);
     invoice = processInvoice(invoice);
     data.assertCompletedInvoice(invoice);
+    afterTest();
   }
 
   private Order processOrder(Order testOrder) {

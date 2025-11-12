@@ -1,8 +1,9 @@
 package org.openbravo.scheduling.quartz;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,18 +13,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit tests for OpenbravoPostgreJDBCDelegate class.
  * Tests database operations related to scheduler and boolean value handling.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class OpenbravoPostgreJDBCDelegateTest {
 
   @InjectMocks
@@ -45,7 +46,7 @@ public class OpenbravoPostgreJDBCDelegateTest {
    * @throws SQLException
    *     if database operations fail
    */
-  @Before
+  @BeforeEach
   public void setUp() throws SQLException {
     when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
     when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
@@ -192,14 +193,12 @@ public class OpenbravoPostgreJDBCDelegateTest {
    * @throws SQLException
    *     expected to be thrown when no results are found
    */
-  @Test(expected = SQLException.class)
+  @Test
   public void testSchedulersStartedNoResults() throws SQLException {
     // GIVEN
     when(mockResultSet.next()).thenReturn(false);
 
     // WHEN
-    delegate.schedulersStarted(mockConnection);
-
-    // THEN - should throw SQLException
+    assertThrows(SQLException.class, () -> delegate.schedulersStarted(mockConnection));
   }
 }

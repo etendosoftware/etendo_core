@@ -1,6 +1,6 @@
 package org.openbravo.test.invoice;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -134,7 +134,7 @@ public class CloneInvoiceTest extends WeldBaseTest {
       exception = true;
     }
 
-    assertFalse(errorMessage, exception);
+    assertFalse(exception, errorMessage);
   }
 
   /**

@@ -27,9 +27,9 @@ package org.openbravo.client.application.test.event;
  */
 
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 
@@ -37,8 +37,7 @@ import jakarta.inject.Inject;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.order.Order;

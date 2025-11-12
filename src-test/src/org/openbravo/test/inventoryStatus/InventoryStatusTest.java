@@ -19,9 +19,11 @@
 
 package org.openbravo.test.inventoryStatus;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,12 +33,10 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -59,7 +59,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.pricing.pricelist.ProductPrice;
 import org.openbravo.service.db.CallStoredProcedure;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class InventoryStatusTest extends WeldBaseTest {
 
   final static private Logger log = LogManager.getLogger();
@@ -120,10 +120,7 @@ public class InventoryStatusTest extends WeldBaseTest {
   private static String binIS004ID;
   private static String productIS004ID;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
-  @Before
+    @BeforeEach
   public void initialize() {
     log.info("Initializing Inventory Status Test ...");
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID, LANGUAGE_CODE);
@@ -251,10 +248,9 @@ public class InventoryStatusTest extends WeldBaseTest {
       changeBinToBackflushStatus(storageBin);
       assertThatBinHasBackflushStatus(storageBin);
 
-      // Expect to throw an exception in the next Status change
-      thrown.expect(Exception.class);
-      thrown.expectMessage(containsString(ERROR_MESSAGE_NEGATIVESTOCK));
-      changeBinToAvailableStatus(storageBin);
+      Exception exception = assertThrows(Exception.class,
+          () -> changeBinToAvailableStatus(storageBin));
+      assertTrue(exception.getMessage().contains(ERROR_MESSAGE_NEGATIVESTOCK));
 
     } catch (Exception e) {
       log.error(e.getMessage(), e);

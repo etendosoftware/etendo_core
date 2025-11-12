@@ -19,11 +19,14 @@
 
 package org.openbravo.test.dal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.Assert;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
@@ -672,7 +674,7 @@ public class IssuesTest extends OBBaseTest {
   public void test20611() {
     OBCriteria<BusinessPartner> c = OBDal.getInstance().createCriteria(BusinessPartner.class);
     ScrollableResults iterator = c.scroll(ScrollMode.FORWARD_ONLY);
-    Assert.assertTrue(iterator.next());
+    assertTrue(iterator.next());
   }
 
   /**
@@ -722,9 +724,9 @@ public class IssuesTest extends OBBaseTest {
       connection = connectionProvider.getConnection();
       otherConnection = connectionProvider.getTransactionConnection();
       yetAnotherConnection = connectionProvider.getTransactionConnection();
-      Assert.assertNotSame(connection, yetAnotherConnection);
-      Assert.assertNotSame(connection, otherConnection);
-      Assert.assertNotSame(otherConnection, yetAnotherConnection);
+      assertNotSame(connection, yetAnotherConnection);
+      assertNotSame(connection, otherConnection);
+      assertNotSame(otherConnection, yetAnotherConnection);
     } finally {
       connectionProvider.releaseCommitConnection(otherConnection);
       connectionProvider.releaseCommitConnection(yetAnotherConnection);
@@ -751,9 +753,9 @@ public class IssuesTest extends OBBaseTest {
 
     final Test22235 test22235 = new Test22235();
     // default is true
-    Assert.assertTrue(test22235.isErrorOccured());
+    assertTrue(test22235.isErrorOccured());
     test22235.execute(processBundle);
-    Assert.assertFalse(test22235.isErrorOccured());
+    assertFalse(test22235.isErrorOccured());
   }
 
   @Test

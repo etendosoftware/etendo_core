@@ -20,9 +20,10 @@
 package org.openbravo.test.pricelist;
 
 import static org.hamcrest.Matchers.comparesEqualTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -33,10 +34,10 @@ import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -77,11 +78,11 @@ import org.openbravo.test.pricelist.data.PriceListTestData9;
 
 /**
  * Tests cases to check Price Lists Generation
- * 
+ *
  * @author Mark
  *
  */
-@RunWith(Parameterized.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class PriceListTest extends OBBaseTest {
   final static private Logger log = LogManager.getLogger();
 
@@ -114,21 +115,7 @@ public class PriceListTest extends OBBaseTest {
   // Price List Version
   private String basePriceListVersionId;
 
-  public PriceListTest(String testNumber, String testDescription, PriceListTestData data) {
-    this.testNumber = testNumber;
-    this.testDescription = testDescription;
-    this.testPriceListRules = data.getTestPriceListRulesData();
-    this.currencyId = data.getCurrencyId();
-    this.isSalesPrice = data.isSalesPrice();
-    this.isBasedOnCost = data.isBasedOnCost();
-    this.isPriceIncludesTax = data.isPriceIncludesTax();
-    this.isDefault = data.isDefault();
-    this.basePriceListVersionId = data.getBasePriceListVersionId();
-    this.expectedProductPricesData = data.getExpectedProductPrices();
-  }
-
   /** Parameterized possible combinations for price list computation */
-  @Parameters(name = "idx:{0} name:{1}")
   public static Collection<Object[]> params() {
     return Arrays.asList(new Object[][] { { "01",
         "PriceListSchema with one rule associated to the same Product Category. Unit Price and List Price discounts applied.",
@@ -200,8 +187,20 @@ public class PriceListTest extends OBBaseTest {
         }, });
   }
 
-  @Test
-  public void testPriceListProductPrices() {
+  @ParameterizedTest(name = "idx:{0} name:{1}")
+  @MethodSource("params")
+  public void testPriceListProductPrices(String testNumber, String testDescription, PriceListTestData data) {
+    // Initialize test data
+    this.testNumber = testNumber;
+    this.testDescription = testDescription;
+    this.testPriceListRules = data.getTestPriceListRulesData();
+    this.currencyId = data.getCurrencyId();
+    this.isSalesPrice = data.isSalesPrice();
+    this.isBasedOnCost = data.isBasedOnCost();
+    this.isPriceIncludesTax = data.isPriceIncludesTax();
+    this.isDefault = data.isDefault();
+    this.basePriceListVersionId = data.getBasePriceListVersionId();
+    this.expectedProductPricesData = data.getExpectedProductPrices();
 
     log.info("Test Started {}: {} ", this.testNumber, this.testDescription);
 
@@ -505,7 +504,7 @@ public class PriceListTest extends OBBaseTest {
 
       String productName = productPrice.getProduct().getName();
       if (!expectedProductPricesData.containsKey(productName)) {
-        assertTrue(testNumber + ". Product " + productName + " isn't expected in the list", false);
+        fail(testNumber + ". Product " + productName + " isn't expected in the list");
 
       } else {
         String[] prices = expectedProductPricesData.get(productName);

@@ -18,11 +18,11 @@
  */
 package org.openbravo.test.generalsetup.enterprise.organization;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({ ADOrgPersistInfoSetReadyTest.class,
-    ADOrgPersistOrgInfoComplexOrgTreeTest.class, ADOrgPersistInfoCornerCaseOrgTest.class })
+@Suite
+@SelectClasses({ ADOrgPersistInfoSetReadyTest.class, ADOrgPersistOrgInfoComplexOrgTreeTest.class,
+    ADOrgPersistInfoCornerCaseOrgTest.class })
 public class ADOrgPersistInfoTestSuite {
 }

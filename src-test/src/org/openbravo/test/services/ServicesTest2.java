@@ -19,22 +19,21 @@
 
 package org.openbravo.test.services;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
@@ -79,13 +78,11 @@ public class ServicesTest2 extends WeldBaseTest {
   public static final List<ServiceTestData> PARAMS = Arrays.asList(new ServiceTestData7(),
       new ServiceTestData8());
 
-  /** defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<ServiceTestData> parameterValuesRule = new ParameterCdiTestRule<ServiceTestData>(
-      PARAMS);
+  private static Stream<ServiceTestData> serviceParameters() {
+    return PARAMS.stream();
+  }
 
-  /** this field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest ServiceTestData parameter;
+  private ServiceTestData parameter;
 
   /**
    * Tests cases to check modifications on quantities of a sales order lines with related service
@@ -93,8 +90,10 @@ public class ServicesTest2 extends WeldBaseTest {
    * service lines to the product line. After it, it changes the ordered quantity of the product
    * line. All related service lines have to be updated.
    */
-  @Test
-  public void ServiceTest() {
+  @ParameterizedTest(name = "Service test {0}")
+  @MethodSource("serviceParameters")
+  public void serviceTest(ServiceTestData parameter) {
+    this.parameter = parameter;
     // Set QA context
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
     String testOrderId = null;

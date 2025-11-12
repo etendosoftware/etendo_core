@@ -19,18 +19,18 @@
 
 package org.openbravo.test.security;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.exception.OBSecurityException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
@@ -56,7 +56,7 @@ import org.openbravo.model.common.order.Order;
  * @author mtaal
  */
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class EntityAccessTest extends CrossOrganizationReference {
 
   private static final Logger log = LogManager.getLogger();
@@ -89,7 +89,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
    * After fixing issue #0010139, all entities are deletable. Therefore this test case is not going
    * to be executed.
    */
-  @Ignore("This test is currently disabled because after fixing issue #0010139, all entities are deletable.")
+  @Disabled("This test is currently disabled because after fixing issue #0010139, all entities are deletable.")
   @Test
   public void testBDoNotExecutetestNonDeletable() {
     setTestUserContext();
@@ -104,8 +104,8 @@ public class EntityAccessTest extends CrossOrganizationReference {
       OBDal.getInstance().commitAndClose();
       fail("Currency should be non-deletable");
     } catch (final OBSecurityException e) {
-      assertTrue("Wrong exception thrown:  " + e.getMessage(),
-          e.getMessage().indexOf("is not deletable") != -1);
+      assertTrue(
+          e.getMessage().indexOf("is not deletable") != -1, "Wrong exception thrown:  " + e.getMessage());
     }
   }
 
@@ -124,8 +124,9 @@ public class EntityAccessTest extends CrossOrganizationReference {
       log.debug(c.getCostingPrecision());
       fail("Derived readable not applied");
     } catch (final OBSecurityException e) {
-      assertTrue("Wrong exception thrown:  " + e.getMessage(),
-          e.getMessage().indexOf("is not directly readable") != -1);
+      assertTrue(
+          e.getMessage().indexOf("is not directly readable") != -1,
+          "Wrong exception thrown:  " + e.getMessage());
 
       try {
         c.setAllowRead(true);
@@ -167,16 +168,16 @@ public class EntityAccessTest extends CrossOrganizationReference {
       c.setCostingPrecision((long) 5);
       fail("Derived readable not checked on set");
     } catch (final OBSecurityException e) {
-      assertTrue("Wrong exception thrown:  " + e.getMessage(),
-          e.getMessage().indexOf("is not directly readable") != -1);
+      assertTrue(e.getMessage().indexOf("is not directly readable") != -1,
+      "Wrong exception thrown:  " + e.getMessage());
     }
     try {
       OBDal.getInstance().save(c);
       fail("No security check");
     } catch (final OBSecurityException e) {
       // successfull check
-      assertTrue("Wrong exception thrown:  " + e.getMessage(),
-          e.getMessage().indexOf("is not writable by this user") != -1);
+      assertTrue(
+          e.getMessage().indexOf("is not writable by this user") != -1,"Wrong exception thrown:  " + e.getMessage());
     }
   }
 

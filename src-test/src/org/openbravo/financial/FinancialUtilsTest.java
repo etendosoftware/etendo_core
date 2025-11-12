@@ -9,8 +9,8 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.model.pricing.pricelist.PriceList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 public class FinancialUtilsTest extends WeldBaseTest {

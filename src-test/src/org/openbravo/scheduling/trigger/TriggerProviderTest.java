@@ -18,10 +18,11 @@
  */
 package org.openbravo.scheduling.trigger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -32,8 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.scheduling.Frequency;
@@ -57,7 +58,7 @@ public class TriggerProviderTest {
   private static final TimeZone DEFAULT = TimeZone.getDefault();
   private static StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
 
-  @After
+  @AfterEach
   public void cleanUp() throws SchedulerException {
     // restore default time zone
     TimeZone.setDefault(DEFAULT);
@@ -297,8 +298,8 @@ public class TriggerProviderTest {
     assertExecutions(data, executions, UTC);
   }
 
-  @Test(expected = TriggerGenerationException.class)
-  public void invalidWeeklyDefinition() throws SchedulerException {
+  @Test
+  public void invalidWeeklyDefinition() {
     TriggerData data = new TriggerData();
     data.timingOption = TimingOption.SCHEDULED.getLabel();
     data.frequency = Frequency.WEEKLY.getLabel();
@@ -312,7 +313,9 @@ public class TriggerProviderTest {
     data.daySat = "N";
     data.daySun = "N";
 
-    assertExecutions(data, Collections.emptyList(), UTC);
+    org.junit.jupiter.api.Assertions.assertThrows(TriggerGenerationException.class, () -> {
+      assertExecutions(data, Collections.emptyList(), UTC);
+    });
   }
 
   @Test
@@ -428,7 +431,7 @@ public class TriggerProviderTest {
     assertExecutions(data, executions, UTC);
   }
 
-  @Test(expected = TriggerGenerationException.class)
+  @Test
   public void invalidMonthlyDefinition() throws SchedulerException {
     TriggerData data = new TriggerData();
     data.timingOption = TimingOption.SCHEDULED.getLabel();
@@ -437,7 +440,9 @@ public class TriggerProviderTest {
     data.startTime = "19:18:21";
     data.monthlyOption = "unknown";
 
-    assertExecutions(data, Collections.emptyList(), UTC);
+    org.junit.jupiter.api.Assertions.assertThrows(TriggerGenerationException.class, () -> {
+      assertExecutions(data, Collections.emptyList(), UTC);
+    });
   }
 
   @Test

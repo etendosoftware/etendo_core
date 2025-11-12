@@ -19,10 +19,10 @@
 
 package org.openbravo.test.model;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.test.base.OBBaseTest;
 
@@ -31,14 +31,14 @@ public class DBModifiedTest extends OBBaseTest {
 
   @Test
   public void noChangesTest() {
-    assertFalse("DB changes detected without any change performed in DB", isDBModified(false));
+    assertFalse(isDBModified(false), "DB changes detected without any change performed in DB");
   }
 
   @Test
   public void dbChangesShouldBeDetected() {
     try {
       createDBObject();
-      assertTrue("DB changes were not detected", isDBModified(false));
+      assertTrue(isDBModified(false), "DB changes were not detected");
     } finally {
       dropDBObject();
     }
@@ -48,10 +48,9 @@ public class DBModifiedTest extends OBBaseTest {
   public void dbChecksumCanBePersisted() {
     try {
       createDBObject();
-      assertTrue("DB changes were not detected", isDBModified(true));
+      assertTrue(isDBModified(true), "DB changes were not detected");
 
-      assertFalse("DB changes were detected just after updating check sum in DB",
-          isDBModified(false));
+      assertFalse(isDBModified(false), "DB changes were detected just after updating check sum in DB");
     } finally {
       dropDBObject();
     }
@@ -61,10 +60,9 @@ public class DBModifiedTest extends OBBaseTest {
   public void canCheckChangesWithoutSavingChecksum() {
     try {
       createDBObject();
-      assertTrue("DB changes were not detected", isDBModified(false));
+      assertTrue(isDBModified(false), "DB changes were not detected");
 
-      assertTrue("DB changes were not detected after calling AD_DB_MODIFIED persisting checksum ",
-          isDBModified(false));
+      assertTrue(isDBModified(false), "DB changes were not detected after calling AD_DB_MODIFIED persisting checksum ");
     } finally {
       dropDBObject();
     }
