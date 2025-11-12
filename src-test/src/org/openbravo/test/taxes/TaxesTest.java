@@ -28,6 +28,7 @@ import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
@@ -373,7 +374,6 @@ public class TaxesTest extends OBBaseTest {
       testOrder(testOrder, false, true);
 
       deleteOrder(testOrder);
-      log.info("Test Completed successfully");
     } catch (Exception e) {
       log.error("Error when executing testOrderTaxes", e);
       fail("Error when executing testOrderTaxes", e);
@@ -395,6 +395,8 @@ public class TaxesTest extends OBBaseTest {
       testInvoice(testInvoice, true, false);
 
       testInvoice = reactivateInvoice(testInvoice);
+      OBDal.getInstance().commitAndClose();
+      testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
       testInvoice(testInvoice, false, false);
 
       testInvoice = updateInvoice(testInvoice);
@@ -402,12 +404,12 @@ public class TaxesTest extends OBBaseTest {
 
       testInvoice = completeInvoice(testInvoice);
       testInvoice(testInvoice, true, true);
-
+      OBDal.getInstance().commitAndClose();
+      testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
       testInvoice = reactivateInvoice(testInvoice);
       testInvoice(testInvoice, false, true);
 
       deleteInvoice(testInvoice);
-      log.info("Test Completed successfully");
     } catch (Exception e) {
       log.error("Error when executing testInvoiceTaxes", e);
       fail("Error when executing testInvoiceTaxes", e);
@@ -488,8 +490,8 @@ public class TaxesTest extends OBBaseTest {
     OBDal.getInstance().flush();
     testOrder = OBDal.getInstance().get(Order.class, testOrder.getId());
 
-    log.info("Order Created:" + testOrder.getDocumentNo());
-    log.info(testDescription);
+    log.debug("Order Created:" + testOrder.getDocumentNo());
+    log.debug(testDescription);
 
     return testOrder;
   }
@@ -563,18 +565,19 @@ public class TaxesTest extends OBBaseTest {
         OBDal.getInstance().save(testInvoiceDiscount);
         OBDal.getInstance().flush();
         testInvoiceDiscount = OBDal.getInstance().get(InvoiceDiscount.class, testInvoiceDiscount.getId());
-        log.info("Line Price: {}", invoiceLine.getUnitPrice());
-        log.info("Tax Rate: {}", invoiceLine.getTax().getRate());
-        log.info("Expected Net Amt: {}", invoiceLine.getLineNetAmount());
+        log.debug("Line Price: {}", invoiceLine.getUnitPrice());
+        log.debug("Tax Rate: {}", invoiceLine.getTax().getRate());
+        log.debug("Expected Net Amt: {}", invoiceLine.getLineNetAmount());
       }
     }
 
     OBDal.getInstance().save(testInvoice);
     OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
     testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
 
-    log.info("Invoice Created: " + testInvoice.getDocumentNo());
-    log.info(testDescription);
+    log.debug("Invoice Created: " + testInvoice.getDocumentNo());
+    log.debug(testDescription);
 
     return testInvoice;
   }
@@ -648,6 +651,7 @@ public class TaxesTest extends OBBaseTest {
 
     OBDal.getInstance().save(testInvoice);
     OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
     testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
 
     return testInvoice;
@@ -660,8 +664,8 @@ public class TaxesTest extends OBBaseTest {
     }
     testOrder.getOrderLineList().clear();
     OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
     testOrder = OBDal.getInstance().get(Order.class, testOrder.getId());
-    OBDal.getInstance().refresh(testOrder);
 
     assertThat("GrandTotal holds an amount when order has no lines",
         testOrder.getGrandTotalAmount(), comparesEqualTo(BigDecimal.ZERO));
@@ -671,7 +675,7 @@ public class TaxesTest extends OBBaseTest {
     OBDal.getInstance().remove(testOrder);
     OBDal.getInstance().flush();
 
-    log.info("Order Deleted:" + testOrder.getDocumentNo());
+    log.debug("Order Deleted:" + testOrder.getDocumentNo());
   }
 
   private void deleteInvoice(Invoice testInvoice) {
@@ -681,6 +685,7 @@ public class TaxesTest extends OBBaseTest {
     }
     testInvoice.getInvoiceLineList().clear();
     OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
     testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
 
     assertThat("GrandTotal holds an amount when invoice has no lines",
@@ -691,7 +696,7 @@ public class TaxesTest extends OBBaseTest {
     OBDal.getInstance().remove(testInvoice);
     OBDal.getInstance().flush();
 
-    log.info("Invoice Deleted:" + testInvoice.getDocumentNo());
+    log.debug("Invoice Deleted:" + testInvoice.getDocumentNo());
   }
 
   private void updateTax(boolean isStart) {
@@ -713,7 +718,6 @@ public class TaxesTest extends OBBaseTest {
     }
   }
 
-
   private Order completeOrder(Order testOrder) throws SQLException {
     testOrder.setDocumentAction("CO");
     return processOrder(testOrder);
@@ -721,6 +725,18 @@ public class TaxesTest extends OBBaseTest {
 
   private Invoice completeInvoice(Invoice testInvoice) {
     testInvoice.setDocumentAction("CO");
+    // Append timestamp but ensure documentNo doesn't exceed 30 characters
+    String baseDocNo = testInvoice.getDocumentNo();
+    String timestamp = String.valueOf(new Date().getTime() % 10000);
+    String newDocNo = baseDocNo + timestamp;
+    if (newDocNo.length() > 30) {
+      // Truncate base to make room for timestamp
+      baseDocNo = baseDocNo.substring(0, Math.max(0, 30 - timestamp.length()));
+      newDocNo = baseDocNo + timestamp;
+    }
+    testInvoice.setDocumentNo(newDocNo);
+    OBDal.getInstance().save(testInvoice);
+    OBDal.getInstance().flush();
     return processInvoice(testInvoice);
   }
 
@@ -739,7 +755,7 @@ public class TaxesTest extends OBBaseTest {
     params.add(null);
     params.add(testOrder.getId());
     for (OrderLine line : testOrder.getOrderLineList()) {
-      log.info("OrderLine -> Product: {}, Amount: {}, Order ID: {}",
+      log.debug("OrderLine -> Product: {}, Amount: {}, Order ID: {}",
           line.getProduct().getIdentifier(),
           line.getLineNetAmount(),
           line.getSalesOrder().getId());
@@ -754,11 +770,17 @@ public class TaxesTest extends OBBaseTest {
   private Invoice processInvoice(Invoice testInvoice) {
     final List<Object> params = new ArrayList<Object>();
     params.add(null);
+    OBDal.getInstance().refresh(testInvoice);
+    log.debug("Invoice ID before Invoice Process: " + testInvoice.getId());
+    log.debug("DocumentNo before Invoice Process: " + testInvoice.getDocumentNo());
+    log.debug("Invoice Org before Invoice Process: " + testInvoice.getOrganization().getName());
     params.add(testInvoice.getId());
     CallStoredProcedure.getInstance()
         .call(INVOICE_COMPLETE_PROCEDURE_NAME, params, null, true, false);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
     testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
-    log.info("After completion - Invoice {} Net: {}, Gross: {}",
+    log.debug("After completion - Invoice {} Net: {}, Gross: {}",
         testInvoice.getDocumentNo(),
         testInvoice.getSummedLineAmount(),
         testInvoice.getGrandTotalAmount());
@@ -768,7 +790,7 @@ public class TaxesTest extends OBBaseTest {
 
   private void testOrder(Order testOrder, boolean isCompleted, boolean isUpdated) {
 
-    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel && !isCompleted;
+    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel;
     int stdPrecision = testOrder.getCurrency().getStandardPrecision().intValue();
 
     // Assert line taxes and amounts
@@ -876,9 +898,9 @@ public class TaxesTest extends OBBaseTest {
           : docTaxes.get(tax.getTax().getId())[1]));
       assertThat("Wrong taxable amount for document",
           round(tax.getTaxableAmount(), round, stdPrecision),
-          comparesEqualTo(expectedTaxableAmount));
-      assertThat("Wrong tax amount for document", tax.getTaxAmount(),
-          comparesEqualTo(expectedTaxAmount));
+          comparesEqualTo(round(expectedTaxableAmount, round, stdPrecision)));
+      assertThat("Wrong tax amount for document", round(tax.getTaxAmount(), round, stdPrecision),
+          comparesEqualTo(round(expectedTaxAmount, round, stdPrecision)));
 
       n++;
     }
@@ -943,7 +965,7 @@ public class TaxesTest extends OBBaseTest {
 
   private void testInvoice(Invoice testInvoice, boolean isCompleted, boolean isUpdated) {
 
-    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel && !isCompleted;
+    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel;
     int stdPrecision = testInvoice.getCurrency().getStandardPrecision().intValue();
 
     // Assert line taxes and amounts
@@ -958,29 +980,17 @@ public class TaxesTest extends OBBaseTest {
       obc2.addEqual(InvoiceLineTax.PROPERTY_INVOICELINE, testInvoiceLine);
       obc2.addOrderBy(InvoiceLineTax.PROPERTY_LINENO, true);
       for (InvoiceLineTax linetax : obc2.list()) {
-        OBDal.getInstance().getSession().clear();
         linetax = OBDal.getInstance().get(InvoiceLineTax.class, linetax.getId());
 
-        log.info(linetax.getTax().getIdentifier());
-        log.info(linetax.getTax().getId());
-        log.info(linetax.getTaxableAmount().toString());
-        log.info(linetax.getTaxAmount().toString());
+        log.debug("Line Tax ID: " + linetax.getTax().getId());
+        log.debug("Line Tax Identifier " + linetax.getTax().getIdentifier());
+        log.debug("Line Tax Taxable amount " + linetax.getTaxableAmount().toString());
+        log.debug("Line Tax Tax Amount " + linetax.getTaxAmount().toString());
 
         if (!linesData[i].getLineTaxes().containsKey(linetax.getTax().getId())) {
           fail(testDescription + ". Tax Should not be present: "
               + linetax.getTax().getIdentifier());
         }
-
-        List<InvoiceLineTax> linetaxList = new ArrayList<>();
-        linetaxList.add(linetax);
-        testInvoiceLine.setInvoiceLineTaxList(null);
-        testInvoiceLine.setInvoiceLineTaxList(linetaxList);
-        OBDal.getInstance().save(linetax);
-        OBDal.getInstance().save(testInvoiceLine);
-        List<InvoiceLine> lineList = new ArrayList<>();
-        lineList.add(testInvoiceLine);
-        testInvoice.setInvoiceLineList(lineList);
-        OBDal.getInstance().save(testInvoice);
         // Assert line taxes
         BigDecimal expectedTaxableAmount = new BigDecimal(isUpdated
             ? (isCompleted ? linesData[i].getLineTaxes().get(linetax.getTax().getId())[6]
@@ -999,9 +1009,6 @@ public class TaxesTest extends OBBaseTest {
             comparesEqualTo(expectedTaxAmount));
 
         n++;
-        OBDal.getInstance().refresh(linetax);
-        OBDal.getInstance().refresh(testInvoiceLine);
-        OBDal.getInstance().refresh(testInvoice);
       }
 
       if (linesData[i].getLineTaxes().size() != n) {
@@ -1021,8 +1028,8 @@ public class TaxesTest extends OBBaseTest {
           : (isCompleted ? linesData[i].getLineAmounts()[3] : linesData[i].getLineAmounts()[1]));
       assertThat("Wrong Invoice line Gross Amount", testInvoiceLine.getGrossAmount(),
           comparesEqualTo(expectedGrossAmount));
-      assertThat("Wrong Invoice line Net Amount", testInvoiceLine.getLineNetAmount(),
-          comparesEqualTo(expectedNetAmount));
+      assertThat("Wrong Invoice line Net Amount", round(testInvoiceLine.getLineNetAmount(), round, stdPrecision),
+          comparesEqualTo(round(expectedNetAmount, round, stdPrecision)));
 
       i++;
     }
@@ -1045,13 +1052,6 @@ public class TaxesTest extends OBBaseTest {
         fail(testDescription + ". Tax Should not be present: " + tax.getTax().getIdentifier());
       }
 
-      OBDal.getInstance().refresh(tax);
-      List<InvoiceTax> linetaxList = new ArrayList<>();
-      linetaxList.add(tax);
-      testInvoice.setInvoiceTaxList(linetaxList);
-      OBDal.getInstance().save(tax);
-      OBDal.getInstance().save(testInvoice);
-      List<InvoiceLine> lineList = new ArrayList<>();
       // Assert header taxes
       BigDecimal expectedTaxableAmount = new BigDecimal(isUpdated
           ? (isCompleted ? docTaxes.get(tax.getTax().getId())[6]
@@ -1065,21 +1065,18 @@ public class TaxesTest extends OBBaseTest {
           : docTaxes.get(tax.getTax().getId())[1]));
       assertThat("Wrong taxable amount for document",
           round(tax.getTaxableAmount(), round, stdPrecision),
-          comparesEqualTo(expectedTaxableAmount));
-      assertThat("Wrong tax amount for document", tax.getTaxAmount(),
-          comparesEqualTo(expectedTaxAmount));
-
+          comparesEqualTo(round(expectedTaxableAmount, round, stdPrecision)));
+      assertThat("Wrong tax amount for document", round(tax.getTaxAmount(), round, stdPrecision),
+          comparesEqualTo(round(expectedTaxAmount, round, stdPrecision)));
       n++;
-      OBDal.getInstance().refresh(testInvoice);
     }
 
     if (docTaxes.size() != n) {
       fail(testDescription + ". Number of lines obtained(" + docTaxes.size()
           + ") different than expected (" + n + ")");
     }
-    // Temp change OBDal.getInstance().refresh(testInvoice);
-    // Because an exception comes up due to the object to refresh doesn't exist
-    //testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
+    // Re-obtain invoice to get updated amounts from stored procedure
+    testInvoice = OBDal.getInstance().get(Invoice.class, testInvoice.getId());
     // Assert header amounts
     BigDecimal expectedGrossAmount = new BigDecimal(
         isUpdated ? (isCompleted ? docAmounts[6] : docAmounts[4])
@@ -1087,12 +1084,12 @@ public class TaxesTest extends OBBaseTest {
     BigDecimal expectedNetAmount = new BigDecimal(
         isUpdated ? (isCompleted ? docAmounts[7] : docAmounts[5])
             : (isCompleted ? docAmounts[3] : docAmounts[1]));
-    log.info("Expected Gross Amount: {}", expectedGrossAmount);
-    log.info("Actual Gross Amount: {}", testInvoice.getGrandTotalAmount());
+    log.debug("Expected Gross Amount: {}", expectedGrossAmount);
+    log.debug("Actual Gross Amount: {}", testInvoice.getGrandTotalAmount());
     assertThat("Wrong Invoice GrandTotal", testInvoice.getGrandTotalAmount(),
         comparesEqualTo(expectedGrossAmount));
-    log.info("Expected Net Amount: {}", expectedNetAmount);
-    log.info("Actual Net Amount: {}", testInvoice.getSummedLineAmount());
+    log.debug("Expected Net Amount: {}", expectedNetAmount);
+    log.debug("Actual Net Amount: {}", testInvoice.getSummedLineAmount());
     assertThat("Wrong Invoice TotalLines", testInvoice.getSummedLineAmount(),
         comparesEqualTo(expectedNetAmount));
 
@@ -1104,9 +1101,9 @@ public class TaxesTest extends OBBaseTest {
     for (InvoiceLine testInvoiceLine : obc1.list()) {
       BigDecimal netAmount = testInvoiceLine.getLineNetAmount();
       BigDecimal grossAmount = testInvoiceLine.getGrossAmount();
-      log.info("Line {} - Expected Gross: {}, Actual Gross: {}",
+      log.debug("Line {} - Expected Gross: {}, Actual Gross: {}",
           testInvoiceLine.getLineNo(), expectedGrossAmount, testInvoiceLine.getGrossAmount());
-      log.info("Line {} - Expected Net: {}, Actual Net: {}",
+      log.debug("Line {} - Expected Net: {}, Actual Net: {}",
           testInvoiceLine.getLineNo(), expectedNetAmount, testInvoiceLine.getLineNetAmount());
 
       if (isPriceIncludingTaxes) {

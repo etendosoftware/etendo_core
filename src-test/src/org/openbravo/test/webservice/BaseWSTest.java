@@ -4,24 +4,24 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2025 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.test.webservice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -61,10 +61,9 @@ import org.xml.sax.XMLReader;
 
 /**
  * Base class for webservice tests. Provides several methods to do HTTP REST requests.
- * 
+ *
  * @author mtaal
  */
-
 public class BaseWSTest extends OBBaseTest {
 
   private static final Logger log = LogManager.getLogger();
@@ -77,21 +76,19 @@ public class BaseWSTest extends OBBaseTest {
 
   /**
    * Executes a DELETE HTTP request, the wsPart is appended to the {@link #getOpenbravoURL()}.
-   * 
+   *
    * @param wsPart
-   *          the actual webservice part of the url, is appended to the openbravo url (
-   *          {@link #getOpenbravoURL()}), includes any query parameters
+   *     the actual webservice part of the url, is appended to the openbravo url (
+   *     {@link #getOpenbravoURL()}), includes any query parameters
    * @param expectedResponse
-   *          the expected HTTP response code
+   *     the expected HTTP response code
    */
   protected void doDirectDeleteRequest(String wsPart, int expectedResponse) {
     try {
       final HttpURLConnection hc = createConnection(wsPart, "DELETE");
       hc.connect();
       assertEquals(expectedResponse, hc.getResponseCode());
-      assertTrue("Content type not set in delete response", hc.getContentType() != null);
-      // disabled, see here: https://issues.openbravo.com/view.php?id=10236
-      // assertTrue("Content encoding not set in delete response", hc.getContentEncoding() != null);
+      assertTrue(hc.getContentType() != null, "Content type not set in delete response");
     } catch (final Exception e) {
       throw new OBException(e);
     }
@@ -100,20 +97,20 @@ public class BaseWSTest extends OBBaseTest {
   /**
    * Execute a REST webservice HTTP request which posts/puts content and returns a XML result. The
    * content is validated against the XML schema retrieved using the /ws/dal/schema webservice call.
-   * 
+   *
    * @param wsPart
-   *          the actual webservice part of the url, is appended to the openbravo url (
-   *          {@link #getOpenbravoURL()}), includes any query parameters
+   *     the actual webservice part of the url, is appended to the openbravo url (
+   *     {@link #getOpenbravoURL()}), includes any query parameters
    * @param content
-   *          the content (XML) to post or put
+   *     the content (XML) to post or put
    * @param expectedResponse
-   *          the expected HTTP response code
+   *     the expected HTTP response code
    * @param expectedContent
-   *          the system check that the returned content contains this expectedContent
+   *     the system check that the returned content contains this expectedContent
    * @param method
-   *          POST or PUT
+   *     POST or PUT
    * @return the result from the rest request (i.e. the content of the response), most of the time
-   *         an xml string
+   *     an xml string
    */
   protected String doContentRequest(String wsPart, String content, int expectedResponse,
       String expectedContent, String method) {
@@ -124,58 +121,57 @@ public class BaseWSTest extends OBBaseTest {
    * Execute a REST webservice HTTP request which posts/puts content and returns a result. If
    * validateXML parameter is <code>true</code>, the content is validated against the XML schema
    * retrieved using the /ws/dal/schema webservice call.
-   * 
+   *
    * @param wsPart
-   *          the actual webservice part of the url, is appended to the openbravo url (
-   *          {@link #getOpenbravoURL()}), includes any query parameters
+   *     the actual webservice part of the url, is appended to the openbravo url (
+   *     {@link #getOpenbravoURL()}), includes any query parameters
    * @param content
-   *          the content (XML) to post or put
+   *     the content (XML) to post or put
    * @param expectedResponse
-   *          the expected HTTP response code
+   *     the expected HTTP response code
    * @param expectedContent
-   *          the system check that the returned content contains this expectedContent
+   *     the system check that the returned content contains this expectedContent
    * @param method
-   *          POST or PUT
+   *     POST or PUT
    * @param validateXML
-   *          should response be validated as XML
+   *     should response be validated as XML
    * @return the result from the rest request (i.e. the content of the response), most of the time
-   *         an xml string
+   *     an xml string
    */
   protected String doContentRequest(String wsPart, String content, int expectedResponse,
       String expectedContent, String method, boolean validateXML) {
     try {
       final HttpURLConnection hc = createConnection(wsPart, method);
-      final OutputStream os = hc.getOutputStream();
-      os.write(content.getBytes("UTF-8"));
-      os.flush();
-      os.close();
-      hc.connect();
+      try (OutputStream os = hc.getOutputStream()) {
+        os.write(content.getBytes(StandardCharsets.UTF_8));
+        os.flush();
+      }
 
+      hc.connect();
       assertEquals(expectedResponse, hc.getResponseCode());
 
       if (expectedResponse == 500) {
-        // no content available anyway
         return "";
       }
 
       String retContent;
-
       if (validateXML) {
         final SAXReader sr = XMLUtil.getInstance().newSAXReader();
-        final InputStream is = hc.getInputStream();
-        final Document doc = sr.read(is);
-        retContent = XMLUtil.getInstance().toString(doc);
-        validateXML(retContent);
+        try (InputStream is = hc.getInputStream()) {
+          final Document doc = sr.read(is);
+          retContent = XMLUtil.getInstance().toString(doc);
+          validateXML(retContent);
+        }
       } else {
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(hc.getInputStream(), writer, "utf-8");
-        retContent = writer.toString();
+        try (StringWriter writer = new StringWriter()) {
+          IOUtils.copy(hc.getInputStream(), writer, StandardCharsets.UTF_8);
+          retContent = writer.toString();
+        }
       }
 
-      if (retContent.indexOf(expectedContent) == -1) {
+      if (!retContent.contains(expectedContent)) {
         log.debug(retContent);
-        fail("WS response does not contain: [" + expectedContent + "]\nActual result:\n"
-            + retContent);
+        fail("WS response does not contain: [" + expectedContent + "]\nActual result:\n" + retContent);
       }
 
       return retContent;
@@ -186,11 +182,11 @@ public class BaseWSTest extends OBBaseTest {
 
   /**
    * Convenience method to get a value of a specific XML element without parsing the whole xml
-   * 
+   *
    * @param content
-   *          the xml
+   *     the xml
    * @param tag
-   *          the element name
+   *     the element name
    * @return the value
    */
   protected String getTagValue(String content, String tag) {
@@ -208,15 +204,15 @@ public class BaseWSTest extends OBBaseTest {
   /**
    * Executes a GET request and validates the return against the schema. The content is validated
    * against the XML schema retrieved using the /ws/dal/schema webservice call.
-   * 
+   *
    * @param wsPart
-   *          the actual webservice part of the url, is appended to the openbravo url (
-   *          {@link #getOpenbravoURL()}), includes any query parameters
+   *     the actual webservice part of the url, is appended to the openbravo url (
+   *     {@link #getOpenbravoURL()}), includes any query parameters
    * @param testContent
-   *          the system check that the returned content contains this testContent. if null is
-   *          passed for this parameter then this check is not done.
+   *     the system check that the returned content contains this testContent. if null is
+   *     passed for this parameter then this check is not done.
    * @param responseCode
-   *          the expected HTTP response code
+   *     the expected HTTP response code
    * @return the content returned from the GET request
    */
   protected String doTestGetRequest(String wsPart, String testContent, int responseCode) {
@@ -231,20 +227,20 @@ public class BaseWSTest extends OBBaseTest {
   /**
    * Executes a GET request. The content is validated against the XML schema retrieved using the
    * /ws/dal/schema webservice call.
-   * 
+   *
    * @param wsPart
-   *          the actual webservice part of the url, is appended to the openbravo url (
-   *          {@link #getOpenbravoURL()}), includes any query parameters
+   *     the actual webservice part of the url, is appended to the openbravo url (
+   *     {@link #getOpenbravoURL()}), includes any query parameters
    * @param testContent
-   *          the system check that the returned content contains this testContent. if null is
-   *          passed for this parameter then this check is not done.
+   *     the system check that the returned content contains this testContent. if null is
+   *     passed for this parameter then this check is not done.
    * @param responseCode
-   *          the expected HTTP response code
+   *     the expected HTTP response code
    * @param validate
-   *          if true then the response content is validated against the Openbravo XML Schema
+   *     if true then the response content is validated against the Openbravo XML Schema
    * @param logException
-   *          indicates whether in case of Exception it should be logged, this param should be false
-   *          when Exception is expected in order not to pollute the log
+   *     indicates whether in case of Exception it should be logged, this param should be false
+   *     when Exception is expected in order not to pollute the log
    * @return the content returned from the GET request
    */
   protected String doTestGetRequest(String wsPart, String testContent, int responseCode,
@@ -253,32 +249,29 @@ public class BaseWSTest extends OBBaseTest {
       final HttpURLConnection hc = createConnection(wsPart, "GET");
       hc.connect();
       final SAXReader sr = XMLUtil.getInstance().newSAXReader();
-      final InputStream is = hc.getInputStream();
       final StringBuilder sb = new StringBuilder();
-      try (BufferedReader reader = new BufferedReader(
-          new InputStreamReader(is, StandardCharsets.UTF_8))) {
+
+      try (InputStream is = hc.getInputStream();
+           BufferedReader reader = new BufferedReader(
+               new InputStreamReader(is, StandardCharsets.UTF_8))) {
         String line;
         while ((line = reader.readLine()) != null) {
           sb.append(line).append("\n");
         }
-
-        final Document doc = sr.read(new StringReader(sb.toString()));
-        final String content = XMLUtil.getInstance().toString(doc);
-        if (testContent != null && content.indexOf(testContent) == -1) {
-          log.debug(content);
-          fail();
-        }
-        assertEquals(responseCode, hc.getResponseCode());
-        is.close();
-        // do not validate the xml schema itself, this results in infinite loops
-        if (validate) {
-          validateXML(content);
-        }
-        return content;
-      } catch (Exception e) {
-        log.debug(sb.toString());
-        throw e;
       }
+
+      final Document doc = sr.read(new StringReader(sb.toString()));
+      final String content = XMLUtil.getInstance().toString(doc);
+      if (testContent != null && !content.contains(testContent)) {
+        log.debug(content);
+        fail("Expected content not found in WS response");
+      }
+
+      assertEquals(responseCode, hc.getResponseCode());
+      if (validate) {
+        validateXML(content);
+      }
+      return content;
     } catch (final Exception e) {
       throw new OBException("Exception when executing ws: " + wsPart, e, logException);
     }
@@ -286,10 +279,10 @@ public class BaseWSTest extends OBBaseTest {
 
   /**
    * Creates a HTTP connection.
-   * 
+   *
    * @param wsPart
    * @param method
-   *          POST, PUT, GET or DELETE
+   *     POST, PUT, GET or DELETE
    * @return the created connection
    * @throws Exception
    */
@@ -300,12 +293,11 @@ public class BaseWSTest extends OBBaseTest {
         return new PasswordAuthentication(LOGIN, PWD.toCharArray());
       }
     });
+
     log.debug(method + ": " + getOpenbravoURL() + wsPart);
     final URL url = new URL(getOpenbravoURL() + wsPart);
     final HttpURLConnection hc = (HttpURLConnection) url.openConnection();
     hc.setRequestMethod(method);
-    hc.setAllowUserInteraction(false);
-    hc.setDefaultUseCaches(false);
     hc.setDoOutput(true);
     hc.setDoInput(true);
     hc.setInstanceFollowRedirects(true);
@@ -329,13 +321,12 @@ public class BaseWSTest extends OBBaseTest {
       throw new OBException(CONTEXT_PROPERTY + " is not set in Openbravo.properties");
     }
     log.debug("got OB context: " + OB_URL);
-
     return OB_URL;
   }
 
   /**
    * Returns the login used to login for the webservice. The default value is {@link #LOGIN}.
-   * 
+   *
    * @return the login name used to login for the webservice
    */
   protected String getLogin() {
@@ -345,7 +336,7 @@ public class BaseWSTest extends OBBaseTest {
   /**
    * Returns the password used to login into the webservice server. The default value is
    * {@link #PWD}.
-   * 
+   *
    * @return the password used to login into the webservice, the default is {@link #PWD}
    */
   protected String getPassword() {
@@ -354,9 +345,9 @@ public class BaseWSTest extends OBBaseTest {
 
   /**
    * Validates the xml against the generated schema.
-   * 
+   *
    * @param xml
-   *          the xml to validate
+   *     the xml to validate
    */
   protected void validateXML(String xml) {
     final Reader schemaReader = new StringReader(getXMLSchema());
@@ -365,27 +356,22 @@ public class BaseWSTest extends OBBaseTest {
       SAXParserFactory factory = SAXParserFactory.newInstance();
       factory.setValidating(false);
       factory.setNamespaceAware(true);
-
       SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-
-      factory.setSchema(schemaFactory.newSchema(new Source[] { new StreamSource(schemaReader) }));
+      factory.setSchema(schemaFactory.newSchema(new Source[]{ new StreamSource(schemaReader) }));
 
       SAXParser parser = factory.newSAXParser();
-
       XMLReader reader = parser.getXMLReader();
       reader.setErrorHandler(new SimpleErrorHandler());
       reader.parse(new InputSource(xmlReader));
     } catch (Exception e) {
       throw new OBException(e);
     }
-
   }
 
   private String getXMLSchema() {
     if (xmlSchema != null) {
       return xmlSchema;
     }
-
     xmlSchema = doTestGetRequest("/ws/dal/schema", "<xs:element name=\"Openbravo\">", 200, false);
     return xmlSchema;
   }
