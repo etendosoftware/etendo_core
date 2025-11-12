@@ -20,14 +20,16 @@
 package org.openbravo.test.datasource;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.OBContext;
 
 /**
@@ -36,6 +38,7 @@ import org.openbravo.dal.core.OBContext;
  */
 public class NonIdForeignKeyFilters extends BaseDataSourceTestDal {
   private static final int STATUS_OK = 0;
+  private static final Logger log = LogManager.getLogger();
 
   @Test
   public void testFilterWithNonIdReferencedProperty() throws Exception {
@@ -70,9 +73,10 @@ public class NonIdForeignKeyFilters extends BaseDataSourceTestDal {
   private JSONObject requestCountry(String criteria) throws Exception {
     Map<String, String> params = this.getParameters(criteria);
 
-    return new JSONObject(
-        this.doRequest("/org.openbravo.service.datasource/Country", params, 200, "POST"))
-            .getJSONObject("response");
+    String response = this.doRequest("/org.openbravo.service.datasource/Country", params, 200,
+        "POST");
+    log.debug("NonIdForeignKeyFilters criteria {} -> {}", criteria, response);
+    return new JSONObject(response).getJSONObject("response");
   }
 
   private Map<String, String> getParameters(String criteria) {

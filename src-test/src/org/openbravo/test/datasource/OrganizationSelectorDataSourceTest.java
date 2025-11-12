@@ -19,27 +19,23 @@
 
 package org.openbravo.test.datasource;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.test.base.Issue;
 
@@ -48,7 +44,6 @@ import org.openbravo.test.base.Issue;
  * filter based on the role's organization access, even when an organization has been selected in
  * the field before calling to the datasource.
  */
-@RunWith(Parameterized.class)
 @Issue("36151")
 @Issue("36863")
 public class OrganizationSelectorDataSourceTest extends BaseDataSourceTestDal {
@@ -56,18 +51,8 @@ public class OrganizationSelectorDataSourceTest extends BaseDataSourceTestDal {
   private static final String ROLE_ID = "9D320A774FCD4E47801DF5E03AA11F2D";
   private static final String LANGUAGE_ID = "192";
   private OBContext initialContext;
-  private boolean organizationSelected;
 
-  public OrganizationSelectorDataSourceTest(boolean organizationSelected) {
-    this.organizationSelected = organizationSelected;
-  }
-
-  @Parameters(name = "{index}: organizationSelected = {0}")
-  public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { { false }, { true } });
-  }
-
-  @Before
+  @BeforeEach
   public void initOBContext() throws Exception {
     initialContext = OBContext.getOBContext();
     // Use F&B España, S.A - Procurement role
@@ -75,7 +60,7 @@ public class OrganizationSelectorDataSourceTest extends BaseDataSourceTestDal {
     changeProfile(ROLE_ID, LANGUAGE_ID, TEST_ORG_ID, TEST_WAREHOUSE_ID);
   }
 
-  @After
+  @AfterEach
   public void resetOBContext() throws Exception {
     String roleId = initialContext.getRole() != null ? initialContext.getRole().getId() : null;
     String languageId = initialContext.getLanguage() != null ? initialContext.getLanguage().getId()
@@ -89,15 +74,19 @@ public class OrganizationSelectorDataSourceTest extends BaseDataSourceTestDal {
     changeProfile(roleId, languageId, orgId, warehouseId);
   }
 
-  @Test
-  public void retrieveExpectedOrganizationListFromSelector() throws Exception {
-    JSONObject resp = performSelectorRequest();
+  @ParameterizedTest(name = "Selector organizationSelected={0}")
+  @ValueSource(booleans = { false, true })
+  public void retrieveExpectedOrganizationListFromSelector(boolean organizationSelected)
+      throws Exception {
+    JSONObject resp = performSelectorRequest(organizationSelected);
     assertOrganizations(getReturnedOrgs(resp.getJSONArray("data")));
   }
 
-  @Test
-  public void retrieveExpectedOrganizationListFromCustomQuerySelector() throws Exception {
-    JSONObject resp = performCustomQuerySelectorRequest();
+  @ParameterizedTest(name = "Custom selector organizationSelected={0}")
+  @ValueSource(booleans = { false, true })
+  public void retrieveExpectedOrganizationListFromCustomQuerySelector(boolean organizationSelected)
+      throws Exception {
+    JSONObject resp = performCustomQuerySelectorRequest(organizationSelected);
     assertOrganizations(getReturnedOrgs(resp.getJSONArray("data")));
   }
 
@@ -123,7 +112,7 @@ public class OrganizationSelectorDataSourceTest extends BaseDataSourceTestDal {
         allOf(hasSize(readableOrgs.length), containsInAnyOrder(readableOrgs)));
   }
 
-  private JSONObject performSelectorRequest() throws Exception {
+  private JSONObject performSelectorRequest(boolean organizationSelected) throws Exception {
     Map<String, String> params = new HashMap<String, String>();
     params.put("_selectorDefinitionId", "4E0AC6FEC5EA4A2BB474747DB03A3A21");
     params.put("filterClass", "org.openbravo.userinterface.selector.SelectorDataSourceFilter");
@@ -155,11 +144,12 @@ public class OrganizationSelectorDataSourceTest extends BaseDataSourceTestDal {
         "POST");
     JSONObject resp = new JSONObject(response).getJSONObject("response");
 
-    assertTrue("Response should have data", resp.has("data"));
+    assertTrue(resp.has("data"), "Response should have data");
     return resp;
   }
 
-  private JSONObject performCustomQuerySelectorRequest() throws Exception {
+  private JSONObject performCustomQuerySelectorRequest(boolean organizationSelected)
+      throws Exception {
     Map<String, String> params = new HashMap<String, String>();
     params.put("_selectorDefinitionId", "B748F356A65641D4974E5C349A16FB27");
     params.put("filterClass", "org.openbravo.userinterface.selector.SelectorDataSourceFilter");
@@ -193,7 +183,7 @@ public class OrganizationSelectorDataSourceTest extends BaseDataSourceTestDal {
         "/org.openbravo.service.datasource/F8DD408F2F3A414188668836F84C21AF", params, 200, "POST");
     JSONObject resp = new JSONObject(response).getJSONObject("response");
 
-    assertTrue("Response should have data", resp.has("data"));
+    assertTrue(resp.has("data"), "Response should have data");
     return resp;
   }
 }

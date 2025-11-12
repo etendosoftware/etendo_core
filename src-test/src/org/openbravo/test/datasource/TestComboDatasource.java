@@ -18,6 +18,7 @@
  */
 package org.openbravo.test.datasource;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -28,11 +29,10 @@ import static org.hamcrest.Matchers.is;
 
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +42,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.test.base.Issue;
@@ -115,7 +115,7 @@ public class TestComboDatasource extends BaseDataSourceTestDal {
     JSONObject jsonResponse = requestCombo(params);
     JSONArray data = getData(jsonResponse);
 
-    assertEquals("paginated combo number of records", 75, data.length());
+    assertEquals(75, data.length(), "paginated combo number of records" );
   }
 
   /** Checks selected value not in 1st page */
@@ -136,11 +136,10 @@ public class TestComboDatasource extends BaseDataSourceTestDal {
 
     int totalRows = jsonResponse.getJSONObject("response").getInt("totalRows"); // 78
     int endRow = jsonResponse.getJSONObject("response").getInt("endRow"); // 76
-    assertTrue("more than one page shoudl be detected", totalRows > endRow + 1);
+    assertTrue(totalRows > endRow + 1, "more than one page shoudl be detected");
     String lastRowId = data.getJSONObject(data.length() - 1).getString("id");
-    assertFalse(
-        "selected record should not be added at the end of 1st page, because it is in a page after it",
-        lastRowId.equals(US_ID));
+    assertFalse(lastRowId.equals(US_ID),
+        "selected record should not be added at the end of 1st page, because it is in a page after it");
   }
 
   /**
@@ -167,7 +166,7 @@ public class TestComboDatasource extends BaseDataSourceTestDal {
     JSONObject jsonResponse = requestCombo(params);
     JSONArray data = getData(jsonResponse);
 
-    assertEquals("number of filtered records", 3, data.length());
+    assertEquals(3, data.length(), "number of filtered records");
   }
 
   /**
@@ -194,7 +193,7 @@ public class TestComboDatasource extends BaseDataSourceTestDal {
     JSONObject jsonResponse = requestCombo(params);
     JSONArray data = getData(jsonResponse);
 
-    assertEquals("number of filtered records", 2, data.length());
+    assertEquals( 2, data.length(),"number of filtered records");
   }
 
   /**
@@ -276,7 +275,7 @@ public class TestComboDatasource extends BaseDataSourceTestDal {
     params.put("_startRow", "0");
     params.put("_endRow", "75");
     JSONObject jsonResponse = requestCombo(params);
-    assertTrue("Combo should have data", getData(jsonResponse).length() > 0);
+    assertTrue(getData(jsonResponse).length() > 0, "Combo should have data");
   }
 
   private JSONObject requestCombo(Map<String, String> params) throws Exception {

@@ -25,8 +25,10 @@ import static org.hamcrest.Matchers.equalTo;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test cases for ExtendedNavigationModel
@@ -35,6 +37,8 @@ import org.junit.Test;
  * 
  */
 public class ExtendedNavigationModelTest extends BaseDataSourceTestDal {
+
+  private static final Logger log = LogManager.getLogger();
 
   // Role QA Testing Admin
   private static String ROLE_ID = "4028E6C72959682B01295A071429011E";
@@ -87,9 +91,7 @@ public class ExtendedNavigationModelTest extends BaseDataSourceTestDal {
     params.put("inpKeyReferenceId", row1);
     params.put("inpwindowId", salesInvoiceWindow);
     params.put("inpKeyReferenceColumnName", "C_OrderLine_ID");
-    // Send the request
-    String responseString = doRequest("/utility/ReferencedLink.html", params, 200, "POST");
-    JSONObject responseJson = new JSONObject(responseString);
+    JSONObject responseJson = executeReferencedLinkRequest(params, "sales-order-lines");
     // Check that the returned tab is the lines tab of the sales order window
     assertThat("The destination tab is not the lines tab of the sales order window",
         responseJson.getString("tabId"), equalTo(salesOrderLinesTab));
@@ -112,14 +114,20 @@ public class ExtendedNavigationModelTest extends BaseDataSourceTestDal {
     params2.put("inpKeyReferenceId", row2);
     params2.put("inpwindowId", returnMaterialReceiptWindow);
     params2.put("inpKeyReferenceColumnName", "C_OrderLine_ID");
-    // Send the request
-    String responseString2 = doRequest("/utility/ReferencedLink.html", params2, 200, "POST");
-    JSONObject responseJson2 = new JSONObject(responseString2);
+    JSONObject responseJson2 = executeReferencedLinkRequest(params2, "return-from-customer-lines");
     // Check that the returned tab is the lines tab of the return from customer window
     assertThat("The destination tab is not the lines tab of the return from customer window",
         responseJson2.getString("tabId"), equalTo(returnFromCustomerLinesTab));
     // Check that the returned window is the return from customer window
     assertThat("The destination window is not the return from customer window",
         responseJson2.getString("windowId"), equalTo(returnFromCustomerWindow));
+  }
+
+  private JSONObject executeReferencedLinkRequest(Map<String, String> params, String scenario)
+      throws Exception {
+    String responseString = doRequest("/utility/ReferencedLink.html", params, 200, "POST");
+    log.debug("ExtendedNavigationModelTest scenario {} params {} -> {}", scenario, params,
+        responseString);
+    return new JSONObject(responseString);
   }
 }

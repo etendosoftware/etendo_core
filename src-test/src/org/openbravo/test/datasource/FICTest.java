@@ -19,11 +19,11 @@
 
 package org.openbravo.test.datasource;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -31,8 +31,10 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.client.kernel.reference.DateUIDefinition;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -47,6 +49,8 @@ import org.openbravo.test.base.Issue;
  */
 public class FICTest extends BaseDataSourceTestDal {
 
+  private static final Logger log = LogManager.getLogger();
+
   /**
    * Auxiliary Input for which SQL can't be evaluated on NEW and the value is correctly set by
    * callouts, should be populated when creating a new record.
@@ -60,13 +64,17 @@ public class FICTest extends BaseDataSourceTestDal {
     params.put("TAB_ID", "186"); // Sales Order
     params.put("PARENT_ID", null);
     String response = doRequest("/org.openbravo.client.kernel", params, 200, "POST");
+    log.debug("FICTest auxiliary inputs response: {}", response);
 
-    JSONObject auxiliaryInputs = new JSONObject(response).getJSONObject("auxiliaryInputValues");
-    assertTrue("ORDERTYPE should be set", auxiliaryInputs.has("ORDERTYPE"));
+    JSONObject ficResponse = new JSONObject(response);
+    assertTrue(ficResponse.has("auxiliaryInputValues"),
+        "Response should contain auxiliaryInputValues");
+    JSONObject auxiliaryInputs = ficResponse.getJSONObject("auxiliaryInputValues");
+    assertTrue(auxiliaryInputs.has("ORDERTYPE"), "ORDERTYPE should be set");
 
     JSONObject orderType = auxiliaryInputs.getJSONObject("ORDERTYPE");
-    assertTrue("ORDERTYPE should have value",
-        orderType.has("value") && StringUtils.isNotEmpty(orderType.getString("value")));
+    assertTrue(orderType.has("value") && StringUtils.isNotEmpty(orderType.getString("value")),
+        "ORDERTYPE should have value");
   }
 
   /**
@@ -88,6 +96,7 @@ public class FICTest extends BaseDataSourceTestDal {
     params.put("TAB_ID", "6868B706DA8340158DE353A6C252A564"); // Costing Rules
     params.put("ROW_ID", rule.getId());
     String response = doRequest("/org.openbravo.client.kernel", params, 200, "POST");
+    log.debug("FICTest dateTime response: {}", response);
 
     String ficDateFromValue = new JSONObject(response).getJSONObject("columnValues")
         .getJSONObject("Datefrom")
@@ -127,10 +136,10 @@ public class FICTest extends BaseDataSourceTestDal {
         content.toString(), 200, "POST", "application/json");
 
     JSONObject columnValues = new JSONObject(response).getJSONObject("columnValues");
-    assertTrue("AD_Role_ID column should be returned", columnValues.has("AD_Role_ID"));
+    assertTrue(columnValues.has("AD_Role_ID"), "AD_Role_ID column should be returned");
 
     JSONObject role = columnValues.getJSONObject("AD_Role_ID");
-    assertTrue("AD_Role_ID column value is correct",
-        role.has("value") && selectedRoleId.equals(role.getString("value")));
+    assertTrue(role.has("value") && selectedRoleId.equals(role.getString("value")),
+        "AD_Role_ID column value is correct");
   }
 }

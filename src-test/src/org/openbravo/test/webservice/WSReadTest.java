@@ -19,12 +19,12 @@
 
 package org.openbravo.test.webservice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URLEncoder;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.ad.datamodel.Column;

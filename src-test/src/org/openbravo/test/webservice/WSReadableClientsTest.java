@@ -19,17 +19,15 @@
 package org.openbravo.test.webservice;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -39,51 +37,40 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.geography.Country;
 import org.openbravo.model.common.geography.Region;
 
-@RunWith(Parameterized.class)
 public class WSReadableClientsTest extends BaseWSTest {
 
   private static final String COUNTRY_ID = "114";
   private static final String REGION_VALUE = "T1";
   private static final String REGION_NAME = "TEST_REGION";
-  private String clientId;
-  private String orgId;
-  private boolean isReadable;
+  private static final Logger log = LogManager.getLogger();
 
-  /**
-   * @param clientId
-   *          client ID of the object created in the test
-   * @param orgId
-   *          organization ID of the object created in the test
-   * @param isReadable
-   *          whether the web service result should contain the object created in the test
-   */
-  public WSReadableClientsTest(String clientId, String orgId, boolean isReadable) {
-    this.clientId = clientId;
-    this.orgId = orgId;
-    this.isReadable = isReadable;
-  }
-
-  @Parameters(name = "clientId: {0}, orgId: {1}, isVisible: {2}")
-  public static Collection<Object[]> data() {
-    // Create a region for the "System" client and another one for the "QA Testing" client
-    return Arrays.asList(new Object[][] { { "0", "0", true }, { QA_TEST_CLIENT_ID, "0", false } });
+  private static Stream<Arguments> readableClientScenarios() {
+    return Stream.of(Arguments.of("0", "0", true),
+        Arguments.of(QA_TEST_CLIENT_ID, "0", false));
   }
 
   /**
    * Test to ensure that DAL web services return just the child objects which belong to the readable
    * clients of the current role.
    */
-  @Test
-  public void canReadChildPropertiesOfReadableClient() {
-    // use a role of "F&B International Group" client
+  @ParameterizedTest(name = "clientId: {0}, orgId: {1}, visible: {2}")
+  @MethodSource("readableClientScenarios")
+  public void canReadChildPropertiesOfReadableClient(String clientId, String orgId,
+      boolean isReadable) {
     setTestAdminContext();
-    String response = doTestGetRequest("/ws/dal/Country/" + COUNTRY_ID, null, 200);
-    assertThat("DAL Web Service response contains the expected regions",
-        response.contains(REGION_NAME), equalTo(isReadable));
+    createTestRegion(clientId, orgId);
+    try {
+      String response = doTestGetRequest("/ws/dal/Country/" + COUNTRY_ID, null, 200);
+      log.info("Readable client scenario client={} org={} -> contains region? {}", clientId,
+          orgId, response.contains(REGION_NAME));
+      assertThat("DAL Web Service response contains the expected regions",
+          response.contains(REGION_NAME), equalTo(isReadable));
+    } finally {
+      deleteTestRegion();
+    }
   }
 
-  @Before
-  public void createTestRegion() {
+  private void createTestRegion(String clientId, String orgId) {
     OBContext.setAdminMode();
     try {
       Region region = OBProvider.getInstance().get(Region.class);
@@ -99,8 +86,7 @@ public class WSReadableClientsTest extends BaseWSTest {
     }
   }
 
-  @After
-  public void deleteTestRegion() {
+  private void deleteTestRegion() {
     OBContext.setAdminMode();
     try {
       OBCriteria<Region> regionCriteria = OBDal.getInstance().createCriteria(Region.class);

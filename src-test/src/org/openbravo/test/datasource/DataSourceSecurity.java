@@ -20,25 +20,24 @@
 package org.openbravo.test.datasource;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
@@ -60,7 +59,6 @@ import org.openbravo.service.json.JsonConstants;
  * @author inigo.sanchez
  *
  */
-@RunWith(Parameterized.class)
 public class DataSourceSecurity extends BaseDataSourceTestDal {
   private static final Logger log = LogManager.getLogger();
   private static final String ASTERISK_ORG_ID = "0";
@@ -82,10 +80,6 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
 
   private static final String OPERATION_FETCH = "fetch";
   private static final String OPERATION_UPDATE = "update";
-
-  private RoleType role;
-  private DataSource dataSource;
-  private int expectedResponseStatus;
 
   private enum RoleType {
     ADMIN_ROLE(ROLE_INTERNATIONAL_ADMIN, ESP_ORG), //
@@ -340,15 +334,8 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
     }
   }
 
-  public DataSourceSecurity(RoleType role, DataSource dataSource, int expectedResponseStatus) {
-    this.role = role;
-    this.dataSource = dataSource;
-    this.expectedResponseStatus = expectedResponseStatus;
-  }
-
-  @Parameters(name = "{0} - dataSource: {1}")
-  public static Collection<Object[]> parameters() {
-    List<Object[]> testCases = new ArrayList<Object[]>();
+  private static Stream<Arguments> parameters() {
+    List<Arguments> testCases = new ArrayList<>();
     for (RoleType type : RoleType.values()) {
       int accessForAdminOnly = type == RoleType.ADMIN_ROLE ? JsonConstants.RPCREQUEST_STATUS_SUCCESS
           : JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR;
@@ -359,56 +346,56 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
           ? JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR
           : JsonConstants.RPCREQUEST_STATUS_SUCCESS;
 
-      testCases.add(new Object[] { type, DataSource.Order, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.ManageVariants, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.ProductCharacteristics, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.Combo, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.CustomQuerySelectorDatasource,
-          accessForAdminAndSystemAndEmployee });
-      testCases.add(new Object[] { type, DataSource.CustomQuerySelectorDatasourceProcess,
-          accessForAdminAndSystemOnly });
+      testCases.add(Arguments.of(type, DataSource.Order, accessForAdminOnly));
+      testCases.add(Arguments.of(type, DataSource.ManageVariants, accessForAdminOnly));
+      testCases.add(Arguments.of(type, DataSource.ProductCharacteristics, accessForAdminOnly));
+      testCases.add(Arguments.of(type, DataSource.Combo, accessForAdminOnly));
+      testCases.add(Arguments.of(type, DataSource.CustomQuerySelectorDatasource,
+          accessForAdminAndSystemAndEmployee));
+      testCases.add(Arguments.of(type, DataSource.CustomQuerySelectorDatasourceProcess,
+          accessForAdminAndSystemOnly));
 
-      testCases.add(new Object[] { type, DataSource.HQLDataSource, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.ADTree, accessForAdminAndSystemOnly });
-      testCases.add(new Object[] { type, DataSource.AccountTree, accessForAdminOnly });
-      testCases.add(new Object[] { type, DataSource.StockReservations, accessForAdminOnly });
+      testCases.add(Arguments.of(type, DataSource.HQLDataSource, accessForAdminOnly));
+      testCases.add(Arguments.of(type, DataSource.ADTree, accessForAdminAndSystemOnly));
+      testCases.add(Arguments.of(type, DataSource.AccountTree, accessForAdminOnly));
+      testCases.add(Arguments.of(type, DataSource.StockReservations, accessForAdminOnly));
 
       // QueryList ds is accessible if current role has access to widgetId
-      testCases.add(new Object[] { type, DataSource.QueryList,
-          JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR });
-      testCases.add(new Object[] { type, DataSource.PropertySelector,
+      testCases.add(Arguments.of(type, DataSource.QueryList,
+          JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR));
+      testCases.add(Arguments.of(type, DataSource.PropertySelector,
           type == RoleType.SYSTEM_ROLE ? JsonConstants.RPCREQUEST_STATUS_SUCCESS
-              : JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR });
+              : JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR));
 
       // Alert ds should be always accessible
       testCases
-          .add(new Object[] { type, DataSource.Alert, JsonConstants.RPCREQUEST_STATUS_SUCCESS });
+          .add(Arguments.of(type, DataSource.Alert, JsonConstants.RPCREQUEST_STATUS_SUCCESS));
 
       // Note ds is accessible if current role has access to entity of the notes. This note is
       // invocated from a record in Windows, Tabs and Fields.
-      testCases.add(new Object[] { type, DataSource.Note, accessForAdminAndSystemOnly });
+      testCases.add(Arguments.of(type, DataSource.Note, accessForAdminAndSystemOnly));
 
       // Selector into a datasource into a P&E Window.
-      testCases.add(
-          new Object[] { type, DataSource.SelectorGLItemDatasource, accessForAdminAndSystemOnly });
+      testCases.add(Arguments.of(type, DataSource.SelectorGLItemDatasource,
+          accessForAdminAndSystemOnly));
 
       // Moving a tree node : https://issues.openbravo.com/view.php?id=32833
-      testCases.add(new Object[] { type, DataSource.AccountTreeMovement, accessForAdminOnly });
+      testCases.add(Arguments.of(type, DataSource.AccountTreeMovement, accessForAdminOnly));
 
       // Testing a problem detected in how permissions for the entities of the selectors with Search
       // parent reference are calculated. See issue https://issues.openbravo.com/view.php?id=34823
-      testCases.add(
-          new Object[] { type, DataSource.ProductStockView, accessForAdminAndSystemAndEmployee });
+      testCases.add(Arguments.of(type, DataSource.ProductStockView,
+          accessForAdminAndSystemAndEmployee));
     }
     // testing a problem detected in how properties are initialized.
-    testCases.add(new Object[] { RoleType.ADMIN_ROLE, DataSource.ProductByPriceAndWarehouse,
-        JsonConstants.RPCREQUEST_STATUS_SUCCESS });
+    testCases.add(Arguments.of(RoleType.ADMIN_ROLE, DataSource.ProductByPriceAndWarehouse,
+        JsonConstants.RPCREQUEST_STATUS_SUCCESS));
 
-    return testCases;
+    return testCases.stream();
   }
 
   /** Creates dummy role without any access for testing purposes */
-  @BeforeClass
+  @BeforeAll
   public static void createNoAccessRoleAndGenericProduct() {
     OBContext.setOBContext(CONTEXT_USER);
 
@@ -473,26 +460,30 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
   }
 
   /** Tests datasource allows or denies fetch action based on role access */
-  @Test
-  public void fetchShouldBeAllowedOnlyIfRoleIsGranted() throws Exception {
+  @ParameterizedTest(name = "{0} - dataSource: {1}")
+  @MethodSource("parameters")
+  public void fetchShouldBeAllowedOnlyIfRoleIsGranted(RoleType role, DataSource dataSource,
+      int expectedResponseStatus) throws Exception {
     OBContext.setOBContext(CONTEXT_USER);
     changeProfile(role.roleId, LANGUAGE_ID, role.orgId, WAREHOUSE_ID);
 
     JSONObject jsonResponse = null;
     if (dataSource.operation.equals(OPERATION_FETCH)) {
-      if (dataSource.ds.equalsIgnoreCase("3C1148C0AB604DE1B51B7EA4112C325F"))
+      if (dataSource.ds.equalsIgnoreCase("3C1148C0AB604DE1B51B7EA4112C325F")) {
         dataSource.params.put("ad_org_id", role.orgId);
-      if (dataSource.ds.equalsIgnoreCase("2F5B70D7F12E4F5C8FE20D6F17D69ECF"))
+      }
+      if (dataSource.ds.equalsIgnoreCase("2F5B70D7F12E4F5C8FE20D6F17D69ECF")) {
         dataSource.params.put("@MaterialMgmtReservation.organization@", role.orgId);
-      jsonResponse = fetchDataSource();
+      }
+      jsonResponse = fetchDataSource(dataSource);
     } else if (dataSource.operation.equals(OPERATION_UPDATE)) {
-      jsonResponse = updateDataSource();
+      jsonResponse = updateDataSource(dataSource);
     }
     assertThat("Response status for: " + jsonResponse.toString(), jsonResponse.getInt("status"),
         is(expectedResponseStatus));
   }
 
-  private JSONObject updateDataSource() throws Exception {
+  private JSONObject updateDataSource(DataSource dataSource) throws Exception {
     String parameters = addCsrfTokenToParameters(dataSource.urlAndJson.content);
     String responseUpdate = doRequest(
         "/org.openbravo.service.datasource/" + dataSource.ds + dataSource.urlAndJson.url,
@@ -519,14 +510,14 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
     }
   }
 
-  private JSONObject fetchDataSource() throws Exception {
+  private JSONObject fetchDataSource(DataSource dataSource) throws Exception {
     String response = doRequest("/org.openbravo.service.datasource/" + dataSource.ds,
         dataSource.params, 200, "POST");
     return new JSONObject(response).getJSONObject("response");
   }
 
   /** Deletes dummy testing role and product */
-  @AfterClass
+  @AfterAll
   public static void cleanUp() {
     OBContext.setOBContext(CONTEXT_USER);
     OBDal.getInstance().remove(OBDal.getInstance().get(Role.class, ROLE_NO_ACCESS));

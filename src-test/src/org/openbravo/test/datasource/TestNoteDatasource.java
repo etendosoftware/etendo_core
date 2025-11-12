@@ -28,17 +28,19 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.client.application.Note;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -46,6 +48,7 @@ import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.service.json.JsonConstants;
 
 public class TestNoteDatasource extends BaseDataSourceTestDal {
+  private static final Logger log = LogManager.getLogger();
   private static final String CONTEXT_USER = "100";
   private static final String CONTEXT_ROLE = "45C861D70874409D86AE1CC7007AB43A";
   private static final String CLIENT = "23C59575B9CF467C9620760EB255B389";
@@ -60,7 +63,7 @@ public class TestNoteDatasource extends BaseDataSourceTestDal {
   /**
    * Required in order to have the CSRF token available
    */
-  @Before
+  @BeforeEach
   public void authenticateUser() throws Exception {
     authenticate();
   }
@@ -144,6 +147,7 @@ public class TestNoteDatasource extends BaseDataSourceTestDal {
     contentJson.put("csrfToken", getSessionCsrfToken());
     String responseAdd = doRequest("/org.openbravo.service.datasource/" + DATASOURCE_ID,
         contentJson.toString(), 200, "POST", "application/json");
+    log.debug("Added note payload -> {}", responseAdd);
     return responseAdd;
   }
 
@@ -163,6 +167,7 @@ public class TestNoteDatasource extends BaseDataSourceTestDal {
     params.put("_endRow", "75");
     String response = doRequest("/org.openbravo.service.datasource/" + DATASOURCE_ID, params, 200,
         "POST");
+    log.debug("Fetched notes response -> {}", response);
     return response;
   }
 
@@ -174,6 +179,7 @@ public class TestNoteDatasource extends BaseDataSourceTestDal {
     String responseRemove = doRequest("/org.openbravo.service.datasource/" + DATASOURCE_ID
         + "?_operationType=remove&id=" + noteId + "&csrfToken=" + getSessionCsrfToken(),
         paramsRemove, 200, "DELETE");
+    log.debug("Removed note {} response -> {}", noteId, responseRemove);
     return responseRemove;
   }
 

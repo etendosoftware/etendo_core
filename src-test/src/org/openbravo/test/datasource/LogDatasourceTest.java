@@ -19,19 +19,23 @@
 package org.openbravo.test.datasource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test that verifies the Log datasource works properly
@@ -39,6 +43,8 @@ import org.junit.Test;
  * @author jarmendariz
  */
 public class LogDatasourceTest extends BaseDataSourceTestNoDal {
+
+  private static final Logger log = LogManager.getLogger();
 
   @Test
   public void testReturnsMoreEntriesThanRequestedForPagination() throws Exception {
@@ -66,11 +72,17 @@ public class LogDatasourceTest extends BaseDataSourceTestNoDal {
   @Test
   public void testCombinedFilterWithPinnedItems() throws Exception {
 
-    Map<String, String> paramsFiltered = new ParamBuilder() //
-        .addPinnedItem("freemarker.beans") //
-        .addPinnedItem("freemarker.runtime") //
-        .setSearchLogger("org.hibernate.Version") //
-        .build();
+    List<String> pinnedItems = Arrays.asList("freemarker.beans", "freemarker.runtime");
+    ParamBuilder builder = new ParamBuilder().setSearchLogger("org.hibernate.Version");
+    pinnedItems.forEach(builder::addPinnedItem);
+    Map<String, String> paramsFiltered = builder.build();
+
+    String criteria = paramsFiltered.getOrDefault("criteria", "");
+    pinnedItems.forEach(item -> assertThat("Pinned item should be included in criteria", criteria,
+        containsString(item)));
+
+    log.info("Testing combined filter with pinned items {} -> params {}", pinnedItems,
+        paramsFiltered);
 
     int totalRowsFiltered = getNumberOfTotalRows(requestLoggers(paramsFiltered));
 
@@ -106,6 +118,7 @@ public class LogDatasourceTest extends BaseDataSourceTestNoDal {
   private JSONObject requestLoggers(Map<String, String> parameters) throws Exception {
     String res = doRequest("/org.openbravo.service.datasource/F6DCA62BC0694DACA9CC84748C119FC5",
         parameters, 200, "POST");
+    log.debug("LogDatasourceTest request params {} -> {}", parameters, res);
 
     return getResponse(res);
   }

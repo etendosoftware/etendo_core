@@ -19,14 +19,16 @@
 
 package org.openbravo.test.datasource;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -42,6 +44,8 @@ import org.openbravo.test.base.Issue;
  */
 @Issue("26162")
 public class TestCSVEncoding extends BaseDataSourceTestDal {
+
+  private static final Logger log = LogManager.getLogger();
 
   /**
    * Creates a preference to ensure that the Arabic characters are correctly displayed and compares
@@ -117,8 +121,9 @@ public class TestCSVEncoding extends BaseDataSourceTestDal {
     OBDal.getInstance().commitAndClose();
 
     // First assert
-    assertTrue("Cannot show Arabic characters on UTF-8 encoding",
-        res[1].substring(1, 4).equals("د.إ"));
+    String utfSnippet = res[1].substring(1, 4);
+    log.info("CSV UTF-8 sample snippet: {}", utfSnippet);
+    assertTrue(utfSnippet.equals("د.إ"), "Cannot show Arabic characters on UTF-8 encoding");
 
     // Request again to see the differences
     String response2 = doRequest("/org.openbravo.service.datasource/Currency", params, 200, "POST");
@@ -128,7 +133,9 @@ public class TestCSVEncoding extends BaseDataSourceTestDal {
     OBDal.getInstance().commitAndClose();
 
     // Second assert
-    assertTrue("On delete CSV Text Preference Arabic characters are still showing",
-        res2[1].substring(1, 4).equals("?.?"));
+    String nonUtfSnippet = res2[1].substring(1, 4);
+    log.info("CSV default encoding sample snippet: {}", nonUtfSnippet);
+    assertTrue(nonUtfSnippet.equals("?.?"),
+        "On delete CSV Text Preference Arabic characters are still showing");
   }
 }

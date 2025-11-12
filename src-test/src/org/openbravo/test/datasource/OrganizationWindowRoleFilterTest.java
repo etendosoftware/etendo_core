@@ -22,10 +22,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.Role;
@@ -49,21 +49,22 @@ public class OrganizationWindowRoleFilterTest extends BaseDataSourceTestDal {
   private static final String EN_US_LANG = "192";
   private String windowAccessId;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
-    super.setUp();
     windowAccessId = enableOrgWindowsAccessToRole(F_B_SPAIN_EMPLOYEE_ROLE);
+    Assertions.assertTrue(windowAccessId != null && !windowAccessId.isEmpty(),
+        "Window access setup must create an identifier");
   }
 
   @Test
   public void testOrganizationShowsOnlyReadableOrgsByRole() throws Exception {
     changeProfile(F_B_SPAIN_EMPLOYEE_ROLE, EN_US_LANG, NORTH_ZONE_ORGANIZATION, null);
 
-    Assert.assertEquals("Number of readable Organizations returned by datasource not matching", 5,
-        getTotalOrganizationDSRequestResult());
+    Assertions.assertEquals(5, getTotalOrganizationDSRequestResult(),
+        "Number of readable Organizations returned by datasource not matching");
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     removeOrgWindowAccess(windowAccessId);
     windowAccessId = "";

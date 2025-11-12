@@ -18,14 +18,16 @@
  */
 package org.openbravo.test.security;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.query.Query;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.test.datasource.BaseDataSourceTestDal;
@@ -40,22 +42,23 @@ public class CSRFAttackTest extends BaseDataSourceTestDal {
 
   private static final int STATUS_OK = 0;
   private static final String FAKE_PRODUCT_SEARCHKEY = "FAKE_PRODUCT";
+  private static final Logger log = LogManager.getLogger();
 
   @Test
   public void testRequestAreProtectedAgainstCSRFAttack() {
-    assertFalse("Fake product were created. No CSRF check has been done",
-        createFakeProductWithNoCSRFToken());
+    assertFalse(createFakeProductWithNoCSRFToken(),
+        "Fake product were created. No CSRF check has been done");
   }
 
   @Test
   public void testRequestVerifiesSessionCSRFToken() {
-    assertTrue("Product should be created", createProduct());
+    assertTrue(createProduct(), "Product should be created");
   }
 
   private boolean createFakeProductWithNoCSRFToken() {
     JSONObject params = this.generateFakeProductParams();
 
-    return requestCreateProduct(params.toString());
+    return requestCreateProduct(params.toString(), "no-csrf");
   }
 
   private boolean createProduct() {
@@ -63,20 +66,24 @@ public class CSRFAttackTest extends BaseDataSourceTestDal {
       JSONObject params = this.generateFakeProductParams();
       params.put("csrfToken", getSessionCsrfToken());
 
-      return requestCreateProduct(params.toString());
+      return requestCreateProduct(params.toString(), "with-csrf");
     } catch (JSONException e) {
       return false;
     }
   }
 
-  private boolean requestCreateProduct(String params) {
+  private boolean requestCreateProduct(String params, String scenario) {
     try {
+      log.info("Submitting product creation request scenario={} payload={}", scenario, params);
       JSONObject response = new JSONObject(this.doRequest(
           "/org.openbravo.service.datasource/Product?windowId=140&tabId=180&moduleId=0&_operationType=update&_noActiveFilter=true&sendOriginalIDBack=true&_extraProperties=&Constants_FIELDSEPARATOR=%24&_className=OBViewDataSource&Constants_IDENTIFIER=_identifier&isc_dataFormat=json",
           params, 200, "POST", "application/json")).getJSONObject("response");
 
+      log.debug("Product creation response scenario={} -> {}", scenario, response);
+
       return isResponseOk(response);
     } catch (Exception e) {
+      log.error("Error executing scenario {}", scenario, e);
       return false;
     }
 
@@ -118,7 +125,7 @@ public class CSRFAttackTest extends BaseDataSourceTestDal {
     return response.getInt("status") == STATUS_OK;
   }
 
-  @After
+  @AfterEach
   public void removeFakeProduct() {
     StringBuilder delete = new StringBuilder();
     delete.append(" delete from " + Product.ENTITY_NAME);

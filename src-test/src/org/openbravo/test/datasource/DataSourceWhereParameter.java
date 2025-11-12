@@ -18,22 +18,22 @@
  */
 package org.openbravo.test.datasource;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.service.json.JsonConstants;
 
 /**
@@ -44,8 +44,9 @@ import org.openbravo.service.json.JsonConstants;
  * @author Naroa Iriarte
  * 
  */
-@RunWith(Parameterized.class)
 public class DataSourceWhereParameter extends BaseDataSourceTestDal {
+
+  private static final Logger log = LogManager.getLogger();
 
   // Expected
 
@@ -64,8 +65,6 @@ public class DataSourceWhereParameter extends BaseDataSourceTestDal {
   private static final String TABLE_ID = "105";
   private static final String RECORD_ID = "283";
   private static final String MANUAL_WHERE = "1=1) or 2=2";
-
-  private DataSource datasource;
 
   @SuppressWarnings("serial")
   private enum DataSource {
@@ -158,83 +157,82 @@ public class DataSourceWhereParameter extends BaseDataSourceTestDal {
     }
   }
 
-  public DataSourceWhereParameter(DataSource datasource, String expectedRecords,
-      String notExpectedRecords) {
-    this.datasource = datasource;
-  }
-
-  @Parameters(name = "{0} datasource")
-  public static Collection<Object[]> parameters() {
-    List<Object[]> tests = new ArrayList<Object[]>();
+  private static Stream<DataSource> datasourceProvider() {
+    List<DataSource> tests = new ArrayList<>();
     for (DataSource t : DataSource.values()) {
-      tests.add(new Object[] { t, t.expected, t.unexpected });
+      tests.add(t);
     }
-
-    return tests;
+    return tests.stream();
   }
 
-  @Test
-  public void datasourceWithNoManualWhereParameter() throws Exception {
+  @ParameterizedTest(name = "{0} without manual where")
+  @MethodSource("datasourceProvider")
+  public void datasourceWithNoManualWhereParameter(DataSource datasource) throws Exception {
     if (datasource.onlySuccessAssert) {
       return;
     }
-    String datasourceResponse;
     if (datasource.hasImplicitFilter) {
       datasource.params.put("isImplicitFilterApplied", "true");
     }
-    datasourceResponse = getDataSourceResponse();
-    assertRecordInResponse(datasourceResponse, datasource.expected, true);
-    assertRecordInResponse(datasourceResponse, datasource.unexpected, false);
+
+    JSONObject responseWithImplicit = parseResponse(datasource, "implicit filter active",
+        getDataSourceResponse(datasource, "implicit true"));
+    assertSuccessfulStatus(responseWithImplicit, datasource, "implicit true");
+    assertRecordInResponse(responseWithImplicit, datasource.expected, true);
+    assertRecordInResponse(responseWithImplicit, datasource.unexpected, false);
 
     if (datasource.hasImplicitFilter) {
       datasource.params.put("isImplicitFilterApplied", "false");
-
-      datasourceResponse = getDataSourceResponse();
-      assertRecordInResponse(datasourceResponse, datasource.expected, true);
-      assertRecordInResponse(datasourceResponse, datasource.unexpected, true);
+      JSONObject responseWithoutImplicit = parseResponse(datasource, "implicit filter disabled",
+          getDataSourceResponse(datasource, "implicit false"));
+      assertSuccessfulStatus(responseWithoutImplicit, datasource, "implicit false");
+      assertRecordInResponse(responseWithoutImplicit, datasource.expected, true);
+      assertRecordInResponse(responseWithoutImplicit, datasource.unexpected, true);
+      datasource.params.remove("isImplicitFilterApplied");
     }
   }
 
-  private void assertRecordInResponse(String datasourceResponse, String recordId,
+  private void assertRecordInResponse(JSONObject datasourceResponse, String recordId,
       boolean shouldBePresent) throws Exception {
+    if (recordId == null) {
+      return;
+    }
     boolean isRecordPresent = isValueInTheResponseData(recordId, datasourceResponse);
-    assertThat("Record [" + recordId + "] - params:" + datasource.params
-        + " - present in response: " + datasourceResponse, isRecordPresent, is(shouldBePresent));
+    assertThat("Record [" + recordId + "] present in response", isRecordPresent,
+        is(shouldBePresent));
   }
 
-  @Test
-  public void datasourceWithManualWhereParameter() throws Exception {
+  @ParameterizedTest(name = "{0} manual where")
+  @MethodSource("datasourceProvider")
+  public void datasourceWithManualWhereParameter(DataSource datasource) throws Exception {
     if (!datasource.onlySuccessAssert
         && !"DB9F062472294F12A0291A7BD203F922".equals(datasource.ds)) {
       datasource.params.put("isImplicitFilterApplied", "true");
       datasource.params.put("_where", MANUAL_WHERE);
-      String datasourceResponseWhereTrue = getDataSourceResponse();
-      JSONObject jsonResponse = new JSONObject(datasourceResponseWhereTrue);
+      JSONObject jsonResponse = parseResponse(datasource, "manual where",
+          getDataSourceResponse(datasource, "manual where"));
       assertThat("If a manual _where parameters is added, the request status should be -4.",
           getStatus(jsonResponse),
           is(String.valueOf(JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR)));
       datasource.params.remove(JsonConstants.WHERE_PARAMETER);
+      datasource.params.remove("isImplicitFilterApplied");
     }
   }
 
-  @Test
-  public void datasourceRequestStatusShouldBeSuccessful() throws Exception {
+  @ParameterizedTest(name = "{0} request success")
+  @MethodSource("datasourceProvider")
+  public void datasourceRequestStatusShouldBeSuccessful(DataSource datasource) throws Exception {
     if (datasource.params.containsKey(JsonConstants.WHERE_PARAMETER)) {
       datasource.params.remove(JsonConstants.WHERE_PARAMETER);
     }
-    String datasourceResponse = getDataSourceResponse();
-    JSONObject jsonResponse = new JSONObject(datasourceResponse);
-    assertThat("The request status should be successful.", getStatus(jsonResponse),
-        is(String.valueOf(JsonConstants.RPCREQUEST_STATUS_SUCCESS)));
+    JSONObject jsonResponse = parseResponse(datasource, "status success",
+        getDataSourceResponse(datasource, "status check"));
+    assertSuccessfulStatus(jsonResponse, datasource, "status check");
   }
 
-  private boolean isValueInTheResponseData(String valueId, String dataSourceResponse)
-      throws Exception {
-    JSONObject dataSourceResponseMid = new JSONObject();
-    JSONArray dataSourceData = new JSONArray();
-    JSONObject jsonResponse = new JSONObject(dataSourceResponse);
-    dataSourceResponseMid = jsonResponse.getJSONObject("response");
-    dataSourceData = dataSourceResponseMid.getJSONArray("data");
+  private boolean isValueInTheResponseData(String valueId, JSONObject dataSourceResponse)
+      throws JSONException {
+    JSONArray dataSourceData = dataSourceResponse.getJSONObject("response").getJSONArray("data");
     for (int i = 0; i < dataSourceData.length(); i++) {
       JSONObject row = dataSourceData.getJSONObject(i);
       if (valueId.equals(row.getString("id"))) {
@@ -244,13 +242,50 @@ public class DataSourceWhereParameter extends BaseDataSourceTestDal {
     return false;
   }
 
-  private String getDataSourceResponse() throws Exception {
+  private String getDataSourceResponse(DataSource datasource, String scenario) throws Exception {
     String response = doRequest("/org.openbravo.service.datasource/" + datasource.ds,
         datasource.params, 200, "POST");
+    log.debug("Datasource {} scenario {} params {} -> {}", datasource, scenario,
+        datasource.params, response);
     return response;
   }
 
   private String getStatus(JSONObject jsonResponse) throws JSONException {
     return jsonResponse.getJSONObject("response").get("status").toString();
+  }
+
+  private JSONObject parseResponse(DataSource datasource, String scenario, String rawResponse)
+      throws JSONException {
+    try {
+      JSONObject jsonResponse = new JSONObject(rawResponse);
+      JSONObject responsePayload = jsonResponse.optJSONObject("response");
+      int status = responsePayload != null ? responsePayload.optInt("status", Integer.MIN_VALUE)
+          : Integer.MIN_VALUE;
+      boolean hasData = responsePayload != null && responsePayload.has("data");
+      if (status < 0 || !hasData) {
+        log.warn(
+            "Unexpected datasource response for {} in {}. status={}, hasData={}, params={}, body={}",
+            datasource, scenario, status, hasData, datasource.params, rawResponse);
+      } else {
+        log.debug("Datasource {} scenario {} completed with status {}", datasource, scenario,
+            status);
+      }
+      return jsonResponse;
+    } catch (JSONException e) {
+      log.error("Invalid JSON response for {} in {}. params={}, body={}", datasource, scenario,
+          datasource.params, rawResponse, e);
+      throw e;
+    }
+  }
+
+  private void assertSuccessfulStatus(JSONObject jsonResponse, DataSource datasource,
+      String scenario) throws JSONException {
+    String status = getStatus(jsonResponse);
+    if (!String.valueOf(JsonConstants.RPCREQUEST_STATUS_SUCCESS).equals(status)) {
+      log.warn("Expected success status for {} in {} but got {}. payload={} params={} ",
+          datasource, scenario, status, jsonResponse, datasource.params);
+    }
+    assertThat("The request status should be successful.", status,
+        is(String.valueOf(JsonConstants.RPCREQUEST_STATUS_SUCCESS)));
   }
 }

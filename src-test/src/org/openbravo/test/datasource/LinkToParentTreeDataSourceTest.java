@@ -20,7 +20,7 @@
 package org.openbravo.test.datasource;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +29,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -78,7 +78,7 @@ public class LinkToParentTreeDataSourceTest extends BaseDataSourceTestDal {
         equalTo(true));
   }
 
-  @After
+  @AfterEach
   public void tearDownLinkToParentData() {
     this.dataHelper.removeCostAdjustment(this.costAdjustmentId);
     this.costAdjustmentId = null;

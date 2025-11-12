@@ -19,13 +19,12 @@
 
 package org.openbravo.test.datasource;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -33,10 +32,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -51,39 +49,29 @@ import org.openbravo.test.base.Issue;
 /**
  * Test case for 'Allow Unpaged Datasource In Manual Request' preference
  */
-@RunWith(Parameterized.class)
 @Issue("30204")
 public class TestAllowUnpagedDatasourcePreference extends BaseDataSourceTestDal {
 
   protected Logger logger = LogManager.getLogger();
-  private String preferenceValue;
 
   private static final String ROLE_SYSTEM = "0";
   private static final String ORGANIZATION = "0";
   private static final String LANGUAGE_ID = "192";
   private static final String WAREHOUSE_ID = "B2D40D8A5D644DD89E329DC297309055";
 
-  /**
-   * @param preferenceValue
-   *          value to be assigned to the preference
-   * @param description
-   *          description for the test case
-   */
-  public TestAllowUnpagedDatasourcePreference(String preferenceValue, String description) {
-    this.preferenceValue = preferenceValue;
+  private static Stream<Arguments> preferenceValues() {
+    return Stream.of(Arguments.of(Preferences.NO, "Manual request should not be performed"),
+        Arguments.of(Preferences.YES, "Manual request should be performed"));
   }
 
-  @Parameters(name = "{index}: ''{1}'' -- preference value: {0}")
-  public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] { { "N", "Manual request should not be performed" },
-        { "Y", "Manual request should be performed" } });
-  }
-
-  @Test
-  public void testDatasourceRequest() throws Exception {
+  @ParameterizedTest(name = "{1} (value={0})")
+  @MethodSource("preferenceValues")
+  public void testDatasourceRequest(String preferenceValue, String description) throws Exception {
     OBContext.setAdminMode(false);
     String preferenceId = "";
     try {
+      logger.info("Testing allow-unpaged preference scenario '{}' with value {}", description,
+          preferenceValue);
       preferenceId = createPreference(preferenceValue);
 
       // Preference is cached at session scope, ensure a new session is created

@@ -18,12 +18,12 @@
  */
 package org.openbravo.test.security;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,9 +36,9 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.query.Query;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -75,7 +75,7 @@ public class UserInfoSessionDataTest extends BaseDataSourceTestDal {
 
   private static String warehouseName;
 
-  @BeforeClass
+  @BeforeAll
   public static void createDataWithQuotes() {
     try {
       OBContext.setAdminMode(false);
@@ -88,7 +88,7 @@ public class UserInfoSessionDataTest extends BaseDataSourceTestDal {
     }
   }
 
-  @AfterClass
+  @AfterAll
   public static void restoreData() {
     try {
       OBContext.setAdminMode(false);
@@ -275,7 +275,7 @@ public class UserInfoSessionDataTest extends BaseDataSourceTestDal {
     } catch (JSONException e) {
       log.error("Could not retrieve the userInfo from the SessionDynamic request");
     }
-    assertNotNull("OB.User.userInfo could not be retrieved", userInfo);
+    assertNotNull(userInfo, "OB.User.userInfo could not be retrieved");
     return userInfo;
   }
 

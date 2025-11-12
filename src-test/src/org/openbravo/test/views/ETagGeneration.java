@@ -20,16 +20,16 @@
 package org.openbravo.test.views;
 
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeThat;
 
 import java.net.HttpURLConnection;
 
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.hibernate.query.Query;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.model.ad.datamodel.Table;
@@ -46,7 +46,7 @@ public class ETagGeneration extends BaseDataSourceTestDal {
 
   @Test
   public void eTagShouldBeStable() throws Exception {
-    assumeThat("Has modules in development", hasModulesInDevelopment(), is(false));
+    Assumptions.assumeTrue(!hasModulesInDevelopment(), "Has modules in development");
 
     String eTag = getEtag(Windows.SALES_ORDER);
 
@@ -56,7 +56,7 @@ public class ETagGeneration extends BaseDataSourceTestDal {
 
   @Test
   public void serverDisplayLogicConfigShouldChangeETag() throws Exception {
-    assumeThat("Has modules in development", hasModulesInDevelopment(), is(false));
+    Assumptions.assumeTrue(!hasModulesInDevelopment(), "Has modules in development");
 
     Preference newPref = null;
     setSystemAdministratorContext();
@@ -86,7 +86,7 @@ public class ETagGeneration extends BaseDataSourceTestDal {
 
   @Test
   public void auditTableShouldChangeETag() throws Exception {
-    assumeThat("Has modules in development", hasModulesInDevelopment(), is(false));
+    Assumptions.assumeTrue(!hasModulesInDevelopment(), "Has modules in development");
     setSystemAdministratorContext();
     boolean wasAudited = false;
 

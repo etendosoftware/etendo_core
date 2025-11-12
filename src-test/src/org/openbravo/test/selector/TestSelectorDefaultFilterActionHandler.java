@@ -20,12 +20,14 @@
 package org.openbravo.test.selector;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.openbravo.userinterface.selector.SelectorConstants.PARAM_FILTER_EXPRESSION;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.test.datasource.BaseDataSourceTestDal;
 import org.openbravo.test.datasource.DatasourceTestUtil;
 
@@ -34,6 +36,7 @@ public class TestSelectorDefaultFilterActionHandler extends BaseDataSourceTestDa
 
   private static final String PRODUCT_COMPLETE_SELECTOR_ID = "4C8BC3E8E56441F4B8C98C684A0C9212";
   private static final String GOODS_MOVEMENTS_WINDOW_ID = "170";
+  private static final Logger log = LogManager.getLogger();
 
   @Test
   public void filterExpressionShouldBeReturned() throws Exception {
@@ -52,6 +55,7 @@ public class TestSelectorDefaultFilterActionHandler extends BaseDataSourceTestDa
     String urlPart = "/org.openbravo.client.kernel?_action=org.openbravo.userinterface.selector.SelectorDefaultFilterActionHandler";
     String resp = DatasourceTestUtil.request(getOpenbravoURL(), urlPart, "POST",
         getRequestContent(), cookie, 200, "application/json");
+    log.debug("Selector default filter response -> {}", resp);
     return resp;
   }
 
