@@ -575,7 +575,7 @@ Define application initiated information and error messages.
 OR AD_User.C_BPartner_ID IS NULL)]]></FILTERCLAUSE>
 <!--118-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--118-->  <UIPATTERN><![CDATA[STD]]></UIPATTERN>
-<!--118-->  <HQLFILTERCLAUSE><![CDATA[e.businessPartner is null or exists(select id from BusinessPartner bp where bp.id=e.businessPartner.id and (bp.employee='Y' or bp.salesRepresentative='Y'))]]></HQLFILTERCLAUSE>
+<!--118-->  <HQLFILTERCLAUSE><![CDATA[e.businessPartner is null or exists(select id from BusinessPartner bp where bp.id=e.businessPartner.id and (bp.employee='Y' or bp.isSalesRepresentative='Y'))]]></HQLFILTERCLAUSE>
 <!--118-->  <SHOWPARENTBUTTONS><![CDATA[Y]]></SHOWPARENTBUTTONS>
 <!--118-->  <DISABLE_PARENT_KEY_PROPERTY><![CDATA[N]]></DISABLE_PARENT_KEY_PROPERTY>
 <!--118-->  <ISREADONLYTREE><![CDATA[N]]></ISREADONLYTREE>
@@ -14185,7 +14185,7 @@ WARNING: This window is not supported anymore and it is only kept for backward c
 <!--0B6731F4F17A4A7AB00960148051E969-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--0B6731F4F17A4A7AB00960148051E969-->  <UIPATTERN><![CDATA[RO]]></UIPATTERN>
 <!--0B6731F4F17A4A7AB00960148051E969-->  <HQLORDERBYCLAUSE><![CDATA[sh.documentNo desc, e.lineNo asc]]></HQLORDERBYCLAUSE>
-<!--0B6731F4F17A4A7AB00960148051E969-->  <HQLFILTERCLAUSE><![CDATA[sh.movementDate >= (now() - @filterByDocumentsProcessedSinceNDaysAgo@)]]></HQLFILTERCLAUSE>
+<!--0B6731F4F17A4A7AB00960148051E969-->  <HQLFILTERCLAUSE><![CDATA[sh.movementDate >= (substract_days(now(), @filterByDocumentsProcessedSinceNDaysAgo@))]]></HQLFILTERCLAUSE>
 <!--0B6731F4F17A4A7AB00960148051E969-->  <FILTERNAME><![CDATA[Movements processed since defined count of days ago]]></FILTERNAME>
 <!--0B6731F4F17A4A7AB00960148051E969-->  <SHOWPARENTBUTTONS><![CDATA[Y]]></SHOWPARENTBUTTONS>
 <!--0B6731F4F17A4A7AB00960148051E969-->  <DISABLE_PARENT_KEY_PROPERTY><![CDATA[N]]></DISABLE_PARENT_KEY_PROPERTY>

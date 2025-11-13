@@ -44,7 +44,6 @@ import jakarta.persistence.criteria.Predicate;
 // import org.hibernate.criterion.DetachedCriteria;
 // import org.hibernate.criterion.Projections;
 import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Subquery;
 // import org.hibernate.criterion.Subqueries;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.APRMPendingPaymentFromInvoice;

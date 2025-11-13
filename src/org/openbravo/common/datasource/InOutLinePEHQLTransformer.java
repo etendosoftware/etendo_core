@@ -170,10 +170,10 @@ public class InOutLinePEHQLTransformer extends HqlQueryTransformer {
       return " '' ";
     }
     StringBuilder operativeQuantityHql = new StringBuilder();
-    operativeQuantityHql.append(" to_number(M_GET_CONVERTED_AUMQTY(e.product.id, ");
+    operativeQuantityHql.append(" to_number(m_get_converted_aumqty(e.product.id, ");
     operativeQuantityHql.append(getMovementQuantityHQL());
     operativeQuantityHql.append(
-        " , coalesce(e.operativeUOM.id, TO_CHAR(M_GET_DEFAULT_AUM_FOR_DOCUMENT(e.product.id, sh.documentType.id)))))");
+        " , coalesce(e.operativeUOM.id, to_char(m_get_default_aum_for_document(e.product.id, sh.documentType.id)))))");
 
     return operativeQuantityHql.toString();
   }
@@ -196,7 +196,7 @@ public class InOutLinePEHQLTransformer extends HqlQueryTransformer {
     if (UOMUtil.isUomManagementEnabled()) {
       operativeUOMHql.append(" (select aum2.name from UOM aum2 where aum2.id = ");
       operativeUOMHql.append(
-          " (coalesce(e.operativeUOM.id, TO_CHAR(M_GET_DEFAULT_AUM_FOR_DOCUMENT(e.product.id, sh.documentType.id))))) ");
+          " (coalesce(e.operativeUOM.id, to_char(m_get_default_aum_for_document(e.product.id, sh.documentType.id))))) ");
     } else {
       operativeUOMHql.append("'' ");
     }
@@ -219,7 +219,7 @@ public class InOutLinePEHQLTransformer extends HqlQueryTransformer {
           OBContext.getOBContext().getCurrentClient(),
           OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(),
           OBContext.getOBContext().getRole(), window);
-      daysCount = Integer.valueOf(value);
+      daysCount = Integer.parseInt(value);
     } catch (Exception ignore) {
     }
     return String.valueOf(daysCount);

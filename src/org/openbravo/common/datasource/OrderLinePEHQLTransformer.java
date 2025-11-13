@@ -198,10 +198,10 @@ public class OrderLinePEHQLTransformer extends HqlQueryTransformer {
       return " '' ";
     }
     StringBuilder operativeQuantityHql = new StringBuilder();
-    operativeQuantityHql.append(" to_number(M_GET_CONVERTED_AUMQTY(e.product.id, ");
+    operativeQuantityHql.append(" to_number(m_get_converted_aumqty(e.product.id, ");
     operativeQuantityHql.append(getOrderedQuantityHQL());
     operativeQuantityHql.append(
-        " , coalesce(e.operativeUOM.id, TO_CHAR(M_GET_DEFAULT_AUM_FOR_DOCUMENT(e.product.id, ");
+        " , coalesce(e.operativeUOM.id, to_char(m_get_default_aum_for_document(e.product.id, ");
     operativeQuantityHql.append(isSalesTransaction ? "ic.documentType.id" : "o.documentType.id");
     operativeQuantityHql.append(")))))");
     return operativeQuantityHql.toString();
@@ -226,7 +226,7 @@ public class OrderLinePEHQLTransformer extends HqlQueryTransformer {
     if (UOMUtil.isUomManagementEnabled()) {
       operativeUOMHql.append(" (select aum2.name from UOM aum2 where aum2.id = ");
       operativeUOMHql.append(
-          " (coalesce(e.operativeUOM.id, TO_CHAR(M_GET_DEFAULT_AUM_FOR_DOCUMENT(e.product.id, ");
+          " (coalesce(e.operativeUOM.id, to_char(m_get_default_aum_for_document(e.product.id, ");
       operativeUOMHql.append(isSalesTransaction ? "ic.documentType.id" : "o.documentType.id");
       operativeUOMHql.append("))))) ");
     } else {
@@ -270,10 +270,10 @@ public class OrderLinePEHQLTransformer extends HqlQueryTransformer {
           OBContext.getOBContext().getCurrentClient(),
           OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(),
           OBContext.getOBContext().getRole(), window);
-      daysCount = Integer.valueOf(value);
+      daysCount = Integer.parseInt(value);
     } catch (Exception ignore) {
     }
-    return (isSalesTransaction ? "ic" : "o") + ".orderDate >= (now()-" + daysCount + ")";
+    return (isSalesTransaction ? "ic" : "o") + ".orderDate >= (substract_days(now(), " + daysCount + "))";
   }
 
   private String changeAdditionalFilters(String transformedHql) {

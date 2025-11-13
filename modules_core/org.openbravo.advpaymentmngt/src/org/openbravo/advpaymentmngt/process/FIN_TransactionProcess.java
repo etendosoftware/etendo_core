@@ -118,7 +118,7 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         boolean documentEnabled = getDocumentConfirmation(transaction.getId());
         if (documentEnabled && !FIN_Utility.isPeriodOpen(transaction.getClient().getId(),
             AcctServer.DOCTYPE_FinAccTransaction, transaction.getOrganization().getId(),
-            OBDateUtils.formatDate(transaction.getDateAcct())) && orgLegalWithAccounting) {
+            transaction.getDateAcct()) && orgLegalWithAccounting) {
           msg = OBMessageUtils.messageBD("PeriodNotAvailable");
           throw new OBException(msg);
         }

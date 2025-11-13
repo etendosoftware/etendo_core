@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
@@ -410,7 +411,7 @@ public class MaterialReceiptPending extends HttpSecureAppServlet {
             org.openbravo.model.common.enterprise.DocumentType dt = OBDal.getInstance()
                 .get(org.openbravo.model.common.enterprise.DocumentType.class, docTargetType);
             if (!FIN_Utility.isPeriodOpen(vars.getClient(), dt.getDocumentCategory(),
-                data[0].adOrgId, strDateReceipt) && orgLegalWithAccounting) {
+                data[0].adOrgId, FIN_Utility.getDate(strDateReceipt)) && orgLegalWithAccounting) {
               myMessage.setType("Error");
               myMessage.setTitle(OBMessageUtils.messageBD("Error"));
               myMessage.setMessage(OBMessageUtils.messageBD("PeriodNotAvailable"));

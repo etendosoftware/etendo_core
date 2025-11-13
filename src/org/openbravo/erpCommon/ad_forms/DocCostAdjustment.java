@@ -546,7 +546,7 @@ public class DocCostAdjustment extends AcctServer {
     for (CostAdjustmentLine costAdjustmentLine : costAdjLineQry.list()) {
       if (!FIN_Utility.isPeriodOpen(costAdjustmentLine.getClient().getId(), documentType,
           costAdjustmentLine.getOrganization().getId(),
-          OBDateUtils.formatDate(costAdjustmentLine.getAccountingDate()))) {
+          costAdjustmentLine.getAccountingDate())) {
         return false;
       }
     }

@@ -108,8 +108,8 @@ public class OBMessageUtils {
         OBContext.setAdminMode(false);
         OBCriteria<Element> obcElement = OBDal.getInstance().createCriteria(Element.class);
         obcElement.addEqual(Element.PROPERTY_DBCOLUMNNAME, strCode);
-        if (obcElement.count() > 0) {
-          Element element = obcElement.list().get(0);
+        Element element = (Element) obcElement.setMaxResults(1).uniqueResult();
+        if (element != null) {
           strMessage = element.getName();
           for (ElementTrl elementTrl : element.getADElementTrlList()) {
             if (elementTrl.getLanguage().getId().equals(strLanguageId)) {

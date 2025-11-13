@@ -54,7 +54,6 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
-import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -222,7 +221,7 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
         boolean periodNotAvailable = documentEnabled
             && !FIN_Utility.isPeriodOpen(payment.getClient().getId(),
                 payment.getDocumentType().getDocumentCategory(), payment.getOrganization().getId(),
-                OBDateUtils.formatDate(payment.getPaymentDate()))
+                payment.getPaymentDate())
             && FIN_Utility.periodControlOpened(FIN_Payment.TABLE_NAME, payment.getId(),
                 FIN_Payment.TABLE_NAME + "_ID", "LE");
         if (periodNotAvailable) {

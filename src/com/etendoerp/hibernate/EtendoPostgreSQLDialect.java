@@ -1,5 +1,6 @@
 package com.etendoerp.hibernate;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +28,13 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     BasicType<Integer> integerBasicType = typeConfiguration.getBasicTypeRegistry().resolve(
         StandardBasicTypes.INTEGER);
     INTEGER_RETURN_TYPE = StandardFunctionReturnTypeResolvers.invariant(integerBasicType);
+  }
+  private static final FunctionReturnTypeResolver BIGDECIMAL_RETURN_TYPE;
+  static {
+    TypeConfiguration typeConfiguration = new TypeConfiguration();
+    BasicType<BigDecimal> bigDecimalBasicType = typeConfiguration.getBasicTypeRegistry().resolve(
+        StandardBasicTypes.BIG_DECIMAL);
+    BIGDECIMAL_RETURN_TYPE = StandardFunctionReturnTypeResolvers.invariant(bigDecimalBasicType);
   }
   private static final FunctionReturnTypeResolver STRING_RETURN_TYPE;
   static {
@@ -59,14 +67,26 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     registerObEquals(functionContributions);
     log.info("Registering add_days(timestamp, int):timestamp function");
     registerAddDays(functionContributions);
+    log.info("Registering substract_days(timestamp, int):timestamp function");
+    registerSubtractDays(functionContributions);
     log.info("Registering now():timestamp function");
     registerNow(functionContributions);
+    log.info("Registering to_date(character varying):timestamp function");
+    registerToDate(functionContributions);
     log.info("Registering hqlagg(character varying):character varying function");
     registerHqlAgg(functionContributions);
     log.info("Registering aprm_seqnoinvpaidstatus(character varying, character varying, character):character varying function");
     registerAprmSeqNoInvPaidStatus(functionContributions);
+    log.info("Registering m_get_default_aum_for_document(character varying, character varying):character varying function");
+    registerMGetDefaultAumForDocument(functionContributions);
+    log.info("Registering m_get_converted_aumqty(character varying, character varying):character varying function");
+    registerMGetConvertedAumQty(functionContributions);
     log.info("Registering aprm_seqnumberpaymentstatus(character varying):character varying function");
     registerAprmSeqNumberPaymentStatus(functionContributions);
+    log.info("Registering ad_org_getperiodcontrolallow(character varying):character varying function");
+    registerAdOrgGetPeriodControlAllow(functionContributions);
+    log.info("Registering ad_org_getperiodcontrolallowtn(character varying):character varying function");
+    registerAdOrgGetPeriodControlAllowtn(functionContributions);
 
     //TODO: Add more custom functions if needed
   }
@@ -148,6 +168,17 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     patternFunctionDescriptorBuilder.setReturnTypeResolver(TIMESTAMP_RETURN_TYPE).register();
   }
 
+  private static void registerSubtractDays(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "substract_days",
+        FunctionKind.NORMAL,
+        "substract_days(?1, ?2)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(2));
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(TIMESTAMP_RETURN_TYPE).register();
+  }
+
   private static void registerNow(FunctionContributions functionContributions) {
     PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
         functionContributions.getFunctionRegistry(),
@@ -156,6 +187,17 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
         "now()"
     );
     patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.NO_ARGS);
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(TIMESTAMP_RETURN_TYPE).register();
+  }
+
+  private static void registerToDate(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "to_date",
+        FunctionKind.NORMAL,
+        "to_date($1, $2)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.between(1,2));
     patternFunctionDescriptorBuilder.setReturnTypeResolver(TIMESTAMP_RETURN_TYPE).register();
   }
 
@@ -181,12 +223,56 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();
   }
 
+  private static void registerMGetDefaultAumForDocument(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "m_get_default_aum_for_document",
+        FunctionKind.NORMAL,
+        "m_get_default_aum_for_document(?1, ?2)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(2));
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();
+  }
+
+  private static void registerMGetConvertedAumQty(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "m_get_converted_aumqty",
+        FunctionKind.NORMAL,
+        "m_get_converted_aumqty(?1, ?2, ?3)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(3));
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(BIGDECIMAL_RETURN_TYPE).register();
+  }
+
   private static void registerAprmSeqNumberPaymentStatus(FunctionContributions functionContributions) {
     PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
         functionContributions.getFunctionRegistry(),
         "aprm_seqnumberpaymentstatus",
         FunctionKind.NORMAL,
         "aprm_seqnumberpaymentstatus(?1)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();
+  }
+
+  private static void registerAdOrgGetPeriodControlAllow(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "ad_org_getperiodcontrolallow",
+        FunctionKind.NORMAL,
+        "ad_org_getperiodcontrolallow(?1)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();
+  }
+
+  private static void registerAdOrgGetPeriodControlAllowtn(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "ad_org_getperiodcontrolallowtn",
+        FunctionKind.NORMAL,
+        "ad_org_getperiodcontrolallowtn(?1)"
     );
     patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
     patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();
