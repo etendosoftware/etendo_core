@@ -575,7 +575,7 @@ Define application initiated information and error messages.
 OR AD_User.C_BPartner_ID IS NULL)]]></FILTERCLAUSE>
 <!--118-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--118-->  <UIPATTERN><![CDATA[STD]]></UIPATTERN>
-<!--118-->  <HQLFILTERCLAUSE><![CDATA[e.businessPartner is null or exists(select id from BusinessPartner bp where bp.id=e.businessPartner.id and (bp.employee='Y' or bp.salesRepresentative='Y'))]]></HQLFILTERCLAUSE>
+<!--118-->  <HQLFILTERCLAUSE><![CDATA[e.businessPartner is null or exists(select id from BusinessPartner bp where bp.id=e.businessPartner.id and (bp.employee='Y' or bp.isSalesRepresentative = true))]]></HQLFILTERCLAUSE>
 <!--118-->  <SHOWPARENTBUTTONS><![CDATA[Y]]></SHOWPARENTBUTTONS>
 <!--118-->  <DISABLE_PARENT_KEY_PROPERTY><![CDATA[N]]></DISABLE_PARENT_KEY_PROPERTY>
 <!--118-->  <ISREADONLYTREE><![CDATA[N]]></ISREADONLYTREE>

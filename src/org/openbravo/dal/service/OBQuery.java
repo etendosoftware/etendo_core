@@ -431,10 +431,10 @@ public class OBQuery<E extends BaseOBObject> {
     final String result;
     if (alias != null) {
       result = "select " + (selectClause == null ? alias : selectClause) + " from "
-          + getEntity().getName() + " " + aliasJoinClause + " " + whereClause + orderByClause;
+          + getEntity().getName() + " " + aliasJoinClause + " " + whereClause + " " + orderByClause;
     } else {
       result = (selectClause == null ? "" : "select " + selectClause + " ") + "from "
-          + getEntity().getName() + " " + aliasJoinClause + " " + whereClause + orderByClause;
+          + getEntity().getName() + " " + aliasJoinClause + " " + whereClause + " " + orderByClause;
     }
     log.debug("Created query string " + result);
     return result;
