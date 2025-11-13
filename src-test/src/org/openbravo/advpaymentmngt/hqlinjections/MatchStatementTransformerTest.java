@@ -1,6 +1,6 @@
 package org.openbravo.advpaymentmngt.hqlinjections;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
@@ -11,9 +11,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -27,12 +25,6 @@ import org.openbravo.test.base.OBBaseTest;
  * Test class for MatchStatementTransformer.
  */
 public class MatchStatementTransformerTest extends OBBaseTest {
-
-  /**
-   * Rule for handling expected exceptions in tests.
-   */
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
 
   @InjectMocks
   private MatchStatementTransformer transformer;
@@ -97,14 +89,13 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     String hqlQuery = "SELECT e FROM Entity e WHERE @whereClause@ ORDER BY e.id";
     Map<String, String> requestParameters = new HashMap<>();
     requestParameters.put("@FIN_Financial_Account.id@", "TEST_FIN_ACCOUNT_ID");
-
     Map<String, Object> queryNamedParameters = new HashMap<>();
 
     // When
     String result = transformer.transformHqlQuery(hqlQuery, requestParameters, queryNamedParameters);
 
     // Then
-    assertTrue("Should preserve existing ORDER BY", result.contains("ORDER BY e.id"));
+    assertTrue(result.contains("ORDER BY e.id"), "Should preserve existing ORDER BY");
   }
 
   /**
@@ -121,7 +112,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     String result = transformer.transformHqlQuery(hqlQuery, requestParameters, queryNamedParameters);
 
     // Then
-    assertTrue("Should contain empty where clause", result.contains("WHERE  order by banklineDate, lineNo"));
-    assertTrue("Should not contain any parameters", queryNamedParameters.isEmpty());
+    assertTrue(result.contains("WHERE  order by banklineDate, lineNo"), "Should contain empty where clause");
+    assertTrue(queryNamedParameters.isEmpty(), "Should not contain any parameters");
   }
 }
