@@ -1,24 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportRegisterLineJR" pageWidth="992" pageHeight="595" orientation="Landscape" columnWidth="932" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="7ef73577-0c62-445e-9f29-a906fde0d16a">
+<!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
+<jasperReport name="ReportRegisterLineJR" language="java" pageWidth="992" pageHeight="595" orientation="Landscape" columnWidth="932" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="7ef73577-0c62-445e-9f29-a906fde0d16a">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
-	<import value="net.sf.jasperreports.engine.*"/>
-	<import value="java.util.*"/>
-	<import value="net.sf.jasperreports.engine.data.*"/>
+	<import>net.sf.jasperreports.engine.*</import>
+	<import>java.util.*</import>
+	<import>net.sf.jasperreports.engine.data.*</import>
 	<parameter name="invoicedateDA" class="java.lang.String">
-		<parameterDescription><![CDATA[Invoice Date From :]]></parameterDescription>
+		<description><![CDATA[Invoice Date From :]]></description>
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
 	<parameter name="invoicedateA" class="java.lang.String">
-		<parameterDescription><![CDATA[Invoice Date To :]]></parameterDescription>
+		<description><![CDATA[Invoice Date To :]]></description>
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="StartPageNo" class="java.lang.Integer" isForPrompting="false">
-		<parameterDescription><![CDATA[Start Page No]]></parameterDescription>
+	<parameter name="StartPageNo" forPrompting="false" class="java.lang.Integer">
+		<description><![CDATA[Start Page No]]></description>
 		<defaultValueExpression><![CDATA[new Integer(0)]]></defaultValueExpression>
 	</parameter>
-	<queryString>
-		<![CDATA[select taxreg.name,taxregline.documentno as DocNum,taxregline.created as RegDate , inv.documentno as DocInv, bp.name as RagSoc,
+	<query language="sql"><![CDATA[select taxreg.name,taxregline.documentno as DocNum,taxregline.created as RegDate , inv.documentno as DocInv, bp.name as RagSoc,
  coalesce(taxregline.totalamt,0) as TotAmt, coalesce(taxregline.taxbaseamt,0) as TaxBaseAmt, coalesce(taxregline.exemptamt,0) as ExemptAmt , coalesce(taxregline.taxundamt,0) as TaxUndAmt,
  coalesce(taxregline.taxamt,0) as TaxAmt , (tax.name||'-'||tax.rate || '%') as aliquota
  from c_taxregister taxreg , c_taxregisterline taxregline , c_invoicetax invtax, c_invoice inv ,c_bpartner bp, c_tax tax
@@ -30,8 +29,7 @@
  and 1=1
  and ( taxregline.invoicedate >= to_date($P{invoicedateDA},'DD/MM/YYYY')  ) 
  and ( taxregline.invoicedate <= to_date($P{invoicedateA},'DD/MM/YYYY')  )
- order by taxreg.name]]>
-	</queryString>
+ order by taxreg.name]]></query>
 	<field name="NAME" class="java.lang.String"/>
 	<field name="DOCNUM" class="java.lang.String"/>
 	<field name="REGDATE" class="java.util.Date"/>
@@ -44,7 +42,7 @@
 	<field name="TAXAMT" class="java.math.BigDecimal"/>
 	<field name="ALIQUOTA" class="java.lang.String"/>
 	<group name="RegName">
-		<groupExpression><![CDATA[$F{NAME}]]></groupExpression>
+		<expression><![CDATA[$F{NAME}]]></expression>
 		<groupHeader>
 			<band height="19" splitType="Stretch"/>
 		</groupHeader>
@@ -52,357 +50,241 @@
 			<band height="24" splitType="Stretch"/>
 		</groupFooter>
 	</group>
-	<background>
-		<band splitType="Stretch"/>
-	</background>
-	<title>
-		<band height="50" splitType="Stretch">
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField" x="0" y="3" width="365" height="45" uuid="5c720c1d-dd24-40dd-8899-4d92e53c0fe1"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement verticalAlignment="Middle">
-					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{NAME}]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement key="line" x="0" y="48" width="932" height="1" forecolor="#000000" backcolor="#FFFFFF" uuid="b36ba2f8-942d-46c6-b296-d868f00f52ea"/>
-			</line>
-			<line>
-				<reportElement key="line" x="0" y="3" width="932" height="1" forecolor="#000000" backcolor="#FFFFFF" uuid="3ffa6fc7-468a-40a6-beb7-fa808781458b"/>
-			</line>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField-1" x="365" y="0" width="567" height="50" uuid="da5a0b26-5bc4-4171-bb37-42072b998396"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement verticalAlignment="Middle">
-					<font isBold="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Date from :    " + $P{invoicedateDA}+"   to    "+$P{invoicedateA}]]></textFieldExpression>
-			</textField>
-		</band>
+	<background splitType="Stretch"/>
+	<title height="50" splitType="Stretch">
+		<element kind="textField" uuid="5c720c1d-dd24-40dd-8899-4d92e53c0fe1" key="textField" x="0" y="3" width="365" height="45" fontSize="12.0" pdfFontName="Helvetica-Bold" blankWhenNull="false" bold="true" vTextAlign="Middle">
+			<expression><![CDATA[$F{NAME}]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="line" uuid="b36ba2f8-942d-46c6-b296-d868f00f52ea" key="line" x="0" y="48" width="932" height="1" forecolor="#000000" backcolor="#FFFFFF"/>
+		<element kind="line" uuid="3ffa6fc7-468a-40a6-beb7-fa808781458b" key="line" x="0" y="3" width="932" height="1" forecolor="#000000" backcolor="#FFFFFF"/>
+		<element kind="textField" uuid="da5a0b26-5bc4-4171-bb37-42072b998396" key="textField-1" x="365" y="0" width="567" height="50" pattern="" blankWhenNull="true" bold="true" vTextAlign="Middle">
+			<expression><![CDATA["Date from :    " + $P{invoicedateDA}+"   to    "+$P{invoicedateA}]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
 	</title>
-	<pageHeader>
-		<band splitType="Stretch"/>
-	</pageHeader>
-	<columnHeader>
-		<band height="23" splitType="Stretch">
-			<rectangle>
-				<reportElement key="rectangle" mode="Opaque" x="0" y="0" width="782" height="23" forecolor="#000000" uuid="68975f94-14f3-4d63-9b6c-7ed035a6ec02"/>
-				<graphicElement>
-					<pen lineWidth="0.0" lineStyle="Solid"/>
-				</graphicElement>
-			</rectangle>
-			<staticText>
-				<reportElement key="staticText" mode="Transparent" x="0" y="0" width="86" height="23" forecolor="#000000" uuid="a6e829b0-8f6b-4435-8abd-775daba58627"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Doc No]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="86" y="0" width="86" height="23" forecolor="#000000" uuid="d81ff10c-a171-494a-8f53-636145c62aba"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Register Date]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="172" y="0" width="86" height="23" forecolor="#000000" uuid="12808066-dcdb-4587-86e3-2ac4666c57e3"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Invoice Doc No]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="258" y="0" width="86" height="23" forecolor="#000000" uuid="2bb65d42-aa70-4a08-8214-0259a6288a71"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[B. Partner]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="344" y="0" width="86" height="23" forecolor="#000000" uuid="890ee16c-ccee-4de8-ba58-5707951de58d"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[Tot. Amount]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="430" y="0" width="86" height="23" forecolor="#000000" uuid="ce0857fb-927a-4bde-abac-4dc325d160aa"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Base Amount]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="516" y="0" width="86" height="23" forecolor="#000000" uuid="a54392b0-10b8-4d3a-823a-c3c690ead5e2"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Exempt Amount]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="602" y="0" width="86" height="23" forecolor="#000000" uuid="cf02be65-6e84-4b06-a14c-2263cce57864"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Tax Und. Amount]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText" x="688" y="0" width="86" height="23" forecolor="#000000" uuid="455e62d3-d6e6-479b-b9db-6cd1be13e0cb"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Tax Amount]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText-1" x="774" y="0" width="158" height="23" forecolor="#000000" uuid="11b24ffe-6201-4c95-a57d-af38cc5536cf"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center">
-					<font size="12" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Tax Name]]></text>
-			</staticText>
-		</band>
+	<pageHeader splitType="Stretch"/>
+	<columnHeader height="23" splitType="Stretch">
+		<element kind="rectangle" uuid="68975f94-14f3-4d63-9b6c-7ed035a6ec02" key="rectangle" mode="Opaque" x="0" y="0" width="782" height="23" forecolor="#000000">
+			<pen lineWidth="0.0" lineStyle="Solid"/>
+		</element>
+		<element kind="staticText" uuid="a6e829b0-8f6b-4435-8abd-775daba58627" key="staticText" mode="Transparent" x="0" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" bold="true">
+			<text><![CDATA[Doc No]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="d81ff10c-a171-494a-8f53-636145c62aba" key="staticText" x="86" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" bold="true">
+			<text><![CDATA[Register Date]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="12808066-dcdb-4587-86e3-2ac4666c57e3" key="staticText" x="172" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" bold="true">
+			<text><![CDATA[Invoice Doc No]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="2bb65d42-aa70-4a08-8214-0259a6288a71" key="staticText" x="258" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" pdfFontName="Helvetica-Bold" bold="true">
+			<text><![CDATA[B. Partner]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="890ee16c-ccee-4de8-ba58-5707951de58d" key="staticText" x="344" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" pdfFontName="Helvetica-Bold" bold="true">
+			<text><![CDATA[Tot. Amount]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="ce0857fb-927a-4bde-abac-4dc325d160aa" key="staticText" x="430" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" bold="true">
+			<text><![CDATA[Base Amount]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="a54392b0-10b8-4d3a-823a-c3c690ead5e2" key="staticText" x="516" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" bold="true">
+			<text><![CDATA[Exempt Amount]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="cf02be65-6e84-4b06-a14c-2263cce57864" key="staticText" x="602" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" bold="true">
+			<text><![CDATA[Tax Und. Amount]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="455e62d3-d6e6-479b-b9db-6cd1be13e0cb" key="staticText" x="688" y="0" width="86" height="23" forecolor="#000000" fontSize="12.0" bold="true">
+			<text><![CDATA[Tax Amount]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="11b24ffe-6201-4c95-a57d-af38cc5536cf" key="staticText-1" x="774" y="0" width="158" height="23" forecolor="#000000" fontSize="12.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[Tax Name]]></text>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
 	</columnHeader>
 	<detail>
 		<band height="17" splitType="Stretch">
-			<line>
-				<reportElement key="line" x="0" y="16" width="932" height="1" forecolor="#808080" backcolor="#FFFFFF" uuid="9742fd3a-0642-4885-837f-3f94c90b6b73"/>
-			</line>
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="0" y="0" width="86" height="17" forecolor="#000000" uuid="106e2087-7686-4ba9-a2ae-188cd9e19111"/>
+			<element kind="line" uuid="9742fd3a-0642-4885-837f-3f94c90b6b73" key="line" x="0" y="16" width="932" height="1" forecolor="#808080" backcolor="#FFFFFF"/>
+			<element kind="textField" uuid="106e2087-7686-4ba9-a2ae-188cd9e19111" key="textField" x="0" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false">
+				<expression><![CDATA[$F{DOCNUM}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{DOCNUM}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="86" y="0" width="86" height="17" forecolor="#000000" uuid="4d66cf03-ac8e-4ee0-9dc5-c539a97ebd3e"/>
+			</element>
+			<element kind="textField" uuid="4d66cf03-ac8e-4ee0-9dc5-c539a97ebd3e" key="textField" x="86" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false">
+				<expression><![CDATA[$F{REGDATE}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{REGDATE}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="172" y="0" width="86" height="17" forecolor="#000000" uuid="880b18aa-f548-4efa-bb68-a95c5f1dd110"/>
+			</element>
+			<element kind="textField" uuid="880b18aa-f548-4efa-bb68-a95c5f1dd110" key="textField" x="172" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false">
+				<expression><![CDATA[$F{DOCINV}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{DOCINV}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="258" y="0" width="86" height="17" forecolor="#000000" uuid="3f366a43-6a93-48e2-aade-56ff736294d3"/>
+			</element>
+			<element kind="textField" uuid="3f366a43-6a93-48e2-aade-56ff736294d3" key="textField" x="258" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false">
+				<expression><![CDATA[$F{RAGSOC}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{RAGSOC}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0.00" isBlankWhenNull="false">
-				<reportElement key="textField" x="344" y="0" width="86" height="17" forecolor="#000000" uuid="f91091c5-c53d-4575-aa54-7f39cae673f5"/>
+			</element>
+			<element kind="textField" uuid="f91091c5-c53d-4575-aa54-7f39cae673f5" key="textField" x="344" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="#,##0.00" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false" hTextAlign="Left">
+				<expression><![CDATA[$F{TOTAMT}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Left">
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{TOTAMT}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0.00" isBlankWhenNull="false">
-				<reportElement key="textField" x="430" y="0" width="86" height="17" forecolor="#000000" uuid="c78500a6-40df-48ee-81c6-fc307e3e28fe"/>
+			</element>
+			<element kind="textField" uuid="c78500a6-40df-48ee-81c6-fc307e3e28fe" key="textField" x="430" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="#,##0.00" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false" hTextAlign="Left">
+				<expression><![CDATA[$F{TAXBASEAMT}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Left">
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{TAXBASEAMT}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0.00" isBlankWhenNull="false">
-				<reportElement key="textField" x="516" y="0" width="86" height="17" forecolor="#000000" uuid="d8949692-db5a-41f2-b07a-c47873d608c6"/>
+			</element>
+			<element kind="textField" uuid="d8949692-db5a-41f2-b07a-c47873d608c6" key="textField" x="516" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="#,##0.00" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false" hTextAlign="Left">
+				<expression><![CDATA[$F{EXEMPTAMT}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Left">
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{EXEMPTAMT}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0.00" isBlankWhenNull="false">
-				<reportElement key="textField" x="602" y="0" width="86" height="17" forecolor="#000000" uuid="38945438-ba59-451e-af6a-01bf9fb99835"/>
+			</element>
+			<element kind="textField" uuid="38945438-ba59-451e-af6a-01bf9fb99835" key="textField" x="602" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="#,##0.00" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false" hTextAlign="Left">
+				<expression><![CDATA[$F{TAXUNDAMT}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Left">
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{TAXUNDAMT}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0.00" isBlankWhenNull="false">
-				<reportElement key="textField" x="688" y="0" width="86" height="17" forecolor="#000000" uuid="d54a48ee-ae77-414a-a8cc-f2202dab3392"/>
+			</element>
+			<element kind="textField" uuid="d54a48ee-ae77-414a-a8cc-f2202dab3392" key="textField" x="688" y="0" width="86" height="17" forecolor="#000000" fontSize="12.0" pattern="#,##0.00" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false" hTextAlign="Left">
+				<expression><![CDATA[$F{TAXAMT}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Left">
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{TAXAMT}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField-2" x="774" y="0" width="158" height="17" forecolor="#000000" uuid="961afa3c-2459-4abf-9af3-7b117a89a308"/>
+			</element>
+			<element kind="textField" uuid="961afa3c-2459-4abf-9af3-7b117a89a308" key="textField-2" x="774" y="0" width="158" height="17" forecolor="#000000" fontSize="12.0" pattern="" blankWhenNull="false" pdfEmbedded="false" bold="false" italic="false" underline="false" strikeThrough="false" hTextAlign="Center">
+				<expression><![CDATA[$F{ALIQUOTA}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Center">
-					<font size="12" isBold="false" isItalic="false" isUnderline="false" isStrikeThrough="false" isPdfEmbedded="false"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{ALIQUOTA}]]></textFieldExpression>
-			</textField>
+			</element>
 		</band>
 	</detail>
-	<columnFooter>
-		<band splitType="Stretch"/>
-	</columnFooter>
-	<pageFooter>
-		<band height="27" splitType="Stretch">
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="719" y="4" width="170" height="19" forecolor="#000000" uuid="a87a8439-8341-4973-ab54-5ed917c57b71"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA["Page   " +(new Integer($V{PAGE_NUMBER}.intValue()+ $P{StartPageNo}.intValue()))]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement key="line" x="0" y="3" width="932" height="1" forecolor="#000000" backcolor="#FFFFFF" uuid="6147186a-96c5-4624-b1cf-924305f28162"/>
-			</line>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField" x="1" y="6" width="209" height="19" forecolor="#000000" uuid="e76cfe11-e6b3-4d66-8ee3-c3d543d41b79"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textFieldExpression><![CDATA[new Date()]]></textFieldExpression>
-			</textField>
-		</band>
+	<columnFooter splitType="Stretch"/>
+	<pageFooter height="27" splitType="Stretch">
+		<element kind="textField" uuid="a87a8439-8341-4973-ab54-5ed917c57b71" key="textField" x="719" y="4" width="170" height="19" forecolor="#000000" pattern="" blankWhenNull="false" hTextAlign="Right">
+			<expression><![CDATA["Page   " +(new Integer($V{PAGE_NUMBER}.intValue()+ $P{StartPageNo}.intValue()))]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="line" uuid="6147186a-96c5-4624-b1cf-924305f28162" key="line" x="0" y="3" width="932" height="1" forecolor="#000000" backcolor="#FFFFFF"/>
+		<element kind="textField" uuid="e76cfe11-e6b3-4d66-8ee3-c3d543d41b79" key="textField" x="1" y="6" width="209" height="19" forecolor="#000000" blankWhenNull="false">
+			<expression><![CDATA[new Date()]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
 	</pageFooter>
-	<summary>
-		<band splitType="Stretch"/>
-	</summary>
+	<summary splitType="Stretch"/>
 </jasperReport>

@@ -1,15 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.0.0.final using JasperReports Library version 6.0.0  -->
-<!-- 2018-02-27T16:45:13 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportInvoiceCustomerDimensionalAnalyses_srpt_doctypecount" pageWidth="400" pageHeight="802" whenNoDataType="AllSectionsNoDetail" columnWidth="400" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" whenResourceMissingType="Error" uuid="dcc54a6a-4fa7-4363-918c-1e721f63d8f0">
-	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
+<!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
+<jasperReport name="ReportInvoiceCustomerDimensionalAnalyses_srpt_doctypecount" language="java" pageWidth="400" pageHeight="802" whenNoDataType="AllSectionsNoDetail" columnWidth="400" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" whenResourceMissingType="Error" uuid="dcc54a6a-4fa7-4363-918c-1e721f63d8f0">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="si"/>
 	<property name="net.sf.jasperreports.export.xls.detect.cell.type" value="true"/>
-	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="SansSerif" fontSize="9" isBold="true"/>
-	<style name="Detail_Line" fontName="SansSerif" fontSize="8" isBold="false">
-		<conditionalStyle>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vTextAlign="Middle" vImageAlign="Middle" fontName="Bitstream Vera Sans" fontSize="9.0" bold="true"/>
+	<style name="Detail_Line" fontName="Bitstream Vera Sans" fontSize="8.0" bold="true">
+		<conditionalStyle mode="Opaque" backcolor="#CCCCCC">
 			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()%2==1)]]></conditionExpression>
-			<style mode="Opaque" backcolor="#CCCCCC"/>
 		</conditionalStyle>
 	</style>
 	<parameter name="USER_CLIENT" class="java.lang.String"/>
@@ -28,8 +24,7 @@
 	<parameter name="C_DOCTYPE_ID" class="java.lang.String"/>
 	<parameter name="DOCSTATUS" class="java.lang.String"/>
 	<parameter name="LANGUAGE" class="java.lang.String"/>
-	<queryString language="SQL">
-		<![CDATA[SELECT DOCTYPE, ORGID, DOCID, COUNT(*) AS DOCTYPECOUNT
+	<query language="SQL"><![CDATA[SELECT DOCTYPE, ORGID, DOCID, COUNT(*) AS DOCTYPECOUNT
         FROM
         (SELECT ad_org.name || '-' || coalesce(c_doctype_trl.name, c_doctype.name) AS DOCTYPE,
         ad_org.ad_org_id AS ORGID,
@@ -86,86 +81,61 @@
                   c_doctype.c_doctype_id, 
                   c_invoice.c_invoice_id) A
         GROUP BY DOCTYPE, ORGID, DOCID
-        ORDER BY DOCTYPE]]>
-	</queryString>
+        ORDER BY DOCTYPE]]></query>
 	<field name="doctypecount" class="java.lang.String"/>
 	<field name="doctype" class="java.lang.String"/>
-	<background>
-		<band splitType="Stretch"/>
-	</background>
-	<columnHeader>
-		<band height="13">
+	<background splitType="Stretch"/>
+	<columnHeader height="13">
+		<element kind="staticText" uuid="27582591-131e-420e-863d-caee79d44078" x="0" y="0" width="300" height="13" fontSize="8.0" style="Detail_Header">
+			<text><![CDATA[Document Type]]></text>
 			<property name="local_mesure_unitheight" value="pixel"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			<staticText>
-				<reportElement style="Detail_Header" x="0" y="0" width="300" height="13" uuid="27582591-131e-420e-863d-caee79d44078">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<box leftPadding="2">
-					<topPen lineWidth="1.0"/>
-					<leftPen lineWidth="1.0"/>
-					<bottomPen lineWidth="1.0"/>
-					<rightPen lineWidth="1.0"/>
-				</box>
-				<textElement>
-					<font size="8"/>
-				</textElement>
-				<text><![CDATA[Document Type]]></text>
-			</staticText>
-			<staticText>
-				<reportElement style="Detail_Header" x="300" y="0" width="100" height="13" uuid="ab814f9f-ece4-4e62-b5a4-5d9bfda937a9">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<box leftPadding="2">
-					<topPen lineWidth="1.0"/>
-					<leftPen lineWidth="0.0"/>
-					<bottomPen lineWidth="1.0"/>
-					<rightPen lineWidth="1.0"/>
-				</box>
-				<textElement>
-					<font size="8"/>
-				</textElement>
-				<text><![CDATA[Count]]></text>
-			</staticText>
-		</band>
+			<box leftPadding="2" style="Detail_Header">
+				<topPen lineWidth="1.0"/>
+				<leftPen lineWidth="1.0"/>
+				<bottomPen lineWidth="1.0"/>
+				<rightPen lineWidth="1.0"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="ab814f9f-ece4-4e62-b5a4-5d9bfda937a9" x="300" y="0" width="100" height="13" fontSize="8.0" style="Detail_Header">
+			<text><![CDATA[Count]]></text>
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<box leftPadding="2" style="Detail_Header">
+				<topPen lineWidth="1.0"/>
+				<leftPen lineWidth="0.0"/>
+				<bottomPen lineWidth="1.0"/>
+				<rightPen lineWidth="1.0"/>
+			</box>
+		</element>
+		<property name="local_mesure_unitheight" value="pixel"/>
+		<property name="com.jaspersoft.studio.unit.height" value="px"/>
 	</columnHeader>
 	<detail>
 		<band height="15">
-			<property name="local_mesure_unitheight" value="pixel"/>
-			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			<textField>
-				<reportElement style="Detail_Line" x="300" y="0" width="100" height="13" uuid="5ce07a41-f1e9-4199-99b0-de0cf018e31c">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<box leftPadding="2">
+			<element kind="textField" uuid="5ce07a41-f1e9-4199-99b0-de0cf018e31c" x="300" y="0" width="100" height="13" fontSize="8.0" hTextAlign="Left" style="Detail_Line">
+				<expression><![CDATA[Integer.parseInt($F{doctypecount})]]></expression>
+				<property name="local_mesure_unitheight" value="pixel"/>
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				<box leftPadding="2" style="Detail_Line">
 					<bottomPen lineWidth="0.0"/>
 					<rightPen lineWidth="0.0"/>
 				</box>
-				<textElement textAlignment="Left">
-					<font size="8"/>
-				</textElement>
-				<textFieldExpression><![CDATA[Integer.parseInt($F{doctypecount})]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="Detail_Line" x="0" y="0" width="300" height="13" uuid="d4593cb6-8fa6-4f11-a6e1-d62b345662af">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="local_mesure_unitx" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.x" value="px"/>
-				</reportElement>
-				<box leftPadding="2">
+			</element>
+			<element kind="textField" uuid="d4593cb6-8fa6-4f11-a6e1-d62b345662af" x="0" y="0" width="300" height="13" fontSize="8.0" hTextAlign="Left" style="Detail_Line">
+				<expression><![CDATA[$F{doctype}]]></expression>
+				<property name="local_mesure_unitheight" value="pixel"/>
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				<property name="local_mesure_unitx" value="pixel"/>
+				<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				<box leftPadding="2" style="Detail_Line">
 					<leftPen lineWidth="0.0"/>
 					<bottomPen lineWidth="0.0"/>
 					<rightPen lineWidth="0.0"/>
 				</box>
-				<textElement textAlignment="Left">
-					<font size="8"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{doctype}]]></textFieldExpression>
-			</textField>
+			</element>
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 		</band>
 	</detail>
 </jasperReport>

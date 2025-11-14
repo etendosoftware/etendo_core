@@ -1,24 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ReportAnnualCertification" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="02325b36-2c8d-4de0-9ff2-59bb35427704">
+<!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
+<jasperReport name="ReportAnnualCertification" language="java" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="02325b36-2c8d-4de0-9ff2-59bb35427704">
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
-	<import value="net.sf.jasperreports.engine.*"/>
-	<import value="java.util.*"/>
-	<import value="net.sf.jasperreports.engine.data.*"/>
-	<parameter name="DateFrom" class="java.lang.String" isForPrompting="false">
-		<parameterDescription><![CDATA[Date From]]></parameterDescription>
+	<import>net.sf.jasperreports.engine.*</import>
+	<import>java.util.*</import>
+	<import>net.sf.jasperreports.engine.data.*</import>
+	<parameter name="DateFrom" forPrompting="false" class="java.lang.String">
+		<description><![CDATA[Date From]]></description>
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="DateTo" class="java.lang.String" isForPrompting="false">
-		<parameterDescription><![CDATA[Date To]]></parameterDescription>
+	<parameter name="DateTo" forPrompting="false" class="java.lang.String">
+		<description><![CDATA[Date To]]></description>
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="DATEFORMATTER" class="java.text.DateFormat" isForPrompting="false">
+	<parameter name="DATEFORMATTER" forPrompting="false" class="java.text.DateFormat">
 		<defaultValueExpression><![CDATA[$P{REPORT_FORMAT_FACTORY}.createDateFormat("", $P{REPORT_LOCALE}, $P{REPORT_TIME_ZONE})]]></defaultValueExpression>
 	</parameter>
-	<parameter name="LOCALE" class="java.util.Locale" isForPrompting="false"/>
-	<queryString>
-		<![CDATA[SELECT '' as Mittente, '' as Erogante,'' as AddressOrganization, buspar.name as BusinessPartner,buspar.taxid,buspar.fiscalcode,Loc.ADDRESS1,Loc.POSTAL,City.NAME as City,City.LOCODE,
+	<parameter name="LOCALE" forPrompting="false" class="java.util.Locale"/>
+	<query language="sql"><![CDATA[SELECT '' as Mittente, '' as Erogante,'' as AddressOrganization, buspar.name as BusinessPartner,buspar.taxid,buspar.fiscalcode,Loc.ADDRESS1,Loc.POSTAL,City.NAME as City,City.LOCODE,
  debpaycancel.DATEPLANNED,bank.Name,bank.Codebank,bank.Codebranch,bank.Digitcontrol as DigitcontrolBank,bankaccount.Digitcontrol as DigitcontrolBankAccount,bankaccount.Codeaccount,
  coalesce ( sum(invoic.TOTALLINES),0) as SummedLineAmount,
  coalesce ( sum(invoic.GRANDTOTAL),0) as GrandTotalAmount,
@@ -46,8 +45,7 @@
  left join (select C_BankAccount_ID, C_Bank_ID, Digitcontrol, Codeaccount from C_BankAccount) bankaccount on (debpaygenerate.C_BankAccount_ID = bankaccount.C_BankAccount_ID) 
  left join (select C_Bank_ID, Name, Codebank, Codebranch, Digitcontrol from C_Bank) bank on (bank.C_Bank_ID = bankaccount.C_Bank_ID) 
  group by buspar.name,buspar.taxid,buspar.fiscalcode,Loc.ADDRESS1,Loc.POSTAL,City.NAME,City.LOCODE ,debpaycancel.DATEPLANNED,bank.Name,bank.Codebank,bank.Codebranch,bank.Digitcontrol,bankaccount.Digitcontrol,bankaccount.Codeaccount
- order by buspar.name asc]]>
-	</queryString>
+ order by buspar.name asc]]></query>
 	<field name="MITTENTE" class="java.lang.String"/>
 	<field name="EROGANTE" class="java.lang.String"/>
 	<field name="ADDRESSORGANIZATION" class="java.lang.String"/>
@@ -68,354 +66,239 @@
 	<field name="SUMMEDLINEAMOUNT" class="java.math.BigDecimal"/>
 	<field name="GRANDTOTALAMOUNT" class="java.math.BigDecimal"/>
 	<field name="WITHHOLDINGAMOUNT" class="java.math.BigDecimal"/>
-	<background>
-		<band splitType="Stretch"/>
-	</background>
-	<title>
-		<band splitType="Stretch">
-			<line>
-				<reportElement key="line" x="0" y="-2" width="534" height="1" uuid="fa2fbf64-d75d-4177-924e-b95eab716537"/>
-			</line>
-			<line>
-				<reportElement key="line" x="0" y="-47" width="534" height="1" uuid="48634cb7-a4d7-41f9-9dc1-0973bf7e60f7"/>
-			</line>
-		</band>
+	<background splitType="Stretch"/>
+	<title splitType="Stretch">
+		<element kind="line" uuid="fa2fbf64-d75d-4177-924e-b95eab716537" key="line" x="0" y="-2" width="534" height="1"/>
+		<element kind="line" uuid="48634cb7-a4d7-41f9-9dc1-0973bf7e60f7" key="line" x="0" y="-47" width="534" height="1"/>
 	</title>
-	<pageHeader>
-		<band height="10" splitType="Stretch">
-			<line direction="BottomUp">
-				<reportElement key="line" x="0" y="9" width="535" height="1" uuid="397a7976-964f-4a1d-b6e4-7b8e26a8eaf4"/>
-			</line>
-		</band>
+	<pageHeader height="10" splitType="Stretch">
+		<element kind="line" uuid="397a7976-964f-4a1d-b6e4-7b8e26a8eaf4" key="line" x="0" y="9" width="535" height="1" direction="BottomUp"/>
 	</pageHeader>
-	<columnHeader>
-		<band splitType="Stretch"/>
-	</columnHeader>
+	<columnHeader splitType="Stretch"/>
 	<detail>
 		<band height="600" splitType="Stretch">
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField" x="0" y="545" width="404" height="30" forecolor="#000000" backcolor="#FFFFFF" uuid="0c6c461a-5ae5-461a-a7c1-d6ac3a3d46b9"/>
+			<element kind="textField" uuid="0c6c461a-5ae5-461a-a7c1-d6ac3a3d46b9" key="textField" x="0" y="545" width="404" height="30" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" blankWhenNull="false">
+				<expression><![CDATA[($F{ADDRESSORGANIZATION}!=null)?$F{ADDRESSORGANIZATION}:new String(" ")+ " " + $P{DATEFORMATTER}.format(new Date())]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[($F{ADDRESSORGANIZATION}!=null)?$F{ADDRESSORGANIZATION}:new String(" ")+ " " + $P{DATEFORMATTER}.format(new Date())]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="220" y="32" width="315" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="d0dd8e4d-c7ed-4f7b-ac23-69cb27d1cab8"/>
+			</element>
+			<element kind="textField" uuid="d0dd8e4d-c7ed-4f7b-ac23-69cb27d1cab8" key="textField" x="220" y="32" width="315" height="17" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" pattern="" blankWhenNull="true" vTextAlign="Middle">
+				<expression><![CDATA[$F{BUSINESSPARTNER}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{BUSINESSPARTNER}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="76" y="170" width="196" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="c8b05ace-b7d9-4bd3-a7f4-54e56e9c96e4"/>
+			</element>
+			<element kind="textField" uuid="c8b05ace-b7d9-4bd3-a7f4-54e56e9c96e4" key="textField" x="76" y="170" width="196" height="17" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" pattern="" blankWhenNull="true" vTextAlign="Middle">
+				<expression><![CDATA[$F{FISCALCODE}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{FISCALCODE}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="76" y="153" width="196" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="2bfc5c00-3325-421f-a241-437ee0245643"/>
+			</element>
+			<element kind="textField" uuid="2bfc5c00-3325-421f-a241-437ee0245643" key="textField" x="76" y="153" width="196" height="17" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" pattern="" blankWhenNull="true" vTextAlign="Middle">
+				<expression><![CDATA[$F{ADDRESS1}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{ADDRESS1}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="387" y="153" width="74" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="0ef95905-cb51-4cbe-a9e0-363f4d38d01e"/>
+			</element>
+			<element kind="textField" uuid="0ef95905-cb51-4cbe-a9e0-363f4d38d01e" key="textField" x="387" y="153" width="74" height="17" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" pattern="" blankWhenNull="true" vTextAlign="Middle">
+				<expression><![CDATA[$F{POSTAL}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{POSTAL}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="277" y="153" width="107" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="9c9b019e-cea5-4573-b3e0-a311ad50b9a1"/>
+			</element>
+			<element kind="textField" uuid="9c9b019e-cea5-4573-b3e0-a311ad50b9a1" key="textField" x="277" y="153" width="107" height="17" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" pattern="" blankWhenNull="true" vTextAlign="Middle">
+				<expression><![CDATA[$F{CITY}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{CITY}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField" x="467" y="153" width="67" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="4fdabc2b-8dbc-4a95-8b4b-7fe2ce5089f8"/>
+			</element>
+			<element kind="textField" uuid="4fdabc2b-8dbc-4a95-8b4b-7fe2ce5089f8" key="textField" x="467" y="153" width="67" height="17" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" pattern="" blankWhenNull="true" vTextAlign="Middle">
+				<expression><![CDATA[$F{LOCODE}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{LOCODE}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-6" x="0" y="69" width="535" height="33" uuid="25c36fec-dfaa-4700-9378-76125d5f8760"/>
+			</element>
+			<element kind="textField" uuid="25c36fec-dfaa-4700-9378-76125d5f8760" key="textField-6" x="0" y="69" width="535" height="33" fontName="Courier New" pdfFontName="Helvetica-Bold" blankWhenNull="false" bold="true">
+				<expression><![CDATA["Subject: Certification of compensation subject to withholding"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New" isBold="true" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Subject: Certification of compensation subject to withholding"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-7" x="1" y="117" width="75" height="18" uuid="f7962023-7ee3-47d3-a96f-653370cfbdd5"/>
+			</element>
+			<element kind="textField" uuid="f7962023-7ee3-47d3-a96f-653370cfbdd5" key="textField-7" x="1" y="117" width="75" height="18" fontName="Courier New" blankWhenNull="false" vTextAlign="Middle">
+				<expression><![CDATA["Tax payer :"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Tax payer :"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-8" x="1" y="135" width="75" height="18" uuid="c52366b0-4838-49eb-9fa8-2d1a63571943"/>
+			</element>
+			<element kind="textField" uuid="c52366b0-4838-49eb-9fa8-2d1a63571943" key="textField-8" x="1" y="135" width="75" height="18" fontName="Courier New" blankWhenNull="false" vTextAlign="Middle">
+				<expression><![CDATA["Date of birth :"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Date of birth :"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-9" x="1" y="153" width="75" height="18" uuid="b9d70a5e-751a-4389-acc9-651facf7f707"/>
+			</element>
+			<element kind="textField" uuid="b9d70a5e-751a-4389-acc9-651facf7f707" key="textField-9" x="1" y="153" width="75" height="18" fontName="Courier New" blankWhenNull="false" vTextAlign="Middle">
+				<expression><![CDATA["Address :"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Address :"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-10" x="1" y="171" width="75" height="18" uuid="f5edd9c4-11b7-4bf9-94f3-82cd3c699861"/>
+			</element>
+			<element kind="textField" uuid="f5edd9c4-11b7-4bf9-94f3-82cd3c699861" key="textField-10" x="1" y="171" width="75" height="18" fontName="Courier New" blankWhenNull="false" vTextAlign="Middle">
+				<expression><![CDATA["Tax ID :"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Tax ID :"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-11" x="0" y="199" width="75" height="18" uuid="23a8da65-9149-4e98-8093-11c7c77c08b0"/>
+			</element>
+			<element kind="textField" uuid="23a8da65-9149-4e98-8093-11c7c77c08b0" key="textField-11" x="0" y="199" width="75" height="18" fontName="Courier New" blankWhenNull="false" vTextAlign="Middle">
+				<expression><![CDATA["Employer :"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Employer :"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-1" x="0" y="217" width="535" height="62" uuid="3ac6d2e8-92bd-404d-a8c4-9e68b76a95ba"/>
+			</element>
+			<element kind="textField" uuid="3ac6d2e8-92bd-404d-a8c4-9e68b76a95ba" key="textField-1" x="0" y="217" width="535" height="62" fontName="Courier New" blankWhenNull="false">
+				<expression><![CDATA["We certify that for the period from "+$P{DateFrom}.toString()+" to "+$P{DateTo}.toString()+" total payments to the payee were "+$F{GRANDTOTALAMOUNT}.toString()+
+" and that the withholding amount is "+$F{WITHHOLDINGAMOUNT}.toString()]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["We certify that for the period from "+$P{DateFrom}.toString()+" to "+$P{DateTo}.toString()+" total payments to the payee were "+$F{GRANDTOTALAMOUNT}.toString()+
-" and that the withholding amount is "+$F{WITHHOLDINGAMOUNT}.toString()]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-12" x="0" y="527" width="131" height="18" uuid="c88084e3-e0f6-4a24-b699-1239adab2a33"/>
+			</element>
+			<element kind="textField" uuid="c88084e3-e0f6-4a24-b699-1239adab2a33" key="textField-12" x="0" y="527" width="131" height="18" fontName="Courier New" blankWhenNull="false">
+				<expression><![CDATA["Best regards :"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Best regards :"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-13" x="404" y="557" width="131" height="18" uuid="827b43a0-9b2a-43eb-8947-1a6bd0ebe85d"/>
+			</element>
+			<element kind="textField" uuid="827b43a0-9b2a-43eb-8947-1a6bd0ebe85d" key="textField-13" x="404" y="557" width="131" height="18" fontName="Courier New" pdfFontName="Helvetica" blankWhenNull="false" bold="false" hTextAlign="Right">
+				<expression><![CDATA["Signature"]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Right">
-					<font fontName="Courier New" isBold="false" pdfFontName="Helvetica"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Signature"]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField" x="0" y="9" width="109" height="12" uuid="6bdcb39d-43b9-49f6-8aad-b3ee7ec711ea"/>
+			</element>
+			<element kind="textField" uuid="6bdcb39d-43b9-49f6-8aad-b3ee7ec711ea" key="textField" x="0" y="9" width="109" height="12" fontName="Courier New" blankWhenNull="false">
+				<expression><![CDATA[$F{MITTENTE}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{MITTENTE}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField" x="76" y="199" width="458" height="18" uuid="58796205-08d4-4e7e-b225-02ee07f3972d"/>
+			</element>
+			<element kind="textField" uuid="58796205-08d4-4e7e-b225-02ee07f3972d" key="textField" x="76" y="199" width="458" height="18" blankWhenNull="false">
+				<expression><![CDATA[$F{EROGANTE}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textFieldExpression><![CDATA[$F{EROGANTE}]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement key="textField-2" x="76" y="117" width="315" height="17" forecolor="#000000" backcolor="#FFFFFF" uuid="8dc59fad-8ac0-4b06-8266-f0c53e7048ee"/>
+			</element>
+			<element kind="textField" uuid="8dc59fad-8ac0-4b06-8266-f0c53e7048ee" key="textField-2" x="76" y="117" width="315" height="17" forecolor="#000000" backcolor="#FFFFFF" fontName="Courier New" fontSize="10.0" pattern="" blankWhenNull="true" vTextAlign="Middle">
+				<expression><![CDATA[$F{BUSINESSPARTNER}]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Courier New" size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{BUSINESSPARTNER}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-3" x="0" y="319" width="535" height="20" uuid="563f4587-cfeb-4a8e-ab42-d9b075093928"/>
+			</element>
+			<element kind="textField" uuid="563f4587-cfeb-4a8e-ab42-d9b075093928" key="textField-3" x="0" y="319" width="535" height="20" fontName="Courier New" blankWhenNull="false">
+				<expression><![CDATA["On : "+ $P{DATEFORMATTER}.format($F{DATEPLANNED})]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["On : "+ $P{DATEFORMATTER}.format($F{DATEPLANNED})]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="false">
-				<reportElement key="textField-4" x="0" y="279" width="535" height="20" uuid="8535180c-5e15-4ad5-9428-d29b9305324b"/>
+			</element>
+			<element kind="textField" uuid="8535180c-5e15-4ad5-9428-d29b9305324b" key="textField-4" x="0" y="279" width="535" height="20" fontName="Courier New" blankWhenNull="false">
+				<expression><![CDATA["The withhold amount has been deposited at: "]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA["The withhold amount has been deposited at: "]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement key="textField-5" x="0" y="299" width="535" height="20" uuid="e989ff64-f136-4c49-839e-ba73b88e44fb"/>
+			</element>
+			<element kind="textField" uuid="e989ff64-f136-4c49-839e-ba73b88e44fb" key="textField-5" x="0" y="299" width="535" height="20" fontName="Courier New" blankWhenNull="true">
+				<expression><![CDATA[$F{NAME}.trim()+"-"+$F{CODEBANK}.toString()+"-"+$F{CODEBRANCH}.toString()+"-"+$F{DIGITCONTROLBANK}.toString()+"-"+$F{DIGITCONTROLBANKACCOUNT}.toString()+"-"+$F{CODEACCOUNT}.toString()]]></expression>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="0.0" lineColor="#000000"/>
 					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement>
-					<font fontName="Courier New"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{NAME}.trim()+"-"+$F{CODEBANK}.toString()+"-"+$F{CODEBRANCH}.toString()+"-"+$F{DIGITCONTROLBANK}.toString()+"-"+$F{DIGITCONTROLBANKACCOUNT}.toString()+"-"+$F{CODEACCOUNT}.toString()]]></textFieldExpression>
-			</textField>
+			</element>
 		</band>
 	</detail>
-	<columnFooter>
-		<band splitType="Stretch"/>
-	</columnFooter>
-	<pageFooter>
-		<band height="27" splitType="Stretch">
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="325" y="4" width="170" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="64a208ef-2f7c-4a81-b448-5d544eeafc8b"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Right">
-					<font size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
-			</textField>
-			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="499" y="4" width="36" height="19" forecolor="#000000" backcolor="#FFFFFF" uuid="493f67e2-1fdb-41e9-b296-730e258f54a1"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="10"/>
-				</textElement>
-				<textFieldExpression><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
-			</textField>
-			<line>
-				<reportElement key="line" x="0" y="3" width="535" height="1" uuid="a556713d-ebe1-4e10-b4bd-80a853425443"/>
-			</line>
-		</band>
+	<columnFooter splitType="Stretch"/>
+	<pageFooter height="27" splitType="Stretch">
+		<element kind="textField" uuid="64a208ef-2f7c-4a81-b448-5d544eeafc8b" key="textField" x="325" y="4" width="170" height="19" forecolor="#000000" backcolor="#FFFFFF" fontSize="10.0" pattern="" blankWhenNull="false" hTextAlign="Right">
+			<expression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="textField" uuid="493f67e2-1fdb-41e9-b296-730e258f54a1" key="textField" x="499" y="4" width="36" height="19" forecolor="#000000" backcolor="#FFFFFF" fontSize="10.0" evaluationTime="Report" pattern="" blankWhenNull="false">
+			<expression><![CDATA["" + $V{PAGE_NUMBER}]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="line" uuid="a556713d-ebe1-4e10-b4bd-80a853425443" key="line" x="0" y="3" width="535" height="1"/>
 	</pageFooter>
-	<summary>
-		<band splitType="Stretch"/>
-	</summary>
+	<summary splitType="Stretch"/>
 </jasperReport>
