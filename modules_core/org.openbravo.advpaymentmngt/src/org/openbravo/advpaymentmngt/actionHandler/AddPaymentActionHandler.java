@@ -440,7 +440,7 @@ public class AddPaymentActionHandler extends Action {
         .isLegalEntityWithAccounting();
     if (documentEnabled
         && !FIN_Utility.isPeriodOpen(OBContext.getOBContext().getCurrentClient().getId(),
-        strDocBaseType, org.getId(), OBDateUtils.formatDate(paymentDate))
+        strDocBaseType, org.getId(), paymentDate)
         && orgLegalWithAccounting) {
       String message = OBMessageUtils.messageBD("PeriodNotAvailable");
       log.debug(message);

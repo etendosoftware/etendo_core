@@ -47,7 +47,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 // TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.advpaymentmngt.APRM_FinaccTransactionV;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -57,7 +56,6 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.OBDao;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -91,7 +89,6 @@ import org.openbravo.model.financialmgmt.payment.FIN_PaymentDetail;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentScheduleDetail;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
-import org.openbravo.service.db.DbUtility;
 
 public abstract class AcctServer {
   public static final String WARNING = "Warning";

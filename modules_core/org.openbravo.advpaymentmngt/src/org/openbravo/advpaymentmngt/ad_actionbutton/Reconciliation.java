@@ -269,7 +269,7 @@ public class Reconciliation extends HttpSecureAppServlet {
         boolean documentEnabled = getDocumentConfirmation(this, reconciliation.getId());
         if (documentEnabled && !FIN_Utility.isPeriodOpen(reconciliation.getClient().getId(),
             AcctServer.DOCTYPE_Reconciliation, reconciliation.getOrganization().getId(),
-            strStatementDate) && orgLegalWithAccounting) {
+            FIN_Utility.getDate(strStatementDate)) && orgLegalWithAccounting) {
           msg.setType("Error");
           msg.setTitle(Utility.messageBD(this, "Error", vars.getLanguage()));
           msg.setMessage(

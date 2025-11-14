@@ -185,86 +185,101 @@ public class OBCriteria<E extends BaseOBObject> {
    * Internal dispatcher executing a projection-specific query based on {@link #projectionType}.
    */
   private Object executeProjectionQuery() {
-    if ("COUNT".equals(projectionType)) {
-      return (long) count();
-    } else if ("SUM".equals(projectionType)) {
-      return executeProjectionSum();
+    if (StringUtils.equals("COUNT", projectionType)) {
+      return count();
+    } else if (StringUtils.equals("SUM", projectionType)) {
+      return sum();
     }
-
-    if ("MAX".equals(projectionType) && projectionProperty != null) {
-      CriteriaQuery<Number> maxQuery = cb.createQuery(Number.class);
-      Root<E> maxRoot = maxQuery.from(entityClass);
-
-      Path<Number> propertyPath = maxRoot.get(projectionProperty);
-      maxQuery.select(cb.max(propertyPath));
-
-      // Apply the same predicates
-      List<Predicate> maxPredicates = rebuildPredicatesFor(maxRoot);
-      if (!maxPredicates.isEmpty()) {
-        maxQuery.where(maxPredicates.toArray(new Predicate[0]));
+    if (StringUtils.isNotEmpty(projectionProperty)){
+      if (StringUtils.equals("MAX", projectionType)) {
+        return max();
       }
-
-      TypedQuery<Number> query = session.createQuery(maxQuery);
-      applyTimeout(query);
-      return query.getSingleResult();
-    }
-
-    if ("MIN".equals(projectionType) && projectionProperty != null) {
-      CriteriaQuery<Number> minQuery = cb.createQuery(Number.class);
-      Root<E> minRoot = minQuery.from(entityClass);
-
-      Path<Number> propertyPath = minRoot.get(projectionProperty);
-      minQuery.select(cb.min(propertyPath));
-
-      // Apply the same predicates
-      List<Predicate> minPredicates = rebuildPredicatesFor(minRoot);
-      if (!minPredicates.isEmpty()) {
-        minQuery.where(minPredicates.toArray(new Predicate[0]));
+      if (StringUtils.equals("MIN", projectionType)) {
+        return min();
       }
-
-      TypedQuery<Number> query = session.createQuery(minQuery);
-      applyTimeout(query);
-      return query.getSingleResult();
-    }
-
-    if ("PROPERTY".equals(projectionType) && projectionProperty != null) {
-      CriteriaQuery<Object> propQuery = cb.createQuery(Object.class);
-      Root<E> propRoot = propQuery.from(entityClass);
-
-      Path<Object> propertyPath = propRoot.get(projectionProperty);
-      propQuery.select(propertyPath);
-
-      // Apply the same predicates
-      List<Predicate> propPredicates = rebuildPredicatesFor(propRoot);
-      if (!propPredicates.isEmpty()) {
-        propQuery.where(propPredicates.toArray(new Predicate[0]));
+      if (StringUtils.equals("PROPERTY", projectionType)) {
+        return property();
       }
-
-      TypedQuery<Object> query = session.createQuery(propQuery);
-      applyTimeout(query);
-      return query.getSingleResult();
     }
 
     throw new IllegalStateException("Unknown projection type: " + projectionType);
   }
 
+  private Object property() {
+    CriteriaQuery<Object> propertyQuery = cb.createQuery(Object.class);
+    Root<E> propRoot = propertyQuery.from(entityClass);
+
+    Path<Object> propertyPath = propRoot.get(projectionProperty);
+    propertyQuery.select(propertyPath);
+
+    List<Predicate> propPreds = rebuildPredicatesFor(propRoot);
+    if (!propPreds.isEmpty()) {
+      propertyQuery.where(propPreds.toArray(new Predicate[0]));
+    }
+    applyOrderByToQuery(propertyQuery);
+
+    TypedQuery<Object> query = session.createQuery(propertyQuery);
+    applyTimeout(query);
+    return query.getSingleResult();
+  }
+
+  private Object min() {
+    CriteriaQuery<Object> minQuery = cb.createQuery(Object.class);
+    Root<E> minRoot = minQuery.from(entityClass);
+
+    Path<Object> propertyPath = minRoot.get(projectionProperty);
+    Expression<?> minExpression = cb.min((Expression) propertyPath);
+    minQuery.select(minExpression);
+
+    List<Predicate> minPreds = rebuildPredicatesFor(minRoot);
+    if (!minPreds.isEmpty()) {
+      minQuery.where(minPreds.toArray(new Predicate[0]));
+    }
+    applyOrderByToQuery(minQuery);
+
+    TypedQuery<Object> query = session.createQuery(minQuery);
+    applyTimeout(query);
+    return query.getSingleResult();
+  }
+
+  private Object max() {
+    CriteriaQuery<Object> maxQuery = cb.createQuery(Object.class);
+    Root<E> maxRoot = maxQuery.from(entityClass);
+
+    Path<?> propertyPath = maxRoot.get(projectionProperty);
+    Expression<?> maxExpression = cb.max((Expression) propertyPath);
+    maxQuery.select(maxExpression);
+
+    List<Predicate> maxPreds = rebuildPredicatesFor(maxRoot);
+    if (!maxPreds.isEmpty()) {
+      maxQuery.where(maxPreds.toArray(new Predicate[0]));
+    }
+    applyOrderByToQuery(maxQuery);
+
+    TypedQuery<Object> query = session.createQuery(maxQuery);
+    applyTimeout(query);
+    return query.getSingleResult();
+  }
+
   /**
    * Executes a SUM projection for the configured {@link #projectionProperty}.
    */
-  private Object executeProjectionSum() {
+  private Object sum() {
     initialize();
     CriteriaQuery<Number> sumQuery = cb.createQuery(Number.class);
     Root<E> sumRoot = sumQuery.from(entityClass);
 
-    List<Predicate> sumPreds = rebuildPredicatesFor(sumRoot);
-
     sumQuery.select(cb.sum(sumRoot.get(projectionProperty).as(Number.class)));
+
+    List<Predicate> sumPreds = rebuildPredicatesFor(sumRoot);
     if (!sumPreds.isEmpty()) {
       sumQuery.where(sumPreds.toArray(new Predicate[0]));
     }
+    applyOrderByToQuery(sumQuery);
 
-    TypedQuery<Number> q = session.createQuery(sumQuery);
-    return q.getSingleResult();
+    TypedQuery<Number> query = session.createQuery(sumQuery);
+    applyTimeout(query);
+    return query.getSingleResult();
   }
 
   /**
@@ -277,7 +292,6 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
     Root<E> countRoot = countQuery.from(entityClass);
 
-    // Re-apply predicates on the count root
     List<Predicate> countPreds = rebuildPredicatesFor(countRoot);
 
     countQuery.select(cb.count(countRoot));
@@ -287,8 +301,8 @@ public class OBCriteria<E extends BaseOBObject> {
 
     TypedQuery<Long> q = session.createQuery(countQuery);
     applyTimeout(q);
-    Long res = q.getSingleResult();
-    return res == null ? 0 : res.intValue();
+    Long count = q.getSingleResult();
+    return count == null ? 0 : count.intValue();
   }
 
   // -------------------- Transparent filters --------------------
@@ -366,13 +380,21 @@ public class OBCriteria<E extends BaseOBObject> {
   }
 
   public OBCriteria<E> addEqual(String property, Object value) {
-    predicates.add(cb.equal(getPath(property), value));
+    if (value != null) {
+      predicates.add(cb.equal(getPath(property), value));
+    } else {
+      predicates.add(cb.isNull(getPath(property)));
+    }
     modified = true;
     return this;
   }
 
   public OBCriteria<E> addNotEqual(String property, Object value) {
-    predicates.add(cb.notEqual(getPath(property), value));
+    if (value != null) {
+      predicates.add(cb.notEqual(getPath(property), value));
+    } else {
+      predicates.add(cb.isNotNull(getPath(property)));
+    }
     modified = true;
     return this;
   }
@@ -885,6 +907,21 @@ public class OBCriteria<E extends BaseOBObject> {
       jpaOrders.add(o.isAscending() ? cb.asc(path) : cb.desc(path));
     }
     cq.orderBy(jpaOrders);
+  }
+
+  /**
+   * Applies stored order specifications creating intermediate joins as required.
+   */
+  private void applyOrderByToQuery(CriteriaQuery<?> query) {
+    if (ordersRequested.isEmpty()) {
+      return;
+    }
+    List<Order> jpaOrders = new ArrayList<>();
+    for (org.openbravo.dal.service.Order o : ordersRequested) {
+      Path<?> path = getPath(o.getProperty());
+      jpaOrders.add(o.isAscending() ? cb.asc(path) : cb.desc(path));
+    }
+    query.orderBy(jpaOrders);
   }
 
   /**

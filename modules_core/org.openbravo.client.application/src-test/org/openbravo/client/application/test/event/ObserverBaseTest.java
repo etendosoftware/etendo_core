@@ -27,7 +27,6 @@ package org.openbravo.client.application.test.event;
  */
 
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.openbravo.base.structure.BaseOBObject;

@@ -28,7 +28,6 @@ package org.openbravo.erpCommon.ad_callouts;
 
 import jakarta.servlet.ServletException;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.dal.core.OBContext;

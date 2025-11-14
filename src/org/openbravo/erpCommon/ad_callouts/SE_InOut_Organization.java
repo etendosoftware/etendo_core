@@ -26,6 +26,7 @@ package org.openbravo.erpCommon.ad_callouts;
  */
 
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletException;
 
 import com.etendoerp.sequences.NextSequenceValue;
@@ -49,6 +50,7 @@ import org.openbravo.model.common.enterprise.Warehouse;
 import java.util.ArrayList;
 import java.util.List;
 
+@Dependent
 public class SE_InOut_Organization extends SimpleCallout {
     private static final String WAREHOUSEID = "inpmWarehouseId";
 
@@ -69,12 +71,11 @@ public class SE_InOut_Organization extends SimpleCallout {
         /* Warehouse */
         OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
         orgWarehouseCriteria.addEqual(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId));
-        orgWarehouseCriteria.setProjectionProperty(OrgWarehouse.PROPERTY_WAREHOUSE);
 
         List<String> warehouseIds = new ArrayList<>();
         List<OrgWarehouse> warehouseList = orgWarehouseCriteria.list();
-        for (Object obj : warehouseList) {
-            Warehouse warehouse = (Warehouse) obj;
+        for (OrgWarehouse orgWarehouse : warehouseList) {
+            Warehouse warehouse = orgWarehouse.getWarehouse();
             warehouseIds.add(warehouse.getId());
         }
 

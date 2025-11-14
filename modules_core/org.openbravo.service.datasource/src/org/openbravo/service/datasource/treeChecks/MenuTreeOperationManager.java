@@ -31,7 +31,6 @@ import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;

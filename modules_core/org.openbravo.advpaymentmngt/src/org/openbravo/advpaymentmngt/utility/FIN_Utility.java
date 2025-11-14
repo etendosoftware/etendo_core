@@ -1218,20 +1218,19 @@ public class FIN_Utility {
    * @return boolean
    */
   public static boolean isPeriodOpen(String client, String documentType, String org,
-      String dateAcct) {
+      Date dateAcct) {
     final Session session = OBDal.getInstance().getSession();
 
     // @formatter:off
-    final String hql = ""
-        + "select max(p.id) as period "
+    final String hql = "select max(p.id) as period "
         + " from FinancialMgmtPeriodControl pc "
         + "   left join pc.period p "
         + " where p.client.id = :clientId"
         + "   and pc.documentCategory = :documentType"
         + "   and pc.periodStatus = 'O' "
         + "   and pc.organization.id = ad_org_getcalendarowner(:org) "
-        + "   and to_date(cast(:dateAcct as timestamp)) >= p.startingDate "
-        + "   and to_date(cast(:dateAcct as timestamp)) < p.endingDate + 1 ";
+        + "   and cast(:dateAcct as timestamp) >= p.startingDate "
+        + "   and cast(:dateAcct as timestamp) <  add_days(p.endingDate, 1) ";
     // @formatter:on
     final Query<String> qry = session.createQuery(hql, String.class);
     qry.setParameter("clientId", client);

@@ -38,6 +38,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import com.etendoerp.sequences.model.SequenceConfiguration;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -673,9 +675,12 @@ public class ModelProvider implements OBSingleton {
     for (final Object row : session.createNativeQuery(columnQry).list()) {
       final Object[] vals = (Object[]) row;
       final String key = createColumnMandatoryKey(vals[0], vals[1]);
-      if (vals[2] instanceof String) {
+      if (vals[2] instanceof String valueString) {
         // note the string contains Y or N
-        result.put(key, ((String) vals[2]).equalsIgnoreCase("N"));
+        result.put(key, StringUtils.equalsIgnoreCase("N", valueString));
+      } else if (vals[2] instanceof Character valueChar) {
+        // note the string contains Y or N
+        result.put(key, (StringUtils.equalsIgnoreCase("N", valueChar.toString())));
       } else {
         result.put(key, (Boolean) vals[2]);
       }
