@@ -29,7 +29,6 @@ package org.openbravo.client.application.window;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.servlet.ServletException;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.application.GCSystem;
 import org.openbravo.client.application.GCTab;
 import org.openbravo.dal.core.OBContext;

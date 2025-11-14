@@ -94,7 +94,7 @@ public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Proce
               recLine.getFinancialAccountTransaction().getClient().getId(),
               AcctServer.DOCTYPE_Reconciliation,
               recLine.getFinancialAccountTransaction().getOrganization().getId(),
-              OBDateUtils.formatDate(recLine.getFinancialAccountTransaction().getDateAcct()))
+              recLine.getFinancialAccountTransaction().getDateAcct())
               && orgLegalWithAccounting) {
             msg.setType("Error");
             msg.setTitle(Utility.messageBD(conProvider, "Error", language));
@@ -157,7 +157,7 @@ public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Proce
               recLine.getFinancialAccountTransaction().getClient().getId(),
               AcctServer.DOCTYPE_Reconciliation,
               recLine.getFinancialAccountTransaction().getOrganization().getId(),
-              OBDateUtils.formatDate(recLine.getFinancialAccountTransaction().getDateAcct()))
+              recLine.getFinancialAccountTransaction().getDateAcct())
               && orgLegalWithAccounting) {
             msg.setType("Error");
             msg.setTitle(Utility.messageBD(conProvider, "Error", language));

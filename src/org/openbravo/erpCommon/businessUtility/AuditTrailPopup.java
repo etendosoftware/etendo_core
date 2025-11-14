@@ -36,7 +36,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.hibernate.FetchMode;
 
 
 import org.openbravo.base.filter.IsIDFilter;

@@ -39,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.query.Query;

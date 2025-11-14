@@ -28,7 +28,6 @@ package org.openbravo.event;
 
 import jakarta.enterprise.event.Observes;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
