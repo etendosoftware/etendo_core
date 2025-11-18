@@ -1,19 +1,22 @@
 package com.etendoerp.sequences.annotations;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.util.AnnotationLiteral;
 
+@Dependent
 public class SequenceQualifier extends AnnotationLiteral<SequenceFilter> implements SequenceFilter {
 
-    String value;
+  String value;
 
-    public SequenceQualifier() {}
+  public SequenceQualifier() {
+  }
 
-    public SequenceQualifier(String value) {
-        this.value = value;
-    }
+  public SequenceQualifier(String value) {
+    this.value = value;
+  }
 
-    @Override
-    public String value() {
-        return this.value;
-    }
+  @Override
+  public String value() {
+    return this.value;
+  }
 }
