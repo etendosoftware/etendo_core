@@ -25,8 +25,6 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -98,6 +96,7 @@ public class ModelProvider implements OBSingleton {
   private HashMap<Entity, List<String>> entitiesWithFile = null;
   private List<Module> modules;
   private Session initsession;
+  private long modelBuildTime = 0;
 
   private static final String TABLEBASEDTABLE = "Table";
 
@@ -163,40 +162,46 @@ public class ModelProvider implements OBSingleton {
   }
 
   private void initialize() {
+    long startTime = System.currentTimeMillis();
     log.info("Building runtime model");
     // Caching model (tables, table-references, search-references,
     // list-references)
     // Changed to use the SessionHandler directly because the dal
     // layer uses the ModelProvider, so otherwise there will be a
     // cyclic relation.
+    long t0 = System.currentTimeMillis();
     final ModelSessionFactoryController sessionFactoryController = new ModelSessionFactoryController();
     initializeReferenceClasses(sessionFactoryController);
     initsession = sessionFactoryController.getSessionFactory().openSession();
     final Transaction tx = initsession.beginTransaction();
+    log.info("Session factory initialization took {}ms", System.currentTimeMillis() - t0);
     try {
       log.debug("Read model from db");
 
-      tables = list(initsession, Table.class);
-      Collections.sort(tables, new Comparator<Table>() {
-        @Override
-        public int compare(Table t1, Table t2) {
-          return t1.getName().compareTo(t2.getName());
-        }
-      });
+      // Tables are now sorted in the database query for better performance
+      long t1 = System.currentTimeMillis();
+      tables = list(initsession, Table.class, "name");
+      log.info("Loaded {} tables in {}ms", tables.size(), System.currentTimeMillis() - t1);
 
-      referencesById = new HashMap<String, Reference>();
+      t1 = System.currentTimeMillis();
       final List<Reference> references = list(initsession, Reference.class);
+      referencesById = new HashMap<>(references.size());
       for (Reference reference : references) {
         reference.getDomainType().setModelProvider(this);
         reference.getDomainType().initialize();
         referencesById.put(reference.getId(), reference);
       }
+      log.info("Loaded {} references in {}ms", references.size(), System.currentTimeMillis() - t1);
+
       // read the columns in one query and assign them to the table
+      t1 = System.currentTimeMillis();
       final List<Column> cols = readColumns(initsession);
       assignColumnsToTable(cols);
+      log.info("Loaded {} columns in {}ms", cols.size(), System.currentTimeMillis() - t1);
 
       // reading will automatically link the reftable, refsearch and reflist
       // to the reference
+      t1 = System.currentTimeMillis();
       final List<RefTable> refTables = list(initsession, RefTable.class);
       final List<RefSearch> refSearches = list(initsession, RefSearch.class);
       list(initsession, RefList.class);
@@ -206,6 +211,7 @@ public class ModelProvider implements OBSingleton {
       for (Module module : modules) {
         log.info("- Module " + module.getJavaPackage());
       }
+      log.info("Retrieved {} modules in {}ms", modules.size(), System.currentTimeMillis() - t1);
       tables = removeInvalidTables(tables);
 
       // maintained for api support of the
@@ -220,8 +226,8 @@ public class ModelProvider implements OBSingleton {
       // see remark above
 
       // this map stores the mapped tables
-      tablesByTableName = new HashMap<String, Table>();
-      dataSourceTablesByName = new HashMap<String, Table>();
+      tablesByTableName = new HashMap<>(tables.size());
+      dataSourceTablesByName = new HashMap<>(tables.size());
       for (final Table t : tables) {
         // tables are stored case insensitive!
         if (TABLEBASEDTABLE.equals(t.getDataOrigin())) {
@@ -239,16 +245,16 @@ public class ModelProvider implements OBSingleton {
         t.setReferenceTypes(ModelProvider.instance);
       }
 
-      model = new ArrayList<Entity>();
-      entitiesByName = new HashMap<String, Entity>();
-      entitiesByClassName = new HashMap<String, Entity>();
-      entitiesByTableName = new HashMap<String, Entity>();
-      entitiesByTableId = new HashMap<String, Entity>();
-      entitiesWithTreeType = new ArrayList<Entity>();
-      entitiesWithImage = new HashMap<Entity, List<String>>();
-      entitiesWithFile = new HashMap<Entity, List<String>>();
+      model = new ArrayList<>(tables.size());
+      entitiesByName = new HashMap<>(tables.size());
+      entitiesByClassName = new HashMap<>(tables.size());
+      entitiesByTableName = new HashMap<>(tables.size());
+      entitiesByTableId = new HashMap<>(tables.size());
+      entitiesWithTreeType = new ArrayList<>();
+      entitiesWithImage = new HashMap<>(tables.size() / 10);
+      entitiesWithFile = new HashMap<>(tables.size() / 10);
       for (final Table t : tables) {
-        log.debug("Building model for table " + t.getName());
+        log.trace("Building model for table {}", t.getName());
 
         final Entity e = new Entity();
         e.initialize(t);
@@ -266,7 +272,7 @@ public class ModelProvider implements OBSingleton {
         if (e.hasComputedColumns()) {
           // When the entity has computed columns, an extra virtual entity is generated in order to
           // access these computed columns through a proxy that allows to compute them lazily.
-          log.debug("Generating computed columns proxy entity for entity " + e.getName());
+          log.trace("Generating computed columns proxy entity for entity {}", e.getName());
           final Entity computedColsEntity = new Entity();
           computedColsEntity.initializeComputedColumns(t, e);
 
@@ -363,6 +369,8 @@ public class ModelProvider implements OBSingleton {
       sessionFactoryController.getSessionFactory().close();
     }
     clearLists();
+    modelBuildTime = System.currentTimeMillis();
+    log.info("Runtime model built successfully in {}ms", modelBuildTime - startTime);
   }
 
   private void setTranslatableColumns(List<Column> translatableColumns) {
@@ -889,7 +897,7 @@ public class ModelProvider implements OBSingleton {
 
   /**
    * Retrieves a list of model objects of the class passed as parameter.
-   * 
+   *
    * @param session
    *          the session used to query for the objects
    * @param clazz
@@ -897,10 +905,29 @@ public class ModelProvider implements OBSingleton {
    * @return a list of model objects
    */
   public <T extends Object> List<T> list(Session session, Class<T> clazz) {
+    return list(session, clazz, null);
+  }
+
+  /**
+   * Retrieves a list of model objects of the class passed as parameter, optionally sorted.
+   *
+   * @param session
+   *          the session used to query for the objects
+   * @param clazz
+   *          the class of the model objects to be retrieved
+   * @param orderByField
+   *          the field name to order by (optional, can be null)
+   * @return a list of model objects
+   */
+  public <T extends Object> List<T> list(Session session, Class<T> clazz, String orderByField) {
     CriteriaBuilder builder = session.getCriteriaBuilder();
     CriteriaQuery<T> criteria = builder.createQuery(clazz);
     Root<T> root = criteria.from(clazz);
     criteria.select(root);
+
+    if (orderByField != null) {
+      criteria.orderBy(builder.asc(root.get(orderByField)));
+    }
 
     Query<T> query = session.createQuery(criteria);
     return query.list();
