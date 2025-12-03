@@ -51,12 +51,12 @@ spec:
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
     - name: postgres
-      image: postgres:16
+      image: postgres:17
       workingDir: /home/jenkins
       env:
         - name: POSTGRES_PASSWORD
           value: syspass
-      resources: {}
+      resources: { }
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
@@ -65,4 +65,4 @@ spec:
   dnsPolicy: ClusterFirst
   serviceAccountName: default
   serviceAccount: default
-  securityContext: {}
+  securityContext: { }
