@@ -1,18 +1,18 @@
 /*
  *************************************************************************
- * The contents of this file are subject to the Openbravo  Public  License
+ * The contents of this file are subject to the Etendo  Public  License
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2024 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Etendo ERP.
+ * The Initial Developer of the Original Code is Etendo SLU
+ * All portions are Copyright (C) 2026 Etendo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -47,16 +47,36 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * Task to generate cryptographic keys for Secure Web Service authentication
+ * Ant task that generates cryptographic keys for Secure Web Service (SWS) authentication.
+ * <p>
+ * This task supports two signing algorithms:
+ * <ul>
+ *   <li>ES256 (ECDSA with P-256 curve and SHA-256)</li>
+ *   <li>HS256 (HMAC with SHA-256)</li>
+ * </ul>
+ * The algorithm selection is retrieved from the database preference 'SMFSWS_EncryptionAlgorithm'.
+ * Generated keys are stored in the smfsws_config database table in JSON format.
  */
 public class GenerateSWSKeysTask extends Task {
   private static final Logger log = LogManager.getLogger();
   private String propertiesFile;
 
-  public void setPropertiesFile(String propertiesFile) {
-    this.propertiesFile = propertiesFile;
-  }
-
+  /**
+   * Executes the key generation task.
+   * <p>
+   * This method performs the following steps:
+   * <ol>
+   *   <li>Establishes a database connection using the configured properties file</li>
+   *   <li>Retrieves the encryption algorithm preference from the database</li>
+   *   <li>Validates that the algorithm is either ES256 or HS256</li>
+   *   <li>Generates the appropriate cryptographic keys based on the algorithm</li>
+   *   <li>Stores the generated keys in the database</li>
+   * </ol>
+   *
+   * @throws BuildException
+   *     if the algorithm is unsupported, if key generation fails,
+   *     or if database operations encounter errors
+   */
   @Override
   public void execute() throws BuildException {
     log.info("Generating keys for Secure Web Service...");
@@ -115,6 +135,16 @@ public class GenerateSWSKeysTask extends Task {
     }
   }
 
+  /**
+   * Retrieves the encryption algorithm preference from the database.
+   * <p>
+   * Queries the ad_preference table for the 'SMFSWS_EncryptionAlgorithm' property.
+   * If no preference is found or an error occurs, returns "ES256" as the default value.
+   *
+   * @param conn
+   *     the database connection to use for the query
+   * @return the encryption algorithm identifier (ES256 or HS256)
+   */
   private String getEncryptionAlgorithm(Connection conn) {
     String algorithm = "ES256"; // Default value
 
@@ -135,6 +165,25 @@ public class GenerateSWSKeysTask extends Task {
     return algorithm;
   }
 
+  /**
+   * Generates an ES256 (ECDSA) key pair for asymmetric encryption.
+   * <p>
+   * Creates a public/private key pair using the secp256r1 (P-256) elliptic curve.
+   * Keys are encoded in standard formats:
+   * <ul>
+   *   <li>Private key: PKCS8 format</li>
+   *   <li>Public key: X.509 format</li>
+   * </ul>
+   * Both keys are converted to PEM format and returned as a JSON string.
+   *
+   * @return a JSON string containing "private-key" and "public-key" fields in PEM format
+   * @throws NoSuchAlgorithmException
+   *     if the EC algorithm is not available
+   * @throws InvalidAlgorithmParameterException
+   *     if the secp256r1 curve specification is invalid
+   * @throws JsonProcessingException
+   *     if JSON serialization fails
+   */
   private String generateES256Keys() throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, JsonProcessingException {
     // Generate ECDSA key pair (ES256)
     KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
@@ -160,6 +209,19 @@ public class GenerateSWSKeysTask extends Task {
     return mapper.writeValueAsString(keyObject);
   }
 
+  /**
+   * Generates an HS256 (HMAC-SHA256) secret key for symmetric encryption.
+   * <p>
+   * Creates a 256-bit secret key suitable for HMAC-SHA256 operations.
+   * The key is converted to PEM format and returned as a JSON string.
+   * The "public-key" field is included but left empty since HS256 uses symmetric encryption.
+   *
+   * @return a JSON string containing "private-key" (the secret) and an empty "public-key" field
+   * @throws NoSuchAlgorithmException
+   *     if the HmacSHA256 algorithm is not available
+   * @throws JsonProcessingException
+   *     if JSON serialization fails
+   */
   private String generateHS256Key() throws NoSuchAlgorithmException, JsonProcessingException {
     // Generate HMAC secret key (HS256)
     KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
@@ -178,11 +240,39 @@ public class GenerateSWSKeysTask extends Task {
     return mapper.writeValueAsString(keyObject);
   }
 
+  /**
+   * Converts a byte array to PEM (Privacy Enhanced Mail) format.
+   * <p>
+   * The byte array is Base64-encoded and wrapped with standard PEM header and footer markers.
+   *
+   * @param buffer
+   *     the byte array to convert (typically a key in binary format)
+   * @param label
+   *     the key type label (e.g., "PRIVATE KEY", "PUBLIC KEY", "SECRET KEY")
+   * @return a PEM-formatted string with appropriate BEGIN/END markers
+   */
   private String arrayBufferToPem(byte[] buffer, String label) {
     String base64 = Base64.getEncoder().encodeToString(buffer);
     return "-----BEGIN " + label + "-----" + base64 + "-----END " + label + "-----";
   }
 
+  /**
+   * Updates or inserts the generated cryptographic keys in the database.
+   * <p>
+   * This method checks if a configuration record exists in the smfsws_config table:
+   * <ul>
+   *   <li>If a record exists: updates the privatekey field and sets the updated timestamp</li>
+   *   <li>If no record exists: creates a new record with a generated UUID as the primary key</li>
+   * </ul>
+   * The expiration time is set to 36000 seconds (10 hours) by default.
+   *
+   * @param conn
+   *     the database connection to use for the operation
+   * @param keyJson
+   *     the JSON string containing the generated keys
+   * @throws SQLException
+   *     if database update or insert operations fail
+   */
   private void updateKeyInDatabase(Connection conn, String keyJson) throws SQLException {
     // Check if a record already exists
     String selectQuery = "SELECT smfsws_config_id FROM smfsws_config LIMIT 1";
@@ -207,7 +297,7 @@ public class GenerateSWSKeysTask extends Task {
         // Create new record
         log.info("Creating new SWS configuration record...");
 
-        String configId = UUID.randomUUID().toString().replace("-", "").substring(0, 32);
+        String configId = UUID.randomUUID().toString().replace("-", "").substring(0, 32).toUpperCase();
 
         String insertQuery = "INSERT INTO smfsws_config "
             + "(smfsws_config_id, ad_client_id, ad_org_id, isactive, created, createdby, "
