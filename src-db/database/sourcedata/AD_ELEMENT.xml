@@ -14974,7 +14974,7 @@ For example, if you want to create different invoices for each ship location for
 <!--800443-->  <NAME><![CDATA[Component Cost]]></NAME>
 <!--800443-->  <PRINTNAME><![CDATA[Component Cost]]></PRINTNAME>
 <!--800443-->  <DESCRIPTION><![CDATA[Component Cost]]></DESCRIPTION>
-<!--800443-->  <HELP><![CDATA[Cost per component]]></HELP>
+<!--800443-->  <HELP><![CDATA[Defines the weighting factor used to allocate the total operation cost among the produced products (P+). When an operation generates more than one P+, the total cost is distributed proportionally according to this value. This field applies only to produced (P+) lines.]]></HELP>
 <!--800443-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--800443-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--800443--></AD_ELEMENT>
