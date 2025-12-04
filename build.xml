@@ -857,9 +857,10 @@ export.database: exports database structure and data to xml files.
     <generateSWSKeys propertiesFile="${base.config}/Openbravo.properties" />
   </target>
 
-  <target name="install.source" depends="init, cleanSubfolders, create.database, wad.lib, trl.lib, compile.complete.deploy, generate.sws.keys">
+  <target name="install.source" depends="init, cleanSubfolders, create.database, wad.lib, trl.lib, compile.complete.deploy">
     <echo message="applying modules" />
     <antcall inheritall="true" inheritrefs="true" target="apply.module" />
+    <antcall target="generate.sws.keys" />
     <antcall inheritall="true" target="import.sample.data" />
     <updatesystemstatus v="RB51"/>
     <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
