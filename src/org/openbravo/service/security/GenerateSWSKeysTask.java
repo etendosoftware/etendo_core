@@ -274,7 +274,7 @@ public class GenerateSWSKeysTask extends Task {
    *   <li>If a record exists: updates the privatekey field and sets the updated timestamp</li>
    *   <li>If no record exists: creates a new record with a generated UUID as the primary key</li>
    * </ul>
-   * The expiration time is set to 36000 seconds (10 hours) by default.
+   * The expiration time is set to 1440 seconds (24 hours) by default.
    *
    * @param conn
    *     the database connection to use for the operation
@@ -294,7 +294,7 @@ public class GenerateSWSKeysTask extends Task {
         String configId = rs.getString("smfsws_config_id");
         log.info("Updating existing SWS configuration record...");
 
-        String updateQuery = "UPDATE smfsws_config SET privatekey = ?, updated = NOW(), updatedby = '100', expirationtime = 36000 "
+        String updateQuery = "UPDATE smfsws_config SET privatekey = ?, updated = NOW(), updatedby = '100', expirationtime = 1440 "
             + "WHERE smfsws_config_id = ?";
 
         try (PreparedStatement updatePs = conn.prepareStatement(updateQuery)) {
@@ -312,7 +312,7 @@ public class GenerateSWSKeysTask extends Task {
         String insertQuery = "INSERT INTO smfsws_config "
             + "(smfsws_config_id, ad_client_id, ad_org_id, isactive, created, createdby, "
             + "updated, updatedby, expirationtime, privatekey) "
-            + "VALUES (?, '0', '0', 'Y', NOW(), '100', NOW(), '100', 36000, ?)";
+            + "VALUES (?, '0', '0', 'Y', NOW(), '100', NOW(), '100', 1440, ?)";
 
         try (PreparedStatement insertPs = conn.prepareStatement(insertQuery)) {
           insertPs.setString(1, configId);
