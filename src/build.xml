@@ -475,8 +475,8 @@ build.war: build a war file in the lib directory.
   <target name="generate.context.xml">
     <mkdir dir="${base.context}/META-INF" />
     <echo file="${base.context}/META-INF/context.xml" encoding="UTF-8">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;Context reloadable="true"&gt;
-  &lt;WatchedResource&gt;WEB-INF/web.xml&lt;/WatchedResource&gt;
+&lt;Context reloadable="true" backgroundProcessorDelay="0"&gt;
+  &lt;WatchedResource&gt;WEB-INF/.reload&lt;/WatchedResource&gt;
 &lt;/Context&gt;
 </echo>
   </target>
