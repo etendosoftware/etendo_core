@@ -16,8 +16,44 @@
 <%@ page import="org.openbravo.erpCommon.utility.OBError" %>
 <%@ page import="org.openbravo.erpCommon.obps.ActivationKey.LicenseRestriction" %>
 <%@ page import="org.openbravo.client.application.window.ApplicationDictionaryCachedStructures"%>
+<%@ page import="org.openbravo.base.session.OBPropertiesProvider"%>
+<%@ page import="java.net.HttpURLConnection"%>
+<%@ page import="java.net.URL"%>
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page session="false" %>
+<%
+  // Check if UI mode is nextgen and redirect to new UI
+  OBPropertiesProvider propsProvider = OBPropertiesProvider.getInstance();
+  String uiMode = propsProvider.getOpenbravoProperties().getProperty("ui.mode", "classic");
+
+  if ("nextgen".equalsIgnoreCase(uiMode)) {
+    String nextgenUrl = propsProvider.getOpenbravoProperties().getProperty("ui.url", "http://localhost:3000");
+
+    // Check if new UI server is available
+    boolean serverAvailable = false;
+    try {
+      URL url = new URL(nextgenUrl);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.setConnectTimeout(3000); // 3 seconds timeout
+      connection.setReadTimeout(3000);
+      int responseCode = connection.getResponseCode();
+      serverAvailable = (responseCode >= 200 && responseCode < 500);
+      connection.disconnect();
+    } catch (Exception e) {
+      serverAvailable = false;
+    }
+
+    if (serverAvailable) {
+      response.sendRedirect(nextgenUrl);
+      return;
+    } else {
+      // Redirect to error page if server is not available
+      response.sendRedirect("web/ui/ui-not-started.jsp");
+      return;
+    }
+  }
+%>
 <%
   /*
  *************************************************************************
