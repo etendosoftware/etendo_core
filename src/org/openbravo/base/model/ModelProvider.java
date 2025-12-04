@@ -96,7 +96,6 @@ public class ModelProvider implements OBSingleton {
   private HashMap<Entity, List<String>> entitiesWithFile = null;
   private List<Module> modules;
   private Session initsession;
-  private long modelBuildTime = 0;
 
   private static final String TABLEBASEDTABLE = "Table";
 
@@ -162,6 +161,7 @@ public class ModelProvider implements OBSingleton {
   }
 
   private void initialize() {
+    long modelBuildTime;
     long startTime = System.currentTimeMillis();
     log.info("Building runtime model");
     // Caching model (tables, table-references, search-references,
