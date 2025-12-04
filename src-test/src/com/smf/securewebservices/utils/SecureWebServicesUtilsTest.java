@@ -100,7 +100,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
       config = OBProvider.getInstance().get(SMFSWSConfig.class);
     }
 
-    config.setExpirationTime(3600L);
+    config.setExpirationTime(1440L);
     config.setPrivateKey(keys);
     OBDal.getInstance().save(config);
     OBDal.getInstance().commitAndClose();
@@ -229,7 +229,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
           .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE))
           .add(Restrictions.eq(Preference.PROPERTY_SELECTED, true))
           .uniqueResult();
-      
+
       if (originalAlgorithm != null) {
         if (pref != null) {
           pref.setSearchKey(originalAlgorithm);
