@@ -62,6 +62,19 @@ public class GenerateSWSKeysTask extends Task {
   private String propertiesFile;
 
   /**
+   * Sets the path to the Openbravo.properties file.
+   * <p>
+   * This method is called by Ant when processing the propertiesFile attribute
+   * in the build.xml task definition.
+   *
+   * @param propertiesFile
+   *     the absolute path to the Openbravo.properties file
+   */
+  public void setPropertiesFile(String propertiesFile) {
+    this.propertiesFile = propertiesFile;
+  }
+
+  /**
    * Executes the key generation task.
    * <p>
    * This method performs the following steps:
@@ -83,8 +96,6 @@ public class GenerateSWSKeysTask extends Task {
 
     ConnectionProvider connProvider = null;
     Connection conn = null;
-    PreparedStatement ps = null;
-    ResultSet rs = null;
 
     try {
       // Get database connection
@@ -120,17 +131,11 @@ public class GenerateSWSKeysTask extends Task {
       throw new BuildException("Error generating SWS keys: " + e.getMessage(), e);
     } finally {
       try {
-        if (rs != null) {
-          rs.close();
-        }
-        if (ps != null) {
-          ps.close();
-        }
         if (conn != null) {
           conn.close();
         }
       } catch (Exception e) {
-        log.error("Error closing database resources", e);
+        log.warn("Error closing database resources", e);
       }
     }
   }
@@ -148,14 +153,19 @@ public class GenerateSWSKeysTask extends Task {
   private String getEncryptionAlgorithm(Connection conn) {
     String algorithm = "ES256"; // Default value
 
+    // Since this task is executed after the installation task,
+    // the only pref created is the default system pref.
     String query = "SELECT value FROM ad_preference " + "WHERE property = 'SMFSWS_EncryptionAlgorithm' "
-        + "AND isactive = 'Y' " + "LIMIT 1";
+        + "AND isactive = 'Y' AND selected = 'N' ";
 
-    try (PreparedStatement ps = conn.prepareStatement(query); ResultSet rs = ps.executeQuery()) {
-      if (rs.next()) {
-        String value = rs.getString("value");
-        if (value != null && !value.isEmpty()) {
-          algorithm = value;
+    try (PreparedStatement ps = conn.prepareStatement(query)) {
+      ps.setMaxRows(1);
+      try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+          String value = rs.getString("value");
+          if (value != null && !value.isEmpty()) {
+            algorithm = value;
+          }
         }
       }
     } catch (Exception e) {
@@ -275,7 +285,7 @@ public class GenerateSWSKeysTask extends Task {
    */
   private void updateKeyInDatabase(Connection conn, String keyJson) throws SQLException {
     // Check if a record already exists
-    String selectQuery = "SELECT smfsws_config_id FROM smfsws_config LIMIT 1";
+    String selectQuery = "SELECT smfsws_config_id FROM smfsws_config";
 
     try (PreparedStatement ps = conn.prepareStatement(selectQuery); ResultSet rs = ps.executeQuery()) {
 
