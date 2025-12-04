@@ -860,7 +860,7 @@ export.database: exports database structure and data to xml files.
   <target name="install.source" depends="init, cleanSubfolders, create.database, wad.lib, trl.lib, compile.complete.deploy">
     <echo message="applying modules" />
     <antcall inheritall="true" inheritrefs="true" target="apply.module" />
-    <antcall target="generate.sws.keys" />
+    <antcall inheritall="true" target="generate.sws.keys" />
     <antcall inheritall="true" target="import.sample.data" />
     <updatesystemstatus v="RB51"/>
     <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
