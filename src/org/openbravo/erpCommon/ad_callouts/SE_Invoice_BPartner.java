@@ -31,6 +31,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.businessUtility.BpartnerMiscData;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -59,7 +60,12 @@ public class SE_Invoice_BPartner extends SimpleCallout {
     String strfinPaymentmethodId = info.getStringParameter("inpfinPaymentmethodId",
         IsIDFilter.instance);
     String strOrgId = info.getStringParameter("inpadOrgId", IsIDFilter.instance);
-    boolean isSales = StringUtils.equals(strIsSOTrx, "Y");
+
+    boolean isSales = StringUtils.equals("Y", strIsSOTrx);
+    String applied = BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartner, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+    if (StringUtils.isNotBlank(applied)) {
+      strDocType = applied;
+    }
 
     // Payment Method changed
     if (StringUtils.equals(strChanged, "inpfinPaymentmethodId")

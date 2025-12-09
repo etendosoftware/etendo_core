@@ -1,9 +1,5 @@
 pipeline {
 
-    options {
-        disableConcurrentBuilds()
-    }
-
     environment {
         // gradle.properties variables
         CONTEXT_NAME        = 'etendo'
@@ -21,144 +17,319 @@ pipeline {
         LANG                = 'en_US.UTF-8'
         EMAIL_ADDRESS       = credentials('email_builds')
 
-        REPO_URL            = 'https://github.com/etendosoftware/etendo_core'
         REPO_NAME           = 'etendo_core'
+        REPO_URL            = 'https://github.com/etendosoftware/etendo_core'
 
-        SUCCESS             = "SUCCESS"
-        FAILED              = "FAILED"
-        UNSTABLE            = "UNSTABLE"
+        CLONE_PLUGIN        = 'TRUE'
+        PLUGIN_NAME         = 'buildSrc'
+        PLUGIN_URL          = 'git@github.com:etendosoftware/com.etendoerp.gradleplugin.git'
 
-        // Stack
-        JAVA_HOME           = "/usr/lib/jvm/jdk-17.0.13"
-        TOMCAT_URL          = "https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.98/bin/apache-tomcat-9.0.98.tar.gz"
-        ORCL_VERSION        = "19c"
+        SUCCESS             = 'SUCCESS'
+        FAILED              = 'FAILED'
+        UNSTABLE            = 'UNSTABLE'
+        ABORTED             = 'ABORTED'
 
-        CONTEXT_BUILD       = "Unit Tests with Oracle Database"
+        ORCL_VERSION        = '19c'
+
+        CONTEXT_BUILD       = 'Unit Tests with Oracle Database'
         ACCESS_TOKEN        = credentials('access_token_github')
 
-        COMMIT_INPROGRESS_STATUS = "pending"
-        COMMIT_SUCCESS_STATUS    = "success"
-        COMMIT_FAILED_STATUS     = "failure"
+        COMMIT_INPROGRESS_STATUS = 'pending'
+        COMMIT_SUCCESS_STATUS    = 'success'
+        COMMIT_FAILED_STATUS     = 'failure'
+
+        TRUE  = 'true'
+        FALSE = 'false'
+
+        // Jenkins credential stored as base64-encoded string for another Atlassian user, not etendobot
+        JIRA_ACCESS_TOKEN         = credentials('jira-access-token')
     }
 
     agent {
         kubernetes {
             inheritFrom 'jenkins-node-unittests-orcl'
             defaultContainer 'jnlp'
-            yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  name: jenkins-node-unittests-orcl-0
-  namespace: jenkins2025
-  labels:
-    app.kubernetes.io/name: jenkins-node-unittests-orcl
-spec:
-  imagePullSecrets:
-    - name: docker-auth-config-secret
-  volumes:
-    - name: rsa-keys
-      configMap:
-        name: rsa-keys
-        defaultMode: 384
-    - name: docker-sock
-      hostPath:
-        path: /var/run/docker.sock
-        type: ''
-  containers:
-    - name: compiler
-      image: etendo/compiler_jenkins:1.0.7-jdk.17.0.13
-      ports:
-        - name: ssh
-          containerPort: 22
-          protocol: TCP
-        - name: visualvm
-          containerPort: 8000
-          protocol: TCP
-      resources:
-        limits:
-          cpu: 3072m
-          memory: 5000Mi
-        requests:
-          cpu: 3072m
-          memory: 5000Mi
-      volumeMounts:
-        - name: rsa-keys
-          mountPath: /root/.ssh/
-        - name: docker-sock
-          mountPath: /var/run/docker.sock
-      lifecycle:
-        postStart:
-          exec:
-            command:
-              - bash
-              - '-c'
-              - >-
-                chmod a+x /var/run/docker.sock && rm
-                /etc/apt/sources.list.d/pgdg.list || echo 0 && apt update && apt
-                install -y curl
-      terminationMessagePath: /dev/termination-log
-      terminationMessagePolicy: File
-      imagePullPolicy: IfNotPresent
-    - name: oracle
-      image: etendo/oracle:19.3.0-ee
-      env:
-        - name: ORACLE_PWD
-          value: oraclepassword
-        - name: ORACLE_SID
-          value: orclsid
-      ports:
-        - name: oracle
-          containerPort: 1521
-          protocol: TCP
-        - name: oracle-em
-          containerPort: 5500
-          protocol: TCP
-      resources:
-        limits:
-          cpu: 2000m
-          memory: 6000Mi
-  restartPolicy: Always
-  terminationGracePeriodSeconds: 30
-  dnsPolicy: ClusterFirst
-  serviceAccountName: default
-  serviceAccount: default
-  securityContext: {}
-  """
+            yamlFile 'pipelines/unittests/AgentOracle.yaml'
         }
     }
 
     stages {
-        stage('Build Oracle DB (temporary stage) ') {
+        stage('Check Pipeline Skip Condition') { // MARK: Check Pipeline Skip Condition
             steps {
-                echo "--------------- Building Oracle DB ---------------"
-                sh "sleep 25m"
+                script {
+                    try {
+                        echo "---------------------- Setting up Environment Variables ----------------------"
+                        env.STATUS_TEST = SUCCESS // Variable to track the status of the test execution.
+                        env.STATUS_BUILD = FAILED // Variable to track the status of the build.
+                        env.FAILED_SUITES = "" // List to collect failed test suites
+                        sh 'printenv'
+
+                        echo "--------------- Checking if pipeline should be skipped ---------------"
+                        def changedFiles = sh(
+                        script: "git diff --name-only HEAD~1 HEAD",
+                        returnStdout: true
+                        ).trim()
+
+                        echo "Files changed in last commit: ${changedFiles}"
+
+                        // Check if only Jenkinsfile and/or sonarUtils.groovy were changed
+                        def filesList = changedFiles.split('\n')
+                        def allowedFiles = [
+                            "pipelines/unittests/Jenkinsfile",
+                            "pipelines/unittests/utils/sonarUtils.groovy"
+                        ]
+
+                        // Check if all changed files are in the allowed list
+                        def onlyAllowedFiles = filesList.every { file -> 
+                            allowedFiles.contains(file)
+                        }
+
+                        // Additionally check that at least one of the allowed files was changed
+                        def hasAllowedFiles = filesList.any { file -> 
+                            allowedFiles.contains(file)
+                        }
+
+                        if (onlyAllowedFiles && hasAllowedFiles) {
+                            echo "⏭️ Only Jenkinsfile and/or sonarUtils.groovy were changed. Skipping pipeline execution."
+                            echo "📋 Changed files: ${changedFiles}"
+
+                            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped - Only pipeline config files changed\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+
+                            echo "✅ Pipeline execution aborted successfully. Commit marked as success."
+                            currentBuild.result = ABORTED
+                            return
+                        } else {
+                            echo "✅ Pipeline will continue - Changes detected in other files."
+                            echo "📋 Changed files: ${changedFiles}"
+                            currentBuild.result = SUCCESS
+                        }
+                    } catch (Exception e) {
+                        echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
+                        env.ERROR_MESSAGE = "Pipeline Check Failed"
+                        sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${env.ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                        currentBuild.result = FAILED
+                        error("Failed to check pipeline skip condition: ${e.getMessage()}")
+                    }
+                }
             }
         }
-        stage('Build Environment') { // MARK: Build Environment
+        stage('Build Oracle DB (temporary stage) ') {
+            when {
+                expression {
+                  currentBuild.result == SUCCESS
+                }
+            }
+            steps {
+                script {
+                    sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Configuring Stack\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                    echo "--------------- Waiting for Oracle DB to be ready ---------------"
+                    sleep( time: 30, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
+                }
+            }
+        }
+        stage ('Stack Configuration') { // MARK: Stack Configuration
+            when {
+                expression {
+                    currentBuild.result == SUCCESS
+                }
+            }
             steps {
                 container('compiler') {
                     script {
                         try {
-                            sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Starting Build Environment" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-
-                            sh 'printenv'
-                            echo 'Building Etendo Core'
-
+                            echo "--------------- Getting Backport Branch Information ---------------"
+                            def pattern = /.*-Y\d{2}$/
+                            def matches = (env.GIT_BRANCH ==~ pattern)
+                            env.CONTAINS_Y_SUFFIX = matches ? TRUE : FALSE
+                            echo "[DEBUG]: CONTAINS_Y_SUFFIX set to: ${env.CONTAINS_Y_SUFFIX}"
+                            env.FROM_BACKPORT = FALSE
+                            env.FROM_PRERELEASE = FALSE
+                            def yearBackportBranch = (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)?.find() ? (env.BACKPORT_BRANCH =~ /release\/(\d{2})\./)[0][1] : null
+                            def yearPrereleaseBranch = (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)?.find() ? (env.PRERELEASE_BRANCH =~ /prerelease\/(\d{2})\./)[0][1] : null
+                            echo "[DEBUG]: yearBackportBranch: ${yearBackportBranch}"
+                            echo "[DEBUG]: yearPrereleaseBranch: ${yearPrereleaseBranch}"
+                            
+                            // Extract backport branch information without using Matcher object
+                            if (env.CONTAINS_Y_SUFFIX == TRUE) {
+                                def yearCommitBranch = (env.GIT_BRANCH =~ /-Y(\d{2})/)?.find() ? (env.GIT_BRANCH =~ /-Y(\d{2})/)[0][1] : null
+                                echo "[DEBUG]: yearCommitBranch: ${yearCommitBranch}"
+                                if (yearCommitBranch) {
+                                    if (yearBackportBranch && yearCommitBranch == yearBackportBranch) {
+                                        env.FROM_BACKPORT = env.TRUE
+                                        echo "[DEBUG]: Setting FROM_BACKPORT = TRUE (year match: ${yearCommitBranch})"
+                                    } else if (yearPrereleaseBranch && yearCommitBranch == yearPrereleaseBranch) {
+                                        env.FROM_PRERELEASE = env.TRUE
+                                        echo "[DEBUG]: Setting FROM_PRERELEASE = TRUE (year match: ${yearCommitBranch})"
+                                    }
+                                }
+                            } else if (GIT_BRANCH.startsWith("release")) {
+                                echo '-------------------------- Backport Branch Detected --------------------------'
+                                env.FROM_BACKPORT = env.TRUE
+                            } else if (GIT_BRANCH.startsWith("prerelease")) {
+                                echo '-------------------------- Prerelease Branch Detected --------------------------'
+                                env.FROM_PRERELEASE = env.TRUE
+                            }
                             echo "---------------- Stack Configuration ----------------"
                             def rootDir = pwd()
                             def stackConfig = load "${rootDir}/pipelines/unittests/utils/stackConfig.groovy"
 
-                            sh "wget -O apache-tomcat.tar.gz $TOMCAT_URL"
-                            sh "tar -xvf apache-tomcat.tar.gz -C $WORKSPACE"
+                            def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
+                            
+                            env.JAVA_HOME = stackConfiguration.javaHome
+                            env.TOMCAT_URL = stackConfiguration.tomcatUrl
+                            env.STACK_TYPE = stackConfiguration.stackType
+
+                            echo "Stack Type: ${env.STACK_TYPE}"
+                            echo "Tomcat URL: ${env.TOMCAT_URL}"
+                            echo "Java Home: ${env.JAVA_HOME}"
+
+                            sh "wget -O apache-tomcat.tar.gz ${TOMCAT_URL}"
+                            sh "tar -xvf apache-tomcat.tar.gz -C ${WORKSPACE}"
 
                             env.TOMCAT_FOLDER = stackConfig.getTomcatFolder()
                             env.CATALINA_HOME = "${WORKSPACE}/${TOMCAT_FOLDER}"
                             env.CATALINA_BASE = "${WORKSPACE}/${TOMCAT_FOLDER}"
 
+                            env.STACK_INFO = stackConfig.generateStackMessage()
+                            echo "__________________________________________________"
+                            echo "${env.STACK_INFO}"
+                            echo "__________________________________________________"
+                        } catch (Exception e) {
+                            env.ERROR_MESSAGE = "Stack Configuration Failed"
+                            echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+                            echo "Exception occurred: " + e.toString()
+                            currentBuild.result = FAILED
+                            error(env.ERROR_MESSAGE)
+                        }
+                    }
+                }
+            }
+        }
+        stage('Build Environment') { // MARK: Build Environment
+            when {
+                expression {
+                    currentBuild.result == SUCCESS
+                }
+            }
+            steps {
+                container('compiler') {
+                    script {
+                        try {
+                            sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Starting Build Environment\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+
                             sh "git clone ${REPO_URL} ${REPO_NAME}"
+
+                            env.WORKDIR_ETENDO = "${pwd()}"
+
                             dir(REPO_NAME) {
+                                echo "---------------- Getting Commit Information ----------------"
                                 sh "git checkout ${GIT_COMMIT}"
+
+                                echo "--------------- Getting Backport Branch Information ---------------"
+                                def pattern = /-Y\d{2}$/
+                                env.CONTAINS_Y_SUFFIX = (env.GIT_BRANCH ==~ pattern) ? TRUE : FALSE
+
+                                // Extract backport branch information without using Matcher object
+                                if (env.CONTAINS_Y_SUFFIX == TRUE) {
+                                    def branchParts = env.GIT_BRANCH.split('-Y')
+                                    if (branchParts.length == 2 && branchParts[1].length() == 4) {
+                                        def yearMonth = branchParts[1]
+                                        def num1 = yearMonth.substring(0, 2)
+                                        def num2 = yearMonth.substring(2, 4)
+                                        env.BACKPORT_BRANCH = "release/${num1}.${num2}.4"
+                                        echo "BACKPORT_BRANCH set to ${env.BACKPORT_BRANCH}"
+                                    } else {
+                                        env.BACKPORT_BRANCH = ""
+                                        echo "No valid backport branch pattern matched."
+                                    }
+                                } else {
+                                    env.BACKPORT_BRANCH = ""
+                                    echo "No backport branch pattern matched."
+                                }
+
+                                if (CLONE_PLUGIN == TRUE) {
+                                    echo "---------------------- Clonning Etendo Plugin Repository ----------------------"
+
+                                    def isFeatureBranch = env.GIT_BRANCH.startsWith("feature/")
+                                    def epicKey = ''
+
+                                    if (isFeatureBranch) {
+                                        echo "-------------------------- Feature Branch Detected --------------------------"
+                                        def taskName = env.GIT_BRANCH.replaceAll("feature/", "").replaceAll("-Y\\d+", "")
+                                        epicKey = sh(script: "bash ${rootDir}/pipelines/unittests/utils/jira-utils.sh ${taskName} ${JIRA_BASE_URL} ${JIRA_ACCESS_TOKEN}", returnStdout: true).trim()
+                                        if (epicKey) {
+                                            echo "Epic Key: ${epicKey}"
+                                            if (env.GIT_BRANCH.contains("-Y")) {
+                                                env.EPIC_BRANCH = "epic/${epicKey}-Y${env.GIT_BRANCH.split('-Y')[1]}"
+                                            } else {
+                                                env.EPIC_BRANCH = "epic/${epicKey}"
+                                            }
+                                            echo "Epic Branch: ${env.EPIC_BRANCH}"
+                                        }
+                                    }
+
+                                    withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
+                                    sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${PLUGIN_URL} ${PLUGIN_NAME}"
+                                    }
+
+                                    if (!(env.GIT_BRANCH.contains("-Y")) && !(env.GIT_BRANCH.startsWith("release")) && !(env.GIT_BRANCH.startsWith("main" )) && !(env.GIT_BRANCH.startsWith("master")) && !(env.GIT_BRANCH.startsWith("hotfix"))) {
+                                        if (isFeatureBranch && epicKey) {
+                                            sh """
+                                            cd ${PLUGIN_NAME}
+                                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.DEVELOP_BRANCH}
+                                            """
+                                        } else {
+                                            sh """
+                                            cd ${PLUGIN_NAME}
+                                            git checkout ${env.DEVELOP_BRANCH}
+                                            """
+                                        }
+                                    } else if (env.GIT_BRANCH.contains("-Y") || env.GIT_BRANCH.startsWith("release")) {
+                                        if (isFeatureBranch && epicKey) {
+                                            sh """
+                                            cd ${PLUGIN_NAME}
+                                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.BACKPORT_BRANCH}
+                                            """
+                                        } else {
+                                            sh """
+                                            cd ${PLUGIN_NAME}
+                                            git checkout ${env.BACKPORT_BRANCH}
+                                            """
+                                        }
+                                    }
+
+                                    sh """
+                                    cd ${PLUGIN_NAME}
+                                    git checkout ${env.GIT_BRANCH} || echo 'Branch ${env.GIT_BRANCH} not found in Etendo plugin'
+                                    """
+
+                                    echo "--------------- Configure gradle.properties in Etendo plugin folder ---------------"
+                                    sh """
+                                    cd ${PLUGIN_NAME}
+                                    echo "\n
+                                    nexusUser=${NEXUS_USER}
+                                    nexusPassword=${NEXUS_PASSWORD}
+                                    githubUser=${GITHUB_USER}
+                                    githubToken=${GITHUB_TOKEN}
+                                    test.bbdd.url=
+                                    test.bbdd.sid=
+                                    test.bbdd.systemUser=
+                                    test.bbdd.systemPassword=
+                                    test.bbdd.user=
+                                    test.bbdd.password=
+                                    org.gradle.daemon=false
+                                    org.gradle.jvmargs=-Dfile.encoding=UTF-8
+                                    etendoCoreVersion=" > gradle.properties
+                                    """
+
+                                    echo "--------------- Configure build.gradle in Etendo ---------------"
+                                    sh """
+                                    cd ${env.WORKDIR_ETENDO}
+                                    sed -i "s/\\(id 'com.etendoerp.gradleplugin[^']*'\\) version '\\([^']*\\)'/\\1 \\/\\/ version '\\2'/" "\${REPO_NAME}/build.gradle"
+                                    """
+                                }
+
+                                echo "--------------- Configure gradle.properties in Etendo ---------------"
                                 sh """
                                 echo "\n
                                 context.name=${CONTEXT_NAME}\n
@@ -171,6 +342,7 @@ spec:
                                 bbdd.user=${BBDD_USER}\n
                                 bbdd.password=${BBDD_PASSWORD}\n
                                 bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
+                                java.version=11\n
 
                                 nexusUser=${NEXUS_USER}\n
                                 nexusPassword=${NEXUS_PASSWORD}\n
@@ -190,17 +362,17 @@ spec:
                                 ./gradlew smartbuild --info
                                 """
                             }
-                            sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh start"
-                            sh "sleep 1m"
+                            sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh start"
+                            sleep( time: 1, unit: 'MINUTES' ) // Wait additional 2 minutes to ensure Tomcat is fully started
                             echo 'Build of Etendo Core Finished'
-                            env.STATUSTEST = "1" // flag to indicate if any test failed
-                            env.STATUSBUILD = "1"
+                            currentBuild.result = SUCCESS
+                            env.STATUS_BUILD = SUCCESS
                         } catch (Exception e) {
-                            echo 'Build of Etendo Core FAILED'
+                            env.ERROR_MESSAGE = 'Build Environment Failed'
                             echo "Exception occurred: " + e.toString()
                             currentBuild.result = FAILED
-                            error('Build Etendo Core FAILED!')
-                            env.STATUSBUILD = "0"
+                            error(env.ERROR_MESSAGE)
+                            env.STATUS_BUILD = FAILED
                         }
                     }
                 }
@@ -211,22 +383,28 @@ spec:
         stage ('Web Service Test Suite'){ // MARK: Web Service Test Suite
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
                 container('compiler') {
                     script {
                         dir(REPO_NAME) {
+                            def suiteName = "org.openbravo.test.WebserviceTestSuite"
                             try {
-                                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_INPROGRESS_STATUS "Running Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
-                                sh './gradlew test --tests org.openbravo.test.WebserviceTestSuite --info '
+                                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Running Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests ${suiteName} --info"
                             } catch (Exception e) {
-                                echo '....WEB SERVICES TESTS FAILED....'
+                                env.ERROR_MESSAGE = "${suiteName} Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Web Service Tests Failed')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
                             } finally {
                                 if (fileExists('build/reports/tests/test/')) {
                                     publishHTML([
@@ -242,7 +420,7 @@ spec:
                                 } else {
                                     echo "Report directory of Webservices tests does not exist. Skipping HTML report publishing."
                                 }
-                                sh "$WORKSPACE/$TOMCAT_FOLDER/bin/catalina.sh stop"
+                                sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh stop"
                                 sh './gradlew --stop'
                             }
                         }
@@ -255,23 +433,28 @@ spec:
         stage ('Core Test Suite') { // MARK: com.smf.* Test Suite
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
                 container('compiler') {
                     script {
                         dir(REPO_NAME) {
+                            def suiteName = "com.smf.test.CoreTestSuite"
                             try {
-                                echo "--------------- Running CoreTestSuite ---------------"
-                                sh "./gradlew test --tests com.smf.test.CoreTestSuite --info"
-                                echo "--------------- CoreTestSuite Successful ---------------"
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests ${suiteName} --info"
+                                echo "--------------- ${suiteName} Successful ---------------"
                             } catch (Exception e) {
-                                echo "--------------- CoreTestSuite Failed ---------------"
+                                env.ERROR_MESSAGE = "${suiteName} Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('CoreTestSuite Failed')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
                             } finally {
                                 if (fileExists("build/reports/tests/test/")) {
                                     publishHTML([
@@ -298,21 +481,27 @@ spec:
         stage ('Standalone Test Suite') { // MARK: Standalone Test Suite
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
                 container('compiler') {
                     script {
                         dir(REPO_NAME) {
+                            def suiteName = "org.openbravo.test.StandaloneTestSuite"
                             try {
-                                sh './gradlew test --tests org.openbravo.test.StandaloneTestSuite --info'
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests \"${suiteName}\" --info"
                             } catch (Exception e) {
-                                echo '....STANDALONE TESTS FAILED....'
+                                env.ERROR_MESSAGE = "${suiteName} Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('Standalone Tests Failed!')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
                             }  finally {
                                 if (fileExists('build/reports/tests/test/')) {
                                     publishHTML([
@@ -339,21 +528,27 @@ spec:
         stage ('com.etendoerp.* Tests') { // MARK: com.etendoerp.* Tests
             when {
                 expression {
-                    env.STATUSBUILD == "1"
+                    env.STATUS_BUILD == SUCCESS
                 }
             }
             steps {
                 container('compiler') {
                     script {
                         dir(REPO_NAME) {
+                            def suiteName = "com.etendoerp.*"
                             try {
-                                sh './gradlew test --tests "com.etendoerp.*" --info'
+                                echo "--------------- Running ${suiteName} ---------------"
+                                sh "./gradlew test --tests \"${suiteName}\" --info"
                             } catch (Exception e) {
-                                echo '....com.etendoerp.* TESTS FAILED....'
+                                env.ERROR_MESSAGE = "${suiteName} Tests Failed"
+                                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
                                 echo 'Exception occurred: ' + e.toString()
                                 currentBuild.result = UNSTABLE
-                                unstable('com.etendoerp.* Tests failed!')
-                                env.STATUSTEST = "0"
+                                unstable(env.ERROR_MESSAGE)
+                                env.STATUS_TEST = FAILED
+                                
+                                def currentFailed = env.FAILED_SUITES ?: ""
+                                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName} Tests" : "${currentFailed}, ${suiteName} Tests"
                             }  finally {
                                 if (fileExists('build/spock-reports/')) {
                                     publishHTML([
@@ -408,104 +603,46 @@ spec:
         }
         success {
             script {
-                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_SUCCESS_STATUS "Successful Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Successful Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
             }
-        }
-        fixed {
-            mail to: EMAIL_ADDRESS,
-            subject: "✅ FIXED - ${currentBuild.fullDisplayName}",
-            mimeType: "text/html",
-            body:  """
-              <html>
-                <head>
-                    <style>
-                        body { font-family: 'Arial', sans-serif; }
-                        .header { font-size: 16px; font-weight: bold; color: #333; }
-                    </style>
-                </head>
-                <body>
-                  <p><em>${new Date()}</em></p>
-                  <p>__________________________________________________________</p>
-
-                  <h2 class="header">✅ ERRORS FIXED ✅</h2>
-
-                  ${env.COMMIT_INFO}
-
-                  ${env.STACK_INFO}
-
-                  <p>The problems found in the previous run/s have been fixed! 💪<br>Check out the output in the following link: ${env.BUILD_URL}</p>
-
-                  <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-                  <p>__________________________________________________________</p>
-                </body>
-              </html>
-            """
         }
         unstable {
             script {
-                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Failed Test Suites" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+                env.ERROR_MESSAGE = "Tests Suites Failed"
+                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"Failed Test Suites\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                def rootDir = pwd()
+                def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
+
+                def failedSuitesMessage = ""
+                if (env.FAILED_SUITES && !env.FAILED_SUITES.isEmpty()) {
+                    failedSuitesMessage = "Failed Test Suites: ${env.FAILED_SUITES}"
+                } else {
+                    failedSuitesMessage = "Tests have been detected that have failed in Etendo Core."
+                }
+
+                emailNotifier.sendParameterizedEmail(
+                    env.ERROR_MESSAGE,
+                    '⚠️',
+                    UNSTABLE,
+                    failedSuitesMessage
+                )
             }
-            mail to: EMAIL_ADDRESS,
-            subject: "⚠️ TESTS FAILED - ${currentBuild.fullDisplayName}",
-            mimeType: "text/html",
-            body:  """
-              <html>
-                <head>
-                    <style>
-                        body { font-family: 'Arial', sans-serif; }
-                        .header { font-size: 16px; font-weight: bold; color: #333; }
-                    </style>
-                </head>
-                <body>
-                  <p><em>${new Date()}</em></p>
-                  <p>__________________________________________________________</p>
-
-                  <h2 class="header">⚠️ BUILD UNSTABLE ⚠️</h2>
-
-                  ${env.COMMIT_INFO}
-
-                  ${env.STACK_INFO}
-
-                  <p>Tests have been detected that have failed in Etendo Core.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
-
-                  <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-                  <p>__________________________________________________________</p>
-                </body>
-              </html>
-            """
         }
         failure {
             script {
-                sh './pipelines/unittests/build-update.sh $REPO_NAME $COMMIT_FAILED_STATUS "Build Failed" $ACCESS_TOKEN $GIT_COMMIT $BUILD_URL \"${CONTEXT_BUILD}\"'
+                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_FAILED_STATUS} \"${env.ERROR_MESSAGE}\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                echo "--------------- FAILURE ---------------"
+
+                def rootDir = pwd()
+                def emailNotifier = load "${rootDir}/pipelines/unittests/utils/emailNotifier.groovy"
+
+                emailNotifier.sendParameterizedEmail(
+                    env.ERROR_MESSAGE,
+                    '🚫',
+                    FAILED,
+                    env.ERROR_MESSAGE
+                )
             }
-            mail to: EMAIL_ADDRESS,
-            subject: "🚫 ERROR IN ${currentBuild.fullDisplayName}",
-            mimeType: "text/html",
-            body:  """
-              <html>
-                <head>
-                    <style>
-                        body { font-family: 'Arial', sans-serif; }
-                        .header { font-size: 16px; font-weight: bold; color: #333; }
-                    </style>
-                </head>
-                <body>
-                  <p><em>${new Date()}</em></p>
-                  <p>__________________________________________________________</p>
-
-                  <h2 class="header">🚫 BUILD FAILED 🚫</h2>
-
-                  ${env.COMMIT_INFO}
-
-                  ${env.STACK_INFO}
-
-                  <p>The build has failed unexpectedly. This failure isn't likely to be caused by failing tests.<br>To more information on the failing run visit: ${env.BUILD_URL}</p>
-
-                  <p class="footer"><em>Best regards,<br>#EtendoBot 🤖</em></p>
-                  <p>__________________________________________________________</p>
-                </body>
-              </html>
-            """
         }
     }
 }

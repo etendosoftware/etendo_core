@@ -69,16 +69,21 @@ isc.OBPickAndExecuteGrid.addProperties({
     return true;
   },
 
-  //** {{{ dataPageSize }}} **
-  // The data page size used for loading paged data from the server.
-  dataPageSize: 100,
-
   initWidget: function() {
     var i,
       len = this.fields.length,
       me = this,
       filterableProperties,
       canFilter;
+
+    var windowId = this.viewProperties &&
+      this.viewProperties.standardProperties &&
+      this.viewProperties.standardProperties.inpwindowId;
+
+    //** {{{ dataPageSize }}} **
+    // The data page size used for loading paged data from the server.
+    this.dataPageSize = OB.PropertyStore.get('dataPageSize', windowId) ||
+      OB.PropertyStore.get('dataPageSize') || 100;
 
     this.selectedIds = [];
     this.deselectedIds = [];
@@ -601,7 +606,23 @@ isc.OBPickAndExecuteGrid.addProperties({
     var rowNum = this.getEditRow(),
       colNum = this.getEditCol(),
       editField = this.getEditField(colNum),
+      editForm,
+      formItem,
       undef;
+    
+    // Issue #822 (ETP-2790)
+    // When the editCompletionEvent is 'enter' and the edited field is a number,
+    // we need to call the blur method of the OBNumberItem to ensure proper rounding
+    if (editCompletionEvent === 'enter') {
+      editForm = this.getEditForm();
+      if (editForm) {
+        formItem = editForm.getItem(editField.name);
+        if (formItem && isc.isA.OBNumberItem(formItem) && formItem.blur) {
+          formItem.blurItem();
+        }
+      }
+    }
+    
     // if no value is provided use the value from the edit form. If it does not exist, use the stored value
     if (newValue === null || newValue === undefined) {
       newValue = this.getEditValue(rowNum, colNum);
