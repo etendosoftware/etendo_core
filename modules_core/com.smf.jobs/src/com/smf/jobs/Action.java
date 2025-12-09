@@ -72,7 +72,7 @@ public abstract class Action extends BaseProcessActionHandler {
       }
       for (Iterator<String> it = allParams.keys(); it.hasNext(); ) {
         String key = it.next();
-        jsonContent.put(key, parameters.get(key));
+        jsonContent.put(key, allParams.get(key));
       }
       runPreActionHooks(jsonContent);
       var result = action(jsonContent, new MutableBoolean(false));

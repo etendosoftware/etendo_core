@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+  <database name="VIEW M_INOUTLINE_TOTALINVOICED_V">
+    <view name="M_INOUTLINE_TOTALINVOICED_V"><![CDATA[SELECT l.m_inoutline_id, sum(CASE WHEN i.docstatus = 'CO' THEN il.qtyinvoiced ELSE 0 END) AS totalinvoiced FROM m_inoutline l LEFT JOIN c_invoiceline il ON il.m_inoutline_id = l.m_inoutline_id OR il.c_orderline_id = l.c_orderline_id AND il.m_inoutline_id IS NULL LEFT JOIN c_invoice i ON il.c_invoice_id = i.c_invoice_id WHERE i.processed = 'Y' AND i.docstatus <> 'VO' GROUP BY l.m_inoutline_id]]></view>
+  </database>

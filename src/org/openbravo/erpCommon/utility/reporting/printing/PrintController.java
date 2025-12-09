@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -1142,7 +1143,6 @@ public class PrintController extends HttpSecureAppServlet {
       }
 
       final String salesRep = documentData.salesrepEmail;
-
       boolean moreThanOnesalesRep = checks.get("moreThanOnesalesRep").booleanValue();
       if (moreThanOnesalesRep) {
         if (salesRep == null || salesRep.length() == 0) {
@@ -1191,7 +1191,7 @@ public class PrintController extends HttpSecureAppServlet {
         log4j.debug(" Filling report location with: " + documentData.reportLocation);
       }
 
-      if (onlyOneAttachedDoc) {
+      if (onlyOneAttachedDoc && !StringUtils.equals(attachedContent.getDocName(), report.getFilename())) {
         attachedContent.setDocName(report.getFilename());
         attachedContent.setVisible("checkbox");
         clonedAttachemnts.add(attachedContent);

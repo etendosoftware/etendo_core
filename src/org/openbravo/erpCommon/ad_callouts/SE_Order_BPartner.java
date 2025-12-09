@@ -31,6 +31,7 @@ import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.data.FieldProvider;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.businessUtility.BpartnerMiscData;
 import org.openbravo.erpCommon.utility.ComboTableData;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -44,6 +45,7 @@ public class SE_Order_BPartner extends SimpleCallout {
   private static final String WAREHOUSEID = "inpmWarehouseId";
   private static final String USER_CLIENT_PARAM = "#User_Client";
   private static final String SE_ORDER_B_PARTNER = "SEOrderBPartner";
+  private static final String INPDOCTYPETARGET = "inpcDoctypetargetId";
 
   @Override
   protected void execute(CalloutInfo info) throws ServletException {
@@ -61,9 +63,15 @@ public class SE_Order_BPartner extends SimpleCallout {
     String strDeliveryViaRule = "";
     String strPaymentterm = "";
     String strDeliveryRule = "";
-    String strDocTypeTarget = info.vars.getStringParameter("inpcDoctypetargetId");
+    String strDocTypeTarget = info.vars.getStringParameter(INPDOCTYPETARGET);
     String docSubTypeSO = "";
 
+    boolean isSales = StringUtils.equals("Y", strIsSOTrx);
+    String applied = BpDocTypeUtils.applyOrderDocType(info, strOrgId, strBPartner, isSales, INPDOCTYPETARGET, "inpcDoctypetargetId_R");
+    if (StringUtils.isNotBlank(applied)) {
+      strDocTypeTarget = applied;
+    }
+    
     BpartnerMiscData[] data = BpartnerMiscData.select(this, strBPartner);
     if (data != null && data.length > 0) {
       strDeliveryRule = data[0].deliveryrule.equals("")

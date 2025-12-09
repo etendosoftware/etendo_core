@@ -24,17 +24,13 @@ import javax.servlet.ServletException;
 import com.etendoerp.sequences.NextSequenceValue;
 import com.etendoerp.sequences.UINextSequenceValueInterface;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.criterion.MatchMode;
-import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.RequestFilter;
 import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.client.kernel.RequestContext;
-import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.utility.CashVATUtil;
 import org.openbravo.model.ad.ui.Field;
-import org.openbravo.model.ad.ui.Tab;
 
 import java.util.List;
 
@@ -67,5 +63,10 @@ public class SE_Invoice_Organization extends SimpleCallout {
                 }
             }
         }
+        boolean isSales = StringUtils.equals("Y", strinpissotrx);
+        if (StringUtils.isNotBlank(strBPartnerId)) {
+          BpDocTypeUtils.applyInvoiceDocType(info, strOrgId, strBPartnerId, isSales, "inpcDoctypetargetId", "inpcDoctypetargetId_R");
+        }
+
     }
 }
