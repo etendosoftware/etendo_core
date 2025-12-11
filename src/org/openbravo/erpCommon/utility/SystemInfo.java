@@ -20,6 +20,7 @@
 package org.openbravo.erpCommon.utility;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,7 +49,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
-import java.io.FileReader;
 
 import javax.servlet.ServletException;
 
@@ -321,7 +321,7 @@ public class SystemInfo {
 
   /**
    * Obtains mac address a CRC of the byte[] array for the obtained mac address.
-   *
+   * <p>
    * In case multiple interfaces are present, it is taken the first one with mac address of the list
    * sorted in this way: loopbacks are sorted at the end, the rest of interfaces are sorted by name.
    */
@@ -458,7 +458,7 @@ public class SystemInfo {
   /**
    * Runs a native command to try and locate the user's web server version. Tests all combinations
    * of paths + commands.
-   *
+   * <p>
    * Currently only checks for Apache.
    */
   private final static String[] getWebserver() {
@@ -495,7 +495,7 @@ public class SystemInfo {
         // OK. We'll probably get a lot of these.
       }
     }
-    return new String[] { "", "" };
+    return new String[]{ "", "" };
   }
 
   /**
@@ -828,7 +828,6 @@ public class SystemInfo {
    * Auxiliary class to keep track of session events. It contains the time when the event occurred
    * and which kind of event is (in sessionCount field) +1 in case it is login, -1 for logout, so
    * then it is possible to compute number of users taking into account all the events.
-   *
    */
   private static class Event implements Comparable<Event> {
     Date eventDate;
@@ -930,7 +929,7 @@ public class SystemInfo {
    * </p>
    *
    * @return A string representing the Ubuntu version (e.g., "Ubuntu 22.04.4 LTS"),
-   *         or "Unknown" if the version cannot be determined.
+   *     or "Unknown" if the version cannot be determined.
    */
   public static String getUbuntuVersion() {
     try (BufferedReader reader = new BufferedReader(new FileReader("/etc/os-release"))) {
