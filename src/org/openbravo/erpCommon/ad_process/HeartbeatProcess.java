@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -364,11 +364,12 @@ public class HeartbeatProcess implements Process {
    * it iterates through each JSON object in the array and processes them individually.
    * This method sets the administrative mode to allow database operations without restrictions.
    *
-   * @param response The JSON response string to be parsed. It is expected to be either a JSON object
-   *                 or a JSON array. The JSON should contain an "alerts" key if it is an object.
-   *                 If it is an array, each object in the array should have an "alerts" key.
-   *
-   * @throws JSONException if there is an error parsing the JSON response.
+   * @param response
+   *     The JSON response string to be parsed. It is expected to be either a JSON object
+   *     or a JSON array. The JSON should contain an "alerts" key if it is an object.
+   *     If it is an array, each object in the array should have an "alerts" key.
+   * @throws JSONException
+   *     if there is an error parsing the JSON response.
    */
   private void parseResponse(String response) {
     logger.logln(logger.messageDb("HB_UPDATES", ctx.getLanguage()));
@@ -709,7 +710,8 @@ public class HeartbeatProcess implements Process {
   /**
    * Updates the status of the HeartbeatLog entry identified by `logHeartbeatID`.
    *
-   * @param status the new status to set
+   * @param status
+   *     the new status to set
    */
   private void updateHeartbeatLogStatus(String status) {
     OBContext.setAdminMode();

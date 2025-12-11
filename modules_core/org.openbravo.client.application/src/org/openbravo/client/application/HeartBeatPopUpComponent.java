@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2017-2018 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2017-2018 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -99,7 +99,7 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
     if (OBDal.getInstance().exists(Module.ENTITY_NAME, APRM_MIGRATION_TOOL_ID)) {
       return new AdvPaymentMngtDao().existsAPRMReadyPreference();
     }
-    return true; // si no existe el módulo APRM, asumimos que sí lo usa
+    return true; // If the module APRM doesn't exist, is assumed that it's used.
   }
 
   private String handleStandardPopup() throws ServletException {
@@ -135,14 +135,14 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
     qMod.add(Restrictions.eq(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true));
 
     String obDir = OBPropertiesProvider.getInstance()
-            .getOpenbravoProperties()
-            .getProperty("source.path");
+        .getOpenbravoProperties()
+        .getProperty("source.path");
 
     StringBuilder oldScripts = new StringBuilder();
 
     for (Module mod : qMod.list()) {
       File cfScript = new File(obDir + "/modules/" + mod.getJavaPackage() + "/src-db/database",
-              "configScript.xml");
+          "configScript.xml");
 
       if (cfScript.exists() && DBSMOBUtil.isOldConfigScript(cfScript)) {
         if (oldScripts.length() > 0) {
