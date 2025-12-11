@@ -3,6 +3,7 @@ package com.smf.securewebservices.service;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -10,25 +11,25 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.smf.securewebservices.SWSConfig;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.hibernate.criterion.Restrictions;
-import org.jfree.chart.HashUtilities;
 import org.openbravo.authentication.hashing.PasswordHash;
 import org.openbravo.base.HttpBaseServlet;
+import org.openbravo.base.HttpBaseUtils;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.database.SessionInfo;
+import org.openbravo.erpCommon.security.SessionLogin;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.service.db.DalConnectionProvider;
-import org.openbravo.utils.FormatUtilities;
 
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -58,6 +59,9 @@ public class SecureLoginServlet extends HttpBaseServlet {
 		} catch (JSONException | IOException e2) {
 			data = new JSONObject();
 		}
+
+		request.getSession().invalidate();
+
 		JSONObject result = new JSONObject();
 		OBContext.setAdminMode(true);
 
@@ -125,8 +129,10 @@ public class SecureLoginServlet extends HttpBaseServlet {
 						OBContext.getOBContext().getLanguage().getLanguage()));
 			}
 			if (user != null) {
+				String newSessionId = UUID.randomUUID().toString().replace("-", "").toUpperCase();
 				try {
-					token = SecureWebServicesUtils.generateToken(user, role, org, warehouse);
+					//trackSession(user.getId(), role, org, warehouse, newSessionId, request);
+					token = SecureWebServicesUtils.generateToken(user, role, org, warehouse, newSessionId);
 					Boolean showRoles = !("false".equals(request.getParameter("showRoles")));
 					Boolean showOrgs = !("false".equals(request.getParameter("showOrgs")));
 					Boolean showWarehouses = !("false".equals(request.getParameter("showWarehouses")));
@@ -143,7 +149,7 @@ public class SecureLoginServlet extends HttpBaseServlet {
 					throw new Exception(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_ErrorCreatingToken",
 							OBContext.getOBContext().getLanguage().getLanguage()));
 				}
-
+				createDBSession(newSessionId, request, user.getId(), user.getUsername());
 			} else {
 				log.warn("SWS - Invalid user name or password.");
 				throw new Exception(Utility.messageBD(new DalConnectionProvider(), "IDENTIFICATION_FAILURE_TITLE",
@@ -173,5 +179,32 @@ public class SecureLoginServlet extends HttpBaseServlet {
 		Writer out = response.getWriter();
 		out.write(result.toString());
 		out.close();
+	}
+
+	private void trackSession(String userId, Role role, Organization org, Warehouse warehouse, String newSessionId, HttpServletRequest request) {
+		SessionInfo.setCommand("SWS_Login");
+		SessionInfo.setUserId(userId);
+		SessionInfo.setSessionId(newSessionId);
+		SessionInfo.setAuditActive(true);
+	}
+
+	protected final String createDBSession(String sessionId, HttpServletRequest request, String userId, String username) {
+		try {
+			final SessionLogin sl = new SessionLogin(request, "0", "0", userId);
+			sl.setSessionID(sessionId);
+			sl.setStatus( isUI(request) ? "UI" : "WS");
+			sl.setUserName(username);
+			sl.setServerUrl(HttpBaseUtils.getLocalAddress(request));
+			sl.save();
+			return sl.getSessionID();
+		} catch (Exception e) {
+			log4j.error("Error creating DB session", e);
+			return null;
+		}
+	}
+
+	private boolean isUI(HttpServletRequest request) {
+		String clientSource = request.getHeader("X-Client-Source");
+		return StringUtils.equals(clientSource, "MainUI");
 	}
 }

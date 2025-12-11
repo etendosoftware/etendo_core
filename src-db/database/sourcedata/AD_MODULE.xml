@@ -26,6 +26,7 @@ You may obtain a copy of the License at http://www.openbravo.com/legal/license.h
 <!--0-->  <VERSION_LABEL><![CDATA[25Q3.0]]></VERSION_LABEL>
 <!--0-->  <ISCOMMERCIAL><![CDATA[N]]></ISCOMMERCIAL>
 <!--0-->  <ISTRIALALLOWED><![CDATA[N]]></ISTRIALALLOWED>
+<!--0-->  <EM_ETRX_ISREACT><![CDATA[N]]></EM_ETRX_ISREACT>
 <!--0--></AD_MODULE>
 
 </data>

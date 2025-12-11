@@ -444,6 +444,10 @@ public class SecureWebServicesUtils {
 		return StringUtils.startsWith(privateKey, "{") && StringUtils.endsWith(privateKey, "}");
 	}
 
+	public static String generateToken(User user, Role role, Organization org, Warehouse warehouse) throws Exception {
+		return generateToken(user, role, org, warehouse, null);
+	}
+
 	/**
 	 * Generates a JSON Web Token (JWT) for a given user with specified role, organization, and warehouse details.
 	 * This method dynamically selects the token signing algorithm based on the configuration setting.
@@ -454,11 +458,12 @@ public class SecureWebServicesUtils {
 	 * @param role The {@link Role} to be associated with the user. If null, the user's default or first role is used.
 	 * @param org The {@link Organization} to be associated with the user. If null, the user's default or first organization is used.
 	 * @param warehouse The {@link Warehouse} to be associated with the organization. If null, the organization's default or first warehouse is used.
+	 * @param sessionId The session ID to be included in the token. If null, no session ID is included.
 	 * @return A signed JWT as a {@link String}.
 	 * @throws Exception If there are any issues during token generation, such as missing roles, organizations, or warehouse information,
 	 *                   or issues with key generation or token signing.
 	 */
-	public static String generateToken(User user, Role role, Organization org, Warehouse warehouse) throws Exception {
+	public static String generateToken(User user, Role role, Organization org, Warehouse warehouse, String sessionId) throws Exception {
 		try {
 			OBContext.setAdminMode(true);
 			SWSConfig config = SWSConfig.getInstance();
@@ -486,8 +491,7 @@ public class SecureWebServicesUtils {
 				// Legacy private key format. Use HS256 algorithm.
 				algorithm = getEncoderAlgorithm(privateKey, HS256_ALGORITHM);
 			}
-			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse);
-
+			Builder jwtBuilder = getJwtBuilder(user, selectedRole, selectedOrg, selectedWarehouse, sessionId);
 			if (config.getExpirationTime() > 0) {
 				Calendar date = Calendar.getInstance();
 				long t = date.getTimeInMillis();
@@ -703,8 +707,8 @@ public class SecureWebServicesUtils {
 	 * @return A {@link Builder} for the JWT with pre-set claims.
 	 */
 	private static Builder getJwtBuilder(User user, Role selectedRole, Organization selectedOrg,
-			Warehouse selectedWarehouse) {
-		return JWT.create()
+			Warehouse selectedWarehouse, String sessionID) {
+		var jwtBuilder = JWT.create()
 				.withIssuer("sws")
 				.withAudience("sws")
 				.withClaim("user", user.getId())
@@ -713,5 +717,9 @@ public class SecureWebServicesUtils {
 				.withClaim("organization", selectedOrg.getId())
 				.withClaim("warehouse", selectedWarehouse.getId())
 				.withIssuedAt(new Date());
+		if (sessionID != null) {
+			jwtBuilder.withClaim("jti", sessionID);
+		}
+		return jwtBuilder;
 	}
 }

@@ -78,8 +78,8 @@
   <SqlMethod name="insertUsageAudit" type="preparedStatement" return="rowCount" saveContextInfo="false">
     <Sql><![CDATA[
         INSERT INTO ad_session_usage_audit
-        (ad_session_usage_audit_id, ad_client_id, ad_org_id, createdby, updatedby, ad_session_id, object_id, ad_module_id, command, classname, object_type, process_time)
-        VALUES (get_uuid(),'0','0',?,?,?,?,?,?,?,?,to_number(?))
+        (ad_session_usage_audit_id, ad_client_id, ad_org_id, createdby, updatedby, ad_session_id, object_id, ad_module_id, command, classname, object_type, process_time, jsondata)
+        VALUES (get_uuid(),'0','0',?,?,?,?,?,?,?,?,to_number(?), ?)
     ]]></Sql>
     <Parameter name="userId"/>
     <Parameter name="userId"/>
@@ -90,6 +90,7 @@
     <Parameter name="classname"/>
     <Parameter name="objecttype"/>
     <Parameter name="time"/>
+    <Parameter name="jsondata"/>
   </SqlMethod>
   
 </SqlClass>

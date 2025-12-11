@@ -44,7 +44,7 @@ public class UsageAudit {
    * 
    */
   public static void auditActionNoDal(ConnectionProvider conn, VariablesSecureApp vars,
-      String javaClassName, long duration) {
+      String javaClassName, long duration, String body) {
     String sessionId = vars.getSessionValue(SESSION_ID_ATTR);
     String action = SessionInfo.getCommand();
     String objectType = SessionInfo.getProcessType();
@@ -65,9 +65,14 @@ public class UsageAudit {
             + " - javaClassName:" + javaClassName);
       }
       SessionLoginData.insertUsageAudit(conn, SessionInfo.getUserId(), sessionId, objectId,
-          moduleId, action, javaClassName, objectType, Long.toString(duration));
+          moduleId, action, javaClassName, objectType, Long.toString(duration), body);
     } catch (ServletException se) {
       log4j.error("Error inserting usage audit", se);
     }
+  }
+
+  public static void auditActionNoDal(ConnectionProvider conn, VariablesSecureApp vars,
+      String javaClassName, long duration) {
+    auditActionNoDal(conn, vars, javaClassName, duration, null);
   }
 }

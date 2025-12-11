@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.io.IOUtils;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.authentication.AuthenticationException;
@@ -457,8 +458,12 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         }
         long t = System.currentTimeMillis();
         super.serviceInitialized(request, response);
+
+        // Get payload if is received
+        String payload = parameterMapToString(request.getParameterMap());
+
         UsageAudit.auditActionNoDal(cp, vars1, this.getClass().getName(),
-            System.currentTimeMillis() - t);
+            System.currentTimeMillis() - t, payload);
       } else {
         if ((strPopUp != null && !strPopUp.equals("")) || classInfo.type.equals("S")) {
           bdErrorGeneralPopUp(request, response,
@@ -509,6 +514,24 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         bdErrorGeneral(request, response, "Error", e.toString());
       }
     }
+  }
+
+  public static String parameterMapToString(Map<String, String[]> parameterMap) {
+    try {
+      // read parameter map to json
+      JSONObject json = new JSONObject();
+      for (String key : parameterMap.keySet()) {
+        String[] values = parameterMap.get(key);
+        if (values != null && values.length == 1) {
+          json.put(key, values[0]);
+        } else {
+          json.put(key, values);
+        }
+      }
+      return json.toString();
+    } catch (Exception e) {
+    }
+    return null;
   }
 
   /**

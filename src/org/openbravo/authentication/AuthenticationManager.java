@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.smf.securewebservices.utils.SecureWebServicesUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -560,12 +561,11 @@ public abstract class AuthenticationManager {
   protected abstract void doLogout(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException;
 
-  protected final String createDBSession(HttpServletRequest req, String strUser,
-      String strUserAuth) {
+  protected String createDBSession(HttpServletRequest req, String strUser, String strUserAuth) {
     return createDBSession(req, strUser, strUserAuth, "S");
   }
 
-  protected final String createDBSession(HttpServletRequest req, String strUser, String strUserAuth,
+  protected String createDBSession(HttpServletRequest req, String strUser, String strUserAuth,
       String successSessionType) {
     try {
       if (strUserAuth == null && StringUtils.isEmpty(strUser)) {
