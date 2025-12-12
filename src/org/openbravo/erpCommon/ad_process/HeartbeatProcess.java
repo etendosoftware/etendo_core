@@ -100,7 +100,7 @@ public class HeartbeatProcess implements Process {
       return;
     }
 
-    logger.logln("Hearbeat process starting...");
+    logger.logln("Heartbeat process starting...");
     String beatType = determineBeatType(channel, bundle, connection);
 
     try {
@@ -155,15 +155,24 @@ public class HeartbeatProcess implements Process {
   }
 
   /**
-   * Determines the type of heartbeat to process based on the execution channel and possibly user actions.
+   * Determines the type of heartbeat to process based on the execution channel,
+   * the process bundle parameters, and the current heartbeat status stored in the database.
+   * <p>
    * This can return types such as scheduled, enabling, disabling, deferring, or declining beats.
    *
+   * @param channel
+   *     The execution channel that triggered the heartbeat (e.g., scheduled or manual).
    * @param bundle
-   *     The process bundle containing all necessary context and parameters.
+   *     The process bundle containing context and parameters, including user-driven actions.
+   * @param connection
+   *     The database connection provider used to query the current heartbeat status.
    * @return A string representing the determined heartbeat type.
+   * @throws ServletException
+   *     If an error occurs while retrieving heartbeat information or processing parameters.
    */
   public String determineBeatType(Channel channel, ProcessBundle bundle,
       ConnectionProvider connection) throws ServletException {
+
     String beatType;
     if (channel == Channel.SCHEDULED) {
       beatType = SCHEDULED_BEAT;
@@ -659,8 +668,10 @@ public class HeartbeatProcess implements Process {
           systemInfo.getProperty(SystemInfo.Item.REJECTED_LOGINS_DUE_CONC_USERS.getLabel()));
       heartbeatObj.put("modules", systemInfo.getProperty(SystemInfo.Item.MODULES.getLabel()));
       heartbeatObj.put("numRegisteredUsers", systemInfo.getProperty(SystemInfo.Item.NUM_REGISTERED_USERS.getLabel()));
-      heartbeatObj.put("firstLogin", dateFormat.format(parseDateSafely(systemInfo, SystemInfo.Item.FIRST_LOGIN)));
-      heartbeatObj.put("lastLogin", dateFormat.format(parseDateSafely(systemInfo, SystemInfo.Item.LAST_LOGIN)));
+      Date firstLogin = parseDateSafely(systemInfo, SystemInfo.Item.FIRST_LOGIN);
+      heartbeatObj.put("firstLogin", firstLogin != null ? dateFormat.format(firstLogin) : JSONObject.NULL);
+      Date lastLogin = parseDateSafely(systemInfo, SystemInfo.Item.LAST_LOGIN);
+      heartbeatObj.put("lastLogin", lastLogin != null ? dateFormat.format(lastLogin) : JSONObject.NULL);
       heartbeatObj.put("totalLogins", parseLongSafely(systemInfo, SystemInfo.Item.TOTAL_LOGINS));
       heartbeatObj.put("maxUsers", parseLongSafely(systemInfo, SystemInfo.Item.MAX_CONCURRENT_USERS));
       heartbeatObj.put("avgUsers", systemInfo.getProperty(SystemInfo.Item.AVG_CONCURRENT_USERS.getLabel()));
