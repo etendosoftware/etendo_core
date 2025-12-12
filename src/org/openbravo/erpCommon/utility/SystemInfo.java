@@ -52,7 +52,7 @@ import java.util.zip.CRC32;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -206,7 +206,9 @@ public class SystemInfo {
           systemInfo.put(i, os);
           break;
         case OPERATING_SYSTEM_VERSION:
-          systemInfo.put(i, getUbuntuVersion());
+          String osVersion = StringUtils.equals("Unknown", getUbuntuVersion()) ? System.getProperty(
+              "os.version") : getUbuntuVersion();
+          systemInfo.put(i, osVersion);
           break;
         case JAVA_VERSION:
           systemInfo.put(i, System.getProperty("java.version"));
