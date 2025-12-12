@@ -22,13 +22,24 @@ package org.openbravo.dal.core;
 /**
  * Encapsulates a thread so that when the thread returns the session/transaction is
  * closed/committed/rolledback. It also ensures that the OBContext is removed from the thread.
- * 
+ *
  * Note that cleaning up the thread is particularly important in webcontainer environments because
  * webcontainers (tomcat) re-use thread instances for new requests (using a threadpool).
- * 
+ *
  * @author mtaal
+ *
+ * @deprecated As of Etendo 26.Q1, replaced by {@code com.etendoerp.base.filter.threadhandler.UnifiedThreadHandler}
+ *             in the refactored filter chain architecture (ETP-2966).
+ *             <p>
+ *             The nested ThreadHandler pattern created deep stack traces (2-3 additional levels)
+ *             and made debugging difficult. The new UnifiedThreadHandler manages all filter phases
+ *             in a flat structure within the FilterChainCoordinator.
+ *             <p>
+ *             <b>Migration:</b> Use the new filter chain by setting {@code filter.chain.legacy=false}.
+ *             <p>
+ *             <b>This class will be removed in Etendo 27.Q1.</b>
  */
-
+@Deprecated(since = "26.Q1", forRemoval = true)
 public abstract class DalThreadHandler extends ThreadHandler {
 
   /** @see ThreadHandler#doBefore */

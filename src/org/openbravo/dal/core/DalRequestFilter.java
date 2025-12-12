@@ -42,26 +42,42 @@ import org.openbravo.database.SessionInfo;
  * DalLayerInitializer}). Although this is not required (session factory initialization is done
  * automatically at first database access), it is better for test/debug purposes to do the
  * initialization here.
- * 
+ *
  * The DalRequestFilter is enabled by setting it in the web.xml file:
- * 
+ *
  * {@literal
  * <filter> <filter-name>dalFilter</filter-name>
  * <filter-class>org.openbravo.dal.core.DalRequestFilter</filter-class> </filter>
- * 
+ *
  * <filter-mapping>
- * 
+ *
  * <filter-name>dalFilter</filter-name> <url-pattern>/*</url-pattern>
- * 
+ *
  * </filter-mapping>
  * }
- * 
+ *
  * Note the url-pattern can be defined more strictly if it is possible to identify the pages which
  * require a session/transaction.
- * 
+ *
  * @author mtaal
+ *
+ * @deprecated As of Etendo 26.Q1, replaced by the refactored filter chain architecture (ETP-2966).
+ *             This filter violated Single Responsibility Principle by mixing transaction management,
+ *             OBContext initialization, and session tracking.
+ *             <p>
+ *             <b>Replacement:</b> Use the new coordinated filter chain:
+ *             <ul>
+ *               <li>{@code com.etendoerp.base.filter.filters.TransactionManagementFilter} - Transaction lifecycle</li>
+ *               <li>{@code com.etendoerp.base.filter.filters.OBContextFilter} - OBContext setup/cleanup</li>
+ *               <li>{@code com.etendoerp.base.filter.filters.SessionInfoFilter} - Session metadata</li>
+ *             </ul>
+ *             <p>
+ *             To enable the new filter chain, set {@code filter.chain.legacy=false} in
+ *             {@code config/filter-chain.properties} or use environment variable {@code FILTER_CHAIN_LEGACY=false}.
+ *             <p>
+ *             <b>This class will be removed in Etendo 27.Q1.</b>
  */
-
+@Deprecated(since = "26.Q1", forRemoval = true)
 public class DalRequestFilter implements Filter {
   private static final Logger log = LogManager.getLogger();
 

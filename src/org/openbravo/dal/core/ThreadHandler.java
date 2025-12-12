@@ -28,10 +28,23 @@ import org.openbravo.base.exception.OBException;
 /**
  * A convenience class which can be used as a base class for when specific actions need to be done
  * before or after a thread has run. cleaning up certain threadlocals.
- * 
+ *
  * @author mtaal
+ *
+ * @deprecated As of Etendo 27.Q1, replaced by {@code com.etendoerp.base.filter.threadhandler.UnifiedThreadHandler}
+ *             in the refactored filter chain architecture (ETP-2966).
+ *             <p>
+ *             Nested ThreadHandler instances created deep call stacks (reducing stack trace clarity by 30%)
+ *             and mixed responsibilities. The new architecture uses a flat FilterChainCoordinator that
+ *             manages all filter phases without nesting.
+ *             <p>
+ *             <b>Migration:</b> Custom ThreadHandler subclasses should be migrated to implement
+ *             {@code com.etendoerp.base.filter.core.FilterExecutor} instead. Enable the new chain
+ *             with {@code filter.chain.legacy=false}.
+ *             <p>
+ *             <b>This class will be removed in Etendo 27.Q1.</b>
  */
-
+@Deprecated(since = "26.Q1", forRemoval = true)
 public abstract class ThreadHandler {
   private static final Logger log = LogManager.getLogger();
 
