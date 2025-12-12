@@ -17,7 +17,8 @@
  ************************************************************************
 -->
 
-<html>
+<!DOCTYPE html>
+<html lang="en" xml:lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Heartbeat Configuration</title>
@@ -62,10 +63,10 @@
   </script>
 
 </head>
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="onLoadDo();" onresize="onResizeDo();">
+<body onload="onLoadDo();" onresize="onResizeDo();">
 
 <div class="Popup_Wallpaper_Background Popup_Wallpaper_Background_Heartbeat">
-  <img src="../../../../../web/images/blank.gif" class="Popup_Wallpaper_Image Popup_Wallpaper_Image_Heartbeat"></img>
+  <img src="../../../../../web/images/blank.gif" class="Popup_Wallpaper_Image Popup_Wallpaper_Image_Heartbeat" alt=""></img>
 </div>
 
 <form method="post" action="Heartbeat.html" name="frmMain" style="position: relative;">
@@ -76,51 +77,64 @@
 
 <div class="Popup_ContentPane_CircleLogo">
   <div class="Popup_WindowLogo">
-    <img class="Popup_WindowLogo_Icon Popup_WindowLogo_Icon_heartbeat" src="../../../../../web/images/blank.gif" border=0/></img>
+    <img class="Popup_WindowLogo_Icon Popup_WindowLogo_Icon_heartbeat" src="../../../../../web/images/blank.gif" alt=""/></img>
   </div>
 </div>
 
-<table cellspacing="0" cellpadding="0" width="100%">
+<table aria-label="Popup layout table for Heartbeat configuration">
+  <thead style="display: none;">
+  <tr>
+    <th scope="col"></th>
+    <th scope="col"></th>
+    <th scope="col"></th>
+    <th scope="col"></th>
+    <th scope="col"></th>
+  </tr>
+  </thead>
   <tr>
     <td>
-      <table cellspacing="0" cellpadding="0" class="Popup_ContentPane_NavBar">
-        <tr class="Popup_NavBar_bg"><td></td>
-          <td class="Popup_NavBar_separator_cell"></td>
-          <td class="Popup_NavBar_bg_logo_left"></td>
-          <td class="Popup_NavBar_bg_logo" width="1" onclick="openNewBrowser('http://www.openbravo.com', 'Openbravo');return false;"><img src="../../../../../web/images/blank.gif" alt="Openbravo" title="Openbravo" border="0" id="openbravoLogo" class="Popup_NavBar_logo" /></td>
-          <td class="Popup_NavBar_bg_logo_right"></td>
-          <td class="Popup_NavBar_Popup_title_cell"><span>Heartbeat Configuration</span></td>
-          <td class="Popup_NavBar_separator_cell"></td>
-        </tr>
-      </table>
+      <div class="Popup_ContentPane_NavBar Popup_NavBar_bg">
+        <div class="Popup_NavBar_empty_col"></div>
+        <div class="Popup_NavBar_separator_cell"></div>
+        <div class="Popup_NavBar_bg_logo_left"></div>
+        <div class="Popup_NavBar_bg_logo" onclick="openNewBrowser('http://www.openbravo.com', 'Openbravo'); return false;">
+          <img src="../../../../../web/images/blank.gif" alt="Openbravo" title="Openbravo" id="openbravoLogo" class="Popup_NavBar_logo" />
+        </div>
+        <div class="Popup_NavBar_bg_logo_right"></div>
+        <div class="Popup_NavBar_Popup_title_cell"><span>Heartbeat Configuration</span></div>
+        <div class="Popup_NavBar_separator_cell"></div>
+      </div>
     </td>
   </tr>
   <tr>
     <td>
-      <table cellspacing="0" cellpadding="0" class="Popup_ContentPane_SeparatorBar">
-        <tr>
-          <td class="Popup_SeparatorBar_bg"></td>
-        </tr>
-      </table>
+      <div class="Popup_ContentPane_SeparatorBar">
+        <div class="Popup_SeparatorBar_bg"></div>
+      </div>
     </td>
   </tr>
   <tr>
     <td>
       <div class="Popup_ContentPane_Client" style="overflow: auto; background: none !important;">
-        <table cellspacing="0" cellpadding="0" class="Popup_Client_TablePopup" style="background: none !important;">
-          <tr>
-            <td>
-              <p class="Wide_Paragraph" id="paramWelcome">xxWelcome to Etendo ERP</p>
-            </td>
-          </tr>
-        </table>
+        <div class="Popup_Client_TablePopup" style="background: none !important;">
+          <p class="Wide_Paragraph" id="paramWelcome">xxWelcome to Etendo ERP</p>
+        </div>
       </div>
     </td>
   </tr>
   <tr>
     <td>
       <div class="Popup_ContentPane_Client" style="overflow: auto; background: none !important;" id="client">
-        <table cellspacing="0" cellpadding="0" class="Popup_Client_TablePopup" style="background: none !important;">
+        <table class="Popup_Client_TablePopup" style="background: none !important;" aria-label="Layout table for popup action buttons">
+          <thead style="display: none;">
+          <tr>
+            <th scope="col"></th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+          </thead>
           <tbody><tr>
             <td class="TableEdition_OneCell_width"/>
             <td class="TableEdition_OneCell_width"/>
@@ -128,7 +142,7 @@
             <td class="TableEdition_OneCell_width"/>
             <td class="TableEdition_OneCell_width"/>
           </tr>
-          <tr><td height="20" colspan="5"/></tr>
+          <tr><td colspan="5"/></tr>
           <tr>
             <td/>
             <td class="Button_RightAlign_ContentCell">
@@ -146,12 +160,21 @@
                   onmousedown="buttonEvent('onmousedown', this);"
                   onmouseover="buttonEvent('onmouseover', this); window.status='Accept'; return true;"
                   onmouseout="buttonEvent('onmouseout', this);">
-                  <table class="Button">
+                  <table class="Button" aria-label="Visual layout of Accept button">
+                    <thead style="display: none;">
+                    <tr>
+                      <th scope="col">Icon</th>
+                      <th scope="col">Label</th>
+                      <th scope="col">Right</th>
+                    </tr>
+                    </thead>
+                    <tbody>
                     <tr>
                       <td class="Button_left"><img class="Button_Icon Button_Icon_ok" alt="Accept" title="Accept" src="../../../../../web/images/blank.gif" border="0" /></td>
                       <td class="Button_text Button_width">Accept</td>
                       <td class="Button_right"></td>
                     </tr>
+                    </tbody>
                   </table>
                 </button>
               </div>
@@ -171,12 +194,21 @@
                   onmousedown="buttonEvent('onmousedown', this);"
                   onmouseover="buttonEvent('onmouseover', this); window.status='Decline'; return true;"
                   onmouseout="buttonEvent('onmouseout', this);">
-                  <table class="Button">
+                  <table class="Button" aria-label="Visual layout of Decline button">
+                    <thead style="display: none;">
+                    <tr>
+                      <th scope="col">Icon</th>
+                      <th scope="col">Label</th>
+                      <th scope="col">Right</th>
+                    </tr>
+                    </thead>
+                    <tbody>
                     <tr>
                       <td class="Button_left"><img class="Button_Icon Button_Icon_cancel" alt="Decline" title="Decline" src="../../../../../web/images/blank.gif" border="0" /></td>
                       <td class="Button_text Button_width">Decline</td>
                       <td class="Button_right"></td>
                     </tr>
+                    </tbody>
                   </table>
                 </button>
               </div>
@@ -196,19 +228,29 @@
                   onmousedown="buttonEvent('onmousedown', this);"
                   onmouseover="buttonEvent('onmouseover', this); window.status='Later'; return true;"
                   onmouseout="buttonEvent('onmouseout', this);">
-                  <table class="Button">
+                  <table class="Button" aria-label="Visual layout of Later button">
+                    <thead style="display: none;">
+                    <tr>
+                      <th scope="col">Icon</th>
+                      <th scope="col">Label</th>
+                      <th scope="col">Right</th>
+                    </tr>
+                    </thead>
+                    <tbody>
                     <tr>
                       <td class="Button_left"><img class="Button_Icon Button_Icon_process" alt="Later" title="Later" src="../../../../../web/images/blank.gif" border="0" /></td>
                       <td class="Button_text Button_width">Later</td>
                       <td class="Button_right"></td>
                     </tr>
+                    </tbody>
                   </table>
                 </button>
               </div>
             </td>
             <td/>
           </tr>
-        </tbody></table>
+        </tbody>
+        </table>
       </div>
     </td>
   </tr>

@@ -234,4 +234,5 @@ OB.Layout.initialize = function() {
 
   // show the heartbeat or registration popups (if it applies)
   OB.Application.showHeartBeatOrRegistration();
+
 };
