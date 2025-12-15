@@ -7,7 +7,7 @@
   v_Product_UOM     VARCHAR2(32);
   v_UOM             VARCHAR2(32);
   v_Attribute       VARCHAR2(32);
-  v_Warehouse       VARCHAR2(32);a
+  v_Warehouse       VARCHAR2(32);
   V_STOCKED         NUMBER;
 
 /*

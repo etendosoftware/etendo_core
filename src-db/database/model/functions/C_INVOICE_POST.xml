@@ -757,6 +757,34 @@ IF (NOT FINISH_PROCESS) THEN
               M_INOUTLINE_ID, v_NextNo, M_PRODUCT_ID, DATETRX, -QTY, 'N', 'Y', 'N'
             FROM M_MATCHINV
             WHERE C_INVOICELINE_ID = Cur_InvoiceLine.C_InvoiceLine_ID;
+
+            IF v_IsSOTrx = 'Y' THEN
+            INSERT INTO M_MATCHSI
+                (M_MATCHSI_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+                CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+                M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID, DATETRX,
+                QTY, PROCESSING, PROCESSED, POSTED)
+            SELECT
+                get_uuid(), AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+                now(), v_UpdatedBy, now(), v_UpdatedBy,
+                M_INOUTLINE_ID, v_NextNo, M_PRODUCT_ID, DATETRX,
+                -QTY, 'N', 'Y', 'N'
+            FROM M_MATCHSI
+            WHERE C_INVOICELINE_ID = Cur_InvoiceLine.C_InvoiceLine_ID;
+
+            INSERT INTO M_MATCHSO
+              (M_MATCHSO_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+              CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+              C_ORDERLINE_ID, M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID,
+              DATETRX, QTY, PROCESSING, PROCESSED, POSTED)
+            SELECT
+              get_uuid(), AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+              now(), v_UpdatedBy, now(), v_UpdatedBy,
+              C_ORDERLINE_ID, M_INOUTLINE_ID, v_NextNo, M_PRODUCT_ID,
+              DATETRX, -QTY, 'N', 'Y', 'N'
+            FROM M_MATCHSO
+            WHERE C_INVOICELINE_ID = Cur_InvoiceLine.C_InvoiceLine_ID;
+          END IF;
           /* OrderLine.qtyInvoiced is updated in c_invoicePost
           UPDATE C_OrderLine
           SET QtyInvoiced = QtyInvoiced - Cur_InvoiceLine.QtyInvoiced,
@@ -1046,6 +1074,8 @@ IF (NOT FINISH_PROCESS) THEN
         END IF;
         DELETE FROM M_MATCHPO
         WHERE C_InvoiceLine_ID IN (SELECT C_InvoiceLine_ID FROM C_INVOICELINE WHERE C_Invoice_ID=v_Record_ID);
+        DELETE FROM M_MATCHSO
+        WHERE C_InvoiceLine_ID IN (SELECT C_InvoiceLine_ID FROM C_INVOICELINE WHERE C_Invoice_ID = v_Record_ID);
       END IF;
       UPDATE C_INVOICE
       SET Processed='N',
@@ -1488,11 +1518,100 @@ IF (NOT FINISH_PROCESS) THEN
         v_ODocumentNo C_ORDER.DocumentNo%TYPE;
         v_NewPendingToInvoice NUMBER;
         v_inOutStatus varchar2(60) ;
+        Cur_SILines RECORD;
+        v_Qty NUMBER;
+        v_MatchSI_ID VARCHAR2(32);
+        Cur_SOLines RECORD;
+        v_MatchSO_ID VARCHAR2(32);
       BEGIN
         SELECT DateInvoiced
         INTO p_DateInvoiced
         FROM C_INVOICE
         WHERE C_Invoice_ID=v_Record_ID;
+        v_ResultStr := 'MatchSI-FromInvoice';
+        FOR Cur_SILines IN
+          (SELECT il.AD_Client_ID,
+                  il.AD_Org_ID,
+                  il.C_InvoiceLine_ID,
+                  il.M_InOutLine_ID,
+                  il.M_Product_ID,
+                  il.QtyInvoiced,
+                  i.DateAcct
+            FROM C_INVOICELINE il
+            JOIN C_INVOICE i ON (i.C_INVOICE_ID = il.C_INVOICE_ID)
+            WHERE il.C_INVOICE_ID   = v_Record_ID
+              AND il.M_InOutLine_ID IS NOT NULL)
+        LOOP
+          SELECT COALESCE(COUNT(*), 0)
+            INTO v_Count
+            FROM M_MATCHSI
+          WHERE M_INOUTLINE_ID   = Cur_SILines.M_InOutLine_ID
+            AND C_INVOICELINE_ID = Cur_SILines.C_InvoiceLine_ID;
+
+          IF (v_Count = 0) THEN
+            v_Qty := Cur_SILines.QtyInvoiced;
+
+            v_MatchSI_ID := get_uuid();
+
+            v_ResultStr := 'InsertMatchSI ' || v_MatchSI_ID;
+
+            INSERT INTO M_MATCHSI
+              (M_MATCHSI_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+              CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+              M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID, DATETRX,
+              QTY, PROCESSING, PROCESSED, POSTED)
+            VALUES
+              (v_MatchSI_ID, Cur_SILines.AD_Client_ID, Cur_SILines.AD_Org_ID, 'Y',
+              now(), v_UpdatedBy, now(), v_UpdatedBy,
+              Cur_SILines.M_InOutLine_ID, Cur_SILines.C_InvoiceLine_ID,
+              Cur_SILines.M_Product_ID, Cur_SILines.DateAcct,
+              v_Qty, 'N', 'Y', 'N');
+          END IF;
+        END LOOP;
+        v_ResultStr := 'MatchSO-FromInvoice';
+        FOR Cur_SOLines IN
+          (SELECT il.AD_Client_ID,
+                  il.AD_Org_ID,
+                  il.C_InvoiceLine_ID,
+                  ol.C_OrderLine_ID,
+                  il.M_Product_ID,
+                  il.C_Charge_ID,
+                  ol.QtyOrdered,
+                  il.QtyInvoiced,
+                  i.DateAcct
+            FROM C_INVOICELINE il
+            JOIN C_ORDERLINE  ol ON (il.C_OrderLine_ID = ol.C_OrderLine_ID)
+            JOIN C_INVOICE    i  ON (i.C_INVOICE_ID    = il.C_INVOICE_ID)
+            WHERE (il.M_Product_ID = ol.M_Product_ID
+                  OR (il.C_Charge_ID IS NOT NULL
+                      AND il.C_Charge_ID = ol.C_Charge_ID))
+              AND il.C_INVOICE_ID = v_Record_ID)
+        LOOP
+          SELECT COALESCE(COUNT(*), 0)
+            INTO v_Count
+            FROM M_MATCHSO
+          WHERE C_ORDERLINE_ID   = Cur_SOLines.C_OrderLine_ID
+            AND C_INVOICELINE_ID = Cur_SOLines.C_InvoiceLine_ID;
+
+          IF (v_Count = 0) THEN
+            v_Qty := Cur_SOLines.QtyInvoiced;
+            v_MatchSO_ID := get_uuid();
+
+            v_ResultStr := 'InsertMatchSO ' || v_MatchSO_ID;
+
+            INSERT INTO M_MATCHSO
+              (M_MatchSO_ID, AD_Client_ID, AD_ORG_ID, ISACTIVE,
+              CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+              C_ORDERLINE_ID, M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID,
+              DATETRX, QTY, PROCESSING, PROCESSED, POSTED)
+            VALUES
+              (v_MatchSO_ID, Cur_SOLines.AD_Client_ID, Cur_SOLines.AD_Org_ID, 'Y',
+              now(), v_UpdatedBy, now(), v_UpdatedBy,
+              Cur_SOLines.C_OrderLine_ID, NULL, Cur_SOLines.C_InvoiceLine_ID,
+              Cur_SOLines.M_Product_ID, Cur_SOLines.DateAcct,
+              v_Qty, 'N', 'Y', 'N');
+          END IF;
+        END LOOP;
         FOR CurLines IN
           (SELECT * FROM C_INVOICELINE  WHERE C_INVOICE_ID=v_Record_ID  ORDER BY line)
         LOOP
