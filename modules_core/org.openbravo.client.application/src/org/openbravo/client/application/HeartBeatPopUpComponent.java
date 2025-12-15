@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2017-2018 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2017-2018 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -67,36 +67,49 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
   public String getHeartBeatRegistrationFunction() {
     try {
       if (isUpgrading()) {
-        if (!isSystemAdmin()) {
-          return "OB.Layout.ClassicOBCompatibility.Popup.standardUpgrading()";
-        } else {
-          boolean usingAprm = true;
-          if (OBDal.getInstance().exists(Module.ENTITY_NAME, APRM_MIGRATION_TOOL_ID)) {
-            usingAprm = new AdvPaymentMngtDao().existsAPRMReadyPreference();
-          }
-          if (!usingAprm) {
-            return "OB.Layout.ClassicOBCompatibility.Popup.openAPRMPopup()";
-          }
-          String oldScripts = getConfigScriptsNotExported();
-          if (!oldScripts.isEmpty()) {
-            return "OB.Layout.ClassicOBCompatibility.Popup.openConfigScriptPopup(" + oldScripts
-                + ")";
-          } else {
-            return "OB.Layout.ClassicOBCompatibility.Popup.openSuccessUpgradePopup()";
-          }
-        }
+        return handleUpgradePopup();
       }
 
-      switch (getPopUpToShow()) {
-        case InstancePurpose:
-          return "OB.Layout.ClassicOBCompatibility.Popup.openInstancePurpose()";
-        case HeartBeat:
-          return "OB.Layout.ClassicOBCompatibility.Popup.openHeartbeat()";
-        default:
-          return "return";
-      }
+      return handleStandardPopup();
+
     } catch (Exception e) {
       throw new OBException(e);
+    }
+  }
+
+  private String handleUpgradePopup() {
+    if (!isSystemAdmin()) {
+      return "OB.Layout.ClassicOBCompatibility.Popup.standardUpgrading()";
+    }
+
+    if (!isUsingAprm()) {
+      return "OB.Layout.ClassicOBCompatibility.Popup.openAPRMPopup()";
+    }
+
+    StringBuilder oldScripts = getConfigScriptsNotExported();
+    if (oldScripts.length() > 0) {
+      return "OB.Layout.ClassicOBCompatibility.Popup.openConfigScriptPopup(" + oldScripts + ")";
+    }
+
+
+    return "OB.Layout.ClassicOBCompatibility.Popup.openSuccessUpgradePopup()";
+  }
+
+  private boolean isUsingAprm() {
+    if (OBDal.getInstance().exists(Module.ENTITY_NAME, APRM_MIGRATION_TOOL_ID)) {
+      return new AdvPaymentMngtDao().existsAPRMReadyPreference();
+    }
+    return true; // If the module APRM doesn't exist, is assumed that it's used.
+  }
+
+  private String handleStandardPopup() throws ServletException {
+    switch (getPopUpToShow()) {
+      case InstancePurpose:
+        return "OB.Layout.ClassicOBCompatibility.Popup.openInstancePurpose()";
+      case HeartBeat:
+        return "OB.Layout.ClassicOBCompatibility.Popup.openHeartbeat()";
+      default:
+        return "return";
     }
   }
 
@@ -115,29 +128,34 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
     return "S".equals(OBContext.getOBContext().getRole().getUserLevel());
   }
 
-  private String getConfigScriptsNotExported() {
-    // Get all applied configuration scripts which are not exported in 3.0
+  private StringBuilder getConfigScriptsNotExported() {
     OBCriteria<Module> qMod = OBDal.getInstance().createCriteria(Module.class);
     qMod.add(Restrictions.eq(Module.PROPERTY_TYPE, "T"));
     qMod.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
     qMod.add(Restrictions.eq(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true));
+
     String obDir = OBPropertiesProvider.getInstance()
         .getOpenbravoProperties()
         .getProperty("source.path");
-    String oldScripts = "";
+
+    StringBuilder oldScripts = new StringBuilder();
+
     for (Module mod : qMod.list()) {
       File cfScript = new File(obDir + "/modules/" + mod.getJavaPackage() + "/src-db/database",
           "configScript.xml");
+
       if (cfScript.exists() && DBSMOBUtil.isOldConfigScript(cfScript)) {
-        if (!oldScripts.isEmpty()) {
-          oldScripts += ", ";
+        if (oldScripts.length() > 0) {
+          oldScripts.append(", ");
         }
-        oldScripts += "'" + mod.getName() + "'";
+        oldScripts.append("'").append(mod.getName()).append("'");
         log.info(mod.getName() + " config script is not exported in 3.0");
       }
     }
+
     return oldScripts;
   }
+
 
   private HeartBeatOrRegistration getPopUpToShow() throws ServletException {
     Object sessionObject = getParameters().get(KernelConstants.HTTP_SESSION);
