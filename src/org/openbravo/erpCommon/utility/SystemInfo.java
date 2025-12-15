@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2019 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2019 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -20,6 +20,7 @@
 package org.openbravo.erpCommon.utility;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,6 +52,7 @@ import java.util.zip.CRC32;
 
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -174,7 +176,7 @@ public class SystemInfo {
         case ANT_VERSION:
           systemInfo.put(i, getVersion(SystemInfoData.selectAntVersion(conn)));
           break;
-        case OB_VERSION:
+        case ETENDO_VERSION:
           OBVersion version = OBVersion.getInstance();
           systemInfo.put(i, version.getVersionNumber() + version.getMP());
           break;
@@ -204,7 +206,9 @@ public class SystemInfo {
           systemInfo.put(i, os);
           break;
         case OPERATING_SYSTEM_VERSION:
-          systemInfo.put(i, System.getProperty("os.version"));
+          String osVersion = StringUtils.equals("Unknown", getUbuntuVersion()) ? System.getProperty(
+              "os.version") : getUbuntuVersion();
+          systemInfo.put(i, osVersion);
           break;
         case JAVA_VERSION:
           systemInfo.put(i, System.getProperty("java.version"));
@@ -236,7 +240,7 @@ public class SystemInfo {
         case PERC_TIME_USAGE:
           systemInfo.put(i, usagePercentageTime.toString());
           break;
-        case TOTAL_LOGINS_LAST_MOTH:
+        case TOTAL_LOGINS_LAST_MONTH:
           systemInfo.put(i, Integer.toString(numberOfLoginsThisMonth));
           break;
         case WS_CALLS_MAX:
@@ -319,7 +323,7 @@ public class SystemInfo {
 
   /**
    * Obtains mac address a CRC of the byte[] array for the obtained mac address.
-   * 
+   * <p>
    * In case multiple interfaces are present, it is taken the first one with mac address of the list
    * sorted in this way: loopbacks are sorted at the end, the rest of interfaces are sorted by name.
    */
@@ -456,7 +460,7 @@ public class SystemInfo {
   /**
    * Runs a native command to try and locate the user's web server version. Tests all combinations
    * of paths + commands.
-   * 
+   * <p>
    * Currently only checks for Apache.
    */
   private final static String[] getWebserver() {
@@ -493,7 +497,7 @@ public class SystemInfo {
         // OK. We'll probably get a lot of these.
       }
     }
-    return new String[] { "", "" };
+    return new String[]{ "", "" };
   }
 
   /**
@@ -543,6 +547,9 @@ public class SystemInfo {
         modInfo.add(mod.getVersion());
         modInfo.add(mod.isEnabled() ? "Y" : "N");
         modInfo.add(mod.getName());
+        modInfo.add(mod.getJavaPackage());
+        modInfo.add(mod.getDescription());
+        modInfo.add(mod.isCommercial() ? "Y" : "N");
 
         if (usageAuditEnabled) {
           OBCriteria<SessionUsageAudit> qUsage = OBDal.getInstance()
@@ -593,7 +600,7 @@ public class SystemInfo {
    * Returns the string representation of a numerical version from a longer string. For example,
    * given the string: 'Apache Ant version 1.7.0 compiled on August 29 2007' getVersion() will
    * return '1.7.0'
-   * 
+   *
    * @param str
    * @return the string representation of a numerical version from a longer string.
    */
@@ -645,8 +652,8 @@ public class SystemInfo {
   private static void loadSessionInfo() {
     // Obtain login counts
     //@formatter:off
-    String hql = 
-            "select min(s.creationDate) as firstLogin, " +
+    String hql =
+        "select min(s.creationDate) as firstLogin, " +
             "       max(s.creationDate) as lastLogin, " +
             "       count(*) as totalLogins " +
             "  from ADSession s";
@@ -784,8 +791,8 @@ public class SystemInfo {
 
   private static List<Long> getWsLogins(String type, Date fromDate) {
     //@formatter:off
-    String hql = 
-            "select count(*) " +
+    String hql =
+        "select count(*) " +
             "  from ADSession " +
             " where loginStatus = :type " +
             "   and creationDate > :firstDay " +
@@ -810,7 +817,7 @@ public class SystemInfo {
 
   /**
    * Returns the date to start the computation data period which is 30 days before now.
-   * 
+   *
    * @return Starting date
    */
   private static Calendar getStartOfPeriod() {
@@ -823,7 +830,6 @@ public class SystemInfo {
    * Auxiliary class to keep track of session events. It contains the time when the event occurred
    * and which kind of event is (in sessionCount field) +1 in case it is login, -1 for logout, so
    * then it is possible to compute number of users taking into account all the events.
-   * 
    */
   private static class Event implements Comparable<Event> {
     Date eventDate;
@@ -859,7 +865,7 @@ public class SystemInfo {
     SERVLET_CONTAINER("servletContainer", false),
     SERVLET_CONTAINER_VERSION("servletContainerVersion", false),
     ANT_VERSION("antVersion", false),
-    OB_VERSION("obVersion", false),
+    ETENDO_VERSION("etendoVersion", false),
     OB_INSTALL_MODE("obInstallMode", false),
     NUM_REGISTERED_USERS("numRegisteredUsers", false),
     ISHEARTBEATACTIVE("isheartbeatactive", true),
@@ -872,7 +878,7 @@ public class SystemInfo {
     FIRST_LOGIN("firstLogin", false),
     LAST_LOGIN("lastLogin", false),
     TOTAL_LOGINS("totalLogins", false),
-    TOTAL_LOGINS_LAST_MOTH("loginsMoth", false),
+    TOTAL_LOGINS_LAST_MONTH("loginsMonth", false),
     MAX_CONCURRENT_USERS("maxUsers", false),
     AVG_CONCURRENT_USERS("avgUsers", false),
     PERC_TIME_USAGE("timeUsage", false),
@@ -915,6 +921,30 @@ public class SystemInfo {
 
   private static String formatDate(Date date) {
     return (date != null) ? sd.format(date) : "";
+  }
+
+  /**
+   * Reads the Ubuntu version from the /etc/os-release file.
+   * <p>
+   * This method looks for the "PRETTY_NAME" property in the file and returns its value,
+   * which represents the human-readable version of the Ubuntu distribution.
+   * </p>
+   *
+   * @return A string representing the Ubuntu version (e.g., "Ubuntu 22.04.4 LTS"),
+   *     or "Unknown" if the version cannot be determined.
+   */
+  public static String getUbuntuVersion() {
+    try (BufferedReader reader = new BufferedReader(new FileReader("/etc/os-release"))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (StringUtils.startsWith(line, "PRETTY_NAME=")) {
+          return line.split("=")[1].replace("\"", "");
+        }
+      }
+    } catch (IOException e) {
+      log4j.error("Error obtaining Version of Ubuntu", e);
+    }
+    return "Unknown";
   }
 
 }
