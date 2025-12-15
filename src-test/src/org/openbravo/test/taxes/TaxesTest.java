@@ -41,6 +41,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.InvoiceLineTax;
 import org.openbravo.model.ad.access.OrderLineTax;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -585,7 +586,7 @@ public class TaxesTest extends OBBaseTest {
   private Order updateOrder(Order testOrder) {
 
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
-    obc.addEqual(OrderLine.PROPERTY_SALESORDER, testOrder);
+    obc.add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, testOrder));
     obc.addOrderBy(OrderLine.PROPERTY_LINENO, true);
 
     int i = 0;
@@ -622,7 +623,7 @@ public class TaxesTest extends OBBaseTest {
   private Invoice updateInvoice(Invoice testInvoice) {
 
     OBCriteria<InvoiceLine> obc = OBDal.getInstance().createCriteria(InvoiceLine.class);
-    obc.addEqual(InvoiceLine.PROPERTY_INVOICE, testInvoice);
+    obc.add(Restrictions.eq(InvoiceLine.PROPERTY_INVOICE, testInvoice));
     obc.addOrderBy(InvoiceLine.PROPERTY_LINENO, true);
 
     int i = 0;
@@ -796,14 +797,14 @@ public class TaxesTest extends OBBaseTest {
     // Assert line taxes and amounts
     int i = 0;
     OBCriteria<OrderLine> obc1 = OBDal.getInstance().createCriteria(OrderLine.class);
-    obc1.addEqual(OrderLine.PROPERTY_SALESORDER, testOrder);
+    obc1.add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, testOrder));
     obc1.addOrderBy(OrderLine.PROPERTY_LINENO, true);
     for (OrderLine testOrderLine : obc1.list()) {
       testOrderLine = OBDal.getInstance().get(OrderLine.class, testOrderLine.getId());
 
       int n = 0;
       OBCriteria<OrderLineTax> obc2 = OBDal.getInstance().createCriteria(OrderLineTax.class);
-      obc2.addEqual(OrderLineTax.PROPERTY_SALESORDERLINE, testOrderLine);
+      obc2.add(Restrictions.eq(OrderLineTax.PROPERTY_SALESORDERLINE, testOrderLine));
       obc2.addOrderBy(OrderLineTax.PROPERTY_LINENO, true);
       for (OrderLineTax linetax : obc2.list()) {
         linetax = OBDal.getInstance().get(OrderLineTax.class, linetax.getId());
@@ -870,7 +871,7 @@ public class TaxesTest extends OBBaseTest {
     // Assert header taxes and amounts
     int n = 0;
     OBCriteria<OrderTax> obc3 = OBDal.getInstance().createCriteria(OrderTax.class);
-    obc3.addEqual(OrderTax.PROPERTY_SALESORDER, testOrder);
+    obc3.add(Restrictions.eq(OrderTax.PROPERTY_SALESORDER, testOrder));
     obc3.addOrderBy(OrderLineTax.PROPERTY_LINENO, true);
 
     for (OrderTax tax : obc3.list()) {
@@ -971,13 +972,13 @@ public class TaxesTest extends OBBaseTest {
     // Assert line taxes and amounts
     int i = 0;
     OBCriteria<InvoiceLine> obc1 = OBDal.getInstance().createCriteria(InvoiceLine.class);
-    obc1.addEqual(InvoiceLine.PROPERTY_INVOICE, testInvoice);
+    obc1.add(Restrictions.eq(InvoiceLine.PROPERTY_INVOICE, testInvoice));
     obc1.addOrderBy(InvoiceLine.PROPERTY_LINENO, true);
     for (InvoiceLine testInvoiceLine : obc1.list()) {
       testInvoiceLine = OBDal.getInstance().get(InvoiceLine.class, testInvoiceLine.getId());
       int n = 0;
       OBCriteria<InvoiceLineTax> obc2 = OBDal.getInstance().createCriteria(InvoiceLineTax.class);
-      obc2.addEqual(InvoiceLineTax.PROPERTY_INVOICELINE, testInvoiceLine);
+      obc2.add(Restrictions.eq(InvoiceLineTax.PROPERTY_INVOICELINE, testInvoiceLine));
       obc2.addOrderBy(InvoiceLineTax.PROPERTY_LINENO, true);
       for (InvoiceLineTax linetax : obc2.list()) {
         linetax = OBDal.getInstance().get(InvoiceLineTax.class, linetax.getId());
@@ -1037,7 +1038,7 @@ public class TaxesTest extends OBBaseTest {
     // Assert header taxes and amounts
     int n = 0;
     OBCriteria<InvoiceTax> obc3 = OBDal.getInstance().createCriteria(InvoiceTax.class);
-    obc3.addEqual(InvoiceTax.PROPERTY_INVOICE, testInvoice);
+    obc3.add(Restrictions.eq(InvoiceTax.PROPERTY_INVOICE, testInvoice));
     obc3.addOrderBy(InvoiceLineTax.PROPERTY_LINENO, true);
 
     for (InvoiceTax tax : obc3.list()) {

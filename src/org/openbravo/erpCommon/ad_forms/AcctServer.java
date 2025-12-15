@@ -57,6 +57,8 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.DateTimeData;
@@ -924,10 +926,8 @@ public abstract class AcctServer {
       for (AcctSchema as : m_as) {
         AcctSchemaTable table = null;
         OBCriteria<AcctSchemaTable> criteria = OBDal.getInstance().createCriteria(AcctSchemaTable.class);
-        criteria.addAnd(
-            (cb, obc) -> cb.equal(obc.getPath("accountingSchema.id"), as.getC_AcctSchema_ID()),
-            (cb, obc) -> cb.equal(obc.getPath("table.id"), AD_Table_ID)
-        );
+        criteria.add(Restrictions.and(Restrictions.eq("accountingSchema.id",as.getC_AcctSchema_ID()),
+        Restrictions.eq("table.id",AD_Table_ID)));
         criteria.setFilterOnReadableClients(false);
         criteria.setFilterOnReadableOrganization(false);
         table = (AcctSchemaTable) criteria.uniqueResult();
@@ -1466,12 +1466,12 @@ public abstract class AcctServer {
           if (conversionCount > 0) {
             List<ConversionRateDoc> conversionRate = conversionQuery.list();
             OBCriteria<Currency> currencyCrit = OBDal.getInstance().createCriteria(Currency.class);
-            currencyCrit.addEqual(Currency.PROPERTY_ID, acctSchema.m_C_Currency_ID);
-            currencyCrit.setProjectionMax(Currency.PROPERTY_STANDARDPRECISION);
+            currencyCrit.add(Restrictions.eq(Currency.PROPERTY_ID, acctSchema.m_C_Currency_ID));
+            currencyCrit.setProjection(Projections.max(Currency.PROPERTY_STANDARDPRECISION));
             Long precision = 0L;
             if (currencyCrit.count() > 0) {
-              List<Currency> toCurrency = currencyCrit.list();
-              precision = toCurrency.get(0).getStandardPrecision();
+              List<Long> toCurrency = currencyCrit.list(Long.class);
+              precision = toCurrency.get(0);
             }
             BigDecimal convertedAmount = new BigDecimal("1")
                 .multiply(conversionRate.get(0).getRate());
@@ -2335,12 +2335,12 @@ public abstract class AcctServer {
     try {
       OBCriteria<GLItemAccounts> accounts = OBDal.getInstance()
           .createCriteria(GLItemAccounts.class);
-      accounts.addEqual(GLItemAccounts.PROPERTY_GLITEM, glItem);
-      accounts.addEqual(GLItemAccounts.PROPERTY_ACCOUNTINGSCHEMA,
+      accounts.add(Restrictions.eq(GLItemAccounts.PROPERTY_GLITEM, glItem));
+      accounts.add(Restrictions.eq(GLItemAccounts.PROPERTY_ACCOUNTINGSCHEMA,
           OBDal.getInstance()
               .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
-                  as.m_C_AcctSchema_ID));
-      accounts.addEqual(GLItemAccounts.PROPERTY_ACTIVE, true);
+                  as.m_C_AcctSchema_ID)));
+      accounts.add(Restrictions.eq(GLItemAccounts.PROPERTY_ACTIVE, true));
       accounts.setFilterOnReadableClients(false);
       accounts.setFilterOnReadableOrganization(false);
       List<GLItemAccounts> accountList = accounts.list();
@@ -2379,12 +2379,12 @@ public abstract class AcctServer {
     try {
       OBCriteria<FIN_FinancialAccountAccounting> accounts = OBDal.getInstance()
           .createCriteria(FIN_FinancialAccountAccounting.class);
-      accounts.addEqual(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNT, finAccount);
-      accounts.addEqual(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNTINGSCHEMA,
+      accounts.add(Restrictions.eq(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNT, finAccount));
+      accounts.add(Restrictions.eq(FIN_FinancialAccountAccounting.PROPERTY_ACCOUNTINGSCHEMA,
           OBDal.getInstance()
               .get(org.openbravo.model.financialmgmt.accounting.coa.AcctSchema.class,
-                  as.m_C_AcctSchema_ID));
-      accounts.addEqual(FIN_FinancialAccountAccounting.PROPERTY_ACTIVE, true);
+                  as.m_C_AcctSchema_ID)));
+      accounts.add(Restrictions.eq(FIN_FinancialAccountAccounting.PROPERTY_ACTIVE, true));
       accounts.setFilterOnReadableClients(false);
       accounts.setFilterOnReadableOrganization(false);
       List<FIN_FinancialAccountAccounting> accountList = accounts.list();
@@ -2717,23 +2717,23 @@ public abstract class AcctServer {
         .createCriteria(ConversionRateDoc.class);
     docRateCriteria.setFilterOnReadableClients(false);
     docRateCriteria.setFilterOnReadableOrganization(false);
-    docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY,
-        OBDal.getInstance().get(Currency.class, curTo_ID));
-    docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_CURRENCY,
-        OBDal.getInstance().get(Currency.class, curFrom_ID));
+    docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY,
+        OBDal.getInstance().get(Currency.class, curTo_ID)));
+    docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY,
+        OBDal.getInstance().get(Currency.class, curFrom_ID)));
     if (record_ID != null) {
       if (table_ID.equals(TABLEID_Invoice)) {
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_INVOICE,
-            OBDal.getInstance().get(Invoice.class, record_ID));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE,
+            OBDal.getInstance().get(Invoice.class, record_ID)));
       } else if (table_ID.equals(TABLEID_Payment)) {
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_PAYMENT,
-            OBDal.getInstance().get(FIN_Payment.class, record_ID));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_PAYMENT,
+            OBDal.getInstance().get(FIN_Payment.class, record_ID)));
       } else if (table_ID.equals(TABLEID_Transaction)) {
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION,
-            OBDal.getInstance().get(FIN_FinaccTransaction.class, record_ID));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION+"."+APRM_FinaccTransactionV.PROPERTY_FINANCIALACCOUNTTRANSACTION +".id",
+            record_ID));
       } else if (table_ID.equals(TABLEID_GLJournal)) {
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_JOURNALENTRY,
-            OBDal.getInstance().get(GLJournal.class, record_ID));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_JOURNALENTRY,
+            OBDal.getInstance().get(GLJournal.class, record_ID)));
       } else {
         return null;
       }
@@ -3127,15 +3127,15 @@ public abstract class AcctServer {
       OBCriteria<ConversionRateDoc> docRateCriteria = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
       if (docType.equals(EXCHANGE_DOCTYPE_Invoice) && recordId != null) {
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY,
-            OBDal.getInstance().get(Currency.class, CurTo_ID));
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_CURRENCY,
-            OBDal.getInstance().get(Currency.class, CurFrom_ID));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY,
+            OBDal.getInstance().get(Currency.class, CurTo_ID)));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY,
+            OBDal.getInstance().get(Currency.class, CurFrom_ID)));
         // get reversed invoice id if exist.
         OBCriteria<ReversedInvoice> reversedCriteria = OBDal.getInstance()
             .createCriteria(ReversedInvoice.class);
-        reversedCriteria.addEqual(ReversedInvoice.PROPERTY_INVOICE,
-            OBDal.getInstance().get(Invoice.class, recordId));
+        reversedCriteria.add(Restrictions.eq(ReversedInvoice.PROPERTY_INVOICE,
+            OBDal.getInstance().get(Invoice.class, recordId)));
         if (!reversedCriteria.list().isEmpty()) {
           String strDateFormat;
           strDateFormat = OBPropertiesProvider.getInstance()
@@ -3146,22 +3146,22 @@ public abstract class AcctServer {
               .format(reversedCriteria.list().get(0).getReversedInvoice().getAccountingDate());
           data = AcctServerData.currencyConvert(conn, amt, CurFrom_ID, CurTo_ID, localConvDate,
               localRateType, client, org);
-          docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_INVOICE,
+          docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE,
               OBDal.getInstance()
                   .get(Invoice.class,
-                      reversedCriteria.list().get(0).getReversedInvoice().getId()));
+                      reversedCriteria.list().get(0).getReversedInvoice().getId())));
         } else {
-          docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_INVOICE,
-              OBDal.getInstance().get(Invoice.class, recordId));
+          docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE,
+              OBDal.getInstance().get(Invoice.class, recordId)));
         }
         useSystemConversionRate = false;
       } else if (docType.equals(EXCHANGE_DOCTYPE_Payment)) {
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY,
-            OBDal.getInstance().get(Currency.class, CurTo_ID));
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_CURRENCY,
-            OBDal.getInstance().get(Currency.class, CurFrom_ID));
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_PAYMENT,
-            OBDal.getInstance().get(FIN_Payment.class, recordId));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY,
+            OBDal.getInstance().get(Currency.class, CurTo_ID)));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY,
+            OBDal.getInstance().get(Currency.class, CurFrom_ID)));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_PAYMENT,
+            OBDal.getInstance().get(FIN_Payment.class, recordId)));
         useSystemConversionRate = false;
       } else if (docType.equals(EXCHANGE_DOCTYPE_Transaction)) {
         APRM_FinaccTransactionV a = OBDal.getInstance()
@@ -3170,18 +3170,18 @@ public abstract class AcctServer {
           amt = a.getForeignAmount().toString();
           data = AcctServerData.currencyConvert(conn, amt, a.getForeignCurrency().getId(), CurTo_ID,
               localConvDate, localRateType, client, org);
-          docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY,
-              OBDal.getInstance().get(Currency.class, CurTo_ID));
-          docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_CURRENCY,
-              OBDal.getInstance().get(Currency.class, a.getForeignCurrency().getId()));
+          docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY,
+              OBDal.getInstance().get(Currency.class, CurTo_ID)));
+          docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY,
+              OBDal.getInstance().get(Currency.class, a.getForeignCurrency().getId())));
         } else {
-          docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY,
-              OBDal.getInstance().get(Currency.class, CurTo_ID));
-          docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_CURRENCY,
-              OBDal.getInstance().get(Currency.class, CurFrom_ID));
+          docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY,
+              OBDal.getInstance().get(Currency.class, CurTo_ID)));
+          docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY,
+              OBDal.getInstance().get(Currency.class, CurFrom_ID)));
         }
-        docRateCriteria.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION,
-            OBDal.getInstance().get(APRM_FinaccTransactionV.class, recordId));
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION,
+            OBDal.getInstance().get(APRM_FinaccTransactionV.class, recordId)));
         useSystemConversionRate = false;
       }
       if (docType.equals(EXCHANGE_DOCTYPE_Invoice) || docType.equals(EXCHANGE_DOCTYPE_Payment)

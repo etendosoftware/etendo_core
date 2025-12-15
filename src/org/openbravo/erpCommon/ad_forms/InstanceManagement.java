@@ -47,6 +47,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_process.HeartbeatProcess;
 import org.openbravo.erpCommon.obps.ActivationKey;
@@ -131,12 +132,12 @@ public class InstanceManagement extends HttpSecureAppServlet {
     try {
       // Check for commercial modules installed in the instance
       OBCriteria<Module> qMods = OBDal.getInstance().createCriteria(Module.class);
-      qMods.addEqual(Module.PROPERTY_COMMERCIAL, true);
-      qMods.addEqual(Module.PROPERTY_ENABLED, true);
+      qMods.add(Restrictions.eq(Module.PROPERTY_COMMERCIAL, true));
+      qMods.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
       qMods.addOrderBy(Module.PROPERTY_NAME, true);
 
       // core can be commercial, do not take it into account
-      qMods.addNotEqual(Module.PROPERTY_ID, "0");
+      qMods.add(Restrictions.ne(Module.PROPERTY_ID, "0"));
       boolean deactivable = true;
       String commercialModules = "";
       for (Module mod : qMods.list()) {

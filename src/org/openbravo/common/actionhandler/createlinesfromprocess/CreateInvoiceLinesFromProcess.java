@@ -46,6 +46,8 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.common.order.OrderLine;
@@ -118,13 +120,13 @@ public class CreateInvoiceLinesFromProcess {
 
   private Long getLastLineNoOfCurrentInvoice(final Invoice currentInvoice) {
     OBCriteria<InvoiceLine> obc = OBDal.getInstance().createCriteria(InvoiceLine.class);
-    obc.addEqual(InvoiceLine.PROPERTY_INVOICE, currentInvoice);
-    obc.setProjectionMax(InvoiceLine.PROPERTY_LINENO);
+    obc.add(Restrictions.eq(InvoiceLine.PROPERTY_INVOICE, currentInvoice));
+    obc.setProjection(Projections.max(InvoiceLine.PROPERTY_LINENO));
     Long lineNumber = 0L;
     obc.setMaxResults(1);
-    Object o = obc.uniqueResult();
+    Long o = obc.uniqueResult(Long.class);
     if (o != null) {
-      lineNumber = (Long) o;
+      lineNumber = o;
     }
     return lineNumber;
   }

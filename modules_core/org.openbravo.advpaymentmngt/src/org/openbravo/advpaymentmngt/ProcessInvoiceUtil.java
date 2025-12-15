@@ -28,6 +28,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_actionButton.ActionButtonUtility;
@@ -290,7 +291,7 @@ public class ProcessInvoiceUtil {
                     OBCriteria<ReversedInvoice> revInvoiceCriteria = OBDal.getInstance()
                             .createCriteria(ReversedInvoice.class);
                     revInvoiceCriteria
-                            .addEqual(ReversedInvoice.PROPERTY_REVERSEDINVOICE, invoice);
+                            .add(Restrictions.eq(ReversedInvoice.PROPERTY_REVERSEDINVOICE, invoice));
                     revInvoiceCriteria.setMaxResults(1);
                     ReversedInvoice revInvoice = (ReversedInvoice) revInvoiceCriteria.uniqueResult();
 

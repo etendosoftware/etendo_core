@@ -31,6 +31,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.Category;
@@ -145,7 +146,7 @@ public class DalPerformanceCriteriaTest extends OBBaseTest {
     @Override
     public int doCriteriaQry() {
       final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-      obc.addEqual(Currency.PROPERTY_ISOCODE, DOLLAR);
+      obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, DOLLAR));
       if (doScroll) {
         final ScrollableResults r = obc.scroll(ScrollMode.FORWARD_ONLY);
         int cnt = 0;
@@ -232,7 +233,7 @@ public class DalPerformanceCriteriaTest extends OBBaseTest {
     public int doCriteriaQry() {
       final OBCriteria<MaterialTransaction> obc = OBDal.getInstance()
           .createCriteria(MaterialTransaction.class);
-      obc.addIsNotNull(MaterialTransaction.PROPERTY_UOM);
+      obc.add(Restrictions.isNotNull(MaterialTransaction.PROPERTY_UOM));
       obc.addOrderBy(MaterialTransaction.PROPERTY_PRODUCT + "." + Product.PROPERTY_NAME, false);
       obc.setMaxResults(10);
       obc.setFirstResult(0);
@@ -281,7 +282,7 @@ public class DalPerformanceCriteriaTest extends OBBaseTest {
     @Override
     public int doCriteriaQry() {
       OBCriteria<Table> c = OBDal.getInstance().createCriteria(Table.class);
-      c.addEqual(Table.PROPERTY_ID, "100");
+      c.add(Restrictions.eq(Table.PROPERTY_ID, "100"));
       if (doScroll) {
         final ScrollableResults r = c.scroll(ScrollMode.FORWARD_ONLY);
         int cnt = 0;

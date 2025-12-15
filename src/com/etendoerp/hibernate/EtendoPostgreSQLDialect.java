@@ -48,6 +48,12 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     BasicType<Date> timestampBasicType = typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.TIMESTAMP);
     TIMESTAMP_RETURN_TYPE = StandardFunctionReturnTypeResolvers.invariant(timestampBasicType);
   }
+  private static final FunctionReturnTypeResolver BOOLEAN_RETURN_TYPE;
+  static {
+    TypeConfiguration typeConfiguration = new TypeConfiguration();
+    BasicType<Boolean> booleanBasicType = typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN);
+    BOOLEAN_RETURN_TYPE = StandardFunctionReturnTypeResolvers.invariant(booleanBasicType);
+  }
 
   @Override
   public void initializeFunctionRegistry(FunctionContributions functionContributions) {
@@ -276,6 +282,17 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     );
     patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
     patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();
+  }
+
+  private static void registerSqlRestrictionFunction(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "sql_restriction",
+        FunctionKind.NORMAL,
+        "sql_restriction(?1)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(BOOLEAN_RETURN_TYPE).register();
   }
 
 }

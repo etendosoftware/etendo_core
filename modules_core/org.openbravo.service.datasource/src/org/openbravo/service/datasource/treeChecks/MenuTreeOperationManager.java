@@ -34,6 +34,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.ui.Menu;
@@ -64,8 +65,8 @@ public class MenuTreeOperationManager extends CheckTreeOperationManager {
   private boolean areThereTemplatesInDevelopment() {
     OBCriteria<Module> templatesInDevelopmentCriteria = OBDal.getInstance()
         .createCriteria(Module.class);
-    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_TYPE, TEMPLATE_TYPE);
-    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_INDEVELOPMENT, true);
+    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_TYPE, TEMPLATE_TYPE));
+    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, true));
     return (templatesInDevelopmentCriteria.count() > 0);
   }
 }

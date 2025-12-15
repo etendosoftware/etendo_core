@@ -36,6 +36,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleInheritance;
@@ -659,9 +660,9 @@ public class RoleInheritanceManager {
       boolean seqNoAscending) {
     final OBCriteria<RoleInheritance> obCriteria = OBDal.getInstance()
         .createCriteria(RoleInheritance.class);
-    obCriteria.addEqual(RoleInheritance.PROPERTY_ROLE, role);
+    obCriteria.add(Restrictions.eq(RoleInheritance.PROPERTY_ROLE, role));
     if (excludedInheritFrom != null) {
-      obCriteria.addNotEqual(RoleInheritance.PROPERTY_INHERITFROM, excludedInheritFrom);
+      obCriteria.add(Restrictions.ne(RoleInheritance.PROPERTY_INHERITFROM, excludedInheritFrom));
     }
     obCriteria.addOrderBy(RoleInheritance.PROPERTY_SEQUENCENUMBER, seqNoAscending);
     return obCriteria.list();
@@ -706,8 +707,8 @@ public class RoleInheritanceManager {
     final ArrayList<RoleInheritance> roleInheritancesList = new ArrayList<RoleInheritance>();
     final OBCriteria<RoleInheritance> obCriteria = OBDal.getInstance()
         .createCriteria(RoleInheritance.class);
-    obCriteria.addEqual(RoleInheritance.PROPERTY_ROLE, inheritance.getRole());
-    obCriteria.addNotEqual(RoleInheritance.PROPERTY_ID, inheritance.getId());
+    obCriteria.add(Restrictions.eq(RoleInheritance.PROPERTY_ROLE, inheritance.getRole()));
+    obCriteria.add(Restrictions.ne(RoleInheritance.PROPERTY_ID, inheritance.getId()));
     obCriteria.addOrderBy(RoleInheritance.PROPERTY_SEQUENCENUMBER, true);
     boolean added = false;
     for (RoleInheritance rh : obCriteria.list()) {

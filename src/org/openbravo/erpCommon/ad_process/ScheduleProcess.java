@@ -32,6 +32,7 @@ import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.ui.ProcessGroup;
@@ -115,7 +116,7 @@ public class ScheduleProcess extends HttpSecureAppServlet {
     OBCriteria<ProcessGroupList> processListCri = OBDal.getInstance()
         .createCriteria(ProcessGroupList.class);
     processListCri
-        .addEqual(ProcessGroupList.PROPERTY_PROCESSGROUP, getProcessGroup(requestId));
+        .add(Restrictions.eq(ProcessGroupList.PROPERTY_PROCESSGROUP, getProcessGroup(requestId)));
     processListCri.setMaxResults(1);
     return processListCri.uniqueResult() == null;
   }

@@ -48,6 +48,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.ddlutils.task.DatabaseUtils;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.model.ad.module.Module;
@@ -91,7 +92,7 @@ public class SystemService implements OBSingleton {
     for (Class<?> clz : clzs) {
       @SuppressWarnings("unchecked")
       final OBCriteria<?> obc = OBDal.getInstance().createCriteria((Class<BaseOBObject>) clz);
-      obc.addGreaterThan(Organization.PROPERTY_UPDATED, afterDate);
+      obc.add(Restrictions.gt(Organization.PROPERTY_UPDATED, afterDate));
       // todo: count is slower than exists, is exists possible?
       if (obc.count() > 0) {
         return true;

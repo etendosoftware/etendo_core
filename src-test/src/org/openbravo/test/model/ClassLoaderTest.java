@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.domain.ModelImplementation;
 import org.openbravo.test.base.OBBaseTest;
 
@@ -96,17 +97,17 @@ public class ClassLoaderTest extends OBBaseTest {
     // Checking listener and filters classes
     OBCriteria<ModelImplementation> obc = OBDal.getInstance()
         .createCriteria(ModelImplementation.class);
-    obc.addIn(ModelImplementation.PROPERTY_OBJECTTYPE, in);
+    obc.add(Restrictions.in(ModelImplementation.PROPERTY_OBJECTTYPE, in));
 
     // these don't need to implement Servlet
     checkClasses("Listener/Filter", obc.list(), notFoundClasses, new ArrayList<String>());
 
     // Checking manual servlets
     obc = OBDal.getInstance().createCriteria(ModelImplementation.class);
-    obc.addEqual(ModelImplementation.PROPERTY_OBJECTTYPE, "S");
-    obc.addIsNull(ModelImplementation.PROPERTY_SPECIALFORM);
-    obc.addIsNull(ModelImplementation.PROPERTY_PROCESS);
-    obc.addIsNull(ModelImplementation.PROPERTY_CALLOUT);
+    obc.add(Restrictions.eq(ModelImplementation.PROPERTY_OBJECTTYPE, "S"));
+    obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_SPECIALFORM));
+    obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_PROCESS));
+    obc.add(Restrictions.isNull(ModelImplementation.PROPERTY_CALLOUT));
 
     checkClasses("Manual Servlet", obc.list(), notFoundClasses, notServletClasses);
 

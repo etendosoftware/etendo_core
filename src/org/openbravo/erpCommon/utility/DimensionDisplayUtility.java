@@ -34,6 +34,7 @@ import org.openbravo.client.application.Process;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.ADClientAcctDimension;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.system.Client;
@@ -541,13 +542,13 @@ public class DimensionDisplayUtility {
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     if (dimension != null) {
-      obc.addEqual(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension);
+      obc.add(Restrictions.eq(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension));
     }
     if (documentBaseType != null) {
-      obc.addEqual(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, documentBaseType);
+      obc.add(Restrictions.eq(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, documentBaseType));
     }
     if (level != null) {
-      obc.addEqual(DimensionMapping.PROPERTY_LEVEL, level);
+      obc.add(Restrictions.eq(DimensionMapping.PROPERTY_LEVEL, level));
     }
     return obc.list();
   }

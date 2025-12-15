@@ -32,6 +32,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.common.enterprise.Organization;
@@ -157,8 +158,8 @@ public class ManagePrereservationActionHandlerTest {
 
     OBCriteria<ReservationStock> critRS = mock(OBCriteria.class);
     when(obDal.createCriteria(ReservationStock.class)).thenReturn(critRS);
-    when(critRS.addEqual(anyString(), any())).thenReturn(critRS);
-    when(critRS.addIsNull(anyString())).thenReturn(critRS);
+    when(critRS.add(Restrictions.eq(anyString(), any()))).thenReturn(critRS);
+    when(critRS.add(Restrictions.isNull(anyString()))).thenReturn(critRS);
     List<ReservationStock> emptyList = new ArrayList<>();
     when(critRS.list()).thenReturn(emptyList);
 

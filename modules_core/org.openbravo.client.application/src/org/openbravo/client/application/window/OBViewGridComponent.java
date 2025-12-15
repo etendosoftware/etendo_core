@@ -54,6 +54,7 @@ import org.openbravo.client.kernel.Template;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.ui.AuxiliaryInput;
@@ -330,7 +331,7 @@ public class OBViewGridComponent extends BaseTemplateComponent {
    */
   private List<String> getPropertiesUsedInAuxiliaryInputs() {
     OBCriteria<AuxiliaryInput> criteria = OBDal.getInstance().createCriteria(AuxiliaryInput.class);
-    criteria.addEqual(AuxiliaryInput.PROPERTY_TAB, tab);
+    criteria.add(Restrictions.eq(AuxiliaryInput.PROPERTY_TAB, tab));
     List<AuxiliaryInput> auxInputs = criteria.list();
     boolean throwExceptionIfNotExists = false;
     List<String> propertiesUsedInAuxiliaryInputs = new ArrayList<String>();

@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.model.ad.ui.Process;
 import org.openbravo.model.ad.ui.ProcessGroupList;
@@ -90,7 +91,7 @@ public class ProcessGroupTest {
 
       when(mockOBDal.createCriteria(ProcessGroupList.class)).thenReturn(mockCriteria);
 
-      when(mockCriteria.addEqual(any(), any())).thenReturn(mockCriteria);
+      when(mockCriteria.add(Restrictions.eq(any(), any()))).thenReturn(mockCriteria);
       when(mockCriteria.addOrderBy(any(), anyBoolean())).thenReturn(mockCriteria);
     } catch (Exception e) {
       closeStaticMocks();

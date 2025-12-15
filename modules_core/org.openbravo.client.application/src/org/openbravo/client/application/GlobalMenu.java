@@ -44,6 +44,7 @@ import org.openbravo.client.application.MenuManager.MenuEntryType;
 import org.openbravo.client.application.MenuManager.MenuOption;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.domain.ModelImplementation;
@@ -121,7 +122,7 @@ public class GlobalMenu {
   private List<MenuOption> createInitialMenuList(Tree tree, String language) {
     List<MenuOption> menuOptions = new ArrayList<MenuOption>();
     OBCriteria<TreeNode> treeNodes = OBDal.getInstance().createCriteria(TreeNode.class);
-    treeNodes.addEqual(TreeNode.PROPERTY_TREE, tree);
+    treeNodes.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
     treeNodes.setFilterOnActive(false);
 
     // Cache in DAL session all menu entries in a single query, so no need to query one by one

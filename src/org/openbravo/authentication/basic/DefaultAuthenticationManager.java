@@ -34,6 +34,7 @@ import org.openbravo.base.secureApp.VariablesHistory;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
@@ -220,7 +221,7 @@ public class DefaultAuthenticationManager extends AuthenticationManager {
     final OBCriteria<User> obc = OBDal.getInstance().createCriteria(User.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.addEqual(User.PROPERTY_ID, userId);
+    obc.add(Restrictions.eq(User.PROPERTY_ID, userId));
     final User userOB = (User) obc.uniqueResult();
     Date lastUpdatePassword = userOB.getLastPasswordUpdate();
     Long validityDays = userOB.getClient().getDaysToPasswordExpiration();

@@ -44,6 +44,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.InventoryStatusUtils;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.model.ad.domain.Preference;
@@ -160,11 +161,11 @@ public class InventoryStatusTest extends WeldBaseTest {
     String valueISYes = " to_char(value) = 'Y' ";
 
     OBCriteria<Preference> criteria = OBDal.getInstance().createCriteria(Preference.class);
-    criteria.addEqual(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE);
+    criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE));
     // TODO: Check if there is a better way to add this restriction
-    criteria.addEqual(Preference.PROPERTY_PROPERTY, "Y");
-    criteria.addEqual(Preference.PROPERTY_CLIENT, client);
-    criteria.addEqual(Preference.PROPERTY_ORGANIZATION, organization);
+    criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "Y"));
+    criteria.add(Restrictions.eq(Preference.PROPERTY_CLIENT, client));
+    criteria.add(Restrictions.eq(Preference.PROPERTY_ORGANIZATION, organization));
     return !criteria.list().isEmpty();
   }
 
@@ -585,7 +586,7 @@ public class InventoryStatusTest extends WeldBaseTest {
   private static int getNumberOfBinsWithSameName(String searchKey) {
     try {
       final OBCriteria<Locator> criteria = OBDal.getInstance().createCriteria(Locator.class);
-      criteria.addLike(Locator.PROPERTY_SEARCHKEY, searchKey + "-%");
+      criteria.add(Restrictions.like(Locator.PROPERTY_SEARCHKEY, searchKey + "-%"));
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -639,7 +640,7 @@ public class InventoryStatusTest extends WeldBaseTest {
   private static int getNumberOfProductsWithSameName(String name) {
     try {
       final OBCriteria<Product> criteria = OBDal.getInstance().createCriteria(Product.class);
-      criteria.addLike(Product.PROPERTY_NAME, name + "-%");
+      criteria.add(Restrictions.like(Product.PROPERTY_NAME, name + "-%"));
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -715,7 +716,7 @@ public class InventoryStatusTest extends WeldBaseTest {
     try {
       final OBCriteria<ShipmentInOut> criteria = OBDal.getInstance()
           .createCriteria(ShipmentInOut.class);
-      criteria.addLike(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%");
+      criteria.add(Restrictions.like(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%"));
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);

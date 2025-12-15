@@ -39,6 +39,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.datamodel.Table;
@@ -101,10 +102,10 @@ class TableTreeEventHandler extends EntityPersistenceEventObserver {
     if (ADTREE_STRUCTURE.equals(treeStructure)) {
       // Check that there is no other ADTree Defined for this table
       OBCriteria<TableTree> obq = OBDal.getInstance().createCriteria(TableTree.class);
-      obq.addEqual(TableTree.PROPERTY_TABLE, table);
-      obq.addEqual(TableTree.PROPERTY_TREESTRUCTURE, treeStructure);
+      obq.add(Restrictions.eq(TableTree.PROPERTY_TABLE, table));
+      obq.add(Restrictions.eq(TableTree.PROPERTY_TREESTRUCTURE, treeStructure));
       if (recordId != null) {
-        obq.addNotEqual(TableTree.PROPERTY_ID, recordId);
+        obq.add(Restrictions.ne(TableTree.PROPERTY_ID, recordId));
       }
       if (obq.count() > 0) {
         String language = OBContext.getOBContext().getLanguage().getLanguage();

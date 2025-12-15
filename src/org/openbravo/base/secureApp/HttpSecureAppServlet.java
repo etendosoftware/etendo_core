@@ -45,6 +45,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.data.ScrollableFieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -938,8 +939,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         Tab tab = OBDal.getInstance().get(Tab.class, id);
         if (tab != null) {
           OBCriteria<WindowTrl> qtTrl = OBDal.getInstance().createCriteria(WindowTrl.class);
-          qtTrl.addEqual(WindowTrl.PROPERTY_WINDOW, tab.getWindow());
-          qtTrl.addEqual(WindowTrl.PROPERTY_LANGUAGE + ".language", language);
+          qtTrl.add(Restrictions.eq(WindowTrl.PROPERTY_WINDOW, tab.getWindow()));
+          qtTrl.add(Restrictions.eq(WindowTrl.PROPERTY_LANGUAGE + ".language", language));
           if (qtTrl.list().size() != 0) {
             return qtTrl.list().get(0).getName();
           } else {
@@ -948,8 +949,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         }
       } else if ("X".equals(type)) {
         OBCriteria<FormTrl> qfTrl = OBDal.getInstance().createCriteria(FormTrl.class);
-        qfTrl.addEqual(FormTrl.PROPERTY_SPECIALFORM + ".id", id);
-        qfTrl.addEqual(FormTrl.PROPERTY_LANGUAGE + ".language", language);
+        qfTrl.add(Restrictions.eq(FormTrl.PROPERTY_SPECIALFORM + ".id", id));
+        qfTrl.add(Restrictions.eq(FormTrl.PROPERTY_LANGUAGE + ".language", language));
         if (qfTrl.list().size() != 0) {
           return qfTrl.list().get(0).getName();
         }
@@ -960,8 +961,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         }
       } else if ("R".endsWith(type) || "P".equals(type)) {
         OBCriteria<ProcessTrl> qfTrl = OBDal.getInstance().createCriteria(ProcessTrl.class);
-        qfTrl.addEqual(ProcessTrl.PROPERTY_PROCESS + ".id", id);
-        qfTrl.addEqual(ProcessTrl.PROPERTY_LANGUAGE + ".language", language);
+        qfTrl.add(Restrictions.eq(ProcessTrl.PROPERTY_PROCESS + ".id", id));
+        qfTrl.add(Restrictions.eq(ProcessTrl.PROPERTY_LANGUAGE + ".language", language));
         if (qfTrl.list().size() != 0) {
           return qfTrl.list().get(0).getName();
         }

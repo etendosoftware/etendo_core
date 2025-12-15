@@ -34,6 +34,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.geography.Country;
@@ -104,8 +105,8 @@ public class WSReadableClientsTest extends BaseWSTest {
     OBContext.setAdminMode();
     try {
       OBCriteria<Region> regionCriteria = OBDal.getInstance().createCriteria(Region.class);
-      regionCriteria.addEqual(Region.PROPERTY_COUNTRY + ".id", COUNTRY_ID);
-      regionCriteria.addEqual(Region.PROPERTY_NAME, REGION_NAME);
+      regionCriteria.add(Restrictions.eq(Region.PROPERTY_COUNTRY + ".id", COUNTRY_ID));
+      regionCriteria.add(Restrictions.eq(Region.PROPERTY_NAME, REGION_NAME));
       regionCriteria.setFilterOnReadableClients(false);
       regionCriteria.setMaxResults(1);
       Region region = (Region) regionCriteria.uniqueResult();

@@ -42,6 +42,7 @@ import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 
 /**
@@ -115,7 +116,7 @@ public class DataSourceServiceProvider {
 
   private DataSource getDataSourceFromDataSourceName(String dataSourceName) {
     final OBCriteria<DataSource> obCriteria = OBDal.getInstance().createCriteria(DataSource.class);
-    obCriteria.addEqual(DataSource.PROPERTY_NAME, dataSourceName);
+    obCriteria.add(Restrictions.eq(DataSource.PROPERTY_NAME, dataSourceName));
     // obserds_datasource.name has unique constraint
     return (DataSource) obCriteria.uniqueResult();
   }
@@ -123,7 +124,7 @@ public class DataSourceServiceProvider {
   private DataSource getDataSourceFromTableName(String tableName) {
     DataSource dataSource = null;
     final OBCriteria<Table> qTable = OBDal.getInstance().createCriteria(Table.class);
-    qTable.addEqual(Table.PROPERTY_NAME, tableName);
+    qTable.add(Restrictions.eq(Table.PROPERTY_NAME, tableName));
     // ad_table.name is unique
     Table table = (Table) qTable.uniqueResult();
     if (table != null) {

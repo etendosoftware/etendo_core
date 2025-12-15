@@ -50,6 +50,7 @@ import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.client.kernel.KernelUtils;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.common.invoice.Invoice;
@@ -313,7 +314,7 @@ public class ModifyPaymentPlanActionHandler extends BaseProcessActionHandler {
   private boolean existsPaymentScheduleDetail(FIN_PaymentDetail pd) {
     OBCriteria<FIN_PaymentScheduleDetail> obcPSD = OBDal.getInstance()
         .createCriteria(FIN_PaymentScheduleDetail.class);
-    obcPSD.addEqual(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS, pd);
+    obcPSD.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS, pd));
     obcPSD.setMaxResults(1);
     return obcPSD.uniqueResult() != null;
   }
@@ -358,8 +359,8 @@ public class ModifyPaymentPlanActionHandler extends BaseProcessActionHandler {
       // 1) Remove not paid payment schedule detail lines
       OBCriteria<FIN_PaymentScheduleDetail> obcPSD = OBDal.getInstance()
           .createCriteria(FIN_PaymentScheduleDetail.class);
-      obcPSD.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE, invoicePS);
-      obcPSD.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
+      obcPSD.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE, invoicePS));
+      obcPSD.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
       for (FIN_PaymentScheduleDetail psd : obcPSD.list()) {
         invoicePS.getFINPaymentScheduleDetailInvoicePaymentScheduleList().remove(psd);
         OBDal.getInstance().save(invoicePS);
@@ -515,7 +516,7 @@ public class ModifyPaymentPlanActionHandler extends BaseProcessActionHandler {
     List<FIN_PaymentSchedule> lQuery, lReturn = new ArrayList<FIN_PaymentSchedule>();
     OBCriteria<FIN_PaymentSchedule> obcPS = OBDal.getInstance()
         .createCriteria(FIN_PaymentSchedule.class);
-    obcPS.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice);
+    obcPS.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice));
     lQuery = obcPS.list();
     for (FIN_PaymentSchedule ps : lQuery) {
       if (ps.getPaidAmount().abs().compareTo(ps.getAmount().abs()) < 0) {

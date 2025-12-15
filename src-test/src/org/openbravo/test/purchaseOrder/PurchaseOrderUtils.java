@@ -9,6 +9,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.Location;
@@ -180,8 +181,8 @@ public class PurchaseOrderUtils {
       receiptLine.setMovementQuantity(orderLine.getOrderedQuantity());
 
       OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance().createCriteria(StorageDetail.class);
-      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, productPrice.getProduct());
-      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_STORAGEBIN, storageBin);
+      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, productPrice.getProduct()));
+      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_STORAGEBIN, storageBin));
 
       receiptLine.setStorageBin(storageBin);
       receiptLine.setSalesOrderLine(orderLine);

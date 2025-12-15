@@ -42,6 +42,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.domain.TableNavigation;
@@ -304,12 +305,12 @@ public class ReferencedLink extends HttpSecureAppServlet {
       String strKeyReferenceId, boolean fieldRules, boolean hasKeyReferenceId) {
     OBCriteria<TableNavigation> tableNavigationCriteria = OBDal.getInstance()
         .createCriteria(TableNavigation.class);
-    tableNavigationCriteria.addEqual("table.id", strTableReferenceId);
+    tableNavigationCriteria.add(Restrictions.eq("table.id", strTableReferenceId));
     if (fieldRules) {
       Field field = OBDal.getInstance().get(Field.class, fieldId);
-      tableNavigationCriteria.addEqual(TableNavigation.PROPERTY_FIELD, field);
+      tableNavigationCriteria.add(Restrictions.eq(TableNavigation.PROPERTY_FIELD, field));
     } else {
-      tableNavigationCriteria.addIsNull(TableNavigation.PROPERTY_FIELD);
+      tableNavigationCriteria.add(Restrictions.isNull(TableNavigation.PROPERTY_FIELD));
     }
     tableNavigationCriteria.addOrderBy(TableNavigation.PROPERTY_SEQUENCENUMBER, true);
     List<TableNavigation> tableNavigationList = tableNavigationCriteria.list();

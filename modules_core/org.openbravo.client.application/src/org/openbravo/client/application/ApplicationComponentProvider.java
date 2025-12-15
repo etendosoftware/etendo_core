@@ -37,6 +37,7 @@ import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 
 import jakarta.enterprise.context.Dependent;
 
@@ -517,7 +518,7 @@ public class ApplicationComponentProvider extends BaseComponentProvider {
 
   private static boolean existsDynamicNavigationBarComponents() {
     OBCriteria<NavBarComponent> obc = OBDal.getInstance().createCriteria(NavBarComponent.class);
-    obc.addEqual(NavBarComponent.PROPERTY_ISSTATICCOMPONENT, false);
+    obc.add(Restrictions.eq(NavBarComponent.PROPERTY_ISSTATICCOMPONENT, false));
     obc.setMaxResults(1);
     return obc.uniqueResult() != null;
   }

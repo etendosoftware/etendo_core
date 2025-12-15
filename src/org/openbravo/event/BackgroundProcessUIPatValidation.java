@@ -15,6 +15,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.domain.ModelImplementation;
 import org.openbravo.model.ad.ui.Process;
@@ -61,7 +62,7 @@ public class BackgroundProcessUIPatValidation extends EntityPersistenceEventObse
     String processId = (String) event.getTargetInstance().getId();
     OBCriteria<ModelImplementation> modelImplCrit = OBDal.getInstance().createCriteria(
         ModelImplementation.class);
-    modelImplCrit.addEqual(ModelImplementation.PROPERTY_PROCESS + ".id", processId);
+    modelImplCrit.add(Restrictions.eq(ModelImplementation.PROPERTY_PROCESS + ".id", processId));
     return modelImplCrit.setMaxResults(1).uniqueResult() == null;
   }
 }

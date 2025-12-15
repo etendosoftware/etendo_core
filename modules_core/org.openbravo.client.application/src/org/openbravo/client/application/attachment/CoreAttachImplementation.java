@@ -43,6 +43,7 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.PropertyException;
@@ -193,9 +194,9 @@ public class CoreAttachImplementation extends AttachImplementation {
       attachmentTable = OBDal.getInstance().get(Table.class, tableID);
       OBCriteria<Attachment> attachmentCriteria = OBDal.getInstance()
           .createCriteria(Attachment.class);
-      attachmentCriteria.addEqual(Attachment.PROPERTY_RECORD, recordID);
-      attachmentCriteria.addEqual(Attachment.PROPERTY_TABLE, attachmentTable);
-      attachmentCriteria.addEqual(Attachment.PROPERTY_NAME, fileName);
+      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_RECORD, recordID));
+      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_TABLE, attachmentTable));
+      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_NAME, fileName));
 
       attachmentCriteria.setFilterOnReadableOrganization(false);
       attachmentCriteria.setMaxResults(1);

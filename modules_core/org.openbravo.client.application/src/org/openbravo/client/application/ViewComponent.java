@@ -59,6 +59,7 @@ import org.openbravo.client.kernel.OBUserException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 import org.openbravo.erpCommon.obps.ActivationKey;
 import org.openbravo.erpCommon.obps.ActivationKey.FeatureRestriction;
@@ -179,7 +180,7 @@ public class ViewComponent extends BaseComponent {
 
   private List<Parameter> getParameterList(Process process) {
     OBCriteria<Parameter> criteria = OBDal.getInstance().createCriteria(Parameter.class);
-    criteria.addEqual(Parameter.PROPERTY_OBUIAPPPROCESS, process);
+    criteria.add(Restrictions.eq(Parameter.PROPERTY_OBUIAPPPROCESS, process));
     criteria.setFilterOnReadableClients(false);
     criteria.setFilterOnReadableOrganization(false);
     return criteria.list();
@@ -329,8 +330,8 @@ public class ViewComponent extends BaseComponent {
   private OBUIAPPViewImplementation getView(String viewName) {
     OBCriteria<OBUIAPPViewImplementation> obc = OBDal.getInstance()
         .createCriteria(OBUIAPPViewImplementation.class);
-    obc.addOr((cb, obc_inner) -> cb.equal(obc_inner.getPath(OBUIAPPViewImplementation.PROPERTY_NAME), viewName),
-              (cb, obc_inner) -> cb.equal(obc_inner.getPath(OBUIAPPViewImplementation.PROPERTY_ID), viewName));
+    obc.add(Restrictions.or(Restrictions.eq(OBUIAPPViewImplementation.PROPERTY_NAME, viewName),
+        Restrictions.eq(OBUIAPPViewImplementation.PROPERTY_ID, viewName)));
 
     if (obc.list().size() > 0) {
       return obc.list().get(0);

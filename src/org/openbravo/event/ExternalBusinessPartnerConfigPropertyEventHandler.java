@@ -31,6 +31,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.externalbpartner.ExternalBusinessPartnerConfig;
 import org.openbravo.model.externalbpartner.ExternalBusinessPartnerConfigProperty;
 
@@ -68,13 +69,13 @@ public class ExternalBusinessPartnerConfigPropertyEventHandler extends EntityPer
 
     final OBCriteria<?> criteria = OBDal.getInstance()
       .createCriteria(event.getTargetInstance().getClass());
-    criteria.addEqual(
+    criteria.add(Restrictions.eq(
       ExternalBusinessPartnerConfigProperty.PROPERTY_EXTERNALBUSINESSPARTNERINTEGRATIONCONFIGURATION,
-      currentExtBPConfig);
+      currentExtBPConfig));
     criteria
-      .addEqual(ExternalBusinessPartnerConfigProperty.PROPERTY_ISDEFAULTEMAIL, true);
-    criteria.addEqual(ExternalBusinessPartnerConfigProperty.PROPERTY_ACTIVE, true);
-    criteria.addNotEqual(ExternalBusinessPartnerConfigProperty.PROPERTY_ID, id);
+      .add(Restrictions.eq(ExternalBusinessPartnerConfigProperty.PROPERTY_ISDEFAULTEMAIL, true));
+    criteria.add(Restrictions.eq(ExternalBusinessPartnerConfigProperty.PROPERTY_ACTIVE, true));
+    criteria.add(Restrictions.ne(ExternalBusinessPartnerConfigProperty.PROPERTY_ID, id));
 
     criteria.setMaxResults(1);
     if (criteria.uniqueResult() != null) {

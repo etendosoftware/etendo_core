@@ -34,6 +34,7 @@ import org.openbravo.advpaymentmngt.utility.FIN_SequenceActionInterface;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
@@ -89,7 +90,7 @@ public class Fin_UtilityLegacy implements FIN_SequenceActionInterface {
             Sequence seq = docType.getDocumentSequence();
             if (seq == null && tableName != null) {
                 OBCriteria<Sequence> obcSeq = OBDal.getInstance().createCriteria(Sequence.class);
-                obcSeq.addEqual(Sequence.PROPERTY_NAME, tableName);
+                obcSeq.add(Restrictions.eq(Sequence.PROPERTY_NAME, tableName));
                 obcSeq.setMaxResults(1);
                 seq = (Sequence) obcSeq.uniqueResult();
             }

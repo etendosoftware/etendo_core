@@ -52,6 +52,7 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromProcess;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -291,7 +292,7 @@ public class InvoiceGeneratorFromGoodsShipment {
     }
     return !OBDal.getInstance()
         .createCriteria(InvoiceCandidateV.class)
-        .addEqual(InvoiceCandidateV.PROPERTY_ID, order.getId())
+        .add(Restrictions.eq(InvoiceCandidateV.PROPERTY_ID, order.getId()))
         .setMaxResults(1)
         .list()
         .isEmpty();

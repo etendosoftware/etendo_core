@@ -33,6 +33,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatement;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
@@ -110,23 +111,23 @@ public class MatchTransactionDaoTest {
     when(mockOBDal.createCriteria(FIN_Reconciliation.class)).thenReturn(mockReconciliationCriteria);
 
     // FinaccTransaction criteria
-    when(mockFinaccTransactionCriteria.addEqual(anyString(), any())).thenReturn(mockFinaccTransactionCriteria);
+    when(mockFinaccTransactionCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockFinaccTransactionCriteria);
 
     when(mockFinaccTransactionCriteria.list()).thenReturn(Collections.emptyList());
 
 
     // BankStatementLine criteria
-    when(mockBankStatementLineCriteria.addEqual(anyString(), any())).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.addIsNull(anyString())).thenReturn(mockBankStatementLineCriteria);
-    when(mockBankStatementLineCriteria.addIn(anyString(), any())).thenReturn(mockBankStatementLineCriteria);
+    when(mockBankStatementLineCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockBankStatementLineCriteria);
+    when(mockBankStatementLineCriteria.add(Restrictions.isNull(anyString()))).thenReturn(mockBankStatementLineCriteria);
+    when(mockBankStatementLineCriteria.add(Restrictions.in(anyString(), (Object) any()))).thenReturn(mockBankStatementLineCriteria);
     when(mockBankStatementLineCriteria.setMaxResults(anyInt())).thenReturn(mockBankStatementLineCriteria);
     when(mockBankStatementLineCriteria.list()).thenReturn(Collections.emptyList());
 
     // Reconciliation criteria
-    when(mockReconciliationCriteria.addEqual(anyString(), any())).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.addLessOrEqual(anyString(), any())).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.addLessThan(anyString(), any())).thenReturn(mockReconciliationCriteria);
-    when(mockReconciliationCriteria.addGreaterThan(anyString(), any())).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.add(Restrictions.le(anyString(), any()))).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.add(Restrictions.lt(anyString(), any()))).thenReturn(mockReconciliationCriteria);
+    when(mockReconciliationCriteria.add(Restrictions.gt(anyString(), any()))).thenReturn(mockReconciliationCriteria);
     when(mockReconciliationCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockReconciliationCriteria);
     when(mockReconciliationCriteria.setMaxResults(anyInt())).thenReturn(mockReconciliationCriteria);
     when(mockReconciliationCriteria.list()).thenReturn(Collections.emptyList());

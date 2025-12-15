@@ -41,6 +41,7 @@ import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.common.order.OrderLine;
@@ -73,8 +74,8 @@ public class ManagePrereservationActionHandler extends BaseProcessActionHandler 
 
       if (pol != null) {
         OBCriteria<ReservationStock> critRS = OBDal.getInstance().createCriteria(ReservationStock.class);
-        critRS.addEqual(ReservationStock.PROPERTY_SALESORDERLINE, pol);
-        critRS.addIsNull(ReservationStock.PROPERTY_STORAGEBIN);
+        critRS.add(Restrictions.eq(ReservationStock.PROPERTY_SALESORDERLINE, pol));
+        critRS.add(Restrictions.isNull(ReservationStock.PROPERTY_STORAGEBIN));
         List<String> idList = new ArrayList<String>();
         for (ReservationStock resStock : critRS.list()) {
           idList.add(resStock.getId());

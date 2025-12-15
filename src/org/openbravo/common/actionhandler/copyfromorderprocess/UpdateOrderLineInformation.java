@@ -38,6 +38,8 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.Location;
 import org.openbravo.model.common.enterprise.Organization;
@@ -150,11 +152,11 @@ class UpdateOrderLineInformation implements CopyFromOrdersProcessImplementationI
    */
   private String getMaxBusinessPartnerLocationId(final BusinessPartner businessPartner) {
     OBCriteria<Location> obc = OBDal.getInstance().createCriteria(Location.class);
-    obc.addEqual(Location.PROPERTY_BUSINESSPARTNER, businessPartner);
-    obc.addEqual(Location.PROPERTY_ACTIVE, true);
-    obc.setProjectionMax(Location.PROPERTY_ID);
+    obc.add(Restrictions.eq(Location.PROPERTY_BUSINESSPARTNER, businessPartner));
+    obc.add(Restrictions.eq(Location.PROPERTY_ACTIVE, true));
+    obc.setProjection(Projections.max(Location.PROPERTY_ID));
     obc.setMaxResults(1);
-    return (String) obc.uniqueResult();
+    return (String) obc.uniqueResult(String.class);
   }
 
 }

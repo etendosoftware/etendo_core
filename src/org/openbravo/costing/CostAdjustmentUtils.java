@@ -41,6 +41,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.financial.FinancialUtils;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.DocumentType;
@@ -266,10 +267,10 @@ public class CostAdjustmentUtils {
         .getLegalEntity(trx.getOrganization());
     final OBCriteria<TransactionLast> obc = OBDal.getInstance()
         .createCriteria(TransactionLast.class)
-        .addEqual(TransactionLast.PROPERTY_PRODUCT, trx.getProduct())
-        .addEqual(TransactionLast.PROPERTY_ORGANIZATION, orgLegal);
+        .add(Restrictions.eq(TransactionLast.PROPERTY_PRODUCT, trx.getProduct()))
+        .add(Restrictions.eq(TransactionLast.PROPERTY_ORGANIZATION, orgLegal));
     if (includeWarehouseDimension) {
-      obc.addEqual(TransactionLast.PROPERTY_WAREHOUSE, trx.getStorageBin().getWarehouse());
+      obc.add(Restrictions.eq(TransactionLast.PROPERTY_WAREHOUSE, trx.getStorageBin().getWarehouse()));
     }
     return (TransactionLast) obc.setMaxResults(1).uniqueResult();
   }
@@ -1376,8 +1377,8 @@ public class CostAdjustmentUtils {
     final OBCriteria<org.openbravo.model.ad.domain.List> crList = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.List.class);
     crList.createAlias(propADListReference, "ref");
-    crList.addEqual("ref.id", MovementTypeRefID);
-    crList.addEqual(propADListValue, mvmntType);
+    crList.add(Restrictions.eq("ref.id", MovementTypeRefID));
+    crList.add(Restrictions.eq(propADListValue, mvmntType));
     return ((org.openbravo.model.ad.domain.List) crList.uniqueResult()).getSequenceNumber();
   }
 }

@@ -30,6 +30,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.financialmgmt.gl.GLJournal;
 import org.openbravo.model.financialmgmt.gl.GLJournalLine;
 
@@ -55,7 +56,7 @@ class GLJournalEventHandler extends EntityPersistenceEventObserver {
         || !event.getCurrentState(currencyRate).equals(event.getPreviousState(currencyRate))) {
       OBCriteria<GLJournalLine> gljournallineCriteria = OBDal.getInstance()
           .createCriteria(GLJournalLine.class);
-      gljournallineCriteria.addEqual(GLJournalLine.PROPERTY_JOURNALENTRY, glj);
+      gljournallineCriteria.add(Restrictions.eq(GLJournalLine.PROPERTY_JOURNALENTRY, glj));
       ScrollableResults scrollLines = gljournallineCriteria.scroll(ScrollMode.FORWARD_ONLY);
 
       try {

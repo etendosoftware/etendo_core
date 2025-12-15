@@ -40,6 +40,7 @@ import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.utility.CashVATUtil;
@@ -79,7 +80,7 @@ public class SE_Order_Organization extends SimpleCallout {
                         strBPartnerLocationId));
 
         OBCriteria<OrgWarehouse> orgWarehouseCriteria = OBDal.getInstance().createCriteria(OrgWarehouse.class);
-        orgWarehouseCriteria.addEqual(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId));
+        orgWarehouseCriteria.add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, OBDal.getInstance().get(Organization.class, strOrgId)));
         List<String> warehouseIds = new ArrayList<>();
         for (OrgWarehouse orgWarehouse : orgWarehouseCriteria.list()) {
             warehouseIds.add(orgWarehouse.getWarehouse().getId());

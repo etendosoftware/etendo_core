@@ -37,6 +37,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.materialmgmt.cost.CostAdjustment;
@@ -107,8 +108,8 @@ public class CancelCostAdjustment extends BaseActionHandler {
     // Call cost
     OBCriteria<CostAdjustmentLine> qLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    qLines.addEqual(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, costAdjustmentOrig);
-    qLines.addEqual(CostAdjustmentLine.PROPERTY_ISSOURCE, true);
+    qLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, costAdjustmentOrig));
+    qLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISSOURCE, true));
     ScrollableResults scrollLines = qLines.scroll(ScrollMode.FORWARD_ONLY);
     try {
       int cnt = 0;

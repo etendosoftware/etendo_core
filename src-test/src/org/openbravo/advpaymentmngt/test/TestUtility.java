@@ -42,6 +42,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.ConnectionProviderImpl;
 import org.openbravo.erpCommon.utility.OBDateUtils;
@@ -91,7 +92,7 @@ public class TestUtility extends OBBaseTest {
     if (checkIfExist) {
       final OBCriteria<FIN_FinancialAccount> obc = OBDal.getInstance()
           .createCriteria(FIN_FinancialAccount.class);
-      obc.addEqual(FIN_FinancialAccount.PROPERTY_NAME, name);
+      obc.add(Restrictions.eq(FIN_FinancialAccount.PROPERTY_NAME, name));
       if (obc.list() != null && obc.list().size() > 0) {
         return obc.list().get(0);
       }
@@ -163,7 +164,7 @@ public class TestUtility extends OBBaseTest {
     if (checkIfExist) {
       final OBCriteria<FIN_PaymentMethod> obc = OBDal.getInstance()
           .createCriteria(FIN_PaymentMethod.class);
-      obc.addEqual(FIN_PaymentMethod.PROPERTY_NAME, name);
+      obc.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_NAME, name));
       if (obc.list() != null && obc.list().size() > 0) {
         return obc.list().get(0);
       }
@@ -662,9 +663,9 @@ public class TestUtility extends OBBaseTest {
 
     for (Value value : values) {
       if (value.getValue() == null) {
-        obCriteria.addIsNull(value.getField());
+        obCriteria.add(Restrictions.isNull(value.getField()));
       } else {
-        obCriteria.addEqual(value.getField(), value.getValue());
+        obCriteria.add(Restrictions.eq(value.getField(), value.getValue()));
       }
     }
 

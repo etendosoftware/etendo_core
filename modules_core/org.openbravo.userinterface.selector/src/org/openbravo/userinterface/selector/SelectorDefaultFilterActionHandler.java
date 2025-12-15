@@ -50,6 +50,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -95,8 +96,8 @@ public class SelectorDefaultFilterActionHandler extends BaseActionHandler {
       final Entity entity = ModelProvider.getInstance().getEntity(entityName);
 
       OBCriteria<SelectorField> obc = OBDal.getInstance().createCriteria(SelectorField.class);
-      obc.addEqual(SelectorField.PROPERTY_OBUISELSELECTOR, sel);
-      obc.addIsNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION);
+      obc.add(Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, sel));
+      obc.add(Restrictions.isNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION));
 
       List<SelectorField> selFields = obc.list();
       if (selFields.isEmpty()) {

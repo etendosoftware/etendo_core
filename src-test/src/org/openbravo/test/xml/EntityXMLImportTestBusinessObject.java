@@ -40,6 +40,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.EntityXMLConverter;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
@@ -413,7 +414,7 @@ public class EntityXMLImportTestBusinessObject extends XMLBaseTest {
 
   private List<PaymentTerm> getPaymentTerms() {
     final OBCriteria<PaymentTerm> obc = OBDal.getInstance().createCriteria(PaymentTerm.class);
-    obc.addIlike("name", PREFIX + "%");
+    obc.add(Restrictions.like("name", PREFIX + "%"));
     OBDal.getInstance().flush();
     return obc.list();
   }

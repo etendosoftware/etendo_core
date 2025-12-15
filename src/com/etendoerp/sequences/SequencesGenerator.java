@@ -20,6 +20,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.datamodel.Table;
@@ -78,7 +79,7 @@ public class SequencesGenerator extends Action {
         TransactionalSequenceUtils.TRANSACTIONAL_SEQUENCE_ID);
     //Filter columns by transactional sequence references
     OBCriteria<Column> columnOBCriteria = OBDal.getInstance().createCriteria(Column.class);
-    columnOBCriteria.addEqual(Column.PROPERTY_REFERENCE, reference);
+    columnOBCriteria.add(Restrictions.eq(Column.PROPERTY_REFERENCE, reference));
     List<Column> sequenceColumns = columnOBCriteria.list();
 
     int count = 0;
@@ -90,8 +91,8 @@ public class SequencesGenerator extends Action {
 
       //Get Document Type
       OBCriteria<DocumentType> documentTypeOBCriteria = OBDal.getInstance().createCriteria(DocumentType.class);
-      documentTypeOBCriteria.addEqual(DocumentType.PROPERTY_TABLE, column.getTable());
-      documentTypeOBCriteria.addInIds(DocumentType.PROPERTY_ORGANIZATION + ".id", new ArrayList<>(parentOrganizations));
+      documentTypeOBCriteria.add(Restrictions.eq(DocumentType.PROPERTY_TABLE, column.getTable()));
+      documentTypeOBCriteria.add(Restrictions.in(DocumentType.PROPERTY_ORGANIZATION + ".id", new ArrayList<>(parentOrganizations)));
       List<DocumentType> documentTypes = documentTypeOBCriteria.list();
 
       for (String orgId : organizations) {
@@ -152,12 +153,12 @@ public class SequencesGenerator extends Action {
 
   public boolean existsSequence(Column column, Client client, Organization organization, DocumentType documentType) {
     OBCriteria<Sequence> sequenceOBCriteria = OBDal.getInstance().createCriteria(Sequence.class);
-    sequenceOBCriteria.addEqual(Sequence.PROPERTY_CLIENT, client);
-    sequenceOBCriteria.addEqual(Sequence.PROPERTY_COLUMN, column);
+    sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_CLIENT, client));
+    sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_COLUMN, column));
     if (documentType != null) {
-      sequenceOBCriteria.addEqual(Sequence.PROPERTY_DOCUMENTTYPE, documentType);
+      sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_DOCUMENTTYPE, documentType));
     }
-    sequenceOBCriteria.addEqual(Sequence.PROPERTY_ORGANIZATION, organization);
+    sequenceOBCriteria.add(Restrictions.eq(Sequence.PROPERTY_ORGANIZATION, organization));
     sequenceOBCriteria.setMaxResults(1);
     return sequenceOBCriteria.uniqueResult() != null;
   }

@@ -29,6 +29,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;
@@ -207,7 +208,7 @@ public class SendMail extends Action {
         try {
             OBContext.setAdminMode();
             OBCriteria<Table> tableOBCriteria = OBDal.getInstance().createCriteria(Table.class);
-            tableOBCriteria.addEqual(Table.PROPERTY_DBTABLENAME, tableName);
+            tableOBCriteria.add(Restrictions.eq(Table.PROPERTY_DBTABLENAME, tableName));
             tableOBCriteria.setMaxResults(1);
 
             Table table = (Table) tableOBCriteria.uniqueResult();
