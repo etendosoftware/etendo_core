@@ -122,8 +122,8 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaQuery<E> cq = cb.createQuery(entityClass);
     Root<E> root = cq.from(entityClass);
 
-    applyPredicates(cb, cq, root);
     applyAliases(root);
+    applyPredicates(cb, cq, root);
     applyOrderBy(cb, cq, root);
 
     Query<E> query = session.createQuery(cq);

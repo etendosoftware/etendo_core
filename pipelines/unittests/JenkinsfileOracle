@@ -43,6 +43,7 @@ pipeline {
 
         // Jenkins credential stored as base64-encoded string for another Atlassian user, not etendobot
         JIRA_ACCESS_TOKEN         = credentials('jira-access-token')
+        PRERELEASE_BRANCH = 'prerelease/27.1' // Removed when 26.1 will release
     }
 
     agent {

@@ -2729,7 +2729,8 @@ public abstract class AcctServer {
         docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_PAYMENT,
             OBDal.getInstance().get(FIN_Payment.class, record_ID)));
       } else if (table_ID.equals(TABLEID_Transaction)) {
-        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION+"."+APRM_FinaccTransactionV.PROPERTY_FINANCIALACCOUNTTRANSACTION +".id",
+        docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION+"."+
+                APRM_FinaccTransactionV.PROPERTY_FINANCIALACCOUNTTRANSACTION +".id",
             record_ID));
       } else if (table_ID.equals(TABLEID_GLJournal)) {
         docRateCriteria.add(Restrictions.eq(ConversionRateDoc.PROPERTY_JOURNALENTRY,

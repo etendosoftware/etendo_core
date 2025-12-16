@@ -1376,8 +1376,7 @@ public class CostAdjustmentUtils {
   public static long getTrxTypePrio(final String mvmntType) {
     final OBCriteria<org.openbravo.model.ad.domain.List> crList = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.List.class);
-    crList.createAlias(propADListReference, "ref");
-    crList.add(Restrictions.eq("ref.id", MovementTypeRefID));
+    crList.add(Restrictions.eq(propADListReference +".id", MovementTypeRefID));
     crList.add(Restrictions.eq(propADListValue, mvmntType));
     return ((org.openbravo.model.ad.domain.List) crList.uniqueResult()).getSequenceNumber();
   }

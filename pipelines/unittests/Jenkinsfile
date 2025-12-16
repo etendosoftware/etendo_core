@@ -46,6 +46,7 @@ pipeline {
     JIRA_ACCESS_TOKEN         = credentials('jira-access-token')
 
     MAIN_BRANCH = 'main'
+    PRERELEASE_BRANCH = 'prerelease/27.1' // Removed when 26.1 will release
   }
 
   agent { // MARK: Agent
