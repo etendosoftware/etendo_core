@@ -22,7 +22,6 @@ pipeline {
     REPO_URL            = 'https://github.com/etendosoftware/etendo_core'
     REPO_URL_GIT        = 'git@github.com:etendosoftware/etendo_core.git'
 
-    CLONE_PLUGIN        = 'FALSE'
     PLUGIN_NAME         = 'buildSrc'
     PLUGIN_URL          = 'git@github.com:etendosoftware/com.etendoerp.gradleplugin.git'
 
@@ -46,7 +45,8 @@ pipeline {
     JIRA_ACCESS_TOKEN         = credentials('jira-access-token')
 
     MAIN_BRANCH = 'main'
-    PRERELEASE_BRANCH = 'prerelease/27.1' // Removed when 26.1 will release
+    // Removed when 26.1 will release
+    PRERELEASE_BRANCH = 'prerelease/27.1'
   }
 
   agent { // MARK: Agent
@@ -218,88 +218,6 @@ pipeline {
                   }
                 }
                 env.PROJECT_KEY = "${projectKey}"
-
-                if (CLONE_PLUGIN == TRUE) {
-                    echo "---------------------- Clonning Etendo Plugin Repository ----------------------"
-
-                    def isFeatureBranch = env.GIT_BRANCH.startsWith("feature/")
-                    def epicKey = ''
-
-                    if (isFeatureBranch) {
-                        echo "-------------------------- Feature Branch Detected --------------------------"
-                        def taskName = env.GIT_BRANCH.replaceAll("feature/", "").replaceAll("-Y\\d+", "")
-                        epicKey = sh(script: "bash ${rootDir}/pipelines/unittests/utils/jira-utils.sh ${taskName} ${JIRA_BASE_URL} ${JIRA_ACCESS_TOKEN}", returnStdout: true).trim()
-                        if (epicKey) {
-                            echo "Epic Key: ${epicKey}"
-                            if (env.GIT_BRANCH.contains("-Y")) {
-                                env.EPIC_BRANCH = "epic/${epicKey}-Y${env.GIT_BRANCH.split('-Y')[1]}"
-                            } else {
-                                env.EPIC_BRANCH = "epic/${epicKey}"
-                            }
-                            echo "Epic Branch: ${env.EPIC_BRANCH}"
-                        }
-                    }
-
-                    withCredentials([sshUserPrivateKey(credentialsId: 'my-credentials', keyFileVariable: 'keyfile')]) {
-                      sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${PLUGIN_URL} ${PLUGIN_NAME}"
-                    }
-
-                    if (!(env.GIT_BRANCH.contains("-Y")) && !(env.GIT_BRANCH.startsWith("release")) && !(env.GIT_BRANCH.startsWith("main" )) && !(env.GIT_BRANCH.startsWith("master")) && !(env.GIT_BRANCH.startsWith("hotfix"))) {
-                        if (isFeatureBranch && epicKey) {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.DEVELOP_BRANCH}
-                            """
-                        } else {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.DEVELOP_BRANCH}
-                            """
-                        }
-                    } else if (env.GIT_BRANCH.contains("-Y") || env.GIT_BRANCH.startsWith("release")) {
-                        if (isFeatureBranch && epicKey) {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.BACKPORT_BRANCH}
-                            """
-                        } else {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.BACKPORT_BRANCH}
-                            """
-                        }
-                    }
-
-                    sh """
-                    cd ${PLUGIN_NAME}
-                    git checkout ${env.GIT_BRANCH} || echo 'Branch ${env.GIT_BRANCH} not found in Etendo plugin'
-                    """
-
-                    echo "--------------- Configure gradle.properties in Etendo plugin folder ---------------"
-                    sh """
-                    cd ${PLUGIN_NAME}
-                    echo "\n
-                    nexusUser=${NEXUS_USER}
-                    nexusPassword=${NEXUS_PASSWORD}
-                    githubUser=${GITHUB_USER}
-                    githubToken=${GITHUB_TOKEN}
-                    test.bbdd.url=
-                    test.bbdd.sid=
-                    test.bbdd.systemUser=
-                    test.bbdd.systemPassword=
-                    test.bbdd.user=
-                    test.bbdd.password=
-                    org.gradle.daemon=false
-                    org.gradle.jvmargs=-Dfile.encoding=UTF-8
-                    etendoCoreVersion=" > gradle.properties
-                    """
-
-                    echo "--------------- Configure build.gradle in Etendo ---------------"
-                    sh """
-                    cd ${env.WORKDIR_ETENDO}
-                    sed -i "s/\\(id 'com.etendoerp.gradleplugin[^']*'\\) version '\\([^']*\\)'/\\1 \\/\\/ version '\\2'/" "\${REPO_NAME}/build.gradle"
-                    """
-                }
 
                 echo "--------------- Configure gradle.properties ---------------"
                 sh """

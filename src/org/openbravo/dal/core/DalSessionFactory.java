@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceUnitUtil;
@@ -38,6 +39,7 @@ import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.database.SessionInfo;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
+@Dependent
 public class DalSessionFactory implements SessionFactory {
 
   private static final long serialVersionUID = 1L;
