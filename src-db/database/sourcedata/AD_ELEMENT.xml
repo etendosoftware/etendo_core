@@ -36021,9 +36021,8 @@ Processes with "Requires Explicit Access Permission" flag set to true, do not in
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <COLUMNNAME><![CDATA[Basisamt]]></COLUMNNAME>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <NAME><![CDATA[Basis Amount]]></NAME>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <PRINTNAME><![CDATA[Basis Amount]]></PRINTNAME>
-<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <DESCRIPTION><![CDATA[The amount  that will take into account to calculate the commission: net amount or margin.   If margin is selected, only the invoices that have shipments will take into account.]]></DESCRIPTION>
-<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <HELP><![CDATA[The amount  that will take into account to calculate the commission: net amount or margin. 
- If margin is selected, only the invoices that have shipments will take into account.]]></HELP>
+<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <DESCRIPTION><![CDATA[The amount that will take into account to calculate the commission: net amount or margin.]]></DESCRIPTION>
+<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <HELP><![CDATA[The amount that will take into account to calculate the commission: net amount or margin.]]></HELP>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843--></AD_ELEMENT>
