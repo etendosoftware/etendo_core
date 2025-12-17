@@ -19,24 +19,12 @@
 
 package org.openbravo.service.db;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.util.Date;
 import java.util.List;
 
-import org.openbravo.base.structure.BaseOBObject;
-import org.openbravo.dal.service.OBDal;
-import org.openbravo.model.ad.process.ProcessInstance;
-
 /**
- * This class is a service class to directly call a stored procedure without using a
- * {@link ProcessInstance}.
- * 
- * @author mtaal
+ * Facade for executing Stored Procedures.
+ * Delegates all logic to {@link CallProcess#executeRaw}.
+ * Kept for backward compatibility.
  */
 public class CallStoredProcedure {
 
@@ -51,130 +39,25 @@ public class CallStoredProcedure {
   }
 
   /**
-   * @see #call(String, List, List, boolean, boolean)
+   * Delegates to CallProcess.
+   */
+  public Object call(String name, List<Object> parameters, List<Class<?>> types) {
+    return call(name, parameters, types, true, true);
+  }
+
+  /**
+   * Delegates to CallProcess.
    */
   public Object call(String name, List<Object> parameters, List<Class<?>> types, boolean doFlush) {
     return call(name, parameters, types, doFlush, true);
   }
 
   /**
-   * Calls a stored procedure with the specified name. The parameter list is translated in exactly
-   * the same parameters for the call so the parameters should be in the correct order and have the
-   * correct type as expected by the stored procedure. The parameter types can be any of the
-   * primitive types used by Openbravo (Date, Long, String, etc.).
-   * 
-   * @param name
-   *          the name of the stored procedure to call.
-   * @param parameters
-   *          a list of parameters (null values are allowed)
-   * @param types
-   *          the list of types of the parameters, only needs to be set if there are null values and
-   *          if the null value is something else than a String (which is handled as a default type)
-   * @param doFlush
-   *          do flush before calling stored procedure
-   * @param returnResults
-   *          whether a fetch for results should be done after the call to the stored procedure
-   *          (essentially describes whether the PL object is a procedure or function)
-   * 
-   * @return the stored procedure result.
+   * Delegates to CallProcess.
    */
   public Object call(String name, List<Object> parameters, List<Class<?>> types, boolean doFlush,
       boolean returnResults) {
-    final StringBuilder sb = new StringBuilder();
-    if (new DalConnectionProvider(false).getRDBMS().equalsIgnoreCase("ORACLE") && !returnResults) {
-      sb.append("CALL " + name);
-    } else {
-      sb.append("SELECT " + name);
-    }
-    sb.append("(");
-    for (int i = 0; i < parameters.size(); i++) {
-      if (i != 0) {
-        sb.append(",");
-      }
-      sb.append("?");
-    }
-    sb.append(")");
 
-    if (returnResults || !new DalConnectionProvider(false).getRDBMS().equalsIgnoreCase("ORACLE")) {
-      sb.append(" AS RESULT FROM DUAL");
-    }
-    final Connection conn = OBDal.getInstance().getConnection(doFlush);
-    PreparedStatement ps = null;
-    try {
-      ps = conn.prepareStatement(sb.toString(), ResultSet.TYPE_SCROLL_INSENSITIVE,
-          ResultSet.CONCUR_READ_ONLY);
-      int index = 0;
-
-      for (Object parameter : parameters) {
-        final int sqlIndex = index + 1;
-        if (parameter == null) {
-          if (types == null || types.size() < index) {
-            ps.setNull(sqlIndex, Types.NULL);
-          } else {
-            ps.setNull(sqlIndex, getSqlType(types.get(index)));
-          }
-        } else if (parameter instanceof String && parameter.toString().equals("")) {
-          ps.setNull(sqlIndex, Types.VARCHAR);
-        } else if (parameter instanceof Boolean) {
-          ps.setObject(sqlIndex, ((Boolean) parameter) ? "Y" : "N");
-        } else if (parameter instanceof BaseOBObject) {
-          ps.setObject(sqlIndex, ((BaseOBObject) parameter).getId());
-        } else if (parameter instanceof Timestamp) {
-          ps.setTimestamp(sqlIndex, (Timestamp) parameter);
-        } else if (parameter instanceof Date) {
-          ps.setDate(sqlIndex, new java.sql.Date(((Date) parameter).getTime()));
-        } else {
-          ps.setObject(sqlIndex, parameter);
-        }
-        index++;
-      }
-      final ResultSet resultSet = ps.executeQuery();
-      Object resultValue = null;
-      if (returnResults && resultSet.next()) {
-        resultValue = resultSet.getObject("RESULT");
-        if (resultSet.wasNull()) {
-          resultValue = null;
-        }
-      }
-      resultSet.close();
-      return resultValue;
-    } catch (Exception e) {
-      throw new IllegalStateException(e);
-    } finally {
-      try {
-        if (ps != null && !ps.isClosed()) {
-          ps.close();
-        }
-      } catch (SQLException e) {
-        // ignore
-      }
-    }
-  }
-
-  private int getSqlType(Class<?> clz) {
-    if (clz == null) {
-      return Types.VARCHAR;
-    }
-    if (clz == Boolean.class) {
-      return Types.VARCHAR;
-    } else if (clz == String.class) {
-      return Types.VARCHAR;
-    } else if (clz == BaseOBObject.class) {
-      return Types.VARCHAR;
-    } else if (Number.class.isAssignableFrom(clz)) {
-      return Types.NUMERIC;
-    } else if (clz == Timestamp.class) {
-      return Types.TIMESTAMP;
-    } else if (Date.class.isAssignableFrom(clz)) {
-      return Types.DATE;
-    } else if (BaseOBObject.class.isAssignableFrom(clz)) {
-      return Types.VARCHAR;
-    } else {
-      throw new IllegalStateException("Type not supported, please add it here " + clz.getName());
-    }
-  }
-
-  public Object call(String name, List<Object> parameters, List<Class<?>> types) {
-    return call(name, parameters, types, true);
+    return CallProcess.getInstance().executeRaw(name, parameters, types, doFlush, returnResults);
   }
 }
