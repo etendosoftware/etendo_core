@@ -1,3 +1,20 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Etendo License
+ * (the "License"), you may not use this file except in compliance with
+ * the License.
+ * You may obtain a copy of the License at
+ * https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing rights
+ * and limitations under the License.
+ * All portions are Copyright © 2021–2025 FUTIT SERVICES, S.L
+ * All Rights Reserved.
+ * Contributor(s): Futit Services S.L.
+ *************************************************************************
+ */
+
 package org.openbravo.erpCommon.businessUtility;
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +83,7 @@ public class BpDocTypeResolverTest {
     obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
     when(obDal.getSession()).thenReturn(session);
     when(session.createNativeQuery(anyString())).thenReturn(q1, q2, q3, q4);
-    lenientStub(q1); lenientStub(q2); lenientStub(q3); lenientStub(q4);
+    testLenientStub(q1); testLenientStub(q2); testLenientStub(q3); testLenientStub(q4);
   }
 
   /**
@@ -74,7 +91,7 @@ public class BpDocTypeResolverTest {
    * for {@link OBDal} after each test.
    */
   @After
-  public void tearDown() {
+  public void testTearDown() {
     BpDocTypeResolver.clearCache();
     if (obDalStatic != null) obDalStatic.close();
   }
@@ -84,9 +101,9 @@ public class BpDocTypeResolverTest {
    * organization branch when available.
    */
   @Test
-  public void prefersBpMappingOnOrg() {
-    stubFirstQuery(DOC_BP);
-    assertResolvedEquals(DOC_BP, ORG, BP, SOO, false, 1);
+  public void testPrefersBpMappingOnOrg() {
+    testStubFirstQuery(DOC_BP);
+    testAssertResolvedEquals(DOC_BP, ORG, BP, SOO, false, 1);
   }
 
   /**
@@ -94,8 +111,8 @@ public class BpDocTypeResolverTest {
    * (client level) when no org-specific mapping exists.
    */
   @Test
-  public void fallsBackToOrgZero() {
-    stubQueries(DOC_CLIENT, null);
+  public void testFallsBackToOrgZero() {
+    testStubQueries(DOC_CLIENT, null);
     when(q1.uniqueResult()).thenReturn(null);
     String id = resolver.resolveId(ORG, BP, "API", false);
     assertEquals(DOC_CLIENT, id);
@@ -107,9 +124,9 @@ public class BpDocTypeResolverTest {
    * (or no BP mapping found).
    */
   @Test
-  public void usesOrgDefaultWhenNoBp() {
-    stubFirstQuery(DOC_DEF);
-    assertResolvedEquals(DOC_DEF, ORG, null, ARI, false, 1);
+  public void testUsesOrgDefaultWhenNoBp() {
+    testStubFirstQuery(DOC_DEF);
+    testAssertResolvedEquals(DOC_DEF, ORG, null, ARI, false, 1);
   }
 
   /**
@@ -117,7 +134,7 @@ public class BpDocTypeResolverTest {
    * when no organization default is set.
    */
   @Test
-  public void usesFirstMatchWhenNoDefault() {
+  public void testUsesFirstMatchWhenNoDefault() {
     when(q1.uniqueResult()).thenReturn(null);
     when(q2.uniqueResult()).thenReturn(DOC_FIRST);
     String id = resolver.resolveId(ORG, null, "MMS", false);
@@ -130,7 +147,7 @@ public class BpDocTypeResolverTest {
    * without issuing database queries.
    */
   @Test
-  public void returnsNullOnBlankOrUnknown() {
+  public void testReturnsNullOnBlankOrUnknown() {
     assertNull(resolver.resolveId("", BP, SOO, false));
     assertNull(resolver.resolveId(ORG, BP, "", false));
     assertNull(resolver.resolveId(ORG, BP, "UNKNOWN_DBT", false));
@@ -142,8 +159,8 @@ public class BpDocTypeResolverTest {
    * a {@link DocumentType} entity when the identifier can be resolved.
    */
   @Test
-  public void resolveReturnsEntity() {
-    stubFirstQuery(DOC_DEF);
+  public void testResolveReturnsEntity() {
+    testStubFirstQuery(DOC_DEF);
     when(obDal.get(DocumentType.class, DOC_DEF)).thenReturn(docType);
     DocumentType dt = resolver.resolve(ORG, null, "POO");
     assertNotNull(dt);
@@ -157,8 +174,8 @@ public class BpDocTypeResolverTest {
    * therefore avoid issuing additional queries.
    */
   @Test
-  public void usesThreadCache() {
-    stubFirstQuery(DOC_DEF);
+  public void testUsesThreadCache() {
+    testStubFirstQuery(DOC_DEF);
     String id1 = resolver.resolveId(ORG, null, ARI, false);
     String id2 = resolver.resolveId(ORG, null, ARI, false);
     assertEquals(DOC_DEF, id1);
@@ -171,7 +188,7 @@ public class BpDocTypeResolverTest {
    * Applies lenient stubbing for fluent {@link NativeQuery} methods used across tests.
    * @param q the query mock to leniently stub
    */
-  private static void lenientStub(NativeQuery q) {
+  private static void testLenientStub(NativeQuery q) {
     lenient().when(q.setParameter(anyString(), any())).thenReturn(q);
     lenient().when(q.setMaxResults(anyInt())).thenReturn(q);
   }
@@ -180,7 +197,7 @@ public class BpDocTypeResolverTest {
    * Stubs the first query (q1) to return the provided result from {@code uniqueResult()}.
    * @param result object to be returned by q1.uniqueResult()
    */
-  private void stubFirstQuery(Object result) {
+  private void testStubFirstQuery(Object result) {
     when(q1.uniqueResult()).thenReturn(result);
   }
 
@@ -190,7 +207,7 @@ public class BpDocTypeResolverTest {
    * @param q2Result the result to be returned by q2.uniqueResult()
    * @param q1Result the result to be returned by q1.uniqueResult()
    */
-  private void stubQueries(Object q2Result, Object q1Result) {
+  private void testStubQueries(Object q2Result, Object q1Result) {
     when(q1.uniqueResult()).thenReturn(q1Result);
     when(q2.uniqueResult()).thenReturn(q2Result);
   }
@@ -206,7 +223,7 @@ public class BpDocTypeResolverTest {
    * @param auto automation flag passed to the resolver
    * @param expectedQueries  expected number of {@code createNativeQuery} calls
    */
-  private void assertResolvedEquals(
+  private void testAssertResolvedEquals(
     String expected, String org, String bp, String dbt, boolean auto, int expectedQueries) {
     String id = resolver.resolveId(org, bp, dbt, auto);
     assertEquals(expected, id);
