@@ -40,6 +40,10 @@ public class CallStoredProcedure {
 
   /**
    * Delegates to CallProcess.
+   * @param name: the stored procedure name.
+   * @param parameters: the parameters to pass to the stored procedure.
+   * @param types: the types of the parameters.
+   * @return the result of the stored procedure.
    */
   public Object call(String name, List<Object> parameters, List<Class<?>> types) {
     return call(name, parameters, types, true, true);
@@ -47,6 +51,11 @@ public class CallStoredProcedure {
 
   /**
    * Delegates to CallProcess.
+   * @param name: the stored procedure name.
+   * @param parameters: the parameters to pass to the stored procedure.
+   * @param types: the types of the parameters.
+   * @param doFlush: whether to flush the session before executing the stored procedure.
+   * @return the result of the stored procedure.
    */
   public Object call(String name, List<Object> parameters, List<Class<?>> types, boolean doFlush) {
     return call(name, parameters, types, doFlush, true);
@@ -54,6 +63,12 @@ public class CallStoredProcedure {
 
   /**
    * Delegates to CallProcess.
+   * @param name: the stored procedure name.
+   * @param parameters: the parameters to pass to the stored procedure.
+   * @param types: the types of the parameters.
+   * @param doFlush: whether to flush the session before executing the stored procedure.
+   * @param returnResults: whether to return the results of the stored procedure.
+   * @return the result of the stored procedure.
    */
   public Object call(String name, List<Object> parameters, List<Class<?>> types, boolean doFlush,
       boolean returnResults) {

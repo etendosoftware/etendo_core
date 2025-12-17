@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -59,13 +60,35 @@ import org.openbravo.model.ad.ui.Process;
  */
 public class CallProcess {
 
-  private static CallProcess instance = new CallProcess();
+  private static volatile CallProcess instance;
 
+  /**
+   * Protected constructor to prevent direct instantiation while still enabling subclass overrides
+   * that can be registered through {@link #setInstance(CallProcess)} when customization is needed.
+   */
+  protected CallProcess() {
+  }
+
+  /**
+   * Gets the singleton instance of CallProcess.
+   * @return the CallProcess instance.
+   */
   public static synchronized CallProcess getInstance() {
+    if (instance == null) {
+      instance = new CallProcess();
+    }
     return instance;
   }
 
+  /**
+   * Sets the singleton instance of CallProcess, allowing platform extensions or tests to inject a
+   * specialized subclass. Passing {@code null} is not allowed.
+   * @param instance custom implementation replacing the default behavior.
+   */
   public static synchronized void setInstance(CallProcess instance) {
+    if (instance == null) {
+      throw new IllegalArgumentException("CallProcess instance cannot be null");
+    }
     CallProcess.instance = instance;
   }
 
@@ -75,7 +98,7 @@ public class CallProcess {
 
   /**
    * Calls a process by its name.
-   * * @param processName
+   * @param processName
    * the procedure name defined in AD_Process.
    * @param recordID
    * the record ID associated with the execution (optional).
@@ -95,6 +118,9 @@ public class CallProcess {
     final OBCriteria<Process> processCriteria = OBDal.getInstance().createCriteria(Process.class);
     processCriteria.add(Restrictions.eq(Process.PROPERTY_PROCEDURE, processName));
 
+    if (processCriteria.list().size() > 1) {
+      throw new OBException("More than one process found with procedure name " + processName);
+    }
     final Process process = (Process) processCriteria.uniqueResult();
 
     if (process == null) {
@@ -103,10 +129,32 @@ public class CallProcess {
     return call(process, recordID, parameters, doCommit);
   }
 
+  /**
+   * Overloaded call without doCommit.
+   * @param process
+   * the process definition.
+   * @param recordID
+   * the record ID.
+   * @param parameters
+   * map of parameters.
+   * @return the updated ProcessInstance with results.
+   */
   public ProcessInstance call(Process process, String recordID, Map<String, String> parameters) {
     return callProcess(process, recordID, parameters, null);
   }
 
+  /**
+   * Calls a process using the ProcessInstance mechanism.
+   * @param process
+   * the process definition.
+   * @param recordID
+   * the record ID.
+   * @param parameters
+   * map of parameters.
+   * @param doCommit
+   * explicit commit flag (if supported by the SP).
+   * @return the updated ProcessInstance with results.
+   */
   public ProcessInstance call(Process process, String recordID, Map<String, String> parameters, Boolean doCommit) {
     return callProcess(process, recordID, parameters, doCommit);
   }
@@ -119,7 +167,7 @@ public class CallProcess {
    * 2. {@link #executeStandardProcedure}: Executes DB logic.
    * 3. Refreshes the result.
    * </p>
-   * * @param process
+   * @param process
    * the process definition.
    * @param recordID
    * the record ID.
@@ -150,10 +198,10 @@ public class CallProcess {
   /**
    * Overloaded callProcess without doCommit.
    *
-   * @param process
-   * @param recordID
-   * @param parameters
-   * @return
+   * @param process instance of the process to be executed
+   * @param recordID the record ID.
+   * @param parameters map of parameters.
+   * @return the updated ProcessInstance with results.
    */
   public ProcessInstance callProcess(Process process, String recordID, Map<String, ?> parameters) {
     return callProcess(process, recordID, parameters, null);
@@ -330,7 +378,7 @@ public class CallProcess {
     if (parameter instanceof String && ((String) parameter).isEmpty()) {
       ps.setNull(index, Types.VARCHAR);
     } else if (parameter instanceof Boolean) {
-      ps.setString(index, ((Boolean) parameter) ? "Y" : "N");
+      ps.setString(index, BooleanUtils.toBoolean((Boolean) parameter) ? "Y" : "N");
     } else if (parameter instanceof BaseOBObject) {
       ps.setString(index, (String) ((BaseOBObject) parameter).getId());
     } else if (parameter instanceof Timestamp) {

@@ -73,9 +73,7 @@ public class CallAsyncProcess extends CallProcess {
       final OBContext currentContext = OBContext.getOBContext();
 
       // 2. ASYNC PHASE: Submit to Executor
-      executorService.submit(() -> {
-        runInBackground(pInstanceId, processId, currentContext, doCommit);
-      });
+      executorService.submit(() -> runInBackground(pInstanceId, processId, currentContext, doCommit));
 
       // 3. RETURN IMMEDIATELY
       // The pInstance returned here is the initial snapshot. The UI should poll for updates.
