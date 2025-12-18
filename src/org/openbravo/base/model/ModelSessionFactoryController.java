@@ -31,6 +31,8 @@ import org.hibernate.type.Type;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.util.Check;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Initializes and provides the session factory for the model layer. It uses fixed mappings for
  * Table, Column etc..
@@ -38,6 +40,7 @@ import org.openbravo.base.util.Check;
  * @author mtaal
  */
 
+@Dependent
 public class ModelSessionFactoryController extends SessionFactoryController {
 
   private List<Class<?>> additionalClasses = new ArrayList<Class<?>>();

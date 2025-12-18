@@ -50,6 +50,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ExternalConnectionPool;
 import org.openbravo.service.db.DbUtility;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Keeps the Hibernate Session and Transaction in a ThreadLocal so that it is available throughout
  * the application. This class provides convenience methods to get a Session and to
@@ -59,6 +62,7 @@ import org.openbravo.service.db.DbUtility;
  */
 // TODO: revisit when looking at factory pattern and dependency injection
 // framework
+@Dependent
 public class SessionHandler implements OBNotSingleton {
   private static final Logger log = LogManager.getLogger();
 
