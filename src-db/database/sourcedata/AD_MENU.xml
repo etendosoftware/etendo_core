@@ -1148,7 +1148,7 @@
 <!--217-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
 <!--217-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--217-->  <ISACTIVE><![CDATA[N]]></ISACTIVE>
-<!--217-->  <NAME><![CDATA[Create Invoices from Orders]]></NAME>
+<!--217-->  <NAME><![CDATA[Create Invoices from Orders (old)]]></NAME>
 <!--217-->  <DESCRIPTION><![CDATA[Create invoices for all processed sales orders/goods shipments that have not been invoiced.]]></DESCRIPTION>
 <!--217-->  <ISSUMMARY><![CDATA[N]]></ISSUMMARY>
 <!--217-->  <ACTION><![CDATA[X]]></ACTION>

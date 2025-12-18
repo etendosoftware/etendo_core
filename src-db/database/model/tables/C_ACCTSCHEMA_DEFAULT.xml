@@ -329,10 +329,6 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="NOTINVOICEDSHIPMENTS_ACCT" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
       <foreign-key foreignTable="C_VALIDCOMBINATION" name="C_ACCTSCH_DEF_P_PURCHASEPRICE">
         <reference local="P_DEF_REVENUE_ACCT" foreign="C_VALIDCOMBINATION_ID"/>
       </foreign-key>
@@ -449,9 +445,6 @@
       </foreign-key>
       <foreign-key foreignTable="C_VALIDCOMBINATION" name="C_ACCTSCHEMA_DEFAULT_NOTINVOI2">
         <reference local="NOTINVOICEDREVENUE_ACCT" foreign="C_VALIDCOMBINATION_ID"/>
-      </foreign-key>
-      <foreign-key foreignTable="C_VALIDCOMBINATION" name="C_ACCTSCHEMA_DEFAULT_NOTINVOI3">
-        <reference local="NOTINVOICEDSHIPMENTS_ACCT" foreign="C_VALIDCOMBINATION_ID"/>
       </foreign-key>
       <foreign-key foreignTable="C_VALIDCOMBINATION" name="C_ACCTSCHEMA_DEFAULT_NOTINVOIC">
         <reference local="NOTINVOICEDRECEIVABLES_ACCT" foreign="C_VALIDCOMBINATION_ID"/>
