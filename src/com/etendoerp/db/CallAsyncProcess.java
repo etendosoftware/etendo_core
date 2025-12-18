@@ -27,19 +27,44 @@ import org.openbravo.service.db.CallProcess;
  */
 public class CallAsyncProcess extends CallProcess {
 
-  private static CallAsyncProcess instance = new CallAsyncProcess();
+  private static final int DEFAULT_THREAD_POOL_SIZE = 10;
+
+  private static CallAsyncProcess instance;
 
   // Thread pool to manage background executions.
   // Using a fixed pool prevents system resource exhaustion.
-  private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+  private final ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
 
   public static synchronized CallAsyncProcess getInstance() {
+    if (instance == null) {
+      instance = new CallAsyncProcess();
+    }
     return instance;
   }
 
-  public static synchronized void setInstance(CallAsyncProcess instance) {
-    CallAsyncProcess.instance = instance;
+  /**
+   * Internal class to encapsulate OBContext values for thread-safe transfer.
+   * Instead of passing the full OBContext object (which may have session-specific state),
+   * we extract and pass only the essential values needed to recreate the context.
+   */
+  private static class ContextValues {
+    final String userId;
+    final String roleId;
+    final String clientId;
+    final String organizationId;
+    final String warehouseId;
+    final String languageId;
+
+    ContextValues(OBContext context) {
+      this.userId = context.getUser() != null ? context.getUser().getId() : null;
+      this.roleId = context.getRole() != null ? context.getRole().getId() : null;
+      this.clientId = context.getCurrentClient() != null ? context.getCurrentClient().getId() : null;
+      this.organizationId = context.getCurrentOrganization() != null ? context.getCurrentOrganization().getId() : null;
+      this.warehouseId = context.getWarehouse() != null ? context.getWarehouse().getId() : null;
+      this.languageId = context.getLanguage() != null ? context.getLanguage().getId() : null;
+    }
   }
+
 
   /**
    * Overrides the main execution method to run asynchronously.
@@ -70,10 +95,10 @@ public class CallAsyncProcess extends CallProcess {
       // Capture critical IDs and Context to pass to the thread
       final String pInstanceId = pInstance.getId();
       final String processId = process.getId();
-      final OBContext currentContext = OBContext.getOBContext();
+      final ContextValues contextValues = new ContextValues(OBContext.getOBContext());
 
       // 2. ASYNC PHASE: Submit to Executor
-      executorService.submit(() -> runInBackground(pInstanceId, processId, currentContext, doCommit));
+      executorService.submit(() -> runInBackground(pInstanceId, processId, contextValues, doCommit));
 
       // 3. RETURN IMMEDIATELY
       // The pInstance returned here is the initial snapshot. The UI should poll for updates.
@@ -87,13 +112,32 @@ public class CallAsyncProcess extends CallProcess {
   /**
    * Internal method executed by the worker thread.
    */
-  private void runInBackground(String pInstanceId, String processId, OBContext context, Boolean doCommit) {
+  private void runInBackground(String pInstanceId, String processId, ContextValues contextValues, Boolean doCommit) {
     // A. Context Hydration
     // The new thread does not have the user session. We must set it manually.
-    OBContext.setOBContext(context);
-    OBContext.setAdminMode();
-
+    // We recreate the context from the captured values to avoid thread-safety issues.
     try {
+      // Recreate the OBContext from the captured values
+      OBContext newContext = OBContext.getOBContext();
+      if (contextValues.userId != null) {
+        newContext.setUser(OBDal.getInstance().get(org.openbravo.model.ad.access.User.class, contextValues.userId));
+      }
+      if (contextValues.roleId != null) {
+        newContext.setRole(OBDal.getInstance().get(org.openbravo.model.ad.access.Role.class, contextValues.roleId));
+      }
+      if (contextValues.clientId != null) {
+        newContext.setCurrentClient(OBDal.getInstance().get(org.openbravo.model.ad.system.Client.class, contextValues.clientId));
+      }
+      if (contextValues.organizationId != null) {
+        newContext.setCurrentOrganization(OBDal.getInstance().get(org.openbravo.model.common.enterprise.Organization.class, contextValues.organizationId));
+      }
+      if (contextValues.warehouseId != null) {
+        newContext.setWarehouse(OBDal.getInstance().get(org.openbravo.model.common.enterprise.Warehouse.class, contextValues.warehouseId));
+      }
+      if (contextValues.languageId != null) {
+        newContext.setLanguage(OBDal.getInstance().get(org.openbravo.model.ad.system.Language.class, contextValues.languageId));
+      }
+
       // B. Re-attach Hibernate Objects
       // We cannot use the objects from the main thread (Process/ProcessInstance)
       // because they belong to a different (likely closed) Hibernate Session.

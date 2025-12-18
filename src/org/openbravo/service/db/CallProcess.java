@@ -87,7 +87,7 @@ public class CallProcess {
    */
   public static synchronized void setInstance(CallProcess instance) {
     if (instance == null) {
-      throw new IllegalArgumentException("CallProcess instance cannot be null");
+      throw new OBException("CallProcess instance cannot be null");
     }
     CallProcess.instance = instance;
   }
@@ -118,7 +118,7 @@ public class CallProcess {
     final OBCriteria<Process> processCriteria = OBDal.getInstance().createCriteria(Process.class);
     processCriteria.add(Restrictions.eq(Process.PROPERTY_PROCEDURE, processName));
 
-    if (processCriteria.list().size() > 1) {
+    if (processCriteria.list().size() > 1) { // safeguard against NonUniqueResultException and preserve previous controlled behavior
       throw new OBException("More than one process found with procedure name " + processName);
     }
     final Process process = (Process) processCriteria.uniqueResult();
@@ -356,7 +356,9 @@ public class CallProcess {
    * Binds parameters to the PreparedStatement.
    */
   private void setParameters(PreparedStatement ps, List<Object> parameters, List<Class<?>> types) throws SQLException {
-    if (parameters == null || parameters.isEmpty()) return;
+    if (parameters == null || parameters.isEmpty()) {
+      return;
+    }
 
     int index = 0;
     for (Object parameter : parameters) {
