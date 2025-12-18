@@ -764,7 +764,7 @@ public class OBDal implements OBNotSingleton {
 
     Session session = getSession();
     session.evict(object);
-    session.createNativeQuery(sql).setParameter(BaseOBObject.ID, object.getId()).uniqueResult();
+    session.createNativeQuery(sql, Object.class).setParameter(BaseOBObject.ID, object.getId()).uniqueResult();
 
     @SuppressWarnings("unchecked")
     T newInstance = OBDal.getInstance().get((Class<T>) entity.getMappingClass(), object.getId());

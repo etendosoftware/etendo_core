@@ -282,12 +282,12 @@ public abstract class SessionFactoryController {
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {
-      props.setProperty(JdbcSettings.DRIVER, "org.postgresql.Driver");
-      props.setProperty(JdbcSettings.URL,
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_DRIVER, "org.postgresql.Driver");
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_URL,
           obProps.getProperty("bbdd.url") + "/" + obProps.getProperty("bbdd.sid"));
 
-      props.setProperty(JdbcSettings.USER, obProps.getProperty("bbdd.user"));
-      props.setProperty(JdbcSettings.PASS, obProps.getProperty("bbdd.password"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_USER, obProps.getProperty("bbdd.user"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_PASSWORD, obProps.getProperty("bbdd.password"));
     }
     return props;
   }
@@ -299,17 +299,17 @@ public abstract class SessionFactoryController {
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {
-      props.setProperty(JdbcSettings.DRIVER, "oracle.jdbc.driver.OracleDriver");
-      props.setProperty(JdbcSettings.URL, obProps.getProperty("bbdd.url"));
-      props.setProperty(JdbcSettings.USER, obProps.getProperty("bbdd.user"));
-      props.setProperty(JdbcSettings.PASS, obProps.getProperty("bbdd.password"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_DRIVER, "oracle.jdbc.driver.OracleDriver");
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_URL, obProps.getProperty("bbdd.url"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_USER, obProps.getProperty("bbdd.user"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_PASSWORD, obProps.getProperty("bbdd.password"));
     }
     return props;
   }
 
   private void setJNDI(Properties obProps, Properties hbProps) {
     log.info("Using JNDI with resource name-> {}", obProps.getProperty("JNDI.resourceName"));
-    hbProps.setProperty(JdbcSettings.DATASOURCE,
+    hbProps.setProperty(JdbcSettings.JAKARTA_JTA_DATASOURCE,
         "java:/comp/env/" + obProps.getProperty("JNDI.resourceName"));
   }
 
