@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.hibernate.criterion.Restrictions;
@@ -54,13 +55,15 @@ import org.openbravo.model.ad.ui.Process;
  * This replaces the logic previously found in CallStoredProcedure.</li>
  * </ul>
  * </p>
- * * @author mtaal
+ *
+ * @author mtaal
+ * @author @sebastianbarrozo
  * @see ProcessInstance
  * @see Process
  */
 public class CallProcess {
 
-  private static volatile CallProcess instance;
+  private static final AtomicReference<CallProcess> instance = new AtomicReference<>();
 
   /**
    * Protected constructor to prevent direct instantiation while still enabling subclass overrides
@@ -73,11 +76,8 @@ public class CallProcess {
    * Gets the singleton instance of CallProcess.
    * @return the CallProcess instance.
    */
-  public static synchronized CallProcess getInstance() {
-    if (instance == null) {
-      instance = new CallProcess();
-    }
-    return instance;
+  public static CallProcess getInstance() {
+    return instance.updateAndGet(v -> v == null ? new CallProcess() : v);
   }
 
   /**
@@ -85,11 +85,11 @@ public class CallProcess {
    * specialized subclass. Passing {@code null} is not allowed.
    * @param instance custom implementation replacing the default behavior.
    */
-  public static synchronized void setInstance(CallProcess instance) {
+  public static void setInstance(CallProcess instance) {
     if (instance == null) {
       throw new OBException("CallProcess instance cannot be null");
     }
-    CallProcess.instance = instance;
+    CallProcess.instance.set(instance);
   }
 
   // ===========================================================================
@@ -111,7 +111,17 @@ public class CallProcess {
   }
 
   /**
-   * Calls a process by its name with commit control.
+   * Calls a process by its procedure name with explicit commit control.
+   *
+   * @param processName
+   *     the procedure name defined in AD_Process.
+   * @param recordID
+   *     the record ID associated with the execution (optional).
+   * @param parameters
+   *     a map of parameters to be injected into AD_PInstance_Para.
+   * @param doCommit
+   *     explicit commit flag (if supported by the SP).
+   * @return the result ProcessInstance.
    */
   public ProcessInstance call(String processName, String recordID, Map<String, String> parameters,
       Boolean doCommit) {

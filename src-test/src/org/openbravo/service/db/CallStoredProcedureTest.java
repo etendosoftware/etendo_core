@@ -14,15 +14,29 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Unit tests for {@link CallStoredProcedure}.
- * Since {@link CallStoredProcedure} delegates to {@link CallProcess#executeRaw},
- * we mock {@link CallProcess} to verify the delegation.
+ * Unit tests for the {@link CallStoredProcedure} class.
+ * <p>
+ * This test suite ensures that {@link CallStoredProcedure} correctly maintains its singleton
+ * behavior and properly delegates calls to the underlying {@link CallProcess} engine.
+ * Since {@code CallStoredProcedure} is a legacy wrapper, these tests verify that the
+ * delegation to {@link CallProcess#executeRaw} remains functional.
+ * </p>
+ *
+ * @author etendo
+ * @see CallStoredProcedure
+ * @see CallProcess
  */
 public class CallStoredProcedureTest {
 
+  public static final String TEST_PROCEDURE = "test_procedure";
+  public static final String RESULT_SHOULD_BE_DELEGATED_FROM_CALL_PROCESS = "Result should be delegated from CallProcess";
   private CallProcess mockCallProcess;
   private CallProcess originalCallProcess;
 
+  /**
+   * Sets up the test environment by mocking the {@link CallProcess} singleton.
+   * The original instance is stored to be restored after each test.
+   */
   @Before
   public void setUp() {
     mockCallProcess = mock(CallProcess.class);
@@ -30,6 +44,10 @@ public class CallStoredProcedureTest {
     CallProcess.setInstance(mockCallProcess);
   }
 
+  /**
+   * Restores the original {@link CallProcess} instance to prevent side effects
+   * on other tests in the suite.
+   */
   @After
   public void tearDown() {
     // Restore the original instance to avoid side effects in other tests
@@ -38,6 +56,7 @@ public class CallStoredProcedureTest {
 
   /**
    * Verifies the singleton behavior of {@link CallStoredProcedure#getInstance()}.
+   * Ensures that multiple calls return the exact same object instance.
    */
   @Test
   public void testGetInstance() {
@@ -47,12 +66,19 @@ public class CallStoredProcedureTest {
   }
 
   /**
-   * Verifies that {@link CallStoredProcedure#call(String, List, List)} 
+   * Verifies that {@link CallStoredProcedure#call(String, List, List)}
    * correctly delegates to {@link CallProcess#executeRaw} with default parameters.
+   * <p>
+   * Default parameters for this legacy method are:
+   * <ul>
+   *   <li>doFlush: true</li>
+   *   <li>returnResults: true</li>
+   * </ul>
+   * </p>
    */
   @Test
   public void testCallDelegation() {
-    String name = "test_procedure";
+    String name = TEST_PROCEDURE;
     List<Object> parameters = new ArrayList<>();
     List<Class<?>> types = new ArrayList<>();
     Object expectedResult = "result";
@@ -61,17 +87,20 @@ public class CallStoredProcedureTest {
 
     Object result = CallStoredProcedure.getInstance().call(name, parameters, types);
 
-    assertEquals("Result should be delegated from CallProcess", expectedResult, result);
+    assertEquals(RESULT_SHOULD_BE_DELEGATED_FROM_CALL_PROCESS, expectedResult, result);
     verify(mockCallProcess).executeRaw(name, parameters, types, true, true);
   }
 
   /**
-   * Verifies that {@link CallStoredProcedure#call(String, List, List, boolean)} 
-   * correctly delegates to {@link CallProcess#executeRaw} with custom doFlush.
+   * Verifies that {@link CallStoredProcedure#call(String, List, List, boolean)}
+   * correctly delegates to {@link CallProcess#executeRaw} with a custom flush flag.
+   * <p>
+   * The returnResults flag is expected to be true by default in this overload.
+   * </p>
    */
   @Test
   public void testCallWithFlushDelegation() {
-    String name = "test_procedure";
+    String name = TEST_PROCEDURE;
     List<Object> parameters = new ArrayList<>();
     List<Class<?>> types = new ArrayList<>();
     Object expectedResult = 123;
@@ -80,17 +109,17 @@ public class CallStoredProcedureTest {
 
     Object result = CallStoredProcedure.getInstance().call(name, parameters, types, false);
 
-    assertEquals("Result should be delegated from CallProcess", expectedResult, result);
+    assertEquals(RESULT_SHOULD_BE_DELEGATED_FROM_CALL_PROCESS, expectedResult, result);
     verify(mockCallProcess).executeRaw(name, parameters, types, false, true);
   }
 
   /**
-   * Verifies that {@link CallStoredProcedure#call(String, List, List, boolean, boolean)} 
+   * Verifies that {@link CallStoredProcedure#call(String, List, List, boolean, boolean)}
    * correctly delegates to {@link CallProcess#executeRaw} with all custom parameters.
    */
   @Test
   public void testFullCallDelegation() {
-    String name = "test_procedure";
+    String name = TEST_PROCEDURE;
     List<Object> parameters = new ArrayList<>();
     List<Class<?>> types = new ArrayList<>();
     Object expectedResult = null;
@@ -99,7 +128,7 @@ public class CallStoredProcedureTest {
 
     Object result = CallStoredProcedure.getInstance().call(name, parameters, types, false, false);
 
-    assertEquals("Result should be delegated from CallProcess", expectedResult, result);
+    assertEquals(RESULT_SHOULD_BE_DELEGATED_FROM_CALL_PROCESS, expectedResult, result);
     verify(mockCallProcess).executeRaw(name, parameters, types, false, false);
   }
 }

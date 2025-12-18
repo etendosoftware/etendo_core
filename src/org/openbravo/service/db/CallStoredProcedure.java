@@ -29,28 +29,31 @@ import java.util.List;
  * </p>
  * <p>
  * This class is kept primarily for backward compatibility with older versions of the system.
+ * New code should prefer using {@link CallProcess} directly.
  * </p>
- * 
+ *
  * @author Openbravo
+ * @author etendo
+ * @see CallProcess
  */
 public class CallStoredProcedure {
 
   private static CallStoredProcedure instance = new CallStoredProcedure();
 
   /**
-   * Returns the singleton instance of CallStoredProcedure.
-   * 
-   * @return the instance
+   * Returns the singleton instance of {@code CallStoredProcedure}.
+   *
+   * @return the singleton instance.
    */
   public static synchronized CallStoredProcedure getInstance() {
     return instance;
   }
 
   /**
-   * Sets the singleton instance of CallStoredProcedure.
-   * 
+   * Sets the singleton instance of {@code CallStoredProcedure}.
+   *
    * @param instance
-   *          the instance to set
+   *     the instance to set.
    */
   public static synchronized void setInstance(CallStoredProcedure instance) {
     CallStoredProcedure.instance = instance;
