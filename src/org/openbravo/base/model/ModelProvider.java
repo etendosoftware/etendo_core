@@ -672,8 +672,7 @@ public class ModelProvider implements OBSingleton {
     final String columnQry = sfController.getColumnMetadataQuery();
 
     final Map<String, Boolean> result = new HashMap<>();
-    for (final Object row : session.createNativeQuery(columnQry).list()) {
-      final Object[] vals = (Object[]) row;
+    for (final Object[] vals : session.createNativeQuery(columnQry, Object[].class).list()) {
       final String key = createColumnMandatoryKey(vals[0], vals[1]);
       if (vals[2] instanceof String valueString) {
         // note the string contains Y or N
@@ -743,7 +742,7 @@ public class ModelProvider implements OBSingleton {
     final List<UniqueConstraintColumn> result = new ArrayList<>();
     @SuppressWarnings("rawtypes")
     final NativeQuery sqlQuery = session
-        .createNativeQuery(sessionFactoryController.getUniqueConstraintQuery());
+        .createNativeQuery(sessionFactoryController.getUniqueConstraintQuery(), Object[].class);
     for (final Object row : sqlQuery.list()) {
       // cast to an array of strings!
       // 0: tablename

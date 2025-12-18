@@ -30,7 +30,7 @@ pipeline {
     UNSTABLE            = 'UNSTABLE'
     ABORTED             = 'ABORTED'
 
-    POSTGRES_VERSION    = '16'
+    POSTGRES_VERSION    = '17'
 
     CONTEXT_BUILD       = 'Unit Tests with Postgres Database'
 

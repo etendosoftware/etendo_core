@@ -50,7 +50,6 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ExternalConnectionPool;
 import org.openbravo.service.db.DbUtility;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 
 /**
