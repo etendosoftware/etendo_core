@@ -1542,15 +1542,15 @@ IF (NOT FINISH_PROCESS) THEN
             WHERE il.C_INVOICE_ID   = v_Record_ID
               AND il.M_InOutLine_ID IS NOT NULL)
         LOOP
+          v_Qty := Cur_SILines.QtyInvoiced;
+
           SELECT COALESCE(COUNT(*), 0)
             INTO v_Count
             FROM M_MATCHSI
-          WHERE M_INOUTLINE_ID   = Cur_SILines.M_InOutLine_ID
+          WHERE M_INOUTLINE_ID = Cur_SILines.M_InOutLine_ID
             AND C_INVOICELINE_ID = Cur_SILines.C_InvoiceLine_ID;
 
           IF (v_Count = 0) THEN
-            v_Qty := Cur_SILines.QtyInvoiced;
-
             v_MatchSI_ID := get_uuid();
 
             v_ResultStr := 'InsertMatchSI ' || v_MatchSI_ID;
@@ -1566,6 +1566,16 @@ IF (NOT FINISH_PROCESS) THEN
               Cur_SILines.M_InOutLine_ID, Cur_SILines.C_InvoiceLine_ID,
               Cur_SILines.M_Product_ID, Cur_SILines.DateAcct,
               v_Qty, 'N', 'Y', 'N');
+          ELSE
+            v_ResultStr := 'UpdateMatchSI';
+
+            UPDATE M_MATCHSI
+               SET QTY = v_Qty,
+                   DATETRX = Cur_SILines.DateAcct,
+                   UPDATED = now(),
+                   UPDATEDBY = v_UpdatedBy
+             WHERE M_INOUTLINE_ID = Cur_SILines.M_InOutLine_ID
+               AND C_INVOICELINE_ID = Cur_SILines.C_InvoiceLine_ID;
           END IF;
         END LOOP;
         v_ResultStr := 'MatchSO-FromInvoice';
@@ -1580,8 +1590,8 @@ IF (NOT FINISH_PROCESS) THEN
                   il.QtyInvoiced,
                   i.DateAcct
             FROM C_INVOICELINE il
-            JOIN C_ORDERLINE  ol ON (il.C_OrderLine_ID = ol.C_OrderLine_ID)
-            JOIN C_INVOICE    i  ON (i.C_INVOICE_ID    = il.C_INVOICE_ID)
+            JOIN C_ORDERLINE ol ON (il.C_OrderLine_ID = ol.C_OrderLine_ID)
+            JOIN C_INVOICE i  ON (i.C_INVOICE_ID = il.C_INVOICE_ID)
             WHERE (il.M_Product_ID = ol.M_Product_ID
                   OR (il.C_Charge_ID IS NOT NULL
                       AND il.C_Charge_ID = ol.C_Charge_ID))
@@ -1590,7 +1600,7 @@ IF (NOT FINISH_PROCESS) THEN
           SELECT COALESCE(COUNT(*), 0)
             INTO v_Count
             FROM M_MATCHSO
-          WHERE C_ORDERLINE_ID   = Cur_SOLines.C_OrderLine_ID
+          WHERE C_ORDERLINE_ID = Cur_SOLines.C_OrderLine_ID
             AND C_INVOICELINE_ID = Cur_SOLines.C_InvoiceLine_ID;
 
           IF (v_Count = 0) THEN
