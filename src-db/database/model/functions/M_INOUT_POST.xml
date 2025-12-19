@@ -1132,11 +1132,7 @@
 
                 IF (v_Count = 0) THEN
                   v_Qty := Cur_SOLines.MovementQty;
-
-                  SELECT *
-                    INTO v_MatchSO_ID
-                    FROM AD_Sequence_Next('M_MatchSO', Cur_SOLines.AD_Org_ID);
-
+                  v_MatchSO_ID := get_uuid();
                   v_ResultStr := 'InsertMatchSO ' || v_MatchSO_ID;
 
                   INSERT INTO M_MATCHSO
@@ -1177,11 +1173,7 @@
 
                 IF (v_Count = 0) THEN
                   v_Qty := Cur_SILines.MovementQty;
-
-                  SELECT *
-                    INTO v_MatchSI_ID
-                    FROM AD_Sequence_Next('M_MatchSI', Cur_SILines.AD_Org_ID);
-
+                  v_MatchSI_ID := get_uuid();
                   v_ResultStr := 'InsertMatchSI ' || v_MatchSI_ID;
 
                   INSERT INTO M_MATCHSI
