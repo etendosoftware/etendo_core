@@ -176,7 +176,7 @@ public class WindowSettingsActionHandler extends BaseActionHandler {
       final Set<String> fields = new TreeSet<String>();
       List<Field> tabFields = tab.getADFieldList();
       for (Field field : tabFields) {
-        if (!field.isReadOnly() && !field.isShownInStatusBar() && field.getColumn().isUpdatable()) {
+        if (!field.isReadOnly() && !field.isShownInStatusBar() && field.getColumn() != null && field.getColumn().isUpdatable()) {
           final Property property = KernelUtils.getProperty(entity, field);
           if (property != null) {
             fields.add(property.getName());
