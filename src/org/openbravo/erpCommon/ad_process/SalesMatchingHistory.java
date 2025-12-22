@@ -130,7 +130,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param fromDate
    *     lower bound of the invoice date (inclusive) to consider
    */
-  private void backfillSIMatch(Date fromDate) {
+  protected void backfillSIMatch(Date fromDate) {
     int counter = 0;
 
     OBCriteria<InvoiceLine> lineCriteria = OBDal.getInstance().createCriteria(InvoiceLine.class);
@@ -194,7 +194,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     timestamp used for creation and update audit fields
    */
-  private void createShipmentSIMatch(InvoiceLine invLine, ShipmentInOutLine shipLine, java.math.BigDecimal qty,
+  protected void createShipmentSIMatch(InvoiceLine invLine, ShipmentInOutLine shipLine, java.math.BigDecimal qty,
       java.util.Date now) {
     SIMatch match = OBProvider.getInstance().get(SIMatch.class);
     match.setClient(invLine.getClient());
@@ -220,7 +220,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param fromDate
    *     lower bound of the document date (movement date / invoice date) to consider
    */
-  private void backfillSOMatch(Date fromDate) {
+  protected void backfillSOMatch(Date fromDate) {
     Date now = new Date();
 
     backfillSOMatchFromShipments(fromDate, now);
@@ -249,7 +249,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     reference timestamp used to populate audit fields in new match records
    */
-  private void backfillSOMatchFromShipments(Date fromDate, Date now) {
+  protected void backfillSOMatchFromShipments(Date fromDate, Date now) {
     int counter = 0;
 
     // SO -> GS (OrderLine + ShipmentInOutLine, invoiceLine = null)
@@ -309,7 +309,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     reference timestamp used to populate audit fields in new match records
    */
-  private void backfillSOMatchFromInvoices(Date fromDate, Date now) {
+  protected void backfillSOMatchFromInvoices(Date fromDate, Date now) {
     int counter = 0;
 
     // SO -> SI (OrderLine + InvoiceLine, goodsShipmentLine = null)
@@ -367,7 +367,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     timestamp used for creation and update audit fields
    */
-  private void createShipmentSOMatch(ShipmentInOutLine shipLine, OrderLine orderLine, BigDecimal qty, Date now) {
+  protected void createShipmentSOMatch(ShipmentInOutLine shipLine, OrderLine orderLine, BigDecimal qty, Date now) {
     SOMatch match = OBProvider.getInstance().get(SOMatch.class);
     match.setClient(shipLine.getClient());
     match.setOrganization(shipLine.getOrganization());
@@ -411,7 +411,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     timestamp used for creation and update audit fields
    */
-  private void createInvoiceSOMatch(InvoiceLine invLine, OrderLine orderLine, BigDecimal qty, Date now) {
+  protected void createInvoiceSOMatch(InvoiceLine invLine, OrderLine orderLine, BigDecimal qty, Date now) {
     SOMatch match = OBProvider.getInstance().get(SOMatch.class);
     match.setClient(invLine.getClient());
     match.setOrganization(invLine.getOrganization());
@@ -436,7 +436,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param qty
    *     quantity to store in the match
    */
-  private void fillInvoiceMatchCommonData(BaseOBObject match, InvoiceLine invLine, BigDecimal qty) {
+  protected void fillInvoiceMatchCommonData(BaseOBObject match, InvoiceLine invLine, BigDecimal qty) {
     match.set(SIMatch.PROPERTY_INVOICELINE, invLine);
     match.set(SIMatch.PROPERTY_TRANSACTIONDATE, invLine.getInvoice().getAccountingDate());
     match.set(SIMatch.PROPERTY_QUANTITY, qty);
@@ -463,7 +463,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    *     current processed records counter
    * @return the incremented counter-value
    */
-  private int incrementAndMaybeFlush(int counter) {
+  protected int incrementAndMaybeFlush(int counter) {
     counter++;
     if (counter % 100 == 0) {
       OBDal.getInstance().flush();
@@ -484,7 +484,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @throws OBException
    *     if the preference is not defined or is not a valid integer
    */
-  private static int getAmountOfDays() {
+  protected static int getAmountOfDays() {
     int amountOfDays;
     try {
       String preferenceValue = Preferences.getPreferenceValue(PREFERENCE_MATCH_DAYS, true,
@@ -510,7 +510,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    *     number of days to go back from today
    * @return a {@link Date} representing the lower bound of the search window
    */
-  private static Date calculateFromDate(int amountOfDays) {
+  protected static Date calculateFromDate(int amountOfDays) {
     Calendar cal = Calendar.getInstance();
     cal.set(Calendar.HOUR_OF_DAY, 0);
     cal.set(Calendar.MINUTE, 0);
