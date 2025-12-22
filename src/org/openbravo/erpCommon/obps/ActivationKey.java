@@ -527,8 +527,93 @@ public class ActivationKey {
 
     checkDates();
 
+    // Persist activation key information to database
+    persistActivationInfoToDB();
+
     // this occurs on Tomcat start, don't want to try to refresh on next login, let's wait for 24hr
     resetRefreshTime();
+  }
+
+  /**
+   * Persists the calculated activation key information to the database
+   * in the new columns of AD_SYSTEM_INFO table
+   */
+  private void persistActivationInfoToDB() {
+    if (!isActive && !hasActivationKey) {
+      // No activation key, don't persist anything
+      return;
+    }
+
+    OBContext.setAdminMode(true);
+    try {
+      SystemInformation sysInfo = OBDal.getInstance().get(SystemInformation.class, "0");
+      if (sysInfo == null) {
+        log.warn("SystemInformation record not found, cannot persist activation info");
+        return;
+      }
+
+      // Persist customer name
+      if (instanceProperties != null && getProperty("customer") != null) {
+        sysInfo.setCustomerName(getProperty("customer"));
+      }
+
+      // Persist license edition
+      if (licenseClass != null) {
+        sysInfo.setLicenseEdition(licenseClass.getCode());
+      }
+
+      // Persist subscription type (license type)
+      if (licenseType != null) {
+        sysInfo.setSubscriptionType(licenseType.getCode());
+      } else if (instanceProperties != null && getProperty("lincensetype") != null) {
+        sysInfo.setSubscriptionType(getProperty("lincensetype"));
+      }
+
+      // Persist subscription start date
+      if (startDate != null) {
+        sysInfo.setSubscriptionStartDate(startDate);
+      }
+
+      // Persist subscription end date
+      if (endDate != null) {
+        sysInfo.setSubscriptionEndDate(endDate);
+      }
+
+      // Persist concurrent users limit
+      if (maxUsers != null) {
+        sysInfo.setConcurrentGlobalSystemUsers(maxUsers);
+      }
+
+      // Persist instance number
+      if (instanceProperties != null && getProperty("instanceno") != null) {
+        sysInfo.setInstanceNumber(getProperty("instanceno"));
+      }
+
+      // Persist web service access information
+      String wsAccess = null;
+      if (limitedWsAccess) {
+        String packs = getProperty("wsPacks");
+        String unitsPack = getProperty("wsUnitsPerUnit");
+        if (packs != null && unitsPack != null) {
+          wsAccess = "Limited: " + packs + " packs x " + unitsPack + " calls";
+        } else {
+          wsAccess = "Limited";
+        }
+      } else {
+        wsAccess = "Unlimited";
+      }
+      sysInfo.setWEBServiceAccess(wsAccess);
+
+      OBDal.getInstance().save(sysInfo);
+      OBDal.getInstance().flush();
+
+      log.info("Activation key information persisted to database successfully");
+    } catch (Exception e) {
+      log.error("Error persisting activation key information to database", e);
+      // Don't throw exception to not break the activation process
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   private void reset() {
