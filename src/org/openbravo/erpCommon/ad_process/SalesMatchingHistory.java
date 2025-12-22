@@ -25,6 +25,7 @@ import java.util.List;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
+import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -39,7 +40,6 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.sales.SIMatch;
 import org.openbravo.model.sales.SOMatch;
-import org.openbravo.scheduling.KillableProcess;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
@@ -58,11 +58,11 @@ import org.openbravo.service.db.DalBaseProcess;
  *   <li>Updates quantity and transaction date in the existing match row.</li>
  * </ul>
  */
-public class SalesMatchingHistory extends DalBaseProcess implements KillableProcess {
+public class SalesMatchingHistory extends DalBaseProcess {
   private static final String PREFERENCE_MATCH_DAYS = "MatchedSalesDaysBack";
   private static final String SUCCESS = "Success";
-  private ProcessLogger logger;
-  private boolean killProcess;
+  private static final String SHIPMENT_ALIAS_PREFIX = "ship.";
+  private static final String INVOICE_ALIAS_PREFIX = "inv.";
 
   /**
    * Main entry point for the process.
@@ -84,7 +84,7 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
    */
   @Override
   protected void doExecute(ProcessBundle bundle) throws Exception {
-    logger = bundle.getLogger();
+    ProcessLogger logger = bundle.getLogger();
     OBError result = new OBError();
     try {
       OBContext.setAdminMode(false);
@@ -137,9 +137,10 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
     lineCriteria.createAlias(InvoiceLine.PROPERTY_INVOICE, "inv");
     lineCriteria.createAlias(InvoiceLine.PROPERTY_GOODSSHIPMENTLINE, "shipLine");
     lineCriteria.add(Restrictions.isNotNull(InvoiceLine.PROPERTY_GOODSSHIPMENTLINE));
-    lineCriteria.add(Restrictions.eq("inv." + Invoice.PROPERTY_SALESTRANSACTION, true));
-    lineCriteria.add(Restrictions.ge("inv." + Invoice.PROPERTY_INVOICEDATE, fromDate));
-    lineCriteria.add(Restrictions.in("inv." + Invoice.PROPERTY_DOCUMENTSTATUS, Arrays.asList("CO", "CL", "VO", "RE")));
+    lineCriteria.add(Restrictions.eq(INVOICE_ALIAS_PREFIX + Invoice.PROPERTY_SALESTRANSACTION, true));
+    lineCriteria.add(Restrictions.ge(INVOICE_ALIAS_PREFIX + Invoice.PROPERTY_INVOICEDATE, fromDate));
+    lineCriteria.add(
+        Restrictions.in(INVOICE_ALIAS_PREFIX + Invoice.PROPERTY_DOCUMENTSTATUS, Arrays.asList("CO", "CL", "VO", "RE")));
 
     List<InvoiceLine> lines = lineCriteria.list();
     Date now = new Date();
@@ -162,27 +163,7 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
       SIMatch match = (SIMatch) matchCrit.uniqueResult();
 
       if (match == null) {
-        match = OBProvider.getInstance().get(SIMatch.class);
-        match.setClient(invLine.getClient());
-        match.setOrganization(invLine.getOrganization());
-        match.setActive(true);
-        match.setCreationDate(now);
-        match.setCreatedBy(OBContext.getOBContext().getUser());
-        match.setUpdated(now);
-        match.setUpdatedBy(OBContext.getOBContext().getUser());
-        match.setGoodsShipmentLine(shipLine);
-        match.setInvoiceLine(invLine);
-        match.setTransactionDate(invLine.getInvoice().getAccountingDate());
-        match.setQuantity(qty);
-        match.setProcessNow(false);
-        match.setProcessed(true);
-        match.setPosted("N");
-        Product product = invLine.getProduct();
-        if (product != null) {
-          match.setProduct(product);
-        }
-
-        OBDal.getInstance().save(match);
+        createShipmentSIMatch(invLine, shipLine, qty, now);
       }
 
       counter++;
@@ -196,51 +177,89 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
   }
 
   /**
+   * Creates a {@link SIMatch} (M_MATCHSI) record for the
+   * Sales Invoice → Goods Shipment scenario.
+   * <p>
+   * The new match links the given invoice line and shipment line,
+   * sets the transaction date from the invoice accounting date,
+   * stores the provided quantity, and initializes all audit and
+   * processing flags ({@code active}, {@code processed}, {@code posted}, etc.).
+   *
+   * @param invLine
+   *     sales invoice line to be matched
+   * @param shipLine
+   *     goods shipment line related to the invoice
+   * @param qty
+   *     quantity to store in the match record
+   * @param now
+   *     timestamp used for creation and update audit fields
+   */
+  private void createShipmentSIMatch(InvoiceLine invLine, ShipmentInOutLine shipLine, java.math.BigDecimal qty,
+      java.util.Date now) {
+    SIMatch match = OBProvider.getInstance().get(SIMatch.class);
+    match.setClient(invLine.getClient());
+    match.setOrganization(invLine.getOrganization());
+    match.setActive(true);
+    match.setCreationDate(now);
+    match.setCreatedBy(OBContext.getOBContext().getUser());
+    match.setUpdated(now);
+    match.setUpdatedBy(OBContext.getOBContext().getUser());
+    match.setGoodsShipmentLine(shipLine);
+
+    fillInvoiceMatchCommonData(match, invLine, qty);
+
+    OBDal.getInstance().save(match);
+  }
+
+  /**
    * Backfills {@link SOMatch} (M_MATCHSO) records for historical sales orders.
    * <p>
-   * It handles two scenarios:
-   * <ol>
-   *   <li><strong>SO → GS</strong>: links sales order lines to goods shipment lines.</li>
-   *   <li><strong>SO → SI</strong>: links sales order lines to sales invoice lines.</li>
-   * </ol>
-   *
-   * <p><strong>SO → GS</strong>:</p>
-   * <ul>
-   *   <li>Processes {@link ShipmentInOutLine} records whose header is a sales
-   *       shipment ({@code IsSOTrx = 'Y'}).</li>
-   *   <li>Movement date {@code >= fromDate} and document status in {@code (CO, CL, VO, RE)}.</li>
-   *   <li>Shipment line must be linked to a {@link OrderLine}.</li>
-   *   <li>If no {@link SOMatch} exists for (order line, shipment line, no invoice line),
-   *       a new row is created; otherwise the existing row is updated.</li>
-   * </ul>
-   *
-   * <p><strong>SO → SI</strong>:</p>
-   * <ul>
-   *   <li>Processes {@link InvoiceLine} records from sales invoices
-   *       ({@code IsSOTrx = 'Y'}).</li>
-   *   <li>Invoice date {@code >= fromDate} and document status in {@code (CO, CL, VO, RE)}.</li>
-   *   <li>Invoice line must be linked to a {@link OrderLine}.</li>
-   *   <li>If no {@link SOMatch} exists for (order line, invoice line, no shipment line),
-   *       a new row is created; otherwise the existing row is updated.</li>
-   * </ul>
-   * <p>
-   * Changes are flushed in batches (every 100 records) to improve performance on large datasets.
+   * It delegates to the shipment-based and invoice-based backfill methods
+   * and performs a final {@link OBDal#flush()} to persist all pending changes.
    *
    * @param fromDate
    *     lower bound of the document date (movement date / invoice date) to consider
    */
   private void backfillSOMatch(Date fromDate) {
-    int counter = 0;
     Date now = new Date();
 
-    // 1) SO -> GS (OrderLine + ShipmentInOutLine, invoiceLine = null)
+    backfillSOMatchFromShipments(fromDate, now);
+    backfillSOMatchFromInvoices(fromDate, now);
+
+    OBDal.getInstance().flush();
+  }
+
+  /**
+   * Backfills {@link SOMatch} (M_MATCHSO) records for the
+   * <strong>SO → GS</strong> scenario (Sales Order → Goods Shipment).
+   * <p>
+   * It processes {@link ShipmentInOutLine} records that:
+   * <ul>
+   *   <li>belong to a sales shipment header ({@code IsSOTrx = 'Y'}),</li>
+   *   <li>have a movement date {@code >= fromDate},</li>
+   *   <li>have a document status in {@code (CO, CL, VO, RE)}, and</li>
+   *   <li>are linked to a {@link OrderLine}.</li>
+   * </ul>
+   * For each eligible shipment line, if no {@link SOMatch} exists for the
+   * (order line, shipment line, no invoice line) combination, a new record is created.
+   * Changes are flushed in batches through {@link #incrementAndMaybeFlush(int)}.
+   *
+   * @param fromDate
+   *     lower bound of the shipment movement date (inclusive) to consider
+   * @param now
+   *     reference timestamp used to populate audit fields in new match records
+   */
+  private void backfillSOMatchFromShipments(Date fromDate, Date now) {
+    int counter = 0;
+
+    // SO -> GS (OrderLine + ShipmentInOutLine, invoiceLine = null)
     OBCriteria<ShipmentInOutLine> shipLineCrit = OBDal.getInstance().createCriteria(ShipmentInOutLine.class);
     shipLineCrit.add(Restrictions.isNotNull(ShipmentInOutLine.PROPERTY_SALESORDERLINE));
     shipLineCrit.createAlias(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, "ship");
-    shipLineCrit.add(Restrictions.eq("ship." + ShipmentInOut.PROPERTY_SALESTRANSACTION, true));
-    shipLineCrit.add(Restrictions.ge("ship." + ShipmentInOut.PROPERTY_MOVEMENTDATE, fromDate));
-    shipLineCrit.add(
-        Restrictions.in("ship." + ShipmentInOut.PROPERTY_DOCUMENTSTATUS, Arrays.asList("CO", "CL", "VO", "RE")));
+    shipLineCrit.add(Restrictions.eq(SHIPMENT_ALIAS_PREFIX + ShipmentInOut.PROPERTY_SALESTRANSACTION, true));
+    shipLineCrit.add(Restrictions.ge(SHIPMENT_ALIAS_PREFIX + ShipmentInOut.PROPERTY_MOVEMENTDATE, fromDate));
+    shipLineCrit.add(Restrictions.in(SHIPMENT_ALIAS_PREFIX + ShipmentInOut.PROPERTY_DOCUMENTSTATUS,
+        Arrays.asList("CO", "CL", "VO", "RE")));
 
     List<ShipmentInOutLine> shipLines = shipLineCrit.list();
 
@@ -263,42 +282,43 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
       SOMatch match = (SOMatch) matchCrit.uniqueResult();
 
       if (match == null) {
-        match = OBProvider.getInstance().get(SOMatch.class);
-        match.setClient(shipLine.getClient());
-        match.setOrganization(shipLine.getOrganization());
-        match.setActive(true);
-        match.setCreationDate(now);
-        match.setCreatedBy(OBContext.getOBContext().getUser());
-        match.setUpdated(now);
-        match.setUpdatedBy(OBContext.getOBContext().getUser());
-        match.setSalesOrderLine(orderLine);
-        match.setGoodsShipmentLine(shipLine);
-        match.setTransactionDate(shipLine.getShipmentReceipt().getMovementDate());
-        match.setQuantity(qty);
-        match.setProcessNow(false);
-        match.setProcessed(true);
-        match.setPosted("N");
-        Product product = shipLine.getProduct();
-        if (product != null) {
-          match.setProduct(product);
-        }
-
-        OBDal.getInstance().save(match);
+        createShipmentSOMatch(shipLine, orderLine, qty, now);
       }
 
-      counter++;
-      if (counter % 100 == 0) {
-        OBDal.getInstance().flush();
-        OBDal.getInstance().getSession().clear();
-      }
+      counter = incrementAndMaybeFlush(counter);
     }
+  }
 
-    // 2) SO -> SI (OrderLine + InvoiceLine, goodsShipmentLine = null)
+  /**
+   * Backfills {@link SOMatch} (M_MATCHSO) records for the
+   * <strong>SO → SI</strong> scenario (Sales Order → Sales Invoice).
+   * <p>
+   * It processes {@link InvoiceLine} records that:
+   * <ul>
+   *   <li>belong to a sales invoice header ({@code IsSOTrx = 'Y'}),</li>
+   *   <li>have an invoice date {@code >= fromDate},</li>
+   *   <li>have a document status in {@code (CO, CL, VO, RE)}, and</li>
+   *   <li>are linked to a {@link OrderLine}.</li>
+   * </ul>
+   * For each eligible invoice line, if no {@link SOMatch} exists for the
+   * (order line, invoice line, no shipment line) combination, a new record is created.
+   * Changes are flushed in batches through {@link #incrementAndMaybeFlush(int)}.
+   *
+   * @param fromDate
+   *     lower bound of the invoice date (inclusive) to consider
+   * @param now
+   *     reference timestamp used to populate audit fields in new match records
+   */
+  private void backfillSOMatchFromInvoices(Date fromDate, Date now) {
+    int counter = 0;
+
+    // SO -> SI (OrderLine + InvoiceLine, goodsShipmentLine = null)
     OBCriteria<InvoiceLine> invLineCrit = OBDal.getInstance().createCriteria(InvoiceLine.class);
     invLineCrit.createAlias(InvoiceLine.PROPERTY_INVOICE, "inv");
-    invLineCrit.add(Restrictions.eq("inv." + Invoice.PROPERTY_SALESTRANSACTION, true));
-    invLineCrit.add(Restrictions.ge("inv." + Invoice.PROPERTY_INVOICEDATE, fromDate));
-    invLineCrit.add(Restrictions.in("inv." + Invoice.PROPERTY_DOCUMENTSTATUS, Arrays.asList("CO", "CL", "VO", "RE")));
+    invLineCrit.add(Restrictions.eq(INVOICE_ALIAS_PREFIX + Invoice.PROPERTY_SALESTRANSACTION, true));
+    invLineCrit.add(Restrictions.ge(INVOICE_ALIAS_PREFIX + Invoice.PROPERTY_INVOICEDATE, fromDate));
+    invLineCrit.add(
+        Restrictions.in(INVOICE_ALIAS_PREFIX + Invoice.PROPERTY_DOCUMENTSTATUS, Arrays.asList("CO", "CL", "VO", "RE")));
     invLineCrit.add(Restrictions.isNotNull(InvoiceLine.PROPERTY_SALESORDERLINE));
 
     List<InvoiceLine> invLines = invLineCrit.list();
@@ -322,37 +342,134 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
       SOMatch match = (SOMatch) matchCrit.uniqueResult();
 
       if (match == null) {
-        match = OBProvider.getInstance().get(SOMatch.class);
-        match.setClient(invLine.getClient());
-        match.setOrganization(invLine.getOrganization());
-        match.setActive(true);
-        match.setCreationDate(now);
-        match.setCreatedBy(OBContext.getOBContext().getUser());
-        match.setUpdated(now);
-        match.setUpdatedBy(OBContext.getOBContext().getUser());
-        match.setSalesOrderLine(orderLine);
-        match.setInvoiceLine(invLine);
-        match.setTransactionDate(invLine.getInvoice().getAccountingDate());
-        match.setQuantity(qty);
-        match.setProcessNow(false);
-        match.setProcessed(true);
-        match.setPosted("N");
-        Product product = invLine.getProduct();
-        if (product != null) {
-          match.setProduct(product);
-        }
-
-        OBDal.getInstance().save(match);
+        createInvoiceSOMatch(invLine, orderLine, qty, now);
       }
 
-      counter++;
-      if (counter % 100 == 0) {
-        OBDal.getInstance().flush();
-        OBDal.getInstance().getSession().clear();
-      }
+      counter = incrementAndMaybeFlush(counter);
+    }
+  }
+
+  /**
+   * Creates a {@link SOMatch} (M_MATCHSO) record for the
+   * <strong>SO → GS</strong> scenario (Sales Order → Goods Shipment).
+   * <p>
+   * The new match links the given sales order line and shipment line,
+   * sets the transaction date from the shipment header movement date,
+   * stores the provided quantity, and initializes all audit and
+   * processing flags ({@code active}, {@code processed}, {@code posted}, etc.).
+   *
+   * @param shipLine
+   *     goods shipment line to be matched
+   * @param orderLine
+   *     sales order line related to the shipment
+   * @param qty
+   *     quantity to store in the match record
+   * @param now
+   *     timestamp used for creation and update audit fields
+   */
+  private void createShipmentSOMatch(ShipmentInOutLine shipLine, OrderLine orderLine, BigDecimal qty, Date now) {
+    SOMatch match = OBProvider.getInstance().get(SOMatch.class);
+    match.setClient(shipLine.getClient());
+    match.setOrganization(shipLine.getOrganization());
+    match.setActive(true);
+    match.setCreationDate(now);
+    match.setCreatedBy(OBContext.getOBContext().getUser());
+    match.setUpdated(now);
+    match.setUpdatedBy(OBContext.getOBContext().getUser());
+
+    match.setSalesOrderLine(orderLine);
+    match.setGoodsShipmentLine(shipLine);
+    match.setTransactionDate(shipLine.getShipmentReceipt().getMovementDate());
+    match.setQuantity(qty);
+    match.setProcessNow(false);
+    match.setProcessed(true);
+    match.setPosted("N");
+
+    Product product = shipLine.getProduct();
+    if (product != null) {
+      match.setProduct(product);
     }
 
-    OBDal.getInstance().flush();
+    OBDal.getInstance().save(match);
+  }
+
+  /**
+   * Creates a {@link SOMatch} (M_MATCHSO) record for the
+   * <strong>SO → SI</strong> scenario (Sales Order → Sales Invoice).
+   * <p>
+   * The new match links the given sales order line and invoice line,
+   * sets the transaction date from the invoice accounting date,
+   * stores the provided quantity, and initializes all audit and
+   * processing flags ({@code active}, {@code processed}, {@code posted}, etc.).
+   *
+   * @param invLine
+   *     sales invoice line to be matched
+   * @param orderLine
+   *     sales order line related to the invoice
+   * @param qty
+   *     quantity to store in the match record
+   * @param now
+   *     timestamp used for creation and update audit fields
+   */
+  private void createInvoiceSOMatch(InvoiceLine invLine, OrderLine orderLine, BigDecimal qty, Date now) {
+    SOMatch match = OBProvider.getInstance().get(SOMatch.class);
+    match.setClient(invLine.getClient());
+    match.setOrganization(invLine.getOrganization());
+    match.setActive(true);
+    match.setCreationDate(now);
+    match.setCreatedBy(OBContext.getOBContext().getUser());
+    match.setUpdated(now);
+    match.setUpdatedBy(OBContext.getOBContext().getUser());
+    match.setSalesOrderLine(orderLine);
+    fillInvoiceMatchCommonData(match, invLine, qty);
+
+    OBDal.getInstance().save(match);
+  }
+
+  /**
+   * Fills common invoice-related data for SIMatch / SOMatch instances.
+   *
+   * @param match
+   *     DAL entity instance (SIMatch or SOMatch)
+   * @param invLine
+   *     invoice line used as a source
+   * @param qty
+   *     quantity to store in the match
+   */
+  private void fillInvoiceMatchCommonData(BaseOBObject match, InvoiceLine invLine, BigDecimal qty) {
+    match.set(SIMatch.PROPERTY_INVOICELINE, invLine);
+    match.set(SIMatch.PROPERTY_TRANSACTIONDATE, invLine.getInvoice().getAccountingDate());
+    match.set(SIMatch.PROPERTY_QUANTITY, qty);
+    match.set(SIMatch.PROPERTY_PROCESSNOW, false);
+    match.set(SIMatch.PROPERTY_PROCESSED, true);
+    match.set(SIMatch.PROPERTY_POSTED, "N");
+
+    Product product = invLine.getProduct();
+    if (product != null) {
+      match.set(SIMatch.PROPERTY_PRODUCT, product);
+    }
+  }
+
+  /**
+   * Increments a batch counter and performs a periodic DAL flush/clear.
+   * <p>
+   * When the counter reaches a multiple of 100, it:
+   * <ul>
+   *   <li>flushes pending changes to the database, and</li>
+   *   <li>clears the current Hibernate session to free memory.</li>
+   * </ul>
+   *
+   * @param counter
+   *     current processed records counter
+   * @return the incremented counter-value
+   */
+  private int incrementAndMaybeFlush(int counter) {
+    counter++;
+    if (counter % 100 == 0) {
+      OBDal.getInstance().flush();
+      OBDal.getInstance().getSession().clear();
+    }
+    return counter;
   }
 
   /**
@@ -401,21 +518,5 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
     cal.set(Calendar.MILLISECOND, 0);
     cal.add(Calendar.DAY_OF_YEAR, -amountOfDays);
     return cal.getTime();
-  }
-
-  /**
-   * Requests a graceful stop of the process.
-   * <p>
-   * This method sets the {@code killProcess} flag to {@code true}. Loops inside
-   * the process can periodically check this flag and abort early if needed.
-   *
-   * @param processBundle
-   *     the bundle representing the running process instance
-   * @throws Exception
-   *     unused, declared to comply with {@link KillableProcess}
-   */
-  @Override
-  public void kill(ProcessBundle processBundle) throws Exception {
-    this.killProcess = true;
   }
 }
