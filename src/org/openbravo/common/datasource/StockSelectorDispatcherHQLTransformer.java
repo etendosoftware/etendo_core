@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.refinventory.DefaultBoxFilterProvider;
 import org.openbravo.materialmgmt.refinventory.StockSelectorFilterProvider;
 import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
@@ -116,6 +117,11 @@ public class StockSelectorDispatcherHQLTransformer extends HqlQueryTransformer {
     }
     ReferencedInventory ri = OBDal.getInstance()
         .get(ReferencedInventory.class, refInventoryId);
+    if (ri == null) {
+      throw new OBException(String.format(OBMessageUtils.messageBD("ReferencedInventoryNotFound"),
+          refInventoryId));
+    }
+
     final String typeId = ri.getReferencedInventoryType().getId();
 
 
