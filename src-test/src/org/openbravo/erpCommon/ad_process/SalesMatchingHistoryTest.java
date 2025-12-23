@@ -1,3 +1,19 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Etendo License
+ * (the "License"), you may not use this file except in compliance with
+ * the License.
+ * You may obtain a copy of the License at
+ * https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing rights
+ * and limitations under the License.
+ * All portions are Copyright © 2021–2025 FUTIT SERVICES, S.L
+ * All Rights Reserved.
+ * Contributor(s): Futit Services S.L.
+ *************************************************************************
+ */
 package org.openbravo.erpCommon.ad_process;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,11 +30,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -192,21 +208,18 @@ class SalesMatchingHistoryTest {
   }
 
   /**
-   * Verifies that {@link SalesMatchingHistory#backfillSIMatch(Date)} creates
-   * {@link SIMatch} records for eligible sales invoice lines.
-   * <p>
-   * The test simulates invoice lines linked to goods shipment lines and checks that:
-   * <ul>
-   *   <li>The criteria used to retrieve invoice lines is applied correctly.</li>
-   *   <li>A new {@link SIMatch} instance is created when no match exists yet.</li>
-   *   <li>The match is persisted through {@link OBDal#save(Object)}.</li>
-   * </ul>
+   * Verifies that backfillSIMatch creates SIMatch records only
+   * for eligible invoice lines that have a shipment line and no existing match.
+   *
+   * @throws Exception
+   *     if reflection fails while setting the batch size
    */
   @Test
-  void testBackfillSIMatchCreatesMatchesForEligibleLines() {
+  void testBackfillSIMatchCreatesMatchesForEligibleLines() throws Exception {
     Date fromDate = new Date();
     SIMatch existingMatch = null;
     BigDecimal qty = new BigDecimal("4");
+    setBatchSizeCache(10);
 
     when(mockInvoiceLine.getGoodsShipmentLine()).thenReturn(mockShipmentInOutLine);
     when(mockInvoiceLine2.getGoodsShipmentLine()).thenReturn(null);
@@ -220,7 +233,6 @@ class SalesMatchingHistoryTest {
       when(mockOBCriteria.createAlias(anyString(), anyString())).thenReturn(mockOBCriteria);
       when(mockOBCriteria.add(any())).thenReturn(mockOBCriteria);
       when(mockOBCriteria.list()).thenReturn(Arrays.asList(mockInvoiceLine, mockInvoiceLine2));
-      when(mockOBCriteria.add(any())).thenReturn(mockOBCriteria);
       when(mockOBCriteria.uniqueResult()).thenReturn(existingMatch);
 
       doNothing().when(salesMatchingHistory).createShipmentSIMatch(any(InvoiceLine.class), any(ShipmentInOutLine.class),
@@ -241,6 +253,8 @@ class SalesMatchingHistoryTest {
       assertNotNull(dateCaptor.getValue());
 
       verify(mockOBDal).flush();
+    } finally {
+      setBatchSizeCache(null);
     }
   }
 
@@ -359,14 +373,13 @@ class SalesMatchingHistoryTest {
     Date fromDate = new Date();
     Date now = new Date();
 
-    ShipmentInOutLine shipLineWithOrder = mock(ShipmentInOutLine.class);
     ShipmentInOutLine shipLineWithoutOrder = mock(ShipmentInOutLine.class);
 
-    when(shipLineWithOrder.getSalesOrderLine()).thenReturn(mockOrderLine);
+    when(mockShipmentInOutLine.getSalesOrderLine()).thenReturn(mockOrderLine);
     when(shipLineWithoutOrder.getSalesOrderLine()).thenReturn(null);
 
     BigDecimal movementQty = new BigDecimal("3");
-    when(shipLineWithOrder.getMovementQuantity()).thenReturn(movementQty);
+    when(mockShipmentInOutLine.getMovementQuantity()).thenReturn(movementQty);
 
     doAnswer(invocation -> {
       int c = invocation.getArgument(0);
@@ -380,7 +393,7 @@ class SalesMatchingHistoryTest {
       when(mockOBDal.createCriteria(SOMatch.class)).thenReturn(mockOBCriteria);
       when(mockOBCriteria.add(any())).thenReturn(mockOBCriteria);
       when(mockOBCriteria.createAlias(anyString(), anyString())).thenReturn(mockOBCriteria);
-      when(mockOBCriteria.list()).thenReturn(Arrays.asList(shipLineWithOrder, shipLineWithoutOrder));
+      when(mockOBCriteria.list()).thenReturn(Arrays.asList(mockShipmentInOutLine, shipLineWithoutOrder));
       when(mockOBCriteria.add(any())).thenReturn(mockOBCriteria);
       when(mockOBCriteria.uniqueResult()).thenReturn(null);
 
@@ -392,7 +405,7 @@ class SalesMatchingHistoryTest {
       ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
       ArgumentCaptor<Date> dateCaptor = ArgumentCaptor.forClass(Date.class);
 
-      verify(salesMatchingHistory).createShipmentSOMatch(eq(shipLineWithOrder), eq(mockOrderLine), qtyCaptor.capture(),
+      verify(salesMatchingHistory).createShipmentSOMatch(eq(mockShipmentInOutLine), eq(mockOrderLine), qtyCaptor.capture(),
           dateCaptor.capture());
       verify(salesMatchingHistory, never()).createShipmentSOMatch(eq(shipLineWithoutOrder), any(OrderLine.class),
           any(BigDecimal.class), any(Date.class));
@@ -636,56 +649,54 @@ class SalesMatchingHistoryTest {
   }
 
   /**
-   * Verifies that {@link SalesMatchingHistory#incrementAndMaybeFlush(int)}
-   * increments the counter without flushing when the batch size threshold
-   * has not been reached.
-   * <p>
-   * The test asserts that:
-   * <ul>
-   *   <li>The returned counter is incremented by one.</li>
-   *   <li>{@link OBDal#flush()} and session {@code clear()} are not invoked.</li>
-   * </ul>
+   * Verifies that incrementAndMaybeFlush does not flush or clear the session
+   * when the counter has not yet reached the configured batch size.
+   *
+   * @throws Exception
+   *     if reflection fails while setting the batch size
    */
   @Test
-  void testIncrementAndMaybeFlushDoesNotFlushBeforeBatchSize() {
-    int initialCounter = 5;
+  void testIncrementAndMaybeFlushDoesNotFlushBeforeBatchSize() throws Exception {
+    int batchSize = 5;
+    setBatchSizeCache(batchSize);
 
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
 
-      int result = salesMatchingHistory.incrementAndMaybeFlush(initialCounter);
+      int startingCounter = 3;
+      int result = salesMatchingHistory.incrementAndMaybeFlush(startingCounter);
 
-      assertEquals(6, result);
+      assertEquals(startingCounter + 1, result);
       verify(mockOBDal, never()).flush();
       verify(mockSession, never()).clear();
+    } finally {
+      setBatchSizeCache(null);
     }
   }
 
   /**
-   * Verifies that {@link SalesMatchingHistory#incrementAndMaybeFlush(int)}
-   * flushes and clears the DAL session when the counter reaches the batch
-   * boundary (e.g. a multiple of 100).
-   * <p>
-   * The test asserts that:
-   * <ul>
-   *   <li>The returned counter is incremented.</li>
-   *   <li>{@link OBDal#flush()} is called once at the batch boundary.</li>
-   *   <li>The Hibernate session {@code clear()} is also invoked.</li>
-   * </ul>
+   * Verifies that incrementAndMaybeFlush flushes and clears the session
+   * when the counter reaches the configured batch size.
+   *
+   * @throws Exception
+   *     if reflection fails while setting the batch size
    */
   @Test
-  void testIncrementAndMaybeFlushFlushesOnBatchBoundary() {
-    int initialCounter = 99;
+  void testIncrementAndMaybeFlushFlushesOnBatchBoundary() throws Exception {
+    int batchSize = 5;
+    setBatchSizeCache(batchSize);
 
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.getSession()).thenReturn(mockSession);
 
-      int result = salesMatchingHistory.incrementAndMaybeFlush(initialCounter);
+      int result = salesMatchingHistory.incrementAndMaybeFlush(batchSize - 1);
 
-      assertEquals(100, result);
-      verify(mockOBDal, times(1)).flush();
-      verify(mockSession, times(1)).clear();
+      assertEquals(batchSize, result);
+      verify(mockOBDal).flush();
+      verify(mockSession).clear();
+    } finally {
+      setBatchSizeCache(null);
     }
   }
 
@@ -802,5 +813,23 @@ class SalesMatchingHistoryTest {
     Date expected = expectedCal.getTime();
 
     assertEquals(expected, result);
+  }
+
+  /**
+   * Sets the static {@code batchSizeCache} field of {@link SalesMatchingHistory}
+   * via reflection for testing purposes.
+   * <p>
+   * Passing {@code null} resets the cached value so that {@link SalesMatchingHistory#getBatchSize()}
+   * will read the preference again on the next call.
+   *
+   * @param value
+   *     new value to assign to {@code batchSizeCache}, or {@code null} to clear it
+   * @throws Exception
+   *     if the underlying field cannot be accessed or modified via reflection
+   */
+  private void setBatchSizeCache(Integer value) throws Exception {
+    Field field = SalesMatchingHistory.class.getDeclaredField("batchSizeCache");
+    field.setAccessible(true);
+    field.set(null, value);
   }
 }
