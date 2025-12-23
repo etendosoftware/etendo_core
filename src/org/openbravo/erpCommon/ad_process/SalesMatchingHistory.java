@@ -61,14 +61,13 @@ import org.openbravo.service.db.DalBaseProcess;
  * </ul>
  */
 public class SalesMatchingHistory extends DalBaseProcess implements KillableProcess {
-  private final MutableBoolean stopped = new MutableBoolean(false);
-
   private static final String PREFERENCE_MATCH_DAYS = "MatchedSalesDaysBack";
   private static final String PREFERENCE_BATCH_SIZE = "Filter_Batch_Size";
   private static final String SUCCESS = "Success";
   private static final String SHIPMENT_ALIAS_PREFIX = "ship.";
   private static final String INVOICE_ALIAS_PREFIX = "inv.";
   private static Integer batchSizeCache;
+  private final MutableBoolean stopped = new MutableBoolean(false);
 
   /**
    * Main entry point for the process.
@@ -168,26 +167,25 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
       }
 
       ShipmentInOutLine shipLine = invLine.getGoodsShipmentLine();
-      if (shipLine == null) {
-        continue;
+      if (shipLine != null) {
+
+        BigDecimal qty = invLine.getInvoicedQuantity();
+        if (qty == null) {
+          qty = BigDecimal.ZERO;
+        }
+
+        OBCriteria<SIMatch> matchCrit = OBDal.getInstance().createCriteria(SIMatch.class);
+        matchCrit.add(Restrictions.eq(SIMatch.PROPERTY_GOODSSHIPMENTLINE, shipLine));
+        matchCrit.add(Restrictions.eq(SIMatch.PROPERTY_INVOICELINE, invLine));
+
+        SIMatch match = (SIMatch) matchCrit.uniqueResult();
+
+        if (match == null) {
+          createShipmentSIMatch(invLine, shipLine, qty, now);
+        }
+
+        counter = incrementAndMaybeFlush(counter);
       }
-
-      BigDecimal qty = invLine.getInvoicedQuantity();
-      if (qty == null) {
-        qty = BigDecimal.ZERO;
-      }
-
-      OBCriteria<SIMatch> matchCrit = OBDal.getInstance().createCriteria(SIMatch.class);
-      matchCrit.add(Restrictions.eq(SIMatch.PROPERTY_GOODSSHIPMENTLINE, shipLine));
-      matchCrit.add(Restrictions.eq(SIMatch.PROPERTY_INVOICELINE, invLine));
-
-      SIMatch match = (SIMatch) matchCrit.uniqueResult();
-
-      if (match == null) {
-        createShipmentSIMatch(invLine, shipLine, qty, now);
-      }
-
-      counter = incrementAndMaybeFlush(counter);
     }
 
     if (stopped.isFalse()) {
@@ -292,27 +290,26 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
       }
 
       OrderLine orderLine = shipLine.getSalesOrderLine();
-      if (orderLine == null) {
-        continue;
+      if (orderLine != null) {
+
+        BigDecimal qty = shipLine.getMovementQuantity();
+        if (qty == null) {
+          qty = BigDecimal.ZERO;
+        }
+
+        OBCriteria<SOMatch> matchCrit = OBDal.getInstance().createCriteria(SOMatch.class);
+        matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_SALESORDERLINE, orderLine));
+        matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_GOODSSHIPMENTLINE, shipLine));
+        matchCrit.add(Restrictions.isNull(SOMatch.PROPERTY_INVOICELINE));
+
+        SOMatch match = (SOMatch) matchCrit.uniqueResult();
+
+        if (match == null) {
+          createShipmentSOMatch(shipLine, orderLine, qty, now);
+        }
+
+        counter = incrementAndMaybeFlush(counter);
       }
-
-      BigDecimal qty = shipLine.getMovementQuantity();
-      if (qty == null) {
-        qty = BigDecimal.ZERO;
-      }
-
-      OBCriteria<SOMatch> matchCrit = OBDal.getInstance().createCriteria(SOMatch.class);
-      matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_SALESORDERLINE, orderLine));
-      matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_GOODSSHIPMENTLINE, shipLine));
-      matchCrit.add(Restrictions.isNull(SOMatch.PROPERTY_INVOICELINE));
-
-      SOMatch match = (SOMatch) matchCrit.uniqueResult();
-
-      if (match == null) {
-        createShipmentSOMatch(shipLine, orderLine, qty, now);
-      }
-
-      counter = incrementAndMaybeFlush(counter);
     }
   }
 
@@ -356,27 +353,26 @@ public class SalesMatchingHistory extends DalBaseProcess implements KillableProc
       }
 
       OrderLine orderLine = invLine.getSalesOrderLine();
-      if (orderLine == null) {
-        continue;
+      if (orderLine != null) {
+
+        BigDecimal qty = invLine.getInvoicedQuantity();
+        if (qty == null) {
+          qty = BigDecimal.ZERO;
+        }
+
+        OBCriteria<SOMatch> matchCrit = OBDal.getInstance().createCriteria(SOMatch.class);
+        matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_SALESORDERLINE, orderLine));
+        matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_INVOICELINE, invLine));
+        matchCrit.add(Restrictions.isNull(SOMatch.PROPERTY_GOODSSHIPMENTLINE));
+
+        SOMatch match = (SOMatch) matchCrit.uniqueResult();
+
+        if (match == null) {
+          createInvoiceSOMatch(invLine, orderLine, qty, now);
+        }
+
+        counter = incrementAndMaybeFlush(counter);
       }
-
-      BigDecimal qty = invLine.getInvoicedQuantity();
-      if (qty == null) {
-        qty = BigDecimal.ZERO;
-      }
-
-      OBCriteria<SOMatch> matchCrit = OBDal.getInstance().createCriteria(SOMatch.class);
-      matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_SALESORDERLINE, orderLine));
-      matchCrit.add(Restrictions.eq(SOMatch.PROPERTY_INVOICELINE, invLine));
-      matchCrit.add(Restrictions.isNull(SOMatch.PROPERTY_GOODSSHIPMENTLINE));
-
-      SOMatch match = (SOMatch) matchCrit.uniqueResult();
-
-      if (match == null) {
-        createInvoiceSOMatch(invLine, orderLine, qty, now);
-      }
-
-      counter = incrementAndMaybeFlush(counter);
     }
   }
 
