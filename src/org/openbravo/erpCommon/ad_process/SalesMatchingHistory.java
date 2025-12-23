@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
@@ -40,6 +41,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 import org.openbravo.model.sales.SIMatch;
 import org.openbravo.model.sales.SOMatch;
+import org.openbravo.scheduling.KillableProcess;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 import org.openbravo.service.db.DalBaseProcess;
@@ -58,7 +60,9 @@ import org.openbravo.service.db.DalBaseProcess;
  *   <li>Updates quantity and transaction date in the existing match row.</li>
  * </ul>
  */
-public class SalesMatchingHistory extends DalBaseProcess {
+public class SalesMatchingHistory extends DalBaseProcess implements KillableProcess {
+  private final MutableBoolean stopped = new MutableBoolean(false);
+
   private static final String PREFERENCE_MATCH_DAYS = "MatchedSalesDaysBack";
   private static final String PREFERENCE_BATCH_SIZE = "Filter_Batch_Size";
   private static final String SUCCESS = "Success";
@@ -96,11 +100,22 @@ public class SalesMatchingHistory extends DalBaseProcess {
       int amountOfDays = getAmountOfDays();
       Date fromDate = calculateFromDate(amountOfDays);
 
-      backfillSIMatch(fromDate);
-      backfillSOMatch(fromDate);
+      backfillSIMatch(fromDate, stopped);
+
+      if (stopped.isFalse()) {
+        backfillSOMatch(fromDate, stopped);
+      }
 
       OBDal.getInstance().flush();
-      logger.logln(OBMessageUtils.messageBD(SUCCESS));
+
+      if (stopped.isTrue()) {
+        logger.logln("Process stopped by user request");
+        result.setType("Warning");
+        result.setTitle("Process Stopped");
+      } else {
+        logger.logln(OBMessageUtils.messageBD(SUCCESS));
+      }
+
       bundle.setResult(result);
     } catch (Exception e) {
       String errorMessage = OBMessageUtils.messageBD(e.getMessage());
@@ -132,7 +147,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param fromDate
    *     lower bound of the invoice date (inclusive) to consider
    */
-  protected void backfillSIMatch(Date fromDate) {
+  protected void backfillSIMatch(Date fromDate, MutableBoolean stopped) {
     int counter = 0;
 
     OBCriteria<InvoiceLine> lineCriteria = OBDal.getInstance().createCriteria(InvoiceLine.class);
@@ -148,6 +163,10 @@ public class SalesMatchingHistory extends DalBaseProcess {
     Date now = new Date();
 
     for (InvoiceLine invLine : lines) {
+      if (stopped.isTrue()) {
+        break;
+      }
+
       ShipmentInOutLine shipLine = invLine.getGoodsShipmentLine();
       if (shipLine == null) {
         continue;
@@ -171,7 +190,9 @@ public class SalesMatchingHistory extends DalBaseProcess {
       counter = incrementAndMaybeFlush(counter);
     }
 
-    OBDal.getInstance().flush();
+    if (stopped.isFalse()) {
+      OBDal.getInstance().flush();
+    }
   }
 
   /**
@@ -217,13 +238,18 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param fromDate
    *     lower bound of the document date (movement date / invoice date) to consider
    */
-  protected void backfillSOMatch(Date fromDate) {
+  protected void backfillSOMatch(Date fromDate, MutableBoolean stopped) {
     Date now = new Date();
 
-    backfillSOMatchFromShipments(fromDate, now);
-    backfillSOMatchFromInvoices(fromDate, now);
+    backfillSOMatchFromShipments(fromDate, now, stopped);
 
-    OBDal.getInstance().flush();
+    if (stopped.isFalse()) {
+      backfillSOMatchFromInvoices(fromDate, now, stopped);
+    }
+
+    if (stopped.isFalse()) {
+      OBDal.getInstance().flush();
+    }
   }
 
   /**
@@ -246,7 +272,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     reference timestamp used to populate audit fields in new match records
    */
-  protected void backfillSOMatchFromShipments(Date fromDate, Date now) {
+  protected void backfillSOMatchFromShipments(Date fromDate, Date now, MutableBoolean stopped) {
     int counter = 0;
 
     // SO -> GS (OrderLine + ShipmentInOutLine, invoiceLine = null)
@@ -261,6 +287,10 @@ public class SalesMatchingHistory extends DalBaseProcess {
     List<ShipmentInOutLine> shipLines = shipLineCrit.list();
 
     for (ShipmentInOutLine shipLine : shipLines) {
+      if (stopped.isTrue()) {
+        break;
+      }
+
       OrderLine orderLine = shipLine.getSalesOrderLine();
       if (orderLine == null) {
         continue;
@@ -306,7 +336,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     reference timestamp used to populate audit fields in new match records
    */
-  protected void backfillSOMatchFromInvoices(Date fromDate, Date now) {
+  protected void backfillSOMatchFromInvoices(Date fromDate, Date now, MutableBoolean stopped) {
     int counter = 0;
 
     // SO -> SI (OrderLine + InvoiceLine, goodsShipmentLine = null)
@@ -321,6 +351,10 @@ public class SalesMatchingHistory extends DalBaseProcess {
     List<InvoiceLine> invLines = invLineCrit.list();
 
     for (InvoiceLine invLine : invLines) {
+      if (stopped.isTrue()) {
+        break;
+      }
+
       OrderLine orderLine = invLine.getSalesOrderLine();
       if (orderLine == null) {
         continue;
@@ -544,5 +578,10 @@ public class SalesMatchingHistory extends DalBaseProcess {
     cal.set(Calendar.MILLISECOND, 0);
     cal.add(Calendar.DAY_OF_YEAR, -amountOfDays);
     return cal.getTime();
+  }
+
+  @Override
+  public void kill(ProcessBundle bundle) {
+    stopped.setValue(true);
   }
 }
