@@ -60,9 +60,11 @@ import org.openbravo.service.db.DalBaseProcess;
  */
 public class SalesMatchingHistory extends DalBaseProcess {
   private static final String PREFERENCE_MATCH_DAYS = "MatchedSalesDaysBack";
+  private static final String PREFERENCE_BATCH_SIZE = "Filter_Batch_Size";
   private static final String SUCCESS = "Success";
   private static final String SHIPMENT_ALIAS_PREFIX = "ship.";
   private static final String INVOICE_ALIAS_PREFIX = "inv.";
+  private static Integer batchSizeCache;
 
   /**
    * Main entry point for the process.
@@ -125,7 +127,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    *       a new row is created with the invoiced quantity.</li>
    *   <li>If a match already exists, its quantity and transaction date are updated.</li>
    * </ul>
-   * Changes are flushed in batches (every 100 records) to avoid excessive memory usage.
+   * Changes are flushed in configurable batches (based on the Filter_Batch_Size preference) to avoid excessive memory usage.
    *
    * @param fromDate
    *     lower bound of the invoice date (inclusive) to consider
@@ -166,11 +168,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
         createShipmentSIMatch(invLine, shipLine, qty, now);
       }
 
-      counter++;
-      if (counter % 100 == 0) {
-        OBDal.getInstance().flush();
-        OBDal.getInstance().getSession().clear();
-      }
+      counter = incrementAndMaybeFlush(counter);
     }
 
     OBDal.getInstance().flush();
@@ -194,8 +192,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
    * @param now
    *     timestamp used for creation and update audit fields
    */
-  protected void createShipmentSIMatch(InvoiceLine invLine, ShipmentInOutLine shipLine, java.math.BigDecimal qty,
-      java.util.Date now) {
+  protected void createShipmentSIMatch(InvoiceLine invLine, ShipmentInOutLine shipLine, BigDecimal qty, Date now) {
     SIMatch match = OBProvider.getInstance().get(SIMatch.class);
     match.setClient(invLine.getClient());
     match.setOrganization(invLine.getOrganization());
@@ -453,7 +450,7 @@ public class SalesMatchingHistory extends DalBaseProcess {
   /**
    * Increments a batch counter and performs a periodic DAL flush/clear.
    * <p>
-   * When the counter reaches a multiple of 100, it:
+   * When the counter reaches a multiple of the configured batch size, it:
    * <ul>
    *   <li>flushes pending changes to the database, and</li>
    *   <li>clears the current Hibernate session to free memory.</li>
@@ -465,11 +462,40 @@ public class SalesMatchingHistory extends DalBaseProcess {
    */
   protected int incrementAndMaybeFlush(int counter) {
     counter++;
-    if (counter % 100 == 0) {
+    int batchSize = getBatchSize();
+    if (counter % batchSize == 0) {
       OBDal.getInstance().flush();
       OBDal.getInstance().getSession().clear();
     }
     return counter;
+  }
+
+  /**
+   * Returns the batch size used to periodically flush and clear the DAL session.
+   * <p>
+   * The value is read from the {@code Filter_Batch_Size} preference. If the
+   * preference is missing or not a valid integer, an {@link OBException} is
+   * thrown with the message {@code ETBLKP_NoSizePreference}.
+   *
+   * @return batch size to use when flushing/clearing the session
+   * @throws OBException
+   *     if the preference is not defined or is not a valid integer
+   */
+  protected static int getBatchSize() {
+    if (batchSizeCache != null) {
+      return batchSizeCache;
+    }
+
+    try {
+      String preferenceValue = Preferences.getPreferenceValue(PREFERENCE_BATCH_SIZE, true,
+          OBContext.getOBContext().getCurrentClient(), OBContext.getOBContext().getCurrentOrganization(),
+          OBContext.getOBContext().getUser(), OBContext.getOBContext().getRole(), null);
+
+      batchSizeCache = Integer.parseInt(preferenceValue);
+      return batchSizeCache;
+    } catch (Exception e) {
+      throw new OBException(OBMessageUtils.messageBD("NoFilterBatchSizePreference"));
+    }
   }
 
   /**
