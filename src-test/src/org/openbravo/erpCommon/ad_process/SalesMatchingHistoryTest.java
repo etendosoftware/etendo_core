@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.hibernate.Session;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -174,6 +175,7 @@ class SalesMatchingHistoryTest {
 
     int daysBack = 90;
     Date fromDate = new Date();
+    MutableBoolean stopped = new MutableBoolean(false);
 
     try (MockedStatic<SalesMatchingHistory> historyStatic = mockStatic(SalesMatchingHistory.class,
         Mockito.CALLS_REAL_METHODS); MockedStatic<OBDal> obDalStatic = mockStatic(
@@ -189,13 +191,13 @@ class SalesMatchingHistoryTest {
 
       msgStatic.when(() -> OBMessageUtils.messageBD(anyString())).thenAnswer(inv -> inv.getArgument(0, String.class));
 
-      doNothing().when(salesMatchingHistory).backfillSIMatch(fromDate);
-      doNothing().when(salesMatchingHistory).backfillSOMatch(fromDate);
+      doNothing().when(salesMatchingHistory).backfillSIMatch(fromDate, stopped);
+      doNothing().when(salesMatchingHistory).backfillSOMatch(fromDate, stopped);
 
       salesMatchingHistory.doExecute(mockProcessBundle);
 
-      verify(salesMatchingHistory).backfillSIMatch(fromDate);
-      verify(salesMatchingHistory).backfillSOMatch(fromDate);
+      verify(salesMatchingHistory).backfillSIMatch(fromDate, stopped);
+      verify(salesMatchingHistory).backfillSOMatch(fromDate, stopped);
       verify(mockOBDal).flush();
       verify(mockProcessLogger).logln(SUCCESS);
 
@@ -217,6 +219,7 @@ class SalesMatchingHistoryTest {
   @Test
   void testBackfillSIMatchCreatesMatchesForEligibleLines() throws Exception {
     Date fromDate = new Date();
+    MutableBoolean stopped = new MutableBoolean(false);
     SIMatch existingMatch = null;
     BigDecimal qty = new BigDecimal("4");
     setBatchSizeCache(10);
@@ -238,7 +241,7 @@ class SalesMatchingHistoryTest {
       doNothing().when(salesMatchingHistory).createShipmentSIMatch(any(InvoiceLine.class), any(ShipmentInOutLine.class),
           any(BigDecimal.class), any(Date.class));
 
-      salesMatchingHistory.backfillSIMatch(fromDate);
+      salesMatchingHistory.backfillSIMatch(fromDate, stopped);
 
       ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
       ArgumentCaptor<Date> dateCaptor = ArgumentCaptor.forClass(Date.class);
@@ -316,7 +319,7 @@ class SalesMatchingHistoryTest {
   }
 
   /**
-   * Verifies that {@link SalesMatchingHistory#backfillSOMatch(Date)} delegates
+   * Verifies that {@link SalesMatchingHistory#backfillSOMatch(Date, MutableBoolean)} delegates
    * to the shipment- and invoice-based backfill methods and flushes changes.
    * <p>
    * The test ensures that:
@@ -329,14 +332,15 @@ class SalesMatchingHistoryTest {
   @Test
   void testBackfillSOMatchDelegatesAndFlushes() {
     Date fromDate = new Date();
+    MutableBoolean stopped = new MutableBoolean(false);
 
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
 
-      doNothing().when(salesMatchingHistory).backfillSOMatchFromShipments(any(Date.class), any(Date.class));
-      doNothing().when(salesMatchingHistory).backfillSOMatchFromInvoices(any(Date.class), any(Date.class));
+      doNothing().when(salesMatchingHistory).backfillSOMatchFromShipments(any(Date.class), any(Date.class), any(MutableBoolean.class));
+      doNothing().when(salesMatchingHistory).backfillSOMatchFromInvoices(any(Date.class), any(Date.class), any(MutableBoolean.class));
 
-      salesMatchingHistory.backfillSOMatch(fromDate);
+      salesMatchingHistory.backfillSOMatch(fromDate, stopped);
 
       ArgumentCaptor<Date> shipmentsFromDateCaptor = ArgumentCaptor.forClass(Date.class);
       ArgumentCaptor<Date> shipmentsNowCaptor = ArgumentCaptor.forClass(Date.class);
@@ -344,9 +348,9 @@ class SalesMatchingHistoryTest {
       ArgumentCaptor<Date> invoicesNowCaptor = ArgumentCaptor.forClass(Date.class);
 
       verify(salesMatchingHistory).backfillSOMatchFromShipments(shipmentsFromDateCaptor.capture(),
-          shipmentsNowCaptor.capture());
+          shipmentsNowCaptor.capture(), eq(stopped));
       verify(salesMatchingHistory).backfillSOMatchFromInvoices(invoicesFromDateCaptor.capture(),
-          invoicesNowCaptor.capture());
+          invoicesNowCaptor.capture(), eq(stopped));
 
       assertEquals(fromDate, shipmentsFromDateCaptor.getValue());
       assertEquals(fromDate, invoicesFromDateCaptor.getValue());
@@ -358,7 +362,7 @@ class SalesMatchingHistoryTest {
   }
 
   /**
-   * Verifies that {@link SalesMatchingHistory#backfillSOMatchFromShipments(Date, Date)}
+   * Verifies that {@link SalesMatchingHistory#backfillSOMatchFromShipments(Date, Date, MutableBoolean)}
    * creates {@link SOMatch} records for eligible shipment lines (SO → GS).
    * <p>
    * The test simulates shipment lines linked to sales order lines and checks that:
@@ -372,6 +376,7 @@ class SalesMatchingHistoryTest {
   void testBackfillSOMatchFromShipmentsCreatesMatchesForEligibleLines() {
     Date fromDate = new Date();
     Date now = new Date();
+    MutableBoolean stopped = new MutableBoolean(false);
 
     ShipmentInOutLine shipLineWithoutOrder = mock(ShipmentInOutLine.class);
 
@@ -400,7 +405,7 @@ class SalesMatchingHistoryTest {
       doNothing().when(salesMatchingHistory).createShipmentSOMatch(any(ShipmentInOutLine.class), any(OrderLine.class),
           any(BigDecimal.class), any(Date.class));
 
-      salesMatchingHistory.backfillSOMatchFromShipments(fromDate, now);
+      salesMatchingHistory.backfillSOMatchFromShipments(fromDate, now, stopped);
 
       ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
       ArgumentCaptor<Date> dateCaptor = ArgumentCaptor.forClass(Date.class);
@@ -416,7 +421,7 @@ class SalesMatchingHistoryTest {
   }
 
   /**
-   * Verifies that {@link SalesMatchingHistory#backfillSOMatchFromInvoices(Date, Date)}
+   * Verifies that {@link SalesMatchingHistory#backfillSOMatchFromInvoices(Date, Date, MutableBoolean)}
    * creates {@link SOMatch} records for eligible invoice lines (SO → SI).
    * <p>
    * The test simulates sales invoice lines linked to order lines and checks that:
@@ -430,6 +435,7 @@ class SalesMatchingHistoryTest {
   void testBackfillSOMatchFromInvoicesCreatesMatchesForEligibleLines() {
     Date fromDate = new Date();
     Date now = new Date();
+    MutableBoolean stopped = new MutableBoolean(false);
 
     when(mockInvoiceLine.getSalesOrderLine()).thenReturn(mockOrderLine);
     when(mockInvoiceLine2.getSalesOrderLine()).thenReturn(null);
@@ -459,7 +465,7 @@ class SalesMatchingHistoryTest {
       doNothing().when(salesMatchingHistory).createInvoiceSOMatch(any(InvoiceLine.class), any(OrderLine.class),
           any(BigDecimal.class), any(Date.class));
 
-      salesMatchingHistory.backfillSOMatchFromInvoices(fromDate, now);
+      salesMatchingHistory.backfillSOMatchFromInvoices(fromDate, now, stopped);
 
       ArgumentCaptor<BigDecimal> qtyCaptor = ArgumentCaptor.forClass(BigDecimal.class);
       ArgumentCaptor<Date> dateCaptor = ArgumentCaptor.forClass(Date.class);
