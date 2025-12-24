@@ -5535,7 +5535,7 @@ Once the Purchase Order is created, it is marked as Completed and its Document N
 <!--38C413D32923498CA18F7A612331C7C3-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--38C413D32923498CA18F7A612331C7C3-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--38C413D32923498CA18F7A612331C7C3-->  <VALUE><![CDATA[RefreshMatchedSales]]></VALUE>
-<!--38C413D32923498CA18F7A612331C7C3-->  <NAME><![CDATA[Days Back to Refresh Matched Sales]]></NAME>
+<!--38C413D32923498CA18F7A612331C7C3-->  <NAME><![CDATA[Match Sales Order Invoice and Shipment Lines]]></NAME>
 <!--38C413D32923498CA18F7A612331C7C3-->  <DESCRIPTION><![CDATA[Backfills historical sales matching data for orders, shipments and invoices within a configurable number of days.]]></DESCRIPTION>
 <!--38C413D32923498CA18F7A612331C7C3-->  <HELP><![CDATA[This background process updates the sales matching tables (Matched Sales Invoices and Matched Sales Orders) for existing sales documents.
 
