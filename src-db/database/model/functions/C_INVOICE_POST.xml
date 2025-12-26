@@ -1057,6 +1057,8 @@ IF (NOT FINISH_PROCESS) THEN
             END IF;
           END IF;
         END LOOP;
+        DELETE FROM M_MATCHSO
+        WHERE C_InvoiceLine_ID IN (SELECT C_InvoiceLine_ID FROM C_INVOICELINE WHERE C_Invoice_ID = v_Record_ID);
       ELSE
         -- When re-activating an invoice, match invoice lines are removed (if not posted)
         SELECT COUNT(1) INTO v_count
@@ -1074,8 +1076,6 @@ IF (NOT FINISH_PROCESS) THEN
         END IF;
         DELETE FROM M_MATCHPO
         WHERE C_InvoiceLine_ID IN (SELECT C_InvoiceLine_ID FROM C_INVOICELINE WHERE C_Invoice_ID=v_Record_ID);
-        DELETE FROM M_MATCHSO
-        WHERE C_InvoiceLine_ID IN (SELECT C_InvoiceLine_ID FROM C_INVOICELINE WHERE C_Invoice_ID = v_Record_ID);
       END IF;
       UPDATE C_INVOICE
       SET Processed='N',
