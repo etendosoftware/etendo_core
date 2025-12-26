@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -77,7 +78,7 @@ import org.openbravo.exception.PoolNotFoundException;
  * @author iperdomo
  * @author mtaal
  */
-
+@Dependent
 public class ModelProvider implements OBSingleton {
   private static final Logger log = LogManager.getLogger();
   private static final String DEPRECATED_STATUS = "DP";

@@ -42,12 +42,15 @@ import org.openbravo.database.ExternalConnectionPool;
 import org.openbravo.database.PoolInterceptorProvider;
 import org.openbravo.jmx.MBeanRegistry;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * JdbcExternalConnectionPool manages all the functionality of the Apache JDBC Connection Pool. This
  * class can handle different pools (data sources) at the same time. All these pools are eventually
  * making use of the Apache JDBC Connection Pool. This class provides convenience methods to get a
  * connection from a pool, close the different pools and other actions.
  */
+@Dependent
 public class JdbcExternalConnectionPool extends ExternalConnectionPool {
   final static private Logger log = LogManager.getLogger();
 

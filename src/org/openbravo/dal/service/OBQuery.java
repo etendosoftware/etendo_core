@@ -256,7 +256,7 @@ public class OBQuery<E extends BaseOBObject> {
       deleteClause.append("DELETE FROM ");
       deleteClause.append(getEntity().getName()).append(" ");
       deleteClause.append(whereClause);
-      final Query<?> qry = getSession().createQuery(deleteClause.toString(), Object.class);
+      final Query<?> qry = getSession().createQuery(deleteClause.toString());
       setParameters(qry);
       return qry;
     } catch (final Exception e) {

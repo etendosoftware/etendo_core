@@ -47,6 +47,8 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.xml.EntityXMLConverter;
 import org.openbravo.test.base.OBBaseTest;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Test for updates which can happen behind the scenes (but should not happen) if properties are
  * accidentally changed. An example of this is that a boolean field has a null in the database, then
@@ -113,6 +115,7 @@ public class HiddenUpdateTest extends OBBaseTest {
 
   }
 
+  @Dependent
   private class LocalSessionFactoryController extends DalSessionFactoryController {
     @Override
     public Configuration buildConfiguration() {
@@ -173,6 +176,7 @@ public class HiddenUpdateTest extends OBBaseTest {
     }
   }
 
+  @Dependent
   private static class LocalMetadataExtractorIntegrator implements Integrator {
 
     private static LocalMetadataExtractorIntegrator instance = new LocalMetadataExtractorIntegrator();

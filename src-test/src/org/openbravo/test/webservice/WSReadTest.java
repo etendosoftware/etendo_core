@@ -66,7 +66,7 @@ public class WSReadTest extends BaseWSTest {
    */
   @Test
   public void testWhereClause() throws Exception {
-    String whereClause = "(table.id='104' or table.id='105') and isKey='Y'";
+    String whereClause = "(table.id='104' or table.id='105') and keyColumn='Y'";
     whereClause = URLEncoder.encode(whereClause, "UTF-8");
     final String content = doTestGetRequest("/ws/dal/ADColumn?where=" + whereClause, "<ADColumn",
         200);

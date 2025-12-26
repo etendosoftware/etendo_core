@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;

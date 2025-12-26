@@ -9,6 +9,7 @@ pipeline {
     BBDD_SYSTEMPASS     = 'syspass'
     BBDD_USER           = 'tad'
     BBDD_PASSWORD       = 'tad'
+    TOMCAT_PORT         = '8080'
     NEXUS_USER          = credentials('nexus-admin-user')
     NEXUS_PASSWORD      = credentials('nexus-admin-passwd')
     GITHUB_USER         = 'etendobot'
@@ -251,9 +252,20 @@ pipeline {
               }
               sh "${WORKSPACE}/${TOMCAT_FOLDER}/bin/catalina.sh start"
               sleep(time: 1, unit: 'MINUTES')
-              currentBuild.result = SUCCESS
-              env.STATUS_BUILD = SUCCESS
-              echo "--------------- Build Environment Successful ---------------"
+              def rootDir = pwd()
+              def tomcatUtils = load "${rootDir}/pipelines/unittests/utils/tomcatUtils.groovy"
+              def url = "http://localhost:${TOMCAT_PORT}/${CONTEXT_NAME}/security/Login_FS.html"
+              def tomcatStatus = tomcatUtils.checkTomcatStatus(url, 60, 5)
+              if (!tomcatStatus) {
+                env.ERROR_MESSAGE = "Tomcat did not start correctly"
+                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+                currentBuild.result = FAILED
+                error(env.ERROR_MESSAGE)
+              } else {
+                currentBuild.result = SUCCESS
+                env.STATUS_BUILD = SUCCESS
+                echo "--------------- Build Environment Successful ---------------"
+              }
             } catch (Exception e) {
               env.ERROR_MESSAGE = "Build Environment Failed"
               echo "--------------- ${env.ERROR_MESSAGE} ---------------"

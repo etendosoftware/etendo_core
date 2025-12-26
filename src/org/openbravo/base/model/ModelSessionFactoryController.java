@@ -31,6 +31,7 @@ import org.hibernate.type.Type;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.util.Check;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 
 /**
@@ -40,7 +41,7 @@ import jakarta.enterprise.context.Dependent;
  * @author mtaal
  */
 
-@Dependent
+@ApplicationScoped
 public class ModelSessionFactoryController extends SessionFactoryController {
 
   private List<Class<?>> additionalClasses = new ArrayList<Class<?>>();
@@ -67,6 +68,7 @@ public class ModelSessionFactoryController extends SessionFactoryController {
   }
 
   // an interceptor which fails on all updates
+  @Dependent
   private class LocalInterceptor extends EmptyInterceptor {
 
     private static final long serialVersionUID = 1L;

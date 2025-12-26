@@ -40,6 +40,8 @@ import org.openbravo.base.validation.AccessLevelChecker;
 import org.openbravo.base.validation.EntityValidator;
 import org.openbravo.base.validation.PropertyValidator;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Models the business object type. The Entity is the main concept in the in-memory model. An entity
  * corresponds to a {@link Table} in the database. An Entity has properties which are primitive
@@ -52,6 +54,7 @@ import org.openbravo.base.validation.PropertyValidator;
  * @author mtaal
  */
 
+@Dependent
 public class Entity {
   private static final Logger log = LogManager.getLogger();
 
