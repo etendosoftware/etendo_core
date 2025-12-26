@@ -57,6 +57,8 @@ import org.openbravo.model.materialmgmt.transaction.InternalMovementLine;
 public class ReferencedInventoryUtil {
   public static final String REFERENCEDINVENTORYPREFIX = "[";
   public static final String REFERENCEDINVENTORYSUFFIX = "]";
+  /* BOX Type for referenced inventories */
+  public static final String DEFAULT_REFERENCED_INVENTORY_TYPE = "F3E918BA1E404495BDAF6E72B4B017D9";
 
   /**
    * Create and return a new AttributeSetInstance from the given originalAttributeSetInstance and

@@ -14974,7 +14974,7 @@ For example, if you want to create different invoices for each ship location for
 <!--800443-->  <NAME><![CDATA[Component Cost]]></NAME>
 <!--800443-->  <PRINTNAME><![CDATA[Component Cost]]></PRINTNAME>
 <!--800443-->  <DESCRIPTION><![CDATA[Component Cost]]></DESCRIPTION>
-<!--800443-->  <HELP><![CDATA[Cost per component]]></HELP>
+<!--800443-->  <HELP><![CDATA[Defines the weighting factor used to allocate the total operation cost among the produced products (P+). When an operation generates more than one P+, the total cost is distributed proportionally according to this value. This field applies only to produced (P+) lines.]]></HELP>
 <!--800443-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--800443-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--800443--></AD_ELEMENT>
@@ -32219,6 +32219,20 @@ By disabling this option standard beats will be sent to HeartBeat server, but no
 <!--A0082483F6A94849A1EB41C049E6E0A5-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--A0082483F6A94849A1EB41C049E6E0A5--></AD_ELEMENT>
 
+<!--A09131D7FF094F5FA93A3CEABEE34437--><AD_ELEMENT>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <AD_ELEMENT_ID><![CDATA[A09131D7FF094F5FA93A3CEABEE34437]]></AD_ELEMENT_ID>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <COLUMNNAME><![CDATA[Isforceautomation]]></COLUMNNAME>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <NAME><![CDATA[Force configuration in automated processes]]></NAME>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <PRINTNAME><![CDATA[Force configuration in automated processes]]></PRINTNAME>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <DESCRIPTION><![CDATA[Enable default configuration automation in processes.]]></DESCRIPTION>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <HELP><![CDATA[Checkbox field to identify configuration automation in processes.]]></HELP>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
+<!--A09131D7FF094F5FA93A3CEABEE34437-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
+<!--A09131D7FF094F5FA93A3CEABEE34437--></AD_ELEMENT>
+
 <!--A0D16AC37FE945928ECB65528B11B788--><AD_ELEMENT>
 <!--A0D16AC37FE945928ECB65528B11B788-->  <AD_ELEMENT_ID><![CDATA[A0D16AC37FE945928ECB65528B11B788]]></AD_ELEMENT_ID>
 <!--A0D16AC37FE945928ECB65528B11B788-->  <AD_CLIENT_ID><![CDATA[0]]></AD_CLIENT_ID>
@@ -36075,9 +36089,8 @@ Processes with "Requires Explicit Access Permission" flag set to true, do not in
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <COLUMNNAME><![CDATA[Basisamt]]></COLUMNNAME>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <NAME><![CDATA[Basis Amount]]></NAME>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <PRINTNAME><![CDATA[Basis Amount]]></PRINTNAME>
-<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <DESCRIPTION><![CDATA[The amount  that will take into account to calculate the commission: net amount or margin.   If margin is selected, only the invoices that have shipments will take into account.]]></DESCRIPTION>
-<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <HELP><![CDATA[The amount  that will take into account to calculate the commission: net amount or margin. 
- If margin is selected, only the invoices that have shipments will take into account.]]></HELP>
+<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <DESCRIPTION><![CDATA[The amount that will take into account to calculate the commission: net amount or margin.]]></DESCRIPTION>
+<!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <HELP><![CDATA[The amount that will take into account to calculate the commission: net amount or margin.]]></HELP>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--D86D2ACAE6A346BCBDDC688BE98AB843--></AD_ELEMENT>
