@@ -45,6 +45,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.ad_process.HeartbeatProcess;
+import org.openbravo.erpCommon.obps.ActivationKey;
 import org.openbravo.erpCommon.obps.ActiveInstanceProcess;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.ad.module.Module;
@@ -722,7 +723,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
   // Test helper: set ActivationKey.instanceProperties via reflection to avoid NPE in tests
   private void setActivationKeyProperties(String instanceNo, String purpose) {
     try {
-      org.openbravo.erpCommon.obps.ActivationKey ak = org.openbravo.erpCommon.obps.ActivationKey.getInstance();
+      ActivationKey ak = ActivationKey.getInstance();
       Properties props = new Properties();
       if (instanceNo != null) {
         props.setProperty("instanceNo", instanceNo);
@@ -730,7 +731,7 @@ public class InstanceManagementActionTest extends WeldBaseTest {
       if (purpose != null) {
         props.setProperty("purpose", purpose);
       }
-      Field f = org.openbravo.erpCommon.obps.ActivationKey.class.getDeclaredField("instanceProperties");
+      Field f = ActivationKey.class.getDeclaredField("instanceProperties");
       f.setAccessible(true);
       f.set(ak, props);
     } catch (Exception e) {
