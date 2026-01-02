@@ -22,6 +22,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
 import org.openbravo.model.common.plm.ProductUOM;
@@ -231,7 +232,7 @@ public class UOMUtilTest {
     when(mockUOM2.getName()).thenReturn("UOM Name 2");
 
     when(mockDal.createCriteria(ProductUOM.class)).thenReturn(mockCriteria);
-    when(mockCriteria.addEqual(eq("product.id"), eq(TEST_PRODUCT_ID))).thenReturn(mockCriteria);
+    when(mockCriteria.add(Restrictions.eq(eq("product.id"), eq(TEST_PRODUCT_ID)))).thenReturn(mockCriteria);
     when(mockCriteria.addOrderBy(eq("uOM.name"), eq(true))).thenReturn(mockCriteria);
     when(mockCriteria.list()).thenReturn(mockProductUOMList);
 
@@ -245,7 +246,7 @@ public class UOMUtilTest {
 
     mockedOBContext.verify(OBContext::restorePreviousMode, Mockito.atLeastOnce());
 
-    Mockito.verify(mockCriteria).addEqual("product.id", TEST_PRODUCT_ID);
+    Mockito.verify(mockCriteria).add(Restrictions.eq("product.id", TEST_PRODUCT_ID));
     Mockito.verify(mockCriteria).addOrderBy("uOM.name", true);
     Mockito.verify(mockCriteria).list();
   }

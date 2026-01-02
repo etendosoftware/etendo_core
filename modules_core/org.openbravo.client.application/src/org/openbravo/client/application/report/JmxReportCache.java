@@ -20,13 +20,13 @@ package org.openbravo.client.application.report;
 
 import java.util.Set;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * An standard MBean that allows to view and clear the cached contents of the
  * {@link CompiledReportManager} through JMX.
  */
-@ApplicationScoped
+@Dependent
 public class JmxReportCache implements JmxReportCacheMBean {
 
   public static final String MBEAN_NAME = "ReportCache";

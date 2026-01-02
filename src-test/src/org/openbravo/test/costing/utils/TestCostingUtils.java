@@ -65,6 +65,7 @@ import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.ConnectionProviderImpl;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
@@ -268,7 +269,7 @@ public class TestCostingUtils {
   private static int getNumberOfCostingProducts(String name) {
     try {
       final OBCriteria<Product> criteria = OBDal.getInstance().createCriteria(Product.class);
-      criteria.addLike(Product.PROPERTY_NAME, name + "-%");
+      criteria.add(Restrictions.like(Product.PROPERTY_NAME, name + "-%"));
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -386,8 +387,8 @@ public class TestCostingUtils {
 
       OBCriteria<ProductAccounts> criteria = OBDal.getInstance()
           .createCriteria(ProductAccounts.class);
-      criteria.addEqual(ProductAccounts.PROPERTY_PRODUCT, product);
-      criteria.addIsNotNull(ProductAccounts.PROPERTY_INVOICEPRICEVARIANCE);
+      criteria.add(Restrictions.eq(ProductAccounts.PROPERTY_PRODUCT, product));
+      criteria.add(Restrictions.isNotNull(ProductAccounts.PROPERTY_INVOICEPRICEVARIANCE));
       criteria.setMaxResults(1);
       productClone.getProductAccountsList()
           .get(0)
@@ -919,9 +920,9 @@ public class TestCostingUtils {
     try {
       OBCriteria<ReceiptInvoiceMatch> criteria1 = OBDal.getInstance()
           .createCriteria(ReceiptInvoiceMatch.class);
-      criteria1.addEqual(ReceiptInvoiceMatch.PROPERTY_INVOICELINE, purchaseInvoiceLine);
+      criteria1.add(Restrictions.eq(ReceiptInvoiceMatch.PROPERTY_INVOICELINE, purchaseInvoiceLine));
       criteria1
-          .addEqual(ReceiptInvoiceMatch.PROPERTY_GOODSSHIPMENTLINE, goodsReceiptLine);
+          .add(Restrictions.eq(ReceiptInvoiceMatch.PROPERTY_GOODSSHIPMENTLINE, goodsReceiptLine));
       criteria1.setMaxResults(1);
       ReceiptInvoiceMatch receiptInvoiceMatch = (ReceiptInvoiceMatch) criteria1.uniqueResult();
       assertMatchedInvoice(receiptInvoiceMatch,
@@ -944,9 +945,9 @@ public class TestCostingUtils {
                       .getRate());
       OBCriteria<AccountingFact> criteria2 = OBDal.getInstance()
           .createCriteria(AccountingFact.class);
-      criteria2.addEqual(AccountingFact.PROPERTY_RECORDID,
-          goodsReceiptLine.getShipmentReceipt().getId());
-      criteria2.addEqual(AccountingFact.PROPERTY_LINEID, goodsReceiptLine.getId());
+      criteria2.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID,
+          goodsReceiptLine.getShipmentReceipt().getId()));
+      criteria2.add(Restrictions.eq(AccountingFact.PROPERTY_LINEID, goodsReceiptLine.getId()));
       criteria2.addOrderBy(AccountingFact.PROPERTY_SEQUENCENUMBER, true);
       criteria2.setMaxResults(1);
       BigDecimal receiptPrice = ((AccountingFact) criteria2.uniqueResult()).getDebit()
@@ -1309,7 +1310,7 @@ public class TestCostingUtils {
 
         final OBCriteria<AccountingFact> criteria1 = OBDal.getInstance()
             .createCriteria(AccountingFact.class);
-        criteria1.addEqual(AccountingFact.PROPERTY_RECORDID, billOfMaterialsProduction.getId());
+        criteria1.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, billOfMaterialsProduction.getId()));
         criteria1.addOrderBy(AccountingFact.PROPERTY_SEQUENCENUMBER, true);
 
         if (!criteria1.list()
@@ -1326,7 +1327,7 @@ public class TestCostingUtils {
 
         if (i == 0) {
           OBCriteria<ProductBOM> criteria2 = OBDal.getInstance().createCriteria(ProductBOM.class);
-          criteria2.addEqual(ProductBOM.PROPERTY_PRODUCT, productionLine.getProduct());
+          criteria2.add(Restrictions.eq(ProductBOM.PROPERTY_PRODUCT, productionLine.getProduct()));
           for (ProductBOM productBOM : criteria2.list()) {
             amountTotal = amountTotal.add(productBOM.getBOMQuantity()
                 .multiply(productBOM.getBOMProduct()
@@ -1614,7 +1615,7 @@ public class TestCostingUtils {
 
       OBCriteria<LandedCostCost> criteria2 = OBDal.getInstance()
           .createCriteria(LandedCostCost.class);
-      criteria2.addEqual(LandedCostCost.PROPERTY_LANDEDCOST, landedCost);
+      criteria2.add(Restrictions.eq(LandedCostCost.PROPERTY_LANDEDCOST, landedCost));
       criteria2.addOrderBy(LandedCostCost.PROPERTY_LINENO, true);
       List<LandedCostCost> landedCostCostList = criteria2.list();
 
@@ -1687,7 +1688,7 @@ public class TestCostingUtils {
             else {
 
               OBCriteria<LCMatched> criteria3 = OBDal.getInstance().createCriteria(LCMatched.class);
-              criteria3.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, landedCostCost);
+              criteria3.add(Restrictions.eq(LCMatched.PROPERTY_LANDEDCOSTCOST, landedCostCost));
               criteria3.addOrderBy(LCMatched.PROPERTY_CREATIONDATE, true);
 
               for (LCMatched landedCostMatched : criteria3.list()) {
@@ -1853,8 +1854,8 @@ public class TestCostingUtils {
 
               OBCriteria<ShipmentInOutLine> criteria3 = OBDal.getInstance()
                   .createCriteria(ShipmentInOutLine.class);
-              criteria3.addEqual(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT,
-                  landedCostReceipt.getGoodsShipment());
+              criteria3.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT,
+                  landedCostReceipt.getGoodsShipment()));
               criteria3.addOrderBy(ShipmentInOutLine.PROPERTY_LINENO, true);
 
               for (ShipmentInOutLine receiptLine : criteria3.list()) {
@@ -1955,7 +1956,7 @@ public class TestCostingUtils {
 
             final OBCriteria<AccountingFact> criteria = OBDal.getInstance()
                 .createCriteria(AccountingFact.class);
-            criteria.addEqual(AccountingFact.PROPERTY_RECORDID, lcCost.getId());
+            criteria.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, lcCost.getId()));
             criteria.addOrderBy(AccountingFact.PROPERTY_SEQUENCENUMBER, true);
 
             if (criteria.list()
@@ -2117,13 +2118,13 @@ public class TestCostingUtils {
       else {
 
         final OBCriteria<LCMatched> criteria1 = OBDal.getInstance().createCriteria(LCMatched.class);
-        criteria1.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, landedCostCost);
+        criteria1.add(Restrictions.eq(LCMatched.PROPERTY_LANDEDCOSTCOST, landedCostCost));
         criteria1.addOrderBy(LCMatched.PROPERTY_CREATIONDATE, true);
         List<LCMatched> landedCostCostMatchedList = criteria1.list();
 
         final OBCriteria<AccountingFact> criteria2 = OBDal.getInstance()
             .createCriteria(AccountingFact.class);
-        criteria2.addEqual(AccountingFact.PROPERTY_RECORDID, lcCost.getId());
+        criteria2.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, lcCost.getId()));
         criteria2.addOrderBy(AccountingFact.PROPERTY_SEQUENCENUMBER, true);
 
         if (!criteria2.list()
@@ -2528,7 +2529,7 @@ public class TestCostingUtils {
 
         OBCriteria<ShipmentInOutLine> criteria = OBDal.getInstance()
             .createCriteria(ShipmentInOutLine.class);
-        criteria.addEqual(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine);
+        criteria.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine));
         criteria.setMaxResults(1);
         ShipmentInOutLine shipmentInOutLine = (ShipmentInOutLine) criteria.uniqueResult();
         if (shipmentInOutLine != null) {
@@ -2677,7 +2678,7 @@ public class TestCostingUtils {
 
         OBCriteria<ShipmentInOutLine> criteria = OBDal.getInstance()
             .createCriteria(ShipmentInOutLine.class);
-        criteria.addEqual(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine);
+        criteria.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine));
         criteria.setMaxResults(1);
         ShipmentInOutLine shipmentInOutLine = (ShipmentInOutLine) criteria.uniqueResult();
         if (shipmentInOutLine != null) {
@@ -3114,7 +3115,7 @@ public class TestCostingUtils {
 
       final OBCriteria<DocumentType> criteria = OBDal.getInstance()
           .createCriteria(DocumentType.class);
-      criteria.addEqual(DocumentType.PROPERTY_NAME, "Inventory Amount Update");
+      criteria.add(Restrictions.eq(DocumentType.PROPERTY_NAME, "Inventory Amount Update"));
       criteria.setMaxResults(1);
       DocumentType documentType = (DocumentType) criteria.uniqueResult();
 
@@ -3280,10 +3281,10 @@ public class TestCostingUtils {
       else if (landedCostTypeId
           .equals(TestCostingConstants.LANDEDCOSTTYPE_TRANSPORTATION_COST_ID)) {
         OBCriteria<TaxRate> criteria = OBDal.getInstance().createCriteria(TaxRate.class);
-        criteria.addEqual(TaxRate.PROPERTY_TAXCATEGORY,
-            OBDal.getInstance().get(Product.class, landedCostTypeId).getTaxCategory());
-        criteria.addEqual(TaxRate.PROPERTY_ORGANIZATION, OBDal.getInstance()
-            .get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID));
+        criteria.add(Restrictions.eq(TaxRate.PROPERTY_TAXCATEGORY,
+            OBDal.getInstance().get(Product.class, landedCostTypeId).getTaxCategory()));
+        criteria.add(Restrictions.eq(TaxRate.PROPERTY_ORGANIZATION, OBDal.getInstance()
+            .get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID)));
         criteria.setMaxResults(1);
         invoiceLine.setTax((TaxRate) criteria.uniqueResult());
       }
@@ -3601,7 +3602,7 @@ public class TestCostingUtils {
     try {
       final OBCriteria<AccountingFact> criteria = OBDal.getInstance()
           .createCriteria(AccountingFact.class);
-      criteria.addEqual(AccountingFact.PROPERTY_RECORDID, document.getId());
+      criteria.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, document.getId()));
       for (AccountingFact accountingFact : criteria.list()) {
         OBDal.getInstance().remove(accountingFact);
       }
@@ -3628,7 +3629,7 @@ public class TestCostingUtils {
   public static BaseOBObject completeDocument(BaseOBObject document, String processId) {
     try {
       final OBCriteria<Table> criteria = OBDal.getInstance().createCriteria(Table.class);
-      criteria.addEqual(Table.PROPERTY_NAME, document.getEntityName());
+      criteria.add(Restrictions.eq(Table.PROPERTY_NAME, document.getEntityName()));
       criteria.setMaxResults(1);
       String procedureName = ((Table) criteria.uniqueResult()).getDBTableName() + "_post";
 
@@ -3672,7 +3673,7 @@ public class TestCostingUtils {
 
     try {
       final OBCriteria<Table> criteria = OBDal.getInstance().createCriteria(Table.class);
-      criteria.addEqual(Table.PROPERTY_NAME, document.getEntityName());
+      criteria.add(Restrictions.eq(Table.PROPERTY_NAME, document.getEntityName()));
       criteria.setMaxResults(1);
       String tableId = ((Table) criteria.uniqueResult()).getId();
       con = conn.getTransactionConnection();
@@ -3971,8 +3972,8 @@ public class TestCostingUtils {
     try {
       OBCriteria<MaterialTransaction> criteria = OBDal.getInstance()
           .createCriteria(MaterialTransaction.class);
-      criteria.addEqual(MaterialTransaction.PROPERTY_PRODUCT,
-          OBDal.getInstance().get(Product.class, productId));
+      criteria.add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCT,
+          OBDal.getInstance().get(Product.class, productId)));
       if (orderByTransProcessDate) {
         criteria.addOrderBy(MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE, true);
       } else {
@@ -3991,7 +3992,7 @@ public class TestCostingUtils {
     try {
       OBCriteria<MaterialTransaction> criteria = OBDal.getInstance()
           .createCriteria(MaterialTransaction.class);
-      criteria.addEqual(MaterialTransaction.PROPERTY_PRODUCTIONLINE, productionLine);
+      criteria.add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCTIONLINE, productionLine));
       criteria.setMaxResults(1);
       return criteria.uniqueResult() != null ? (MaterialTransaction) criteria.uniqueResult() : null;
     } catch (Exception e) {
@@ -4306,7 +4307,7 @@ public class TestCostingUtils {
           landedCostCostMatchedAssertList.size());
 
       OBCriteria<LCMatched> criteria1 = OBDal.getInstance().createCriteria(LCMatched.class);
-      criteria1.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, landedCostCost);
+      criteria1.add(Restrictions.eq(LCMatched.PROPERTY_LANDEDCOSTCOST, landedCostCost));
       criteria1.addOrderBy(LCMatched.PROPERTY_CREATIONDATE, true);
       List<LCMatched> landedCostCostMatchedList = criteria1.list();
 
@@ -4351,13 +4352,13 @@ public class TestCostingUtils {
           calendar.set(9999, 0, 1);
           OBCriteria<ConversionRate> criteria2 = OBDal.getInstance()
               .createCriteria(ConversionRate.class);
-          criteria2.addEqual(ConversionRate.PROPERTY_CLIENT,
-              OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID));
-          criteria2.addEqual(ConversionRate.PROPERTY_CURRENCY,
-              OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
-          criteria2.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
-              OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
-          criteria2.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
+          criteria2.add(Restrictions.eq(ConversionRate.PROPERTY_CLIENT,
+              OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID)));
+          criteria2.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY,
+              OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID)));
+          criteria2.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY,
+              OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID)));
+          criteria2.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
           criteria2.setMaxResults(1);
           BigDecimal rate = ((ConversionRate) criteria2.uniqueResult()).getMultipleRateBy();
 
@@ -4866,13 +4867,13 @@ public class TestCostingUtils {
             calendar.set(9999, 0, 1);
             OBCriteria<ConversionRate> criteria2 = OBDal.getInstance()
                 .createCriteria(ConversionRate.class);
-            criteria2.addEqual(ConversionRate.PROPERTY_CLIENT,
-                OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID));
-            criteria2.addEqual(ConversionRate.PROPERTY_CURRENCY,
-                OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
-            criteria2.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
-                OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
-            criteria2.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
+            criteria2.add(Restrictions.eq(ConversionRate.PROPERTY_CLIENT,
+                OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID)));
+            criteria2.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY,
+                OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID)));
+            criteria2.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY,
+                OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID)));
+            criteria2.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
             criteria2.setMaxResults(1);
             BigDecimal rate = ((ConversionRate) criteria2.uniqueResult()).getMultipleRateBy();
 
@@ -5039,11 +5040,11 @@ public class TestCostingUtils {
         if (costAdjustmentAssertLineList.get(0).getStatus().equals("VO")) {
           OBCriteria<CostAdjustmentLine> criteria = OBDal.getInstance()
               .createCriteria(CostAdjustmentLine.class);
-          criteria.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION,
-              costAdjustmentAssertLineList.get(0).getMaterialTransaction());
-          criteria.addEqual(CostAdjustmentLine.PROPERTY_ADJUSTMENTAMOUNT,
-              costAdjustmentAssertLineList.get(0).getAmount().negate());
-          criteria.addNotEqual(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, costAdjustment);
+          criteria.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION,
+              costAdjustmentAssertLineList.get(0).getMaterialTransaction()));
+          criteria.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ADJUSTMENTAMOUNT,
+              costAdjustmentAssertLineList.get(0).getAmount().negate()));
+          criteria.add(Restrictions.ne(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, costAdjustment));
           criteria.setMaxResults(1);
           assertEquals(costAdjustment.getCostAdjustmentCancel(),
               ((CostAdjustmentLine) criteria.uniqueResult()).getCostAdjustment()
@@ -5223,14 +5224,14 @@ public class TestCostingUtils {
       assertEquals(document.get("posted"), "Y");
 
       final OBCriteria<Table> criteria1 = OBDal.getInstance().createCriteria(Table.class);
-      criteria1.addEqual(Table.PROPERTY_NAME, document.getEntityName());
+      criteria1.add(Restrictions.eq(Table.PROPERTY_NAME, document.getEntityName()));
       criteria1.setMaxResults(1);
       Table table = (Table) criteria1.uniqueResult();
 
       final OBCriteria<AccountingFact> criteria2 = OBDal.getInstance()
           .createCriteria(AccountingFact.class);
-      criteria2.addEqual(AccountingFact.PROPERTY_RECORDID, document.getId());
-      criteria2.addEqual(AccountingFact.PROPERTY_TABLE, table);
+      criteria2.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, document.getId()));
+      criteria2.add(Restrictions.eq(AccountingFact.PROPERTY_TABLE, table));
       criteria2.addOrderBy(AccountingFact.PROPERTY_SEQUENCENUMBER, true);
       List<AccountingFact> accountingFactList = criteria2.list();
       String groupId = accountingFactList.get(0).getGroupID();
@@ -5271,8 +5272,8 @@ public class TestCostingUtils {
         } else if (document.getEntityName().equals(CostAdjustment.ENTITY_NAME)) {
           final OBCriteria<CostAdjustmentLine> criteria3 = OBDal.getInstance()
               .createCriteria(CostAdjustmentLine.class);
-          criteria3.addEqual(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, document);
-          criteria3.addEqual(CostAdjustmentLine.PROPERTY_NEEDSPOSTING, true);
+          criteria3.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, document));
+          criteria3.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_NEEDSPOSTING, true));
           criteria3.addOrderBy(CostAdjustmentLine.PROPERTY_LINENO, true);
           line = criteria3.list().get(i / 2);
         } else if (productId != null
@@ -5380,13 +5381,13 @@ public class TestCostingUtils {
             calendar.set(9999, 0, 1);
             OBCriteria<ConversionRate> criteria = OBDal.getInstance()
                 .createCriteria(ConversionRate.class);
-            criteria.addEqual(ConversionRate.PROPERTY_CLIENT,
-                OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID));
-            criteria.addEqual(ConversionRate.PROPERTY_CURRENCY,
-                OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
-            criteria.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
-                OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
-            criteria.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
+            criteria.add(Restrictions.eq(ConversionRate.PROPERTY_CLIENT,
+                OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID)));
+            criteria.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY,
+                OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID)));
+            criteria.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY,
+                OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID)));
+            criteria.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
             criteria.setMaxResults(1);
             rate = ((ConversionRate) criteria.uniqueResult()).getMultipleRateBy();
           }
@@ -5454,13 +5455,13 @@ public class TestCostingUtils {
           calendar.set(9999, 0, 1);
           OBCriteria<ConversionRate> criteria = OBDal.getInstance()
               .createCriteria(ConversionRate.class);
-          criteria.addEqual(ConversionRate.PROPERTY_CLIENT,
-              OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID));
-          criteria.addEqual(ConversionRate.PROPERTY_CURRENCY,
-              OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID));
-          criteria.addEqual(ConversionRate.PROPERTY_TOCURRENCY,
-              OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID));
-          criteria.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime());
+          criteria.add(Restrictions.eq(ConversionRate.PROPERTY_CLIENT,
+              OBDal.getInstance().get(Client.class, TestCostingConstants.QATESTING_CLIENT_ID)));
+          criteria.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY,
+              OBDal.getInstance().get(Currency.class, TestCostingConstants.EURO_ID)));
+          criteria.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY,
+              OBDal.getInstance().get(Currency.class, TestCostingConstants.DOLLAR_ID)));
+          criteria.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, calendar.getTime()));
           criteria.setMaxResults(1);
           rate = ((ConversionRate) criteria.uniqueResult()).getMultipleRateBy();
         }
@@ -5498,8 +5499,8 @@ public class TestCostingUtils {
         calendar2.setTime(accountingFact.getAccountingDate());
         calendar2.set(Calendar.DAY_OF_MONTH, calendar2.getActualMaximum(Calendar.DAY_OF_MONTH));
         final OBCriteria<Period> criteria3 = OBDal.getInstance().createCriteria(Period.class);
-        criteria3.addEqual(Period.PROPERTY_STARTINGDATE, calendar1.getTime());
-        criteria3.addEqual(Period.PROPERTY_ENDINGDATE, calendar2.getTime());
+        criteria3.add(Restrictions.eq(Period.PROPERTY_STARTINGDATE, calendar1.getTime()));
+        criteria3.add(Restrictions.eq(Period.PROPERTY_ENDINGDATE, calendar2.getTime()));
         criteria3.setMaxResults(1);
         assertEquals(accountingFact.getPeriod(), (Period) criteria3.uniqueResult());
 
@@ -5672,10 +5673,10 @@ public class TestCostingUtils {
             assertEquals(accountingFact.getRecordID2(), null);
 
             OBCriteria<TaxRate> criteria = OBDal.getInstance().createCriteria(TaxRate.class);
-            criteria.addEqual(TaxRate.PROPERTY_TAXCATEGORY,
-                OBDal.getInstance().get(Product.class, productId).getTaxCategory());
-            criteria.addEqual(TaxRate.PROPERTY_ORGANIZATION, OBDal.getInstance()
-                .get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID));
+            criteria.add(Restrictions.eq(TaxRate.PROPERTY_TAXCATEGORY,
+                OBDal.getInstance().get(Product.class, productId).getTaxCategory()));
+            criteria.add(Restrictions.eq(TaxRate.PROPERTY_ORGANIZATION, OBDal.getInstance()
+                .get(Organization.class, TestCostingConstants.SPAIN_ORGANIZATION_ID)));
             criteria.setMaxResults(1);
             assertEquals(accountingFact.getTax(), (TaxRate) criteria.uniqueResult());
           } else {
@@ -5789,7 +5790,7 @@ public class TestCostingUtils {
         final OBCriteria<ElementValue> criteria4 = OBDal.getInstance()
             .createCriteria(ElementValue.class);
         criteria4
-            .addEqual(ElementValue.PROPERTY_SEARCHKEY, documentPostAssert.getAccount());
+            .add(Restrictions.eq(ElementValue.PROPERTY_SEARCHKEY, documentPostAssert.getAccount()));
         criteria4.setMaxResults(1);
         assertEquals(accountingFact.getAccountingEntryDescription(),
             ((ElementValue) criteria4.uniqueResult()).getDescription());
@@ -5953,8 +5954,8 @@ public class TestCostingUtils {
       final Locator storageBin) {
     OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance()
         .createCriteria(StorageDetail.class);
-    storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, product);
-    storageDetailCriteria.addEqual(StorageDetail.PROPERTY_STORAGEBIN, storageBin);
+    storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, product));
+    storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_STORAGEBIN, storageBin));
     storageDetailCriteria.setMaxResults(1);
     StorageDetail storageDetail = (StorageDetail) storageDetailCriteria.uniqueResult();
     if (storageDetail != null) {

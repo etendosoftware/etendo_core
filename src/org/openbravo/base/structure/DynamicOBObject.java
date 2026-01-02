@@ -37,6 +37,7 @@ import org.openbravo.model.common.enterprise.Organization;
  */
 
 @SuppressWarnings("serial")
+@Deprecated
 public class DynamicOBObject extends BaseOBObject
     implements Traceable, ClientEnabled, OrganizationEnabled {
 

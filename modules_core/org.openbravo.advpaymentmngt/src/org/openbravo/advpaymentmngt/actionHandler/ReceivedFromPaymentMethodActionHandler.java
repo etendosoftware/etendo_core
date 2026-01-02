@@ -34,6 +34,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
@@ -69,9 +70,9 @@ public class ReceivedFromPaymentMethodActionHandler extends BaseActionHandler {
           if (paymentMethod != null) {
             OBCriteria<FinAccPaymentMethod> criteria = OBDal.getInstance()
                 .createCriteria(FinAccPaymentMethod.class);
-            criteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount);
+            criteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount));
             criteria
-                .addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
+                .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
             criteria.setFilterOnReadableOrganization(false);
             criteria.setFilterOnActive(true);
             criteria.setMaxResults(1);

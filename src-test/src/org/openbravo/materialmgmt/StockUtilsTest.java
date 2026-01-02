@@ -26,6 +26,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.Client;
@@ -109,7 +110,7 @@ public class StockUtilsTest {
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
 
     when(mockOBDal.createCriteria(StockProposed.class)).thenReturn(mockCriteria);
-    when(mockCriteria.addEqual(anyString(), any())).thenReturn(mockCriteria);
+    when(mockCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockCriteria);
     when(mockCriteria.addOrderBy(anyString(), anyBoolean())).thenReturn(mockCriteria);
     when(mockCriteria.scroll(ScrollMode.FORWARD_ONLY)).thenReturn(mockScrollableResults);
 
@@ -246,7 +247,7 @@ public class StockUtilsTest {
 
     // Verify that createCriteria and its methods were called correctly
     verify(mockOBDal).createCriteria(StockProposed.class);
-    verify(mockCriteria).addEqual(anyString(), any());
+    verify(mockCriteria).add(Restrictions.eq(anyString(), any()));
     verify(mockCriteria).addOrderBy(anyString(), anyBoolean());
     verify(mockCriteria).scroll(ScrollMode.FORWARD_ONLY);
   }

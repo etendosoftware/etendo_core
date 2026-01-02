@@ -35,6 +35,7 @@ import org.openbravo.client.application.Note;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
@@ -77,9 +78,9 @@ public class ObserverBaseTest extends WeldBaseTest {
     OBContext.setAdminMode(true);
     try {
       OBCriteria<Note> q = OBDal.getInstance().createCriteria(Note.class);
-      q.addEqual(Note.PROPERTY_RECORD, obj.getId());
-      q.addEqual(Note.PROPERTY_TABLE,
-          OBDal.getInstance().getProxy(Table.class, obj.getEntity().getTableId()));
+      q.add(Restrictions.eq(Note.PROPERTY_RECORD, obj.getId()));
+      q.add(Restrictions.eq(Note.PROPERTY_TABLE,
+          OBDal.getInstance().getProxy(Table.class, obj.getEntity().getTableId())));
       return q.count();
     } finally {
       OBContext.restorePreviousMode();

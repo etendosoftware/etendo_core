@@ -16,6 +16,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.plm.Product;
@@ -138,7 +139,7 @@ public class ProductStatusTest extends OBBaseTest {
       final Product costingProduct1 = OBDal.getInstance().get(Product.class, COSTING_PRODUCT_1);
       final OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance()
           .createCriteria(StorageDetail.class);
-      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, costingProduct1);
+      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, costingProduct1));
       final List<StorageDetail> storageDetailList = storageDetailCriteria.list();
       for (final StorageDetail storageDetail : storageDetailList) {
         storageDetail.setQuantityOnHand(BigDecimal.ZERO);
@@ -165,7 +166,7 @@ public class ProductStatusTest extends OBBaseTest {
       final Product costingProduct1 = OBDal.getInstance().get(Product.class, COSTING_PRODUCT_1);
       final OBCriteria<StorageDetail> storageDetailCriteria = OBDal.getInstance()
           .createCriteria(StorageDetail.class);
-      storageDetailCriteria.addEqual(StorageDetail.PROPERTY_PRODUCT, costingProduct1);
+      storageDetailCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, costingProduct1));
       storageDetailCriteria.setMaxResults(1);
       final StorageDetail storageDetail = (StorageDetail) storageDetailCriteria.uniqueResult();
       final BigDecimal qtyOnHand = storageDetail.getQuantityOnHand() != null

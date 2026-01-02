@@ -33,6 +33,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.module.ModuleDBPrefix;
 import org.openbravo.test.base.OBBaseTest;
@@ -117,7 +118,7 @@ public class DBPrefixTest extends OBBaseTest {
   public void deleteModule() {
     setSystemAdministratorContext();
     final OBCriteria<Module> obCriteria = OBDal.getInstance().createCriteria(Module.class);
-    obCriteria.addEqual(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix");
+    obCriteria.add(Restrictions.eq(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix"));
     final List<Module> modules = obCriteria.list();
     for (Module mod : modules) {
       System.out.println("Removing module: " + mod.getName());
@@ -130,7 +131,7 @@ public class DBPrefixTest extends OBBaseTest {
   private Module getModule() {
     setSystemAdministratorContext();
     final OBCriteria<Module> obCriteria = OBDal.getInstance().createCriteria(Module.class);
-    obCriteria.addEqual(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix");
+    obCriteria.add(Restrictions.eq(Module.PROPERTY_JAVAPACKAGE, "org.openbravo.test.dbprefix"));
     final List<Module> modules = obCriteria.list();
     assertEquals(1, modules.size(), "Not a single module obtained");
     return modules.get(0);

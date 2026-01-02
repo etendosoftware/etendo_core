@@ -16,22 +16,19 @@ import org.openbravo.base.structure.BaseOBObject;
 public class OBDao {
 
   /**
-   * Generic OBCriteria builder based on a map of field/value pairs.
+   * Generic OBCriteria.
    *
    * @param clazz
    *          Class (entity).
-   * @param filters
-   *          Map of field → value conditions.
-   * @return An OBCriteria object with the filters applied.
+   * @param restrictions
+   *          List of Restriction instances which are used as filters
+   * @return An OBCriteria object with the constraints.
    */
-  public static <T extends BaseOBObject> OBCriteria<T> getFilteredCriteria(
-      Class<T> clazz, Map<String, Object> filters) {
-
+  public static <T extends BaseOBObject> OBCriteria<T> getFilteredCriteria(Class<T> clazz,
+      Restriction... restrictions) {
     OBCriteria<T> obc = OBDal.getInstance().createCriteria(clazz);
-    if (filters != null) {
-      for (Map.Entry<String, Object> entry : filters.entrySet()) {
-        obc.addEqual(entry.getKey(), entry.getValue());
-      }
+    for (Restriction r : restrictions) {
+      obc.add(r);
     }
     return obc;
   }

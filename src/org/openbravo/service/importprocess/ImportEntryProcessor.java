@@ -29,9 +29,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -43,6 +40,9 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ExternalConnectionPool;
 import org.openbravo.database.SessionInfo;
 import org.openbravo.model.common.enterprise.Organization;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 /**
  * The {@link ImportEntryProcessor} is responsible for importing/processing {@link ImportEntry}
@@ -102,7 +102,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public abstract class ImportEntryProcessor {
 
   // a sufficient large number still preventing OOM and signaling strange situation

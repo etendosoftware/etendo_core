@@ -70,14 +70,13 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.OBInterceptor;
 import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.XMLUtil;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.ddlutils.task.DatabaseUtils;
@@ -1155,12 +1154,12 @@ public class ImportModule implements Serializable {
           OBCriteria<org.openbravo.model.ad.module.ModuleDependency> qDependentMod = OBDal
               .getInstance()
               .createCriteria(org.openbravo.model.ad.module.ModuleDependency.class);
-          qDependentMod.addEqual(
+          qDependentMod.add(Restrictions.eq(
               org.openbravo.model.ad.module.ModuleDependency.PROPERTY_MODULE + ".id",
-              ad_module_id);
-          qDependentMod.addEqual(
+              ad_module_id));
+          qDependentMod.add(Restrictions.eq(
               org.openbravo.model.ad.module.ModuleDependency.PROPERTY_DEPENDENTMODULE + ".id",
-              modId);
+              modId));
           String enforcement = null;
           if (!qDependentMod.list().isEmpty()
               && qDependentMod.list().get(0).isUserEditableEnforcement()
@@ -1799,9 +1798,11 @@ public class ImportModule implements Serializable {
 
       OBCriteria<org.openbravo.model.ad.module.Module> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.module.Module.class);
-      obCriteria.addFunction((cb, obc) -> cb.not(cb.equal(obc.getPath(org.openbravo.model.ad.module.Module.PROPERTY_STATUS), "U")));
+      obCriteria.add(Restrictions
+          .not(Restrictions.eq(org.openbravo.model.ad.module.Module.PROPERTY_STATUS, "U")));
       if (!installingMods.isEmpty()) {
-        obCriteria.addFunction((cb, obc) -> cb.not(obc.getPath(org.openbravo.model.ad.module.Module.PROPERTY_ID).in(installingMods)));
+        obCriteria.add(Restrictions.not(
+            Restrictions.in(org.openbravo.model.ad.module.Module.PROPERTY_ID, installingMods)));
       }
       List<org.openbravo.model.ad.module.Module> modules = obCriteria.list();
 

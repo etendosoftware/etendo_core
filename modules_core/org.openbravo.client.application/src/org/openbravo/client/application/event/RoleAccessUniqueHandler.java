@@ -43,6 +43,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.client.myob.WidgetClassAccess;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.access.Role;
 
@@ -107,13 +108,13 @@ class RoleAccessUniqueHandler extends EntityPersistenceEventObserver {
 
     OBCriteria<BaseOBObject> q = OBDal.getInstance().createCriteria(entity.getName());
 
-    q.addEqual("role", newRole);
-    q.addEqual(securedObjectProperty.getName(),
-        event.getCurrentState(securedObjectProperty));
+    q.add(Restrictions.eq("role", newRole));
+    q.add(Restrictions.eq(securedObjectProperty.getName(),
+        event.getCurrentState(securedObjectProperty)));
 
     if (event instanceof EntityUpdateEvent) {
       // do not count itself when updating
-      q.addNotEqual("id", event.getId());
+      q.add(Restrictions.ne("id", event.getId()));
     }
 
     if (q.count() > 0) {

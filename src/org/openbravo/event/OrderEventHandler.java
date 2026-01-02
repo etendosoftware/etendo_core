@@ -43,6 +43,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -120,8 +121,8 @@ class OrderEventHandler extends EntityPersistenceEventObserver {
   private List<OrderLine> getOrderLines(final OrderParameters orderParameters) {
     return OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .addEqual(OrderLine.PROPERTY_SALESORDER,
-            OBDal.getInstance().get(Order.class, orderParameters.getOrderId()))
+        .add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER,
+            OBDal.getInstance().get(Order.class, orderParameters.getOrderId())))
         .list();
   }
 

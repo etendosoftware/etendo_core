@@ -25,6 +25,7 @@ import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.financial.ResetAccounting;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -383,7 +384,7 @@ public class ReversePaymentTest {
     try {
       final OBCriteria<FIN_PaymentMethod> paymentMethodOBCriteria = OBDal.getInstance()
           .createCriteria(FIN_PaymentMethod.class);
-      paymentMethodOBCriteria.addEqual(FIN_PaymentMethod.PROPERTY_NAME, REVERSE_PAYMENT_METHOD_NAME);
+      paymentMethodOBCriteria.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_NAME, REVERSE_PAYMENT_METHOD_NAME));
       FIN_PaymentMethod paymentMethod = (FIN_PaymentMethod) paymentMethodOBCriteria.setMaxResults(1).uniqueResult();
       FIN_FinancialAccount financialAccount = OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId);
       FinAccPaymentMethod finAccPaymentMethod = TestUtility.getOneInstance(FinAccPaymentMethod.class,

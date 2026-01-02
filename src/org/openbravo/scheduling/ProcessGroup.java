@@ -26,6 +26,7 @@ import org.hibernate.Hibernate;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.model.ad.ui.ProcessGroupList;
 import org.openbravo.model.ad.ui.ProcessRequest;
@@ -53,7 +54,7 @@ public class ProcessGroup extends DalBaseProcess {
 
     OBCriteria<ProcessGroupList> processListcri = OBDal.getInstance()
         .createCriteria(ProcessGroupList.class);
-    processListcri.addEqual(ProcessGroupList.PROPERTY_PROCESSGROUP, group);
+    processListcri.add(Restrictions.eq(ProcessGroupList.PROPERTY_PROCESSGROUP, group));
     processListcri.addOrderBy(ProcessGroupList.PROPERTY_SEQUENCENUMBER, true);
     List<ProcessGroupList> processList = processListcri.list();
 

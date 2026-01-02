@@ -40,6 +40,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Tax;
 import org.openbravo.erpCommon.utility.DateTimeData;
 import org.openbravo.erpCommon.utility.OBError;
@@ -324,8 +325,8 @@ public class CopyFromInvoice extends HttpSecureAppServlet {
       GLItem glItem = OBDal.getInstance().get(GLItem.class, accountId);
 
       OBCriteria<TaxRate> obcriteria = OBDal.getInstance().createCriteria(TaxRate.class);
-      obcriteria.addEqual(TaxRate.PROPERTY_TAXCATEGORY, glItem.getTaxCategory());
-      obcriteria.addEqual(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE);
+      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_TAXCATEGORY, glItem.getTaxCategory()));
+      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE));
       List<TaxRate> taxRates = obcriteria.list();
       if (taxRates.size() == 0) {
         throw new OBException(
@@ -341,8 +342,8 @@ public class CopyFromInvoice extends HttpSecureAppServlet {
       Product product = OBDal.getInstance().get(Product.class, productId);
 
       OBCriteria<TaxRate> obcriteria = OBDal.getInstance().createCriteria(TaxRate.class);
-      obcriteria.addEqual(TaxRate.PROPERTY_TAXCATEGORY, product.getTaxCategory());
-      obcriteria.addEqual(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE);
+      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_TAXCATEGORY, product.getTaxCategory()));
+      obcriteria.add(Restrictions.eq(TaxRate.PROPERTY_ACTIVE, Boolean.TRUE));
       List<TaxRate> taxRates = obcriteria.list();
       if (taxRates.size() == 0) {
         throw new OBException(

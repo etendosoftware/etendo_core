@@ -43,6 +43,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.ad.access.UserRoles;
@@ -315,10 +316,10 @@ public class UserInfoSessionDataTest extends BaseDataSourceTestDal {
   private void setActiveOrganizationRoleAccess(boolean isActive) {
     final OBCriteria<RoleOrganization> orgAccessCriteria = OBDal.getInstance()
         .createCriteria(RoleOrganization.class);
-    orgAccessCriteria.addEqual(RoleOrganization.PROPERTY_ROLE + "." + Role.PROPERTY_ID,
-        US_EMPLOYEE_ROLE_ID);
-    orgAccessCriteria.addEqual(RoleOrganization.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
-            US_EASTCOAST_ORG_ID);
+    orgAccessCriteria.add(Restrictions.eq(RoleOrganization.PROPERTY_ROLE + "." + Role.PROPERTY_ID,
+        US_EMPLOYEE_ROLE_ID));
+    orgAccessCriteria.add(Restrictions.eq(RoleOrganization.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
+            US_EASTCOAST_ORG_ID));
     orgAccessCriteria.setMaxResults(1);
     orgAccessCriteria.setFilterOnActive(false);
     RoleOrganization ro = (RoleOrganization) orgAccessCriteria.uniqueResult();
@@ -328,8 +329,8 @@ public class UserInfoSessionDataTest extends BaseDataSourceTestDal {
 
   private void setActiveWarehouse(boolean isActive) {
     OBCriteria<Warehouse> waCriteria = OBDal.getInstance().createCriteria(Warehouse.class);
-    waCriteria.addEqual(Warehouse.PROPERTY_ORGANIZATION,
-        OBDal.getInstance().getProxy(Organization.class, US_EASTCOAST_ORG_ID));
+    waCriteria.add(Restrictions.eq(Warehouse.PROPERTY_ORGANIZATION,
+        OBDal.getInstance().getProxy(Organization.class, US_EASTCOAST_ORG_ID)));
     waCriteria.setMaxResults(1);
     waCriteria.setFilterOnActive(false);
     Warehouse wa = (Warehouse) waCriteria.uniqueResult();

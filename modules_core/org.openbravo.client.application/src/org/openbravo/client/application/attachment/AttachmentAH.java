@@ -45,6 +45,7 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.Attachment;
@@ -168,14 +169,14 @@ public class AttachmentAH extends BaseActionHandler {
     String tableId = tab.getTable().getId();
 
     OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
-    attachmentFiles.addEqual("table.id", tableId);
-    attachmentFiles.addIn("record", Arrays.asList(recordIds.split(",")));
+    attachmentFiles.add(Restrictions.eq("table.id", tableId));
+    attachmentFiles.add(Restrictions.in("record", Arrays.asList(recordIds.split(","))));
     // do not filter by the attachment's organization
     // if the user has access to the record where the file its attached, it has access to all
     // its attachments
     attachmentFiles.setFilterOnReadableOrganization(false);
     if (attachmentId != null) {
-      attachmentFiles.addEqual(Attachment.PROPERTY_ID, attachmentId);
+      attachmentFiles.add(Restrictions.eq(Attachment.PROPERTY_ID, attachmentId));
     }
 
     for (Attachment attachment : attachmentFiles.list()) {

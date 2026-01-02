@@ -30,6 +30,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
@@ -77,8 +78,8 @@ class MInOutLineEventHandler extends EntityPersistenceEventObserver {
   private void checkShipmentOrderRelation(ShipmentInOutLine shipmentInOutLine) {
     OBCriteria<ShipmentInOutLine> criteria = OBDal.getInstance()
         .createCriteria(ShipmentInOutLine.class);
-    criteria.addEqual(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT,
-        shipmentInOutLine.getShipmentReceipt());
+    criteria.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT,
+        shipmentInOutLine.getShipmentReceipt()));
 
     if (criteria.count() == 1) {
       ShipmentInOut shipmentInOut = OBDal.getInstance()

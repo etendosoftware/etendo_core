@@ -30,15 +30,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.OBClassLoader;
@@ -46,17 +42,21 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 /**
  * Util class for MyOB.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class MyOBUtils {
   private static Logger log = LogManager.getLogger();
   private static String MENU_ITEM_IS_SEPARATOR = "isSeparator";
@@ -129,16 +129,13 @@ public class MyOBUtils {
   private static List<WidgetClassMenu> getWidgetClassMenuItemsList(WidgetClass widgetClass) {
     OBCriteria<WidgetClassMenu> obcMenuItems = OBDal.getInstance()
         .createCriteria(WidgetClassMenu.class);
-
     if (widgetClass.getWidgetSuperclass() != null) {
-      obcMenuItems.addOr(
-          (cb, obc) -> cb.equal(obc.getPath(WidgetClassMenu.PROPERTY_WIDGETCLASS), widgetClass),
-          (cb, obc) -> cb.equal(obc.getPath(WidgetClassMenu.PROPERTY_WIDGETCLASS), widgetClass.getWidgetSuperclass())
-      );
+      obcMenuItems.add(Restrictions
+          .or(Restrictions.eq(WidgetClassMenu.PROPERTY_WIDGETCLASS, widgetClass), Restrictions
+              .eq(WidgetClassMenu.PROPERTY_WIDGETCLASS, widgetClass.getWidgetSuperclass())));
     } else {
-      obcMenuItems.addEqual(WidgetClassMenu.PROPERTY_WIDGETCLASS, widgetClass);
+      obcMenuItems.add(Restrictions.eq(WidgetClassMenu.PROPERTY_WIDGETCLASS, widgetClass));
     }
-
     obcMenuItems.addOrderBy(WidgetClassMenu.PROPERTY_SEQUENCE, true);
     return obcMenuItems.list();
   }
@@ -160,7 +157,7 @@ public class MyOBUtils {
       // USER level is not supported
     }
     OBCriteria<WidgetInstance> criteria = OBDal.getInstance().createCriteria(WidgetInstance.class);
-    criteria.addIsNull(WidgetInstance.PROPERTY_VISIBLEATUSER);
+    criteria.add(Restrictions.isNull(WidgetInstance.PROPERTY_VISIBLEATUSER));
     return criteria.list();
   }
 
@@ -202,19 +199,19 @@ public class MyOBUtils {
   private static OBCriteria<WidgetInstance> getWidgetInstanceCriteria(Long priority, Client client,
       Organization organization, Role role) {
     OBCriteria<WidgetInstance> criteria = OBDal.getInstance().createCriteria(WidgetInstance.class);
-    criteria.addIsNull(WidgetInstance.PROPERTY_VISIBLEATUSER);
+    criteria.add(Restrictions.isNull(WidgetInstance.PROPERTY_VISIBLEATUSER));
     criteria.setFilterOnReadableClients(false);
-    criteria.addEqual(WidgetInstance.PROPERTY_RELATIVEPRIORITY, priority);
+    criteria.add(Restrictions.eq(WidgetInstance.PROPERTY_RELATIVEPRIORITY, priority));
     if (client != null) {
-      criteria.addEqual(WidgetInstance.PROPERTY_CLIENT, client);
+      criteria.add(Restrictions.eq(WidgetInstance.PROPERTY_CLIENT, client));
     }
     if (organization != null) {
       criteria.setFilterOnReadableOrganization(false);
-      criteria.addEqual(WidgetInstance.PROPERTY_ORGANIZATION, organization);
+      criteria.add(Restrictions.eq(WidgetInstance.PROPERTY_ORGANIZATION, organization));
     }
     if (role != null) {
-      criteria.addEqual(WidgetInstance.PROPERTY_CLIENT, role.getClient());
-      criteria.addEqual(WidgetInstance.PROPERTY_VISIBLEATROLE, role);
+      criteria.add(Restrictions.eq(WidgetInstance.PROPERTY_CLIENT, role.getClient()));
+      criteria.add(Restrictions.eq(WidgetInstance.PROPERTY_VISIBLEATROLE, role));
     }
     return criteria;
   }
@@ -223,8 +220,8 @@ public class MyOBUtils {
       Client client, String[] orgIds, Role role) {
     OBCriteria<WidgetInstance> criteria = getWidgetInstanceCriteria(priority, client, null, role);
     criteria.setFilterOnReadableOrganization(false);
-    criteria.addIn(
-        WidgetInstance.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID, List.of((Object[]) orgIds));
+    criteria.add(Restrictions.in(
+        WidgetInstance.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID, List.of((Object[]) orgIds)));
     return criteria;
   }
 
@@ -232,7 +229,7 @@ public class MyOBUtils {
       Client client, Set<String> orgIds, Role role) {
     OBCriteria<WidgetInstance> criteria = getWidgetInstanceCriteria(priority, client, null, role);
     criteria.setFilterOnReadableOrganization(false);
-    criteria.addInIds(WidgetInstance.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID, orgIds);
+    criteria.add(Restrictions.in(WidgetInstance.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID, orgIds));
     return criteria;
   }
 
@@ -244,18 +241,18 @@ public class MyOBUtils {
     OBCriteria<WidgetInstance> obc = OBDal.getInstance().createCriteria(WidgetInstance.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnActive(isActive);
-    obc.addEqual(WidgetInstance.PROPERTY_CLIENT, OBDal.getInstance()
-        .get(Client.class, OBContext.getOBContext().getCurrentClient().getId()));
-    obc.addEqual(WidgetInstance.PROPERTY_VISIBLEATROLE,
-        OBDal.getInstance().get(Role.class, OBContext.getOBContext().getRole().getId()));
-    obc.addEqual(WidgetInstance.PROPERTY_VISIBLEATUSER,
-        OBDal.getInstance().get(User.class, OBContext.getOBContext().getUser().getId()));
+    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_CLIENT, OBDal.getInstance()
+        .get(Client.class, OBContext.getOBContext().getCurrentClient().getId())));
+    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_VISIBLEATROLE,
+        OBDal.getInstance().get(Role.class, OBContext.getOBContext().getRole().getId())));
+    obc.add(Restrictions.eq(WidgetInstance.PROPERTY_VISIBLEATUSER,
+        OBDal.getInstance().get(User.class, OBContext.getOBContext().getUser().getId())));
     return obc.list();
   }
 
   static WidgetClass getWidgetClassFromTitle(String strClassTitle) {
     OBCriteria<WidgetClass> widgetClassCrit = OBDal.getInstance().createCriteria(WidgetClass.class);
-    widgetClassCrit.addEqual(WidgetClass.PROPERTY_WIDGETTITLE, strClassTitle);
+    widgetClassCrit.add(Restrictions.eq(WidgetClass.PROPERTY_WIDGETTITLE, strClassTitle));
     if (widgetClassCrit.list().size() == 0) {
       return null;
     }

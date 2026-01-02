@@ -28,6 +28,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.CharacteristicSubsetValue;
 import org.openbravo.model.common.plm.ProductCharacteristic;
 import org.openbravo.model.common.plm.ProductCharacteristicConf;
@@ -57,16 +58,17 @@ class SubsetValueEventHandler extends EntityPersistenceEventObserver {
     if (event.getCurrentState(codeProperty) != event.getPreviousState(codeProperty)) {
       OBCriteria<ProductCharacteristic> productCharacteristic = OBDal.getInstance()
           .createCriteria(ProductCharacteristic.class);
-      productCharacteristic.addEqual(ProductCharacteristic.PROPERTY_CHARACTERISTICSUBSET,
-          chsubsetv.getCharacteristicSubset());
+      productCharacteristic.add(Restrictions.eq(ProductCharacteristic.PROPERTY_CHARACTERISTICSUBSET,
+          chsubsetv.getCharacteristicSubset()));
       if (productCharacteristic.count() > 0) {
         for (ProductCharacteristic productCh : productCharacteristic.list()) {
           OBCriteria<ProductCharacteristicConf> productCharateristicsConf = OBDal.getInstance()
               .createCriteria(ProductCharacteristicConf.class);
           productCharateristicsConf
-              .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
-                  chsubsetv.getCharacteristicValue());
-          productCharateristicsConf.addFunction((cb, obc) -> cb.equal(obc.getPath(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT), productCh));
+              .add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
+                  chsubsetv.getCharacteristicValue()));
+          productCharateristicsConf.add(Restrictions
+              .eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, productCh));
           if (productCharateristicsConf.count() > 0) {
             for (ProductCharacteristicConf conf : productCharateristicsConf.list()) {
               if (chsubsetv.getCode() != conf.getCode()) {

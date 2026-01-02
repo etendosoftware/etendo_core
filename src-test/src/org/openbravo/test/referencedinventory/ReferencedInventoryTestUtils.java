@@ -40,6 +40,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.ad.domain.Preference;
@@ -98,11 +99,11 @@ class ReferencedInventoryTestUtils {
     // Value property is defined as CLOB in Oracle, this is why it is needed this expression to
     // convert it to a char first
     OBCriteria<Preference> criteria = OBDal.getInstance().createCriteria(Preference.class);
-    criteria.addEqual(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE);
+    criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE));
     // TODO: Check if addEqual works for CLOB fields in other databases
-    criteria.addEqual(Preference.PROPERTY_SEARCHKEY, "Y");
-    criteria.addEqual(Preference.PROPERTY_CLIENT, client);
-    criteria.addEqual(Preference.PROPERTY_ORGANIZATION, organization);
+    criteria.add(Restrictions.eq(Preference.PROPERTY_SEARCHKEY, "Y"));
+    criteria.add(Restrictions.eq(Preference.PROPERTY_CLIENT, client));
+    criteria.add(Restrictions.eq(Preference.PROPERTY_ORGANIZATION, organization));
     return !criteria.list().isEmpty();
   }
 
@@ -246,10 +247,9 @@ class ReferencedInventoryTestUtils {
   }
 
   static List<StorageDetail> getAvailableStorageDetailsOrderByQtyOnHand(final Product product) {
-    Map<String, Object> filters = new HashMap<>();
-    filters.put(StorageDetail.PROPERTY_PRODUCT, product);
-        filters.put(StorageDetail.PROPERTY_QUANTITYONHAND, BigDecimal.ZERO);
-    final OBCriteria<StorageDetail> crit = OBDao.getFilteredCriteria(StorageDetail.class, filters);
+    final OBCriteria<StorageDetail> crit = OBDao.getFilteredCriteria(StorageDetail.class,
+        Restrictions.eq(StorageDetail.PROPERTY_PRODUCT, product),
+        Restrictions.gt(StorageDetail.PROPERTY_QUANTITYONHAND, BigDecimal.ZERO));
     crit.addOrderBy(StorageDetail.PROPERTY_QUANTITYONHAND, true);
     return crit.list();
   }

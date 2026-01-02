@@ -24,14 +24,14 @@ import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Retrieves a label from the server.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class GetLabelActionHandler extends BaseActionHandler {
 
   private static final String KEY_PARAMETER = "key";

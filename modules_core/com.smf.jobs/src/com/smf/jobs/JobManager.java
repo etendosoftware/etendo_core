@@ -16,7 +16,6 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.util.OBClassLoader;
@@ -24,9 +23,8 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.common.actionhandler.KillProcess;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.ui.ProcessRequest;
 import org.openbravo.model.ad.ui.ProcessRun;
@@ -317,7 +315,7 @@ public enum JobManager {
      */
     public String getExecutionId(String processRequestId) {
         var executionCriteria = OBDal.getInstance().createCriteria(ProcessRun.class);
-        executionCriteria.addEqual(ProcessRun.PROPERTY_PROCESSREQUEST+".id", processRequestId);
+        executionCriteria.add(Restrictions.eq(ProcessRun.PROPERTY_PROCESSREQUEST+".id", processRequestId));
         executionCriteria.setMaxResults(1);
 
         var execution = (ProcessRun) executionCriteria.uniqueResult();
@@ -336,8 +334,8 @@ public enum JobManager {
      */
     public static Filter getFilter(Job job) {
         var linesCriteria = OBDal.getInstance().createCriteria(JobLine.class);
-        linesCriteria.addEqual(JobLine.PROPERTY_JOBSJOB, job);
-        linesCriteria.addEqual(JobLine.PROPERTY_ISAFILTER, true);
+        linesCriteria.add(Restrictions.eq(JobLine.PROPERTY_JOBSJOB, job));
+        linesCriteria.add(Restrictions.eq(JobLine.PROPERTY_ISAFILTER, true));
         linesCriteria.setMaxResults(1);
 
         var filterLine = (JobLine) Optional.ofNullable(linesCriteria.uniqueResult()).orElseThrow();
@@ -376,18 +374,18 @@ public enum JobManager {
      * @return a list of {@link Action}
      */
     public static List<Action> getActions(Job job) {
-        var linesCriteria = OBDal.getInstance().createCriteria(JobLine.class);
-        linesCriteria.addEqual(JobLine.PROPERTY_JOBSJOB, job);
-        linesCriteria.addEqual(JobLine.PROPERTY_ISAFILTER, false);
-        linesCriteria.addFunction((cb, obc) -> cb.isNotNull(obc.getPath(JobLine.PROPERTY_ACTION)));
-        linesCriteria.addOrderBy(JobLine.PROPERTY_LINENO, true);
+      var linesCriteria = OBDal.getInstance().createCriteria(JobLine.class);
+      linesCriteria.add(Restrictions.eq(JobLine.PROPERTY_JOBSJOB, job));
+      linesCriteria.add(Restrictions.eq(JobLine.PROPERTY_ISAFILTER, false));
+      linesCriteria.add(Restrictions.isNotNull(JobLine.PROPERTY_ACTION));
+      linesCriteria.addOrderBy(JobLine.PROPERTY_LINENO, true);
 
-        return linesCriteria
-                .list()
-                .stream()
-                .map(line -> processActions(line.getAction().getJavaClassName(), line.getParameters()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+      return linesCriteria
+          .list()
+          .stream()
+          .map(line -> processActions(line.getAction().getJavaClassName(), line.getParameters()))
+          .filter(Objects::nonNull)
+          .collect(Collectors.toList());
     }
 
     /**
@@ -424,15 +422,15 @@ public enum JobManager {
      * @return a {@link JobResult} object with the Result of the desired job.
      */
     public JobResult getResult(String jobId, String requestId) {
-        var resultCriteria = OBDal.getInstance().createCriteria(JobResult.class);
-        resultCriteria.addEqual(JobResult.PROPERTY_JOBSJOB + ".id", jobId);
-        if (requestId != null && !requestId.isBlank()) {
-            resultCriteria.addEqual(JobResult.PROPERTY_PROCESSREQUEST + ".id", requestId);
-        } else {
-            resultCriteria.addFunction((cb, obc) -> cb.isNull(obc.getPath(JobResult.PROPERTY_PROCESSREQUEST)));
-        }
-        resultCriteria.setMaxResults(1);
+      var resultCriteria = OBDal.getInstance().createCriteria(JobResult.class);
+      resultCriteria.add(Restrictions.eq(JobResult.PROPERTY_JOBSJOB + ".id", jobId));
+      if (requestId != null && !requestId.isBlank()) {
+        resultCriteria.add(Restrictions.eq(JobResult.PROPERTY_PROCESSREQUEST + ".id", requestId));
+      } else {
+        resultCriteria.add(Restrictions.isNull(JobResult.PROPERTY_PROCESSREQUEST));
+      }
+      resultCriteria.setMaxResults(1);
 
-        return (JobResult) resultCriteria.uniqueResult();
+      return (JobResult) resultCriteria.uniqueResult();
     }
 }

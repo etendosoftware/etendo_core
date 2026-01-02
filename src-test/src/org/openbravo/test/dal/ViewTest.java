@@ -34,6 +34,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.test.base.Issue;
 import org.openbravo.test.base.OBBaseTest;
@@ -79,7 +80,7 @@ public class ViewTest extends OBBaseTest {
     OBContext.setAdminMode();
     try {
       OBCriteria<Invoice> payedInvoice = OBDal.getInstance().createCriteria(Invoice.class);
-      payedInvoice.addEqual(Invoice.PROPERTY_PAYMENTCOMPLETE, true);
+      payedInvoice.add(Restrictions.eq(Invoice.PROPERTY_PAYMENTCOMPLETE, true));
       payedInvoice.setMaxResults(1);
       Invoice anyPayedInvoice = (Invoice) payedInvoice.uniqueResult();
       assertThat("Original invoice has payments " + anyPayedInvoice,

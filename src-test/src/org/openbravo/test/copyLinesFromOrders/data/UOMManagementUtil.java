@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.materialmgmt.UOMUtil;
 import org.openbravo.model.ad.domain.Preference;
@@ -82,7 +83,7 @@ public class UOMManagementUtil {
     OBDal.getInstance().flush();
 
     OBCriteria<Preference> qPref = OBDal.getInstance().createCriteria(Preference.class);
-    qPref.addEqual(Preference.PROPERTY_PROPERTY, "UomManagement");
+    qPref.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "UomManagement"));
 
     assertFalse("No property has been set", qPref.list().isEmpty());
 

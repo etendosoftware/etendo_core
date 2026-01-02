@@ -41,6 +41,7 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
@@ -151,7 +152,7 @@ public class ResetValuedStockAggregatedTest {
 
     // Configure criteria and query
   // Hibernate 6 migration: replace generic add(Predicate) stubbing with addEqual
-  when(mockOBCriteria.addEqual(anyString(), any())).thenReturn(mockOBCriteria);
+    when(mockOBCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockOBCriteria);
     when(mockOBCriteria.uniqueResult()).thenReturn(null);
     when(mockOBCriteria.list()).thenReturn(new ArrayList<>());
 

@@ -23,13 +23,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.etendoerp.sequences.model.SequenceConfiguration;
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.type.Type;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.util.Check;
+
+import com.etendoerp.sequences.model.SequenceConfiguration;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Initializes and provides the session factory for the model layer. It uses fixed mappings for
@@ -38,6 +41,7 @@ import org.openbravo.base.util.Check;
  * @author mtaal
  */
 
+@Dependent
 public class ModelSessionFactoryController extends SessionFactoryController {
 
   private List<Class<?>> additionalClasses = new ArrayList<Class<?>>();
@@ -64,6 +68,7 @@ public class ModelSessionFactoryController extends SessionFactoryController {
   }
 
   // an interceptor which fails on all updates
+  @Dependent
   private class LocalInterceptor extends EmptyInterceptor {
 
     private static final long serialVersionUID = 1L;

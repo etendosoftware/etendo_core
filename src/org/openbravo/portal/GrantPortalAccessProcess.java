@@ -33,6 +33,7 @@ import org.openbravo.client.application.process.ResponseActionsBuilder.MessageTy
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.email.EmailEventManager;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.access.Role;
@@ -80,8 +81,8 @@ public class GrantPortalAccessProcess extends BaseProcessActionHandler {
 
       OBCriteria<UserRoles> checkRoleIsPresent = OBDal.getInstance()
           .createCriteria(UserRoles.class);
-      checkRoleIsPresent.addEqual(UserRoles.PROPERTY_USERCONTACT, user);
-      checkRoleIsPresent.addEqual(UserRoles.PROPERTY_ROLE, role);
+      checkRoleIsPresent.add(Restrictions.eq(UserRoles.PROPERTY_USERCONTACT, user));
+      checkRoleIsPresent.add(Restrictions.eq(UserRoles.PROPERTY_ROLE, role));
       if (checkRoleIsPresent.count() == 0) {
         UserRoles newUserRole = OBProvider.getInstance().get(UserRoles.class);
         newUserRole.setUserContact(user);

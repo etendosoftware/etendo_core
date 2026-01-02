@@ -42,6 +42,7 @@ import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.model.ad.utility.Attachment;
 
@@ -98,8 +99,8 @@ public class DefaultsAttachmentActionHandler extends BaseActionHandler {
           // Calculate stored value.
           OBCriteria<ParameterValue> parameterValueCriteria = OBDal.getInstance()
               .createCriteria(ParameterValue.class);
-          parameterValueCriteria.addEqual(ParameterValue.PROPERTY_FILE, attachment);
-          parameterValueCriteria.addEqual(ParameterValue.PROPERTY_PARAMETER, param);
+          parameterValueCriteria.add(Restrictions.eq(ParameterValue.PROPERTY_FILE, attachment));
+          parameterValueCriteria.add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, param));
           ParameterValue parameterValue = (ParameterValue) parameterValueCriteria.uniqueResult();
           if (parameterValue != null) {
             // If the parameter has a previous value set it on the defaults map and continue with

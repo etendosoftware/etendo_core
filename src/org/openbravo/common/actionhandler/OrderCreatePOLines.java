@@ -44,6 +44,8 @@ import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
@@ -106,12 +108,12 @@ public class OrderCreatePOLines extends BaseProcessActionHandler {
     Order order = OBDal.getInstance().get(Order.class, strOrderId);
     // if no lines selected don't do anything.
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
-    obc.addEqual(OrderLine.PROPERTY_SALESORDER, order);
-    obc.setProjectionMax(OrderLine.PROPERTY_LINENO);
+    obc.add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, order));
+    obc.setProjection(Projections.max(OrderLine.PROPERTY_LINENO));
     Long lineNo = 0L;
-    Object o = obc.uniqueResult();
+    Long o = obc.uniqueResult(Long.class);
     if (o != null) {
-      lineNo = (Long) o;
+      lineNo = o;
     }
 
     for (int i = 0; i < selectedLines.length(); i++) {

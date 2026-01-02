@@ -49,6 +49,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.EntityAccessChecker;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.SessionInfo;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBError;
@@ -380,8 +381,8 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
       if (!checkPermission) {
         // check if window is accessible
         OBCriteria<WindowAccess> qAccess = OBDal.getInstance().createCriteria(WindowAccess.class);
-        qAccess.addEqual(WindowAccess.PROPERTY_WINDOW, window);
-        qAccess.addEqual(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
+        qAccess.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
+        qAccess.add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
         return qAccess.count() > 0;
       }
     }
@@ -391,8 +392,8 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     // * Invoked from menu (without window)
     // In any of these two cases, security is checked based on process access
     OBCriteria<ProcessAccess> qAccess = OBDal.getInstance().createCriteria(ProcessAccess.class);
-    qAccess.addEqual(ProcessAccess.PROPERTY_OBUIAPPPROCESS, processDefinition);
-    qAccess.addEqual(ProcessAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
+    qAccess.add(Restrictions.eq(ProcessAccess.PROPERTY_OBUIAPPPROCESS, processDefinition));
+    qAccess.add(Restrictions.eq(ProcessAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
     return qAccess.count() > 0;
   }
 

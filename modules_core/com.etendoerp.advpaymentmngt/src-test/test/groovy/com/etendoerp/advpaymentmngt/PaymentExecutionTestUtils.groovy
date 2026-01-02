@@ -2,6 +2,7 @@ package com.etendoerp.advpaymentmngt
 
 import org.openbravo.dal.service.OBCriteria
 import org.openbravo.dal.service.OBDal
+import org.openbravo.dal.service.Restrictions
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod
@@ -17,9 +18,9 @@ class PaymentExecutionTestUtils {
     static FinAccPaymentMethod getFinancialAccountPaymentMethod(FIN_FinancialAccount account, FIN_PaymentMethod paymentMethod) {
         final OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
                 .createCriteria(FinAccPaymentMethod.class);
-        obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
-        obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
-        obc.addEqual(FinAccPaymentMethod.PROPERTY_ACTIVE, true);
+        obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
+        obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+        obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACTIVE, true));
         obc.setFilterOnReadableClients(false);
         obc.setFilterOnReadableOrganization(false);
         try {

@@ -29,14 +29,14 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.system.ADClusterService;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 /**
  * An standard MBean that allows to display and manage some of the cluster services settings through
  * JMX.
  */
-@ApplicationScoped
+@Dependent
 public class JmxClusterServiceManager implements JmxClusterServiceManagerMBean {
   private static final Logger log = LogManager.getLogger();
 

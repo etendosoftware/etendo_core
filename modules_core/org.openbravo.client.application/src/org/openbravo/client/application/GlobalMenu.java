@@ -34,16 +34,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.client.application.MenuManager.MenuEntryType;
 import org.openbravo.client.application.MenuManager.MenuOption;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.domain.ModelImplementation;
@@ -54,6 +52,8 @@ import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.Tree;
 import org.openbravo.model.ad.utility.TreeNode;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * Caches in memory generic global menus per language and tree to be consumed by {@link MenuManager}
@@ -61,7 +61,7 @@ import org.openbravo.model.ad.utility.TreeNode;
  * @author alostale
  * 
  */
-@ApplicationScoped
+@Dependent
 public class GlobalMenu {
   private static final Logger log = LogManager.getLogger();
 
@@ -121,7 +121,7 @@ public class GlobalMenu {
   private List<MenuOption> createInitialMenuList(Tree tree, String language) {
     List<MenuOption> menuOptions = new ArrayList<MenuOption>();
     OBCriteria<TreeNode> treeNodes = OBDal.getInstance().createCriteria(TreeNode.class);
-    treeNodes.addEqual(TreeNode.PROPERTY_TREE, tree);
+    treeNodes.add(Restrictions.eq(TreeNode.PROPERTY_TREE, tree));
     treeNodes.setFilterOnActive(false);
 
     // Cache in DAL session all menu entries in a single query, so no need to query one by one

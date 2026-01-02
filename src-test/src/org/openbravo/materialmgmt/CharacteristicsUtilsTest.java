@@ -25,6 +25,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.plm.Characteristic;
 import org.openbravo.model.common.plm.CharacteristicValue;
@@ -92,10 +93,10 @@ public class CharacteristicsUtilsTest {
     when(mockOBDal.createCriteria(ProductCharacteristicValue.class)).thenReturn(mockPCVCriteria);
     when(mockOBDal.createCriteria(ProductCharacteristic.class)).thenReturn(mockPCCriteria);
 
-  when(mockPCVCriteria.addEqual(anyString(), any())).thenReturn(mockPCVCriteria);
+  when(mockPCVCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockPCVCriteria);
   when(mockPCVCriteria.setMaxResults(anyInt())).thenReturn(mockPCVCriteria);
 
-  when(mockPCCriteria.addEqual(anyString(), any())).thenReturn(mockPCCriteria);
+  when(mockPCCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockPCCriteria);
   when(mockPCCriteria.setMaxResults(anyInt())).thenReturn(mockPCCriteria);
 
     when(mockProduct.getOrganization()).thenReturn(mockOrganization);
@@ -138,7 +139,7 @@ public class CharacteristicsUtilsTest {
     // THEN
     assertEquals(mockCharacteristicValue, result);
     verify(mockOBDal).createCriteria(ProductCharacteristicValue.class);
-  verify(mockPCVCriteria, times(2)).addEqual(anyString(), any());
+  verify(mockPCVCriteria, times(2)).add(Restrictions.eq(anyString(), any()));
     verify(mockPCVCriteria).setMaxResults(1);
     verify(mockPCVCriteria).uniqueResult();
   }
@@ -159,7 +160,7 @@ public class CharacteristicsUtilsTest {
     // THEN
     assertNull(result);
     verify(mockOBDal).createCriteria(ProductCharacteristicValue.class);
-  verify(mockPCVCriteria, times(2)).addEqual(anyString(), any());
+  verify(mockPCVCriteria, times(2)).add(Restrictions.eq(anyString(), any()));
     verify(mockPCVCriteria).setMaxResults(1);
     verify(mockPCVCriteria).uniqueResult();
   }

@@ -32,6 +32,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restriction;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.AccDefUtility;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
@@ -300,7 +301,7 @@ public class TransactionsDaoTest {
   public void testGetLastReconciliationProcessed() {
     // GIVEN
     when(obDal.createCriteria(FIN_Reconciliation.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(org.mockito.ArgumentMatchers.any(Predicate.class))).thenReturn(
+    when(mockCriteria.add(ArgumentMatchers.any(Restriction.class))).thenReturn(
         mockCriteria);
     when(mockCriteria.addOrderBy(anyString(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(1)).thenReturn(mockCriteria);
@@ -328,7 +329,7 @@ public class TransactionsDaoTest {
 
     when(obDal.createCriteria(AccountingFact.class)).thenReturn(mockAccountingFactCriteria);
     when(mockAccountingFactCriteria.add(
-        ArgumentMatchers.any(Predicate.class))).thenReturn(
+        ArgumentMatchers.any(Restriction.class))).thenReturn(
         mockAccountingFactCriteria);
 
     when(obDal.get(Table.class, FIN_FINACC_TRANSACTION_TABLE)).thenReturn(mockTable);

@@ -23,8 +23,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -38,6 +36,7 @@ import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Implements the {@link TemplateProcessor} for the
@@ -45,7 +44,7 @@ import freemarker.template.TemplateExceptionHandler;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 @TemplateProcessor.Qualifier(FreemarkerTemplateProcessor.QUALIFIER)
 public class FreemarkerTemplateProcessor
     extends BaseTemplateProcessor<freemarker.template.Template> {

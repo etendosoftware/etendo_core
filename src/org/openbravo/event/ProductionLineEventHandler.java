@@ -34,6 +34,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.materialmgmt.transaction.ProductionLine;
@@ -78,8 +79,8 @@ class ProductionLineEventHandler extends EntityPersistenceEventObserver {
       OBCriteria<ProductionLine> productionLineCriteria = OBDal.getInstance()
           .createCriteria(ProductionLine.class);
       productionLineCriteria
-          .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan);
-      productionLineCriteria.addGreaterThan(ProductionLine.PROPERTY_MOVEMENTQUANTITY, ZERO);
+          .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan));
+      productionLineCriteria.add(Restrictions.gt(ProductionLine.PROPERTY_MOVEMENTQUANTITY, ZERO));
       if (productionLineCriteria.count() > 0 && previousMovementQty != currentMovementQty) {
         if (currentMovementQty.compareTo(ZERO) == 1 && previousMovementQty.compareTo(ZERO) != 1) {
           String language = OBContext.getOBContext().getLanguage().getLanguage();

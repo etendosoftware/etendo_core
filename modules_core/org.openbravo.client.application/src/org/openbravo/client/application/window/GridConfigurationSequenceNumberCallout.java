@@ -34,6 +34,7 @@ import org.openbravo.client.application.GCTab;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.ui.Tab;
@@ -65,13 +66,13 @@ public class GridConfigurationSequenceNumberCallout extends SimpleCallout {
       String tabOfGcTabId = info.getStringParameter("inpadTabId", null);
       Tab myTab = OBDal.getInstance().get(Tab.class, tabOfGcTabId);
       OBCriteria<GCTab> gcTabCriteria = OBDal.getInstance().createCriteria(GCTab.class);
-      gcTabCriteria.addAnd((cb, obc) -> cb.equal(obc.getPath(GCTab.PROPERTY_TAB), myTab),
-                           (cb, obc) -> cb.equal(obc.getPath(GCTab.PROPERTY_SEQNO), configurationSequence));
+      gcTabCriteria.add(Restrictions.and(Restrictions.eq(GCTab.PROPERTY_TAB, myTab),
+          Restrictions.eq(GCTab.PROPERTY_SEQNO, configurationSequence)));
       int countGCTabCriteria = gcTabCriteria.count();
       createWarningMessage(info, countGCTabCriteria);
     } else if (info.getTabId().equals(GC_SYSTEM_TAB_ID)) {
       OBCriteria<GCSystem> gcSystemCriteria = OBDal.getInstance().createCriteria(GCSystem.class);
-      gcSystemCriteria.addEqual(GCSystem.PROPERTY_SEQNO, configurationSequence);
+      gcSystemCriteria.add(Restrictions.eq(GCSystem.PROPERTY_SEQNO, configurationSequence));
       int countGCSystemCriteria = gcSystemCriteria.count();
       createWarningMessage(info, countGCSystemCriteria);
     }

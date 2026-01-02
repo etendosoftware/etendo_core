@@ -18,8 +18,6 @@
 
 package org.openbravo.common.hooks;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.commons.lang3.StringUtils;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -27,7 +25,9 @@ import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.materialmgmt.onhandquantity.InventoryStatus;
 import org.openbravo.model.materialmgmt.onhandquantity.StorageDetail;
 
-@ApplicationScoped
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class InventoryStatusValidationHookReservations implements InventoryStatusValidationHook {
 
   @Override

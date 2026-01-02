@@ -44,6 +44,7 @@ import org.openbravo.client.kernel.KernelServlet;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -108,7 +109,7 @@ public class SecureWebServicesUtils {
 		OBContext.setAdminMode();
 		try {
 			OBCriteria<OrganizationTree> crit = OBDal.getInstance().createCriteria(OrganizationTree.class);
-			crit.addEqual(OrganizationTree.PROPERTY_PARENTORGANIZATION, org);
+			crit.add(Restrictions.eq(OrganizationTree.PROPERTY_PARENTORGANIZATION, org));
 			crit.setFilterOnReadableClients(false);
 			crit.setFilterOnReadableOrganization(false);
 			List<OrganizationTree> orgTreeList = crit.list();
@@ -133,7 +134,7 @@ public class SecureWebServicesUtils {
 		OBContext.setAdminMode();
 		try {
 			OBCriteria<Warehouse> crit = OBDal.getInstance().createCriteria(Warehouse.class);
-			crit.addIn(Warehouse.PROPERTY_ORGANIZATION, childrenOrg);
+			crit.add(Restrictions.in(Warehouse.PROPERTY_ORGANIZATION, childrenOrg));
 			crit.setFilterOnReadableClients(false);
 			crit.setFilterOnReadableOrganization(false);
 			warehouses = crit.list();

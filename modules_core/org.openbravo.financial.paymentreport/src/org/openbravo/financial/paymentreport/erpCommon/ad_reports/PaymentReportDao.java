@@ -61,6 +61,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
 import org.openbravo.erpCommon.utility.SQLReturnObject;
@@ -633,7 +634,7 @@ public class PaymentReportDao {
           payment = fpsd.getPaymentDetails().getFinPayment();
           OBCriteria<FIN_FinaccTransaction> trxQuery = OBDal.getReadOnlyInstance()
               .createCriteria(FIN_FinaccTransaction.class);
-          trxQuery.addEqual(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment);
+          trxQuery.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment));
           // uniqueness guaranteed via unique constraint in db
           trx = (FIN_FinaccTransaction) trxQuery.uniqueResult();
         } else {
@@ -1556,9 +1557,9 @@ public class PaymentReportDao {
     try {
       OBCriteria<List> obCriteria = OBDal.getReadOnlyInstance().createCriteria(List.class);
       obCriteria.createAlias(List.PROPERTY_REFERENCE, "r", JoinType.LEFT);
-      obCriteria.addIlike(
-          "r." + org.openbravo.model.ad.domain.Reference.PROPERTY_NAME, "FIN_Payment status");
-      obCriteria.addIn(List.PROPERTY_SEARCHKEY, java.util.List.of(strStatus));
+      obCriteria.add(Restrictions.ilike(
+          "r." + org.openbravo.model.ad.domain.Reference.PROPERTY_NAME, "FIN_Payment status"));
+      obCriteria.add(Restrictions.in(List.PROPERTY_SEARCHKEY, java.util.List.of(strStatus)));
       obCriteria.addOrderBy(List.PROPERTY_SEQUENCENUMBER, true);
       obCriteria.addOrderBy(List.PROPERTY_SEARCHKEY, true);
       final java.util.List<List> statusList = obCriteria.list();
@@ -1612,23 +1613,27 @@ public class PaymentReportDao {
           JoinType.LEFT);
       obCriteriaTrans.createAlias(FIN_FinaccTransaction.PROPERTY_ACCOUNT, "acc",
           JoinType.LEFT);
-      obCriteriaTrans.addIsNull(FIN_FinaccTransaction.PROPERTY_FINPAYMENT);
-      obCriteriaTrans.addEqual(FIN_FinaccTransaction.PROPERTY_PROCESSED, true);
-      obCriteriaTrans.addIn(FIN_FinaccTransaction.PROPERTY_ORGANIZATION, java.util.List.of((Object[]) organizations));
+      obCriteriaTrans.add(Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_FINPAYMENT));
+      obCriteriaTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_PROCESSED, true));
+      obCriteriaTrans.add(
+          Restrictions.in(FIN_FinaccTransaction.PROPERTY_ORGANIZATION, (Object[]) organizations));
 
       // Empty Business Partner included
       if (StringUtils.equals(strcNoBusinessPartner, "include")) {
 
         // BPartners
         if (!bPartners.isEmpty()) {
-          obCriteriaTrans.addOr((cb, obc) -> cb.in(obc.getPath(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER)).value(bPartners),
-                                (cb, obc) -> cb.isNull(obc.getPath(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER)));
+          obCriteriaTrans.add(Restrictions.or(
+              Restrictions.in(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER, bPartners),
+              Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER)));
         }
 
         // BPartner Category
         if (StringUtils.isNotEmpty(strcBPGroupIdIN)) {
-          obCriteriaTrans.addOr((cb, obc) -> cb.equal(obc.getPath("bp." + BusinessPartner.PROPERTY_BUSINESSPARTNERCATEGORY), strcBPGroupIdIN),
-                                (cb, obc) -> cb.isNull(obc.getPath(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER)));
+          obCriteriaTrans.add(Restrictions.or(
+              Restrictions.eq("bp." + BusinessPartner.PROPERTY_BUSINESSPARTNERCATEGORY,
+                  strcBPGroupIdIN),
+              Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER)));
         }
 
         // Empty Business Partner excluded
@@ -1637,71 +1642,76 @@ public class PaymentReportDao {
         // BPartners
         if (!bPartners.isEmpty()) {
           obCriteriaTrans
-              .addIn(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER, bPartners);
+              .add(Restrictions.in(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER, bPartners));
         }
 
         // BPartner Category
         if (StringUtils.isNotEmpty(strcBPGroupIdIN)) {
-          obCriteriaTrans.addEqual("bp." + BusinessPartner.PROPERTY_BUSINESSPARTNERCATEGORY, strcBPGroupIdIN);
+          obCriteriaTrans.add(Restrictions
+              .eq("bp." + BusinessPartner.PROPERTY_BUSINESSPARTNERCATEGORY, strcBPGroupIdIN));
         }
 
         if (bPartners.isEmpty() && StringUtils.isEmpty(strcBPGroupIdIN)) {
           obCriteriaTrans
-              .addIsNotNull(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER);
+              .add(Restrictions.isNotNull(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER));
         }
 
         // Only empty Business Partners
       } else { // if if (strcNoBusinessPartner.equals("only"))
-        obCriteriaTrans.addIsNull(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER);
+        obCriteriaTrans.add(Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_BUSINESSPARTNER));
       }
 
       // Financial Account
       if (StringUtils.isNotEmpty(strFinancialAccountId)) {
-        obCriteriaTrans.addEqual(FIN_FinaccTransaction.PROPERTY_ACCOUNT,
-            OBDal.getReadOnlyInstance().get(FIN_FinancialAccount.class, strFinancialAccountId));
+        obCriteriaTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_ACCOUNT,
+            OBDal.getReadOnlyInstance().get(FIN_FinancialAccount.class, strFinancialAccountId)));
       }
 
       // Document Date, Payment Date & Due Date
       if (StringUtils.isNotEmpty(strDocumentDateFrom)) {
-        obCriteriaTrans.addGreaterOrEqual(FIN_FinaccTransaction.PROPERTY_DATEACCT,
-            FIN_Utility.getDate(strDocumentDateFrom));
+        obCriteriaTrans.add(Restrictions.ge(FIN_FinaccTransaction.PROPERTY_DATEACCT,
+            FIN_Utility.getDate(strDocumentDateFrom)));
       }
       if (StringUtils.isNotEmpty(strDocumentDateTo)) {
-        obCriteriaTrans.addLessOrEqual(FIN_FinaccTransaction.PROPERTY_DATEACCT,
-            FIN_Utility.getDate(strDocumentDateTo));
+        obCriteriaTrans.add(Restrictions.le(FIN_FinaccTransaction.PROPERTY_DATEACCT,
+            FIN_Utility.getDate(strDocumentDateTo)));
       }
       if (StringUtils.isNotEmpty(strPaymentDateFrom)) {
-        obCriteriaTrans.addGreaterOrEqual(FIN_FinaccTransaction.PROPERTY_DATEACCT,
-            FIN_Utility.getDate(strPaymentDateFrom));
+        obCriteriaTrans.add(Restrictions.ge(FIN_FinaccTransaction.PROPERTY_DATEACCT,
+            FIN_Utility.getDate(strPaymentDateFrom)));
       }
       if (StringUtils.isNotEmpty(strPaymentDateTo)) {
-        obCriteriaTrans.addLessOrEqual(FIN_FinaccTransaction.PROPERTY_DATEACCT,
-            FIN_Utility.getDate(strPaymentDateTo));
+        obCriteriaTrans.add(Restrictions.le(FIN_FinaccTransaction.PROPERTY_DATEACCT,
+            FIN_Utility.getDate(strPaymentDateTo)));
       }
       if (StringUtils.isNotEmpty(strDueDateFrom)) {
-        obCriteriaTrans.addGreaterOrEqual(FIN_FinaccTransaction.PROPERTY_DATEACCT,
-            FIN_Utility.getDate(strDueDateFrom));
+        obCriteriaTrans.add(Restrictions.ge(FIN_FinaccTransaction.PROPERTY_DATEACCT,
+            FIN_Utility.getDate(strDueDateFrom)));
       }
       if (StringUtils.isNotEmpty(strExpectedDateTo)) {
-        obCriteriaTrans.addLessOrEqual(FIN_FinaccTransaction.PROPERTY_DATEACCT,
-            FIN_Utility.getDate(strExpectedDateFrom));
+        obCriteriaTrans.add(Restrictions.le(FIN_FinaccTransaction.PROPERTY_DATEACCT,
+            FIN_Utility.getDate(strExpectedDateFrom)));
       }
 
       // Amount
       if (StringUtils.isNotEmpty(strAmountFrom)) {
-        BigDecimal amountFrom = new BigDecimal(strAmountFrom);
-        obCriteriaTrans.addOr((cb, obc) -> cb.greaterThanOrEqualTo(obc.getPath(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT), amountFrom),
-                              (cb, obc) -> cb.greaterThanOrEqualTo(obc.getPath(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT), amountFrom));
+        obCriteriaTrans.add(Restrictions.or(
+            Restrictions.ge(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT,
+                new BigDecimal(strAmountFrom)),
+            Restrictions.ge(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT,
+                new BigDecimal(strAmountFrom))));
       }
       if (StringUtils.isNotEmpty(strAmountTo)) {
-        BigDecimal amountTo = new BigDecimal(strAmountTo);
-        obCriteriaTrans.addOr((cb, obc) -> cb.lessThanOrEqualTo(obc.getPath(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT), amountTo),
-                              (cb, obc) -> cb.lessThanOrEqualTo(obc.getPath(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT), amountTo));
+        obCriteriaTrans.add(Restrictions.or(
+            Restrictions.le(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT,
+                new BigDecimal(strAmountTo)),
+            Restrictions.le(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT,
+                new BigDecimal(strAmountTo))));
       }
 
       // Projects
       if (!projects.isEmpty()) {
-        obCriteriaTrans.addIn(FIN_FinaccTransaction.PROPERTY_PROJECT, projects);
+        obCriteriaTrans.add(Restrictions.in(FIN_FinaccTransaction.PROPERTY_PROJECT, projects));
       }
 
       // Status
@@ -1712,67 +1722,67 @@ public class PaymentReportDao {
         localStrfinPaymSt = localStrfinPaymSt.replace("'", "");
         localStrfinPaymSt = localStrfinPaymSt.replace(" ", "");
         Object[] status = localStrfinPaymSt.split(",");
-        obCriteriaTrans.addIn(FIN_FinaccTransaction.PROPERTY_STATUS, java.util.List.of(status));
+        obCriteriaTrans.add(Restrictions.in(FIN_FinaccTransaction.PROPERTY_STATUS, status));
       }
 
       // Currency
       if (StringUtils.isNotEmpty(strcCurrency)) {
-        obCriteriaTrans.addEqual(FIN_FinaccTransaction.PROPERTY_CURRENCY,
-            OBDal.getReadOnlyInstance().get(Currency.class, strcCurrency));
+        obCriteriaTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_CURRENCY,
+            OBDal.getReadOnlyInstance().get(Currency.class, strcCurrency)));
       }
 
       // payment type
       if (StringUtils.equalsIgnoreCase(strPaymType, "FINPR_Receivables")) {
         Object[] status = { "PWNC", "RPPC" };
-        obCriteriaTrans.addIn(FIN_FinaccTransaction.PROPERTY_STATUS, java.util.List.of(status));
+        obCriteriaTrans.add(Restrictions.in(FIN_FinaccTransaction.PROPERTY_STATUS, status));
       } else if (StringUtils.equalsIgnoreCase(strPaymType, "FINPR_Payables")) {
         Object[] status = { "RDNC", "RPPC" };
-        obCriteriaTrans.addIn(FIN_FinaccTransaction.PROPERTY_STATUS, java.util.List.of(status));
+        obCriteriaTrans.add(Restrictions.in(FIN_FinaccTransaction.PROPERTY_STATUS, status));
       }
 
       // order
 
       if (StringUtils.equalsIgnoreCase(strGroupCrit, "APRM_FATS_BPARTNER")) {
-        obCriteriaTrans.addOrderBy("bp." + BusinessPartner.PROPERTY_NAME, true);
+        obCriteriaTrans.addOrderBy("bp." + BusinessPartner.PROPERTY_NAME);
       } else if (StringUtils.equalsIgnoreCase(strGroupCrit, "Project")) {
-        obCriteriaTrans.addOrderBy("p." + Project.PROPERTY_NAME, true);
+        obCriteriaTrans.addOrderBy("p." + Project.PROPERTY_NAME);
       } else if (StringUtils.equalsIgnoreCase(strGroupCrit, "FINPR_BPartner_Category")) {
-        obCriteriaTrans.addOrderBy("bpc." + Category.PROPERTY_NAME, true);
+        obCriteriaTrans.addOrderBy("bpc." + Category.PROPERTY_NAME);
       } else if (StringUtils.equalsIgnoreCase(strGroupCrit, "INS_CURRENCY")) {
-        obCriteriaTrans.addOrderBy("c." + Currency.PROPERTY_ISOCODE, true);
+        obCriteriaTrans.addOrderBy("c." + Currency.PROPERTY_ISOCODE);
       } else if (StringUtils.equalsIgnoreCase(strGroupCrit, "ACCS_ACCOUNT_ID_D")) {
-        obCriteriaTrans.addOrderBy("acc." + FIN_FinancialAccount.PROPERTY_NAME, true);
+        obCriteriaTrans.addOrderBy("acc." + FIN_FinancialAccount.PROPERTY_NAME);
       }
 
-      obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_STATUS, true);
+      obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_STATUS);
 
       if (StringUtils.isNotEmpty(strOrdCrit)) {
         String[] strOrdCritList = strOrdCrit.substring(2, strOrdCrit.length() - 2).split("', '");
         for (int i = 0; i < strOrdCritList.length; i++) {
           if (StringUtils.equalsIgnoreCase(strOrdCritList[i], "Date")) {
-            obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_DATEACCT, true);
+            obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_DATEACCT);
           }
           if (strOrdCritList[i].contains("Project")) {
-            obCriteriaTrans.addOrderBy("p." + Project.PROPERTY_NAME, true);
+            obCriteriaTrans.addOrderBy("p." + Project.PROPERTY_NAME);
           }
           if (strOrdCritList[i].contains("FINPR_BPartner_Category")) {
-            obCriteriaTrans.addOrderBy("bpc." + Category.PROPERTY_NAME, true);
+            obCriteriaTrans.addOrderBy("bpc." + Category.PROPERTY_NAME);
           }
           if (strOrdCritList[i].contains("APRM_FATS_BPARTNER")) {
-            obCriteriaTrans.addOrderBy("bp." + BusinessPartner.PROPERTY_NAME, true);
+            obCriteriaTrans.addOrderBy("bp." + BusinessPartner.PROPERTY_NAME);
           }
           if (strOrdCritList[i].contains("INS_CURRENCY")) {
-            obCriteriaTrans.addOrderBy("c." + Currency.PROPERTY_ISOCODE, true);
+            obCriteriaTrans.addOrderBy("c." + Currency.PROPERTY_ISOCODE);
           }
           if (strOrdCritList[i].contains("ACCS_ACCOUNT_ID_D")) {
-            obCriteriaTrans.addOrderBy("acc." + FIN_FinancialAccount.PROPERTY_NAME, true);
+            obCriteriaTrans.addOrderBy("acc." + FIN_FinancialAccount.PROPERTY_NAME);
           }
           if (StringUtils.equalsIgnoreCase(strOrdCritList[i], "DueDate")) {
-            obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, true);
+            obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE);
           }
         }
       }
-      obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_ID, true);
+      obCriteriaTrans.addOrderBy(FIN_FinaccTransaction.PROPERTY_ID);
 
       final java.util.List<FIN_FinaccTransaction> transList = obCriteriaTrans.list();
       return transList;
@@ -1854,10 +1864,10 @@ public class PaymentReportDao {
       Date conversionDateObj = FIN_Utility.getDate(conversionDate);
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getReadOnlyInstance()
           .createCriteria(ConversionRate.class);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_CURRENCY, transCurrency);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_TOCURRENCY, baseCurrency);
-      obcConvRate.addLessOrEqual(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDateObj);
-      obcConvRate.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE, conversionDateObj);
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, transCurrency));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, baseCurrency));
+      obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDateObj));
+      obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, conversionDateObj));
       obcConvRate.setMaxResults(1);
       ConversionRate convRate = (ConversionRate) obcConvRate.uniqueResult();
       return convRate;
@@ -1871,9 +1881,9 @@ public class PaymentReportDao {
     String values[];
     try {
       final OBCriteria<Reference> obc = OBDal.getReadOnlyInstance().createCriteria(Reference.class);
-      obc.addEqual(Reference.PROPERTY_NAME, refName);
+      obc.add(Restrictions.eq(Reference.PROPERTY_NAME, refName));
       final OBCriteria<List> obcValue = OBDal.getReadOnlyInstance().createCriteria(List.class);
-      obcValue.addEqual(List.PROPERTY_REFERENCE, obc.list().get(0));
+      obcValue.add(Restrictions.eq(List.PROPERTY_REFERENCE, obc.list().get(0)));
       java.util.List<List> v = obcValue.list();
       int n = v.size();
 
@@ -1906,9 +1916,9 @@ public class PaymentReportDao {
 
       if (!StringUtils.equals(language.getLanguage(), "en_US")) {
         OBCriteria<ListTrl> obcTrl = OBDal.getReadOnlyInstance().createCriteria(ListTrl.class);
-        obcTrl.addEqual(ListTrl.PROPERTY_LANGUAGE, language);
+        obcTrl.add(Restrictions.eq(ListTrl.PROPERTY_LANGUAGE, language));
         obcTrl.createAlias(ListTrl.PROPERTY_LISTREFERENCE, "lr");
-        obcTrl.addEqual("lr." + List.PROPERTY_SEARCHKEY, strCode);
+        obcTrl.add(Restrictions.eq("lr." + List.PROPERTY_SEARCHKEY, strCode));
         obcTrl.setFilterOnReadableClients(false);
         obcTrl.setFilterOnReadableOrganization(false);
         obcTrl.setMaxResults(1);
@@ -1919,7 +1929,7 @@ public class PaymentReportDao {
         OBCriteria<List> obc = OBDal.getReadOnlyInstance().createCriteria(List.class);
         obc.setFilterOnReadableClients(false);
         obc.setFilterOnReadableOrganization(false);
-        obc.addEqual(List.PROPERTY_SEARCHKEY, strCode);
+        obc.add(Restrictions.eq(List.PROPERTY_SEARCHKEY, strCode));
         obc.setMaxResults(1);
         List list = (List) obc.uniqueResult();
         strMessage = list != null ? list.getName() : null;

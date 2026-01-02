@@ -41,6 +41,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.AccountTree;
@@ -571,10 +572,10 @@ public class GeneralAccountingReports extends HttpSecureAppServlet {
       final OBCriteria<OrganizationClosing> obc = OBDal.getReadOnlyInstance()
           .createCriteria(OrganizationClosing.class);
       obc.createAlias(OrganizationClosing.PROPERTY_ORGACCTSCHEMA, "oa");
-      obc.addEqual("organization", org);
-      obc.addEqual(OrganizationClosing.PROPERTY_YEAR, year);
-      obc.addEqual("oa.accountingSchema.id", strcAcctSchemaId);
-      obc.addIsNotNull(OrganizationClosing.PROPERTY_CLOSINGFACTACCTGROUP);
+      obc.add(Restrictions.eq("organization", org));
+      obc.add(Restrictions.eq(OrganizationClosing.PROPERTY_YEAR, year));
+      obc.add(Restrictions.eq("oa.accountingSchema.id", strcAcctSchemaId));
+      obc.add(Restrictions.isNotNull(OrganizationClosing.PROPERTY_CLOSINGFACTACCTGROUP));
       obc.setMaxResults(1);
       return obc.uniqueResult() == null;
     } finally {

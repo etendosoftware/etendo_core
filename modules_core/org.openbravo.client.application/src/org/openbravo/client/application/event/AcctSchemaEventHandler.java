@@ -19,14 +19,6 @@
 
 package org.openbravo.client.application.event;
 
-/**
- * MIGRATED TO HIBERNATE 6
- * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
- * - This file was automatically migrated from Criteria API to JPA Criteria API
- * - Review and test thoroughly before committing
- */
-
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +27,6 @@ import jakarta.enterprise.event.Observes;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -45,6 +36,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchemaElement;
@@ -117,9 +109,9 @@ class AcctSchemaEventHandler extends EntityPersistenceEventObserver {
   private Element getAccountElement(AcctSchema acctSchema) {
     final String ELEMENTTYPE_ACCOUNT = "AC";
     OBCriteria<AcctSchemaElement> aee = OBDal.getInstance().createCriteria(AcctSchemaElement.class);
-    aee.addEqual(AcctSchemaElement.PROPERTY_ACCOUNTINGSCHEMA, acctSchema);
-    aee.addIsNotNull(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT);
-    aee.addEqual(AcctSchemaElement.PROPERTY_TYPE, ELEMENTTYPE_ACCOUNT);
+    aee.add(Restrictions.eq(AcctSchemaElement.PROPERTY_ACCOUNTINGSCHEMA, acctSchema));
+    aee.add(Restrictions.isNotNull(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT));
+    aee.add(Restrictions.eq(AcctSchemaElement.PROPERTY_TYPE, ELEMENTTYPE_ACCOUNT));
     aee.setMaxResults(1);
     List<AcctSchemaElement> aees = aee.list();
     if (!aees.isEmpty()) {
@@ -132,7 +124,7 @@ class AcctSchemaEventHandler extends EntityPersistenceEventObserver {
   private int countSchemas(Element element) {
     Set<AcctSchema> schemas = new HashSet<>();
     OBCriteria<AcctSchemaElement> aee = OBDal.getInstance().createCriteria(AcctSchemaElement.class);
-    aee.addEqual(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT, element);
+    aee.add(Restrictions.eq(AcctSchemaElement.PROPERTY_ACCOUNTINGELEMENT, element));
     for (AcctSchemaElement acctSchemaElement : aee.list()) {
       schemas.add(acctSchemaElement.getAccountingSchema());
     }

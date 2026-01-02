@@ -10,6 +10,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.test.base.TestConstants;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -198,7 +199,8 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
       OBDal.getInstance().remove(config);
 
       Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
-          .addEqual(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE).addEqual(Preference.PROPERTY_SELECTED, true)
+          .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE))
+          .add(Restrictions.eq(Preference.PROPERTY_SELECTED, true))
           .uniqueResult();
       if(pref != null) {
         OBDal.getInstance().remove(pref);

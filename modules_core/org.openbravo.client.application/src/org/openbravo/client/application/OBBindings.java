@@ -19,6 +19,8 @@
 package org.openbravo.client.application;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -28,9 +30,6 @@ import jakarta.servlet.http.HttpSession;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
-import org.mozilla.javascript.Scriptable;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.Check;
 import org.openbravo.base.util.OBClassLoader;
@@ -195,20 +194,29 @@ public class OBBindings {
   }
 
   private Date getTimeFromJavaScriptDate(Object d) {
-    // Rhino engine is used to generate a Date object from provided JS expression
-    Context rhinoContext = Context.enter();
+    if (d == null) {
+      return null;
+    }
+
     try {
-      Scriptable scope = rhinoContext.initStandardObjects();
-      Function f = (Function) scope.get("getTime", scope);
-      Object result = f.call(rhinoContext, scope, scope, new Object[] { d });
-      long localTime = ((Double) result).longValue();
-      return new Date(localTime);
-    } catch (Exception ex) {
-      log.error("Error getting javascript date from object {} of class {}", d,
-          d.getClass().getName());
+      if (d instanceof Number ms) {
+        long localTime = ms.longValue();
+        return new Date(localTime);
+      }
+
+      if (d instanceof String dateString) {
+        Instant instant = Instant.parse(dateString);
+        return Date.from(instant);
+      }
+
+      if (d instanceof Date date) {
+        return date;
+      }
+      throw new IllegalArgumentException("Date format not supported: " + d.getClass().getName());
+
+    } catch (DateTimeParseException | IllegalArgumentException ex) {
+      log.error("Error getting date from object {} of class {}", d, d.getClass().getName());
       throw new OBException(ex.getMessage(), ex);
-    } finally {
-      Context.exit();
     }
   }
 

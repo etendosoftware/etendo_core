@@ -25,6 +25,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.DalInitializingTask;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.module.Module;
 
 /**
@@ -67,7 +68,7 @@ public class SystemValidationTask extends DalInitializingTask {
       return null;
     }
     final OBCriteria<Module> modules = OBDal.getInstance().createCriteria(Module.class);
-    modules.addEqual(Module.PROPERTY_JAVAPACKAGE, moduleJavaPackage);
+    modules.add(Restrictions.eq(Module.PROPERTY_JAVAPACKAGE, moduleJavaPackage));
 
     if (modules.list().size() == 0) {
       throw new OBException("Module with javapackage " + moduleJavaPackage + " does not exist");

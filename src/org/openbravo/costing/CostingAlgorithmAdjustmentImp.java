@@ -37,6 +37,7 @@ import org.openbravo.costing.CostingServer.TrxType;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -308,8 +309,8 @@ public abstract class CostingAlgorithmAdjustmentImp {
 
     final OBCriteria<ProductionLine> critPL = OBDal.getInstance()
         .createCriteria(ProductionLine.class)
-        .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan())
-        .addEqual(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+")
+        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan()))
+        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+"))
         .addOrderBy(ProductionLine.PROPERTY_COMPONENTCOST, true);
     critPL.createAlias(ProductionLine.PROPERTY_PRODUCT, "pr");
 
@@ -357,10 +358,10 @@ public abstract class CostingAlgorithmAdjustmentImp {
     final ProductionLine pl = currentCostAdjLine.getInventoryTransaction().getProductionLine();
     final OBCriteria<ProductionLine> critBOM = OBDal.getInstance()
         .createCriteria(ProductionLine.class)
-        .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan())
-        .addGreaterThan(ProductionLine.PROPERTY_MOVEMENTQUANTITY, BigDecimal.ZERO)
-        .addEqual("pr." + Product.PROPERTY_STOCKED, true)
-        .addEqual("pr." + Product.PROPERTY_PRODUCTTYPE, "I");
+        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan()))
+        .add(Restrictions.gt(ProductionLine.PROPERTY_MOVEMENTQUANTITY, BigDecimal.ZERO))
+        .add(Restrictions.eq("pr." + Product.PROPERTY_STOCKED, true))
+        .add(Restrictions.eq("pr." + Product.PROPERTY_PRODUCTTYPE, "I"));
     critBOM.createAlias(ProductionLine.PROPERTY_PRODUCT, "pr");
     for (ProductionLine pline : critBOM.list()) {
       if (pline.getMaterialMgmtMaterialTransactionList().isEmpty()) {
@@ -699,8 +700,8 @@ public abstract class CostingAlgorithmAdjustmentImp {
       final MaterialTransaction movementTransaction) {
     return OBDal.getInstance()
         .createCriteria(TransactionCost.class)
-        .addEqual(TransactionCost.PROPERTY_INVENTORYTRANSACTION, movementTransaction)
-        .addIsNotNull(TransactionCost.PROPERTY_COSTADJUSTMENTLINE)
+        .add(Restrictions.eq(TransactionCost.PROPERTY_INVENTORYTRANSACTION, movementTransaction))
+        .add(Restrictions.isNotNull(TransactionCost.PROPERTY_COSTADJUSTMENTLINE))
         .list();
   }
 }

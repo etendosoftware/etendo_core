@@ -45,6 +45,8 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
@@ -178,7 +180,7 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
   public static boolean noAggregatedDataForPeriod(final Period period) {
     final OBCriteria<ValuedStockAggregated> obc = OBDal.getInstance()
         .createCriteria(ValuedStockAggregated.class)
-        .addEqual(ValuedStockAggregated.PROPERTY_PERIOD, period);
+        .add(Restrictions.eq(ValuedStockAggregated.PROPERTY_PERIOD, period));
 
     return obc.list().isEmpty();
   }
@@ -330,9 +332,9 @@ public class ResetValuedStockAggregated extends BaseProcessActionHandler {
     try {
       OBCriteria<ValuedStockAggregated> criteria = OBDal.getInstance()
           .createCriteria(ValuedStockAggregated.class);
-      criteria.addEqual(ValuedStockAggregated.PROPERTY_ORGANIZATION, legalEntity);
-      criteria.setProjectionMax(ValuedStockAggregated.PROPERTY_ENDINGDATE);
-      dateTo = (Date) criteria.uniqueResult();
+      criteria.add(Restrictions.eq(ValuedStockAggregated.PROPERTY_ORGANIZATION, legalEntity));
+      criteria.setProjection(Projections.max(ValuedStockAggregated.PROPERTY_ENDINGDATE));
+      dateTo = criteria.uniqueResult(Date.class);
       if (dateTo == null) {
         final DateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
         dateTo = formatter.parse("01-01-0001");

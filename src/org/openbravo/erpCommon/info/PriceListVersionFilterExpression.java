@@ -36,6 +36,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.model.pricing.pricelist.PriceListVersion;
@@ -90,12 +91,12 @@ public class PriceListVersionFilterExpression implements FilterExpression {
 
   private PriceList getDefaultPriceList(boolean salesTransaction) {
     final OBCriteria<PriceList> priceListCrit = OBDal.getInstance().createCriteria(PriceList.class);
-    priceListCrit.addEqual(PriceList.PROPERTY_SALESPRICELIST, salesTransaction);
-    priceListCrit.addEqual(PriceList.PROPERTY_DEFAULT, true);
+    priceListCrit.add(Restrictions.eq(PriceList.PROPERTY_SALESPRICELIST, salesTransaction));
+    priceListCrit.add(Restrictions.eq(PriceList.PROPERTY_DEFAULT, true));
     String orgs = getOrgs();
     if (StringUtils.isNotEmpty(orgs)) {
-      priceListCrit.addInEntities(PriceList.PROPERTY_ORGANIZATION,
-          OBDao.getOBObjectListFromString(Organization.class, orgs));
+      priceListCrit.add(Restrictions.in(PriceList.PROPERTY_ORGANIZATION,
+          OBDao.getOBObjectListFromString(Organization.class, orgs)));
       priceListCrit.setFilterOnReadableOrganization(false);
     }
     if (priceListCrit.count() > 0) {
@@ -128,8 +129,8 @@ public class PriceListVersionFilterExpression implements FilterExpression {
   private PriceListVersion getPriceListVersion(PriceList priceList, Date date) {
     OBCriteria<PriceListVersion> plVersionCrit = OBDal.getInstance()
         .createCriteria(PriceListVersion.class);
-    plVersionCrit.addEqual(PriceListVersion.PROPERTY_PRICELIST, priceList);
-    plVersionCrit.addLessOrEqualThan(PriceListVersion.PROPERTY_VALIDFROMDATE, date);
+    plVersionCrit.add(Restrictions.eq(PriceListVersion.PROPERTY_PRICELIST, priceList));
+    plVersionCrit.add(Restrictions.le(PriceListVersion.PROPERTY_VALIDFROMDATE, date));
     plVersionCrit.addOrderBy(PriceListVersion.PROPERTY_VALIDFROMDATE, false);
     plVersionCrit.setMaxResults(1);
     return (PriceListVersion) plVersionCrit.uniqueResult();

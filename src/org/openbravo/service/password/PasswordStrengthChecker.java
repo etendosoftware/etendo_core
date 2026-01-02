@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Utility class used to check that passwords meets a minimum strength policy.
@@ -32,7 +32,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * 
  * @author jarmendariz
  */
-@ApplicationScoped
+@Dependent
 public class PasswordStrengthChecker {
   private static final int MINIMUM_LENGTH = 8;
   private static final int MIN_REQUIRED_CRITERIA = 3;

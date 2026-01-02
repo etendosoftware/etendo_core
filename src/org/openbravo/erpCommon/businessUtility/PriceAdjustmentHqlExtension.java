@@ -19,7 +19,7 @@
 
 package org.openbravo.erpCommon.businessUtility;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * This class allows PriceAdjustment discounts to be extended from external modules and to be
@@ -29,7 +29,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * 
  */
 
-@ApplicationScoped
+@Dependent
 public abstract class PriceAdjustmentHqlExtension {
 
   /**

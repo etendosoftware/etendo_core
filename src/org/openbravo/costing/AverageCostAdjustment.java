@@ -52,6 +52,7 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.financial.FinancialUtils;
@@ -822,9 +823,10 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
     critLines.createAlias(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, "ca");
-    critLines.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx);
-    // TODO: HIBERNATE 6 - Needs manual conversion of OR logic 
-    critLines.addEqual("ca." + CostAdjustment.PROPERTY_ID, getCostAdj().getId());
+    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx));
+    critLines.add(Restrictions.or(//
+        Restrictions.eq("ca.id", getCostAdj().getId()), //
+        Restrictions.not(Restrictions.eq("ca." + CostAdjustment.PROPERTY_DOCUMENTSTATUS, "DR"))));
 
     return critLines.list();
   }
@@ -1173,8 +1175,8 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
   private boolean isBackdatedTransaction(MaterialTransaction trx) {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    critLines.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx);
-    critLines.addEqual(CostAdjustmentLine.PROPERTY_ISBACKDATEDTRX, true);
+    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx));
+    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISBACKDATEDTRX, true));
     critLines.setMaxResults(1);
     return critLines.uniqueResult() != null;
   }
@@ -1189,8 +1191,8 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
   private List<CostAdjustmentLine> getNegativeStockAdjustments(MaterialTransaction trx) {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    critLines.addEqual(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx);
-    critLines.addEqual(CostAdjustmentLine.PROPERTY_ISNEGATIVESTOCKCORRECTION, true);
+    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx));
+    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISNEGATIVESTOCKCORRECTION, true));
     return critLines.list();
   }
 }

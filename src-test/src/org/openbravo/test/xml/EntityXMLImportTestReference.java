@@ -35,6 +35,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.utility.ReferenceDataStore;
@@ -79,8 +80,8 @@ public class EntityXMLImportTestReference extends XMLBaseTest {
     Location l = null;
     setTestUserContext();
     OBCriteria<Warehouse> obc = OBDal.getInstance().createCriteria(Warehouse.class);
-    obc.addEqual(Warehouse.PROPERTY_ORGANIZATION,
-        OBDal.getInstance().get(Organization.class, TEST_US_ORG_ID));
+    obc.add(Restrictions.eq(Warehouse.PROPERTY_ORGANIZATION,
+        OBDal.getInstance().get(Organization.class, TEST_US_ORG_ID)));
     numberOfWarehouses = obc.count();
     for (Warehouse w : obc.list()) {
       warehouseNames.add(w.getName());

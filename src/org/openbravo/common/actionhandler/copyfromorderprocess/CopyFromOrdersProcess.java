@@ -44,6 +44,8 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.process.ProcessInstance;
 import org.openbravo.model.common.order.Order;
@@ -171,9 +173,9 @@ public class CopyFromOrdersProcess {
 
   private ScrollableResults getOrderLinesExcludingDiscountsAndExplodedBOMLines(final Order order) {
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
-    obc.addEqual(OrderLine.PROPERTY_SALESORDER, order);
-    obc.addIsNull(OrderLine.PROPERTY_BOMPARENT);
-    obc.addIsNull(OrderLine.PROPERTY_ORDERDISCOUNT);
+    obc.add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, order));
+    obc.add(Restrictions.isNull(OrderLine.PROPERTY_BOMPARENT));
+    obc.add(Restrictions.isNull(OrderLine.PROPERTY_ORDERDISCOUNT));
     obc.addOrderBy(OrderLine.PROPERTY_LINENO, true);
     return obc.scroll(ScrollMode.FORWARD_ONLY);
   }
@@ -243,13 +245,13 @@ public class CopyFromOrdersProcess {
    */
   private Long getLastLineNoOfCurrentOrder() {
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
-    obc.addEqual(OrderLine.PROPERTY_SALESORDER, processingOrder);
-    obc.setProjectionMax(OrderLine.PROPERTY_LINENO);
+    obc.add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, processingOrder));
+    obc.setProjection(Projections.max(OrderLine.PROPERTY_LINENO));
     Long lineNumber = 0L;
     obc.setMaxResults(1);
-    Object o = obc.uniqueResult();
+    Long o = obc.uniqueResult(Long.class);
     if (o != null) {
-      lineNumber = (Long) o;
+      lineNumber = o;
     }
     return lineNumber;
   }

@@ -36,6 +36,7 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.financial.FinancialUtils;
 import org.openbravo.model.common.currency.ConversionRate;
 import org.openbravo.model.common.currency.Currency;
@@ -137,10 +138,10 @@ public class PaymentMethodMulticurrencyActionHandler extends BaseActionHandler {
           .createCriteria(FinAccPaymentMethod.class);
       obc.setFilterOnReadableOrganization(false);
       obc.setMaxResults(1);
-      obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT,
-          OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId));
-      obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-          OBDal.getInstance().get(FIN_PaymentMethod.class, paymentMethodId));
+      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT,
+          OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId)));
+      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+          OBDal.getInstance().get(FIN_PaymentMethod.class, paymentMethodId)));
       return (FinAccPaymentMethod) obc.uniqueResult();
     } finally {
       OBContext.restorePreviousMode();

@@ -23,6 +23,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.ConnectionProviderImpl;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
@@ -223,7 +224,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
    */
   private Table getMaterialManagementConsumptionTable(BaseOBObject document) {
     final OBCriteria<Table> criteria = OBDal.getInstance().createCriteria(Table.class);
-    criteria.addEqual(Table.PROPERTY_NAME, document.getEntityName());
+    criteria.add(Restrictions.eq(Table.PROPERTY_NAME, document.getEntityName()));
     criteria.setMaxResults(1);
     return (Table) criteria.uniqueResult();
   }

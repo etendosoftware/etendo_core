@@ -69,10 +69,10 @@ public class URLWidgetProvider extends WidgetProvider {
       final JSONObject parameters = new JSONObject();
       jsonObject.put(WidgetProvider.PARAMETERS, parameters);
       try {
-        Map<String, Object> filters = new HashMap<>();
-        filters.put(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass());
-        OBCriteria<WidgetURL> selFieldsCrit = OBDao.getFilteredCriteria(WidgetURL.class, filters);
-        final WidgetURL widgetURL = (WidgetURL) selFieldsCrit.uniqueResult();
+        final WidgetURL widgetURL = (WidgetURL) OBDao
+            .getFilteredCriteria(WidgetURL.class,
+                Restrictions.eq(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass()))
+            .uniqueResult();
         if (widgetURL != null) {
           parameters.put(SRC, widgetURL.getURL());
         } else {
@@ -99,10 +99,10 @@ public class URLWidgetProvider extends WidgetProvider {
     try {
       addDefaultWidgetProperties(jsonObject, widgetInstance);
       final JSONObject parameters = jsonObject.getJSONObject(WidgetProvider.PARAMETERS);
-      Map<String, Object> filters = new HashMap<>();
-      filters.put(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass());
-      OBCriteria<WidgetURL> selFieldsCrit = OBDao.getFilteredCriteria(WidgetURL.class, filters);
-      final WidgetURL widgetURL = (WidgetURL) selFieldsCrit.uniqueResult();
+      final WidgetURL widgetURL = (WidgetURL) OBDao
+          .getFilteredCriteria(WidgetURL.class,
+              Restrictions.eq(WidgetURL.PROPERTY_WIDGETCLASS, getWidgetClass()))
+          .uniqueResult();
       if (widgetURL != null) {
         parameters.put(SRC, widgetURL.getURL());
       } else {

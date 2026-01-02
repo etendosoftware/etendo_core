@@ -37,6 +37,7 @@ import org.apache.logging.log4j.Logger;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.User;
 
 /**
@@ -81,7 +82,7 @@ public class PasswordHash {
     try {
       User user = (User) OBDal.getInstance()
           .createCriteria(User.class)
-          .addEqual(User.PROPERTY_USERNAME, userName)
+          .add(Restrictions.eq(User.PROPERTY_USERNAME, userName))
           .setFilterOnActive(true)
           .setFilterOnReadableClients(false)
           .setFilterOnReadableOrganization(false)

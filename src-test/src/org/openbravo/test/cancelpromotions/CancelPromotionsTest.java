@@ -13,6 +13,7 @@ import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.model.pricing.priceadjustment.PriceAdjustment;
 import org.openbravo.test.base.TestConstants;
@@ -87,7 +88,8 @@ public class CancelPromotionsTest extends WeldBaseTest {
    */
   @After
   public void cleanUp() {
-    PriceAdjustment pa = (PriceAdjustment) OBDal.getInstance().createCriteria(PriceAdjustment.class).addEqual(PriceAdjustment.PROPERTY_NAME, "10% DISCOUNT TEST").uniqueResult();
+    PriceAdjustment pa = (PriceAdjustment) OBDal.getInstance().createCriteria(PriceAdjustment.class).add(
+        Restrictions.eq(PriceAdjustment.PROPERTY_NAME, "10% DISCOUNT TEST")).uniqueResult();
 
     OBDal.getInstance().remove(pa);
     OBDal.getInstance().flush();
