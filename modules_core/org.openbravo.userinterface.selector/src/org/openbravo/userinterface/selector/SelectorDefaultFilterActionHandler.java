@@ -53,14 +53,14 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.http.HttpSession;
 
 /**
  * 
  * @author iperdomo
  */
-@ApplicationScoped
+@Dependent
 public class SelectorDefaultFilterActionHandler extends BaseActionHandler {
   private Logger log = LogManager.getLogger();
 

@@ -19,8 +19,6 @@
 
 package org.openbravo.utility.cleanup.log;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,6 +33,8 @@ import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.scheduling.ProcessLogger;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Default implementation to clean up an entity.
  * 
@@ -45,7 +45,7 @@ import org.openbravo.scheduling.ProcessLogger;
  * @author alostale
  * 
  */
-@ApplicationScoped
+@Dependent
 @Qualifier("Default")
 public class CleanEntity {
   protected static final String SYSTEM = "0";

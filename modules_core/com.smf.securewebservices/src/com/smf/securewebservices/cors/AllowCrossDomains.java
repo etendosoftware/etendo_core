@@ -1,15 +1,16 @@
 package com.smf.securewebservices.cors;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.openbravo.base.secureApp.AllowedCrossDomainsHandler.AllowedCrossDomainsChecker;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpServletRequest;
 /**
  * 
  * @author androettop
  * TODO: make configurable
  */
-@ApplicationScoped
+@Dependent
 public class AllowCrossDomains extends AllowedCrossDomainsChecker {
     private static final Logger log = Logger.getLogger(AllowCrossDomains.class);
     @Override

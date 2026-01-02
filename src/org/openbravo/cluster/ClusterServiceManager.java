@@ -40,7 +40,7 @@ import org.openbravo.model.ad.system.ADClusterService;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -49,7 +49,7 @@ import jakarta.inject.Inject;
  * Class in charge of registering the node that should handle a particular service when working in a
  * clustered environment.
  */
-@ApplicationScoped
+@Dependent
 public class ClusterServiceManager {
   private static final Logger log = LogManager.getLogger();
   private static final String UNKNOWN = "Unknown";

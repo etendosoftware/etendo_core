@@ -42,7 +42,7 @@ import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleInheritance;
 import org.openbravo.role.inheritance.access.AccessTypeInjector;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -52,7 +52,7 @@ import jakarta.inject.Inject;
  * not intended to handle large volumes of objects (permissions) within this class. For this reason
  * it makes use of DAL lists instead of ScrollableResults.
  */
-@ApplicationScoped
+@Dependent
 public class RoleInheritanceManager {
 
   private static final Logger log = LogManager.getLogger();

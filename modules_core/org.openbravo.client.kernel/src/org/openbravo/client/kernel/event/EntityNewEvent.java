@@ -18,6 +18,8 @@
  */
 package org.openbravo.client.kernel.event;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * The event object send out when an entity gets saved for the first time.
  * 
@@ -30,6 +32,7 @@ package org.openbravo.client.kernel.event;
  * 
  * @author mtaal
  */
+@Dependent
 public class EntityNewEvent extends EntityPersistenceEvent {
 
 }

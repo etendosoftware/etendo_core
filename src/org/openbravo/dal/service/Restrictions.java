@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
@@ -17,6 +18,7 @@ import jakarta.persistence.criteria.Root;
  *
  * @author refactored for Hibernate 6.5.2
  */
+@Dependent
 public class Restrictions {
 
   /**

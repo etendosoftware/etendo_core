@@ -12,11 +12,11 @@ import org.openbravo.erpCommon.utility.DocumentNoData;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.erpCommon.utilitySequence.UtilitySequenceActionInterface;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Default;
 import jakarta.servlet.ServletException;
 
-@ApplicationScoped
+@Dependent
 @Default
 public class UtilitySequenceLegacy implements UtilitySequenceActionInterface {
 

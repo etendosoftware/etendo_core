@@ -18,12 +18,12 @@
 
 package org.openbravo.server;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Abstract class to be extended by implementations of the server controller
  */
-@ApplicationScoped
+@Dependent
 public abstract class ServerController {
 
   public abstract boolean isThisACentralServer();

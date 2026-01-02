@@ -21,9 +21,6 @@ package org.openbravo.client.kernel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.client.application.report.JmxReportCache;
@@ -35,13 +32,16 @@ import org.openbravo.jmx.MBeanRegistry;
 import org.openbravo.model.ad.system.SystemInformation;
 import org.openbravo.service.db.DalConnectionProvider;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * An {@link ApplicationInitializer} in charge of doing some initialization tasks like checking if
  * both Tomcat and DB are configured to use the same time and registering some standard jmx beans.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class KernelApplicationInitializer implements ApplicationInitializer {
   private static final Logger log4j = LogManager.getLogger();
   private static final String sqlDateTimeFormat = "DD-MM-YYYY HH24:MI:SS";
