@@ -207,24 +207,24 @@ OB.APRM.AddPayment.onLoad = function(view) {
 };
 
 OB.APRM.AddPayment._requestNextOrderInvoicePage = function (orderInvoiceGrid) {
-  var rs = orderInvoiceGrid.data;
+  const rs = orderInvoiceGrid.data;
   if (!rs || rs.cachedRows === undefined || rs.totalRows === undefined) {
     return;
   }
 
-  var startRow = rs.cachedRows;
-  var totalRows = rs.totalRows;
+  const startRow = rs.cachedRows;
+  const totalRows = rs.totalRows;
   if (startRow >= totalRows) {
     return;
   }
   
-  var pageSize =
+  const pageSize =
     rs.resultSize ||
     rs.pageSize ||
     orderInvoiceGrid.dataPageSize ||
     orderInvoiceGrid.pageSize ||
     100;
-  var endRow = Math.min(totalRows, startRow + pageSize);
+  const endRow = Math.min(totalRows, startRow + pageSize);
   orderInvoiceGrid._aprmAutoDistributeInProgress = true;
   rs.getRange(startRow, endRow);
 };
@@ -588,7 +588,7 @@ OB.APRM.AddPayment.distributeAmount = function(
     message;
 
   if (autoDistributeAmt !== 'N' && autoDistributeAmt !== '"N"') {
-    var hasPartialData = orderInvoice.data.cachedRows < orderInvoice.data.totalRows;
+    const hasPartialData = orderInvoice.data.cachedRows < orderInvoice.data.totalRows;
     if (hasPartialData) {
       showMessageProperty = OB.PropertyStore.get('APRM_ShowNoDistributeMsg');
       showMessage =
