@@ -398,21 +398,33 @@
               */
               -- Get Order DocType Info - approved from Invoice DocType
               BEGIN
-              v_DocType_ID:=NULL;
-              v_ResultStr:='GetDocTypeInfo - ' || Cur_Order.C_DocType_ID;  SELECT od.C_DocTypeInvoice_ID
-              INTO v_DocType_ID
-              FROM C_DOCTYPE od,
-                C_DOCTYPE ID
-              WHERE od.C_DocType_ID=Cur_Order.C_DocType_ID
-                AND od.C_DocTypeInvoice_ID=ID.C_DocType_ID
-                AND ID.IsActive='Y';
-              EXCEPTION
-              WHEN OTHERS THEN
-                v_DocType_ID:=NULL;
-              END;
-              IF (v_DocType_ID IS NULL) THEN
-                RAISE_APPLICATION_ERROR(-20000, '@NoDocumentTypeFound@') ;
-              END IF;
+                v_DocType_ID := NULL;
+                v_DocType_ID := c_bp_get_doctype(
+                  Cur_Order.AD_Client_ID,
+                  Cur_Order.AD_Org_ID,
+                  Cur_Order.C_BPartner_ID,
+                 CASE WHEN Cur_Order.IsSOTrx = 'Y' THEN 'ARI' ELSE 'API' END,
+                  'Y'
+                );
+                IF v_DocType_ID IS NULL THEN
+                 BEGIN
+                   v_ResultStr := 'GetDocTypeInfo - ' || Cur_Order.C_DocType_ID;
+                   SELECT od.C_DocTypeInvoice_ID
+                   INTO v_DocType_ID
+                   FROM C_DOCTYPE od,
+                     C_DOCTYPE id
+                   WHERE od.C_DocType_ID = Cur_Order.C_DocType_ID
+                     AND od.C_DocTypeInvoice_ID = id.C_DocType_ID
+                     AND id.IsActive = 'Y';
+                  EXCEPTION
+                  WHEN OTHERS THEN
+                    v_DocType_ID := NULL;
+                  END;
+                END IF;
+                IF v_DocType_ID IS NULL THEN
+                  RAISE_APPLICATION_ERROR(-20000, '@NoDocumentTypeFound@');
+                END IF;
+			  END;
               --
               Ad_Sequence_Next('C_Invoice', Cur_Order.AD_Client_ID, p_Invoice_ID) ;
               Ad_Sequence_Doctype(v_DocType_ID, Cur_Order.AD_Client_ID, 'Y', v_DocumentNo) ;
@@ -1096,11 +1108,26 @@
                 v_ResultStr:='GetDocumentType';
                 IF(Cur_InvoiceSchedule.C_Order_ID IS NULL OR cur_invoiceschedule.order_org_id != v_invorg_id) THEN
                   BEGIN
-                    v_DocType_ID:=Ad_Get_Doctype(Cur_InvoiceSchedule.AD_Client_ID, v_invorg_id, 'ARI') ;
+                    v_DocType_ID := c_bp_get_doctype(
+                      Cur_InvoiceSchedule.AD_Client_ID,
+                      v_invOrg_ID,
+                      Cur_InvoiceSchedule.C_BPartner_ID,
+                      'ARI',
+                      'Y'
+                    );
                   EXCEPTION
                   WHEN OTHERS THEN
-                    RAISE_APPLICATION_ERROR(-20000, '@NoDefaultInvoice@') ;
+                    v_DocType_ID := NULL;
                   END;
+
+                  IF v_DocType_ID IS NULL THEN
+                    BEGIN
+                      v_DocType_ID := Ad_Get_Doctype(Cur_InvoiceSchedule.AD_Client_ID, v_invOrg_ID, 'ARI');
+                    EXCEPTION
+                      WHEN OTHERS THEN
+                        RAISE_APPLICATION_ERROR(-20000, '@NoDefaultInvoice@');
+                    END;
+                  END IF;
                 ELSE
                   BEGIN
                   v_DocType_ID:=NULL;
