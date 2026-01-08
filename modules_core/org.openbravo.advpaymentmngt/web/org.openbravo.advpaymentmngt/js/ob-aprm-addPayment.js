@@ -21,11 +21,14 @@ OB.APRM.AddPayment = {
     var i,
       selectedRecords = this.getSelectedRecords();
     this.Super('dataArrived', arguments);
-    for (i = 0; i < selectedRecords; i++) {
-      this.setEditValues(
-        this.getRecordIndex(selectedRecords[i]),
-        selectedRecords[i]
-      );
+    for (i = 0; i < selectedRecords.length; i++) {
+      this.setEditValues(this.getRecordIndex(selectedRecords[i]), selectedRecords[i]);
+    }
+    if (this._aprmAutoDistributeInProgress && this._aprmAddPaymentView && this._aprmAddPaymentForm) {
+      var grid = this;
+      isc.Timer.setTimeout(function () {
+        OB.APRM.AddPayment.distributeAmount(grid._aprmAddPaymentView, grid._aprmAddPaymentForm, false);
+      }, 0);
     }
   },
   ordInvTransformData: function(newData, dsResponse) {
@@ -176,6 +179,8 @@ OB.APRM.AddPayment.onLoad = function(view) {
   creditUseGrid.userSelectAllRecords = OB.APRM.AddPayment.userSelectAllRecords;
   creditUseGrid.deselectAllRecords = OB.APRM.AddPayment.deselectAllRecords;
   orderInvoiceGrid.dataArrived = OB.APRM.AddPayment.ordInvDataArrived;
+  orderInvoiceGrid._aprmAddPaymentView = view;
+  orderInvoiceGrid._aprmAddPaymentForm = form;
 
   form.isCreditAllowed =
     form.getItem('received_from').getValue() !== undefined &&
@@ -199,6 +204,29 @@ OB.APRM.AddPayment.onLoad = function(view) {
     form.addField(orgParam);
     form.addField(bankStatementLineAmount);
   }
+};
+
+OB.APRM.AddPayment._requestNextOrderInvoicePage = function (orderInvoiceGrid) {
+  var rs = orderInvoiceGrid.data;
+  if (!rs || rs.cachedRows === undefined || rs.totalRows === undefined) {
+    return;
+  }
+
+  var startRow = rs.cachedRows;
+  var totalRows = rs.totalRows;
+  if (startRow >= totalRows) {
+    return;
+  }
+  
+  var pageSize =
+    rs.resultSize ||
+    rs.pageSize ||
+    orderInvoiceGrid.dataPageSize ||
+    orderInvoiceGrid.pageSize ||
+    100;
+  var endRow = Math.min(totalRows, startRow + pageSize);
+  orderInvoiceGrid._aprmAutoDistributeInProgress = true;
+  rs.getRange(startRow, endRow);
 };
 
 OB.APRM.AddPayment.addNewGLItem = function(grid) {
@@ -560,7 +588,8 @@ OB.APRM.AddPayment.distributeAmount = function(
     message;
 
   if (autoDistributeAmt !== 'N' && autoDistributeAmt !== '"N"') {
-    if (orderInvoice.data.cachedRows < orderInvoice.data.totalRows) {
+    var hasPartialData = orderInvoice.data.cachedRows < orderInvoice.data.totalRows;
+    if (hasPartialData) {
       showMessageProperty = OB.PropertyStore.get('APRM_ShowNoDistributeMsg');
       showMessage =
         showMessageProperty !== 'N' && showMessageProperty !== '"N"';
@@ -584,8 +613,6 @@ OB.APRM.AddPayment.distributeAmount = function(
           ' '
         );
       }
-      OB.APRM.AddPayment.updateInvOrderTotal(form, orderInvoice);
-      return;
     } else {
       // hide the message bar if it is still showing the APRM_NoDistributeMsg message and the distribution is about to be done
       message = orderInvoice.contentView.messageBar.text.contents;
@@ -717,6 +744,11 @@ OB.APRM.AddPayment.distributeAmount = function(
       }
     }
     OB.APRM.AddPayment.updateActualExpected(form);
+  }
+  if (hasPartialData && amount.signum() !== 0) {
+    OB.APRM.AddPayment._requestNextOrderInvoicePage(orderInvoice);
+  } else {
+    delete orderInvoice._aprmAutoDistributeInProgress;
   }
   OB.APRM.AddPayment.updateInvOrderTotal(form, orderInvoice);
 };
