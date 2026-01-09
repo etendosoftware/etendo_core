@@ -16,15 +16,9 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationExpirationPasswordException;
 import org.openbravo.authentication.AuthenticationManager;
@@ -42,11 +36,18 @@ import org.openbravo.model.ad.access.User;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.web.BaseWebServiceServlet;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 /**
  * 
  * @author adrianromero
  * @author iperdomo
  */
+@Dependent
 public class DefaultAuthenticationManager extends AuthenticationManager {
 
   private static final Logger log4j = LogManager.getLogger();

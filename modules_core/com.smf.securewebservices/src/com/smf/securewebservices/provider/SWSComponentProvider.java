@@ -26,13 +26,13 @@ import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * 
  * @author androettop
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(SWSComponentProvider.COMPONENT_TYPE)
 public class SWSComponentProvider extends BaseComponentProvider {
 	public static final String COMPONENT_TYPE = "SMFSWS_CompProv";

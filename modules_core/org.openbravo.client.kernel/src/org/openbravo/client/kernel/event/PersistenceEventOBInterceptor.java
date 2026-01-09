@@ -21,6 +21,7 @@ package org.openbravo.client.kernel.event;
 import java.io.Serializable;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 
@@ -35,7 +36,7 @@ import org.openbravo.base.structure.Traceable;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class PersistenceEventOBInterceptor extends EmptyInterceptor {
 
   private static final long serialVersionUID = 1L;

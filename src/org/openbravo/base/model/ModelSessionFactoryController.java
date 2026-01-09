@@ -23,7 +23,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.etendoerp.sequences.model.SequenceConfiguration;
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.cfg.Configuration;
@@ -31,7 +30,8 @@ import org.hibernate.type.Type;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.util.Check;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import com.etendoerp.sequences.model.SequenceConfiguration;
+
 import jakarta.enterprise.context.Dependent;
 
 /**
@@ -41,7 +41,7 @@ import jakarta.enterprise.context.Dependent;
  * @author mtaal
  */
 
-@ApplicationScoped
+@Dependent
 public class ModelSessionFactoryController extends SessionFactoryController {
 
   private List<Class<?>> additionalClasses = new ArrayList<Class<?>>();

@@ -34,13 +34,15 @@ import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.database.ExternalConnectionPool;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class is responsible for initializing the DAL layer. It ensures that the model is read in
  * memory and that the mapping is generated in a two stage process.
  * 
  * @author mtaal
  */
-
+@Dependent
 public class DalLayerInitializer implements OBSingleton {
   private static final Logger log = LogManager.getLogger();
 

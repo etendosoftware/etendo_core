@@ -50,7 +50,7 @@ import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.ui.Window;
 import org.openbravo.service.db.DalConnectionProvider;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -62,7 +62,7 @@ import jakarta.servlet.ServletException;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class WindowSettingsActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
   public static final String EXTRA_CALLBACKS = "extraCallbacks";

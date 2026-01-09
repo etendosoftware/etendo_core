@@ -18,7 +18,7 @@
  */
 package org.openbravo.client.kernel.event;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * The event object send out when an entity gets deleted.
@@ -32,6 +32,6 @@ import jakarta.enterprise.context.ApplicationScoped;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class EntityDeleteEvent extends EntityPersistenceEvent {
 }

@@ -27,14 +27,14 @@ import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.client.kernel.KernelConstants;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Provides Selector Components.
  * 
  * @author mtaal
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(SelectorConstants.SELECTOR_COMPONENT_TYPE)
 public class SelectorComponentProvider extends BaseComponentProvider {
 

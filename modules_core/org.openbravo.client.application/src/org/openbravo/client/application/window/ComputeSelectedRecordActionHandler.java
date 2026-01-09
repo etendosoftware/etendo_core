@@ -37,7 +37,7 @@ import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.ui.Window;
 import org.openbravo.service.json.JsonConstants;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,7 +49,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class ComputeSelectedRecordActionHandler extends BaseActionHandler {
 
   private static final String WINDOW_ID = "windowId";

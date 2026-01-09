@@ -28,13 +28,13 @@ import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * 
  * @author dbaz
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(ResourcesComponentProvider.COMPONENT_TYPE)
 public class ResourcesComponentProvider extends BaseComponentProvider {
   public static final String COMPONENT_TYPE = "com.smf.userinterface.skin.legacy_Resources";

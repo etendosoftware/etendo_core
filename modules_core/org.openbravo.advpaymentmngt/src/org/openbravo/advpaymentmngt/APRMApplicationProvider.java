@@ -25,9 +25,9 @@ import java.util.Map;
 import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Dependent
+@ApplicationScoped
 public class APRMApplicationProvider extends BaseComponentProvider {
 
   @Override

@@ -21,6 +21,8 @@ package org.openbravo.client.kernel.event;
 import org.hibernate.Transaction;
 import org.openbravo.dal.core.OBInterceptor;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * The event object send out when a transaction has been completed.
  * 
@@ -35,6 +37,7 @@ import org.openbravo.dal.core.OBInterceptor;
  * 
  * @author mtaal
  */
+@Dependent
 public class TransactionCompletedEvent {
   private Transaction transaction;
 

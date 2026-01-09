@@ -20,37 +20,27 @@
 package org.openbravo.advpaymentmngt.utility;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
-import java.util.List;
-
 import org.hibernate.query.ReturnableType;
-import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
-import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.openbravo.dal.core.SQLFunctionRegister;
 import org.openbravo.service.db.DalConnectionProvider;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A class in charge of registering APRM SQL functions in Hibernate.
  */
-@ApplicationScoped
+@Dependent
 public class APRMSQLFunctionRegister implements SQLFunctionRegister {
   private static final String RDBMS = new DalConnectionProvider(false).getRDBMS();
 

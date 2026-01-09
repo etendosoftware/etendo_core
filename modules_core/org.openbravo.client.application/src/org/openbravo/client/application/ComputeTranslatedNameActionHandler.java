@@ -27,7 +27,7 @@ import org.openbravo.client.kernel.StaticResourceComponent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Computes information to open a classic window for a record in the new layout.
@@ -35,7 +35,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * @author mtaal, aro
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class ComputeTranslatedNameActionHandler extends BaseActionHandler {
 
   @Override

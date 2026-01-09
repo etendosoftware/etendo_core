@@ -8,9 +8,9 @@ import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(com.smf.jobs.defaults.provider.JobsComponentProvider.COMPONENT_TYPE)
 public class JobsComponentProvider extends BaseComponentProvider {
 

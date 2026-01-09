@@ -31,10 +31,13 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.database.PoolInterceptorProvider;
 import org.openbravo.database.SessionInfo;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This interceptor allows to act whenever a connection is requested from the pool and whenever any
  * operation is invoked on a connection provided by Apache JDBC Connection Pool.
  */
+@Dependent
 public class ConnectionInitializerInterceptor extends JdbcInterceptor
     implements PoolInterceptorProvider {
 

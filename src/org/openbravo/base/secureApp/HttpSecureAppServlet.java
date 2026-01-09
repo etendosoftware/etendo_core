@@ -22,16 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import org.codehaus.jettison.json.JSONObject;
-
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationManager;
 import org.openbravo.base.HttpBaseServlet;
@@ -72,8 +63,17 @@ import org.openbravo.utils.FileUtility;
 import org.openbravo.utils.Replace;
 import org.openbravo.xmlEngine.XmlDocument;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import net.sf.jasperreports.engine.JRDataSource;
 
+@Dependent
 public class HttpSecureAppServlet extends HttpBaseServlet {
   private static final long serialVersionUID = 1L;
   protected boolean boolHist = true;
@@ -83,6 +83,7 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
 
   private String servletClass = this.getClass().getName();
 
+  @Dependent
   private class Variables extends VariablesHistory {
     private String loggingIn;
 

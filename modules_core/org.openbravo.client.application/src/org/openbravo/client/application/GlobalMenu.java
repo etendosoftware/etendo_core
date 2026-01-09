@@ -34,11 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.client.application.MenuManager.MenuEntryType;
 import org.openbravo.client.application.MenuManager.MenuOption;
@@ -55,6 +52,8 @@ import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.Tree;
 import org.openbravo.model.ad.utility.TreeNode;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * 
  * Caches in memory generic global menus per language and tree to be consumed by {@link MenuManager}
@@ -62,7 +61,7 @@ import org.openbravo.model.ad.utility.TreeNode;
  * @author alostale
  * 
  */
-@ApplicationScoped
+@Dependent
 public class GlobalMenu {
   private static final Logger log = LogManager.getLogger();
 

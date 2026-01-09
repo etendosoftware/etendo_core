@@ -22,17 +22,17 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.service.db.DalConnectionProvider;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * This class will be extended by those classes that implements a service which supports working in
  * a clustered environment.
  */
-@ApplicationScoped
+@Dependent
 public abstract class ClusterService {
   private static final Logger log = LogManager.getLogger();
   private static final Long DEFAULT_TIMEOUT = 10_000L;

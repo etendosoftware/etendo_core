@@ -42,6 +42,8 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Builds a tree of organizations to compute the accessible organizations for the current
  * organizations of a user. Is used to check if references from one object to another are correct
@@ -53,6 +55,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * @author mtaal
  */
 
+@Dependent
 public class OrganizationStructureProvider implements OBNotSingleton {
   final static Logger log = LogManager.getLogger();
 

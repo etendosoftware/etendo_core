@@ -24,14 +24,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import org.openbravo.base.validation.ValidationException;
+
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
-
-import org.openbravo.base.validation.ValidationException;
 
 /**
  * Processes a template with data passed into it. A template processor is used as a singleton so
@@ -107,7 +107,7 @@ public interface TemplateProcessor {
     }
   }
 
-  @ApplicationScoped
+  @Dependent
   public static class Registry {
 
     @Inject

@@ -35,6 +35,8 @@ import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class combines all security checks which are performed on entity level:
  * <ul>
@@ -50,7 +52,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * CONTRIBUTORS: androettop
  *
  */
-
+@Dependent
 public class SecurityChecker implements OBSingleton {
 
     private static SecurityChecker instance;
@@ -190,7 +192,7 @@ public class SecurityChecker implements OBSingleton {
                         SessionHandler.getInstance().setDoRollback(true);
                         throw new OBSecurityException(
                                 "Organization " + orgId + " of object (" + obj
-                                        + ") is not present in OrganizationList " + obContext.getWritableOrganizations(),
+                                        + ") is not present in OrganizationList " + obContext.getWritableOrganizations() + " of Role: " +OBContext.getOBContext().getRole().getName(),
                                 logError);
                     }
                 }
