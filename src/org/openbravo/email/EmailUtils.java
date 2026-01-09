@@ -27,6 +27,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.enterprise.Organization;
 
@@ -54,9 +55,9 @@ public class EmailUtils {
         OBCriteria<EmailServerConfiguration> mailConfigCriteria = OBDal.getInstance()
             .createCriteria(EmailServerConfiguration.class);
         mailConfigCriteria
-            .addEqual(EmailServerConfiguration.PROPERTY_ORGANIZATION, organization);
-        mailConfigCriteria.addEqual(EmailServerConfiguration.PROPERTY_CLIENT,
-            OBContext.getOBContext().getCurrentClient());
+            .add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ORGANIZATION, organization));
+        mailConfigCriteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
+            OBContext.getOBContext().getCurrentClient()));
 
         List<EmailServerConfiguration> mailConfigList = null;
         mailConfigList = mailConfigCriteria.list();

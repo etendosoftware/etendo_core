@@ -8,13 +8,13 @@ import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * 
  * @author androettop
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(DebugToolsComponentProvider.COMPONENT_TYPE)
 public class DebugToolsComponentProvider extends BaseComponentProvider {
 	public static final String COMPONENT_TYPE = "SMFSCDT_CompProvider";

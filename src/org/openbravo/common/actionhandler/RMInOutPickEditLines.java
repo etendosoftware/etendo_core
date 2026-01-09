@@ -34,6 +34,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.UOMUtil;
 import org.openbravo.model.common.enterprise.Locator;
@@ -185,8 +186,8 @@ public class RMInOutPickEditLines extends BaseProcessActionHandler {
       if (inOutLine.getSalesOrderLine().getBOMParent() != null) {
         OBCriteria<ShipmentInOutLine> obc = OBDal.getInstance()
             .createCriteria(ShipmentInOutLine.class);
-        obc.addEqual(ShipmentInOutLine.PROPERTY_SALESORDERLINE,
-            inOutLine.getSalesOrderLine().getBOMParent());
+        obc.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SALESORDERLINE,
+            inOutLine.getSalesOrderLine().getBOMParent()));
         ShipmentInOutLine parentInOutLine = (ShipmentInOutLine) obc.uniqueResult();
         inOutLine.setBOMParent(parentInOutLine);
         OBDal.getInstance().save(inOutLine);

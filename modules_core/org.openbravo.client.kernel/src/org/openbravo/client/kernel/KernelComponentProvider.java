@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.openbravo.dal.core.OBContext;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Provides Kernel Components.
@@ -32,7 +32,7 @@ import jakarta.enterprise.context.Dependent;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(KernelConstants.KERNEL_COMPONENT_TYPE)
 public class KernelComponentProvider extends BaseComponentProvider {
   public static final String QUALIFIER = KernelConstants.KERNEL_COMPONENT_TYPE;

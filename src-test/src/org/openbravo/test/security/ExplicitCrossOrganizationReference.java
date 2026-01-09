@@ -43,6 +43,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.ad.access.User;
@@ -497,7 +498,7 @@ public class ExplicitCrossOrganizationReference extends CrossOrganizationReferen
   static void grantWindowAccess(Role role, String windowId) {
     WindowAccess windowAccess = OBProvider.getInstance().get(WindowAccess.class);
     final OBCriteria<Window> obCriteria = OBDal.getInstance().createCriteria(Window.class);
-    obCriteria.addEqual(Window.PROPERTY_ID, windowId);
+    obCriteria.add(Restrictions.eq(Window.PROPERTY_ID, windowId));
     obCriteria.setMaxResults(1);
     windowAccess.setClient(role.getClient());
     windowAccess.setOrganization(role.getOrganization());

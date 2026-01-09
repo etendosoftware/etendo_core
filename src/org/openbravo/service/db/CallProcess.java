@@ -36,6 +36,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.process.Parameter;
 import org.openbravo.model.ad.process.ProcessInstance;
 
@@ -85,7 +86,7 @@ public class CallProcess {
     final OBCriteria<org.openbravo.model.ad.ui.Process> processCriteria = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.ui.Process.class);
     processCriteria
-        .addEqual(org.openbravo.model.ad.ui.Process.PROPERTY_PROCEDURE, processName);
+        .add(Restrictions.eq(org.openbravo.model.ad.ui.Process.PROPERTY_PROCEDURE, processName));
     List<org.openbravo.model.ad.ui.Process> processList = processCriteria.list();
     if (processList.size() != 1) {
       throw new OBException(

@@ -34,6 +34,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.currency.ConversionRate;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.enterprise.Organization;
@@ -135,11 +136,11 @@ public class SE_Payment_MultiCurrency extends SimpleCallout {
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getInstance()
           .createCriteria(ConversionRate.class);
       obcConvRate.setFilterOnReadableOrganization(false);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_ORGANIZATION, org);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_CURRENCY, fromCurrency);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_TOCURRENCY, toCurrency);
-      obcConvRate.addLessOrEqualThan(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate);
-      obcConvRate.addGreaterOrEqualThan(ConversionRate.PROPERTY_VALIDTODATE, conversionDate);
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_ORGANIZATION, org));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, fromCurrency));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, toCurrency));
+      obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate));
+      obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, conversionDate));
       conversionRateList = obcConvRate.list();
       if ((conversionRateList != null) && (conversionRateList.size() != 0)) {
         conversionRate = conversionRateList.get(0);

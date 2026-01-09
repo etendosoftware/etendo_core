@@ -22,13 +22,13 @@ package org.openbravo.base.secureApp;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.base.weld.WeldUtils;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Provides/handles the domain checkers which determine if a specific cross domain request is
@@ -38,6 +38,7 @@ import org.openbravo.base.weld.WeldUtils;
  * 
  * @author Martin Taal
  */
+@Dependent
 public class AllowedCrossDomainsHandler {
 
   private static final Logger log = LogManager.getLogger();
@@ -168,7 +169,7 @@ public class AllowedCrossDomainsHandler {
    * 
    * @author mtaal
    */
-  @ApplicationScoped
+  @Dependent
   public static abstract class AllowedCrossDomainsChecker {
 
     public abstract boolean isAllowedOrigin(HttpServletRequest request, String origin);

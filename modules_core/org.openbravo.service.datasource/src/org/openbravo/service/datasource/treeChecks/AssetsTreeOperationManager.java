@@ -21,15 +21,15 @@ package org.openbravo.service.datasource.treeChecks;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.financialmgmt.assetmgmt.Asset;
 import org.openbravo.service.datasource.CheckTreeOperationManager;
 
-@ApplicationScoped
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 @Qualifier("FinancialMgmtAsset")
 public class AssetsTreeOperationManager extends CheckTreeOperationManager {
 

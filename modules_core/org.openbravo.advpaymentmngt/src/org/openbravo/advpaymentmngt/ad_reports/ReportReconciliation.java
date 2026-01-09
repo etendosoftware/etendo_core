@@ -48,6 +48,9 @@ import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.ProjectionList;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatement;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
 import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
@@ -197,24 +200,24 @@ public class ReportReconciliation extends HttpSecureAppServlet {
     try {
       OBCriteria<FIN_FinaccTransaction> obcTrans = OBDal.getInstance()
           .createCriteria(FIN_FinaccTransaction.class);
-      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount());
-      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_PROCESSED, true);
-      obcTrans.addLessOrEqual(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate());
+      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount()));
+      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_PROCESSED, true));
+      obcTrans.add(
+          Restrictions.le(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate()));
       List<FIN_Reconciliation> afterReconciliations = MatchTransactionDao
           .getReconciliationListAfterDate(recon);
       if (!afterReconciliations.isEmpty()) {
-        obcTrans.addOr((cb, obc) -> cb.isNull(obc.getPath(FIN_FinaccTransaction.PROPERTY_RECONCILIATION)),
-            (cb, obc) -> cb.in(obc.getPath(FIN_FinaccTransaction.PROPERTY_RECONCILIATION)).value(afterReconciliations));
+        obcTrans.add(Restrictions.or(
+            Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION),
+            Restrictions.in(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, afterReconciliations)));
       } else {
-        obcTrans.addIsNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION);
+        obcTrans.add(Restrictions.isNull(FIN_FinaccTransaction.PROPERTY_RECONCILIATION));
       }
 
-      // Usar nueva funcionalidad de múltiples proyecciones
-      obcTrans.setMultipleSums(
-          FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT,
-          FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT
-      );
-
+      ProjectionList projections = Projections.projectionList();
+      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT));
+      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT));
+      obcTrans.setProjection(projections);
       @SuppressWarnings("rawtypes")
       List o = obcTrans.list();
       if (o != null && !o.isEmpty()) {
@@ -256,22 +259,24 @@ public class ReportReconciliation extends HttpSecureAppServlet {
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION, "tr",
           JoinType.LEFT);
-      obcBsl.addLessOrEqual(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, recon.getEndingDate());
+      obcBsl.add(
+          Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, recon.getEndingDate()));
       List<FIN_Reconciliation> afterReconciliations = MatchTransactionDao
           .getReconciliationListAfterDate(recon);
       if (!afterReconciliations.isEmpty()) {
-        obcBsl.addOr((cb, obc) -> cb.isNull(obc.getPath(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION)),
-            (cb, obc) -> cb.in(obc.getPath("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION)).value(
-                afterReconciliations));
+        obcBsl.add(Restrictions.or(
+            Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION),
+            Restrictions.in("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION,
+                afterReconciliations)));
       } else {
-        obcBsl.addIsNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION);
+        obcBsl.add(Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION));
       }
-      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, recon.getAccount());
-      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true);
-      obcBsl.setMultipleSums(
-          FIN_BankStatementLine.PROPERTY_CRAMOUNT,
-          FIN_BankStatementLine.PROPERTY_DRAMOUNT
-      );
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, recon.getAccount()));
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      ProjectionList projections = Projections.projectionList();
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_CRAMOUNT));
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_DRAMOUNT));
+      obcBsl.setProjection(projections);
 
       @SuppressWarnings("rawtypes")
       List o = obcBsl.list();
@@ -304,13 +309,14 @@ public class ReportReconciliation extends HttpSecureAppServlet {
     try {
       OBCriteria<FIN_FinaccTransaction> obcTrans = OBDal.getInstance()
           .createCriteria(FIN_FinaccTransaction.class);
-      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount());
-      obcTrans.addEqual(FIN_FinaccTransaction.PROPERTY_PROCESSED, true);
-      obcTrans.addGreaterThan(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate());
-      obcTrans.setMultipleSums(
-          FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT,
-          FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT
-      );
+      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_ACCOUNT, recon.getAccount()));
+      obcTrans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_PROCESSED, true));
+      obcTrans.add(
+          Restrictions.gt(FIN_FinaccTransaction.PROPERTY_TRANSACTIONDATE, recon.getEndingDate()));
+      ProjectionList projections = Projections.projectionList();
+      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_PAYMENTAMOUNT));
+      projections.add(Projections.sum(FIN_FinaccTransaction.PROPERTY_DEPOSITAMOUNT));
+      obcTrans.setProjection(projections);
 
       @SuppressWarnings("rawtypes")
       List o = obcTrans.list();

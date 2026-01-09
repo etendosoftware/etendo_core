@@ -11,6 +11,7 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.domain.DimensionsList;
 import org.openbravo.model.ad.domain.Reference;
@@ -54,7 +55,7 @@ public class SequenceDatabaseUtils {
         SequenceConfig sequenceConfig = getSequenceConfiguration(reference);
         if (sequenceConfig != null) {
             final OBCriteria<DimensionsList> dimensionsListOBCriteria = OBDal.getInstance().createCriteria(DimensionsList.class);
-            dimensionsListOBCriteria.addEqual(DimensionsList.PROPERTY_SEQUENCECONFIG, sequenceConfig);
+            dimensionsListOBCriteria.add(Restrictions.eq(DimensionsList.PROPERTY_SEQUENCECONFIG, sequenceConfig));
             dimensionsLists = dimensionsListOBCriteria.list();
         }
         return dimensionsLists;
@@ -70,7 +71,7 @@ public class SequenceDatabaseUtils {
      */
     public static SequenceConfig getSequenceConfiguration(Reference reference) {
         final OBCriteria<SequenceConfig> sequenceConfigOBCriteria = OBDal.getInstance().createCriteria(SequenceConfig.class);
-        sequenceConfigOBCriteria.addEqual(SequenceConfig.PROPERTY_REFERENCE, reference);
+        sequenceConfigOBCriteria.add(Restrictions.eq(SequenceConfig.PROPERTY_REFERENCE, reference));
         return (SequenceConfig) sequenceConfigOBCriteria.uniqueResult();
     }
 

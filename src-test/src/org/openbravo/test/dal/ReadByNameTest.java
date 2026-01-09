@@ -32,6 +32,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.Category;
 import org.openbravo.model.common.businesspartner.Location;
@@ -129,8 +130,8 @@ public class ReadByNameTest extends OBBaseTest {
     OBCriteria<org.openbravo.model.common.businesspartner.Location> obc = OBDal.getInstance()
         .createCriteria(org.openbravo.model.common.businesspartner.Location.class);
 
-    obc.addEqual(org.openbravo.model.common.businesspartner.Location.PROPERTY_NAME,
-        locName);
+    obc.add(Restrictions.eq(org.openbravo.model.common.businesspartner.Location.PROPERTY_NAME,
+        locName));
 
     assertFalse(obc.list().isEmpty());
 

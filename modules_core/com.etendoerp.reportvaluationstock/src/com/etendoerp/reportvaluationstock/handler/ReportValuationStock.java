@@ -40,6 +40,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.DateTimeData;
@@ -383,23 +384,23 @@ public class ReportValuationStock extends BaseReportActionHandler {
       try {
         ConnectionProvider readOnlyCP = DalConnectionProvider.getReadOnlyConnectionProvider();
         Date maxDate = OBDateUtils.getDate(DateTimeData.nDaysAfter(readOnlyCP, strDate, "1"));
-        criteria.addFunction((cb, obc) -> cb.lessThan(obc.getPath(MaterialTransaction.PROPERTY_MOVEMENTDATE), maxDate));
+        criteria.add(Restrictions.lt(MaterialTransaction.PROPERTY_MOVEMENTDATE, maxDate));
       } catch (Exception e) {
         log4j.error("Error parsing date: " + strDate, e);
       }
 
-      criteria.addEqual(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, false);
-      criteria.addIn(MaterialTransaction.PROPERTY_ORGANIZATION + ID, orgs);
+      criteria.add(Restrictions.eq(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, false));
+      criteria.add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + ID, orgs));
       criteria.createAlias(MaterialTransaction.PROPERTY_PRODUCT, "p");
-      criteria.addEqual("p." + Product.PROPERTY_STOCKED, true);
+      criteria.add(Restrictions.eq("p." + Product.PROPERTY_STOCKED, true));
 
       if (StringUtils.isNotBlank(strWarehouse)) {
         criteria.createAlias(MaterialTransaction.PROPERTY_STORAGEBIN, "loc");
-        criteria.addEqual("loc." + Locator.PROPERTY_WAREHOUSE + ID, strWarehouse);
+        criteria.add(Restrictions.eq("loc." + Locator.PROPERTY_WAREHOUSE + ID, strWarehouse));
       }
 
       if (StringUtils.isNotBlank(strCategoryProduct)) {
-        criteria.addEqual("p." + Product.PROPERTY_PRODUCTCATEGORY + ID, strCategoryProduct);
+        criteria.add(Restrictions.eq("p." + Product.PROPERTY_PRODUCTCATEGORY + ID, strCategoryProduct));
       }
 
       criteria.setMaxResults(1);

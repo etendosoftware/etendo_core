@@ -35,7 +35,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mozilla.javascript.NativeArray;
 import org.openbravo.base.expression.OBScriptEngine;
 import org.openbravo.client.application.OBBindings;
 import org.openbravo.client.application.OBBindingsConstants;
@@ -145,7 +144,7 @@ public class OBBindingsTest extends OBBaseTest {
 
   @Test
   public void shouldGetNullWhenUndefinedPropertyInArray() throws ScriptException {
-    NativeArray result = (NativeArray) engine.eval("[OB.undefined_property]", bindings);
+    Object result = engine.eval("[OB.undefined_property]", bindings);
     //assertNull(result.get());
   }
 

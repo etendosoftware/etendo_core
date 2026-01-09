@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.OrderLineTax;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
@@ -81,7 +82,7 @@ public class OneToManyTest extends OBBaseTest {
     addReadWriteAccess(OrderLine.class);
     addReadWriteAccess(OrderLineTax.class);
     final OBCriteria<Order> orders = OBDal.getInstance().createCriteria(Order.class);
-    orders.addEqual(Order.PROPERTY_DOCUMENTSTATUS, "DR"); // Draft
+    orders.add(Restrictions.eq(Order.PROPERTY_DOCUMENTSTATUS, "DR")); // Draft
     // document
 
     for (final Order o : orders.list()) {
@@ -120,7 +121,7 @@ public class OneToManyTest extends OBBaseTest {
     addReadWriteAccess(OrderLine.class);
     addReadWriteAccess(OrderLineTax.class);
     final OBCriteria<Order> orders = OBDal.getInstance().createCriteria(Order.class);
-    orders.addEqual(Order.PROPERTY_DOCUMENTSTATUS, "DR");
+    orders.add(Restrictions.eq(Order.PROPERTY_DOCUMENTSTATUS, "DR"));
 
     OrderLine toRemove = null;
     for (final Order o : orders.list()) {
@@ -152,7 +153,7 @@ public class OneToManyTest extends OBBaseTest {
     addReadWriteAccess(OrderLineTax.class);
 
     final OBCriteria<OrderLine> lines = OBDal.getInstance().createCriteria(OrderLine.class);
-    lines.addEqual(OrderLine.PROPERTY_ID, lineId);
+    lines.add(Restrictions.eq(OrderLine.PROPERTY_ID, lineId));
 
     assertEquals(0, lines.list().size());
 

@@ -47,6 +47,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.PropertyConflictException;
 import org.openbravo.erpCommon.utility.PropertyException;
@@ -105,7 +106,7 @@ public class PreferenceTest extends OBBaseTest {
     OBDal.getInstance().flush();
 
     OBCriteria<Preference> qPref = OBDal.getInstance().createCriteria(Preference.class);
-    qPref.addEqual(Preference.PROPERTY_ATTRIBUTE, "testProperty");
+    qPref.add(Restrictions.eq(Preference.PROPERTY_ATTRIBUTE, "testProperty"));
 
     List<Preference> prefs = qPref.list();
     assertFalse(prefs.isEmpty(), "No property has been set");
@@ -122,7 +123,7 @@ public class PreferenceTest extends OBBaseTest {
     OBDal.getInstance().flush();
 
     OBCriteria<Preference> qPref = OBDal.getInstance().createCriteria(Preference.class);
-    qPref.addEqual(Preference.PROPERTY_ATTRIBUTE, "testProperty");
+    qPref.add(Restrictions.eq(Preference.PROPERTY_ATTRIBUTE, "testProperty"));
 
     List<Preference> prefs = qPref.list();
     assertFalse(prefs.isEmpty(), "No property has been set");
@@ -142,7 +143,7 @@ public class PreferenceTest extends OBBaseTest {
     OBDal.getInstance().flush();
 
     OBCriteria<Preference> qPref = OBDal.getInstance().createCriteria(Preference.class);
-    qPref.addEqual(Preference.PROPERTY_ATTRIBUTE, "testProperty");
+    qPref.add(Restrictions.eq(Preference.PROPERTY_ATTRIBUTE, "testProperty"));
 
     List<Preference> prefs = qPref.list();
     assertEquals(2, prefs.size(), "There should be only 2 properties, found:" + prefs.size());
@@ -451,7 +452,7 @@ public class PreferenceTest extends OBBaseTest {
 
     Preference newPref = null;
     OBCriteria<Preference> qPref = OBDal.getInstance().createCriteria(Preference.class);
-    qPref.addEqual(Preference.PROPERTY_ATTRIBUTE, "testProperty");
+    qPref.add(Restrictions.eq(Preference.PROPERTY_ATTRIBUTE, "testProperty"));
     for (Preference p : qPref.list()) {
       if (p.getSearchKey().equals("anotherValue")) {
         newPref = p;
@@ -557,15 +558,16 @@ public class PreferenceTest extends OBBaseTest {
   public void test99Clean() {
     setSystemAdministratorContext();
     OBCriteria<Preference> qPref = OBDal.getInstance().createCriteria(Preference.class);
-    qPref.addOr((cb, obc) -> cb.like(obc.getPath(Preference.PROPERTY_ATTRIBUTE), "testProperty%"),
-                (cb, obc) -> cb.equal(obc.getPath(Preference.PROPERTY_PROPERTY), "testPropertyList"));
+    qPref.add(Restrictions.or(Restrictions.like(Preference.PROPERTY_ATTRIBUTE, "testProperty%"),
+        Restrictions.eq(Preference.PROPERTY_PROPERTY, "testPropertyList")));
     for (Preference pref : qPref.list()) {
       OBDal.getInstance().remove(pref);
     }
 
     OBCriteria<org.openbravo.model.ad.domain.List> qList = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.List.class);
-    qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, "testPropertyList");
+    qList.add(
+        Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, "testPropertyList"));
     for (org.openbravo.model.ad.domain.List l : qList.list()) {
       OBDal.getInstance().refresh(l);
       OBDal.getInstance().remove(l);

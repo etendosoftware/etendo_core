@@ -48,6 +48,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.ad.access.OrderLineTax;
@@ -523,8 +524,6 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
    *          Line number of the shipment line.
    * @param movementQty
    *          Movement quantity of the shipment line.
-   * @param triggersDisabled
-   *          Flag that tells if triggers are disabled or not while executing this method.
    */
   private ShipmentInOutLine createNettingShipmentLine(final ShipmentInOut nettingGoodsShipment,
       final OrderLine orderLine, final long lineNoCounter, final BigDecimal movementQty) {
@@ -552,13 +551,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
    * Method that creates the relation between products and services for the inverse order. Also, if
    * the old order has or has a relation with a deferred service, this relation must be moved to the
    * new tickets product.
-   * 
-   * @param oldOrder
-   *          The order that has been canceled.
-   * @param newOrderIdSet
-   *          The orders that are replacing the old order.
-   * @param jsonOrder
-   *          Parameter with order information coming from Web POS.
+   *
    * @throws JSONException
    */
   private void updateServicesRelations() throws JSONException {
@@ -566,7 +559,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
     final List<OrderlineServiceRelation> relationsToRemove = new ArrayList<>();
     final OBCriteria<OrderLine> oldOrderLineCriteria = OBDal.getInstance()
         .createCriteria(OrderLine.class);
-    oldOrderLineCriteria.addEqual("salesOrder.id", oldOrderId);
+    oldOrderLineCriteria.add(Restrictions.eq("salesOrder.id", oldOrderId));
     for (final OrderLine oldOrderLine : oldOrderLineCriteria.list()) {
       //@formatter:off
       final String hqlWhere =
@@ -612,15 +605,15 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
                   final JSONObject line = lines.getJSONObject(i);
                   if (line.has("linepos")
                       && (line.getInt("linepos") + 1) * 10 == oldOrderLine.getLineNo()) {
-                    newOrderLineCriteria.addInIds("salesOrder.id", newOrderIds);
-                    newOrderLineCriteria.addEqual("lineNo", (long) ((i + 1) * 10));
+                    newOrderLineCriteria.add(Restrictions.in("salesOrder.id", newOrderIds));
+                    newOrderLineCriteria.add(Restrictions.eq("lineNo", (long) ((i + 1) * 10)));
                     newOrderLineCriteria.setMaxResults(1);
                     newOrderLine = (OrderLine) newOrderLineCriteria.uniqueResult();
                     break;
                   }
                 }
               } else {
-                newOrderLineCriteria.addEqual("replacedorderline", oldOrderLine);
+                newOrderLineCriteria.add(Restrictions.eq("replacedorderline", oldOrderLine));
                 newOrderLineCriteria.setMaxResults(1);
                 newOrderLine = (OrderLine) newOrderLineCriteria.uniqueResult();
               }
@@ -691,7 +684,7 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
   private ScrollableResults getShipmentLineListOfOrderLine(final OrderLine line) {
     return OBDal.getInstance()
         .createCriteria(ShipmentInOutLine.class)
-        .addEqual("salesOrderLine", line)
+        .add(Restrictions.eq("salesOrderLine", line))
         .setFilterOnReadableOrganization(false)
         .scroll(ScrollMode.FORWARD_ONLY);
   }
@@ -704,10 +697,6 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
    * 
    * @param line
    *          Shipment Line related to the transaction.
-   * @param updateStockStatement
-   *          M_UPDATE_INVENTORY callable statement.
-   * @param triggersDisabled
-   *          Flag that tells if triggers are disabled or not while executing this method.
    */
   private void createMTransaction(final ShipmentInOutLine line) {
     final Product prod = line.getProduct();
@@ -756,8 +745,6 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
    * 
    * @param transaction
    *          The transaction that triggers the update of the inventory.
-   * @param updateStockStatement
-   *          The query to be executed.
    */
   private void updateInventory(final MaterialTransaction transaction) {
     // Stock manipulation
@@ -911,8 +898,8 @@ class ReplaceOrderExecutor extends CancelAndReplaceUtils {
   private OrderLine getReplacementOrderLine(final String oldOrderLineId) {
     return (OrderLine) OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .addEqual("replacedorderline.id", oldOrderLineId)
-        .addInIds("salesOrder.id", newOrderIds)
+        .add(Restrictions.eq("replacedorderline.id", oldOrderLineId))
+        .add(Restrictions.in("salesOrder.id", newOrderIds))
         .setFilterOnReadableOrganization(false)
         .setMaxResults(1)
         .uniqueResult();

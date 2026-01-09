@@ -37,6 +37,7 @@ import org.openbravo.base.validation.ValidationException;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.alert.AlertRule;
 import org.openbravo.model.common.businesspartner.Category;
 import org.openbravo.model.common.currency.Currency;
@@ -64,7 +65,7 @@ public class ValidationTest extends OBBaseTest {
   public void testTypeChecking() {
     setTestAdminContext();
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.addEqual(Currency.PROPERTY_ISOCODE, DOLLAR);
+    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, DOLLAR));
     final List<Currency> cs = obc.list();
     final Currency c = cs.get(0);
 

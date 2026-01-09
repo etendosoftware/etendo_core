@@ -30,6 +30,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.InitialOrgSetup;
 import org.openbravo.model.ad.process.ProcessInstance;
 import org.openbravo.model.ad.system.Client;
@@ -129,10 +130,10 @@ class ADOrgPersistInfoUtility {
           .get(Organization.class, ADOrgPersistInfoConstants.ORG_0);
       final OBCriteria<OrganizationType> criteria = OBDal.getInstance()
           .createCriteria(OrganizationType.class);
-      criteria.addEqual(OrganizationType.PROPERTY_BUSINESSUNIT, true);
-      criteria.addEqual(OrganizationType.PROPERTY_ACTIVE, true);
-      criteria.addEqual(OrganizationType.PROPERTY_CLIENT, client);
-      criteria.addEqual(OrganizationType.PROPERTY_ORGANIZATION, org0);
+      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_BUSINESSUNIT, true));
+      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_ACTIVE, true));
+      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_CLIENT, client));
+      criteria.add(Restrictions.eq(OrganizationType.PROPERTY_ORGANIZATION, org0));
       criteria.setMaxResults(1);
       if (criteria.uniqueResult() != null) {
         businessUnitOrgType = ((OrganizationType) criteria.uniqueResult()).getId();

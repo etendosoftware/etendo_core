@@ -37,17 +37,18 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.portal.PortalAccessible;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Responsible of retrieving/storing Parameter values
  * 
  * @author iperdomo
  */
-@ApplicationScoped
+@Dependent
 public class ParametersActionHandler extends BaseActionHandler implements PortalAccessible {
   private static Logger log = LogManager.getLogger();
 
@@ -122,8 +123,8 @@ public class ParametersActionHandler extends BaseActionHandler implements Portal
 
         ParameterValue value = (ParameterValue) OBDal.getInstance()
             .createCriteria(ParameterValue.class)
-            .addEqual(dbFilterProperty, filterObject)
-            .addEqual(ParameterValue.PROPERTY_PARAMETER, param)
+            .add(Restrictions.eq(dbFilterProperty, filterObject))
+            .add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, param))
             .setMaxResults(1)
             .uniqueResult();
 

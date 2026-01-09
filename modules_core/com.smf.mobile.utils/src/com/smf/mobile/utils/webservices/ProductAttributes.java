@@ -32,9 +32,9 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.enterprise.Locator;
@@ -159,7 +159,7 @@ public class ProductAttributes implements WebService {
 
     // Get assigned attributes
     OBCriteria<AttributeUse> criteria = OBDal.getInstance().createCriteria(AttributeUse.class);
-    criteria.addEqual(AttributeUse.PROPERTY_ATTRIBUTESET, attributeSet);
+    criteria.add(Restrictions.eq(AttributeUse.PROPERTY_ATTRIBUTESET, attributeSet));
     criteria.addOrderBy(AttributeUse.PROPERTY_SEQUENCENUMBER, true);
     List<AttributeUse> results = criteria.list();
 
@@ -175,8 +175,8 @@ public class ProductAttributes implements WebService {
 
         if (attributeSetInstance != null) {
           OBCriteria<AttributeInstance> valueCriteria = OBDal.getInstance().createCriteria(AttributeInstance.class);
-          valueCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance);
-          valueCriteria.addFunction((cb, obc) -> cb.isNull(obc.getPath(AttributeInstance.PROPERTY_ATTRIBUTEVALUE)));
+          valueCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance));
+          valueCriteria.add(Restrictions.isNull(AttributeInstance.PROPERTY_ATTRIBUTEVALUE));
           List<AttributeInstance> valueResults = valueCriteria.list();
 
           if (!valueResults.isEmpty()) {
@@ -195,8 +195,8 @@ public class ProductAttributes implements WebService {
 
             if (attributeSetInstance != null) {
               OBCriteria<AttributeInstance> listValueCriteria = OBDal.getInstance().createCriteria(AttributeInstance.class);
-              listValueCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance);
-              listValueCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTEVALUE, value);
+              listValueCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstance));
+              listValueCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTEVALUE, value));
               List<AttributeInstance> listValueResults = listValueCriteria.list();
 
               if (!listValueResults.isEmpty()) {
@@ -298,7 +298,7 @@ public class ProductAttributes implements WebService {
 
         String lot = attributes.getString("lot");
         if (lot != null && !lot.isEmpty()) {
-          attributeCriteria.addEqual(AttributeSetInstance.PROPERTY_LOTNAME, lot);
+          attributeCriteria.add(Restrictions.eq(AttributeSetInstance.PROPERTY_LOTNAME, lot));
         }
 
       } else if ("serialNo".equals(key)) {
@@ -307,7 +307,7 @@ public class ProductAttributes implements WebService {
 
         if (serialno != null && !serialno.isEmpty()) {
 
-          attributeCriteria.addEqual(AttributeSetInstance.PROPERTY_SERIALNO, serialno);
+          attributeCriteria.add(Restrictions.eq(AttributeSetInstance.PROPERTY_SERIALNO, serialno));
         }
 
       } else if ("expirationDate".equals(key)) {
@@ -320,7 +320,7 @@ public class ProductAttributes implements WebService {
           try {
             guaranteeDate = dateFormat.parse(guaranteeDateStr);
             attributeCriteria
-                .addEqual(AttributeSetInstance.PROPERTY_EXPIRATIONDATE, guaranteeDate);
+                .add(Restrictions.eq(AttributeSetInstance.PROPERTY_EXPIRATIONDATE, guaranteeDate));
           } catch (Exception e) {
             log.error(e.getMessage(), e);
           }
@@ -360,10 +360,10 @@ public class ProductAttributes implements WebService {
         // instances
         OBCriteria<AttributeInstance> attributeInstanceCriteria = OBDal.getInstance()
             .createCriteria(AttributeInstance.class);
-        attributeInstanceCriteria.addIn(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances);
+        attributeInstanceCriteria.add(Restrictions.in(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances));
 
         attributeInstanceCriteria
-            .addIn(AttributeInstance.PROPERTY_SEARCHKEY, attributeInstancesValues);
+            .add(Restrictions.in(AttributeInstance.PROPERTY_SEARCHKEY, attributeInstancesValues));
 
         List<AttributeInstance> attributeInstances = attributeInstanceCriteria.list();
 
@@ -420,11 +420,11 @@ public class ProductAttributes implements WebService {
     }
     
     OBCriteria<StorageDetail> sdCriteria = OBDal.getInstance().createCriteria(StorageDetail.class);
-    sdCriteria.addEqual(StorageDetail.PROPERTY_STORAGEBIN, storageBin);
+    sdCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_STORAGEBIN, storageBin));
 
     if (attributeSetInstances != null) {
       sdCriteria
-          .addIn(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances);
+          .add(Restrictions.in(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributeSetInstances));
     }
 
     if (attributeInstances != null) {
@@ -432,7 +432,7 @@ public class ProductAttributes implements WebService {
       for (AttributeInstance attributeInstance : attributeInstances) {
         attributes.add(attributeInstance.getAttributeSetValue());
       }
-      sdCriteria.addIn(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributes);
+      sdCriteria.add(Restrictions.eq(StorageDetail.PROPERTY_ATTRIBUTESETVALUE, attributes));
     }
 
     return sdCriteria.list();
@@ -475,8 +475,8 @@ public class ProductAttributes implements WebService {
 
           final OBCriteria<AttributeUse> attributeuseCriteria = OBDal.getInstance().createCriteria(
               AttributeUse.class);
-          attributeuseCriteria.addEqual(AttributeUse.PROPERTY_ATTRIBUTESET,
-              product.getAttributeSet());
+          attributeuseCriteria.add(Restrictions.eq(AttributeUse.PROPERTY_ATTRIBUTESET,
+              product.getAttributeSet()));
           attributeuseCriteria.addOrderBy(AttributeUse.PROPERTY_SEQUENCENUMBER, true);
 
           final List<AttributeUse> attributeUseResults = attributeuseCriteria.list();

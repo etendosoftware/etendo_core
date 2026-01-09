@@ -38,6 +38,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.InventoryCountProcess;
 import org.openbravo.model.ad.system.Client;
@@ -77,7 +78,7 @@ public class InventoryAmountUpdateProcess extends BaseActionHandler {
           .get(InventoryAmountUpdate.class, invAmtUpdId);
       final OBCriteria<InventoryAmountUpdateLine> qLines = OBDal.getInstance()
           .createCriteria(InventoryAmountUpdateLine.class);
-      qLines.addEqual(InventoryAmountUpdateLine.PROPERTY_CAINVENTORYAMT, invAmtUpd);
+      qLines.add(Restrictions.eq(InventoryAmountUpdateLine.PROPERTY_CAINVENTORYAMT, invAmtUpd));
 
       final ScrollableResults scrollLines = qLines.scroll(ScrollMode.FORWARD_ONLY);
       try {

@@ -43,6 +43,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.datamodel.Table;
@@ -280,8 +281,8 @@ public class ResetAccounting {
               .setFilterOnReadableClients(false)
               .setFilterOnReadableOrganization(false)
               .setFilterOnActive(false)
-              .addEqual(AccountingFact.PROPERTY_RECORDID, localRecordId)
-              .addEqual(AccountingFact.PROPERTY_TABLE, table)
+              .add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, localRecordId))
+              .add(Restrictions.eq(AccountingFact.PROPERTY_TABLE, table))
               .setMaxResults(1)
               .list()
               .isEmpty();
@@ -584,9 +585,9 @@ public class ResetAccounting {
     final String CLIENT_SYSTEM = "0";
     final OBCriteria<Organization> obc = OBDal.getInstance().createCriteria(Organization.class);
     if (!CLIENT_SYSTEM.equals(client.getId())) {
-      obc.addEqual(Organization.PROPERTY_CLIENT, client);
+      obc.add(Restrictions.eq(Organization.PROPERTY_CLIENT, client));
     }
-    return obc.addInIds(Organization.PROPERTY_ID, orgIds)
+    return obc.add(Restrictions.in(Organization.PROPERTY_ID, orgIds))
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .list();
@@ -841,11 +842,11 @@ public class ResetAccounting {
       for (String transaction : transactions) {
         final List<AccountingFact> facts = OBDal.getInstance()
             .createCriteria(AccountingFact.class)
-            .addEqual(AccountingFact.PROPERTY_RECORDID, transaction)
-            .addEqual(AccountingFact.PROPERTY_TABLE,
-                OBDal.getInstance().get(Table.class, tableId))
-            .addEqual(AccountingFact.PROPERTY_CLIENT,
-                OBDal.getInstance().get(Client.class, clientId))
+            .add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, transaction))
+            .add(Restrictions.eq(AccountingFact.PROPERTY_TABLE,
+                OBDal.getInstance().get(Table.class, tableId)))
+            .add(Restrictions.eq(AccountingFact.PROPERTY_CLIENT,
+                OBDal.getInstance().get(Client.class, clientId)))
             .list();
         final Set<Date> exceptionDates = new HashSet<>();
         for (AccountingFact fact : facts) {

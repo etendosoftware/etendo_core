@@ -26,6 +26,7 @@ import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -65,8 +66,8 @@ public class SE_Payment_BPartner extends SimpleCallout {
       if (paymentMethod != null && financialAccount != null) {
         final OBCriteria<FinAccPaymentMethod> apmCriteria = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
-        apmCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
-        apmCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount);
+        apmCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+        apmCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount));
         apmCriteria.setFilterOnActive(false);
         FinAccPaymentMethod accPaymentMethod = (FinAccPaymentMethod) apmCriteria.uniqueResult();
         if (accPaymentMethod != null) {

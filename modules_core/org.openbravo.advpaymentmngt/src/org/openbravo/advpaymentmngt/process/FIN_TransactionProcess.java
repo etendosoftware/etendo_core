@@ -41,9 +41,9 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
-import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.currency.ConversionRateDoc;
@@ -216,7 +216,7 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         try {
           OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
               .createCriteria(ConversionRateDoc.class);
-          obc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction);
+          obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
           boolean dataRemoved = false;
           for (ConversionRateDoc conversionRateDoc : obc.list()) {
             dataRemoved = true;
@@ -273,9 +273,9 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
     try {
       OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
-      obc.addEqual(ConversionRateDoc.PROPERTY_CURRENCY, transaction.getForeignCurrency());
-      obc.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY, transaction.getCurrency());
-      obc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction);
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, transaction.getForeignCurrency()));
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY, transaction.getCurrency()));
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION, transaction));
       return obc.list();
     } finally {
       OBContext.restorePreviousMode();
@@ -322,9 +322,9 @@ public class FIN_TransactionProcess implements org.openbravo.scheduling.Process 
         OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
             .createCriteria(FinAccPaymentMethod.class);
         obCriteria
-            .addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, transaction.getAccount());
-        obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-            payment.getPaymentMethod());
+            .add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, transaction.getAccount()));
+        obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+            payment.getPaymentMethod()));
         obCriteria.setFilterOnReadableClients(false);
         obCriteria.setFilterOnReadableOrganization(false);
         List<FinAccPaymentMethod> lines = obCriteria.list();

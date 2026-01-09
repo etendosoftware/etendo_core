@@ -8,13 +8,13 @@ import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * 
  * @author androettop
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(SCFeaturesComponentProvider.COMPONENT_TYPE)
 public class SCFeaturesComponentProvider extends BaseComponentProvider {
 	public static final String COMPONENT_TYPE = "SMFSCDT_CompProvider";

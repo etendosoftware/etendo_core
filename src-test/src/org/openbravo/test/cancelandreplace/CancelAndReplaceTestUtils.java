@@ -37,6 +37,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.erpCommon.utility.SequenceIdData;
@@ -207,17 +208,17 @@ class CancelAndReplaceTestUtils {
     FIN_PaymentSchedule paymentSchedule = null;
     OBCriteria<FIN_PaymentSchedule> paymentScheduleCriteria = OBDal.getInstance()
         .createCriteria(FIN_PaymentSchedule.class);
-    paymentScheduleCriteria.addEqual(FIN_PaymentSchedule.PROPERTY_ORDER, oldOrder);
+    paymentScheduleCriteria.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_ORDER, oldOrder));
     paymentScheduleCriteria.setMaxResults(1);
     paymentSchedule = (FIN_PaymentSchedule) paymentScheduleCriteria.uniqueResult();
 
     // Get the payment schedule detail of the order
     OBCriteria<FIN_PaymentScheduleDetail> paymentScheduleDetailCriteria = OBDal.getInstance()
         .createCriteria(FIN_PaymentScheduleDetail.class);
-    paymentScheduleDetailCriteria.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE, paymentSchedule);
+    paymentScheduleDetailCriteria.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE, paymentSchedule));
     // There should be only one with null paymentDetails
     paymentScheduleDetailCriteria
-        .addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
+        .add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
     List<FIN_PaymentScheduleDetail> paymentScheduleDetailList = paymentScheduleDetailCriteria
         .list();
 
@@ -285,7 +286,7 @@ class CancelAndReplaceTestUtils {
 
     OBCriteria<ShipmentInOutLine> orderLineShipments = OBDal.getInstance()
         .createCriteria(ShipmentInOutLine.class);
-    orderLineShipments.addEqual(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine);
+    orderLineShipments.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine));
     assertThat("Wrong Orderline Goods shipment lines",
         new BigDecimal(orderLineShipments.list().size()), comparesEqualTo(line.getShipmentLines()));
   }

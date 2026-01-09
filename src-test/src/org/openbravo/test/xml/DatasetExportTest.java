@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -34,6 +35,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.utility.DataSet;
@@ -259,7 +261,7 @@ public class DatasetExportTest extends OBBaseTest {
 
   private DataSetTable createDataSetTable(DataSet ds, String tableName) {
     final OBCriteria<Table> obcTable = OBDal.getInstance().createCriteria(Table.class);
-    obcTable.addEqual(Table.PROPERTY_DBTABLENAME, tableName);
+    obcTable.add(Restrictions.eq(Table.PROPERTY_DBTABLENAME, tableName));
     assertTrue(obcTable.list().size() == 1);
     final Table table = obcTable.list().get(0);
 
@@ -304,9 +306,9 @@ public class DatasetExportTest extends OBBaseTest {
 
   private Column getColumn(DataSetTable dst, Property p) {
     final OBCriteria<Column> obcColumn = OBDal.getInstance().createCriteria(Column.class);
-    obcColumn.addAnd((cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_DBCOLUMNNAME), p.getColumnName()),
-                     (cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_TABLE), dst.getTable()));
-    assertTrue(obcColumn.list().size() == 1);
+    obcColumn.add(Restrictions.and(Restrictions.eq(Column.PROPERTY_DBCOLUMNNAME, p.getColumnName()),
+        Restrictions.eq(Column.PROPERTY_TABLE, dst.getTable())));
+    Assert.assertTrue(obcColumn.list().size() == 1);
     return obcColumn.list().get(0);
   }
 }

@@ -38,6 +38,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.UOMUtil;
@@ -86,11 +87,8 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (event instanceof EntityNewEvent) {
       OBCriteria<ProductAUM> duplicateAUM = OBDal.getInstance().createCriteria(ProductAUM.class);
-      // Migración de Restrictions.and()
-      duplicateAUM.addAnd(
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product),
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_UOM), target.getUOM())
-      );
+      duplicateAUM.add(Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product),
+          Restrictions.eq(ProductAUM.PROPERTY_UOM, target.getUOM())));
       duplicateAUM.setMaxResults(1);
       if (duplicateAUM.uniqueResult() != null) {
         throw new OBException(OBMessageUtils.messageBD(conn, "DuplicateAUM", language));
@@ -99,9 +97,9 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (target.getSales().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primarySales = OBDal.getInstance().createCriteria(ProductAUM.class);
-      primarySales.addAnd((cb, obc) -> cb.notEqual(obc.getPath(ProductAUM.PROPERTY_ID), target.getId()),
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_SALES), UOMUtil.UOM_PRIMARY),
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product));
+      primarySales.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
+          Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_SALES, UOMUtil.UOM_PRIMARY),
+              Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
       primarySales.setMaxResults(1);
       if (primarySales.uniqueResult() != null) {
         throw new OBException(OBMessageUtils.messageBD(conn, "DuplicatePrimarySalesAUM", language));
@@ -110,9 +108,9 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
 
     if (target.getPurchase().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primaryPurchase = OBDal.getInstance().createCriteria(ProductAUM.class);
-      primaryPurchase.addAnd((cb, obc) -> cb.notEqual(obc.getPath(ProductAUM.PROPERTY_ID), target.getId()),
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PURCHASE), UOMUtil.UOM_PRIMARY),
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product));
+      primaryPurchase.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
+          Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_PURCHASE, UOMUtil.UOM_PRIMARY),
+              Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
       primaryPurchase.setMaxResults(1);
       if (primaryPurchase.uniqueResult() != null) {
         throw new OBException(
@@ -123,9 +121,9 @@ class ProductAumEventHandler extends EntityPersistenceEventObserver {
     if (target.getLogistics().equals(UOMUtil.UOM_PRIMARY)) {
       OBCriteria<ProductAUM> primaryLogistics = OBDal.getInstance()
           .createCriteria(ProductAUM.class);
-      primaryLogistics.addAnd((cb, obc) -> cb.notEqual(obc.getPath(ProductAUM.PROPERTY_ID), target.getId()),
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_LOGISTICS), UOMUtil.UOM_PRIMARY),
-          (cb, obc) -> cb.equal(obc.getPath(ProductAUM.PROPERTY_PRODUCT), product));
+      primaryLogistics.add(Restrictions.and(Restrictions.ne(ProductAUM.PROPERTY_ID, target.getId()),
+          Restrictions.and(Restrictions.eq(ProductAUM.PROPERTY_LOGISTICS, UOMUtil.UOM_PRIMARY),
+              Restrictions.eq(ProductAUM.PROPERTY_PRODUCT, product))));
       primaryLogistics.setMaxResults(1);
       if (primaryLogistics.uniqueResult() != null) {
         throw new OBException(

@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 
 /**
  * Resolves templates, meaning that it reads all dependencies of a template (and the dependencies of
@@ -105,7 +106,7 @@ public class TemplateResolver {
     while (true) {
       final OBCriteria<Template> templateCriteria = OBDal.getInstance()
           .createCriteria(Template.class);
-      templateCriteria.addEqual(Template.PROPERTY_OVERRIDESTEMPLATE, currentTemplate);
+      templateCriteria.add(Restrictions.eq(Template.PROPERTY_OVERRIDESTEMPLATE, currentTemplate));
       final List<Template> overridingTemplates = templateCriteria.list();
       if (overridingTemplates.size() == 0) {
         return currentTemplate;

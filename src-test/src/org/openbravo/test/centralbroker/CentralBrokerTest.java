@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.materialmgmt.UOMUtil;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.common.plm.ProductAUM;
@@ -90,7 +91,7 @@ public class CentralBrokerTest extends OBBaseTest {
   public void test06() {
     // Remove all AUM before added to product 4028E6C72959682B01295ADC1E6E0230
     OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-    pAUMCriteria.addEqual("product.id", PRODUCT_ID);
+    pAUMCriteria.add(Restrictions.eq("product.id", PRODUCT_ID));
     for (ProductAUM pAUM : pAUMCriteria.list()) {
       OBDal.getInstance().remove(pAUM);
     }

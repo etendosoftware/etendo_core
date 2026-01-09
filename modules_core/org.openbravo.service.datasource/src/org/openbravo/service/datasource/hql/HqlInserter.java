@@ -19,7 +19,7 @@ package org.openbravo.service.datasource.hql;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A HqlInserter is able to insert code at an hql insertion point. HqlInserters are instantiated
@@ -27,7 +27,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * particular table and insertion point
  */
 
-@ApplicationScoped
+@Dependent
 public abstract class HqlInserter extends HqlQueryPriorityHandler {
   /**
    * Returns some code to be inserted in a HQL query, and adds query named parameters when needed

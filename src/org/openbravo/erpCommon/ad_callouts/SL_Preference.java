@@ -33,6 +33,7 @@ import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.domain.Preference;
 
@@ -53,58 +54,54 @@ public class SL_Preference extends SimpleCallout {
 
       String prefId = info.getStringParameter("inpadPreferenceId", idFilter);
       if (!prefId.isEmpty()) {
-        qPref.addNotEqual(Preference.PROPERTY_ID, prefId);
+        qPref.add(Restrictions.ne(Preference.PROPERTY_ID, prefId));
       }
 
       if (info.getStringParameter("inpispropertylist", booleanFilter).equals("Y")) {
-        qPref.addEqual(Preference.PROPERTY_PROPERTY,
-            info.getStringParameter("inpproperty", null));
+        qPref.add(Restrictions.eq(Preference.PROPERTY_PROPERTY,
+            info.getStringParameter("inpproperty", null)));
       } else {
-        qPref.addEqual(Preference.PROPERTY_ATTRIBUTE,
-            info.getStringParameter("inpattribute", null));
+        qPref.add(Restrictions.eq(Preference.PROPERTY_ATTRIBUTE,
+            info.getStringParameter("inpattribute", null)));
       }
 
-      qPref.addEqual(Preference.PROPERTY_SELECTED, true);
+      qPref.add(Restrictions.eq(Preference.PROPERTY_SELECTED, true));
 
       String client = info.getStringParameter("inpvisibleatClientId", idFilter);
       if (client.isEmpty() || client.equals("0")) {
-        qPref.addOr(
-            (cb, obc) -> cb.isNull(obc.getPath(Preference.PROPERTY_VISIBLEATCLIENT)),
-            (cb, obc) -> cb.equal(obc.getPath(Preference.PROPERTY_VISIBLEATCLIENT + ".id"), "0")
-        );
+        qPref.add(Restrictions.or(Restrictions.isNull(Preference.PROPERTY_VISIBLEATCLIENT),
+            Restrictions.eq(Preference.PROPERTY_VISIBLEATCLIENT + ".id", "0")));
       } else {
-        qPref.addEqual(Preference.PROPERTY_VISIBLEATCLIENT + ".id", client);
+        qPref.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATCLIENT + ".id", client));
       }
 
       String org = info.getStringParameter("inpvisibleatOrgId", idFilter);
       if (org.isEmpty() || org.equals("0")) {
-        qPref.addOr(
-            (cb, obc) -> cb.isNull(obc.getPath(Preference.PROPERTY_VISIBLEATORGANIZATION)),
-            (cb, obc) -> cb.equal(obc.getPath(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id"), "0")
-        );
+        qPref.add(Restrictions.or(Restrictions.isNull(Preference.PROPERTY_VISIBLEATORGANIZATION),
+            Restrictions.eq(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", "0")));
       } else {
-        qPref.addEqual(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", org);
+        qPref.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATORGANIZATION + ".id", org));
       }
 
       String user = info.getStringParameter("inpadUserId", idFilter);
       if (user.isEmpty()) {
-        qPref.addIsNull(Preference.PROPERTY_USERCONTACT);
+        qPref.add(Restrictions.isNull(Preference.PROPERTY_USERCONTACT));
       } else {
-        qPref.addEqual(Preference.PROPERTY_USERCONTACT + ".id", user);
+        qPref.add(Restrictions.eq(Preference.PROPERTY_USERCONTACT + ".id", user));
       }
 
       String role = info.getStringParameter("inpvisibleatRoleId", idFilter);
       if (role.isEmpty()) {
-        qPref.addIsNull(Preference.PROPERTY_VISIBLEATROLE);
+        qPref.add(Restrictions.isNull(Preference.PROPERTY_VISIBLEATROLE));
       } else {
-        qPref.addEqual(Preference.PROPERTY_VISIBLEATROLE + ".id", role);
+        qPref.add(Restrictions.eq(Preference.PROPERTY_VISIBLEATROLE + ".id", role));
       }
 
       String window = info.getStringParameter("inpadWindowId", idFilter);
       if (window.isEmpty()) {
-        qPref.addIsNull(Preference.PROPERTY_WINDOW);
+        qPref.add(Restrictions.isNull(Preference.PROPERTY_WINDOW));
       } else {
-        qPref.addEqual(Preference.PROPERTY_WINDOW + ".id", window);
+        qPref.add(Restrictions.eq(Preference.PROPERTY_WINDOW + ".id", window));
       }
 
       if (qPref.count() > 0) {

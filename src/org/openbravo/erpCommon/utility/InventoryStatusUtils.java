@@ -28,6 +28,7 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.common.hooks.InventoryStatusHookManager;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.enterprise.Locator;
 import org.openbravo.model.materialmgmt.onhandquantity.InventoryStatus;
 import org.openbravo.model.materialmgmt.onhandquantity.StorageDetail;
@@ -123,8 +124,8 @@ public class InventoryStatusUtils {
    */
   private static int getNumberOfVirtualBins(Locator storageBin, boolean active) {
     OBCriteria<Locator> obc = OBDal.getInstance().createCriteria(Locator.class);
-    obc.addEqual(Locator.PROPERTY_ISVIRTUAL, true);
-    obc.addEqual(Locator.PROPERTY_PARENTLOCATOR, storageBin);
+    obc.add(Restrictions.eq(Locator.PROPERTY_ISVIRTUAL, true));
+    obc.add(Restrictions.eq(Locator.PROPERTY_PARENTLOCATOR, storageBin));
     obc.setFilterOnActive(active);
     return obc.count();
   }

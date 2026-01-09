@@ -42,6 +42,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -311,18 +312,18 @@ public class CostingUtils {
     // Get cost from M_Costing for given date.
     OBCriteria<Costing> obcCosting = OBDal.getInstance()
         .createCriteria(Costing.class)
-        .addEqual(Costing.PROPERTY_PRODUCT, product)
-        .addLessOrEqualThan(Costing.PROPERTY_STARTINGDATE, date)
-        .addGreaterThan(Costing.PROPERTY_ENDINGDATE, date)
-        .addEqual(Costing.PROPERTY_COSTTYPE, costtype)
-        .addIsNotNull(Costing.PROPERTY_COST);
+        .add(Restrictions.eq(Costing.PROPERTY_PRODUCT, product))
+        .add(Restrictions.le(Costing.PROPERTY_STARTINGDATE, date))
+        .add(Restrictions.gt(Costing.PROPERTY_ENDINGDATE, date))
+        .add(Restrictions.eq(Costing.PROPERTY_COSTTYPE, costtype))
+        .add(Restrictions.isNotNull(Costing.PROPERTY_COST));
 
     if (costDimensions.get(CostDimension.Warehouse) != null) {
-      obcCosting.addEqual(Costing.PROPERTY_WAREHOUSE, costDimensions.get(CostDimension.Warehouse));
+      obcCosting.add(Restrictions.eq(Costing.PROPERTY_WAREHOUSE, costDimensions.get(CostDimension.Warehouse)));
     }
 
     List<Costing> obcCostingList = obcCosting
-        .addEqual(Costing.PROPERTY_ORGANIZATION, org)
+        .add(Restrictions.eq(Costing.PROPERTY_ORGANIZATION, org))
         .setFilterOnReadableOrganization(false)
         .setMaxResults(2)
         .list();
@@ -909,12 +910,12 @@ public class CostingUtils {
     OBCriteria<MaterialTransaction> criteria = OBDal.getInstance()
         .createCriteria(MaterialTransaction.class);
     criteria.createAlias(MaterialTransaction.PROPERTY_STORAGEBIN, "sb")
-        .addEqual(MaterialTransaction.PROPERTY_PRODUCT, product)
-        .addEqual(MaterialTransaction.PROPERTY_ISPROCESSED, true)
-        .addInIds(MaterialTransaction.PROPERTY_ORGANIZATION + ".id", orgs);
+        .add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCT, product))
+        .add(Restrictions.eq(MaterialTransaction.PROPERTY_ISPROCESSED, true))
+        .add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + ".id", orgs));
     if (costDimensions.get(CostDimension.Warehouse) != null) {
-      criteria.addEqual("sb." + Locator.PROPERTY_WAREHOUSE + ".id",
-          costDimensions.get(CostDimension.Warehouse).getId());
+      criteria.add(Restrictions.eq("sb." + Locator.PROPERTY_WAREHOUSE + ".id",
+          costDimensions.get(CostDimension.Warehouse).getId()));
     }
 
     return criteria.setFilterOnReadableOrganization(false).setMaxResults(1).uniqueResult() != null;

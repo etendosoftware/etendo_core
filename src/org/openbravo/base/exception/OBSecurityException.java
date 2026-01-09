@@ -19,12 +19,15 @@
 
 package org.openbravo.base.exception;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This exception is used in case of Security violation. For example updating an object of another
  * client.
  * 
  * @author mtaal
  */
+@Dependent
 public class OBSecurityException extends OBException {
 
   private static final long serialVersionUID = 1L;

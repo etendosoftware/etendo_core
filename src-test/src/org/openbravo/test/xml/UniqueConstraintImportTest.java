@@ -33,6 +33,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.EntityXMLConverter;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.system.Client;
@@ -65,7 +66,7 @@ public class UniqueConstraintImportTest extends XMLBaseTest {
     setSystemAdministratorContext();
     final Country country = getCountryByCode("NO");
     final OBCriteria<CountryTrl> obc = OBDal.getInstance().createCriteria(CountryTrl.class);
-    obc.addEqual("country", country);
+    obc.add(Restrictions.eq("country", country));
     final List<CountryTrl> countryTrls = obc.list();
     if (countryTrls.size() > 0) {
       return;
@@ -131,14 +132,14 @@ public class UniqueConstraintImportTest extends XMLBaseTest {
   private Country getCountryByCode(String name) {
     final OBCriteria<Country> obc = OBDal.getInstance().createCriteria(Country.class);
     // has unique constraint
-    obc.addEqual("iSOCountryCode", name);
+    obc.add(Restrictions.eq("iSOCountryCode", name));
     return (Country) obc.uniqueResult();
   }
 
   private <T extends BaseOBObject> String exportClass(Class<T> clz, String field, Object value) {
     final OBCriteria<?> obc = OBDal.getInstance().createCriteria(clz);
     if (field != null) {
-      obc.addEqual(field, value);
+      obc.add(Restrictions.eq(field, value));
     }
 
     final EntityXMLConverter exc = EntityXMLConverter.newInstance();

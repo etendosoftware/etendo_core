@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.Tab;
 
@@ -32,8 +33,8 @@ public class Utilities {
                 final OBCriteria<Field> criteria = OBDal.getInstance().createCriteria(Field.class);
                 criteria.setFilterOnReadableClients(false);
                 criteria.setFilterOnReadableOrganization(false);
-                criteria.addEqual(Field.PROPERTY_TAB, tab);
-                criteria.addIlike(Field.PROPERTY_NAME, "%Document No.%");
+                criteria.add(Restrictions.eq(Field.PROPERTY_TAB, tab));
+                criteria.add(Restrictions.ilike(Field.PROPERTY_NAME, "%Document No.%"));
                 final List<Field> fields = criteria.list();
                 if (!fields.isEmpty()) {
                         field = fields.get(0);

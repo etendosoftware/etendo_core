@@ -44,6 +44,7 @@ import org.openbravo.client.myob.WidgetClass;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.ui.Tab;
 
@@ -137,7 +138,7 @@ class QueryListUtils {
   public static List<OBCQL_QueryColumn> getColumns(OBCQL_WidgetQuery query) {
     OBCriteria<OBCQL_QueryColumn> obcColumns = OBDal.getInstance()
         .createCriteria(OBCQL_QueryColumn.class);
-    obcColumns.addEqual(OBCQL_QueryColumn.PROPERTY_WIDGETQUERY, query);
+    obcColumns.add(Restrictions.eq(OBCQL_QueryColumn.PROPERTY_WIDGETQUERY, query));
     obcColumns.addOrderBy(OBCQL_QueryColumn.PROPERTY_SEQUENCENUMBER, true);
     return obcColumns.list();
   }

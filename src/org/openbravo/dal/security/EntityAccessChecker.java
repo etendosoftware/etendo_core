@@ -41,6 +41,8 @@ import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.TableAccess;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class is responsible for determining the allowed read/write access for a combination of user
  * and Entity. It uses the window-role access information and the window-table relation to determine
@@ -62,6 +64,7 @@ import org.openbravo.model.ad.access.TableAccess;
  * @author mtaal
  */
 
+@Dependent
 public class EntityAccessChecker implements OBNotSingleton {
   private static final Logger log = LogManager.getLogger();
 

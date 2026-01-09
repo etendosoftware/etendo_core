@@ -62,6 +62,7 @@ import org.openbravo.client.kernel.reference.UIDefinitionController;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.Sqlc;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.datamodel.Column;
@@ -346,8 +347,8 @@ public class OBViewTab extends BaseTemplateComponent {
   public String getViewGrid() {
     // check at least one field is visible in grid view, does not stop the execution
     OBCriteria<Field> fieldCriteria = OBDal.getInstance().createCriteria(Field.class);
-    fieldCriteria.addEqual(Field.PROPERTY_TAB, getTab());
-    fieldCriteria.addEqual(Field.PROPERTY_SHOWINGRIDVIEW, true);
+    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, getTab()));
+    fieldCriteria.add(Restrictions.eq(Field.PROPERTY_SHOWINGRIDVIEW, true));
     if (fieldCriteria.count() == 0) {
       log.error("No Fields are visible in grid view for Tab " + tab.getWindow().getName() + " - "
           + tab.getName());
@@ -578,7 +579,7 @@ public class OBViewTab extends BaseTemplateComponent {
           continue;
         }
         final OBCriteria<Selector> criteria = OBDal.getInstance().createCriteria(Selector.class);
-        criteria.addEqual(Selector.PROPERTY_REFERENCE, fld.getColumn().getReferenceSearchKey());
+        criteria.add(Restrictions.eq(Selector.PROPERTY_REFERENCE, fld.getColumn().getReferenceSearchKey()));
         criteria.setMaxResults(1);
         Selector selector = (Selector) criteria.uniqueResult();
 

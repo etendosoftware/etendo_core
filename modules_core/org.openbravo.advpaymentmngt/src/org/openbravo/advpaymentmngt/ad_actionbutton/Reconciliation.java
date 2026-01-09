@@ -59,6 +59,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
@@ -562,8 +563,8 @@ public class Reconciliation extends HttpSecureAppServlet {
     try {
       final OBCriteria<FIN_ReconciliationLine_v> obc = OBDal.getInstance()
           .createCriteria(FIN_ReconciliationLine_v.class);
-      obc.addEqual(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation);
-      obc.addIsNotNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE);
+      obc.add(Restrictions.eq(FIN_ReconciliationLine_v.PROPERTY_RECONCILIATION, reconciliation));
+      obc.add(Restrictions.isNotNull(FIN_ReconciliationLine_v.PROPERTY_BANKSTATEMENTLINE));
       obc.setMaxResults(1);
       final List<FIN_ReconciliationLine_v> rec = obc.list();
       return (rec.size() != 0);
@@ -606,7 +607,7 @@ public class Reconciliation extends HttpSecureAppServlet {
     try {
       OBCriteria<FIN_FinaccTransaction> trans = OBDal.getInstance()
           .createCriteria(FIN_FinaccTransaction.class);
-      trans.addEqual(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, reconciliation);
+      trans.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_RECONCILIATION, reconciliation));
       trans.setFilterOnReadableClients(false);
       trans.setFilterOnReadableOrganization(false);
       transactions = trans.list();
@@ -634,9 +635,9 @@ public class Reconciliation extends HttpSecureAppServlet {
         if (payment != null) {
           OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
               .createCriteria(FinAccPaymentMethod.class);
-          obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, reconciliation.getAccount());
-          obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
-              payment.getPaymentMethod());
+          obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, reconciliation.getAccount()));
+          obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD,
+              payment.getPaymentMethod()));
           obCriteria.setFilterOnReadableClients(false);
           obCriteria.setFilterOnReadableOrganization(false);
           List<FinAccPaymentMethod> lines = obCriteria.list();

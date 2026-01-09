@@ -62,6 +62,7 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
 import org.openbravo.erpCommon.utility.OBDateUtils;
@@ -681,23 +682,23 @@ public class FIN_Utility {
 
     for (Value value : values) {
       if (value.getValue() == null && StringUtils.equals("==", value.getOperator())) {
-        obc.addIsNull(value.getField());
+        obc.add(Restrictions.isNull(value.getField()));
       } else if (value.getValue() == null && StringUtils.equals("!=", value.getOperator())) {
-        obc.addIsNotNull(value.getField());
+        obc.add(Restrictions.isNotNull(value.getField()));
       } else if (StringUtils.equals("==", value.getOperator())) {
-        obc.addEqual(value.getField(), value.getValue());
+        obc.add(Restrictions.eq(value.getField(), value.getValue()));
       } else if (StringUtils.equals("!=", value.getOperator())) {
-        obc.addNotEqual(value.getField(), value.getValue());
+        obc.add(Restrictions.ne(value.getField(), value.getValue()));
       } else if (StringUtils.equals("<", value.getOperator())) {
-        obc.addLessThan(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.lt(value.getField(), (Comparable) value.getValue()));
       } else if (StringUtils.equals(">", value.getOperator())) {
-        obc.addGreaterThan(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.gt(value.getField(), (Comparable) value.getValue()));
       } else if (StringUtils.equals("<=", value.getOperator())) {
-        obc.addLessOrEqual(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.le(value.getField(), (Comparable) value.getValue()));
       } else if (StringUtils.equals(">=", value.getOperator())) {
-        obc.addGreaterOrEqual(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.ge(value.getField(), (Comparable) value.getValue()));
       } else {
-        obc.addEqual(value.getField(), value.getValue());
+        obc.add(Restrictions.eq(value.getField(), value.getValue()));
       }
     }
 
@@ -740,27 +741,27 @@ public class FIN_Utility {
     OBCriteria<T> obc = OBDal.getInstance().createCriteria(clazz);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.addNotEqual(Client.PROPERTY_ID, "0");
+    obc.add(Restrictions.ne(Client.PROPERTY_ID, "0"));
 
     for (Value value : values) {
       if (value.getValue() == null && StringUtils.equals("==", value.getOperator())) {
-        obc.addIsNull(value.getField());
+        obc.add(Restrictions.isNull(value.getField()));
       } else if (value.getValue() == null && StringUtils.equals("!=", value.getOperator())) {
-        obc.addIsNotNull(value.getField());
+        obc.add(Restrictions.isNotNull(value.getField()));
       } else if (StringUtils.equals("==", value.getOperator())) {
-        obc.addEqual(value.getField(), value.getValue());
+        obc.add(Restrictions.eq(value.getField(), value.getValue()));
       } else if (StringUtils.equals("!=", value.getOperator())) {
-        obc.addNotEqual(value.getField(), value.getValue());
+        obc.add(Restrictions.ne(value.getField(), value.getValue()));
       } else if (StringUtils.equals("<", value.getOperator())) {
-        obc.addLessThan(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.lt(value.getField(), (Comparable) value.getValue()));
       } else if (StringUtils.equals(">", value.getOperator())) {
-        obc.addGreaterThan(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.gt(value.getField(), (Comparable) value.getValue()));
       } else if (StringUtils.equals("<=", value.getOperator())) {
-        obc.addLessOrEqual(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.le(value.getField(), (Comparable) value.getValue()));
       } else if (StringUtils.equals(">=", value.getOperator())) {
-        obc.addGreaterOrEqual(value.getField(), (Comparable) value.getValue());
+        obc.add(Restrictions.ge(value.getField(), (Comparable) value.getValue()));
       } else {
-        obc.addEqual(value.getField(), value.getValue());
+        obc.add(Restrictions.eq(value.getField(), value.getValue()));
       }
     }
 
@@ -874,13 +875,13 @@ public class FIN_Utility {
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getInstance()
           .createCriteria(ConversionRate.class);
       obcConvRate.setFilterOnReadableOrganization(false);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_ORGANIZATION, org);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_CURRENCY, fromCurrency);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_TOCURRENCY, toCurrency);
-      obcConvRate.addLessOrEqual(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate);
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_ORGANIZATION, org));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, fromCurrency));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, toCurrency));
+      obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, conversionDate));
       long oneDay = 24 * 60 * 60 * 1000;
-      obcConvRate.addGreaterOrEqual(ConversionRate.PROPERTY_VALIDTODATE,
-          new Date(conversionDate.getTime() - oneDay));
+      obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE,
+          new Date(conversionDate.getTime() - oneDay)));
       conversionRateList = obcConvRate.list();
       if ((conversionRateList != null) && (conversionRateList.size() != 0)) {
         conversionRate = conversionRateList.get(0);
@@ -926,17 +927,17 @@ public class FIN_Utility {
         .createCriteria(ConversionRateDoc.class);
 
     if (entity.equals(ModelProvider.getInstance().getEntity("Invoice"))) {
-      obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_INVOICE,
-          OBDal.getInstance().get(Invoice.class, documentId));
+      obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE,
+          OBDal.getInstance().get(Invoice.class, documentId)));
     } else if (entity.equals(ModelProvider.getInstance().getEntity("FIN_Payment"))) {
-      obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_PAYMENT,
-          OBDal.getInstance().get(FIN_Payment.class, documentId));
+      obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_PAYMENT,
+          OBDal.getInstance().get(FIN_Payment.class, documentId)));
     } else if (entity.equals(ModelProvider.getInstance().getEntity("FIN_Finacc_Transaction"))) {
-      obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION,
-          OBDal.getInstance().get(FIN_FinaccTransaction.class, documentId));
+      obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_FINANCIALACCOUNTTRANSACTION,
+          OBDal.getInstance().get(FIN_FinaccTransaction.class, documentId)));
     }
-    obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_CURRENCY, fromCurrency);
-    obcConvRateDoc.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY, toCurrency);
+    obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, fromCurrency));
+    obcConvRateDoc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY, toCurrency));
     obcConvRateDoc.setMaxResults(1);
     if (obcConvRateDoc.uniqueResult() != null) {
       return (ConversionRateDoc) obcConvRateDoc.uniqueResult();
@@ -1108,7 +1109,7 @@ public class FIN_Utility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obCriteria.addEqual("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7");
+      obCriteria.add(Restrictions.eq("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7"));
       List<org.openbravo.model.ad.domain.List> adRefList = obCriteria.list();
       for (org.openbravo.model.ad.domain.List adRef : adRefList) {
         if (isConfirmed.equals(isPaymentConfirmed(adRef.getSearchKey(), null))) {
@@ -1136,7 +1137,7 @@ public class FIN_Utility {
     try {
       final OBCriteria<org.openbravo.model.ad.domain.List> obCriteria = OBDal.getInstance()
           .createCriteria(org.openbravo.model.ad.domain.List.class);
-      obCriteria.addEqual("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7");
+      obCriteria.add(Restrictions.eq("reference.id", "575BCB88A4694C27BC013DE9C73E6FE7"));
       List<org.openbravo.model.ad.domain.List> adRefList = obCriteria.list();
       for (org.openbravo.model.ad.domain.List adRef : adRefList) {
         if (isConfirmed.equals(isPaymentConfirmed(adRef.getSearchKey(), psd))) {
@@ -1632,7 +1633,7 @@ public class FIN_Utility {
     OBCriteria<FIN_FinaccTransaction> finAccTransactionCriteria = OBDal.getInstance()
         .createCriteria(FIN_FinaccTransaction.class);
     finAccTransactionCriteria
-        .addEqual(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment);
+        .add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment));
     finAccTransactionCriteria.setMaxResults(1);
     return (FIN_FinaccTransaction) finAccTransactionCriteria.uniqueResult();
   }

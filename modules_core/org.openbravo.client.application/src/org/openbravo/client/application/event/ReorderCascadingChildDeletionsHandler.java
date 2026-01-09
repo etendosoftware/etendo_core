@@ -40,6 +40,7 @@ import org.openbravo.client.kernel.event.EntityDeleteEvent;
 import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.invoice.InvoiceTax;
 import org.openbravo.model.common.order.OrderTax;
 
@@ -78,7 +79,7 @@ class ReorderCascadingChildDeletionsHandler extends EntityPersistenceEventObserv
     if (targetEntity == orderEntity) {
       log.debug("Pre-deleting c_ordertax for order: " + event.getId());
       OBCriteria<OrderTax> otc = OBDal.getInstance().createCriteria(OrderTax.class);
-      otc.addEqual(OrderTax.PROPERTY_SALESORDER, event.getTargetInstance());
+      otc.add(Restrictions.eq(OrderTax.PROPERTY_SALESORDER, event.getTargetInstance()));
       List<OrderTax> otList = otc.list();
       for (OrderTax ot : otList) {
         OBDal.getInstance().remove(ot);
@@ -86,7 +87,7 @@ class ReorderCascadingChildDeletionsHandler extends EntityPersistenceEventObserv
     } else if (targetEntity == invoiceEntity) {
       log.debug("Pre-deleting c_invoicetax for invoice: " + event.getId());
       OBCriteria<InvoiceTax> otc = OBDal.getInstance().createCriteria(InvoiceTax.class);
-      otc.addEqual(InvoiceTax.PROPERTY_INVOICE, event.getTargetInstance());
+      otc.add(Restrictions.eq(InvoiceTax.PROPERTY_INVOICE, event.getTargetInstance()));
       List<InvoiceTax> otList = otc.list();
       for (InvoiceTax ot : otList) {
         // Before delete InvoiceTax set recalculate=N to avoid raise error in InvoiceTaxEventHandler

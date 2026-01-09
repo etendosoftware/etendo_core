@@ -1,6 +1,10 @@
 package com.smf.jobs.defaults;
 
-import com.smf.jobs.hooks.CloneRecordHook;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.openbravo.base.structure.BaseOBObject;
@@ -15,19 +19,16 @@ import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.pricing.pricelist.PriceListVersion;
 import org.openbravo.service.db.CallStoredProcedure;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import com.smf.jobs.hooks.CloneRecordHook;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A hook for the Clone Records Job, to handle Invoices in a special way.
  * This process creates a new invoice, and copies the information from the old invoice to
  * the new one, leaving it in Draft status.
  */
-@ApplicationScoped
+@Dependent
 @Qualifier(Invoice.ENTITY_NAME)
 public class CloneInvoiceHook extends CloneRecordHook {
 

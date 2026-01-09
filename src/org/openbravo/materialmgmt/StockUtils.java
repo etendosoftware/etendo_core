@@ -29,6 +29,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.exception.NoConnectionAvailableException;
 import org.openbravo.model.common.enterprise.Warehouse;
 import org.openbravo.model.common.order.OrderLine;
@@ -89,7 +90,7 @@ public class StockUtils {
     }
     OBCriteria<StockProposed> stockProposed = OBDal.getInstance()
         .createCriteria(StockProposed.class);
-    stockProposed.addEqual(StockProposed.PROPERTY_PROCESSINSTANCE, orderLine.getId());
+    stockProposed.add(Restrictions.eq(StockProposed.PROPERTY_PROCESSINSTANCE, orderLine.getId()));
     stockProposed.addOrderBy(StockProposed.PROPERTY_PRIORITY, true);
     return stockProposed.scroll(ScrollMode.FORWARD_ONLY);
   }

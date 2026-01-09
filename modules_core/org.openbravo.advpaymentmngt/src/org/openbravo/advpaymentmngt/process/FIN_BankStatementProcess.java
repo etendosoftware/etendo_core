@@ -39,6 +39,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
@@ -211,7 +212,7 @@ public class FIN_BankStatementProcess implements org.openbravo.scheduling.Proces
       final OBCriteria<FIN_BankStatementLine> obc = OBDal.getInstance()
           .createCriteria(FIN_BankStatementLine.class);
       obc.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
-      obc.addEqual("bs." + FIN_BankStatement.PROPERTY_ID, bankStatement.getId());
+      obc.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ID, bankStatement.getId()));
       obc.addOrderBy(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, true);
       obc.setMaxResults(1);
       final List<FIN_BankStatementLine> bst = obc.list();
@@ -240,8 +241,8 @@ public class FIN_BankStatementProcess implements org.openbravo.scheduling.Proces
     try {
       final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, account);
-      obc.addGreaterOrEqual(FIN_Reconciliation.PROPERTY_ENDINGDATE, bankStatementLineMinDate);
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, account));
+      obc.add(Restrictions.ge(FIN_Reconciliation.PROPERTY_ENDINGDATE, bankStatementLineMinDate));
       obc.setMaxResults(1);
       return obc.list();
     } finally {

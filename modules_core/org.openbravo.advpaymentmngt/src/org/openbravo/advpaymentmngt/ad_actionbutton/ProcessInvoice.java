@@ -63,6 +63,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.ad_actionButton.ActionButtonUtility;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
@@ -584,12 +585,12 @@ public class ProcessInvoice extends HttpSecureAppServlet {
   private boolean isInvoiceWithPayments(Invoice invoice) {
     // Crear OBCriteria para FIN_PaymentSchedule
     OBCriteria<FIN_PaymentSchedule> psCriteria = OBDal.getInstance().createCriteria(FIN_PaymentSchedule.class);
-    psCriteria.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice);
+    psCriteria.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice));
     
     for (FIN_PaymentSchedule ps : psCriteria.list()) {
       // Crear OBCriteria para FIN_PaymentDetailV
       OBCriteria<FIN_PaymentDetailV> pdvCriteria = OBDal.getInstance().createCriteria(FIN_PaymentDetailV.class);
-      pdvCriteria.addEqual(FIN_PaymentDetailV.PROPERTY_PAYMENTPLANINVOICE, ps);
+      pdvCriteria.add(Restrictions.eq(FIN_PaymentDetailV.PROPERTY_PAYMENTPLANINVOICE, ps));
       
       for (FIN_PaymentDetailV pdv : pdvCriteria.list()) {
         if (pdv.getPayment() != null && !"RPVOID".equals(pdv.getPayment().getStatus())) {

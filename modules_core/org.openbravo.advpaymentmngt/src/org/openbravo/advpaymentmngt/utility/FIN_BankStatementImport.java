@@ -50,9 +50,10 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restriction;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
@@ -411,13 +412,14 @@ public abstract class FIN_BankStatementImport {
     try {
       OBCriteria<BusinessPartner> obCriteria = OBDal.getInstance()
           .createCriteria(BusinessPartner.class);
-
-      List<PredicateFunction> orPredicates = new ArrayList<>();
-      for (String token : list) {
-        orPredicates.add((cb, obc) -> cb.like(cb.upper(obc.getPath("name")), cb.upper(cb.literal("%" + token + "%"))));
+      Restriction[] orCriterionElements = new Restriction[list.size()];
+      for (int i = 0; i < list.size(); i++) {
+        String token = list.get(i);
+        orCriterionElements[i] = Restrictions.ilike("name", "%" + token + "%");
       }
-      obCriteria.addOr(orPredicates.toArray(new PredicateFunction[0]))
-          .addIn("organization.id", new OrganizationStructureProvider().getNaturalTree(organization.getId()));
+      obCriteria.add(Restrictions.or(orCriterionElements))
+          .add(Restrictions.in("organization.id",
+              new OrganizationStructureProvider().getNaturalTree(organization.getId())));
 
       businessPartnersScroll = obCriteria.scroll(ScrollMode.SCROLL_SENSITIVE);
 
@@ -492,7 +494,7 @@ public abstract class FIN_BankStatementImport {
     final String JAVACLASSNAME = this.getClass().getName();
     try {
       OBCriteria<BankFileFormat> obc = OBDal.getInstance().createCriteria(BankFileFormat.class);
-      obc.addEqual(BankFileFormat.PROPERTY_JAVACLASSNAME, JAVACLASSNAME);
+      obc.add(Restrictions.eq(BankFileFormat.PROPERTY_JAVACLASSNAME, JAVACLASSNAME));
       obc.setMaxResults(1);
       bankFileFormat = obc.list();
     } finally {
@@ -509,11 +511,11 @@ public abstract class FIN_BankStatementImport {
       OBCriteria<BankFileException> obc = OBDal.getInstance()
           .createCriteria(BankFileException.class);
       obc.createAlias(BankFileException.PROPERTY_BANKFILEFORMAT, "BFF");
-      obc.addEqual("BFF." + BankFileFormat.PROPERTY_JAVACLASSNAME,
-          bankFileFormat.getJavaClassName());
-      obc.addOr(
-          (cb, obc_inner) -> cb.equal(obc_inner.getPath(BankFileException.PROPERTY_FINANCIALACCOUNT), financialAccount),
-          (cb, obc_inner) -> cb.isNull(obc_inner.getPath(BankFileException.PROPERTY_FINANCIALACCOUNT)));
+      obc.add(Restrictions.eq("BFF." + BankFileFormat.PROPERTY_JAVACLASSNAME,
+          bankFileFormat.getJavaClassName()));
+      obc.add(Restrictions.or(
+          Restrictions.eq(BankFileException.PROPERTY_FINANCIALACCOUNT, financialAccount),
+          Restrictions.isNull(BankFileException.PROPERTY_FINANCIALACCOUNT)));
       bankFileExceptions = obc.list();
     } finally {
       OBContext.restorePreviousMode();

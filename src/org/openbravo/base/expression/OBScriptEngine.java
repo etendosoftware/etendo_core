@@ -27,12 +27,15 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Class that wraps a ScriptEngine and that should be used to evaluate javascript scripts
  * 
  * It is a singleton, and it takes advantage of the thread safety of ScriptEngine
  * 
  */
+@Dependent
 public class OBScriptEngine {
 
   private final ScriptEngine engine;

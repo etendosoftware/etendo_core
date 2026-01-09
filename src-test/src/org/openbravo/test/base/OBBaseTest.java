@@ -72,6 +72,8 @@ import org.openbravo.test.base.TestConstants.Roles;
 import org.openbravo.test.base.TestConstants.Users;
 import org.openbravo.test.base.mock.OBServletContextMock;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * OBBaseTest class which can/should be extended by most other test classes which want to make use
  * of the Openbravo test infrastructure.
@@ -211,6 +213,7 @@ public class OBBaseTest {
   }
 
   // Inner class that handles the lifecycle
+  @Dependent
   class DalCleanupExtension implements TestWatcher, BeforeTestExecutionCallback, AfterEachCallback {
 
     @Override

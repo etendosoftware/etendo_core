@@ -39,9 +39,11 @@ import org.hibernate.query.Query;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteriaMigrationHelper;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.ProjectionList;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatement;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
@@ -50,7 +52,6 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_Reconciliation;
 
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Selection;
 
 public class MatchTransactionDao {
 
@@ -64,9 +65,9 @@ public class MatchTransactionDao {
   public static BigDecimal getClearedLinesAmount(String strReconciliationId) {
     OBCriteria<FIN_FinaccTransaction> obCriteria = OBDal.getInstance()
         .createCriteria(FIN_FinaccTransaction.class);
-    obCriteria.addEqual(FIN_FinaccTransaction.PROPERTY_RECONCILIATION,
-        MatchTransactionDao.getObject(FIN_Reconciliation.class, strReconciliationId));
-    obCriteria.addEqual(FIN_FinaccTransaction.PROPERTY_STATUS, "RPPC");
+    obCriteria.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_RECONCILIATION,
+        MatchTransactionDao.getObject(FIN_Reconciliation.class, strReconciliationId)));
+    obCriteria.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_STATUS, "RPPC"));
     List<FIN_FinaccTransaction> lines = obCriteria.list();
 
     BigDecimal total = new BigDecimal("0");
@@ -88,9 +89,9 @@ public class MatchTransactionDao {
     FIN_FinancialAccount financialAccount = MatchTransactionDao
         .getObject(FIN_FinancialAccount.class, strFinancialAccountId);
     // FIXME : ****There should be some other filter, like the reconciliation id?
-    obCriteria.addIn(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT,
-        financialAccount.getFINBankStatementList());
-    obCriteria.addIsNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION);
+    obCriteria.add(Restrictions.in(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT,
+        financialAccount.getFINBankStatementList()));
+    obCriteria.add(Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION));
     obCriteria.setMaxResults(1);
     List<FIN_BankStatementLine> lines = obCriteria.list();
 
@@ -288,8 +289,8 @@ public class MatchTransactionDao {
       final OBCriteria<FIN_BankStatementLine> obc = OBDal.getInstance()
           .createCriteria(FIN_BankStatementLine.class);
       obc.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
-      obc.addEqual("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, financialAccount);
-      obc.addEqual("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true);
+      obc.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, financialAccount));
+      obc.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
       obc.addOrderBy(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, false);
       obc.setMaxResults(1);
       final List<FIN_BankStatementLine> bst = obc.list();
@@ -309,8 +310,8 @@ public class MatchTransactionDao {
     try {
       final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.addEqual(FIN_Reconciliation.PROPERTY_PROCESSED, true);
-      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, financialAccount);
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_PROCESSED, true));
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, financialAccount));
       obc.addOrderBy(FIN_Reconciliation.PROPERTY_ENDINGDATE, false);
       obc.setMaxResults(1);
       final List<FIN_Reconciliation> rec = obc.list();
@@ -345,30 +346,25 @@ public class MatchTransactionDao {
       List<FIN_Reconciliation> afterReconciliations = getReconciliationListAfterDate(
           lastReconciliation);
       if (afterReconciliations.size() > 0) {
-        obcBsl.addOr((cb, obc) -> cb.isNull(obc.getPath(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION)),
-            (cb, obc) -> cb.in(obc.getPath("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION)).value(
-                afterReconciliations));
+        obcBsl.add(Restrictions.or(
+            Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION),
+            Restrictions.in("tr." + FIN_FinaccTransaction.PROPERTY_RECONCILIATION,
+                afterReconciliations)));
       } else {
-        obcBsl.addIsNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION);
+        obcBsl.add(Restrictions.isNull(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION));
       }
-      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_ACCOUNT,
-          lastReconciliation.getAccount());
-      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true);
-      obcBsl.addLessOrEqual(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
-          lastReconciliation.getTransactionDate());
-      // Migración de ProjectionList a CriteriaQuery multiselect()
-      // TODO: Aplicar filtros de obcBsl aquí usando OBCriteriaMigrationHelper
-      List<Object[]> o = OBCriteriaMigrationHelper.executeMultipleAggregations(
-          FIN_BankStatementLine.class,
-          obc -> {
-            // TODO: Aplicar todos los filtros que tenía obcBsl antes de esta línea
-            // Por ejemplo: obc.addLessOrEqual(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE, lastReconciliation.getTransactionDate());
-          },
-          (cb, root) -> new Selection<?>[]{
-              cb.sum(root.get(FIN_BankStatementLine.PROPERTY_CRAMOUNT)),
-              cb.sum(root.get(FIN_BankStatementLine.PROPERTY_DRAMOUNT))
-          }
-      );
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT,
+          lastReconciliation.getAccount()));
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      obcBsl.add(Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
+          lastReconciliation.getTransactionDate()));
+      ProjectionList projections = Projections.projectionList();
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_CRAMOUNT));
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_DRAMOUNT));
+      obcBsl.setProjection(projections);
+
+      @SuppressWarnings("rawtypes")
+      List o = obcBsl.list();
       if (o != null && o.size() > 0) {
         Object[] resultSet = (Object[]) o.get(0);
         BigDecimal credit = (resultSet[0] != null) ? (BigDecimal) resultSet[0] : BigDecimal.ZERO;
@@ -395,9 +391,9 @@ public class MatchTransactionDao {
     try {
       OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount());
-      obc.addGreaterThan(FIN_Reconciliation.PROPERTY_CREATIONDATE,
-          reconciliation.getCreationDate());
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount()));
+      obc.add(Restrictions.gt(FIN_Reconciliation.PROPERTY_CREATIONDATE,
+          reconciliation.getCreationDate()));
       reconciliations = obc.list();
     } finally {
       OBContext.restorePreviousMode();
@@ -454,12 +450,15 @@ public class MatchTransactionDao {
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_BANKSTATEMENT, "bs");
       obcBsl.createAlias(FIN_BankStatementLine.PROPERTY_FINANCIALACCOUNTTRANSACTION, "tr",
           JoinType.LEFT);
-      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, reconciliation.getAccount());
-      obcBsl.addEqual("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true);
-      obcBsl.addLessOrEqual(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
-          reconciliation.getEndingDate());
-
-      obcBsl.setMultipleSums(FIN_BankStatementLine.PROPERTY_CRAMOUNT, FIN_BankStatementLine.PROPERTY_DRAMOUNT);
+      obcBsl.add(
+          Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_ACCOUNT, reconciliation.getAccount()));
+      obcBsl.add(Restrictions.eq("bs." + FIN_BankStatement.PROPERTY_PROCESSED, true));
+      obcBsl.add(Restrictions.le(FIN_BankStatementLine.PROPERTY_TRANSACTIONDATE,
+          reconciliation.getEndingDate()));
+      ProjectionList projections = Projections.projectionList();
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_CRAMOUNT));
+      projections.add(Projections.sum(FIN_BankStatementLine.PROPERTY_DRAMOUNT));
+      obcBsl.setProjection(projections);
 
       @SuppressWarnings("rawtypes")
       List o = obcBsl.list();
@@ -496,10 +495,10 @@ public class MatchTransactionDao {
     try {
       final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.addLessOrEqual(FIN_Reconciliation.PROPERTY_ENDINGDATE, reconciliation.getEndingDate());
-      obc.addLessThan(FIN_Reconciliation.PROPERTY_CREATIONDATE,
-          reconciliation.getCreationDate());
-      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount());
+      obc.add(Restrictions.le(FIN_Reconciliation.PROPERTY_ENDINGDATE, reconciliation.getEndingDate()));
+      obc.add(Restrictions.lt(FIN_Reconciliation.PROPERTY_CREATIONDATE,
+          reconciliation.getCreationDate()));
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount()));
       obc.addOrderBy(FIN_Reconciliation.PROPERTY_ENDINGDATE, false);
       obc.addOrderBy(FIN_Reconciliation.PROPERTY_CREATIONDATE, false);
       obc.setMaxResults(1);

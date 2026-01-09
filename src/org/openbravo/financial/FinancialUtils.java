@@ -37,6 +37,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.system.Client;
@@ -235,12 +236,12 @@ public class FinancialUtils {
     try {
       final OBCriteria<ConversionRate> obcConvRate = OBDal.getInstance()
           .createCriteria(ConversionRate.class);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_ORGANIZATION, org);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_CLIENT, client);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_CURRENCY, fromCurrency);
-      obcConvRate.addEqual(ConversionRate.PROPERTY_TOCURRENCY, toCurrency);
-      obcConvRate.addLessOrEqualThan(ConversionRate.PROPERTY_VALIDFROMDATE, dateWithoutTimestamp);
-      obcConvRate.addGreaterOrEqualThan(ConversionRate.PROPERTY_VALIDTODATE, dateWithoutTimestamp);
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_ORGANIZATION, org));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CLIENT, client));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_CURRENCY, fromCurrency));
+      obcConvRate.add(Restrictions.eq(ConversionRate.PROPERTY_TOCURRENCY, toCurrency));
+      obcConvRate.add(Restrictions.le(ConversionRate.PROPERTY_VALIDFROMDATE, dateWithoutTimestamp));
+      obcConvRate.add(Restrictions.ge(ConversionRate.PROPERTY_VALIDTODATE, dateWithoutTimestamp));
       obcConvRate.setFilterOnReadableClients(false);
       obcConvRate.setFilterOnReadableOrganization(false);
       conversionRate = (ConversionRate) obcConvRate.uniqueResult();

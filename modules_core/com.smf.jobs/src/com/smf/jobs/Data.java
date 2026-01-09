@@ -14,6 +14,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +64,7 @@ public class Data {
                 criteria = OBDal.getInstance().createCriteria(entity);
             }
 
-            criteria.addInIds(BaseOBObject.ID, records);
+            criteria.add(Restrictions.in(BaseOBObject.ID, records));
             contents.addAll(criteria.list());
         }
 

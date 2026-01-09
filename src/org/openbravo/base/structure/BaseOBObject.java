@@ -36,6 +36,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.OBInterceptor;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.system.Language;
 
 /**
@@ -149,8 +150,8 @@ public abstract class BaseOBObject
   private BaseOBObject getTranslation(Property trlParentProperty, Language language, String id) {
     OBCriteria<BaseOBObject> obCriteria = OBDal.getInstance()
         .createCriteria(trlParentProperty.getEntity().getName())
-        .addEqual(trlParentProperty.getName() + ".id", id)
-        .addEqual("language", language)
+        .add(Restrictions.eq(trlParentProperty.getName() + ".id", id))
+        .add(Restrictions.eq("language", language))
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setMaxResults(1);

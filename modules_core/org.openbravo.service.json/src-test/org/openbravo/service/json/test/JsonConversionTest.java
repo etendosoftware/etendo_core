@@ -57,6 +57,9 @@ import org.openbravo.service.json.DataToJsonConverter;
 import org.openbravo.service.json.JsonToDataConverter;
 import org.openbravo.test.base.OBBaseTest;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Test the {@link DataToJsonConverter} and the {@link JsonToDataConverter} classes by converting to
  * and from json.
@@ -205,6 +208,7 @@ public class JsonConversionTest extends OBBaseTest {
     assertTrue(checkDone);
   }
 
+  @Dependent
   private class LocalSessionFactoryController extends DalSessionFactoryController {
     @Override
     protected void setInterceptor(Configuration configuration) {
@@ -212,6 +216,7 @@ public class JsonConversionTest extends OBBaseTest {
     }
   }
 
+  @Dependent
   private class LocalInterceptor extends EmptyInterceptor {
 
     private static final long serialVersionUID = 1L;

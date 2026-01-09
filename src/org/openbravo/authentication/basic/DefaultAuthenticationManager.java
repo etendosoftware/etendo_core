@@ -16,15 +16,9 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationExpirationPasswordException;
 import org.openbravo.authentication.AuthenticationManager;
@@ -34,6 +28,7 @@ import org.openbravo.base.secureApp.VariablesHistory;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
@@ -41,11 +36,18 @@ import org.openbravo.model.ad.access.User;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.web.BaseWebServiceServlet;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 /**
  * 
  * @author adrianromero
  * @author iperdomo
  */
+@Dependent
 public class DefaultAuthenticationManager extends AuthenticationManager {
 
   private static final Logger log4j = LogManager.getLogger();
@@ -220,7 +222,7 @@ public class DefaultAuthenticationManager extends AuthenticationManager {
     final OBCriteria<User> obc = OBDal.getInstance().createCriteria(User.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.addEqual(User.PROPERTY_ID, userId);
+    obc.add(Restrictions.eq(User.PROPERTY_ID, userId));
     final User userOB = (User) obc.uniqueResult();
     Date lastUpdatePassword = userOB.getLastPasswordUpdate();
     Long validityDays = userOB.getClient().getDaysToPasswordExpiration();

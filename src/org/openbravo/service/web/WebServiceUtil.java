@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.sql.BatchUpdateException;
 import java.util.List;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
@@ -48,7 +49,7 @@ import org.openbravo.dal.xml.XMLUtil;
  * 
  * @author mtaal
  */
-
+@Dependent
 public class WebServiceUtil implements OBSingleton {
 
   private static WebServiceUtil instance = new WebServiceUtil();

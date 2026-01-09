@@ -53,6 +53,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -608,16 +609,16 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
                 OBCriteria<FIN_PaymentScheduleDetail> unpaidSchedDet = OBDal.getInstance()
                     .createCriteria(FIN_PaymentScheduleDetail.class);
                 if (psd.getInvoicePaymentSchedule() != null) {
-                  unpaidSchedDet.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-                          psd.getInvoicePaymentSchedule());
+                  unpaidSchedDet.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+                          psd.getInvoicePaymentSchedule()));
                 }
                 if (psd.getOrderPaymentSchedule() != null) {
                   unpaidSchedDet
-                      .addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
-                          psd.getOrderPaymentSchedule());
+                      .add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
+                          psd.getOrderPaymentSchedule()));
                 }
                 unpaidSchedDet
-                    .addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
+                    .add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
                 List<FIN_PaymentScheduleDetail> openPSDs = unpaidSchedDet.list();
                 // If invoice/order not fully paid, update outstanding amount
                 if (openPSDs.size() > 0) {
@@ -1264,7 +1265,7 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
   private static boolean hasTransaction(FIN_Payment payment) {
     OBCriteria<FIN_FinaccTransaction> transaction = OBDal.getInstance()
         .createCriteria(FIN_FinaccTransaction.class);
-    transaction.addEqual(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment);
+    transaction.add(Restrictions.eq(FIN_FinaccTransaction.PROPERTY_FINPAYMENT, payment));
     List<FIN_FinaccTransaction> list = transaction.list();
     if (list == null || list.size() == 0) {
       return false;
@@ -1286,7 +1287,7 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
       }
       final OBCriteria<FIN_Payment> reversepayment = OBDal.getInstance()
           .createCriteria(FIN_Payment.class);
-      reversepayment.addEqual(FIN_Payment.PROPERTY_REVERSEDPAYMENT, newPayment);
+      reversepayment.add(Restrictions.eq(FIN_Payment.PROPERTY_REVERSEDPAYMENT, newPayment));
       final FIN_Payment reversepaymnt = (FIN_Payment) reversepayment.uniqueResult();
 
       List<FIN_Payment> creditPayments;
@@ -1378,10 +1379,10 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
     try {
       OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
-      obc.addEqual(ConversionRateDoc.PROPERTY_CURRENCY, payment.getCurrency());
-      obc.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY,
-          payment.getAccount().getCurrency());
-      obc.addEqual(ConversionRateDoc.PROPERTY_PAYMENT, payment);
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, payment.getCurrency()));
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY,
+          payment.getAccount().getCurrency()));
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_PAYMENT, payment));
       return obc.list();
     } finally {
       OBContext.restorePreviousMode();
@@ -1393,10 +1394,10 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
     try {
       OBCriteria<ConversionRateDoc> obc = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
-      obc.addEqual(ConversionRateDoc.PROPERTY_CURRENCY, invoice.getCurrency());
-      obc.addEqual(ConversionRateDoc.PROPERTY_TOCURRENCY,
-          invoice.getBusinessPartner().getCurrency());
-      obc.addEqual(ConversionRateDoc.PROPERTY_INVOICE, invoice);
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_CURRENCY, invoice.getCurrency()));
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_TOCURRENCY,
+          invoice.getBusinessPartner().getCurrency()));
+      obc.add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE, invoice));
       return obc.list();
     } finally {
       OBContext.restorePreviousMode();
@@ -1445,8 +1446,8 @@ public class FIN_PaymentProcess implements org.openbravo.scheduling.Process {
       FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, strRecordId);
       OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
           .createCriteria(FinAccPaymentMethod.class);
-      obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, payment.getAccount());
-      obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, payment.getPaymentMethod());
+      obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, payment.getAccount()));
+      obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, payment.getPaymentMethod()));
       obCriteria.setFilterOnReadableClients(false);
       obCriteria.setFilterOnReadableOrganization(false);
       List<FinAccPaymentMethod> lines = obCriteria.list();

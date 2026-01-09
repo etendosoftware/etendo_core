@@ -27,6 +27,7 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.service.datasource.HQLDataSourceService;
@@ -57,8 +58,8 @@ public class ReturnFromCustomerVendorPropertyFieldsTransformer
         String tabId = requestParameters.get(JsonConstants.TAB_PARAMETER);
         Tab currentTab = OBDal.getInstance().getProxy(Tab.class, tabId);
         OBCriteria<Field> obCriteria = OBDal.getInstance().createCriteria(Field.class);
-        obCriteria.addEqual(Field.PROPERTY_TAB, currentTab);
-        obCriteria.addIsNotNull(Field.PROPERTY_PROPERTY);
+        obCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, currentTab));
+        obCriteria.add(Restrictions.isNotNull(Field.PROPERTY_PROPERTY));
         List<Field> propertyFieldList = obCriteria.list();
 
         for (Field field : propertyFieldList) {

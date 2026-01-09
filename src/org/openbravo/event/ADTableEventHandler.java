@@ -40,6 +40,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.datamodel.Table;
@@ -87,14 +88,9 @@ class ADTableEventHandler extends EntityPersistenceEventObserver {
     Object dataOriginType = event.getCurrentState(dataOriginTypeProperty);
     if (ApplicationConstants.TABLEBASEDTABLE.equals(dataOriginType) && javaClassName != null) {
       OBCriteria<Table> tableCriteria = OBDal.getInstance().createCriteria(Table.class);
-      tableCriteria.addEqual(Table.PROPERTY_JAVACLASSNAME, javaClassName);
-      tableCriteria.addEqual(Table.PROPERTY_DATAPACKAGE, packageName);
-      tableCriteria.add(/* TODO: Migrar manualmente - era Restrictions.not()
-                   * Opción 1: Negar la condición directamente si es simple
-                   * Opción 2: Usar lógica inversa en el código
-                   * Original: Restrictions.not(Restrictions.eq(Table.PROPERTY_ID, tableId))
-                   */
-                   null /* TEMPORAL - Debe implementarse */);
+      tableCriteria.add(Restrictions.eq(Table.PROPERTY_JAVACLASSNAME, javaClassName));
+      tableCriteria.add(Restrictions.eq(Table.PROPERTY_DATAPACKAGE, packageName));
+      tableCriteria.add(Restrictions.not(Restrictions.eq(Table.PROPERTY_ID, tableId)));
       if (tableCriteria.count() != 0) {
         throw new OBException(Utility.messageBD(conn, "DuplicateJavaClassName", language));
       }

@@ -47,6 +47,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.enterprise.Locator;
 import org.openbravo.model.common.enterprise.Organization;
@@ -103,11 +104,12 @@ public class ReferencedInventoryUtil {
           ? OBDal.getInstance().getProxy(AttributeSetInstance.class, "0")
           : _originalAttributeSetInstance;
 
-      final OBCriteria<AttributeSetInstance> criteria = OBDal.getInstance().createCriteria(AttributeSetInstance.class);
-      criteria.addAnd(
-          (cb, obc) -> cb.equal(obc.getPath(AttributeSetInstance.PROPERTY_PARENTATTRIBUTESETINSTANCE + ".id"), originalAttributeSetInstance.getId()),
-          (cb, obc) -> cb.equal(obc.getPath(AttributeSetInstance.PROPERTY_REFERENCEDINVENTORY + ".id"), referencedInventory.getId())
-      );
+      final OBCriteria<AttributeSetInstance> criteria = OBDao.getFilteredCriteria(
+          AttributeSetInstance.class,
+          Restrictions.eq(AttributeSetInstance.PROPERTY_PARENTATTRIBUTESETINSTANCE + ".id",
+              originalAttributeSetInstance.getId()),
+          Restrictions.eq(AttributeSetInstance.PROPERTY_REFERENCEDINVENTORY + ".id",
+              referencedInventory.getId()));
       criteria.setMaxResults(1);
       return criteria.list().get(0);
     } catch (final Exception notFound) {

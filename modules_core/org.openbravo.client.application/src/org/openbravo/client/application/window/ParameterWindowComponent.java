@@ -50,6 +50,7 @@ import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.client.kernel.Template;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.domain.Validation;
 import org.openbravo.model.ad.ui.Window;
 import org.openbravo.client.application.process.dto.TrlButtonDTO;
@@ -146,9 +147,9 @@ public class ParameterWindowComponent extends BaseTemplateComponent {
       if (p.isActive() && p.getReference().getId().equals(BUTTON_LIST_REFERENCE_ID)) {
         OBCriteria<org.openbravo.model.ad.domain.List> qList = OBDal.getInstance()
             .createCriteria(org.openbravo.model.ad.domain.List.class);
-        qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
-            p.getReferenceSearchKey());
-        qList.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_ACTIVE, true);
+        qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE,
+            p.getReferenceSearchKey()));
+        qList.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_ACTIVE, true));
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEQUENCENUMBER, true);
         qList.addOrderBy(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, true);
         List<org.openbravo.model.ad.domain.List> buttonList = qList.list();

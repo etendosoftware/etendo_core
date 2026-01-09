@@ -41,6 +41,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.OrganizationAcctSchema;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
@@ -74,7 +75,7 @@ class GeneralLedgerOrganizationHandler extends EntityPersistenceEventObserver {
             .createCriteria(OrganizationAcctSchema.class);
         orgSchema.setFilterOnReadableOrganization(false);
         orgSchema.setFilterOnActive(false);
-        orgSchema.addEqual(OrganizationAcctSchema.PROPERTY_ORGANIZATION, organization);
+        orgSchema.add(Restrictions.eq(OrganizationAcctSchema.PROPERTY_ORGANIZATION, organization));
         List<OrganizationAcctSchema> orgSchemalist = orgSchema.list();
         ArrayList<String> idlist = new ArrayList<>();
 

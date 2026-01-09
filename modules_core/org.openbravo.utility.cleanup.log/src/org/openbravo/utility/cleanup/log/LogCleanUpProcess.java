@@ -44,6 +44,7 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.scheduling.ProcessBundle;
@@ -90,7 +91,7 @@ public class LogCleanUpProcess extends DalBaseProcess {
 
       OBCriteria<LogCleanUpConfig> qConfig = OBDal.getInstance()
           .createCriteria(LogCleanUpConfig.class);
-      qConfig.addEqual(LogCleanUpConfig.PROPERTY_ACTIVE, true);
+      qConfig.add(Restrictions.eq(LogCleanUpConfig.PROPERTY_ACTIVE, true));
 
       long totalDeletedRows = 0L;
       Set<String> tablesWithDeletions = new LinkedHashSet<String>();

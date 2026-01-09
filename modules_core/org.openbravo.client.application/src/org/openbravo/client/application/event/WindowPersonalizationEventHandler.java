@@ -44,6 +44,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.domain.Preference;
@@ -120,10 +121,10 @@ class WindowPersonalizationEventHandler extends EntityPersistenceEventObserver {
         .createCriteria(Preference.class);
     // filter out the preferences that do not store the default view
     preferenceCriteria
-        .addEqual(Preference.PROPERTY_PROPERTY, "OBUIAPP_DefaultSavedView");
+        .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "OBUIAPP_DefaultSavedView"));
     // filter out the preferences whose default view is not the one being deleted
     preferenceCriteria
-        .addEqual(Preference.PROPERTY_SEARCHKEY, uiPersonalization.getId());
+        .add(Restrictions.eq(Preference.PROPERTY_SEARCHKEY, uiPersonalization.getId()));
     return preferenceCriteria.list();
   }
 }

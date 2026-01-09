@@ -28,6 +28,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.invoice.InvoiceLine;
 import org.openbravo.model.common.order.Order;
@@ -126,13 +127,13 @@ class UpdateInvoiceLineInformation extends CreateLinesFromProcessHook {
     }
 
     OBCriteria<InvoiceLine> obc = OBDal.getInstance().createCriteria(InvoiceLine.class);
-    obc.addEqual(InvoiceLine.PROPERTY_INVOICE, getInvoice());
+    obc.add(Restrictions.eq(InvoiceLine.PROPERTY_INVOICE, getInvoice()));
     if (isCopiedFromOrderLine()) {
-      obc.addEqual(InvoiceLine.PROPERTY_SALESORDERLINE,
-          ((OrderLine) getCopiedFromLine()).getBOMParent());
+      obc.add(Restrictions.eq(InvoiceLine.PROPERTY_SALESORDERLINE,
+          ((OrderLine) getCopiedFromLine()).getBOMParent()));
     } else {
-      obc.addEqual(InvoiceLine.PROPERTY_GOODSSHIPMENTLINE,
-          ((ShipmentInOutLine) getCopiedFromLine()).getBOMParent());
+      obc.add(Restrictions.eq(InvoiceLine.PROPERTY_GOODSSHIPMENTLINE,
+          ((ShipmentInOutLine) getCopiedFromLine()).getBOMParent()));
     }
     obc.setMaxResults(1);
     return (InvoiceLine) obc.uniqueResult();
@@ -174,7 +175,7 @@ class UpdateInvoiceLineInformation extends CreateLinesFromProcessHook {
     try {
       final OBCriteria<FIN_PaymentSchedule> obc = OBDal.getInstance()
           .createCriteria(FIN_PaymentSchedule.class);
-      obc.addEqual(FIN_PaymentSchedule.PROPERTY_ORDER + ".id", getRelatedOrder().getId());
+      obc.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_ORDER + ".id", getRelatedOrder().getId()));
       obc.setMaxResults(1);
       return obc.list().get(0).getPaidAmount();
     } catch (Exception noOrderFoundOrNoPaymentScheduleFound) {

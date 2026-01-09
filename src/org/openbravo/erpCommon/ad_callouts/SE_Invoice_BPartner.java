@@ -30,6 +30,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.businessUtility.BpDocTypeUtils;
 import org.openbravo.erpCommon.businessUtility.BpartnerMiscData;
@@ -255,12 +256,12 @@ public class SE_Invoice_BPartner extends SimpleCallout {
           OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
               .createCriteria(FinAccPaymentMethod.class);
           obc.setFilterOnReadableOrganization(false);
-          obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
-          obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, selectedPaymentMethod);
-          obc.addInIds(FinAccPaymentMethod.PROPERTY_ORGANIZATION + ".id",
+          obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
+          obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, selectedPaymentMethod));
+          obc.add(Restrictions.in(FinAccPaymentMethod.PROPERTY_ORGANIZATION + ".id",
               OBContext.getOBContext()
                   .getOrganizationStructureProvider()
-                  .getNaturalTree(strOrgId));
+                  .getNaturalTree(strOrgId)));
 
           // filter is on unique constraint so list() size <=1 always
           if (obc.uniqueResult() == null) {

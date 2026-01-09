@@ -36,6 +36,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.UtilSql;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.obps.ActivationKey;
@@ -317,8 +318,8 @@ public class AlertProcess implements Process {
           // Getting the SMTP server parameters
           OBCriteria<EmailServerConfiguration> mailConfigCriteria = OBDal.getInstance()
               .createCriteria(EmailServerConfiguration.class);
-          mailConfigCriteria.addEqual(EmailServerConfiguration.PROPERTY_CLIENT,
-              OBDal.getInstance().get(Client.class, adClientId));
+          mailConfigCriteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
+              OBDal.getInstance().get(Client.class, adClientId)));
           mailConfigCriteria.setFilterOnReadableClients(false);
           mailConfigCriteria.setFilterOnReadableOrganization(false);
           final List<EmailServerConfiguration> mailConfigList = mailConfigCriteria.list();
@@ -350,8 +351,8 @@ public class AlertProcess implements Process {
 
             OBCriteria<AlertRecipient> alertRecipientsCriteria = OBDal.getInstance()
                 .createCriteria(AlertRecipient.class);
-            alertRecipientsCriteria.addEqual(AlertRecipient.PROPERTY_ALERTRULE,
-                OBDal.getInstance().get(AlertRule.class, alertRule.adAlertruleId));
+            alertRecipientsCriteria.add(Restrictions.eq(AlertRecipient.PROPERTY_ALERTRULE,
+                OBDal.getInstance().get(AlertRule.class, alertRule.adAlertruleId)));
             alertRecipientsCriteria.setFilterOnReadableClients(false);
             alertRecipientsCriteria.setFilterOnReadableOrganization(false);
 
@@ -374,9 +375,9 @@ public class AlertProcess implements Process {
               } else {
                 OBCriteria<UserRoles> userRolesCriteria = OBDal.getInstance()
                     .createCriteria(UserRoles.class);
-                userRolesCriteria.addEqual(AlertRecipient.PROPERTY_ROLE, currentAlertRecipient.getRole());
-                userRolesCriteria.addEqual(AlertRecipient.PROPERTY_CLIENT,
-                    currentAlertRecipient.getClient());
+                userRolesCriteria.add(Restrictions.eq(AlertRecipient.PROPERTY_ROLE, currentAlertRecipient.getRole()));
+                userRolesCriteria.add(Restrictions.eq(AlertRecipient.PROPERTY_CLIENT,
+                    currentAlertRecipient.getClient()));
                 userRolesCriteria.setFilterOnReadableClients(false);
                 userRolesCriteria.setFilterOnReadableOrganization(false);
 
@@ -495,8 +496,8 @@ public class AlertProcess implements Process {
     String purpose = OBDal.getInstance().get(SystemInformation.class, "0").getInstancePurpose();
     final Reference reference = OBDal.getInstance().get(Reference.class, PURPOSE_REFERENCE_ID);
     OBCriteria<org.openbravo.model.ad.domain.List> referenceCriteria = OBDal.getInstance().createCriteria(org.openbravo.model.ad.domain.List.class);
-    referenceCriteria.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, reference);
-    referenceCriteria.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, purpose);
+    referenceCriteria.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, reference));
+    referenceCriteria.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, purpose));
     referenceCriteria.setMaxResults(1);
 
     org.openbravo.model.ad.domain.List purposeValue = (org.openbravo.model.ad.domain.List) referenceCriteria.uniqueResult();

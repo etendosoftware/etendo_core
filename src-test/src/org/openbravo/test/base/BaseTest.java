@@ -39,6 +39,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.ConnectionProviderImpl;
 import org.openbravo.exception.PoolNotFoundException;
@@ -277,8 +278,8 @@ public class BaseTest extends TestCase {
 
       var excludedUserIds = List.of(new String[] { "100", TEST_USER_ID });
       OBCriteria<User> obc = OBDal.getInstance().createCriteria(User.class);
-      obc.addNotIn(User.PROPERTY_ID, excludedUserIds);
-      obc.addIsNotEmpty(User.PROPERTY_ADUSERROLESLIST);
+      obc.add(Restrictions.not(Restrictions.in(User.PROPERTY_ID, excludedUserIds)));
+      obc.add(Restrictions.isNotEmpty(User.PROPERTY_ADUSERROLESLIST));
 
       if (obc.count() == 0) {
         throw new RuntimeException("Unable to initialize the list of available users");

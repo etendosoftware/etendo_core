@@ -35,6 +35,7 @@ import org.apache.logging.log4j.Logger;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
 import org.openbravo.model.ad.system.Client;
@@ -74,12 +75,7 @@ public class AcctServerProcess extends DalBaseProcess {
     VariablesSecureApp vars = bundle.getContext().toVars();
     if (vars.getClient().equals(SYSTEM_CLIENT_ID)) {
       OBCriteria<Client> obc = OBDal.getInstance().createCriteria(Client.class);
-      obc.add(/* TODO: Migrar manualmente - era Restrictions.not()
-                   * Opción 1: Negar la condición directamente si es simple
-                   * Opción 2: Usar lógica inversa en el código
-                   * Original: Restrictions.not(Restrictions.eq(Client.PROPERTY_ID, SYSTEM_CLIENT_ID))
-                   */
-                   null /* TEMPORAL - Debe implementarse */);
+      obc.add(Restrictions.not(Restrictions.eq(Client.PROPERTY_ID, SYSTEM_CLIENT_ID)));
       for (Client c : obc.list()) {
         final VariablesSecureApp vars1 = new VariablesSecureApp(bundle.getContext().getUser(),
             c.getId(), bundle.getContext().getOrganization());

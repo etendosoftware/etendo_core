@@ -43,6 +43,7 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.financial.FinancialUtils;
 import org.openbravo.model.financialmgmt.calendar.Period;
@@ -259,8 +260,8 @@ public class CostAdjustmentProcess {
         .createCriteria(CostAdjustmentLine.class);
     critLines.createAlias(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, "trx");
     critLines.createAlias(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, "ca");
-    critLines.addEqual("ca.id", strCostAdjustmentId);
-    critLines.addEqual(CostAdjustmentLine.PROPERTY_ISRELATEDTRANSACTIONADJUSTED, false);
+    critLines.add(Restrictions.eq("ca.id", strCostAdjustmentId));
+    critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISRELATEDTRANSACTIONADJUSTED, false));
     critLines.addOrderBy("trx." + MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE, true);
     critLines.addOrderBy("ca." + CostAdjustment.PROPERTY_DOCUMENTNO, true);
     critLines.addOrderBy(CostAdjustmentLine.PROPERTY_LINENO, true);
@@ -276,9 +277,9 @@ public class CostAdjustmentProcess {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
     Date referenceDate = costAdjustmentLine.getCostAdjustment().getReferenceDate();
-    // TODO: HIBERNATE 6 - Needs manual conversion of OR logic
-    critLines.addEqual(CostAdjustmentLine.PROPERTY_PARENTCOSTADJUSTMENTLINE, costAdjustmentLine);
-    // critLines.addOr(...); // Requires Predicate objects
+    critLines.add(Restrictions.or(
+        Restrictions.eq(CostAdjustmentLine.PROPERTY_PARENTCOSTADJUSTMENTLINE, costAdjustmentLine),
+        Restrictions.eq("id", costAdjustmentLine.getId())));
     ScrollableResults lines = critLines.scroll(ScrollMode.FORWARD_ONLY);
 
     try {

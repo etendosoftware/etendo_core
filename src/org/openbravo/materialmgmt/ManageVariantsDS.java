@@ -47,6 +47,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.common.plm.Characteristic;
@@ -99,8 +100,8 @@ public class ManageVariantsDS extends ReadOnlyDataSourceService {
 
       OBCriteria<ProductCharacteristic> prChCrit = OBDal.getInstance()
           .createCriteria(ProductCharacteristic.class);
-      prChCrit.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, product);
-      prChCrit.addEqual(ProductCharacteristic.PROPERTY_VARIANT, true);
+      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, product));
+      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_VARIANT, true));
       prChCrit.addOrderBy(ProductCharacteristic.PROPERTY_SEQUENCENUMBER, true);
       List<ProductCharacteristic> prChs = prChCrit.list();
       int chNumber = prChs.size();
@@ -115,7 +116,7 @@ public class ManageVariantsDS extends ReadOnlyDataSourceService {
         OBCriteria<ProductCharacteristicConf> prChConfCrit = OBDal.getInstance()
             .createCriteria(ProductCharacteristicConf.class);
         prChConfCrit
-            .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh);
+            .add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh));
         List<ProductCharacteristicConf> prChConfs = prChConfCrit.list();
         long valuesCount = prChConfs.size();
 

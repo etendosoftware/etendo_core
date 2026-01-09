@@ -24,6 +24,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restriction;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -92,7 +93,7 @@ public class BPartnerDocTypeEventHandlerTest {
       OBCriteria<BusinessPartnerDocType> criteria = mock(OBCriteria.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.createCriteria(BusinessPartnerDocType.class)).thenReturn(criteria);
-      lenient().when(criteria.add(any(Predicate.class))).thenReturn(criteria);
+      lenient().when(criteria.add(any(Restriction.class))).thenReturn(criteria);
       when(criteria.uniqueResult()).thenReturn(null);
       when(newEvent.getTargetInstance()).thenReturn(bpDocType);
       assertDoesNotThrow(() -> handler.onSave(newEvent));
@@ -123,7 +124,7 @@ public class BPartnerDocTypeEventHandlerTest {
       OBCriteria<BusinessPartnerDocType> criteria = mock(OBCriteria.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.createCriteria(BusinessPartnerDocType.class)).thenReturn(criteria);
-      when(criteria.add(any(Predicate.class))).thenReturn(criteria);
+      when(criteria.add(any(Restriction.class))).thenReturn(criteria);
       when(criteria.uniqueResult()).thenReturn(mock(BusinessPartnerDocType.class));
       messageUtilsMock.when(() -> OBMessageUtils.messageBD(anyString()))
         .thenReturn("BPDocTypeUnique");
@@ -155,7 +156,7 @@ public class BPartnerDocTypeEventHandlerTest {
       OBCriteria<BusinessPartnerDocType> criteria = mock(OBCriteria.class);
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.createCriteria(BusinessPartnerDocType.class)).thenReturn(criteria);
-      when(criteria.add(any(Predicate.class))).thenReturn(criteria);
+      when(criteria.add(any(Restriction.class))).thenReturn(criteria);
       when(criteria.uniqueResult()).thenReturn(null);
       when(updateEvent.getTargetInstance()).thenReturn(bpDocType);
       assertDoesNotThrow(() -> handler.onUpdate(updateEvent));

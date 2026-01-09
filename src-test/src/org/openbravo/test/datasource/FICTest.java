@@ -36,6 +36,7 @@ import org.junit.Test;
 import org.openbravo.client.kernel.reference.DateUIDefinition;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.test.base.Issue;
 
@@ -76,7 +77,7 @@ public class FICTest extends BaseDataSourceTestDal {
   @Issue("28541")
   public void dateTimeShouldntChange() throws Exception {
     OBCriteria<CostingRule> qRule = OBDal.getInstance().createCriteria(CostingRule.class);
-    qRule.addIsNotNull(CostingRule.PROPERTY_STARTINGDATE);
+    qRule.add(Restrictions.isNotNull(CostingRule.PROPERTY_STARTINGDATE));
     qRule.setMaxResults(1);
     assertThat(qRule.list(), not(empty()));
 

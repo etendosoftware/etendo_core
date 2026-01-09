@@ -26,6 +26,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.enterprise.Organization;
@@ -134,9 +135,9 @@ public class PaymentExecutionUtils {
       FIN_PaymentMethod paymentMethod) {
     final OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
-    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, account);
-    obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
-    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACTIVE, true);
+    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, account));
+    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACTIVE, true));
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     try {

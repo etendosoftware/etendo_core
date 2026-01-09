@@ -69,6 +69,7 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.XMLEntityConverter;
 import org.openbravo.dal.xml.XMLUtil;
 import org.openbravo.data.UtilSql;
@@ -304,7 +305,7 @@ public class IssuesTest extends OBBaseTest {
     setSystemAdministratorContext();
 
     OBCriteria<Module> obc = OBDal.getInstance().createCriteria(Module.class);
-    obc.addEqual(Module.PROPERTY_INDEVELOPMENT, false);
+    obc.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, false));
 
     if (obc.list().size() == 0) {
       // Can't test DAL's connection provider

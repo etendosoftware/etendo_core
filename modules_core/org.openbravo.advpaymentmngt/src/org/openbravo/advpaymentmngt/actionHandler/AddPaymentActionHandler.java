@@ -65,6 +65,7 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
@@ -852,8 +853,8 @@ public class AddPaymentActionHandler extends Action {
     try {
       OBCriteria<FinAccPaymentMethod> obCriteria = OBDal.getInstance()
           .createCriteria(FinAccPaymentMethod.class);
-      obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, finAccount);
-      obCriteria.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, finPaymentMethod);
+      obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, finAccount));
+      obCriteria.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, finPaymentMethod));
       obCriteria.setFilterOnReadableClients(false);
       obCriteria.setFilterOnReadableOrganization(false);
       obCriteria.setMaxResults(1);

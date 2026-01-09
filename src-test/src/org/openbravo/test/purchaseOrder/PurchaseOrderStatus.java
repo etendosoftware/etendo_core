@@ -21,6 +21,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.TriggerHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.financial.ResetAccounting;
 import org.openbravo.model.common.invoice.Invoice;
@@ -307,7 +308,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
       TriggerHandler.getInstance().disable();
 
       OBCriteria<ShipmentInOutLine> criteria = OBDal.getInstance().createCriteria(ShipmentInOutLine.class);
-      criteria.addEqual(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipmentInOut);
+      criteria.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipmentInOut));
       List<ShipmentInOutLine> lines = criteria.list();
 
       for (ShipmentInOutLine line : lines) {
@@ -356,7 +357,7 @@ public class PurchaseOrderStatus extends WeldBaseTest {
    */
   private static MaterialTransaction getTransactionByLine(ShipmentInOutLine line) {
     OBCriteria<MaterialTransaction> cTransaction = OBDal.getInstance().createCriteria(MaterialTransaction.class);
-    cTransaction.addEqual(MaterialTransaction.PROPERTY_GOODSSHIPMENTLINE, line);
+    cTransaction.add(Restrictions.eq(MaterialTransaction.PROPERTY_GOODSSHIPMENTLINE, line));
     cTransaction.setMaxResults(1);
     return (MaterialTransaction) cTransaction.uniqueResult();
   }

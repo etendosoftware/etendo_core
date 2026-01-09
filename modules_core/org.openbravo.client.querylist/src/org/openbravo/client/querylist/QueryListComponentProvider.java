@@ -28,13 +28,13 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.dal.core.OBContext;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * 
  * @author gorkaion
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(QueryListComponentProvider.COMPONENT_TYPE)
 public class QueryListComponentProvider extends BaseComponentProvider {
   public static final String COMPONENT_TYPE = "OBCQL_QueryList";

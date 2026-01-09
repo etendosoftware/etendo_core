@@ -20,6 +20,8 @@ package org.openbravo.client.kernel.event;
 
 import org.openbravo.base.model.Property;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * The event object send out when an entity gets updated.
  * 
@@ -32,6 +34,7 @@ import org.openbravo.base.model.Property;
  * 
  * @author mtaal
  */
+@Dependent
 public class EntityUpdateEvent extends EntityPersistenceEvent {
   private Object[] previousState;
 

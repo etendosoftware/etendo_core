@@ -22,6 +22,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBCriteria;
+import org.openbravo.dal.service.Restriction;
 import org.openbravo.erpCommon.utility.DateTimeData;
 import org.openbravo.model.materialmgmt.transaction.MaterialTransaction;
 
@@ -58,7 +59,7 @@ public class ReportValuationStockHasTrxWithNoCostTest {
       MaterialTransaction expectedResult
   ) throws Exception {
     when(mockOBDal.createCriteria(MaterialTransaction.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Predicate.class))).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Restriction.class))).thenReturn(mockCriteria);
 
     when(mockCriteria.createAlias(anyString(), anyString())).thenReturn(mockCriteria);
     when(mockCriteria.setMaxResults(1)).thenReturn(mockCriteria);
@@ -114,7 +115,7 @@ public class ReportValuationStockHasTrxWithNoCostTest {
 
     try (
         MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-        MockedStatic<Predicate> restrictionsMock = mockStatic(Predicate.class);
+        MockedStatic<Restriction> restrictionsMock = mockStatic(Restriction.class);
         MockedStatic<DateTimeData> dateTimeDataMock = mockStatic(DateTimeData.class)
     ) {
       obDalMock.when(OBDal::getReadOnlyInstance).thenReturn(mockOBDal);

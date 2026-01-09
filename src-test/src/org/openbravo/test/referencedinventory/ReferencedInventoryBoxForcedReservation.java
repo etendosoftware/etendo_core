@@ -36,6 +36,7 @@ import org.openbravo.client.myob.WidgetURL;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
 import org.openbravo.model.materialmgmt.onhandquantity.Reservation;
 import org.openbravo.model.materialmgmt.onhandquantity.StorageDetail;
@@ -116,14 +117,14 @@ public class ReferencedInventoryBoxForcedReservation extends ReferencedInventory
 
   private void assertsReservation(final ReferencedInventory refInv, boolean isForceBin,
       boolean isForceAttribute) {
-    Map<String, Object> filters = new HashMap<>();
-    filters.put(StorageDetail.PROPERTY_PRODUCT, refInv.getMaterialMgmtStorageDetailList().get(0).getProduct());
-    final OBCriteria<Reservation> crit = OBDao.getFilteredCriteria(Reservation.class, filters);
+    final OBCriteria<Reservation> crit = OBDao.getFilteredCriteria(Reservation.class,
+        Restrictions.eq(StorageDetail.PROPERTY_PRODUCT,
+            refInv.getMaterialMgmtStorageDetailList().get(0).getProduct()));
     if (isForceBin) {
-      crit.addEqual(Reservation.PROPERTY_STORAGEBIN + ".id", BINS[0]);
+      crit.add(Restrictions.eq(Reservation.PROPERTY_STORAGEBIN + ".id", BINS[0]));
     }
     if (isForceAttribute) {
-      crit.addIsNotNull(Reservation.PROPERTY_ATTRIBUTESETVALUE);
+      crit.add(Restrictions.isNotNull(Reservation.PROPERTY_ATTRIBUTESETVALUE));
     }
     crit.addOrderBy(Reservation.PROPERTY_RESSTATUS, true);
     final List<Reservation> reservations = crit.list();

@@ -37,6 +37,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.financial.ResetAccounting;
@@ -83,9 +84,9 @@ public class Posted extends HttpSecureAppServlet {
         final Table table = OBDal.getInstance().get(Table.class, strTableId);
         final OBCriteria<AccountingFact> fact = OBDal.getInstance()
             .createCriteria(AccountingFact.class);
-        fact.addEqual(AccountingFact.PROPERTY_RECORDID, strKey);
-        fact.addEqual(AccountingFact.PROPERTY_TABLE, table);
-        fact.addEqual(AccountingFact.PROPERTY_MODIFY, true);
+        fact.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, strKey));
+        fact.add(Restrictions.eq(AccountingFact.PROPERTY_TABLE, table));
+        fact.add(Restrictions.eq(AccountingFact.PROPERTY_MODIFY, true));
         if (fact.count() > 0) {
           strModify = "Y";
         }

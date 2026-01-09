@@ -70,6 +70,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.service.datasource.DataSourceUtils;
 import org.openbravo.service.datasource.ReadOnlyDataSourceService;
 import org.openbravo.service.json.AdvancedQueryBuilder;
@@ -517,12 +518,9 @@ public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
 
     // If sortByClause is empty set default sort options.
     if (sortByClause.length() == 0) {
-      Map<String, Object> filters = new HashMap<>();
-      filters.put(SelectorField.PROPERTY_OBUISELSELECTOR, sel);
-      filters.put(SelectorField.PROPERTY_SHOWINGRID, true);
-
-      OBCriteria<SelectorField> selFieldsCrit = OBDao.getFilteredCriteria(
-          SelectorField.class, filters);
+      OBCriteria<SelectorField> selFieldsCrit = OBDao.getFilteredCriteria(SelectorField.class,
+          Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, sel),
+          Restrictions.eq(SelectorField.PROPERTY_SHOWINGRID, true));
       selFieldsCrit.addOrderBy(SelectorField.PROPERTY_SORTNO, true);
       for (SelectorField selField : selFieldsCrit.list()) {
         int fieldSortIndex = getFieldSortIndex(selField.getDisplayColumnAlias(), sel);

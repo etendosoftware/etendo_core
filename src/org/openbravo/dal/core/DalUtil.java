@@ -38,13 +38,15 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.base.util.ArgumentException;
 import org.openbravo.base.util.Check;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Utility class used by the dal layer. It contains several copy methods and methods to retrieve the
  * EntityName and id of an object without forcing a load by Hibernate.
  * 
  * @author mtaal
  */
-
+@Dependent
 public class DalUtil {
 
   private static final String IDENTIFIER_PART_PATH = "_identifier";

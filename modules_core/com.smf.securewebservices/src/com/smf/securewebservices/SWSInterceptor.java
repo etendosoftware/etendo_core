@@ -1,14 +1,15 @@
 package com.smf.securewebservices;
 
+import java.util.Iterator;
+
 import org.openbravo.client.kernel.event.PersistenceEventOBInterceptor;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Specializes;
 import jakarta.inject.Inject;
-import java.util.Iterator;
 
-@ApplicationScoped
+@Dependent
 @Specializes
 public class SWSInterceptor extends PersistenceEventOBInterceptor {
 

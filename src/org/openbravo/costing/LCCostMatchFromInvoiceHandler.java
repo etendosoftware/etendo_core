@@ -35,6 +35,7 @@ import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.financial.FinancialUtils;
 import org.openbravo.model.common.currency.ConversionRate;
@@ -154,7 +155,7 @@ public class LCCostMatchFromInvoiceHandler extends BaseProcessActionHandler {
       final OBCriteria<ConversionRateDoc> conversionRateDoc = OBDal.getInstance()
           .createCriteria(ConversionRateDoc.class);
       conversionRateDoc
-          .addEqual(ConversionRateDoc.PROPERTY_INVOICE, localIl.getInvoice());
+          .add(Restrictions.eq(ConversionRateDoc.PROPERTY_INVOICE, localIl.getInvoice()));
       ConversionRateDoc invoiceconversionrate = (ConversionRateDoc) conversionRateDoc
           .uniqueResult();
 

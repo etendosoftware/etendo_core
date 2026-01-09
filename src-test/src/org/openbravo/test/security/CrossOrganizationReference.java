@@ -28,6 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.openbravo.base.model.ModelProvider;
@@ -67,6 +71,7 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
   protected static final String USA_ORDER = "6394CC7B913240CCB6A54FB9C22477AF";
   protected static final String USA_BP = "4028E6C72959682B01295F40D4D20333";
 
+  private static final Logger log = LogManager.getLogger();
   private static final String CREDIT_ORDER_DOC_TYPE = "FF8080812C2ABFC6012C2B3BDF4C0056";
   private static final String CUST_A = "4028E6C72959682B01295F40C3CB02EC";
   private static final String CUST_A_LOCATION = "4028E6C72959682B01295F40C43802EE";
@@ -77,6 +82,7 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
   private static final String TAX = "3271411A5AFB490A91FB618B6B789C24";
 
   protected static List<BaseOBObject> createdObjects = new ArrayList<BaseOBObject>();
+  private static boolean dalInitialized = false;
 
   /** Creates a default order */
   protected Order createOrder(String orgId) {
@@ -95,6 +101,7 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
 
   /** Creates a default order being possible to overwrite any value */
   protected Order createOrder(String orgId, Map<String, Object> propertyValues) {
+    setQAAdminContext();
     Order order = OBProvider.getInstance().get(Order.class);
     order.setOrganization(OBDal.getInstance().getProxy(Organization.class, orgId));
     order.setDocumentType(OBDal.getInstance().getProxy(DocumentType.class, CREDIT_ORDER_DOC_TYPE));
@@ -158,12 +165,13 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
     }
   }
 
-  @BeforeEach
-  public void setRole() {
+  @BeforeClass
+  public static void setRole() {
+    ensureDalInitialized();
     setQAAdminContext();
   }
 
-  @AfterAll
+  @AfterClass
   public static void removeCreatedObjects() {
     OBContext.setOBContext("0");
     OBContext.setAdminMode(false);
@@ -200,4 +208,22 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
       p.setAllowedCrossOrgReference(allowCrossOrgColumns);
     }
   }
+
+  /**
+   * Ensures DAL is initialized before running tests
+   */
+  private static synchronized void ensureDalInitialized() {
+    if (!dalInitialized) {
+      try {
+        log.info("Initializing DAL layer for test...");
+        staticInitializeDalLayer();
+        dalInitialized = true;
+        log.info("DAL layer initialized successfully");
+      } catch (Exception e) {
+        log.error("Failed to initialize DAL layer", e);
+        throw new RuntimeException("Cannot initialize DAL layer", e);
+      }
+    }
+  }
+
 }

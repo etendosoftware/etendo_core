@@ -36,7 +36,7 @@ import org.openbravo.model.ad.ui.Window;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.portal.PortalAccessible;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Is responsible for storing a preference.
@@ -44,7 +44,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class StorePropertyActionHandler extends BaseActionHandler implements PortalAccessible {
   private static final Logger log = LogManager.getLogger();
 

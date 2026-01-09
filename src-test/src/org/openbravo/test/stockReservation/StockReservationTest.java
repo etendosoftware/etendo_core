@@ -19,6 +19,7 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.materialmgmt.InventoryCountProcess;
 import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.model.common.order.Order;
@@ -185,7 +186,9 @@ public class StockReservationTest extends WeldBaseTest {
    */
   @AfterEach
   public void cleanUp() {
-    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).addEqual(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY).addEqual(Preference.PROPERTY_SELECTED, true).uniqueResult();
+    Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class).add(
+        Restrictions.eq(Preference.PROPERTY_PROPERTY, StockReservationTestUtils.PREFERENCE_PROPERTY))
+        .add(Restrictions.eq(Preference.PROPERTY_SELECTED, true)).uniqueResult();
     OBDal.getInstance().remove(pref);
     OBDal.getInstance().flush();
     OBDal.getInstance().commitAndClose();

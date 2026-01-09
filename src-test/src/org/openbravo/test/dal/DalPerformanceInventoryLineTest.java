@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.materialmgmt.transaction.InventoryCount;
 import org.openbravo.model.materialmgmt.transaction.InventoryCountLine;
 import org.openbravo.test.base.OBBaseTest;
@@ -119,7 +120,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
 
     final OBCriteria<InventoryCount> icObc = OBDal.getInstance()
         .createCriteria(InventoryCount.class);
-    icObc.addLike("name", NAME_PREFIX + "%");
+    icObc.add(Restrictions.like("name", NAME_PREFIX + "%"));
     int cnt = 0;
     int cntLine = 0;
     for (final InventoryCount ic : icObc.list()) {
@@ -152,7 +153,7 @@ public class DalPerformanceInventoryLineTest extends OBBaseTest {
     addReadWriteAccess(InventoryCountLine.class);
     final OBCriteria<InventoryCount> icObc = OBDal.getInstance()
         .createCriteria(InventoryCount.class);
-    icObc.addLike("name", NAME_PREFIX + "%");
+    icObc.add(Restrictions.like("name", NAME_PREFIX + "%"));
     for (InventoryCount ic : icObc.list()) {
       OBDal.getInstance().remove(ic);
     }

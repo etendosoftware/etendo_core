@@ -38,6 +38,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.EntityAccessChecker;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.currency.CurrencyTrl;
@@ -68,7 +69,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
   public void testACreateCurrency() {
     setTestAdminContext();
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.addEqual(Currency.PROPERTY_ISOCODE, "TE2");
+    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, "TE2"));
     final List<Currency> cs = obc.list();
     if (cs.size() == 0) {
       final Currency c = OBProvider.getInstance().get(Currency.class);
@@ -95,7 +96,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
     setTestUserContext();
     addReadWriteAccess(Currency.class);
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.addEqual(Currency.PROPERTY_ISOCODE, "TE2");
+    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, "TE2"));
     final List<Currency> cs = obc.list();
     assertEquals(1, cs.size());
     final Currency c = cs.get(0);
@@ -211,7 +212,7 @@ public class EntityAccessTest extends CrossOrganizationReference {
     addReadWriteAccess(Currency.class);
     addReadWriteAccess(CurrencyTrl.class);
     final OBCriteria<Currency> obc = OBDal.getInstance().createCriteria(Currency.class);
-    obc.addEqual(Currency.PROPERTY_ISOCODE, "TE2");
+    obc.add(Restrictions.eq(Currency.PROPERTY_ISOCODE, "TE2"));
     final List<Currency> cs = obc.list();
     assertEquals(1, cs.size());
     OBDal.getInstance().remove(cs.get(0));
