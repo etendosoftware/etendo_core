@@ -551,6 +551,7 @@ OB.APRM.AddPayment.distributeAmount = function(
     orderInvoiceData = orderInvoice.data.localData,
     total = orderInvoice.data.totalRows,
     autoDistributeAmt = OB.PropertyStore.get('APRM_AutoDistributeAmt'),
+    hasPartialData = false,
     writeoff,
     amt,
     outstandingAmount,
@@ -560,7 +561,7 @@ OB.APRM.AddPayment.distributeAmount = function(
     message;
 
   if (autoDistributeAmt !== 'N' && autoDistributeAmt !== '"N"') {
-    const hasPartialData = orderInvoice.data.cachedRows < orderInvoice.data.totalRows;
+    hasPartialData = orderInvoice.data.cachedRows < orderInvoice.data.totalRows;
     if (hasPartialData) {
       showMessageProperty = OB.PropertyStore.get('APRM_ShowNoDistributeMsg');
       showMessage =
