@@ -588,6 +588,7 @@ export.database: exports database structure and data to xml files.
     <echo>Smartbuild step build.deploy</echo>
     <antcall target="build.deploy" />
     <updatesystemstatuswhennot v="RB51" previous="RB12"/>
+    <antcall target="touch.reload" />
 
   </target>
 
@@ -628,6 +629,7 @@ export.database: exports database structure and data to xml files.
     <ant dir="${base.db}" target="setApplied" inheritAll="true" inheritRefs="true" />
     <antcall target="build.deploy" />
     <updatesystemstatuswhennot v="RB51" previous="RB12"/>
+    <antcall target="touch.reload" />
   </target>
 
   <target name="update.database.if.no.local" if="no.local">
@@ -1287,6 +1289,13 @@ export.database: exports database structure and data to xml files.
   </target>
   <target name="wad" depends="init">
     <ant dir="${base.src}" target="wad" inheritAll="true" inheritRefs="true" />
+  </target>
+
+  <!-- Touch .reload file to trigger Tomcat context reload -->
+  <!-- This prevents premature reloading while files are being copied -->
+  <target name="touch.reload">
+    <touch file="${base.context}/WEB-INF/.reload" mkdirs="true"/>
+    <echo message="✓ Touched .reload file to trigger context reload"/>
   </target>
 
 </project>
