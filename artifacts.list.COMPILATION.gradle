@@ -1,6 +1,6 @@
 List<String> _dependenciesListCOMPILATION = [
   'com.auth0:java-jwt:4.4.0',
-  'com.etendoerp:YUIAnt:1.0.0', 
+  'com.etendoerp:yuiant:1.0', 
   'com.etendoerp:ant-nodeps:1.0.0', 
   'com.etendoerp:antlr:2.7.7', 
   'com.etendoerp:catalina-ant:1.0.0', 
