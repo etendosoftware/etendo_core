@@ -39,6 +39,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.VariantChDescUpdateProcess;
 import org.openbravo.model.common.plm.Characteristic;
@@ -86,8 +87,8 @@ public class UpdateInvariantCharacteristicsHandler extends BaseActionHandler {
         // Retrieves all the product invariant characteristics
         OBCriteria<ProductCharacteristic> criteria = OBDal.getInstance()
             .createCriteria(ProductCharacteristic.class);
-        criteria.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, product);
-        criteria.addEqual(ProductCharacteristic.PROPERTY_VARIANT, false);
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, product));
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_VARIANT, false));
 
         JSONArray productCharArray = new JSONArray();
 
@@ -98,10 +99,10 @@ public class UpdateInvariantCharacteristicsHandler extends BaseActionHandler {
           OBCriteria<ProductCharacteristicValue> criteriaSelectedValue = OBDal.getInstance()
               .createCriteria(ProductCharacteristicValue.class);
           criteriaSelectedValue
-              .addEqual(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
-                  characteristic.getCharacteristic());
-          criteriaSelectedValue.addEqual(ProductCharacteristicValue.PROPERTY_PRODUCT,
-              characteristic.getProduct());
+              .add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
+                  characteristic.getCharacteristic()));
+          criteriaSelectedValue.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_PRODUCT,
+              characteristic.getProduct()));
           ProductCharacteristicValue selectedValue = (ProductCharacteristicValue) criteriaSelectedValue
               .uniqueResult();
           productChar.put("id", characteristic.getCharacteristic().getId());

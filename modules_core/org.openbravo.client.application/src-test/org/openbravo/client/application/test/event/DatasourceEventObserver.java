@@ -40,6 +40,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.service.datasource.DataSourceService;
@@ -204,7 +205,7 @@ public class DatasourceEventObserver extends ObserverBaseTest {
 
     BaseOBObject refreshedBob = (BaseOBObject) OBDal.getInstance()
         .createCriteria(obj.getEntityName())
-        .addEqual(BaseOBObject.ID, obj.getId())
+        .add(Restrictions.eq(BaseOBObject.ID, obj.getId()))
         .uniqueResult();
     assertThat(obj.getEntityName() + " - " + obj.getId() + " response description",
         updatedOrder.getString("description"), is(expectedDescription));

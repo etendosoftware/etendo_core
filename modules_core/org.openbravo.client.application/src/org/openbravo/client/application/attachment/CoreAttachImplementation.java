@@ -31,23 +31,23 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.utility.Attachment;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Default implementation of Attachment Management. This method saves the attached files in the
@@ -55,7 +55,7 @@ import org.openbravo.model.ad.utility.Attachment;
  * provided.
  *
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(AttachmentUtils.DEFAULT_METHOD)
 public class CoreAttachImplementation extends AttachImplementation {
   private static final Logger log = LogManager.getLogger();
@@ -193,9 +193,9 @@ public class CoreAttachImplementation extends AttachImplementation {
       attachmentTable = OBDal.getInstance().get(Table.class, tableID);
       OBCriteria<Attachment> attachmentCriteria = OBDal.getInstance()
           .createCriteria(Attachment.class);
-      attachmentCriteria.addEqual(Attachment.PROPERTY_RECORD, recordID);
-      attachmentCriteria.addEqual(Attachment.PROPERTY_TABLE, attachmentTable);
-      attachmentCriteria.addEqual(Attachment.PROPERTY_NAME, fileName);
+      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_RECORD, recordID));
+      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_TABLE, attachmentTable));
+      attachmentCriteria.add(Restrictions.eq(Attachment.PROPERTY_NAME, fileName));
 
       attachmentCriteria.setFilterOnReadableOrganization(false);
       attachmentCriteria.setMaxResults(1);

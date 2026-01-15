@@ -34,6 +34,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.ad_forms.DocInvoice;
 import org.openbravo.erpCommon.businessUtility.Tree;
 import org.openbravo.erpCommon.businessUtility.TreeData;
@@ -376,9 +377,9 @@ public class CreateVatRegisters extends HttpSecureAppServlet {
     OBError myMessage = new OBError();
     OBCriteria<TaxRegisterTypeLines> obCriteria = OBDal.getInstance()
         .createCriteria(TaxRegisterTypeLines.class);
-    obCriteria.addEqual(TaxRegisterTypeLines.PROPERTY_TAXREGISTERTYPE + ".id",
-        taxRegisterType.cTaxregisterTypeId);
-    obCriteria.addIsNull(TaxRegisterTypeLines.PROPERTY_DOCUMENTTYPE);
+    obCriteria.add(Restrictions.eq(TaxRegisterTypeLines.PROPERTY_TAXREGISTERTYPE + ".id",
+        taxRegisterType.cTaxregisterTypeId));
+    obCriteria.add(Restrictions.isNull(TaxRegisterTypeLines.PROPERTY_DOCUMENTTYPE));
     if (obCriteria.list().size() > 0) {
       myMessage.setTitle("Error");
       myMessage.setType("Error");

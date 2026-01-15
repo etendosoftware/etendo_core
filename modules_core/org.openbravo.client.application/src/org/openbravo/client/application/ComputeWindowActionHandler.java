@@ -36,7 +36,7 @@ import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.ui.WindowTrl;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Computes information to open a classic window for a record in the new layout.
@@ -44,7 +44,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class ComputeWindowActionHandler extends BaseActionHandler {
 
   @Override

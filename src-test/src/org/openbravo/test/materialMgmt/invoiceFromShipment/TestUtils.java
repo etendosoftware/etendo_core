@@ -28,6 +28,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.model.common.order.Order;
@@ -88,7 +89,7 @@ public class TestUtils {
   static int getNumberOfProducts(final String name) {
     try {
       final OBCriteria<Product> criteria = OBDal.getInstance().createCriteria(Product.class);
-      criteria.addLike(Product.PROPERTY_NAME, name + "-%");
+      criteria.add(Restrictions.like(Product.PROPERTY_NAME, name + "-%"));
       return criteria.count();
     } catch (Exception e) {
       throw new OBException(e);
@@ -133,7 +134,7 @@ public class TestUtils {
   static int getNumberOfOrders(final String docNo) {
     try {
       final OBCriteria<Order> criteria = OBDal.getInstance().createCriteria(Order.class);
-      criteria.addLike(Order.PROPERTY_DOCUMENTNO, docNo + "-%");
+      criteria.add(Restrictions.like(Order.PROPERTY_DOCUMENTNO, docNo + "-%"));
       return criteria.list().size();
     } catch (Exception e) {
       throw new OBException(e);
@@ -229,7 +230,7 @@ public class TestUtils {
     try {
       final OBCriteria<ShipmentInOut> criteria = OBDal.getInstance()
           .createCriteria(ShipmentInOut.class);
-      criteria.addLike(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%");
+      criteria.add(Restrictions.like(ShipmentInOut.PROPERTY_DOCUMENTNO, docNo + "-%"));
       return criteria.list().size();
     } catch (Exception e) {
       throw new OBException(e);
@@ -239,9 +240,9 @@ public class TestUtils {
   /**
    * Returns a new Goods Receipt/Shipment Line based on the given one. It is a clone of the first
    * one but with different product
-   * 
-   * @param line
-   *          Original Goods Receipt/Shipment
+   *
+   * @param oldLine
+   *          Original Goods Receipt/Shipment line to be cloned
    * @param newInOut
    *          new Goods Receipt/Shipment (a clone of the original one)
    * @return A new Goods Receipt/Shipment Line clone based on the original one

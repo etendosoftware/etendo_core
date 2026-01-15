@@ -38,6 +38,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.financialmgmt.accounting.AccountingFact;
 import org.openbravo.model.financialmgmt.accounting.coa.AccountingCombination;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
@@ -504,9 +505,9 @@ public class RecordID2Filling extends DalBaseProcess {
     String use = null;
     OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
         .createCriteria(FinAccPaymentMethod.class);
-    obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
-    obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT,
-        OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId));
+    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+    obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT,
+        OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId)));
     obc.setMaxResults(1);
     FinAccPaymentMethod pm = (FinAccPaymentMethod) obc.uniqueResult();
     if (isReceipt) {

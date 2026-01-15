@@ -28,6 +28,8 @@ import org.openbravo.dal.xml.EntityResolver;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This entity resolver is used in complete Client imports. With complete Client imports all the
  * data on Client/Organization level is present in the xml String. This means that the
@@ -39,7 +41,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * 
  * @author mtaal
  */
-
+@Dependent
 public class ClientImportEntityResolver extends EntityResolver {
 
   public static ClientImportEntityResolver getInstance() {

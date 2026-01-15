@@ -25,6 +25,7 @@ import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.model.financialmgmt.payment.FinAccPaymentMethod;
@@ -58,10 +59,10 @@ public class SE_PaymentMethod_FinAccount extends SimpleCallout {
       OBCriteria<FinAccPaymentMethod> obc = OBDal.getInstance()
           .createCriteria(FinAccPaymentMethod.class);
       // (paymentmethod, financial_account) is unique
-      obc.addEqual(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod);
-      obc.addEqual(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount);
-      obc.addInIds("organization.id",
-          OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId));
+      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_PAYMENTMETHOD, paymentMethod));
+      obc.add(Restrictions.eq(FinAccPaymentMethod.PROPERTY_ACCOUNT, financialAccount));
+      obc.add(Restrictions.in("organization.id",
+          OBContext.getOBContext().getOrganizationStructureProvider().getNaturalTree(strOrgId)));
 
       FinAccPaymentMethod selectedAccPaymentMethod = (FinAccPaymentMethod) obc.uniqueResult();
       if (selectedAccPaymentMethod != null) {

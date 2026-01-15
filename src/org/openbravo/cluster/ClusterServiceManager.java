@@ -33,13 +33,14 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.jmx.MBeanRegistry;
 import org.openbravo.model.ad.system.ADClusterService;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -48,7 +49,7 @@ import jakarta.inject.Inject;
  * Class in charge of registering the node that should handle a particular service when working in a
  * clustered environment.
  */
-@ApplicationScoped
+@Dependent
 public class ClusterServiceManager {
   private static final Logger log = LogManager.getLogger();
   private static final String UNKNOWN = "Unknown";
@@ -137,7 +138,7 @@ public class ClusterServiceManager {
       OBContext.setAdminMode(false); // allow to delete, the current context does not matter
       OBCriteria<ADClusterService> criteria = OBDal.getInstance()
           .createCriteria(ADClusterService.class);
-      criteria.addEqual(ADClusterService.PROPERTY_NODEID, nodeId);
+      criteria.add(Restrictions.eq(ADClusterService.PROPERTY_NODEID, nodeId));
       for (ADClusterService service : criteria.list()) {
         log.info("Deregistering node {} in charge of service {}", nodeId, service.getService());
         OBDal.getInstance().remove(service);
@@ -334,7 +335,7 @@ public class ClusterServiceManager {
     private ADClusterService getService(String serviceName) {
       OBCriteria<ADClusterService> criteria = OBDal.getInstance()
           .createCriteria(ADClusterService.class);
-      criteria.addEqual(ADClusterService.PROPERTY_SERVICE, serviceName);
+      criteria.add(Restrictions.eq(ADClusterService.PROPERTY_SERVICE, serviceName));
       return (ADClusterService) criteria.uniqueResult();
     }
 

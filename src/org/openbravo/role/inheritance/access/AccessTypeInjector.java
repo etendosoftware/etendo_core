@@ -25,9 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.util.AnnotationLiteral;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,12 +36,15 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.role.inheritance.RoleInheritanceManager;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.util.AnnotationLiteral;
+
 /**
  * An AccessTypeInjector is used by {@link RoleInheritanceManager} to retrieve the access types that
  * should be inherited
  */
 
-@ApplicationScoped
+@Dependent
 public abstract class AccessTypeInjector implements Comparable<AccessTypeInjector> {
 
   private static final Logger log = LogManager.getLogger();

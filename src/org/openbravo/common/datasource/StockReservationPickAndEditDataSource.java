@@ -63,6 +63,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.common.enterprise.Locator;
@@ -225,7 +226,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     return OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .addInIds(OrderLine.PROPERTY_ID, ids)
+        .add(Restrictions.in(OrderLine.PROPERTY_ID, ids))
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -276,7 +277,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     return OBDal.getInstance()
         .createCriteria(Warehouse.class)
-        .addInIds(Warehouse.PROPERTY_ID, ids)
+        .add(Restrictions.in(Warehouse.PROPERTY_ID, ids))
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -298,17 +299,17 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     new OrganizationStructureProvider().getChildTree(reservation.getOrganization().getId(), true);
     OBCriteria<Warehouse> obc = OBDal.getInstance().createCriteria(Warehouse.class);
     if (reservation.getWarehouse() != null) {
-      obc.addEqual(Warehouse.PROPERTY_ID, reservation.getWarehouse().getId());
+      obc.add(Restrictions.eq(Warehouse.PROPERTY_ID, reservation.getWarehouse().getId()));
       return obc.list();
     }
     if (reservation.getStorageBin() != null) {
-      obc.addEqual(Warehouse.PROPERTY_ID,
-          reservation.getStorageBin().getWarehouse().getId());
+      obc.add(Restrictions.eq(Warehouse.PROPERTY_ID,
+          reservation.getStorageBin().getWarehouse().getId()));
       return obc.list();
     }
     // Just on hand warehouses are taken into account as per window validation
-    obc.addInIds(Warehouse.PROPERTY_ID,
-        getOnHandWarehouseIds(reservation.getOrganization()));
+    obc.add(Restrictions.in(Warehouse.PROPERTY_ID,
+        getOnHandWarehouseIds(reservation.getOrganization())));
     if (contains != null && !"".equals(contains)) {
       if (contains.startsWith("[")) {
         try {
@@ -319,20 +320,20 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
             if (myJSONObject.get("fieldName").equals("warehouse$_identifier")) {
               if (operator.equals("iEquals")) {
-                obc.addIlike(Warehouse.PROPERTY_NAME, myJSONObject.get("value").toString());
+                obc.add(Restrictions.ilike(Warehouse.PROPERTY_NAME, myJSONObject.get("value").toString()));
               } else if (operator.equals("iContains")) {
-                obc.addIlike(Warehouse.PROPERTY_NAME, "%" + myJSONObject.get("value") + "%");
+                obc.add(Restrictions.ilike(Warehouse.PROPERTY_NAME, "%" + myJSONObject.get("value") + "%"));
               }
             } else if (myJSONObject.get("fieldName").equals("warehouse")
                 && myJSONObject.get("operator").equals("equals") && myJSONObject.has("value")) {
-              obc.addEqual(Warehouse.PROPERTY_ID, myJSONObject.get("value"));
+              obc.add(Restrictions.eq(Warehouse.PROPERTY_ID, myJSONObject.get("value")));
             }
           }
         } catch (JSONException e) {
           log4j.error("Error getting filter for warehouses", e);
         }
       } else {
-        obc.addIlike(Warehouse.PROPERTY_NAME, "%" + contains + "%");
+        obc.add(Restrictions.ilike(Warehouse.PROPERTY_NAME, "%" + contains + "%"));
       }
     }
     obc.addOrderBy(Warehouse.PROPERTY_NAME, true);
@@ -352,7 +353,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     final List<OrgWarehouse> orgWarehosueList = OBDal.getInstance()
         .createCriteria(OrgWarehouse.class)
-        .addEqual(OrgWarehouse.PROPERTY_ORGANIZATION, organization)
+        .add(Restrictions.eq(OrgWarehouse.PROPERTY_ORGANIZATION, organization))
         .list();
 
     for (final OrgWarehouse ow : orgWarehosueList) {
@@ -395,7 +396,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     }
     return OBDal.getInstance()
         .createCriteria(Locator.class)
-        .addInIds(Locator.PROPERTY_ID, ids)
+        .add(Restrictions.in(Locator.PROPERTY_ID, ids))
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -412,13 +413,13 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     new OrganizationStructureProvider().getChildTree(reservation.getOrganization().getId(), true);
     OBCriteria<Locator> obc = OBDal.getInstance()
         .createCriteria(Locator.class)
-        .addInEntities(Locator.PROPERTY_WAREHOUSE,
-            getOnHandWarehouses(reservation.getOrganization()));
+        .add(Restrictions.in(Locator.PROPERTY_WAREHOUSE,
+            getOnHandWarehouses(reservation.getOrganization())));
     if (reservation.getWarehouse() != null) {
-      obc.addEqual(Locator.PROPERTY_WAREHOUSE, reservation.getWarehouse());
+      obc.add(Restrictions.eq(Locator.PROPERTY_WAREHOUSE, reservation.getWarehouse()));
     }
     if (reservation.getStorageBin() != null) {
-      obc.addEqual(Locator.PROPERTY_ID, reservation.getStorageBin().getId());
+      obc.add(Restrictions.eq(Locator.PROPERTY_ID, reservation.getStorageBin().getId()));
       return obc.list();
     }
     if (contains != null && !"".equals(contains)) {
@@ -431,20 +432,20 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             if (myJSONObject.get("fieldName").equals("storageBin$_identifier")
                 && myJSONObject.has("value")) {
               if (operator.equals("iEquals")) {
-                obc.addIlike(Locator.PROPERTY_SEARCHKEY, myJSONObject.get("value").toString());
+                obc.add(Restrictions.ilike(Locator.PROPERTY_SEARCHKEY, myJSONObject.get("value").toString()));
               } else if (operator.equals("iContains")) {
-                obc.addIlike(Locator.PROPERTY_SEARCHKEY, "%" + myJSONObject.get("value") + "%");
+                obc.add(Restrictions.ilike(Locator.PROPERTY_SEARCHKEY, "%" + myJSONObject.get("value") + "%"));
               }
             } else if (myJSONObject.get("fieldName").equals("storageBin")
                 && operator.equals("equals") && myJSONObject.has("value")) {
-              obc.addEqual(Locator.PROPERTY_ID, myJSONObject.get("value"));
+              obc.add(Restrictions.eq(Locator.PROPERTY_ID, myJSONObject.get("value")));
             }
           }
         } catch (JSONException e) {
           log4j.error("Error getting filter for storage bins", e);
         }
       } else {
-        obc.addIlike(Locator.PROPERTY_SEARCHKEY, "%" + contains + "%");
+        obc.add(Restrictions.ilike(Locator.PROPERTY_SEARCHKEY, "%" + contains + "%"));
       }
     }
 
@@ -484,7 +485,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     }
     return OBDal.getInstance()
         .createCriteria(AttributeSetInstance.class)
-        .addInIds(AttributeSetInstance.PROPERTY_ID, ids)
+        .add(Restrictions.in(AttributeSetInstance.PROPERTY_ID, ids))
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -522,7 +523,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
 
     return OBDal.getInstance()
         .createCriteria(InventoryStatus.class)
-        .addInIds(InventoryStatus.PROPERTY_ID, ids)
+        .add(Restrictions.in(InventoryStatus.PROPERTY_ID, ids))
         .setFilterOnReadableClients(false)
         .setFilterOnReadableOrganization(false)
         .setFilterOnActive(false)
@@ -829,7 +830,7 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     OBCriteria<AttributeSetInstance> obc = OBDal.getInstance()
         .createCriteria(AttributeSetInstance.class);
     if (reservation.getAttributeSetValue() != null) {
-      obc.addEqual(AttributeSetInstance.PROPERTY_ID, reservation.getAttributeSetValue());
+      obc.add(Restrictions.eq(AttributeSetInstance.PROPERTY_ID, reservation.getAttributeSetValue()));
     }
     if (contains != null && !"".equals(contains)) {
       if (contains.startsWith("[")) {
@@ -841,22 +842,22 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             if (myJSONObject.get("fieldName").equals("attributeSetValue$_identifier")
                 && myJSONObject.has("value")) {
               if (operator.equals("iContains")) {
-                obc.addIlike(AttributeSetInstance.PROPERTY_DESCRIPTION,
-                    "%" + myJSONObject.get("value") + "%");
+                obc.add(Restrictions.ilike(AttributeSetInstance.PROPERTY_DESCRIPTION,
+                    "%" + myJSONObject.get("value") + "%"));
               } else if (operator.equals("iEquals")) {
-                obc.addIlike(AttributeSetInstance.PROPERTY_DESCRIPTION,
-                    myJSONObject.get("value").toString());
+                obc.add(Restrictions.ilike(AttributeSetInstance.PROPERTY_DESCRIPTION,
+                    myJSONObject.get("value").toString()));
               }
             } else if (myJSONObject.get("fieldName").equals("attributeSetValue")
                 && operator.equals("equals") && myJSONObject.has("value")) {
-              obc.addEqual(AttributeSetInstance.PROPERTY_ID, myJSONObject.get("value"));
+              obc.add(Restrictions.eq(AttributeSetInstance.PROPERTY_ID, myJSONObject.get("value")));
             }
           }
         } catch (JSONException e) {
           log4j.error("Error getting filter for attribute", e);
         }
       } else {
-        obc.addIlike(AttributeSetInstance.PROPERTY_DESCRIPTION, "%" + contains + "%");
+        obc.add(Restrictions.ilike(AttributeSetInstance.PROPERTY_DESCRIPTION, "%" + contains + "%"));
       }
     }
     obc.addOrderBy(AttributeSetInstance.PROPERTY_DESCRIPTION, true);
@@ -870,10 +871,10 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
     OBCriteria<OrderLine> obc = OBDal.getInstance().createCriteria(OrderLine.class);
     obc.createAlias(OrderLine.PROPERTY_SALESORDER, "o");
     if (reservation.getAttributeSetValue() != null) {
-      obc.addEqual(OrderLine.PROPERTY_ATTRIBUTESETVALUE,
-          reservation.getAttributeSetValue());
+      obc.add(Restrictions.eq(OrderLine.PROPERTY_ATTRIBUTESETVALUE,
+          reservation.getAttributeSetValue()));
     }
-    obc.addEqual(OrderLine.PROPERTY_PRODUCT, reservation.getProduct());
+    obc.add(Restrictions.eq(OrderLine.PROPERTY_PRODUCT, reservation.getProduct()));
     if (contains != null && !"".equals(contains)) {
       if (contains.startsWith("[")) {
         try {
@@ -883,24 +884,24 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             String operator = (String) myJSONObject.get("operator");
             if (myJSONObject.getString("fieldName").equals("purchaseOrderLine$_identifier")) {
               if (operator.equals("iContains")) {
-                obc.addIlike("o." + org.openbravo.model.common.order.Order.PROPERTY_DOCUMENTNO,
-                    "%" + getOrderDocumentNo((String) myJSONObject.get("value")) + "%");
+                obc.add(Restrictions.ilike("o." + org.openbravo.model.common.order.Order.PROPERTY_DOCUMENTNO,
+                    "%" + getOrderDocumentNo((String) myJSONObject.get("value")) + "%"));
               } else if (operator.equals("iEquals")) {
-                obc.addIlike("o." + org.openbravo.model.common.order.Order.PROPERTY_DOCUMENTNO,
-                    getOrderDocumentNo((String) myJSONObject.get("value")));
+                obc.add(Restrictions.ilike("o." + org.openbravo.model.common.order.Order.PROPERTY_DOCUMENTNO,
+                    getOrderDocumentNo((String) myJSONObject.get("value"))));
               }
             } else if (myJSONObject.getString("fieldName").equals("purchaseOrderLine")
                 && operator.equals("equals") && myJSONObject.has("value")) {
-              obc.addEqual(org.openbravo.model.common.order.OrderLine.PROPERTY_ID,
-                  myJSONObject.get("value"));
+              obc.add(Restrictions.eq(org.openbravo.model.common.order.OrderLine.PROPERTY_ID,
+                  myJSONObject.get("value")));
             }
           }
         } catch (JSONException e) {
           log4j.error("Error getting filter for attribute", e);
         }
       } else {
-        obc.addIlike("o." + org.openbravo.model.common.order.Order.PROPERTY_DOCUMENTNO,
-                "%" + getOrderDocumentNo(contains) + "%");
+        obc.add(Restrictions.ilike("o." + org.openbravo.model.common.order.Order.PROPERTY_DOCUMENTNO,
+                "%" + getOrderDocumentNo(contains) + "%"));
       }
     }
 
@@ -922,22 +923,22 @@ public class StockReservationPickAndEditDataSource extends ReadOnlyDataSourceSer
             String operator = (String) myJSONObject.get("operator");
             if (myJSONObject.getString("fieldName").equals("inventoryStatus$_identifier")) {
               if (operator.equals("iContains")) {
-                obc.addIlike(InventoryStatus.PROPERTY_NAME,
-                    "%" + myJSONObject.get("value") + "%");
+                obc.add(Restrictions.ilike(InventoryStatus.PROPERTY_NAME,
+                    "%" + myJSONObject.get("value") + "%"));
               } else if (operator.equals("iEquals")) {
-                obc.addIlike(InventoryStatus.PROPERTY_NAME,
-                    myJSONObject.get("value").toString());
+                obc.add(Restrictions.ilike(InventoryStatus.PROPERTY_NAME,
+                    myJSONObject.get("value").toString()));
               }
             } else if (myJSONObject.getString("fieldName").equals("inventoryStatus")
                 && operator.equals("equals") && myJSONObject.has("value")) {
-              obc.addEqual(InventoryStatus.PROPERTY_ID, myJSONObject.get("value"));
+              obc.add(Restrictions.eq(InventoryStatus.PROPERTY_ID, myJSONObject.get("value")));
             }
           }
         } catch (JSONException e) {
           log4j.error("Error getting filter for attribute", e);
         }
       } else {
-        obc.addIlike(InventoryStatus.PROPERTY_NAME, "%" + contains + "%");
+        obc.add(Restrictions.ilike(InventoryStatus.PROPERTY_NAME, "%" + contains + "%"));
       }
     }
 

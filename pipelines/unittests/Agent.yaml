@@ -51,7 +51,7 @@ spec:
       terminationMessagePolicy: File
       imagePullPolicy: IfNotPresent
     - name: postgres
-      image: postgres:16
+      image: postgres:17
       workingDir: /home/jenkins
       env:
         - name: POSTGRES_PASSWORD

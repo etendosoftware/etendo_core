@@ -21,6 +21,9 @@ package org.openbravo.erpCommon.utility;
 
 import java.util.UUID;
 
+import jakarta.enterprise.context.Dependent;
+
+@Dependent
 public class SequenceIdData {
 
   /**

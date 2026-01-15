@@ -27,6 +27,7 @@ import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.base.filter.ValueListFilter;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.module.Module;
 
@@ -42,10 +43,10 @@ public class SL_ModuleCallout extends SimpleCallout {
     if (StringUtils.equals(isInDev, "Y") && StringUtils.equals(moduleType, "T")) {
       // Check whether there are more templates in development
       OBCriteria<Module> obc = OBDal.getInstance().createCriteria(Module.class);
-      obc.addEqual(Module.PROPERTY_TYPE, "T");
-      obc.addEqual(Module.PROPERTY_INDEVELOPMENT, true);
+      obc.add(Restrictions.eq(Module.PROPERTY_TYPE, "T"));
+      obc.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, true));
       if (StringUtils.isNotEmpty(strADModuleID)) {
-        obc.addNotEqual(Module.PROPERTY_ID, strADModuleID);
+        obc.add(Restrictions.ne(Module.PROPERTY_ID, strADModuleID));
       }
 
       if (!obc.list().isEmpty()) {

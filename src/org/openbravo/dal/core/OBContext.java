@@ -34,9 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -59,6 +56,10 @@ import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 /**
  * Models the context in which Data Access Layer actions are executed. Contains the user, the client
  * and the allowed organizations.
@@ -76,6 +77,7 @@ import org.openbravo.model.common.enterprise.Warehouse;
 
 // Note the getInstance/setInstance and ThreadLocal pattern should be reviewed
 // when using a factory/dependency injection approach.
+@Dependent
 public class OBContext implements OBNotSingleton, Serializable {
   private static final long serialVersionUID = 1L;
   private static final Logger log = LogManager.getLogger();
@@ -677,11 +679,11 @@ public class OBContext implements OBNotSingleton, Serializable {
     // @formatter:off
     final String orgQryStr = "select o.id"
         + " from Organization o"
-        + " where o.client=:client";
+        + " where o.client.id=:clientId";
     // @formatter:on
     final Query<String> qry = SessionHandler.getInstance()
         .createQuery(orgQryStr, String.class)
-        .setParameter("client", client);
+        .setParameter("clientId", client.getId());
     organizationList = qry.list();
     return organizationList;
   }
@@ -895,7 +897,7 @@ public class OBContext implements OBNotSingleton, Serializable {
         final UserRoles ur = getOne(UserRoles.class, userRolesQryStr, params, false);
         if (ur == null) {
           throw new OBSecurityException(
-              "Your user is not assigned to a Role and it is required to login into Openbravo. Ask the Security Administrator");
+              "Your user is not assigned to a Role and it is required to login into Etendo. Ask the Security Administrator");
         }
         Hibernate.initialize(ur.getRole());
         setRole(ur.getRole());
@@ -1303,6 +1305,7 @@ public class OBContext implements OBNotSingleton, Serializable {
     this.newUI = newUI;
   }
 
+  @Dependent
   private static class OBAdminMode {
 
     private boolean adminMode;

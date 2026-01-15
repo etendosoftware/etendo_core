@@ -14,22 +14,24 @@ package org.openbravo.authentication.basic;
 
 import java.io.IOException;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.openbravo.authentication.AuthenticationData;
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationManager;
 import org.openbravo.base.ConfigParameters;
 import org.openbravo.base.HttpBaseUtils;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 /**
  * 
  * @author adrianromero
  * @author iperdomo
  */
+@Dependent
 public class AutologonAuthenticationManager extends AuthenticationManager {
 
   private String m_sAutologonUsername;

@@ -13,6 +13,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
@@ -122,9 +123,9 @@ public class RMCreateInvoice implements org.openbravo.scheduling.Process {
   private List<APRMPendingPaymentFromInvoice> getPendingPayments() {
     OBCriteria<APRMPendingPaymentFromInvoice> ppfiCriteria = OBDal.getInstance()
         .createCriteria(APRMPendingPaymentFromInvoice.class);
-    ppfiCriteria.addEqual(APRMPendingPaymentFromInvoice.PROPERTY_PROCESSNOW, false);
-    ppfiCriteria.addInEntities(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS,
-        getLeaveAsCreditProcesses());
+    ppfiCriteria.add(Restrictions.eq(APRMPendingPaymentFromInvoice.PROPERTY_PROCESSNOW, false));
+    ppfiCriteria.add(Restrictions.in(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS,
+        getLeaveAsCreditProcesses()));
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_PAYMENTEXECUTIONPROCESS, false);
     ppfiCriteria.addOrderBy(APRMPendingPaymentFromInvoice.PROPERTY_ORGANIZATION, false);
     return ppfiCriteria.list();
@@ -133,8 +134,8 @@ public class RMCreateInvoice implements org.openbravo.scheduling.Process {
   private List<PaymentExecutionProcess> getLeaveAsCreditProcesses() {
     OBCriteria<PaymentExecutionProcess> payExecProcCrit = OBDal.getInstance()
         .createCriteria(PaymentExecutionProcess.class);
-    payExecProcCrit.addEqual(PaymentExecutionProcess.PROPERTY_JAVACLASSNAME,
-        "org.openbravo.advpaymentmngt.executionprocess.LeaveAsCredit");
+    payExecProcCrit.add(Restrictions.eq(PaymentExecutionProcess.PROPERTY_JAVACLASSNAME,
+        "org.openbravo.advpaymentmngt.executionprocess.LeaveAsCredit"));
 
     return payExecProcCrit.list();
   }

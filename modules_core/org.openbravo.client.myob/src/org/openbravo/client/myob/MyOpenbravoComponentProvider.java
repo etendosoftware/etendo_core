@@ -28,13 +28,13 @@ import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.dal.core.OBContext;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * 
  * @author iperdomo
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(MyOpenbravoComponentProvider.COMPONENT_TYPE)
 public class MyOpenbravoComponentProvider extends BaseComponentProvider {
   public static final String COMPONENT_TYPE = "OBMYOB_MyOpenbravo";

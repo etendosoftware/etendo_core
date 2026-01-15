@@ -27,7 +27,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.client.kernel.StaticResourceComponent;
 import org.openbravo.portal.PortalAccessible;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -36,7 +36,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class LogOutActionHandler extends BaseActionHandler implements PortalAccessible {
 
   /*

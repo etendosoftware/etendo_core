@@ -20,14 +20,14 @@ package org.openbravo.materialmgmt;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.kernel.ComponentProvider;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Implementation of ManageVariantsCustomProductCharacteristicWhereClause for the Manage Variants
@@ -37,7 +37,7 @@ import org.openbravo.client.kernel.ComponentProvider;
  * product characteristic references a characterictisc value subset, only the values that are part
  * of the subset are shown
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(ManageVariantsCustomProductCharacteristicWhereClause.MANAGE_VARIANTS_PROCESS_ID)
 public class ManageVariantsCustomProductCharacteristicWhereClause
     implements ProductCharacteristicCustomWhereClause {

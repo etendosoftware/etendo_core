@@ -37,6 +37,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.common.businesspartner.Category;
@@ -124,7 +125,7 @@ public class WritableReadableOrganizationClientTest extends OBBaseTest {
     setTestUserContext();
     addReadWriteAccess(Product.class);
     final OBCriteria<Product> obc = OBDal.getInstance().createCriteria(Product.class);
-    obc.addEqual("id", TEST_PRODUCT_ID);
+    obc.add(Restrictions.eq("id", TEST_PRODUCT_ID));
     final List<Product> ps = obc.list();
     assertEquals(1, ps.size());
     final Product p = ps.get(0);
@@ -151,7 +152,7 @@ public class WritableReadableOrganizationClientTest extends OBBaseTest {
     setTestUserContext();
     addReadWriteAccess(Category.class);
     final OBCriteria<Category> obc = OBDal.getInstance().createCriteria(Category.class);
-    obc.addEqual("name", "Supplier");
+    obc.add(Restrictions.eq("name", "Supplier"));
     final List<Category> bogs = obc.list();
     assertEquals(1, bogs.size());
     final Category bp = bogs.get(0);

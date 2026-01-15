@@ -27,9 +27,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -55,13 +52,16 @@ import org.openbravo.model.ad.ui.Window;
 import org.openbravo.userinterface.selector.Selector;
 import org.openbravo.userinterface.selector.SelectorField;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class caches some AD structures used by the Form Initialization component. Basically, it
  * caches: AD components (fields, columns, auxiliary inputs) and ComboTableData instances. This
  * caching occurs to obtain better performance in FIC computations. For this cache to be used, the
  * system needs to be on 'production' mode, that is, all the modules need to be not in development
  */
-@ApplicationScoped
+@Dependent
 public class ApplicationDictionaryCachedStructures {
   private static final Logger log = LogManager.getLogger();
 
@@ -106,7 +106,7 @@ public class ApplicationDictionaryCachedStructures {
 
     // The cache will only be active when there are no modules in development in the system
     useCache = inDevelopmentModules.isEmpty();
-    log.info("ADCS initialized, use cache: {}", useCache);
+    log.debug("ADCS initialized, use cache: {}", useCache);
   }
 
   private Set<String> getModulesInDevelopment() {

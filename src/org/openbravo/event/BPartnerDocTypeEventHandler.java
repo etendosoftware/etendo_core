@@ -1,9 +1,5 @@
 package org.openbravo.event;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-
-
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -13,17 +9,21 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.BusinessPartnerDocType;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.event.Observes;
+
 /**
  * Validates uniqueness of Business Partner Document Type per combination of
  * Document Category and Sales Transaction (IsSOTrx).
  */
-@ApplicationScoped
+@Dependent
 public class BPartnerDocTypeEventHandler extends EntityPersistenceEventObserver {
   private static final Entity[] entities = { ModelProvider.getInstance().getEntity(BusinessPartnerDocType.ENTITY_NAME)};
 
@@ -70,14 +70,14 @@ public class BPartnerDocTypeEventHandler extends EntityPersistenceEventObserver 
       Organization org = bpDocType.getOrganization();
   
       OBCriteria<BusinessPartnerDocType> bpDocTypeCriteria = OBDal.getInstance().createCriteria(BusinessPartnerDocType.class);
-      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_CLIENT, client);
-      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_ORGANIZATION, org);
-      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_BUSINESSPARTNER, bp);
-      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_DOCUMENTCATEGORY, documentCat);
-      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_ISSOTRX, isSotrx);
-      bpDocTypeCriteria.addEqual(BusinessPartnerDocType.PROPERTY_ACTIVE, true);
+      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_CLIENT, client));
+      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ORGANIZATION, org));
+      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_BUSINESSPARTNER, bp));
+      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_DOCUMENTCATEGORY, documentCat));
+      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ISSOTRX, isSotrx));
+      bpDocTypeCriteria.add(Restrictions.eq(BusinessPartnerDocType.PROPERTY_ACTIVE, true));
       if (id != null) {
-        bpDocTypeCriteria.addNotEqual(BusinessPartnerDocType.PROPERTY_ID, id);
+        bpDocTypeCriteria.add(Restrictions.ne(BusinessPartnerDocType.PROPERTY_ID, id));
       }
       bpDocTypeCriteria.setMaxResults(1);
       BusinessPartnerDocType bpDocTypeResult = (BusinessPartnerDocType) bpDocTypeCriteria.uniqueResult();

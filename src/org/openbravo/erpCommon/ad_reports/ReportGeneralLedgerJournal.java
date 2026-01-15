@@ -49,6 +49,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.AccountingSchemaMiscData;
 import org.openbravo.erpCommon.businessUtility.Tree;
@@ -1162,7 +1163,7 @@ public class ReportGeneralLedgerJournal extends HttpSecureAppServlet {
       }
 
       OBCriteria<BaseOBObject> query = OBDal.getInstance().createCriteria(tablename);
-      query.addEqual("documentNo", documentNo);
+      query.add(Restrictions.eq("documentNo", documentNo));
 
       return Utility.getInStrList(query.list(), true);
     } catch (Exception ignore) {

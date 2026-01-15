@@ -35,6 +35,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.reference.PInstanceProcessData;
 import org.openbravo.erpCommon.utility.OBError;
@@ -102,7 +103,7 @@ public class PeriodControlUtility {
     obc.setFilterOnActive(false);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.addInIds(Period.PROPERTY_ID, periodIds);
+    obc.add(Restrictions.in(Period.PROPERTY_ID, periodIds));
     obc.addOrderBy(Period.PROPERTY_STARTINGDATE, true);
     return obc.list();
   }

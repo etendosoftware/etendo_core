@@ -24,6 +24,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.plm.Characteristic;
 import org.openbravo.model.common.plm.CharacteristicValue;
 import org.openbravo.model.common.plm.Product;
@@ -60,9 +61,9 @@ public class CharacteristicsUtils {
       Characteristic characteristic) throws OBException {
     OBCriteria<ProductCharacteristicValue> obCriteria = OBDal.getInstance()
         .createCriteria(ProductCharacteristicValue.class);
-    obCriteria.addEqual(ProductCharacteristicValue.PROPERTY_PRODUCT, product);
+    obCriteria.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_PRODUCT, product));
     obCriteria
-        .addEqual(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC, characteristic);
+        .add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC, characteristic));
     obCriteria.setMaxResults(1);
     return (ProductCharacteristicValue) obCriteria.uniqueResult();
   }
@@ -70,9 +71,9 @@ public class CharacteristicsUtils {
   private static void setCharacteristic(Product product, Characteristic characteristic) {
     OBCriteria<ProductCharacteristic> obCriteria = OBDal.getInstance()
         .createCriteria(ProductCharacteristic.class);
-    obCriteria.addEqual(ProductCharacteristicValue.PROPERTY_PRODUCT, product);
+    obCriteria.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_PRODUCT, product));
     obCriteria
-        .addEqual(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC, characteristic);
+        .add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC, characteristic));
     obCriteria.setMaxResults(1);
     if (obCriteria.count() > 0) {
       return;

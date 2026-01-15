@@ -30,6 +30,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.materialmgmt.UOMUtil;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.ui.Tab;
@@ -106,8 +107,8 @@ public class OperativeQuantity_To_BaseQuantity extends SimpleCallout {
 
   private Table getTableOfHeaderTabFromWindow(String windowId) {
     OBCriteria<Tab> obc = OBDal.getInstance().createCriteria(Tab.class);
-    obc.addEqual(Tab.PROPERTY_WINDOW, OBDal.getInstance().get(Window.class, windowId));
-    obc.addEqual(Tab.PROPERTY_TABLEVEL, 0L);
+    obc.add(Restrictions.eq(Tab.PROPERTY_WINDOW, OBDal.getInstance().get(Window.class, windowId)));
+    obc.add(Restrictions.eq(Tab.PROPERTY_TABLEVEL, 0L));
     obc.addOrderBy(Tab.PROPERTY_SEQUENCENUMBER, true);
     Tab tab = (Tab) obc.list().get(0);
     return tab.getTable();

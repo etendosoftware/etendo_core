@@ -32,6 +32,7 @@ import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.financialmgmt.calendar.Period;
@@ -73,14 +74,14 @@ class PeriodEventHandler extends EntityPersistenceEventObserver {
     ConnectionProvider conn = new DalConnectionProvider(false);
     String language = OBContext.getOBContext().getLanguage().getLanguage();
     OBCriteria<Period> criteria = OBDal.getInstance().createCriteria(Period.class);
-    criteria.addEqual(Period.PROPERTY_ORGANIZATION, period.getOrganization());
-    criteria.addEqual(Period.PROPERTY_CLIENT, period.getClient());
-    criteria.addNotEqual(Period.PROPERTY_ID, period.getId());
-    criteria.addGreaterOrEqualThan(Period.PROPERTY_ENDINGDATE, period.getStartingDate());
-    criteria.addLessOrEqualThan(Period.PROPERTY_STARTINGDATE, period.getEndingDate());
-    criteria.addEqual(Period.PROPERTY_PERIODTYPE, "S");
+    criteria.add(Restrictions.eq(Period.PROPERTY_ORGANIZATION, period.getOrganization()));
+    criteria.add(Restrictions.eq(Period.PROPERTY_CLIENT, period.getClient()));
+    criteria.add(Restrictions.ne(Period.PROPERTY_ID, period.getId()));
+    criteria.add(Restrictions.ge(Period.PROPERTY_ENDINGDATE, period.getStartingDate()));
+    criteria.add(Restrictions.le(Period.PROPERTY_STARTINGDATE, period.getEndingDate()));
+    criteria.add(Restrictions.eq(Period.PROPERTY_PERIODTYPE, "S"));
     criteria.createAlias(Period.PROPERTY_YEAR, "y");
-    criteria.addEqual("y." + Year.PROPERTY_CALENDAR, period.getYear().getCalendar());
+    criteria.add(Restrictions.eq("y." + Year.PROPERTY_CALENDAR, period.getYear().getCalendar()));
     criteria.setMaxResults(1);
 
     if (criteria.uniqueResult() != null) {

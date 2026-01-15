@@ -45,6 +45,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.utility.ReferenceDataStore;
@@ -416,17 +417,17 @@ public class EntityResolver implements OBNotSingleton {
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     if (entity.isClientEnabled()) {
-      obc.addEqual(PROPERTY_CLIENT + "." + Organization.PROPERTY_ID, clientId);
+      obc.add(Restrictions.eq(PROPERTY_CLIENT + "." + Organization.PROPERTY_ID, clientId));
     }
     if (filterOrgs && entity.isOrganizationEnabled()) {
       // Note the query is for other types than client but the client
       // property names
       // are good standard ones to use
-      obc.addInIds(PROPERTY_ORGANIZATION + "." + Client.PROPERTY_ID,
-          (Object[]) getOrgIds(orgId));
+      obc.add(Restrictions.in(PROPERTY_ORGANIZATION + "." + Client.PROPERTY_ID,
+          (Object[]) getOrgIds(orgId)));
     }
     // same for here
-    obc.addEqual(Organization.PROPERTY_ID, id);
+    obc.add(Restrictions.eq(Organization.PROPERTY_ID, id));
     final List<?> res = obc.list();
     Check.isTrue(res.size() <= 1,
         "More than one result when searching in " + entity.getName() + " with id " + id);
@@ -518,19 +519,19 @@ public class EntityResolver implements OBNotSingleton {
       rdlCriteria.setFilterOnActive(false);
       rdlCriteria.setFilterOnReadableOrganization(false);
       rdlCriteria.setFilterOnReadableClients(false);
-      rdlCriteria.addEqual(ReferenceDataStore.PROPERTY_GENERIC, id);
+      rdlCriteria.add(Restrictions.eq(ReferenceDataStore.PROPERTY_GENERIC, id));
       if (filterByClient) {
-        rdlCriteria.addEqual(ReferenceDataStore.PROPERTY_CLIENT + "." + Client.PROPERTY_ID, client.getId());
+        rdlCriteria.add(Restrictions.eq(ReferenceDataStore.PROPERTY_CLIENT + "." + Client.PROPERTY_ID, client.getId()));
       } else {
         Object[] clients = { client.getId(), "0" };
-        rdlCriteria.addInIds(ReferenceDataStore.PROPERTY_CLIENT + "." + Client.PROPERTY_ID, clients);
+        rdlCriteria.add(Restrictions.in(ReferenceDataStore.PROPERTY_CLIENT + "." + Client.PROPERTY_ID, clients));
       }
       if (orgId != null) {
-        rdlCriteria.addInIds(ReferenceDataStore.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
-            (Object[]) getOrgIds(orgId));
+        rdlCriteria.add(Restrictions.in(ReferenceDataStore.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
+            (Object[]) getOrgIds(orgId)));
       }
-      rdlCriteria.addEqual(ReferenceDataStore.PROPERTY_TABLE + "." + Table.PROPERTY_ID,
-          entity.getTableId());
+      rdlCriteria.add(Restrictions.eq(ReferenceDataStore.PROPERTY_TABLE + "." + Table.PROPERTY_ID,
+          entity.getTableId()));
       final List<ReferenceDataStore> rdls = rdlCriteria.list();
       return rdls;
     } finally {
@@ -633,7 +634,7 @@ public class EntityResolver implements OBNotSingleton {
       final OBCriteria<BaseOBObject> criteria = OBDal.getInstance()
           .createCriteria(entity.getName());
       if (id != null) {
-        criteria.addNotEqual("id", id);
+        criteria.add(Restrictions.ne("id", id));
       }
 
       boolean ignoreUniqueConstraint = false;
@@ -651,7 +652,7 @@ public class EntityResolver implements OBNotSingleton {
           break;
         }
 
-        criteria.addEqual(p.getName(), value);
+        criteria.add(Restrictions.eq(p.getName(), value));
       }
       if (ignoreUniqueConstraint) {
         continue;

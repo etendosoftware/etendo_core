@@ -208,7 +208,7 @@ class EBaseSpecification extends Specification {
     }
 
     protected static void staticInitializeDalLayer() throws Exception {
-        staticInitializeDalLayer2(null);
+        staticInitializeDalLayer2();
     }
 
     private static void staticInitializeDalLayer2()

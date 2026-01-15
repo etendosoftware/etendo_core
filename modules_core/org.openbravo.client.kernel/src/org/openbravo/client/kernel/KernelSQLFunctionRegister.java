@@ -19,29 +19,26 @@
 package org.openbravo.client.kernel;
 
 import java.util.HashMap;
-import java.util.Map;
-
-import jakarta.enterprise.context.ApplicationScoped;
-
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.type.StandardBasicTypes;
 import org.openbravo.dal.core.SQLFunctionRegister;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A class in charge of registering core SQL functions in Hibernate.
  */
-@ApplicationScoped
+@Dependent
 public class KernelSQLFunctionRegister implements SQLFunctionRegister {
 
   @Override

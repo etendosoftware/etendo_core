@@ -42,6 +42,8 @@ import org.openbravo.base.session.DalUUIDGenerator;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.util.Check;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class is responsible for generating the Hibernate mapping for the tables and entities within
  * OpenBravo. It uses the runtime model provided by {@link ModelProvider ModelProvider}.
@@ -49,6 +51,7 @@ import org.openbravo.base.util.Check;
  * @author mtaal
  */
 
+@Dependent
 public class DalMappingGenerator implements OBSingleton {
   private static final Logger log = LogManager.getLogger();
 

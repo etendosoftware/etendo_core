@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 import com.etendoerp.redis.interfaces.CachedConcurrentMap;
 import org.apache.logging.log4j.LogManager;
@@ -37,7 +38,7 @@ import org.apache.logging.log4j.Logger;
  * keeps the information needed to make use of those resources without the need of generating them
  * again.
  */
-@ApplicationScoped
+@Dependent
 public class StaticResourceProvider implements StaticResourceProviderMBean {
   private static final Logger log = LogManager.getLogger();
 

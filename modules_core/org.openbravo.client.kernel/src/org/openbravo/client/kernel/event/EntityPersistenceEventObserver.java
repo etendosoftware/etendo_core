@@ -18,17 +18,17 @@
  */
 package org.openbravo.client.kernel.event;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.openbravo.base.model.Entity;
 import org.openbravo.dal.core.TriggerHandler;
+
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A base listener which can be extended to perform specific actions when persisting entities.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public abstract class EntityPersistenceEventObserver {
 
   /**

@@ -50,6 +50,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.domain.Validation;
@@ -164,8 +165,8 @@ public class SelectorDataSourceFilter implements DataSourceFilter {
       // Applying default expression for selector fields when is not a selector window request
       if (!"Window".equals(requestType)) {
         OBCriteria<SelectorField> sfc = OBDal.getInstance().createCriteria(SelectorField.class);
-        sfc.addIsNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION);
-        sfc.addEqual(SelectorField.PROPERTY_OBUISELSELECTOR, sel);
+        sfc.add(Restrictions.isNotNull(SelectorField.PROPERTY_DEFAULTEXPRESSION));
+        sfc.add(Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, sel));
 
         applyDefaultExpressions(sel, parameters, sfc, request, filterHQL);
         verifyPropertyTypes(sel, parameters);

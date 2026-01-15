@@ -39,15 +39,13 @@ import jakarta.servlet.ServletException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.OBCriteria;
-import org.openbravo.dal.service.OBCriteria.PredicateFunction;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctSchema;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
@@ -363,9 +361,11 @@ public class CashVATUtil {
       final FIN_PaymentDetail paymentDetail) {
     try {
       OBContext.setAdminMode(true);
-      OBCriteria<InvoiceTaxCashVAT> criteria = OBDal.getInstance().createCriteria(InvoiceTaxCashVAT.class);
-      criteria.addFunction((cb, obc) -> cb.equal(obc.getPath(InvoiceTaxCashVAT.PROPERTY_FINPAYMENTDETAIL), paymentDetail));
-      return criteria.list();
+      return
+          OBDao
+          .getFilteredCriteria(InvoiceTaxCashVAT.class,
+              Restrictions.eq(InvoiceTaxCashVAT.PROPERTY_FINPAYMENTDETAIL, paymentDetail))
+          .list();
     } finally {
       OBContext.restorePreviousMode();
     }

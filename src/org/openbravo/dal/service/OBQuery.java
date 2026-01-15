@@ -292,7 +292,7 @@ public class OBQuery<E extends BaseOBObject> {
 
       final Query<?> qry = isSelect
           ? getSession().createQuery(qryStr, clz)
-          : getSession().createQuery(qryStr);
+          : getSession().createQuery(qryStr, Object.class);
 
       setParameters(qry);
       if (fetchSize > -1) {

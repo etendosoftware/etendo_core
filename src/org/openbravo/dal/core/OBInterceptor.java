@@ -51,6 +51,8 @@ import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This interceptor is used by Hibernate as a kind of save, update and delete event listener. This
  * event listener catches save or update events to set the client and organization and the
@@ -59,6 +61,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * @author mtaal
  */
 
+@Dependent
 public class OBInterceptor extends EmptyInterceptor {
   private static final Logger log = LogManager.getLogger();
 

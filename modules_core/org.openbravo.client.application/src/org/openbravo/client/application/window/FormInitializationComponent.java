@@ -63,6 +63,7 @@ import org.openbravo.dal.security.SecurityChecker;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.Sqlc;
 import org.openbravo.erpCommon.ad_callouts.CalloutConstants;
 import org.openbravo.erpCommon.ad_callouts.CalloutInformationProvider;
@@ -397,8 +398,8 @@ public class FormInitializationComponent extends BaseActionHandler {
   private int computeAttachmentCount(Tab tab, List<String> recordIds, boolean doExists) {
     String tableId = tab.getTable().getId();
     OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
-    attachmentFiles.addEqual("table.id", tableId);
-    attachmentFiles.addIn("record", recordIds);
+    attachmentFiles.add(Restrictions.eq("table.id", tableId));
+    attachmentFiles.add(Restrictions.in("record", recordIds));
     // do not filter by the attachment's organization
     // if the user has access to the record where the file its attached, it has access to all its
     // attachments

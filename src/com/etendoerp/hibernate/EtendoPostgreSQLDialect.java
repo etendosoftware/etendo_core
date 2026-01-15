@@ -16,9 +16,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
-@ApplicationScoped
+@Dependent
 public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
 
   private static final Logger log = LogManager.getLogger();
@@ -47,6 +47,12 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     TypeConfiguration typeConfiguration = new TypeConfiguration();
     BasicType<Date> timestampBasicType = typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.TIMESTAMP);
     TIMESTAMP_RETURN_TYPE = StandardFunctionReturnTypeResolvers.invariant(timestampBasicType);
+  }
+  private static final FunctionReturnTypeResolver BOOLEAN_RETURN_TYPE;
+  static {
+    TypeConfiguration typeConfiguration = new TypeConfiguration();
+    BasicType<Boolean> booleanBasicType = typeConfiguration.getBasicTypeRegistry().resolve(StandardBasicTypes.BOOLEAN);
+    BOOLEAN_RETURN_TYPE = StandardFunctionReturnTypeResolvers.invariant(booleanBasicType);
   }
 
   @Override
@@ -276,6 +282,17 @@ public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
     );
     patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
     patternFunctionDescriptorBuilder.setReturnTypeResolver(STRING_RETURN_TYPE).register();
+  }
+
+  private static void registerSqlRestrictionFunction(FunctionContributions functionContributions) {
+    PatternFunctionDescriptorBuilder patternFunctionDescriptorBuilder = new PatternFunctionDescriptorBuilder(
+        functionContributions.getFunctionRegistry(),
+        "sql_restriction",
+        FunctionKind.NORMAL,
+        "sql_restriction(?1)"
+    );
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(1));
+    patternFunctionDescriptorBuilder.setReturnTypeResolver(BOOLEAN_RETURN_TYPE).register();
   }
 
 }

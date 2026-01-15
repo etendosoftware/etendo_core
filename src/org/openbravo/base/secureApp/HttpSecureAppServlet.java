@@ -22,16 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import org.codehaus.jettison.json.JSONObject;
-
 import org.openbravo.authentication.AuthenticationException;
 import org.openbravo.authentication.AuthenticationManager;
 import org.openbravo.base.HttpBaseServlet;
@@ -45,6 +36,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.data.ScrollableFieldProvider;
 import org.openbravo.database.ConnectionProvider;
@@ -71,8 +63,17 @@ import org.openbravo.utils.FileUtility;
 import org.openbravo.utils.Replace;
 import org.openbravo.xmlEngine.XmlDocument;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import net.sf.jasperreports.engine.JRDataSource;
 
+@Dependent
 public class HttpSecureAppServlet extends HttpBaseServlet {
   private static final long serialVersionUID = 1L;
   protected boolean boolHist = true;
@@ -82,6 +83,7 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
 
   private String servletClass = this.getClass().getName();
 
+  @Dependent
   private class Variables extends VariablesHistory {
     private String loggingIn;
 
@@ -938,8 +940,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         Tab tab = OBDal.getInstance().get(Tab.class, id);
         if (tab != null) {
           OBCriteria<WindowTrl> qtTrl = OBDal.getInstance().createCriteria(WindowTrl.class);
-          qtTrl.addEqual(WindowTrl.PROPERTY_WINDOW, tab.getWindow());
-          qtTrl.addEqual(WindowTrl.PROPERTY_LANGUAGE + ".language", language);
+          qtTrl.add(Restrictions.eq(WindowTrl.PROPERTY_WINDOW, tab.getWindow()));
+          qtTrl.add(Restrictions.eq(WindowTrl.PROPERTY_LANGUAGE + ".language", language));
           if (qtTrl.list().size() != 0) {
             return qtTrl.list().get(0).getName();
           } else {
@@ -948,8 +950,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         }
       } else if ("X".equals(type)) {
         OBCriteria<FormTrl> qfTrl = OBDal.getInstance().createCriteria(FormTrl.class);
-        qfTrl.addEqual(FormTrl.PROPERTY_SPECIALFORM + ".id", id);
-        qfTrl.addEqual(FormTrl.PROPERTY_LANGUAGE + ".language", language);
+        qfTrl.add(Restrictions.eq(FormTrl.PROPERTY_SPECIALFORM + ".id", id));
+        qfTrl.add(Restrictions.eq(FormTrl.PROPERTY_LANGUAGE + ".language", language));
         if (qfTrl.list().size() != 0) {
           return qfTrl.list().get(0).getName();
         }
@@ -960,8 +962,8 @@ public class HttpSecureAppServlet extends HttpBaseServlet {
         }
       } else if ("R".endsWith(type) || "P".equals(type)) {
         OBCriteria<ProcessTrl> qfTrl = OBDal.getInstance().createCriteria(ProcessTrl.class);
-        qfTrl.addEqual(ProcessTrl.PROPERTY_PROCESS + ".id", id);
-        qfTrl.addEqual(ProcessTrl.PROPERTY_LANGUAGE + ".language", language);
+        qfTrl.add(Restrictions.eq(ProcessTrl.PROPERTY_PROCESS + ".id", id));
+        qfTrl.add(Restrictions.eq(ProcessTrl.PROPERTY_LANGUAGE + ".language", language));
         if (qfTrl.list().size() != 0) {
           return qfTrl.list().get(0).getName();
         }

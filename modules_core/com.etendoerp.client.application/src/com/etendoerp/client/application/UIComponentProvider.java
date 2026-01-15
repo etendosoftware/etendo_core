@@ -8,14 +8,14 @@ import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Component provider for UI-related resources in Etendo ERP.
  *
  * <p>Registers JavaScript files required for navigation and UI functionality.</p>
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(UIComponentProvider.COMPONENT_NAME)
 public class UIComponentProvider extends BaseComponentProvider {
 

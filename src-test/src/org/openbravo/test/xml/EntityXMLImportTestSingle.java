@@ -36,6 +36,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.EntityXMLConverter;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.businesspartner.Greeting;
@@ -182,7 +183,7 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     final OBCriteria<Greeting> obc = OBDal.getInstance().createCriteria(Greeting.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.addEqual(PROPERTY_ORGANIZATION, org);
+    obc.add(Restrictions.eq(PROPERTY_ORGANIZATION, org));
     // assertEquals(7, obc.list().size());
     for (final Greeting g : obc.list()) {
       OBDal.getInstance().remove(g);
@@ -203,7 +204,7 @@ public class EntityXMLImportTestSingle extends XMLBaseTest {
     final OBCriteria<Greeting> obc = OBDal.getInstance().createCriteria(Greeting.class);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
-    obc.addEqual(PROPERTY_ORGANIZATION, org);
+    obc.add(Restrictions.eq(PROPERTY_ORGANIZATION, org));
     assertEquals(0, obc.list().size());
     OBDal.getInstance().commitAndClose();
   }

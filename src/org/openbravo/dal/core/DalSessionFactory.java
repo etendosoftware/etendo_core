@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceUnitUtil;
@@ -22,7 +23,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
-import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -34,10 +34,10 @@ import org.hibernate.relational.*;
 import org.hibernate.stat.Statistics;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder; // ← si querés el builder específico
 import org.openbravo.base.session.OBPropertiesProvider;
-import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.database.SessionInfo;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
+@Dependent
 public class DalSessionFactory implements SessionFactory {
 
   private static final long serialVersionUID = 1L;

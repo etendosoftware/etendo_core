@@ -66,6 +66,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.Sqlc;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.domain.ReferencedTree;
@@ -396,8 +397,8 @@ public class SelectorComponent extends BaseTemplateComponent {
    */
   public String getShowSelectorGrid() {
     OBCriteria<SelectorField> criteria = OBDal.getInstance().createCriteria(SelectorField.class);
-    criteria.addEqual(SelectorField.PROPERTY_OBUISELSELECTOR, getSelector());
-    criteria.addEqual(SelectorField.PROPERTY_SHOWINGRID, true);
+    criteria.add(Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, getSelector()));
+    criteria.add(Restrictions.eq(SelectorField.PROPERTY_SHOWINGRID, true));
     if (criteria.count() > 0) {
       return Boolean.TRUE.toString();
     }
@@ -617,9 +618,9 @@ public class SelectorComponent extends BaseTemplateComponent {
     OBContext.setAdminMode();
     try {
       OBCriteria<SelectorField> crit = OBDal.getInstance().createCriteria(SelectorField.class);
-      crit.addEqual(SelectorField.PROPERTY_OBUISELSELECTOR, getSelector());
-      crit.addEqual(SelectorField.PROPERTY_ISOUTFIELD, true);
-      crit.addIsNotNull(SelectorField.PROPERTY_SUFFIX);
+      crit.add(Restrictions.eq(SelectorField.PROPERTY_OBUISELSELECTOR, getSelector()));
+      crit.add(Restrictions.eq(SelectorField.PROPERTY_ISOUTFIELD, true));
+      crit.add(Restrictions.isNotNull(SelectorField.PROPERTY_SUFFIX));
 
       List<SelectorField> fields = crit.list();
 

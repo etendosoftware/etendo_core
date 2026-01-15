@@ -37,6 +37,8 @@ import org.openbravo.client.application.Parameter;
 import org.openbravo.client.application.window.ApplicationDictionaryCachedStructures;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.ad.utility.AttachmentMethod;
@@ -71,9 +73,9 @@ public class MetadataOnTab extends SimpleCallout {
     AttachmentMethod attMethod = OBDal.getInstance().get(AttachmentMethod.class, methodId);
     Tab tab = adcs.getTab(tabId);
     OBCriteria<Parameter> critParam = OBDal.getInstance().createCriteria(Parameter.class);
-    critParam.addEqual(Parameter.PROPERTY_ATTACHMENTMETHOD, attMethod);
-    critParam.addEqual(Parameter.PROPERTY_TAB, tab);
-    critParam.setProjectionMax(Parameter.PROPERTY_SEQUENCENUMBER);
+    critParam.add(Restrictions.eq(Parameter.PROPERTY_ATTACHMENTMETHOD, attMethod));
+    critParam.add(Restrictions.eq(Parameter.PROPERTY_TAB, tab));
+    critParam.setProjection(Projections.max(Parameter.PROPERTY_SEQUENCENUMBER));
 
     Object result = critParam.uniqueResult();
     if (result == null) {

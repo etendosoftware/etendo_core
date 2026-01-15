@@ -112,9 +112,9 @@ public class ETagGeneration extends BaseDataSourceTestDal {
   }
 
   private Boolean hasModulesInDevelopment() {
-    final Query<Object> indevelMods = OBDal.getInstance()
+    final Query<Long> indevelMods = OBDal.getInstance()
         .getSession()
-        .createQuery("select 1 from ADModule m where m.inDevelopment=true", Object.class);
+        .createQuery("select 1 from ADModule m where m.inDevelopment=true", Long.class);
     indevelMods.setMaxResults(1);
     return indevelMods.list().size() > 0;
   }

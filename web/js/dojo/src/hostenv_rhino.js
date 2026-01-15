@@ -119,7 +119,7 @@ dojo.hostenv.exit = function(exitcode){
 
 // do it by using java java.lang.Exception
 function dj_rhino_current_script_via_java(depth) {
-    var optLevel = Packages.org.mozilla.javascript.Context.getCurrentContext().getOptimizationLevel();  
+   // var optLevel = Packages.org.mozilla.javascript.Context.getCurrentContext().getOptimizationLevel();
    // if (optLevel == -1){ dojo.unimplemented("getCurrentScriptURI (determine current script path for rhino when interpreter mode)", ''); }
     var caw = new java.io.CharArrayWriter();
     var pw = new java.io.PrintWriter(caw);

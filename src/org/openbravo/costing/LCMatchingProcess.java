@@ -44,6 +44,8 @@ import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.materialmgmt.cost.CostAdjustment;
@@ -89,9 +91,9 @@ public class LCMatchingProcess {
         return message;
       }
       final OBCriteria<LCMatched> critMatched = OBDal.getInstance().createCriteria(LCMatched.class);
-      critMatched.addEqual(LCMatched.PROPERTY_LANDEDCOSTCOST, currentLcCost);
-      critMatched.setProjectionSum(LCMatched.PROPERTY_AMOUNT);
-      final BigDecimal matchedAmt = (BigDecimal) critMatched.uniqueResult();
+      critMatched.add(Restrictions.eq(LCMatched.PROPERTY_LANDEDCOSTCOST, currentLcCost));
+      critMatched.setProjection(Projections.sum(LCMatched.PROPERTY_AMOUNT));
+      final BigDecimal matchedAmt = critMatched.uniqueResult(BigDecimal.class);
       if (matchedAmt != null) {
         currentLcCost.setMatchingAmount(matchedAmt);
         OBDal.getInstance().save(currentLcCost);
@@ -130,8 +132,8 @@ public class LCMatchingProcess {
     // Check there are Matching Lines.
     final OBCriteria<LandedCostCost> critLCMatched = OBDal.getInstance()
         .createCriteria(LandedCostCost.class);
-    critLCMatched.addSizeEq(LandedCostCost.PROPERTY_LANDEDCOSTMATCHEDLIST, 0);
-    critLCMatched.addEqual(LandedCostCost.PROPERTY_ID, lcCost.getId());
+    critLCMatched.add(Restrictions.sizeEq(LandedCostCost.PROPERTY_LANDEDCOSTMATCHEDLIST, 0));
+    critLCMatched.add(Restrictions.eq(LandedCostCost.PROPERTY_ID, lcCost.getId()));
     if (critLCMatched.uniqueResult() != null) {
       throw new OBException(OBMessageUtils.messageBD("LCCostNoMatchings"));
     }

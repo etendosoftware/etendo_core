@@ -26,14 +26,14 @@ import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * ComponentProvider for declaring static resources
  * 
  * @author iperdomo
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(WidgetsCollectionComponentProvider.COMPONENT_TYPE)
 public class WidgetsCollectionComponentProvider extends BaseComponentProvider {
   public static final String COMPONENT_TYPE = "OBCWC_WIDGETS";

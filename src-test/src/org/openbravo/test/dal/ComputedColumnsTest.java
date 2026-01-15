@@ -36,6 +36,7 @@ import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.Order_ComputedColumns;
 import org.openbravo.service.json.DataResolvingMode;
@@ -102,7 +103,7 @@ public class ComputedColumnsTest extends OBBaseTest {
     try {
       // try to filter in Criteria by computed column...
       OBCriteria<Order> qOrder = OBDal.getInstance().createCriteria(Order.class);
-      qOrder.addEqual(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100);
+      qOrder.add(Restrictions.eq(Order.COMPUTED_COLUMN_DELIVERYSTATUS, 100));
       qOrder.count();
     } catch (QueryException | PathElementException e) {
       thrown = e.getMessage().startsWith(EXCEPTION_MSG);

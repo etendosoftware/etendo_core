@@ -22,6 +22,7 @@ package org.openbravo.dal.core;
 import java.io.InputStream;
 import java.util.Properties;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -39,6 +40,7 @@ import org.openbravo.base.session.SessionFactoryController;
  * 
  * @author mtaal
  */
+@Dependent
 public class DalContextListener implements ServletContextListener {
   private static Properties obProperties = null;
   private static ServletContext servletContext = null;

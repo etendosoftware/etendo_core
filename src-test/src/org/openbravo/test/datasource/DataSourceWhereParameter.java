@@ -224,7 +224,8 @@ public class DataSourceWhereParameter extends BaseDataSourceTestDal {
     }
     String datasourceResponse = getDataSourceResponse();
     JSONObject jsonResponse = new JSONObject(datasourceResponse);
-    assertThat("The request status should be successful.", getStatus(jsonResponse),
+    assertThat("The request status should be successful. Response:" + datasourceResponse
+            + " Params: "+ datasource.params.toString(), getStatus(jsonResponse),
         is(String.valueOf(JsonConstants.RPCREQUEST_STATUS_SUCCESS)));
   }
 

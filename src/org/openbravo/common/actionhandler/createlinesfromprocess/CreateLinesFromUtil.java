@@ -33,6 +33,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.invoice.Invoice;
 import org.openbravo.model.common.order.OrderLine;
@@ -144,7 +145,7 @@ class CreateLinesFromUtil {
         aum = OBDal.getInstance().get(UOM.class, selectedPEValuesInLine.getString("operativeUOM"));
         if (aum == null) {
           OBCriteria<UOM> aumCriteria = OBDal.getInstance().createCriteria(UOM.class);
-          aumCriteria.addEqual(UOM.PROPERTY_NAME, selectedPEValuesInLine.getString("operativeUOM"));
+          aumCriteria.add(Restrictions.eq(UOM.PROPERTY_NAME, selectedPEValuesInLine.getString("operativeUOM")));
           aum = (UOM) aumCriteria.uniqueResult();
         }
       }
