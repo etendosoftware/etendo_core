@@ -1,9 +1,5 @@
 package org.openbravo.event;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-
-
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -20,11 +16,14 @@ import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.businesspartner.BusinessPartnerDocType;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.event.Observes;
+
 /**
  * Validates uniqueness of Business Partner Document Type per combination of
  * Document Category and Sales Transaction (IsSOTrx).
  */
-@ApplicationScoped
+@Dependent
 public class BPartnerDocTypeEventHandler extends EntityPersistenceEventObserver {
   private static final Entity[] entities = { ModelProvider.getInstance().getEntity(BusinessPartnerDocType.ENTITY_NAME)};
 

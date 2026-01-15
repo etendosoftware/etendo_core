@@ -130,6 +130,7 @@ public class HiddenUpdateTest extends OBBaseTest {
     }
   }
 
+  @Dependent
   private class LocalInterceptor extends EmptyInterceptor {
 
     private static final long serialVersionUID = 1L;

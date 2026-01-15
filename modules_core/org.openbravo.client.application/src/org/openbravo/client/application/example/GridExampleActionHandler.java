@@ -30,7 +30,7 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * The backing bean for a grid example. This backing bean does 2 things: 1) read data from the
@@ -38,7 +38,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class GridExampleActionHandler extends BaseActionHandler {
 
   private static final String ID = "id";

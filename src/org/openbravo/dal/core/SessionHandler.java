@@ -50,7 +50,6 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ExternalConnectionPool;
 import org.openbravo.service.db.DbUtility;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 
 /**
@@ -62,7 +61,7 @@ import jakarta.enterprise.context.Dependent;
  */
 // TODO: revisit when looking at factory pattern and dependency injection
 // framework
-@ApplicationScoped
+@Dependent
 public class SessionHandler implements OBNotSingleton {
   private static final Logger log = LogManager.getLogger();
 

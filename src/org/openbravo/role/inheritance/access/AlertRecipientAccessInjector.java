@@ -19,9 +19,6 @@ package org.openbravo.role.inheritance.access;
 
 import java.util.List;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
-
 import org.openbravo.base.structure.InheritedAccessEnabled;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -29,10 +26,12 @@ import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.alert.AlertRecipient;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * AccessTypeInjector for the AlertRecipient class
  */
-@ApplicationScoped
+@Dependent
 @AccessTypeInjector.Qualifier(AlertRecipient.class)
 public class AlertRecipientAccessInjector extends AccessTypeInjector {
 

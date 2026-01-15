@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.LockModeType;
 
 import org.apache.logging.log4j.LogManager;
@@ -68,6 +69,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 // object
 // TODO: re-check singleton pattern when a new factory/dependency injection
 // approach is implemented.
+@Dependent
 public class OBDal implements OBNotSingleton {
   private static final Logger log = LogManager.getLogger();
   private static final String ACTIVE_FILTER = "activeFilter";

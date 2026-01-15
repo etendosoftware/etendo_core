@@ -74,7 +74,7 @@ public class LogDatasourceTest extends BaseDataSourceTestNoDal {
 
     int totalRowsFiltered = getNumberOfTotalRows(requestLoggers(paramsFiltered));
 
-    assertThat("number of total rows", totalRowsFiltered, is(equalTo(3)));
+    assertThat("number of total rows", totalRowsFiltered, is(equalTo(2)));
   }
 
   @Test

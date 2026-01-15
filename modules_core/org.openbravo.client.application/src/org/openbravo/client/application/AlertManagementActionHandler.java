@@ -32,13 +32,13 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
 import org.openbravo.model.ad.alert.Alert;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * @author gorkaion
  * 
  */
-@ApplicationScoped
+@Dependent
 public class AlertManagementActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
   private static final String MOVE_TO_STATUS = "moveToStatus";

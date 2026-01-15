@@ -39,13 +39,13 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.Restrictions;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * 
  * @author iperdomo
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(ApplicationConstants.COMPONENT_TYPE)
 public class ApplicationComponentProvider extends BaseComponentProvider {
   public static final String QUALIFIER = ApplicationConstants.COMPONENT_TYPE;

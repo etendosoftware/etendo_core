@@ -31,7 +31,7 @@ import org.openbravo.erpCommon.utility.CsrfUtil;
 import org.openbravo.model.ad.utility.Image;
 import org.openbravo.service.json.JsonUtils;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Action handler which can delete an image by its id. Used on create a new record, upload an image
@@ -39,7 +39,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * 
  * @author GuillermoGil
  */
-@ApplicationScoped
+@Dependent
 public class DeleteImageActionHandler extends BaseActionHandler {
 
   @Override

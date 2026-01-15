@@ -31,12 +31,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.kernel.ComponentProvider;
@@ -50,13 +47,15 @@ import org.openbravo.erpCommon.utility.PropertyException;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.utility.Attachment;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Default implementation of Attachment Management. This method saves the attached files in the
  * "attach.path" folder of Openbravo server. It is the method used when no other configuration is
  * provided.
  *
  */
-@ApplicationScoped
+@Dependent
 @ComponentProvider.Qualifier(AttachmentUtils.DEFAULT_METHOD)
 public class CoreAttachImplementation extends AttachImplementation {
   private static final Logger log = LogManager.getLogger();

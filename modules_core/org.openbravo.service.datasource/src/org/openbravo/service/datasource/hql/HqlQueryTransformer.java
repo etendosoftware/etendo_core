@@ -19,14 +19,14 @@ package org.openbravo.service.datasource.hql;
 
 import java.util.Map;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A HqlQueryTransformer is able to transform an HQL query. HqlTransformer are instantiated using
  * dependency injection.
  */
 
-@ApplicationScoped
+@Dependent
 public abstract class HqlQueryTransformer extends HqlQueryPriorityHandler {
   /**
    * Returns some code to be injected in a HQL query, and adds query named parameters when needed

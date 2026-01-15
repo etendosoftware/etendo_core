@@ -16,9 +16,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
-@ApplicationScoped
+@Dependent
 public class EtendoPostgreSQLDialect extends PostgreSQLDialect {
 
   private static final Logger log = LogManager.getLogger();

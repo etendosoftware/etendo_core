@@ -27,7 +27,7 @@ import org.openbravo.client.kernel.BaseComponentProvider;
 import org.openbravo.client.kernel.Component;
 import org.openbravo.client.kernel.ComponentProvider;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 /**
@@ -36,7 +36,7 @@ import jakarta.inject.Inject;
  * 
  * @author mtaal
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(DataSourceConstants.DS_COMPONENT_TYPE)
 public class DataSourceComponentProvider extends BaseComponentProvider {
   public final static String QUALIFIER = DataSourceConstants.DS_COMPONENT_TYPE;

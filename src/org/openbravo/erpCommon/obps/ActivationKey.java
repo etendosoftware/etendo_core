@@ -91,12 +91,13 @@ import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.xmlEngine.XmlEngine;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpSession;
 
+@Dependent
 public class ActivationKey {
   private final static String OB_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3KuCsRC3ZxmTTryRAX99SJfwtjfTahW+dtXXpI0CQ87A8XxcL4xhhsH4WhyE+sSxji+vSlZLm7kpcJivbrzX2qy1nmM6OpFX4teo65jk3ccxMVx74ZeT/2aHcFNXUVD8jXxSv2U/5PVH//Q3KJyyay73YbkIKIwQWznWrgj2O3Gy2v1VRoUaeaWlEdS8pKEnfW4DkCJtqM3p6ZbRg6pdNUnGDjo1Ck6V9GuNubxkSvAu5vQQbeJurNFBk4Smwm6tJj6XSyefaOrXjcHFqwe4kU3VRu3nnkOl3aR8PUgHS7IS16LtB6C2AR9sIURS7FnoWp5aiCpNPescfFJQn3+VUQIDAQAB";
   private final static String OB_PUBLIC_KEY_OLD = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApaBElaRrI7V0sztIxI44" +

@@ -29,10 +29,6 @@ package org.openbravo.service.datasource;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -45,12 +41,15 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * Provides {@link DataSourceService} instances and caches them in a global cache.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class DataSourceServiceProvider {
 
   private Map<String, DataSourceService> dataSources = new ConcurrentHashMap<String, DataSourceService>();

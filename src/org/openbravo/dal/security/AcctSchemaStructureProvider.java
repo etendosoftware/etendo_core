@@ -28,6 +28,7 @@ import org.openbravo.base.provider.OBNotSingleton;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 
+@Deprecated
 public class AcctSchemaStructureProvider implements OBNotSingleton {
 
   private Map<String, List<String>> acctSchemaByOrg = new HashMap<String, List<String>>();

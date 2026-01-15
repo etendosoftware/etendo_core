@@ -64,7 +64,7 @@ import org.openbravo.test.views.ETagGeneration;
 @Suite
 @SelectClasses({
 
-    /*DataSourceWhereParameter.class, //
+    DataSourceWhereParameter.class, //
     TestCSVEncoding.class, //
     SelectorFieldPropertySelectorDSTest.class, //
     SelectorPickListFieldsDataSourceTest.class, //
@@ -81,9 +81,7 @@ import org.openbravo.test.views.ETagGeneration;
     ExtendedNavigationModelTest.class, //
     FetchDSNoActiveEntityObjects.class, //
     ExplicitCrossOrganizationReference.class, //
-     */
     DataSourceSecurity.class, //
-    /*
     EmptyStringWhereAndFilterClauseParameter.class, //
     UserInfoSessionDataTest.class, //
     LinkToParentTreeDataSourceTest.class, //
@@ -95,7 +93,6 @@ import org.openbravo.test.views.ETagGeneration;
     TestSelectorDefaultFilterActionHandler.class, //
     SummaryFieldRequestTest.class, //
     CSRFAttackTest.class, //
-    */
 })
 public class WebserviceTestSuite {
 }

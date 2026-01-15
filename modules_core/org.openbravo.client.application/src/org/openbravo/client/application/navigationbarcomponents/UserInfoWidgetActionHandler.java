@@ -49,7 +49,7 @@ import org.openbravo.portal.PortalAccessible;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.password.PasswordStrengthChecker;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -61,7 +61,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class UserInfoWidgetActionHandler extends BaseActionHandler implements PortalAccessible {
 
   @Inject

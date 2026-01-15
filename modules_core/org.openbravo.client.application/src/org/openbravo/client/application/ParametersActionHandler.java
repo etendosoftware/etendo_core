@@ -41,14 +41,14 @@ import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.portal.PortalAccessible;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Responsible of retrieving/storing Parameter values
  * 
  * @author iperdomo
  */
-@ApplicationScoped
+@Dependent
 public class ParametersActionHandler extends BaseActionHandler implements PortalAccessible {
   private static Logger log = LogManager.getLogger();
 

@@ -57,6 +57,7 @@ import org.openbravo.service.json.DataToJsonConverter;
 import org.openbravo.service.json.JsonToDataConverter;
 import org.openbravo.test.base.OBBaseTest;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 
 /**

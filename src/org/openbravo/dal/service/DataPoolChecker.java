@@ -31,9 +31,12 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.provider.OBSingleton;
 import org.openbravo.database.ExternalConnectionPool;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * Helper class used to determine if a report should use the read-only pool to retrieve data
  */
+@Dependent
 public class DataPoolChecker implements OBSingleton {
   private static final Logger log = LogManager.getLogger();
   private static final int REPORT_ID = 0;

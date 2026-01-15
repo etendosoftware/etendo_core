@@ -30,7 +30,7 @@ import org.openbravo.client.kernel.KernelConstants;
 import org.openbravo.client.kernel.KernelUtils;
 import org.openbravo.client.kernel.StaticResourceComponent;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * Is used to provide the global resources needed for smartclient.
@@ -38,7 +38,7 @@ import jakarta.enterprise.context.Dependent;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@Dependent
+@ApplicationScoped
 @ComponentProvider.Qualifier(SmartClientComponentProvider.QUALIFIER)
 public class SmartClientComponentProvider extends BaseComponentProvider {
   public static final String SC_COMPONENT_TYPE = "OBUISC_Smartclient";

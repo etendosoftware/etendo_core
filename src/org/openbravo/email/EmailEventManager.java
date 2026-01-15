@@ -25,11 +25,6 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Inject;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.dal.core.OBContext;
@@ -39,6 +34,11 @@ import org.openbravo.erpCommon.utility.poc.EmailManager;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.enterprise.Organization;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
 /**
  * This singleton class, is in charge of generating events to send emails.
  * 
@@ -46,7 +46,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * @see EmailEventContentGenerator
  * 
  */
-@ApplicationScoped
+@Dependent
 public class EmailEventManager {
 
   private static final Logger log = LogManager.getLogger();

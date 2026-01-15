@@ -18,10 +18,10 @@
  */
 package org.openbravo.service.importprocess;
 
+import org.openbravo.cluster.ClusterService;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import org.openbravo.cluster.ClusterService;
 
 /**
  * This class defines the behavior of the import entry service being in a clustered environment.

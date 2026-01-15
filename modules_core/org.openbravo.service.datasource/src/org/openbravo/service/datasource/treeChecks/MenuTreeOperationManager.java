@@ -30,6 +30,7 @@ package org.openbravo.service.datasource.treeChecks;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBCriteria;
@@ -40,7 +41,7 @@ import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.ui.Menu;
 import org.openbravo.service.datasource.CheckTreeOperationManager;
 
-@ApplicationScoped
+@Dependent
 @Qualifier("ADMenu")
 public class MenuTreeOperationManager extends CheckTreeOperationManager {
   private final String TEMPLATE_TYPE = "T";

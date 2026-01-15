@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletInputStream;
@@ -51,6 +52,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
  * 
  * @author mtaal
  */
+@Dependent
 public class RequestContext {
   private static ServletContext servletContext = null;
 

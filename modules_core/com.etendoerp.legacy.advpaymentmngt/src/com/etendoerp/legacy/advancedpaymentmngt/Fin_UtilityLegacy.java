@@ -28,7 +28,6 @@ package com.etendoerp.legacy.advancedpaymentmngt;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.utility.FIN_SequenceActionInterface;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
@@ -39,10 +38,10 @@ import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Default;
 
-@ApplicationScoped
+@Dependent
 @Default
 public class Fin_UtilityLegacy implements FIN_SequenceActionInterface {
 

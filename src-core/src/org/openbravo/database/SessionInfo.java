@@ -27,10 +27,13 @@ import java.sql.SQLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class is used to maintain session information which will be used for audit purposes.
  * 
  */
+@Dependent
 public class SessionInfo {
   private static final String JDBC_CONNECTION_POOL_CLASS_NAME = "org.openbravo.apachejdbcconnectionpool.JdbcExternalConnectionPool";
 

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
@@ -17,6 +18,7 @@ import jakarta.persistence.criteria.Root;
  *
  * @author refactored for Hibernate 6.5.2
  */
+@Dependent
 public class Restrictions {
 
   /**
@@ -529,9 +531,9 @@ public class Restrictions {
 
       switch (type) {
         case EQ:
-          return cb.equal(path, value);
+          return value != null ? cb.equal(path, value) : cb.isNull(path);
         case NE:
-          return cb.notEqual(path, value);
+          return value != null ? cb.notEqual(path, value): cb.isNotNull(path);
         case GT:
           return cb.greaterThan(path, (Comparable) value);
         case GE:
