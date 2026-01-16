@@ -38,6 +38,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
@@ -545,16 +546,16 @@ public class AssetLinearDepreciationMethodProcess extends DalBaseProcess {
       final Date endDate, final Project project) {
     final OBCriteria<Amortization> obc = OBDal.getInstance()
         .createCriteria(Amortization.class)
-        .addEqual(Amortization.PROPERTY_ORGANIZATION, org);
+        .add(Restrictions.eq(Amortization.PROPERTY_ORGANIZATION, org));
     if (startDate != null) {
-      obc.addEqual(Amortization.PROPERTY_STARTINGDATE, startDate);
+      obc.add(Restrictions.eq(Amortization.PROPERTY_STARTINGDATE, startDate));
     }
-    obc.addEqual(Amortization.PROPERTY_ENDINGDATE, endDate)
-        .addEqual(Amortization.PROPERTY_PROCESSED, "N");
+    obc.add(Restrictions.eq(Amortization.PROPERTY_ENDINGDATE, endDate))
+        .add(Restrictions.eq(Amortization.PROPERTY_PROCESSED, "N"));
     if (project != null) {
-      obc.addEqual(Amortization.PROPERTY_PROJECT, project);
+      obc.add(Restrictions.eq(Amortization.PROPERTY_PROJECT, project));
     } else {
-      obc.addIsNull(Amortization.PROPERTY_PROJECT);
+      obc.add(Restrictions.isNull(Amortization.PROPERTY_PROJECT));
     }
     obc.setFilterOnReadableOrganization(false);
     final List<Amortization> amortizationList = obc.list();

@@ -33,6 +33,7 @@ import org.openbravo.costing.CostingServer.TrxType;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.financial.FinancialUtils;
 import org.openbravo.model.common.currency.Currency;
@@ -241,15 +242,15 @@ public class PriceDifferenceProcess {
     OBCriteria<MaterialTransaction> mTrxs = OBDal.getInstance()
         .createCriteria(MaterialTransaction.class);
     if (date != null) {
-      mTrxs.addLessOrEqualThan(MaterialTransaction.PROPERTY_MOVEMENTDATE, date);
+      mTrxs.add(Restrictions.le(MaterialTransaction.PROPERTY_MOVEMENTDATE, date));
     }
     if (product != null) {
-      mTrxs.addEqual(MaterialTransaction.PROPERTY_PRODUCT, product);
+      mTrxs.add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCT, product));
     }
-    mTrxs.addEqual(MaterialTransaction.PROPERTY_CHECKPRICEDIFFERENCE, true);
-    mTrxs.addEqual(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, true);
-    mTrxs.addInIds(MaterialTransaction.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
-            new OrganizationStructureProvider().getChildTree(legalOrganization.getId(), true));
+    mTrxs.add(Restrictions.eq(MaterialTransaction.PROPERTY_CHECKPRICEDIFFERENCE, true));
+    mTrxs.add(Restrictions.eq(MaterialTransaction.PROPERTY_ISCOSTCALCULATED, true));
+    mTrxs.add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + "." + Organization.PROPERTY_ID,
+            new OrganizationStructureProvider().getChildTree(legalOrganization.getId(), true)));
     mTrxs.addOrderBy(MaterialTransaction.PROPERTY_MOVEMENTDATE, true);
     mTrxs.addOrderBy(MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE, true);
     ScrollableResults lines = mTrxs.scroll(ScrollMode.FORWARD_ONLY);

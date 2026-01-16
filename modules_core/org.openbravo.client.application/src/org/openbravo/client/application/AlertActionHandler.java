@@ -44,7 +44,7 @@ import org.openbravo.portal.PortalAccessible;
 import org.openbravo.service.db.DalConnectionProvider;
 import org.openbravo.service.json.JsonConstants;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -58,7 +58,7 @@ import jakarta.servlet.http.HttpSession;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class AlertActionHandler extends BaseActionHandler implements PortalAccessible {
   private static final Logger log4j = LogManager.getLogger();
 

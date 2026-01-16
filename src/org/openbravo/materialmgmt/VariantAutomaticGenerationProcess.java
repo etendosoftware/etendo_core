@@ -41,6 +41,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.system.Client;
@@ -82,8 +83,8 @@ public class VariantAutomaticGenerationProcess implements Process {
 
       OBCriteria<ProductCharacteristic> prChCrit = OBDal.getInstance()
           .createCriteria(ProductCharacteristic.class);
-      prChCrit.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, product);
-      prChCrit.addEqual(ProductCharacteristic.PROPERTY_VARIANT, true);
+      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, product));
+      prChCrit.add(Restrictions.eq(ProductCharacteristic.PROPERTY_VARIANT, true));
       prChCrit.addOrderBy(ProductCharacteristic.PROPERTY_SEQUENCENUMBER, true);
       List<ProductCharacteristic> prChCritList = prChCrit.list();
       List<String> prChs = new ArrayList<String>();

@@ -31,6 +31,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.User;
 
 /**
@@ -156,7 +157,7 @@ public class UserLock {
     OBContext.setAdminMode();
     try {
       OBCriteria<User> obCriteria = OBDal.getInstance().createCriteria(User.class);
-      obCriteria.addEqual(User.PROPERTY_USERNAME, userName);
+      obCriteria.add(Restrictions.eq(User.PROPERTY_USERNAME, userName));
       obCriteria.setFilterOnReadableClients(false);
       obCriteria.setFilterOnReadableOrganization(false);
 

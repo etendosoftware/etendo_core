@@ -143,24 +143,24 @@ public class AccessLevelTest extends OBBaseTest {
         if (!e.isClientEnabled()) {
           continue;
         }
-        where.append("where client = :clientId");
-        params.put("clientId", clientZero);
+        where.append("where client.id = :clientId");
+        params.put("clientId", clientZero.getId());
       } else if (e.getAccessLevel() == AccessLevel.ORGANIZATION) {
         if (!e.isOrganizationEnabled() || !e.isClientEnabled()) {
           // ignore these
           continue;
         }
-        where.append("where client = :clientId or organization = :orgId");
-        params.put("clientId", clientZero);
-        params.put("orgId", orgZero);
+        where.append("where client.id = :clientId or organization.id = :orgId");
+        params.put("clientId", clientZero.getId());
+        params.put("orgId", orgZero.getId());
       } else if (e.getAccessLevel() == AccessLevel.SYSTEM) {
         if (!e.isOrganizationEnabled()) {
-          where.append("where client != :clientId");
-          params.put("clientId", clientZero);
+          where.append("where client.id != :clientId");
+          params.put("clientId", clientZero.getId());
         } else {
-          where.append("where client != :clientId or organization != :orgId");
-          params.put("clientId", clientZero);
-          params.put("orgId", orgZero);
+          where.append("where client.id != :clientId or organization.id != :orgId");
+          params.put("clientId", clientZero.getId());
+          params.put("orgId", orgZero.getId());
         }
         if (!e.isClientEnabled()) {
           // special case happens for AD_SQL_SCRIPT
@@ -171,8 +171,8 @@ public class AccessLevelTest extends OBBaseTest {
           // ignore these
           continue;
         }
-        where.append("where organization != :orgId");
-        params.put("orgId", orgZero);
+        where.append("where organization.id != :orgId");
+        params.put("orgId", orgZero.getId());
       }
       final OBQuery<BaseOBObject> obq = OBDal.getInstance()
           .createQuery(e.getName(), where.toString());

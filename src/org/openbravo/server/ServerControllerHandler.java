@@ -18,7 +18,7 @@
 
 package org.openbravo.server;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -30,7 +30,7 @@ import jakarta.inject.Inject;
  * It has a default implementation where it is hardcoded that the current server is a central
  * server, but this functionality can be overwritten by extending the {@link ServerController} class
  */
-@ApplicationScoped
+@Dependent
 public class ServerControllerHandler {
 
   @Inject

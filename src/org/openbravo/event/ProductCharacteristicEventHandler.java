@@ -36,6 +36,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.plm.CharacteristicValue;
 import org.openbravo.model.common.plm.Product;
@@ -79,9 +80,9 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
         // Check there is only 1.
         OBCriteria<ProductCharacteristic> criteria = OBDal.getInstance()
             .createCriteria(ProductCharacteristic.class);
-        criteria.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct());
-        criteria.addEqual(ProductCharacteristic.PROPERTY_DEFINESPRICE, true);
-        criteria.addNotEqual(ProductCharacteristic.PROPERTY_ID, prCh.getId());
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct()));
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_DEFINESPRICE, true));
+        criteria.add(Restrictions.ne(ProductCharacteristic.PROPERTY_ID, prCh.getId()));
         criteria.setFilterOnActive(false);
         criteria.setMaxResults(1);
         if (criteria.uniqueResult() != null) {
@@ -92,9 +93,9 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
         // Check there is only 1.
         OBCriteria<ProductCharacteristic> criteria = OBDal.getInstance()
             .createCriteria(ProductCharacteristic.class);
-        criteria.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct());
-        criteria.addEqual(ProductCharacteristic.PROPERTY_DEFINESIMAGE, true);
-        criteria.addNotEqual(ProductCharacteristic.PROPERTY_ID, prCh.getId());
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct()));
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_DEFINESIMAGE, true));
+        criteria.add(Restrictions.ne(ProductCharacteristic.PROPERTY_ID, prCh.getId()));
         criteria.setFilterOnActive(false);
         criteria.setMaxResults(1);
         if (criteria.uniqueResult() != null) {
@@ -144,9 +145,9 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
       // Check there is only 1.
       OBCriteria<ProductCharacteristicValue> criteria = OBDal.getInstance()
           .createCriteria(ProductCharacteristicValue.class);
-      criteria.addEqual(ProductCharacteristicValue.PROPERTY_PRODUCT, prd);
-      criteria.addEqual(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
-          event.getPreviousState(chProp));
+      criteria.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_PRODUCT, prd));
+      criteria.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
+          event.getPreviousState(chProp)));
       criteria.setFilterOnActive(false);
       criteria.setMaxResults(1);
       if (criteria.uniqueResult() != null) {
@@ -170,9 +171,9 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
         // Check there is only 1.
         OBCriteria<ProductCharacteristic> criteria = OBDal.getInstance()
             .createCriteria(ProductCharacteristic.class);
-        criteria.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct());
-        criteria.addEqual(ProductCharacteristic.PROPERTY_DEFINESPRICE, true);
-        criteria.addNotEqual(ProductCharacteristic.PROPERTY_ID, prCh.getId());
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct()));
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_DEFINESPRICE, true));
+        criteria.add(Restrictions.ne(ProductCharacteristic.PROPERTY_ID, prCh.getId()));
         criteria.setFilterOnActive(false);
         criteria.setMaxResults(1);
         if (criteria.uniqueResult() != null) {
@@ -183,9 +184,9 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
         // Check there is only 1.
         OBCriteria<ProductCharacteristic> criteria = OBDal.getInstance()
             .createCriteria(ProductCharacteristic.class);
-        criteria.addEqual(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct());
-        criteria.addEqual(ProductCharacteristic.PROPERTY_DEFINESIMAGE, true);
-        criteria.addNotEqual(ProductCharacteristic.PROPERTY_ID, prCh.getId());
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_PRODUCT, prCh.getProduct()));
+        criteria.add(Restrictions.eq(ProductCharacteristic.PROPERTY_DEFINESIMAGE, true));
+        criteria.add(Restrictions.ne(ProductCharacteristic.PROPERTY_ID, prCh.getId()));
         criteria.setFilterOnActive(false);
         criteria.setMaxResults(1);
         if (criteria.uniqueResult() != null) {
@@ -222,10 +223,10 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
             if (existingValues.remove(chValueId)) {
               OBCriteria<ProductCharacteristicConf> prChConfCrit = OBDal.getInstance()
                   .createCriteria(ProductCharacteristicConf.class);
-              prChConfCrit.addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh);
+              prChConfCrit.add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh));
               prChConfCrit
-                  .addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
-                      OBDal.getInstance().get(CharacteristicValue.class, chValueId));
+                  .add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
+                      OBDal.getInstance().get(CharacteristicValue.class, chValueId)));
               prChConfCrit.setFilterOnActive(false);
               ProductCharacteristicConf prChConf = (ProductCharacteristicConf) prChConfCrit
                   .uniqueResult();
@@ -244,9 +245,9 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
           for (String strChValueId : existingValues) {
             OBCriteria<ProductCharacteristicConf> prChConfCrit = OBDal.getInstance()
                 .createCriteria(ProductCharacteristicConf.class);
-            prChConfCrit.addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh);
-            prChConfCrit.addEqual(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
-                OBDal.getInstance().get(CharacteristicValue.class, strChValueId));
+            prChConfCrit.add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICOFPRODUCT, prCh));
+            prChConfCrit.add(Restrictions.eq(ProductCharacteristicConf.PROPERTY_CHARACTERISTICVALUE,
+                OBDal.getInstance().get(CharacteristicValue.class, strChValueId)));
             prChConfCrit.setFilterOnActive(false);
             ProductCharacteristicConf prChConf = (ProductCharacteristicConf) prChConfCrit
                 .uniqueResult();
@@ -312,10 +313,10 @@ class ProductCharacteristicEventHandler extends EntityPersistenceEventObserver {
   private void deleteProductCharacteristicValue(ProductCharacteristic productCharacteristic) {
     OBCriteria<ProductCharacteristicValue> criteria = OBDal.getInstance()
         .createCriteria(ProductCharacteristicValue.class);
-    criteria.addEqual(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
-        productCharacteristic.getCharacteristic());
-    criteria.addEqual(ProductCharacteristicValue.PROPERTY_PRODUCT,
-        productCharacteristic.getProduct());
+    criteria.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_CHARACTERISTIC,
+        productCharacteristic.getCharacteristic()));
+    criteria.add(Restrictions.eq(ProductCharacteristicValue.PROPERTY_PRODUCT,
+        productCharacteristic.getProduct()));
     try (ScrollableResults scroll = criteria.scroll(ScrollMode.FORWARD_ONLY)) {
       int i = 0;
       while (scroll.next()) {

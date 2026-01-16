@@ -44,6 +44,8 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
 import org.openbravo.erpCommon.businessUtility.Preferences;
@@ -222,12 +224,12 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
     }
-    obc.addEqual(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice);
-    obc.setProjectionMax(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT);
+    obc.add(Restrictions.eq(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice));
+    obc.setProjection(Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
     obc.setMaxResults(1);
-    Object o = obc.uniqueResult();
+    Date o = obc.uniqueResult(Date.class);
     if (o != null) {
-      return ((Date) o);
+      return o;
     } else {
       return null;
     }
@@ -327,13 +329,13 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
       obc.setFilterOnReadableClients(false);
       obc.setFilterOnReadableOrganization(false);
     }
-    obc.addEqual(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice);
-    obc.addNotEqual(FIN_PaymentSchedule.PROPERTY_OUTSTANDINGAMOUNT, BigDecimal.ZERO);
-    obc.setProjectionMin(FIN_PaymentSchedule.PROPERTY_DUEDATE);
+    obc.add(Restrictions.eq(FIN_PaymentSchedule.PROPERTY_INVOICE, invoice));
+    obc.add(Restrictions.ne(FIN_PaymentSchedule.PROPERTY_OUTSTANDINGAMOUNT, BigDecimal.ZERO));
+    obc.setProjection(Projections.min(FIN_PaymentSchedule.PROPERTY_DUEDATE));
     obc.setMaxResults(1);
-    Object o = obc.uniqueResult();
+    Date o = obc.uniqueResult(Date.class);
     if (o != null) {
-      return (FIN_Utility.getDaysToDue((Date) o));
+      return FIN_Utility.getDaysToDue(o);
     } else {
       return 0L;
     }
@@ -352,14 +354,14 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
   private static boolean isPreferenceOfModule(String property, String moduleId) {
 
     final OBCriteria<Preference> obcNotSel = OBDal.getInstance().createCriteria(Preference.class);
-    obcNotSel.addEqual(Preference.PROPERTY_PROPERTY, property);
+    obcNotSel.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, property));
     obcNotSel.setFilterOnReadableClients(false);
     obcNotSel.setFilterOnReadableOrganization(false);
     obcNotSel.setMaxResults(1);
 
     final OBCriteria<Preference> obcSel = OBDal.getInstance().createCriteria(Preference.class);
-    obcSel.addEqual(Preference.PROPERTY_PROPERTY, property);
-    obcSel.addEqual(Preference.PROPERTY_SELECTED, true);
+    obcSel.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, property));
+    obcSel.add(Restrictions.eq(Preference.PROPERTY_SELECTED, true));
     obcSel.setFilterOnReadableClients(false);
     obcSel.setFilterOnReadableOrganization(false);
     obcSel.setMaxResults(1);

@@ -27,13 +27,13 @@ import org.openbravo.client.kernel.BaseActionHandler;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.erpCommon.utility.OBError;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * Is used to get the message set in session for a tab
  * 
  */
-@ApplicationScoped
+@Dependent
 public class GetTabMessageActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

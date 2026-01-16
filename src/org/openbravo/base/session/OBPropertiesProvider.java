@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
@@ -37,12 +36,15 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBConfigFileProvider;
 import org.openbravo.dal.xml.XMLUtil;
 
+import jakarta.enterprise.context.Dependent;
+
 /**
  * This class implements a central location where the Openbravo.properties are read and made
  * available for the rest of the application.
  * 
  * @author mtaal
  */
+@Dependent
 public class OBPropertiesProvider {
   private final Logger log = LogManager.getLogger();
 

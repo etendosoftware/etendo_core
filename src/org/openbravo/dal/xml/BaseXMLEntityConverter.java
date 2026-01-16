@@ -44,7 +44,7 @@ import org.openbravo.model.common.enterprise.Organization;
  * 
  * @author mtaal
  */
-
+@Deprecated
 public class BaseXMLEntityConverter implements OBNotSingleton {
   // This class should translate the
 

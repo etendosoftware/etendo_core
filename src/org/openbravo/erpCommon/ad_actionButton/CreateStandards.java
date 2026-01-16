@@ -33,6 +33,7 @@ import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.reference.PInstanceProcessData;
 import org.openbravo.erpCommon.utility.AttributeSetInstanceValue;
@@ -165,13 +166,13 @@ public class CreateStandards implements org.openbravo.scheduling.Process {
           OBCriteria<ProductionLine> productionLineCriteria = OBDal.getInstance()
               .createCriteria(ProductionLine.class);
           productionLineCriteria
-              .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan);
+              .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan));
           productionLineCriteria
-              .addIsNotNull(ProductionLine.PROPERTY_ATTRIBUTESETVALUE);
+              .add(Restrictions.isNotNull(ProductionLine.PROPERTY_ATTRIBUTESETVALUE));
           productionLineCriteria.createAlias(ProductionLine.PROPERTY_WRPRODUCTPHASE, "wrpp");
           productionLineCriteria
-              .addEqual("wrpp." + WorkRequirementProduct.PROPERTY_SEQUENCEPRODUCT,
-                  opProductAtt.getProductFrom());
+              .add(Restrictions.eq("wrpp." + WorkRequirementProduct.PROPERTY_SEQUENCEPRODUCT,
+                  opProductAtt.getProductFrom()));
 
           List<ProductionLine> plinesToCopyFrom = productionLineCriteria.list();
           if (!plinesToCopyFrom.isEmpty()) {
@@ -212,9 +213,9 @@ public class CreateStandards implements org.openbravo.scheduling.Process {
                 // getValue from
                 OBCriteria<AttributeInstance> attributeInstanceCriteria = OBDal.getInstance()
                     .createCriteria(AttributeInstance.class);
-                attributeInstanceCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attSetInstanceFrom);
-                attributeInstanceCriteria.addEqual(AttributeInstance.PROPERTY_ATTRIBUTE,
-                    opProductAtt.getAttributeUse().getAttribute());
+                attributeInstanceCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTESETVALUE, attSetInstanceFrom));
+                attributeInstanceCriteria.add(Restrictions.eq(AttributeInstance.PROPERTY_ATTRIBUTE,
+                    opProductAtt.getAttributeUse().getAttribute()));
                 List<AttributeInstance> AttributeInstanceList = attributeInstanceCriteria.list();
                 // add value
                 if (!AttributeInstanceList.isEmpty()) {
@@ -239,10 +240,10 @@ public class CreateStandards implements org.openbravo.scheduling.Process {
         OBCriteria<ProductionLine> ProductionLineCriteria = OBDal.getInstance()
             .createCriteria(ProductionLine.class);
         ProductionLineCriteria
-            .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan);
-        ProductionLineCriteria.addEqual(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+");
+            .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan));
+        ProductionLineCriteria.add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+"));
         ProductionLineCriteria.createAlias(ProductionLine.PROPERTY_WRPRODUCTPHASE, "wrpp");
-        ProductionLineCriteria.addEqual("wrpp." + WorkRequirementProduct.PROPERTY_SEQUENCEPRODUCT, opProduct);
+        ProductionLineCriteria.add(Restrictions.eq("wrpp." + WorkRequirementProduct.PROPERTY_SEQUENCEPRODUCT, opProduct));
 
         List<ProductionLine> plinesToCopyTo = ProductionLineCriteria.list();
 
@@ -292,8 +293,8 @@ public class CreateStandards implements org.openbravo.scheduling.Process {
       OBCriteria<ProductionLine> ProductionLineCriteria = OBDal.getInstance()
           .createCriteria(ProductionLine.class);
       ProductionLineCriteria
-          .addEqual(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan);
-      ProductionLineCriteria.addEqual(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+");
+          .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, productionPlan));
+      ProductionLineCriteria.add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONTYPE, "+"));
       List<ProductionLine> plines = ProductionLineCriteria.list();
       for (ProductionLine line : plines) {
         AttributeSet attSet = line.getProduct().getAttributeSet();

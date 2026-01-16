@@ -51,6 +51,7 @@ import org.openbravo.base.model.domaintype.ButtonDomainType;
 import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.module.Module;
@@ -201,8 +202,8 @@ public class DatabaseValidator implements SystemValidator {
 
       final List<Table> adTables = OBDal.getInstance()
           .createCriteria(Table.class)
-          .addEqual(Table.PROPERTY_VIEW, false)
-          .addEqual(Table.PROPERTY_DATAORIGINTYPE, ApplicationConstants.TABLEBASEDTABLE)
+          .add(Restrictions.eq(Table.PROPERTY_VIEW, false))
+          .add(Restrictions.eq(Table.PROPERTY_DATAORIGINTYPE, ApplicationConstants.TABLEBASEDTABLE))
           .list();
 
       final String moduleId = (getValidateModule() == null ? null : getValidateModule().getId());
@@ -289,13 +290,13 @@ public class DatabaseValidator implements SystemValidator {
 
     // if one of the old-booleans is set, but not using new reference-id's -> report as warning
     OBCriteria<Column> colQuery = OBDal.getInstance().createCriteria(Column.class);
-    colQuery.addAnd((cb, obc) -> cb.equal(obc.getPath(Column.PROPERTY_DISPLAYENCRIPTION), Boolean.TRUE),
-                    (cb, obc) -> cb.not(cb.or(cb.equal(obc.getPath(Column.PROPERTY_REFERENCE), hashed),
-                                              cb.equal(obc.getPath(Column.PROPERTY_REFERENCE), encrypted))));
+    colQuery.add(Restrictions.and(Restrictions.eq(Column.PROPERTY_DISPLAYENCRIPTION, Boolean.TRUE),
+        Restrictions.not(Restrictions.or(Restrictions.eq(Column.PROPERTY_REFERENCE, hashed),
+        Restrictions.eq(Column.PROPERTY_REFERENCE, encrypted)))));
 
     // only validate given module (if given)
     if (validateModule != null) {
-      colQuery.addEqual(Column.PROPERTY_MODULE, validateModule);
+      colQuery.add(Restrictions.eq(Column.PROPERTY_MODULE, validateModule));
     }
     if (colQuery.count() > 0) {
       List<Column> columns = colQuery.list();
@@ -317,7 +318,7 @@ public class DatabaseValidator implements SystemValidator {
   private void checkDataSetName(SystemValidationResult result) {
     OBCriteria<DataSet> obc = OBDal.getInstance().createCriteria(DataSet.class);
     if (validateModule != null) {
-      obc.addEqual(DataSet.PROPERTY_MODULE, validateModule);
+      obc.add(Restrictions.eq(DataSet.PROPERTY_MODULE, validateModule));
     }
     List<DataSet> dsList = obc.list();
     for (DataSet ds : dsList) {
@@ -870,14 +871,14 @@ public class DatabaseValidator implements SystemValidator {
    */
   public void checkFieldsInGridView(Table adTable, SystemValidationResult result) {
     OBCriteria<Tab> tabCriteria = OBDal.getInstance().createCriteria(Tab.class);
-    tabCriteria.addEqual(Tab.PROPERTY_TABLE, adTable);
+    tabCriteria.add(Restrictions.eq(Tab.PROPERTY_TABLE, adTable));
     for (Tab tab : tabCriteria.list()) {
       if ("Field Sequence".equals(tab.getName()) || ("Grid Sequence".equals(tab.getName()))) {
         continue;
       }
       OBCriteria<Field> fieldCriteria = OBDal.getInstance().createCriteria(Field.class);
-      fieldCriteria.addEqual(Field.PROPERTY_TAB, tab);
-      fieldCriteria.addEqual(Field.PROPERTY_SHOWINGRIDVIEW, true);
+      fieldCriteria.add(Restrictions.eq(Field.PROPERTY_TAB, tab));
+      fieldCriteria.add(Restrictions.eq(Field.PROPERTY_SHOWINGRIDVIEW, true));
       if (fieldCriteria.count() == 0) {
         result.addError(SystemValidationType.NOFIELDSINGRIDVIEW,
             "No Fields are visible in grid view for Tab " + tab.getWindow().getName() + " - "
@@ -896,13 +897,13 @@ public class DatabaseValidator implements SystemValidator {
   private void checkKillableImplementation(SystemValidationResult result) {
     OBCriteria<org.openbravo.model.ad.ui.Process> obc = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.ui.Process.class);
-    obc.addEqual(org.openbravo.model.ad.ui.Process.PROPERTY_KILLABLE, true);
+    obc.add(Restrictions.eq(org.openbravo.model.ad.ui.Process.PROPERTY_KILLABLE, true));
     // FIXME: Remove when https://issues.openbravo.com/view.php?id=41753 is fixed
-    obc.addNotEqual(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
-        FRENCHFISCAL_MODULE);
+    obc.add(Restrictions.ne(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
+        FRENCHFISCAL_MODULE));
     if (validateModule != null) {
-      obc.addEqual(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
-          validateModule.getId());
+      obc.add(Restrictions.eq(org.openbravo.model.ad.ui.Process.PROPERTY_MODULE + ".id",
+          validateModule.getId()));
     }
     List<org.openbravo.model.ad.ui.Process> processList = obc.list();
     for (org.openbravo.model.ad.ui.Process process : processList) {

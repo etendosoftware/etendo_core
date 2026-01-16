@@ -29,6 +29,7 @@ import jakarta.persistence.Tuple;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOut;
 import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
@@ -151,8 +152,8 @@ public class ServiceDeliverUtility {
     if (orderLine.getBOMParent() != null) {
       OBCriteria<ShipmentInOutLine> obc = OBDal.getInstance()
           .createCriteria(ShipmentInOutLine.class);
-      obc.addEqual(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipment);
-      obc.addEqual(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine.getBOMParent());
+      obc.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SHIPMENTRECEIPT, shipment));
+      obc.add(Restrictions.eq(ShipmentInOutLine.PROPERTY_SALESORDERLINE, orderLine.getBOMParent()));
       obc.setMaxResults(1);
       shipmentLine.setBOMParent((ShipmentInOutLine) obc.uniqueResult());
     }

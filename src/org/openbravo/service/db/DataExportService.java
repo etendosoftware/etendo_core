@@ -39,6 +39,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.EntityXMLConverter;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.utility.DataSet;
@@ -122,7 +123,7 @@ public class DataExportService implements OBSingleton {
     OBContext.setAdminMode();
     try {
       final OBCriteria<DataSet> obc = OBDal.getInstance().createCriteria(DataSet.class);
-      obc.addEqual("name", CLIENT_DATA_SET_NAME);
+      obc.add(Restrictions.eq("name", CLIENT_DATA_SET_NAME));
       if (obc.list().size() == 0) {
         throw new OBException("No dataset found with name " + CLIENT_DATA_SET_NAME);
       }

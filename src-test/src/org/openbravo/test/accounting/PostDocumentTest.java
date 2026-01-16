@@ -40,6 +40,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
 import org.openbravo.erpCommon.utility.OBDateUtils;
@@ -206,8 +207,8 @@ public class PostDocumentTest extends OBBaseTest {
 
   private void checkResults(String keyId, String tableId, String[][] resultTest) {
     OBCriteria<AccountingFact> obc = OBDal.getInstance().createCriteria(AccountingFact.class);
-    obc.addEqual(AccountingFact.PROPERTY_RECORDID, keyId);
-    obc.addEqual(AccountingFact.PROPERTY_TABLE + ".id", tableId);
+    obc.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, keyId));
+    obc.add(Restrictions.eq(AccountingFact.PROPERTY_TABLE + ".id", tableId));
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);
     obc.addOrderBy(AccountingFact.PROPERTY_ACCOUNTINGSCHEMA, true);

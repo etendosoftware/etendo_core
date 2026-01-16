@@ -52,6 +52,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.ui.Tab;
@@ -97,7 +98,7 @@ public class AttachmentUtils {
       // Only one active AttachmentConfig is allowed per client.
       OBCriteria<AttachmentConfig> critAttConf = OBDal.getInstance()
           .createCriteria(AttachmentConfig.class);
-      critAttConf.addEqual(AttachmentConfig.PROPERTY_CLIENT + ".id", clientId);
+      critAttConf.add(Restrictions.eq(AttachmentConfig.PROPERTY_CLIENT + ".id", clientId));
       if (!OBDal.getInstance().isActiveFilterEnabled()) {
         critAttConf.setFilterOnActive(true);
       }
@@ -176,8 +177,8 @@ public class AttachmentUtils {
   public static List<JSONObject> getTabAttachmentsForRows(Tab tab, String[] recordIds) {
     String tableId = tab.getTable().getId();
     OBCriteria<Attachment> attachmentFiles = OBDal.getInstance().createCriteria(Attachment.class);
-    attachmentFiles.addEqual("table.id", tableId);
-    attachmentFiles.addIn("record", Arrays.asList(recordIds));
+    attachmentFiles.add(Restrictions.eq("table.id", tableId));
+    attachmentFiles.add(Restrictions.in("record", Arrays.asList(recordIds)));
     attachmentFiles.addOrderBy("creationDate", false);
     List<JSONObject> attachments = new ArrayList<>();
     // do not filter by the attachment's organization
@@ -274,8 +275,8 @@ public class AttachmentUtils {
 
         final OBCriteria<ParameterValue> critStoredMetadata = OBDal.getInstance()
             .createCriteria(ParameterValue.class);
-        critStoredMetadata.addEqual(ParameterValue.PROPERTY_FILE, attachment);
-        critStoredMetadata.addEqual(ParameterValue.PROPERTY_PARAMETER, param);
+        critStoredMetadata.add(Restrictions.eq(ParameterValue.PROPERTY_FILE, attachment));
+        critStoredMetadata.add(Restrictions.eq(ParameterValue.PROPERTY_PARAMETER, param));
         critStoredMetadata.setMaxResults(1);
         ParameterValue metadataStoredValue = (ParameterValue) critStoredMetadata.uniqueResult();
         if (CORE_DESC_PARAMETER.equals(param.getId()) && metadataStoredValue == null

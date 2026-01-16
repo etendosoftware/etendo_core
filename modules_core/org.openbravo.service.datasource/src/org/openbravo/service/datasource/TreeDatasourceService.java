@@ -57,6 +57,7 @@ import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
@@ -463,9 +464,9 @@ public abstract class TreeDatasourceService extends DefaultDataSourceService {
       // If the tab has been provided, check if the user has access to its window
       OBCriteria<WindowAccess> qWindowAccess = OBDal.getInstance()
           .createCriteria(WindowAccess.class);
-      qWindowAccess.addEqual(WindowAccess.PROPERTY_WINDOW, tab.getWindow());
+      qWindowAccess.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, tab.getWindow()));
       qWindowAccess
-          .addEqual(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
+          .add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
       hasAccessToTable = qWindowAccess.count() > 0;
     }
     return hasAccessToTable;

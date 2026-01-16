@@ -25,6 +25,7 @@ import org.openbravo.base.filter.IsIDFilter;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.domain.List;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.common.plm.AttributeUse;
@@ -58,8 +59,8 @@ public class SL_SequenceProduct_Product_Attribute extends SimpleCallout {
         if (!strChanged.equals("inpcopySpecialIntoNormal")) {
           OBCriteria<AttributeUse> attributeUseCriteria = OBDal.getInstance()
               .createCriteria(AttributeUse.class);
-          attributeUseCriteria.addEqual(AttributeUse.PROPERTY_ATTRIBUTESET,
-              fromOpProduct.getProduct().getAttributeSet());
+          attributeUseCriteria.add(Restrictions.eq(AttributeUse.PROPERTY_ATTRIBUTESET,
+              fromOpProduct.getProduct().getAttributeSet()));
           attributeUseCriteria.addOrderBy(AttributeUse.PROPERTY_SEQUENCENUMBER, true);
           java.util.List<AttributeUse> attUseList = attributeUseCriteria.list();
 
@@ -115,9 +116,9 @@ public class SL_SequenceProduct_Product_Attribute extends SimpleCallout {
     Reference specialAttList = OBDal.getInstance().get(Reference.class, specialAttListId);
     OBCriteria<List> specialAttListValuesCriteria = OBDal.getInstance()
         .createCriteria(org.openbravo.model.ad.domain.List.class);
-    specialAttListValuesCriteria.addEqual(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, specialAttList);
+    specialAttListValuesCriteria.add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_REFERENCE, specialAttList));
     specialAttListValuesCriteria
-        .addEqual(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, Value);
+        .add(Restrictions.eq(org.openbravo.model.ad.domain.List.PROPERTY_SEARCHKEY, Value));
     java.util.List<org.openbravo.model.ad.domain.List> specialAttListValues = specialAttListValuesCriteria
         .list();
     if (specialAttListValues.isEmpty()) {

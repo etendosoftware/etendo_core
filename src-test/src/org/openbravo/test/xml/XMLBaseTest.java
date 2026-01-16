@@ -35,6 +35,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.EntityXMLConverter;
 import org.openbravo.model.ad.utility.ReferenceDataStore;
 import org.openbravo.model.common.enterprise.Organization;
@@ -94,7 +95,7 @@ public class XMLBaseTest extends OBBaseTest {
   protected <T extends BaseOBObject> List<T> getList(Class<T> clz, Organization org) {
     final OBCriteria<T> obc = OBDal.getInstance().createCriteria(clz);
     if (org != null) {
-      obc.addEqual("organization", org);
+      obc.add(Restrictions.eq("organization", org));
     }
     return obc.list();
   }
@@ -122,7 +123,7 @@ public class XMLBaseTest extends OBBaseTest {
     // exc.setOptionEmbedChildren(true);
     // exc.setOptionIncludeChildren(true);
     if (!(o == null)) {
-      obc.addEqual("organization", o);
+      obc.add(Restrictions.eq("organization", o));
     }
     return exc.toXML(new ArrayList<BaseOBObject>(obc.list()));
   }

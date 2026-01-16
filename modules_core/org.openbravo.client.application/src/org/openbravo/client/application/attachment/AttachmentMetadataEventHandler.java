@@ -39,6 +39,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 
 /**
@@ -90,9 +91,9 @@ class AttachmentMetadataEventHandler extends EntityPersistenceEventObserver {
   private boolean checkDuplicates(Parameter parameter) {
     OBCriteria<Parameter> critParam = OBDal.getInstance().createCriteria(Parameter.class);
     critParam
-        .addEqual(Parameter.PROPERTY_ATTACHMENTMETHOD, parameter.getAttachmentMethod());
-    critParam.addEqual(Parameter.PROPERTY_DBCOLUMNNAME, parameter.getDBColumnName());
-    critParam.addNotEqual(Parameter.PROPERTY_ID, parameter.getId());
+        .add(Restrictions.eq(Parameter.PROPERTY_ATTACHMENTMETHOD, parameter.getAttachmentMethod()));
+    critParam.add(Restrictions.eq(Parameter.PROPERTY_DBCOLUMNNAME, parameter.getDBColumnName()));
+    critParam.add(Restrictions.ne(Parameter.PROPERTY_ID, parameter.getId()));
     critParam.setMaxResults(1);
     return critParam.uniqueResult() != null;
   }

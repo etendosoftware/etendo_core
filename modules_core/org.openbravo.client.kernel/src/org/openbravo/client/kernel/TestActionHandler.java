@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A test implementation for the action handler.
@@ -32,7 +33,7 @@ import jakarta.enterprise.context.ApplicationScoped;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class TestActionHandler extends BaseActionHandler {
   private static final Logger log = LogManager.getLogger();
 

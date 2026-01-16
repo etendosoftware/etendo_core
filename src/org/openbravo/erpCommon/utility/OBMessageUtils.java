@@ -30,6 +30,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.model.ad.process.ProcessInstance;
@@ -79,9 +80,9 @@ public class OBMessageUtils {
       log4j.debug("messageBD - Message Code: " + strCode);
       OBCriteria<Message> obcMessage = OBDal.getInstance().createCriteria(Message.class);
       if (ignoreCase) {
-        obcMessage.addEqual(Message.PROPERTY_SEARCHKEY, strCode);
+        obcMessage.add(Restrictions.eq(Message.PROPERTY_SEARCHKEY, strCode));
       } else {
-        obcMessage.addEqual(Message.PROPERTY_SEARCHKEY, strCode);
+        obcMessage.add(Restrictions.eq(Message.PROPERTY_SEARCHKEY, strCode));
       }
       obcMessage.setMaxResults(1);
       Message msg = (Message) obcMessage.uniqueResult();
@@ -107,7 +108,7 @@ public class OBMessageUtils {
       try {
         OBContext.setAdminMode(false);
         OBCriteria<Element> obcElement = OBDal.getInstance().createCriteria(Element.class);
-        obcElement.addEqual(Element.PROPERTY_DBCOLUMNNAME, strCode);
+        obcElement.add(Restrictions.eq(Element.PROPERTY_DBCOLUMNNAME, strCode));
         Element element = (Element) obcElement.setMaxResults(1).uniqueResult();
         if (element != null) {
           strMessage = element.getName();

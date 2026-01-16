@@ -26,6 +26,7 @@ import jakarta.servlet.ServletException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.DimensionDisplayUtility;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.ad.system.DimensionMapping;
@@ -78,9 +79,9 @@ public class SE_DimensionDocBaseType extends SimpleCallout {
 
   private List<DimensionMapping> getMapping(String docbaseType, String dimension, String level) {
     OBCriteria<DimensionMapping> odm = OBDal.getInstance().createCriteria(DimensionMapping.class);
-    odm.addEqual(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, docbaseType);
-    odm.addEqual(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension);
-    odm.addEqual(DimensionMapping.PROPERTY_LEVEL, level);
+    odm.add(Restrictions.eq(DimensionMapping.PROPERTY_DOCUMENTCATEGORY, docbaseType));
+    odm.add(Restrictions.eq(DimensionMapping.PROPERTY_ACCOUNTINGDIMENSION, dimension));
+    odm.add(Restrictions.eq(DimensionMapping.PROPERTY_LEVEL, level));
     odm.setFilterOnReadableClients(false);
     odm.setFilterOnReadableOrganization(false);
     return odm.list();

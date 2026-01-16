@@ -28,20 +28,20 @@ package com.etendoerp.legacy.advancedpaymentmngt;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.utility.FIN_SequenceActionInterface;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Default;
 
-@ApplicationScoped
+@Dependent
 @Default
 public class Fin_UtilityLegacy implements FIN_SequenceActionInterface {
 
@@ -89,7 +89,7 @@ public class Fin_UtilityLegacy implements FIN_SequenceActionInterface {
             Sequence seq = docType.getDocumentSequence();
             if (seq == null && tableName != null) {
                 OBCriteria<Sequence> obcSeq = OBDal.getInstance().createCriteria(Sequence.class);
-                obcSeq.addEqual(Sequence.PROPERTY_NAME, tableName);
+                obcSeq.add(Restrictions.eq(Sequence.PROPERTY_NAME, tableName));
                 obcSeq.setMaxResults(1);
                 seq = (Sequence) obcSeq.uniqueResult();
             }

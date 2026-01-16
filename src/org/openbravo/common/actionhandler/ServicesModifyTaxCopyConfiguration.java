@@ -31,6 +31,7 @@ import org.openbravo.client.application.process.BaseProcessActionHandler;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.common.plm.Product;
 import org.openbravo.model.common.plm.ProductServiceLinked;
@@ -115,7 +116,7 @@ public class ServicesModifyTaxCopyConfiguration extends BaseProcessActionHandler
     // Add new configuration
     OBCriteria<ProductServiceLinked> obc = OBDal.getInstance()
         .createCriteria(ProductServiceLinked.class);
-    obc.addEqual(ProductServiceLinked.PROPERTY_PRODUCT, sourceProduct);
+    obc.add(Restrictions.eq(ProductServiceLinked.PROPERTY_PRODUCT, sourceProduct));
     for (ProductServiceLinked sourceProductServiceLinked : obc.list()) {
       ProductServiceLinked targetProductServiceLinked = OBProvider.getInstance()
           .get(ProductServiceLinked.class);

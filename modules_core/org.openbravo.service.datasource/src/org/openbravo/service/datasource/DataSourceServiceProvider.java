@@ -29,10 +29,6 @@ package org.openbravo.service.datasource;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -42,14 +38,18 @@ import org.openbravo.client.application.ApplicationConstants;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 
 /**
  * Provides {@link DataSourceService} instances and caches them in a global cache.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class DataSourceServiceProvider {
 
   private Map<String, DataSourceService> dataSources = new ConcurrentHashMap<String, DataSourceService>();
@@ -115,7 +115,7 @@ public class DataSourceServiceProvider {
 
   private DataSource getDataSourceFromDataSourceName(String dataSourceName) {
     final OBCriteria<DataSource> obCriteria = OBDal.getInstance().createCriteria(DataSource.class);
-    obCriteria.addEqual(DataSource.PROPERTY_NAME, dataSourceName);
+    obCriteria.add(Restrictions.eq(DataSource.PROPERTY_NAME, dataSourceName));
     // obserds_datasource.name has unique constraint
     return (DataSource) obCriteria.uniqueResult();
   }
@@ -123,7 +123,7 @@ public class DataSourceServiceProvider {
   private DataSource getDataSourceFromTableName(String tableName) {
     DataSource dataSource = null;
     final OBCriteria<Table> qTable = OBDal.getInstance().createCriteria(Table.class);
-    qTable.addEqual(Table.PROPERTY_NAME, tableName);
+    qTable.add(Restrictions.eq(Table.PROPERTY_NAME, tableName));
     // ad_table.name is unique
     Table table = (Table) qTable.uniqueResult();
     if (table != null) {

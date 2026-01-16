@@ -25,14 +25,16 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.CacheSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.Service;
@@ -57,11 +59,12 @@ public abstract class SessionFactoryController {
   private static final String UNIQUE_CONSTRAINT_QUERY_POSTGRES = "SELECT pg_class.relname, pg_attribute.attname, pg_constraint.conname FROM pg_constraint JOIN pg_class ON pg_class.oid = pg_constraint.conrelid JOIN pg_attribute ON pg_attribute.attrelid=pg_constraint.conrelid WHERE pg_constraint.contype = 'u' AND (pg_attribute.attnum = ANY (pg_constraint.conkey)) order by pg_constraint.conname";
   private static final String UNIQUE_CONSTRAINT_QUERY_ORACLE = "SELECT UCC.TABLE_NAME,UCC.COLUMN_NAME,UCC.CONSTRAINT_NAME FROM USER_CONS_COLUMNS UCC JOIN USER_CONSTRAINTS UC ON UC.CONSTRAINT_NAME=UCC.CONSTRAINT_NAME WHERE UC.CONSTRAINT_TYPE = 'U' ORDER BY UCC.CONSTRAINT_NAME";
 
-  private static final String COLUMN_QUERY_POSTGRES = "SELECT t.tablename, a.attname, a.attnotnull FROM pg_tables t, pg_class c, pg_attribute a "
-      + "WHERE c.relname = t.tablename AND a.attnum > 0 AND a.attrelid = c.oid";
+  private static final String COLUMN_QUERY_POSTGRES = "SELECT t.tablename, a.attname, a.attnotnull FROM pg_tables t"
+    + " INNER JOIN pg_class c ON c.relname = t.tablename"
+    + " INNER JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0";
 
   private static final String COLUMN_QUERY_ORACLE = "SELECT C.TABLE_NAME, C.COLUMN_NAME, C.NULLABLE "
-      + "FROM USER_TAB_COLUMNS C  ORDER BY C.TABLE_NAME";
+      + "FROM USER_TAB_COLUMNS C ORDER BY C.TABLE_NAME";
 
   private static SessionFactoryController instance = null;
 
@@ -161,16 +164,12 @@ public abstract class SessionFactoryController {
       // second-level caching is disabled for now because not all data
       // access and updates go through hibernate.
       // TODO: move to configuration file
-      configuration.getProperties().setProperty(AvailableSettings.USE_SECOND_LEVEL_CACHE, "false");
-      configuration.getProperties().setProperty(AvailableSettings.USE_QUERY_CACHE, "false");
-      configuration.getProperties().setProperty(AvailableSettings.BATCH_FETCH_STYLE, "LEGACY");
-      configuration.getProperties().setProperty(AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, "50");
-      configuration.getProperties().setProperty(AvailableSettings.STATEMENT_BATCH_SIZE, "10");
-      configuration.getProperties().setProperty(AvailableSettings.STATEMENT_FETCH_SIZE, "50");
-      configuration.getProperties().setProperty(AvailableSettings.JPA_VALIDATION_MODE, "NONE");
-      configuration.getProperties().setProperty(AvailableSettings.CHECK_NULLABILITY, "false");
+      configuration.getProperties().setProperty(CacheSettings.USE_SECOND_LEVEL_CACHE, BooleanUtils.FALSE);
+      configuration.getProperties().setProperty(CacheSettings.USE_QUERY_CACHE, BooleanUtils.FALSE);
+      configuration.getProperties().setProperty(ValidationSettings.JAKARTA_VALIDATION_MODE, "NONE");
+      configuration.getProperties().setProperty(ValidationSettings.CHECK_NULLABILITY, BooleanUtils.FALSE);
       // TODO: consider setting isolation level explicitly
-      configuration.getProperties().setProperty(Environment.ISOLATION,
+      configuration.getProperties().setProperty(JdbcSettings.ISOLATION,
       "" + Connection.TRANSACTION_READ_COMMITTED);
 
       //registerSqlFunctions();
@@ -278,16 +277,16 @@ public abstract class SessionFactoryController {
   private Properties getPostgresHbProps(Properties obProps) {
     isPostgresDatabase = true;
     final Properties props = new Properties();
-    props.setProperty(AvailableSettings.DIALECT, EtendoPostgreSQLDialect.class.getName());
+    props.setProperty(JdbcSettings.DIALECT, EtendoPostgreSQLDialect.class.getName());
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {
-      props.setProperty(AvailableSettings.DRIVER, "org.postgresql.Driver");
-      props.setProperty(AvailableSettings.URL,
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_DRIVER, "org.postgresql.Driver");
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_URL,
           obProps.getProperty("bbdd.url") + "/" + obProps.getProperty("bbdd.sid"));
 
-      props.setProperty(AvailableSettings.USER, obProps.getProperty("bbdd.user"));
-      props.setProperty(AvailableSettings.PASS, obProps.getProperty("bbdd.password"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_USER, obProps.getProperty("bbdd.user"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_PASSWORD, obProps.getProperty("bbdd.password"));
     }
     return props;
   }
@@ -295,21 +294,21 @@ public abstract class SessionFactoryController {
   private Properties getOracleHbProps(Properties obProps) {
     isPostgresDatabase = false;
     final Properties props = new Properties();
-    props.setProperty(AvailableSettings.DIALECT, OBOracle10gDialect.class.getName());
+    props.setProperty(JdbcSettings.DIALECT, OBOracle10gDialect.class.getName());
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {
-      props.setProperty(AvailableSettings.DRIVER, "oracle.jdbc.driver.OracleDriver");
-      props.setProperty(AvailableSettings.URL, obProps.getProperty("bbdd.url"));
-      props.setProperty(AvailableSettings.USER, obProps.getProperty("bbdd.user"));
-      props.setProperty(AvailableSettings.PASS, obProps.getProperty("bbdd.password"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_DRIVER, "oracle.jdbc.driver.OracleDriver");
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_URL, obProps.getProperty("bbdd.url"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_USER, obProps.getProperty("bbdd.user"));
+      props.setProperty(JdbcSettings.JAKARTA_JDBC_PASSWORD, obProps.getProperty("bbdd.password"));
     }
     return props;
   }
 
   private void setJNDI(Properties obProps, Properties hbProps) {
     log.info("Using JNDI with resource name-> {}", obProps.getProperty("JNDI.resourceName"));
-    hbProps.setProperty(AvailableSettings.DATASOURCE,
+    hbProps.setProperty(JdbcSettings.JAKARTA_JTA_DATASOURCE,
         "java:/comp/env/" + obProps.getProperty("JNDI.resourceName"));
   }
 

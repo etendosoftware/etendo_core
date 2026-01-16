@@ -36,6 +36,7 @@ import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.ad_actionButton.ActionButtonDefaultData;
 import org.openbravo.erpCommon.businessUtility.AccountingSchemaMiscData;
 import org.openbravo.erpCommon.businessUtility.WindowTabs;
@@ -464,7 +465,7 @@ public class CreateAccountingReport extends HttpSecureAppServlet {
       return accounts;
     }
     OBCriteria<TreeNode> obc = OBDal.getInstance().createCriteria(TreeNode.class);
-    obc.addEqual(TreeNode.PROPERTY_REPORTSET, strAccountId);
+    obc.add(Restrictions.eq(TreeNode.PROPERTY_REPORTSET, strAccountId));
     // obc.addEqual(TreeNode.PROPERTY_TREE, tree);
     obc.setFilterOnReadableClients(false);
     obc.setFilterOnReadableOrganization(false);

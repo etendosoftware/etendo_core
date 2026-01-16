@@ -46,6 +46,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.ModuleManagement;
 import org.openbravo.erpCommon.utility.OBError;
@@ -123,16 +124,12 @@ public class TestHeartbeat extends HttpSecureAppServlet {
         // Un-scheduling the process
         final OBCriteria<ProcessRequest> prCriteria = OBDal.getInstance()
             .createCriteria(ProcessRequest.class);
-        // Migración de Restrictions.and() con Restrictions.or() anidado
-        prCriteria.addAnd(
-            (cb, obc) -> cb.equal(obc.getPath(ProcessRequest.PROPERTY_PROCESS), HBProcess),
-            (cb, obc) -> cb.or(
-                cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS),
+        prCriteria.add(Restrictions.and(Restrictions.eq(ProcessRequest.PROPERTY_PROCESS, HBProcess),
+            Restrictions.or(
+                Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
                     org.openbravo.scheduling.Process.SCHEDULED),
-                cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS),
-                    org.openbravo.scheduling.Process.MISFIRED)
-            )
-        );
+                Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
+                    org.openbravo.scheduling.Process.MISFIRED))));
 
         final List<ProcessRequest> requestList = prCriteria.list();
 
@@ -199,10 +196,12 @@ public class TestHeartbeat extends HttpSecureAppServlet {
         // Scheduling the process
         final OBCriteria<ProcessRequest> prCriteria = OBDal.getInstance()
             .createCriteria(ProcessRequest.class);
-        prCriteria.addAnd((cb, obc) -> cb.equal(obc.getPath(ProcessRequest.PROPERTY_PROCESS), HBProcess),
-            (cb, obc) -> cb.or(
-                cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS), org.openbravo.scheduling.Process.UNSCHEDULED),
-                cb.equal(obc.getPath(ProcessRequest.PROPERTY_STATUS), org.openbravo.scheduling.Process.MISFIRED)));
+        prCriteria.add(Restrictions.and(Restrictions.eq(ProcessRequest.PROPERTY_PROCESS, HBProcess),
+            Restrictions.or(
+                Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
+                    org.openbravo.scheduling.Process.UNSCHEDULED),
+                Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
+                    org.openbravo.scheduling.Process.MISFIRED))));
         final List<ProcessRequest> requestList = prCriteria.list();
 
         ProcessRequest pr = null;

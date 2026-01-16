@@ -36,6 +36,10 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -81,6 +85,8 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
 
   private static final String OPERATION_FETCH = "fetch";
   private static final String OPERATION_UPDATE = "update";
+
+  private static boolean dalInitialized = false;
 
   private RoleType role;
   private DataSource dataSource;
@@ -347,6 +353,9 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
 
   @Parameters(name = "{0} - dataSource: {1}")
   public static Collection<Object[]> parameters() {
+
+    ensureDalInitialized();
+
     List<Object[]> testCases = new ArrayList<Object[]>();
     for (RoleType type : RoleType.values()) {
       int accessForAdminOnly = type == RoleType.ADMIN_ROLE ? JsonConstants.RPCREQUEST_STATUS_SUCCESS
@@ -372,34 +381,25 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
       testCases.add(new Object[]{ type, DataSource.AccountTree, accessForAdminOnly });
       testCases.add(new Object[]{ type, DataSource.StockReservations, accessForAdminOnly });
 
-      // QueryList ds is accessible if current role has access to widgetId
       testCases.add(new Object[]{ type, DataSource.QueryList,
           JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR });
       testCases.add(new Object[]{ type, DataSource.PropertySelector,
           type == RoleType.SYSTEM_ROLE ? JsonConstants.RPCREQUEST_STATUS_SUCCESS
               : JsonConstants.RPCREQUEST_STATUS_VALIDATION_ERROR });
 
-      // Alert ds should be always accessible
       testCases
           .add(new Object[]{ type, DataSource.Alert, JsonConstants.RPCREQUEST_STATUS_SUCCESS });
 
-      // Note ds is accessible if current role has access to entity of the notes. This note is
-      // invocated from a record in Windows, Tabs and Fields.
       testCases.add(new Object[]{ type, DataSource.Note, accessForAdminAndSystemOnly });
 
-      // Selector into a datasource into a P&E Window.
       testCases.add(
           new Object[]{ type, DataSource.SelectorGLItemDatasource, accessForAdminAndSystemOnly });
 
-      // Moving a tree node : https://issues.openbravo.com/view.php?id=32833
       testCases.add(new Object[]{ type, DataSource.AccountTreeMovement, accessForAdminOnly });
 
-      // Testing a problem detected in how permissions for the entities of the selectors with Search
-      // parent reference are calculated. See issue https://issues.openbravo.com/view.php?id=34823
       testCases.add(
           new Object[]{ type, DataSource.ProductStockView, accessForAdminAndSystemAndEmployee });
     }
-    // testing a problem detected in how properties are initialized.
     testCases.add(new Object[]{ RoleType.ADMIN_ROLE, DataSource.ProductByPriceAndWarehouse,
         JsonConstants.RPCREQUEST_STATUS_SUCCESS });
 
@@ -407,10 +407,30 @@ public class DataSourceSecurity extends BaseDataSourceTestDal {
   }
 
   /**
+   * Ensures DAL is initialized before running tests
+   */
+  private static synchronized void ensureDalInitialized() {
+    if (!dalInitialized) {
+      try {
+        log.info("Initializing DAL layer for test...");
+        staticInitializeDalLayer();
+        dalInitialized = true;
+        log.info("DAL layer initialized successfully");
+      } catch (Exception e) {
+        log.error("Failed to initialize DAL layer", e);
+        throw new RuntimeException("Cannot initialize DAL layer", e);
+      }
+    }
+  }
+
+  /**
    * Creates dummy role without any access for testing purposes
    */
   @BeforeClass
   public static void createNoAccessRoleAndGenericProduct() {
+
+    ensureDalInitialized();
+
     OBContext.setOBContext(CONTEXT_USER);
 
     Role noAccessRole = OBProvider.getInstance().get(Role.class);

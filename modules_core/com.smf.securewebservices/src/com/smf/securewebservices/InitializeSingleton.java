@@ -2,13 +2,12 @@ package com.smf.securewebservices;
 
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.client.kernel.ApplicationInitializer;
-import org.openbravo.client.kernel.event.PersistenceEventOBInterceptor;
 import org.openbravo.dal.core.OBInterceptor;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
-@ApplicationScoped
+@Dependent
 public class InitializeSingleton implements ApplicationInitializer{
 
     @Inject

@@ -43,6 +43,7 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.businessUtility.Tree;
 import org.openbravo.erpCommon.businessUtility.WindowTabs;
@@ -457,16 +458,16 @@ public class MaterialReceiptPending extends HttpSecureAppServlet {
 
               OBCriteria<UOMConversion> conversion = OBDal.getInstance()
                   .createCriteria(UOMConversion.class);
-              conversion.addEqual(UOMConversion.PROPERTY_UOM, uom);
-              conversion.addEqual(UOMConversion.PROPERTY_TOUOM, orderUom);
+              conversion.add(Restrictions.eq(UOMConversion.PROPERTY_UOM, uom));
+              conversion.add(Restrictions.eq(UOMConversion.PROPERTY_TOUOM, orderUom));
               List<UOMConversion> conversionList = conversion.list();
               Boolean useDivideRateBy = false;
 
               // Inverting search of UOM conversion if conversion list is empty
               if (conversionList.isEmpty()) {
                 conversion = OBDal.getInstance().createCriteria(UOMConversion.class);
-                conversion.addEqual(UOMConversion.PROPERTY_UOM, orderUom);
-                conversion.addEqual(UOMConversion.PROPERTY_TOUOM, uom);
+                conversion.add(Restrictions.eq(UOMConversion.PROPERTY_UOM, orderUom));
+                conversion.add(Restrictions.eq(UOMConversion.PROPERTY_TOUOM, uom));
                 conversionList = conversion.list();
                 useDivideRateBy = true;
               }

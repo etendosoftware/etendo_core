@@ -22,12 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Any;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.enterprise.util.AnnotationLiteral;
-import jakarta.inject.Inject;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -36,12 +30,19 @@ import org.apache.logging.log4j.Logger;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.DalContextListener;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.util.AnnotationLiteral;
+import jakarta.inject.Inject;
+
 /**
  * Provides weld utilities.
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class WeldUtils {
 
   private static BeanManager staticBeanManager = null;

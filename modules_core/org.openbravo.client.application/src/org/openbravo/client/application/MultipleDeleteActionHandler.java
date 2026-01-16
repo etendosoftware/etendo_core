@@ -39,7 +39,7 @@ import org.openbravo.service.datasource.DataSourceServiceProvider;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonUtils;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 /**
@@ -48,7 +48,7 @@ import jakarta.inject.Inject;
  * @author mtaal
  * @see StaticResourceComponent
  */
-@ApplicationScoped
+@Dependent
 public class MultipleDeleteActionHandler extends BaseActionHandler {
 
   @Inject

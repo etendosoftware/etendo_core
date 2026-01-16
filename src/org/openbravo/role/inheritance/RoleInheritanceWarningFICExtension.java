@@ -23,9 +23,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,13 +39,16 @@ import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleInheritance;
 import org.openbravo.model.ad.ui.Tab;
 
+import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
+
 /**
  * This FICExtension is used to show a warning message to the user when editing an access which
  * belongs to a role marked as template. When this type of accesses are edited, the changes are
  * propagated to the roles which are using that template to inherit permissions. With this class,
  * the user will be warned before saving the changes.
  */
-@ApplicationScoped
+@Dependent
 public class RoleInheritanceWarningFICExtension implements FICExtension {
   private static final Logger log = LogManager.getLogger();
   private final static String EDIT_MODE = "EDIT";

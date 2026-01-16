@@ -49,6 +49,8 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Projections;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.utility.CashVATUtil;
 import org.openbravo.erpCommon.utility.OBError;
@@ -901,20 +903,20 @@ public class FIN_AddPayment {
     try {
       OBCriteria<FIN_PaymentScheduleDetail> psdFilter = OBDal.getInstance()
           .createCriteria(FIN_PaymentScheduleDetail.class);
-      psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_CLIENT, psd.getClient());
-      psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORGANIZATION, psd.getOrganization());
-      psdFilter.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
+      psdFilter.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_CLIENT, psd.getClient()));
+      psdFilter.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORGANIZATION, psd.getOrganization()));
+      psdFilter.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
       if (psd.getOrderPaymentSchedule() == null) {
-        psdFilter.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE);
+        psdFilter.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE));
       } else {
-        psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
-            psd.getOrderPaymentSchedule());
+        psdFilter.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
+            psd.getOrderPaymentSchedule()));
       }
       if (psd.getInvoicePaymentSchedule() == null) {
-        psdFilter.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE);
+        psdFilter.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE));
       } else {
-        psdFilter.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-            psd.getInvoicePaymentSchedule());
+        psdFilter.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+            psd.getInvoicePaymentSchedule()));
       }
 
       // Update amount and remove payment schedule detail
@@ -1109,8 +1111,8 @@ public class FIN_AddPayment {
         .createCriteria(FIN_PaymentScheduleDetail.class);
     OBContext.setAdminMode();
     try {
-      obc.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-          invoicePaymentSchedule);
+      obc.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+          invoicePaymentSchedule));
       obc.addOrderBy(FIN_PaymentScheduleDetail.PROPERTY_CREATIONDATE, false);
       obc.setFilterOnReadableOrganization(false);
       obc.setMaxResults(1);
@@ -1129,9 +1131,9 @@ public class FIN_AddPayment {
         .createCriteria(FIN_PaymentSchedInvV.class);
     OBContext.setAdminMode();
     try {
-      obc.addEqual(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice);
-      obc.setProjectionMax(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT);
-      return (Date) obc.uniqueResult();
+      obc.add(Restrictions.eq(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice));
+      obc.setProjection(Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
+      return obc.uniqueResult(Date.class);
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -1337,14 +1339,14 @@ public class FIN_AddPayment {
     try {
       OBCriteria<FIN_PaymentScheduleDetail> obc = OBDal.getInstance()
           .createCriteria(FIN_PaymentScheduleDetail.class);
-      obc.addIsNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS);
+      obc.add(Restrictions.isNull(FIN_PaymentScheduleDetail.PROPERTY_PAYMENTDETAILS));
       if (paymentScheduleDetail.getInvoicePaymentSchedule() != null) {
-        obc.addEqual(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
-            paymentScheduleDetail.getInvoicePaymentSchedule());
+        obc.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_INVOICEPAYMENTSCHEDULE,
+            paymentScheduleDetail.getInvoicePaymentSchedule()));
       }
       if (paymentScheduleDetail.getOrderPaymentSchedule() != null) {
-        obc.addEqual(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
-            paymentScheduleDetail.getOrderPaymentSchedule());
+        obc.add(Restrictions.eq(FIN_PaymentScheduleDetail.PROPERTY_ORDERPAYMENTSCHEDULE,
+            paymentScheduleDetail.getOrderPaymentSchedule()));
       }
       return obc.list();
     } finally {

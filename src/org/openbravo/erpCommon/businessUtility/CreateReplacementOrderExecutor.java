@@ -43,6 +43,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.enterprise.DocumentType;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
@@ -226,8 +227,8 @@ class CreateReplacementOrderExecutor extends CancelAndReplaceUtils {
       final OrderLine replacedOrderLine) {
     return (OrderLine) OBDal.getInstance()
         .createCriteria(OrderLine.class)
-        .addEqual(OrderLine.PROPERTY_SALESORDER, order)
-        .addEqual(OrderLine.PROPERTY_REPLACEDORDERLINE, replacedOrderLine)
+        .add(Restrictions.eq(OrderLine.PROPERTY_SALESORDER, order))
+        .add(Restrictions.eq(OrderLine.PROPERTY_REPLACEDORDERLINE, replacedOrderLine))
         .setMaxResults(1)
         .uniqueResult();
   }

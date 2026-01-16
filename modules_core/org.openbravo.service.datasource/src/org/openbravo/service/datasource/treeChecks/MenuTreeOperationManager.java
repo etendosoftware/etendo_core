@@ -30,16 +30,18 @@ package org.openbravo.service.datasource.treeChecks;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.ui.Menu;
 import org.openbravo.service.datasource.CheckTreeOperationManager;
 
-@ApplicationScoped
+@Dependent
 @Qualifier("ADMenu")
 public class MenuTreeOperationManager extends CheckTreeOperationManager {
   private final String TEMPLATE_TYPE = "T";
@@ -64,8 +66,8 @@ public class MenuTreeOperationManager extends CheckTreeOperationManager {
   private boolean areThereTemplatesInDevelopment() {
     OBCriteria<Module> templatesInDevelopmentCriteria = OBDal.getInstance()
         .createCriteria(Module.class);
-    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_TYPE, TEMPLATE_TYPE);
-    templatesInDevelopmentCriteria.addEqual(Module.PROPERTY_INDEVELOPMENT, true);
+    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_TYPE, TEMPLATE_TYPE));
+    templatesInDevelopmentCriteria.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, true));
     return (templatesInDevelopmentCriteria.count() > 0);
   }
 }

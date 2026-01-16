@@ -31,7 +31,7 @@ import org.openbravo.dal.core.OBInterceptor;
 import org.openbravo.database.ExternalConnectionPool;
 import org.openbravo.database.PoolInterceptorProvider;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -42,7 +42,7 @@ import jakarta.inject.Inject;
  * 
  * @author mtaal
  */
-@ApplicationScoped
+@Dependent
 public class KernelInitializer {
 
   final static private Logger log = LogManager.getLogger();

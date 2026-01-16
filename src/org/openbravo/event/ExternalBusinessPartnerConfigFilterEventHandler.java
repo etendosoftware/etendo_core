@@ -31,6 +31,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.client.kernel.event.EntityUpdateEvent;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.externalbpartner.ExternalBusinessPartnerConfig;
 import org.openbravo.model.externalbpartner.ExternalBusinessPartnerConfigFilter;
 
@@ -71,13 +72,13 @@ public class ExternalBusinessPartnerConfigFilterEventHandler extends EntityPersi
     // Fail otherwise
     final OBCriteria<?> criteria = OBDal.getInstance()
       .createCriteria(event.getTargetInstance().getClass());
-    criteria.addEqual(
+    criteria.add(Restrictions.eq(
       ExternalBusinessPartnerConfigFilter.PROPERTY_EXTERNALBUSINESSPARTNERINTEGRATIONCONFIGURATION,
-      currentExtBPConfig);
+      currentExtBPConfig));
     criteria
-      .addEqual(ExternalBusinessPartnerConfigFilter.PROPERTY_ISSCANIDENTIFIER, true);
-    criteria.addEqual(ExternalBusinessPartnerConfigFilter.PROPERTY_ACTIVE, true);
-    criteria.addNotEqual(ExternalBusinessPartnerConfigFilter.PROPERTY_ID, id);
+      .add(Restrictions.eq(ExternalBusinessPartnerConfigFilter.PROPERTY_ISSCANIDENTIFIER, true));
+    criteria.add(Restrictions.eq(ExternalBusinessPartnerConfigFilter.PROPERTY_ACTIVE, true));
+    criteria.add(Restrictions.ne(ExternalBusinessPartnerConfigFilter.PROPERTY_ID, id));
 
     criteria.setMaxResults(1);
     if (criteria.uniqueResult() != null) {

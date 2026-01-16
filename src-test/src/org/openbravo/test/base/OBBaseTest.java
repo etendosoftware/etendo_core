@@ -42,8 +42,8 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
+import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -101,7 +101,7 @@ public class OBBaseTest {
    * Implements TestWatcher to capture success/failure and AfterEachCallback
    * to execute cleanup *after* the state is known.
    * Uses BeforeTestExecutionCallback to ensure it runs after @BeforeEach (including setUp()).
-   * 
+   *
    * Note: This extension is only active for JUnit 5 tests. JUnit 4 tests that extend
    * OBBaseTest will continue to work but won't use this extension.
    */
@@ -196,7 +196,7 @@ public class OBBaseTest {
     if (disabledTestCases == null) {
       initializeDisabledTestCases();
     }
-    
+
     String className = context.getRequiredTestClass().getName();
     boolean fullClassDisabled = disabledTestCases.contains(className);
     if (fullClassDisabled) {
@@ -373,7 +373,7 @@ public class OBBaseTest {
    *
    * @see TestLogAppender
    */
-  @BeforeAll
+  @BeforeClass
   public static void classSetUp() throws Exception {
     initializeTestLogAppender();
     staticInitializeDalLayer();

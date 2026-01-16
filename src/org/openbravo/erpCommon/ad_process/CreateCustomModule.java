@@ -30,6 +30,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.model.ad.module.DataPackage;
 import org.openbravo.model.ad.module.Module;
@@ -56,7 +57,7 @@ public class CreateCustomModule implements Process {
     OBContext.setAdminMode();
     try {
       OBCriteria<Module> modCriteria = OBDal.getInstance().createCriteria(Module.class);
-      modCriteria.addFunction((cb, obc) -> cb.like(cb.upper(obc.getPath(Module.PROPERTY_NAME)), MODULE_NAME.toUpperCase()));
+      modCriteria.add(Restrictions.ilike(Module.PROPERTY_NAME, MODULE_NAME));
       if (modCriteria.count() != 0) {
         OBError msg = new OBError();
         msg.setType("Info");
@@ -73,7 +74,7 @@ public class CreateCustomModule implements Process {
       module.setVersion("1.0.0");
       module.setTranslationRequired(true);
       OBCriteria<Language> langCriteria = OBDal.getInstance().createCriteria(Language.class);
-      langCriteria.addEqual(Language.PROPERTY_LANGUAGE, "en_US");
+      langCriteria.add(Restrictions.eq(Language.PROPERTY_LANGUAGE, "en_US"));
       module.setLanguage(langCriteria.list().get(0));
       OBDal.getInstance().save(module);
 

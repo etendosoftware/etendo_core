@@ -21,11 +21,11 @@ package org.openbravo.client.application.window;
 
 import java.util.Collection;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 /** Exposes {@link ApplicationDictionaryCachedStructures} as a JMX Bean. */
-@ApplicationScoped
+@Dependent
 public class JmxApplicationDictionaryCachedStructures
     implements JmxApplicationDictionaryCachedStructuresMBean {
   public static final String MBEAN_NAME = "ApplicationDictionaryCachedStructures";

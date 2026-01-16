@@ -29,6 +29,7 @@ import org.openbravo.client.application.window.StandardWindowComponent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.test.base.OBBaseTest;
 
@@ -49,7 +50,7 @@ public class GridConfigurationTest extends OBBaseTest {
     try {
       OBCriteria<GCSystem> systemGridConfig = OBDal.getInstance().createCriteria(GCSystem.class);
       OBCriteria<GCTab> tabGridConfig = OBDal.getInstance().createCriteria(GCTab.class);
-      tabGridConfig.addNotIn(GCTab.PROPERTY_ID, CORE_DEFAULT_GRID_CONFIGS);
+      tabGridConfig.add(Restrictions.not(Restrictions.in(GCTab.PROPERTY_ID, CORE_DEFAULT_GRID_CONFIGS)));
       return systemGridConfig.count() + tabGridConfig.count();
     } finally {
       OBContext.restorePreviousMode();

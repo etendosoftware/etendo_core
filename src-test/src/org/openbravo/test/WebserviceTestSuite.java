@@ -50,21 +50,12 @@ import org.openbravo.test.security.ExplicitCrossOrganizationReference;
 import org.openbravo.test.security.UserInfoSessionDataTest;
 import org.openbravo.test.selector.TestSelectorDefaultFilterActionHandler;
 import org.openbravo.test.views.ETagGeneration;
-import org.openbravo.test.webservice.JSONWebServices;
-import org.openbravo.test.webservice.JSONWebServicesWhereParameter;
-import org.openbravo.test.webservice.PerformanceTest;
-import org.openbravo.test.webservice.WSAddRecordWithComputedColumns;
-import org.openbravo.test.webservice.WSReadTest;
-import org.openbravo.test.webservice.WSReadableClientsTest;
-import org.openbravo.test.webservice.WSUpdateTest;
-import org.openbravo.test.webservice.WSWithNoActiveDalObjects;
-import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
 
 /**
  * This test suite is called from the ant task run.webservice.tests by the CI server. It contains
  * all the test cases that require Tomcat to be running, for example tests including web service
  * requests.
- * 
+ *
  * Tests cases not requiring Tomcat should be included in {@link StandaloneTestSuite} instead.
  *
  * @see StandaloneTestSuite
@@ -74,10 +65,6 @@ import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
 @SelectClasses({
 
     DataSourceWhereParameter.class, //
-    WSReadTest.class, //
-    WSUpdateTest.class, //
-    PerformanceTest.class, //
-    WSAddRecordWithComputedColumns.class, //
     TestCSVEncoding.class, //
     SelectorFieldPropertySelectorDSTest.class, //
     SelectorPickListFieldsDataSourceTest.class, //
@@ -86,21 +73,16 @@ import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
     ProductSelectorDataSourceTest.class, //
     TestComboDatasource.class, //
     FKDropDownDatasource.class, //
-    JSONWebServices.class, //
     FICTest.class, //
     HQLDataSourceTest.class, //
     LogDatasourceTest.class, //
     TestAllowUnpagedDatasourcePreference.class, //
     TestNoteDatasource.class, //
-    WebServicesWithNoActiveFilterTest.class, //
     ExtendedNavigationModelTest.class, //
-    WSWithNoActiveDalObjects.class, //
     FetchDSNoActiveEntityObjects.class, //
     ExplicitCrossOrganizationReference.class, //
     DataSourceSecurity.class, //
     EmptyStringWhereAndFilterClauseParameter.class, //
-    JSONWebServicesWhereParameter.class, //
-    WSReadableClientsTest.class, //
     UserInfoSessionDataTest.class, //
     LinkToParentTreeDataSourceTest.class, //
     OtherDatasourceRequests.class, //

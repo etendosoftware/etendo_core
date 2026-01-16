@@ -37,6 +37,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
 import org.openbravo.erpCommon.utility.OBDateUtils;
@@ -200,9 +201,9 @@ public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Proce
     try {
       OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
           .createCriteria(FIN_Reconciliation.class);
-      obc.addEqual(FIN_Reconciliation.PROPERTY_DOCUMENTSTATUS, "DR");
-      obc.addEqual(FIN_Reconciliation.PROPERTY_PROCESSED, false);
-      obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, account);
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_DOCUMENTSTATUS, "DR"));
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_PROCESSED, false));
+      obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, account));
       obc.setMaxResults(1);
       return obc.uniqueResult() != null;
     } finally {
@@ -213,10 +214,10 @@ public class FIN_ReconciliationProcess implements org.openbravo.scheduling.Proce
   private void updateReconciliations(FIN_Reconciliation reconciliation) {
     final OBCriteria<FIN_Reconciliation> obc = OBDal.getInstance()
         .createCriteria(FIN_Reconciliation.class);
-    obc.addGreaterOrEqual(FIN_Reconciliation.PROPERTY_ENDINGDATE, reconciliation.getEndingDate());
-    obc.addGreaterOrEqual(FIN_Reconciliation.PROPERTY_CREATIONDATE,
-        reconciliation.getCreationDate());
-    obc.addEqual(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount());
+    obc.add(Restrictions.ge(FIN_Reconciliation.PROPERTY_ENDINGDATE, reconciliation.getEndingDate()));
+    obc.add(Restrictions.ge(FIN_Reconciliation.PROPERTY_CREATIONDATE,
+        reconciliation.getCreationDate()));
+    obc.add(Restrictions.eq(FIN_Reconciliation.PROPERTY_ACCOUNT, reconciliation.getAccount()));
     obc.addOrderBy(FIN_Reconciliation.PROPERTY_ENDINGDATE, true);
     obc.addOrderBy(FIN_Reconciliation.PROPERTY_CREATIONDATE, true);
     final List<FIN_Reconciliation> reconciliations = obc.list();

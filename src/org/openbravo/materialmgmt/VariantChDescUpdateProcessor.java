@@ -31,11 +31,10 @@ import org.openbravo.service.importprocess.ImportEntryManager;
 import org.openbravo.service.importprocess.ImportEntryManager.ImportEntryQualifier;
 import org.openbravo.service.importprocess.ImportEntryProcessor;
 
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 
 @ImportEntryQualifier(entity = "VariantChDescUpdate")
-@ApplicationScoped
+@Dependent
 public class VariantChDescUpdateProcessor extends ImportEntryProcessor {
   private static final Logger log = LogManager.getLogger();
 

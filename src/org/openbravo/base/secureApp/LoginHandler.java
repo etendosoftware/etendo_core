@@ -46,6 +46,7 @@ import org.openbravo.base.secureApp.LoginUtils.RoleDefaults;
 import org.openbravo.client.application.CachedPreference;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.businessUtility.Preferences.QueryFilter;
@@ -625,7 +626,7 @@ public class LoginHandler extends HttpBaseServlet {
       OBContext.setAdminMode();
       User user = (User) OBDal.getInstance()
           .createCriteria(User.class)
-          .addEqual(User.PROPERTY_ID, userId)
+          .add(Restrictions.eq(User.PROPERTY_ID, userId))
           .setFilterOnReadableClients(false)
           .setFilterOnReadableOrganization(false)
           .uniqueResult();

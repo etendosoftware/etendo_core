@@ -41,6 +41,7 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.data.FieldProvider;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
@@ -124,10 +125,9 @@ public class UOMUtil {
     OBContext.setAdminMode(false);
     try {
       OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-      pAUMCriteria.addEqual("product.id", mProductId);
-      pAUMCriteria.addFunction(
-          (cb, obc) -> cb.equal(obc.getPath(isSoTrx ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE),
-              UOM_PRIMARY));
+      pAUMCriteria.add(Restrictions.eq("product.id", mProductId));
+      pAUMCriteria.add(Restrictions
+          .eq(isSoTrx ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE, UOM_PRIMARY));
       Product product = OBDal.getInstance().get(Product.class, mProductId);
       finalAUM = product.getUOM().getId();
       ProductAUM primaryAum = (ProductAUM) pAUMCriteria.uniqueResult();
@@ -156,8 +156,8 @@ public class UOMUtil {
     OBContext.setAdminMode(false);
     try {
       OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-      pAUMCriteria.addEqual("product.id", mProductId);
-      pAUMCriteria.addEqual(ProductAUM.PROPERTY_LOGISTICS, UOM_PRIMARY);
+      pAUMCriteria.add(Restrictions.eq("product.id", mProductId));
+      pAUMCriteria.add(Restrictions.eq(ProductAUM.PROPERTY_LOGISTICS, UOM_PRIMARY));
       Product product = OBDal.getInstance().get(Product.class, mProductId);
       finalAUM = product.getUOM().getId();
       ProductAUM primaryAum = (ProductAUM) pAUMCriteria.uniqueResult();
@@ -189,10 +189,10 @@ public class UOMUtil {
       }
       DocumentType docType = OBDal.getInstance().get(DocumentType.class, docTypeId);
       OBCriteria<ProductAUM> pAUMCriteria = OBDal.getInstance().createCriteria(ProductAUM.class);
-      pAUMCriteria.addEqual("product.id", mProductId);
-      pAUMCriteria.addNotEqual(
+      pAUMCriteria.add(Restrictions.eq("product.id", mProductId));
+      pAUMCriteria.add(Restrictions.ne(
           docType.isSalesTransaction() ? ProductAUM.PROPERTY_SALES : ProductAUM.PROPERTY_PURCHASE,
-          UOM_NOT_APPLICABLE);
+          UOM_NOT_APPLICABLE));
       pAUMCriteria.addOrderBy("uOM.name", true);
       Product product = OBDal.getInstance().get(Product.class, mProductId);
       List<ProductAUM> pAUMList = pAUMCriteria.list();
@@ -237,11 +237,8 @@ public class UOMUtil {
 
         OBCriteria<ProductAUM> productAUMConversionCriteria = OBDal.getInstance()
             .createCriteria(ProductAUM.class);
-        // Migración de Restrictions.and()
-        productAUMConversionCriteria.addAnd(
-            (cb, obc) -> cb.equal(obc.getPath("product.id"), mProductId),
-            (cb, obc) -> cb.equal(obc.getPath("uOM.id"), toUOMId)
-        );
+        productAUMConversionCriteria.add(Restrictions.and(Restrictions.eq("product.id", mProductId),
+            Restrictions.eq("uOM.id", toUOMId)));
 
         try {
           ProductAUM conversion = (ProductAUM) productAUMConversionCriteria.uniqueResult();
@@ -396,7 +393,7 @@ public class UOMUtil {
     OBContext.setAdminMode(false);
     try {
       OBCriteria<ProductUOM> pUomCriteria = OBDal.getInstance().createCriteria(ProductUOM.class);
-      pUomCriteria.addEqual("product.id", productId);
+      pUomCriteria.add(Restrictions.eq("product.id", productId));
       pUomCriteria.addOrderBy("uOM.name", true);
       List<ProductUOM> pUomList = pUomCriteria.list();
       for (ProductUOM pUom : pUomList) {

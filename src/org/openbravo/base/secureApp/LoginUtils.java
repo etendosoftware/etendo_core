@@ -36,6 +36,7 @@ import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.dal.xml.XMLUtil;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.businessUtility.Preferences;
@@ -422,7 +423,7 @@ public class LoginUtils {
 
   private static boolean existsAnyOrgWithLedgerConfigured() {
     OBCriteria<Organization> orgCriteria = OBDal.getInstance().createCriteria(Organization.class);
-    orgCriteria.addIsNotNull(Organization.PROPERTY_GENERALLEDGER);
+    orgCriteria.add(Restrictions.isNotNull(Organization.PROPERTY_GENERALLEDGER));
     orgCriteria.setMaxResults(1);
     return orgCriteria.uniqueResult() != null;
   }

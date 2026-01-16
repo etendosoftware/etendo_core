@@ -50,6 +50,7 @@ import org.openbravo.client.kernel.event.EntityPersistenceEventObserver;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Table;
 import org.openbravo.model.ad.utility.TableTree;
 import org.openbravo.service.datasource.DataSourceService;
@@ -124,8 +125,8 @@ class TreeTablesEventHandler extends EntityPersistenceEventObserver {
   private DataSourceService getDataSource(String tableId) {
     Table table = OBDal.getInstance().getProxy(Table.class, tableId);
     OBCriteria<TableTree> obq = OBDal.getInstance().createCriteria(TableTree.class);
-    obq.addEqual(TableTree.PROPERTY_TABLE, table);
-    obq.addEqual(TableTree.PROPERTY_ISMAINTREE, true);
+    obq.add(Restrictions.eq(TableTree.PROPERTY_TABLE, table));
+    obq.add(Restrictions.eq(TableTree.PROPERTY_ISMAINTREE, true));
     List<TableTree> tableTreeList = obq.list();
     if (tableTreeList.isEmpty()) {
       return null;
@@ -175,7 +176,7 @@ class TreeTablesEventHandler extends EntityPersistenceEventObserver {
     OBContext.setAdminMode(true);
     try {
       OBCriteria<Table> treeTablesCriteria = OBDal.getInstance().createCriteria(Table.class);
-      treeTablesCriteria.addEqual(Table.PROPERTY_ISTREE, true);
+      treeTablesCriteria.add(Restrictions.eq(Table.PROPERTY_ISTREE, true));
       List<Table> treeTableList = treeTablesCriteria.list();
       ArrayList<Entity> entityArray = new ArrayList<>();
       for (Table treeTable : treeTableList) {

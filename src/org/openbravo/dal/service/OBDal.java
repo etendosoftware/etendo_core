@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.persistence.LockModeType;
 
 import org.apache.logging.log4j.LogManager;
@@ -68,6 +69,7 @@ import org.openbravo.service.db.DalConnectionProvider;
 // object
 // TODO: re-check singleton pattern when a new factory/dependency injection
 // approach is implemented.
+@Dependent
 public class OBDal implements OBNotSingleton {
   private static final Logger log = LogManager.getLogger();
   private static final String ACTIVE_FILTER = "activeFilter";
@@ -563,10 +565,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(Class<T> clz) {
     checkReadAccess(clz);
     final Entity entity = ModelProvider.getInstance().getEntity(clz);
-    final OBCriteria<T> obCriteria = new OBCriteria<>(clz,
-        SessionHandler.getInstance().getSession(poolName));
-    obCriteria.setEntity(entity);
-    return obCriteria;
+    return new OBCriteria<>(entity.getName(),
+        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
   }
 
   /**
@@ -581,10 +581,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(Class<T> clz, String alias) {
     checkReadAccess(clz);
     final Entity entity = ModelProvider.getInstance().getEntity(clz);
-    final OBCriteria<T> obCriteria = new OBCriteria<>(clz,
-        SessionHandler.getInstance().getSession(poolName));
-    obCriteria.setEntity(entity);
-    return obCriteria;
+    return new OBCriteria<>(entity.getName(), alias,
+        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
   }
 
   /**
@@ -597,10 +595,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(String entityName) {
     checkReadAccess(entityName);
     Entity entity = ModelProvider.getInstance().getEntity(entityName);
-    final OBCriteria<T> obCriteria = new OBCriteria<>((Class<T>) entity.getMappingClass(),
-        SessionHandler.getInstance().getSession(poolName));
-    obCriteria.setEntity(entity);
-    return obCriteria;
+    return new OBCriteria<>(entity.getName(),
+        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
   }
 
   /**
@@ -615,10 +611,8 @@ public class OBDal implements OBNotSingleton {
   public <T extends BaseOBObject> OBCriteria<T> createCriteria(String entityName, String alias) {
     checkReadAccess(entityName);
     Entity entity = ModelProvider.getInstance().getEntity(entityName);
-    final OBCriteria<T> obCriteria = new OBCriteria<>((Class<T>) entity.getMappingClass(),
-        SessionHandler.getInstance().getSession(poolName));
-    obCriteria.setEntity(entity);
-    return obCriteria;
+    return new OBCriteria<>(entity.getName(), alias,
+        (SessionImplementor) SessionHandler.getInstance().getSession(poolName));
   }
 
   /**
@@ -642,11 +636,11 @@ public class OBDal implements OBNotSingleton {
     for (final UniqueConstraint uc : entity.getUniqueConstraints()) {
       final OBCriteria<BaseOBObject> criteria = createCriteria(entity.getName());
       if (id != null) {
-        criteria.addNotEqual("id", id);
+        criteria.add(Restrictions.ne("id", id));
       }
       for (final Property p : uc.getProperties()) {
         final Object value = obObject.getValue(p.getName());
-        criteria.addEqual(p.getName(), value);
+        criteria.add(Restrictions.eq(p.getName(), value));
       }
       final List<BaseOBObject> queryResult = criteria.list();
       for (final BaseOBObject queriedObject : queryResult) {
@@ -772,7 +766,7 @@ public class OBDal implements OBNotSingleton {
 
     Session session = getSession();
     session.evict(object);
-    session.createNativeQuery(sql).setParameter(BaseOBObject.ID, object.getId()).uniqueResult();
+    session.createNativeQuery(sql, Object.class).setParameter(BaseOBObject.ID, object.getId()).uniqueResult();
 
     @SuppressWarnings("unchecked")
     T newInstance = OBDal.getInstance().get((Class<T>) entity.getMappingClass(), object.getId());

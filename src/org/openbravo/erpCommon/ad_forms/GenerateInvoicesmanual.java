@@ -40,6 +40,7 @@ import org.openbravo.base.secureApp.HttpSecureAppServlet;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.businessUtility.Tree;
 import org.openbravo.erpCommon.businessUtility.WindowTabs;
 import org.openbravo.erpCommon.reference.PInstanceProcessData;
@@ -315,7 +316,7 @@ public class GenerateInvoicesmanual extends HttpSecureAppServlet {
     OBCriteria<Order> orderCrit = OBDal.getInstance().createCriteria(Order.class);
 
     ArrayList<String> orderIds = Utility.stringToArrayList(strOrderIds.replaceAll("\\(|\\)|'", ""));
-    orderCrit.addInIds(Order.PROPERTY_ID, orderIds);
+    orderCrit.add(Restrictions.in(Order.PROPERTY_ID, orderIds));
 
     List<Order> orders = orderCrit.list();
     return orders;

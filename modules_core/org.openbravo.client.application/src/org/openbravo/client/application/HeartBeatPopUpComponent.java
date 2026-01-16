@@ -44,6 +44,7 @@ import org.openbravo.client.kernel.SessionDynamicTemplateComponent;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.ddlutils.util.DBSMOBUtil;
 import org.openbravo.erpCommon.ad_process.HeartbeatProcess;
 import org.openbravo.erpCommon.ad_process.HeartbeatProcess.HeartBeatOrRegistration;
@@ -129,9 +130,9 @@ public class HeartBeatPopUpComponent extends SessionDynamicTemplateComponent {
   private String getConfigScriptsNotExported() {
     // Get all applied configuration scripts which are not exported in 3.0
     OBCriteria<Module> qMod = OBDal.getInstance().createCriteria(Module.class);
-    qMod.addEqual(Module.PROPERTY_TYPE, "T");
-    qMod.addEqual(Module.PROPERTY_ENABLED, true);
-    qMod.addEqual(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true);
+    qMod.add(Restrictions.eq(Module.PROPERTY_TYPE, "T"));
+    qMod.add(Restrictions.eq(Module.PROPERTY_ENABLED, true));
+    qMod.add(Restrictions.eq(Module.PROPERTY_APPLYCONFIGURATIONSCRIPT, true));
     String obDir = OBPropertiesProvider.getInstance()
         .getOpenbravoProperties()
         .getProperty("source.path");

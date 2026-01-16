@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
 import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.geography.Location;
@@ -93,7 +94,7 @@ public class FinancialAccountTest extends OBBaseTest {
     final OBCriteria<FIN_FinancialAccount> obCriteria = OBDal.getInstance()
         .createCriteria(FIN_FinancialAccount.class);
     obCriteria
-        .addEqual(FIN_FinancialAccount.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION);
+        .add(Restrictions.eq(FIN_FinancialAccount.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION));
     final List<FIN_FinancialAccount> finAccs = obCriteria.list();
     for (FIN_FinancialAccount fa : finAccs) {
       OBDal.getInstance().remove(fa);

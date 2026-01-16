@@ -31,6 +31,7 @@ import org.hibernate.query.Query;
 import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.module.Module;
 import org.openbravo.service.system.ModuleValidator;
 import org.openbravo.service.system.SystemValidationResult;
@@ -72,7 +73,7 @@ public class SystemValidatorTest extends OBBaseTest {
   private List<String> setModulesInDev() {
     List<String> updatedModules = new ArrayList<String>();
     OBCriteria<Module> qModules = OBDal.getInstance().createCriteria(Module.class);
-    qModules.addEqual(Module.PROPERTY_INDEVELOPMENT, false);
+    qModules.add(Restrictions.eq(Module.PROPERTY_INDEVELOPMENT, false));
     for (Module mod : qModules.list()) {
       mod.setInDevelopment(true);
       updatedModules.add(mod.getId());

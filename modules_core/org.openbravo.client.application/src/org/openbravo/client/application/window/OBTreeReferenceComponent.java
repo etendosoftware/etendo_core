@@ -59,6 +59,7 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.domain.ReferencedTree;
 import org.openbravo.model.ad.domain.ReferencedTreeField;
@@ -256,8 +257,8 @@ public class OBTreeReferenceComponent extends BaseTemplateComponent {
    */
   public String getShowSelectorGrid() {
     OBCriteria<ReferencedTreeField> criteria = OBDal.getInstance().createCriteria(ReferencedTreeField.class);
-    criteria.addEqual(ReferencedTreeField.PROPERTY_REFTREE, getReferencedTree());
-    criteria.addEqual(ReferencedTreeField.PROPERTY_SHOWINGRID, true);
+    criteria.add(Restrictions.eq(ReferencedTreeField.PROPERTY_REFTREE, getReferencedTree()));
+    criteria.add(Restrictions.eq(ReferencedTreeField.PROPERTY_SHOWINGRID, true));
     if (criteria.count() > 0) {
       return Boolean.TRUE.toString();
     }

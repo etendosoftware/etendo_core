@@ -76,6 +76,7 @@ import org.openbravo.client.myob.WidgetReference;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.User;
@@ -431,9 +432,9 @@ public class QueryListDataSource extends ReadOnlyDataSourceService implements Po
   private String getWhereClauseLeftPart(OBCQL_WidgetQuery widgetQuery, String summaryFieldName) {
     OBCriteria<OBCQL_QueryColumn> columnCriteria = OBDal.getInstance()
         .createCriteria(OBCQL_QueryColumn.class);
-    columnCriteria.addEqual(OBCQL_QueryColumn.PROPERTY_WIDGETQUERY, widgetQuery);
+    columnCriteria.add(Restrictions.eq(OBCQL_QueryColumn.PROPERTY_WIDGETQUERY, widgetQuery));
     columnCriteria
-        .addEqual(OBCQL_QueryColumn.PROPERTY_DISPLAYEXPRESSION, summaryFieldName);
+        .add(Restrictions.eq(OBCQL_QueryColumn.PROPERTY_DISPLAYEXPRESSION, summaryFieldName));
     OBCQL_QueryColumn queryColumn = (OBCQL_QueryColumn) columnCriteria.uniqueResult();
     return (queryColumn != null && queryColumn.getWhereClauseLeftPart() != null
         ? queryColumn.getWhereClauseLeftPart()
@@ -484,7 +485,7 @@ public class QueryListDataSource extends ReadOnlyDataSourceService implements Po
   private boolean isAccessibleWidgetInForm(WidgetClass widgetClass) {
     OBCriteria<WidgetReference> widgetInFormCriteria = OBDal.getInstance()
         .createCriteria(WidgetReference.class);
-    widgetInFormCriteria.addEqual(WidgetReference.PROPERTY_WIDGETCLASS, widgetClass);
+    widgetInFormCriteria.add(Restrictions.eq(WidgetReference.PROPERTY_WIDGETCLASS, widgetClass));
     List<Window> windowList = new ArrayList<>();
     List<WidgetReference> widgetInFormList = widgetInFormCriteria.list();
     for (WidgetReference widgetInForm : widgetInFormList) {
@@ -504,8 +505,8 @@ public class QueryListDataSource extends ReadOnlyDataSourceService implements Po
       OBCriteria<WindowAccess> accessibleWindowCriteria = OBDal.getInstance()
           .createCriteria(WindowAccess.class);
       accessibleWindowCriteria
-          .addEqual(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole());
-      accessibleWindowCriteria.addIn(WindowAccess.PROPERTY_WINDOW, windowList);
+          .add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
+      accessibleWindowCriteria.add(Restrictions.in(WindowAccess.PROPERTY_WINDOW, windowList));
       int count = accessibleWindowCriteria.count();
       // If the widget is embedded in at least one window accessible by the user, return true
       return (count > 0);

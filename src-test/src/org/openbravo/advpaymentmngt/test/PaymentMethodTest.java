@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.financialmgmt.payment.FIN_PaymentMethod;
 import org.openbravo.test.base.OBBaseTest;
 
@@ -94,7 +95,7 @@ public class PaymentMethodTest extends OBBaseTest {
   public void testDeletePaymentMethod() {
     final OBCriteria<FIN_PaymentMethod> obCriteria = OBDal.getInstance()
         .createCriteria(FIN_PaymentMethod.class);
-    obCriteria.addEqual(FIN_PaymentMethod.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION);
+    obCriteria.add(Restrictions.eq(FIN_PaymentMethod.PROPERTY_DESCRIPTION, STANDARD_DESCRIPTION));
     final List<FIN_PaymentMethod> paymentMethods = obCriteria.list();
     for (FIN_PaymentMethod pm : paymentMethods) {
       OBDal.getInstance().remove(pm);

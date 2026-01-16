@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,6 +48,7 @@ import org.openbravo.test.base.HiddenObjectHelper;
 /**
  * HttpServletRequest mock to be used to test components requiring requests
  */
+@Dependent
 public class HttpServletRequestMock implements HttpServletRequest {
   private static final Logger log = LogManager.getLogger();
 

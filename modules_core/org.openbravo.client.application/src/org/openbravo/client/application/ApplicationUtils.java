@@ -41,6 +41,7 @@ import org.openbravo.client.kernel.KernelUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.ad.access.User;
@@ -155,8 +156,8 @@ public class ApplicationUtils {
 
       final OBCriteria<RoleOrganization> roleOrgs = OBDal.getInstance()
           .createCriteria(RoleOrganization.class);
-      roleOrgs.addEqual(RoleOrganization.PROPERTY_ROLE, role);
-      roleOrgs.addEqual(RoleOrganization.PROPERTY_ORGADMIN, true);
+      roleOrgs.add(Restrictions.eq(RoleOrganization.PROPERTY_ROLE, role));
+      roleOrgs.add(Restrictions.eq(RoleOrganization.PROPERTY_ORGADMIN, true));
 
       return roleOrgs.list();
 
@@ -174,8 +175,8 @@ public class ApplicationUtils {
       OBContext.setAdminMode();
 
       final OBCriteria<UserRoles> userRoles = OBDal.getInstance().createCriteria(UserRoles.class);
-      userRoles.addEqual(UserRoles.PROPERTY_USERCONTACT, user);
-      userRoles.addEqual(UserRoles.PROPERTY_ROLEADMIN, true);
+      userRoles.add(Restrictions.eq(UserRoles.PROPERTY_USERCONTACT, user));
+      userRoles.add(Restrictions.eq(UserRoles.PROPERTY_ROLEADMIN, true));
 
       return userRoles.list();
 
