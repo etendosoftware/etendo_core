@@ -111,7 +111,6 @@ class TransactionalSequenceUtilsTest extends EBaseSpecification{
                 SessionHandler.getInstance().rollback()
             }
 
-            OBDal.getInstance().getSession().disconnect()
             return [sequenceNextVal, time]
         }
 
