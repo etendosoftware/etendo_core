@@ -1,7 +1,7 @@
 package com.smf.jobs;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,8 +9,8 @@ import java.util.Map;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
@@ -21,10 +21,8 @@ import org.openbravo.test.base.TestConstants;
  */
 public class TestActionHookCall extends WeldBaseTest {
 
-  @Before
-  public void setUp() throws Exception {
-    super.setUp();
-
+  @BeforeEach
+  public void setUpTestAction() {
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
         TestConstants.Orgs.ESP_NORTE);
   }
