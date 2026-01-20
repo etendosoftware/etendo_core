@@ -8,25 +8,28 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
 /**
  * Unit tests for AccountingFactEndYearTransformer
  * Tests the HQL query transformation for End Year Close table
  */
+@RunWith(MockitoJUnitRunner.class)
 public class AccountingFactEndYearTransformerTest {
 
-  public static final String CLIENT_ID = "clientId";
-  public static final String UPPER_MAX_FA_DESCRIPTION = "upper(Max(fa.description))";
-  public static final String HAVING_PARAM_0 = "havingParam_0";
-  public static final String TEST = "%test%";
-  public static final String TEST_CLIENT = "test-client";
-  public static final String FIELD_NAME_DEBIT_OPERATOR_GREATER_THAN_VALUE_100_0 = "{\"fieldName\":\"debit\",\"operator\":\"greaterThan\",\"value\":100.0}";
-  public static final String HAVING = "HAVING";
-  public static final String CRITERIA = "criteria";
-  public static final String ALIAS_0 = "alias_0";
-  public static final String ALIAS_1 = "alias_1";
-  public static final String FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST = "{\"fieldName\":\"description\",\"operator\":\"iContains\",\"value\":\"test\"}";
-  public static final String HAVING_PARAM = "havingParam_";
+  private static final String CLIENT_ID = "clientId";
+  private static final String UPPER_MAX_FA_DESCRIPTION = "upper(Max(fa.description))";
+  private static final String HAVING_PARAM_0 = "havingParam_0";
+  private static final String TEST = "%test%";
+  private static final String TEST_CLIENT = "test-client";
+  private static final String FIELD_NAME_DEBIT_OPERATOR_GREATER_THAN_VALUE_100_0 = "{\"fieldName\":\"debit\",\"operator\":\"greaterThan\",\"value\":100.0}";
+  private static final String HAVING = "HAVING";
+  private static final String CRITERIA = "criteria";
+  private static final String ALIAS_0 = "alias_0";
+  private static final String ALIAS_1 = "alias_1";
+  private static final String FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST = "{\"fieldName\":\"description\",\"operator\":\"iContains\",\"value\":\"test\"}";
+  private static final String HAVING_PARAM = "havingParam_";
   private AccountingFactEndYearTransformer transformer;
   private Map<String, String> requestParameters;
   private Map<String, Object> queryNamedParameters;

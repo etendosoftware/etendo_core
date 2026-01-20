@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -230,9 +230,6 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     queryNamedParameters.put(paramName, paramValue);
     
     switch (operator.toLowerCase()) {
-      case "equals":
-      case "iequals":
-        return expr + " = :" + paramName;
       case "notequal":
         return expr + " <> :" + paramName;
       case "greaterthan":
