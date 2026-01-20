@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -13,8 +12,6 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.Restrictions;
 import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.test.base.TestConstants;
-import org.openbravo.base.secureApp.VariablesSecureApp;
-import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.User;
@@ -43,35 +40,37 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
   public static final String ROLE = "role";
 
   /**
-   * Sets up the test environment.
-   *
-   * @throws Exception if an error occurs during setup
-   */
-  @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
-    OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
-        TestConstants.Clients.SYSTEM, TestConstants.Orgs.MAIN);
-    VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
-            OBContext.getOBContext().getCurrentClient().getId(),
-            OBContext.getOBContext().getCurrentOrganization().getId());
-    RequestContext.get().setVariableSecureApp(vars);
-  }
-
-  /**
    * Configures the SWSConfig with the given keys.
    *
    * @param keys
    */
-  private static void configSWSConfig(String keys) {
-    SMFSWSConfig config = OBProvider.getInstance().get(SMFSWSConfig.class);
-    config.setExpirationTime(0L);
-    config.setPrivateKey(keys);
-    OBDal.getInstance().save(config);
-    OBDal.getInstance().commitAndClose();
-    SWSConfig instance = SWSConfig.getInstance();
-    instance.refresh(config);
+  private void configSWSConfig(String keys) {
+    try {
+      OBContext.setAdminMode();
+      // Set SYSTEM context (client 0) for system-level entities
+      OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
+          TestConstants.Clients.SYSTEM, TestConstants.Orgs.MAIN);
+      
+      // Try to find existing config first
+      OBCriteria<SMFSWSConfig> criteria = OBDal.getInstance().createCriteria(SMFSWSConfig.class);
+      criteria.setMaxResults(1);
+      SMFSWSConfig config = (SMFSWSConfig) criteria.uniqueResult();
+      
+      // If doesn't exist, create new one
+      if (config == null) {
+        config = OBProvider.getInstance().get(SMFSWSConfig.class);
+        config.setNewOBObject(true);
+      }
+      
+      config.setExpirationTime(0L);
+      config.setPrivateKey(keys);
+      OBDal.getInstance().save(config);
+      OBDal.getInstance().flush();
+      SWSConfig instance = SWSConfig.getInstance();
+      instance.refresh(config);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   /**
@@ -79,15 +78,33 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
    *
    * @param algorithm
    */
-  private static void configAlgorithmPreference(String algorithm) {
-    Preference pref = OBProvider.getInstance().get(Preference.class);
-    pref.setProperty(ENCRYPTION_ALGORITHM_PREFERENCE);
-    pref.setSearchKey(algorithm);
-    pref.setSelected(true);
-    OBDal.getInstance().save(pref);
-    OBDal.getInstance().flush();
-    OBDal.getInstance().commitAndClose();
-    OBContext.setOBContext(TestConstants.Users.SYSTEM);
+  private void configAlgorithmPreference(String algorithm) {
+    try {
+      OBContext.setAdminMode();
+      // Set SYSTEM context for preference creation
+      OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
+          TestConstants.Clients.SYSTEM, TestConstants.Orgs.MAIN);
+      
+      // Try to find existing preference first
+      Preference pref = (Preference) OBDal.getInstance().createCriteria(Preference.class)
+          .add(Restrictions.eq(Preference.PROPERTY_PROPERTY, ENCRYPTION_ALGORITHM_PREFERENCE))
+          .add(Restrictions.eq(Preference.PROPERTY_SELECTED, true))
+          .uniqueResult();
+      
+      // If doesn't exist, create new one
+      if (pref == null) {
+        pref = OBProvider.getInstance().get(Preference.class);
+        pref.setNewOBObject(true);
+        pref.setProperty(ENCRYPTION_ALGORITHM_PREFERENCE);
+        pref.setSelected(true);
+      }
+      
+      pref.setSearchKey(algorithm);
+      OBDal.getInstance().save(pref);
+      OBDal.getInstance().flush();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   /**
@@ -186,6 +203,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     assertEquals(role.getId(), decodedToken.getClaim(ROLE).asString());
     assertEquals(org.getId(), decodedToken.getClaim(ORGANIZATION).asString());
   }
+
   /**
    * Cleans up the test environment.
    */
@@ -213,4 +231,3 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     }
   }
 }
-
