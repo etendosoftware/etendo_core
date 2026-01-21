@@ -114,20 +114,6 @@ pipeline {
                 }
             }
         }
-        stage('Build Oracle DB (temporary stage) ') {
-            when {
-                expression {
-                  currentBuild.result == SUCCESS
-                }
-            }
-            steps {
-                script {
-                    sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Configuring Stack\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-                    echo "--------------- Waiting for Oracle DB to be ready ---------------"
-                    sleep( time: 30, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
-                }
-            }
-        }
         stage ('Stack Configuration') { // MARK: Stack Configuration
             when {
                 expression {
@@ -176,9 +162,9 @@ pipeline {
 
                             def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
 
-                            env.JAVA_HOME = stackConfiguration.javaHome
-                            env.TOMCAT_URL = stackConfiguration.tomcatUrl
-                            env.STACK_TYPE = stackConfiguration.stackType
+                            env.JAVA_HOME = "/usr/lib/jvm/jdk-17.0.13"
+                            env.TOMCAT_URL = "https://dlcdn.apache.org/tomcat/tomcat-11/v11.0.15/bin/apache-tomcat-11.0.15.tar.gz"
+                            env.STACK_TYPE = "PRERELEASE 27Q1"
 
                             echo "Stack Type: ${env.STACK_TYPE}"
                             echo "Tomcat URL: ${env.TOMCAT_URL}"
@@ -253,8 +239,15 @@ pipeline {
                                 mkdir -p build/lib/runtime
                                 ./gradlew prepareConfig --info
                                 ./gradlew setup --info
-                                ./gradlew install --info
                                 ./gradlew expandModules --info
+                                """
+
+                                sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Configuring Stack\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+                                echo "--------------- Waiting for Oracle DB to be ready ---------------"
+                                sleep( time: 20, unit: 'MINUTES' ) // Temporary sleep to allow DB to be fully started
+
+                                sh """
+                                ./gradlew install --info
                                 ./gradlew smartbuild --info
                                 """
                             }

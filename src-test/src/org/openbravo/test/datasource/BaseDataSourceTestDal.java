@@ -45,9 +45,9 @@ public class BaseDataSourceTestDal extends OBBaseTest {
   private static String OB_URL = null;
   protected static final String LOGIN = "admin";
   protected static final String PWD = "admin";
-  private static boolean authenticated = false;
-  private static String cookie;
-  private static String csrfToken;
+  private boolean authenticated = false;
+  private String cookie;
+  private String csrfToken;
 
   protected static final String POST_METHOD = "POST";
 

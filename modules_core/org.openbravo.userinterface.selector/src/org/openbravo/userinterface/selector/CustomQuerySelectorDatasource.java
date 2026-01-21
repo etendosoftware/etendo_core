@@ -18,35 +18,24 @@
  */
 package org.openbravo.userinterface.selector;
 
-/**
- * MIGRATED TO HIBERNATE 6
- * - Replaced org.hibernate.criterion.* with jakarta.persistence.criteria.*
- * - This file was automatically migrated from Criteria API to JPA Criteria API
- * - Review and test thoroughly before committing
- */
-
-
 import static org.openbravo.userinterface.selector.SelectorConstants.includeOrgFilter;
 
 import java.math.BigDecimal;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.RequestScoped;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.TupleElement;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,6 +65,11 @@ import org.openbravo.service.datasource.ReadOnlyDataSourceService;
 import org.openbravo.service.json.AdvancedQueryBuilder;
 import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.json.JsonUtils;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 @Dependent
 public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
@@ -137,7 +131,24 @@ public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
       }
 
       for (int i = 0; i < typedParameters.size(); i++) {
-        selQuery.setParameter(ALIAS_PREFIX + Integer.toString(i), typedParameters.get(i));
+        Object paramValue = typedParameters.get(i);
+        String paramName = ALIAS_PREFIX + i;
+
+        // Set parameter with explicit type based on the value's actual type
+        if (paramValue instanceof Collection<?> collectionParamValue) {
+          selQuery.setParameterList(paramName, collectionParamValue);
+        } else if (paramValue instanceof String[] stringArrayParamValue) {
+          selQuery.setParameterList(paramName, stringArrayParamValue);
+        } else if (paramValue instanceof java.sql.Date dateParamValue) {
+          selQuery.setParameter(paramName, dateParamValue, TemporalType.DATE);
+        } else if (paramValue instanceof Time timeParamValue) {
+          selQuery.setParameter(paramName, timeParamValue, TemporalType.TIME);
+        } else if (paramValue instanceof Timestamp timestampParamValue) {
+          selQuery.setParameter(paramName, timestampParamValue, TemporalType.TIMESTAMP);
+        } else {
+          // Fallback for other types
+          selQuery.setParameter(paramName, paramValue);
+        }
       }
 
       if (startRow > 0) {
@@ -146,7 +157,7 @@ public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
       if (endRow > startRow) {
         selQuery.setMaxResults(endRow - startRow + 1);
       }
-
+      log.info("Executing CustomQuerySelectorDatasource selector hql: " + hql);
       for (Tuple tuple : selQuery.list()) {
         rowCount++;
         final Map<String, Object> data = new LinkedHashMap<>();
@@ -394,11 +405,12 @@ public class CustomQuerySelectorDatasource extends ReadOnlyDataSourceService {
       try {
         final Calendar cal = Calendar.getInstance();
         cal.setTime(xmlDateFormat.parse(value));
-        whereClause = " (day(" + field.getClauseLeftPart() + ") = "
+
+        whereClause = " (cast(day(" + field.getClauseLeftPart() + ") as integer) = "
             + getTypedParameterAlias(typedParameters, cal.get(Calendar.DATE));
-        whereClause += "\n and month(" + field.getClauseLeftPart() + ") = "
+        whereClause += "\n and cast(month(" + field.getClauseLeftPart() + ") as integer) = "
             + getTypedParameterAlias(typedParameters, cal.get(Calendar.MONTH) + 1);
-        whereClause += "\n and year(" + field.getClauseLeftPart() + ") = "
+        whereClause += "\n and cast(year(" + field.getClauseLeftPart() + ") as integer) = "
             + getTypedParameterAlias(typedParameters, cal.get(Calendar.YEAR)) + ") ";
       } catch (Exception e) {
         // ignore these errors, just don't filter then
