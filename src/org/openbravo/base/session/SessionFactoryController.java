@@ -42,7 +42,8 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalSessionFactory;
 
-import com.etendoerp.hibernate.EtendoPostgreSQLDialect;
+import com.etendoerp.hibernate.EtendoOracleDialect;
+import com.etendoerp.hibernate.EtendoPostgresDialect;
 
 /**
  * Initializes and provides the session factory to the rest of the application. There are subclasses
@@ -277,7 +278,7 @@ public abstract class SessionFactoryController {
   private Properties getPostgresHbProps(Properties obProps) {
     isPostgresDatabase = true;
     final Properties props = new Properties();
-    props.setProperty(JdbcSettings.DIALECT, EtendoPostgreSQLDialect.class.getName());
+    props.setProperty(JdbcSettings.DIALECT, EtendoPostgresDialect.class.getName());
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {
@@ -294,7 +295,7 @@ public abstract class SessionFactoryController {
   private Properties getOracleHbProps(Properties obProps) {
     isPostgresDatabase = false;
     final Properties props = new Properties();
-    props.setProperty(JdbcSettings.DIALECT, OBOracle10gDialect.class.getName());
+    props.setProperty(JdbcSettings.DIALECT, EtendoOracleDialect.class.getName());
     if (isJNDIModeOn(obProps)) {
       setJNDI(obProps, props);
     } else {
@@ -335,7 +336,7 @@ public abstract class SessionFactoryController {
     if (isPostgresDatabase) {
       return UNIQUE_CONSTRAINT_QUERY_POSTGRES;
     }
-    return UNIQUE_CONSTRAINT_QUERY_ORACLE.replace("${bbdd.user}", bbddUser);
+    return UNIQUE_CONSTRAINT_QUERY_ORACLE;
   }
 
   /**
@@ -348,7 +349,6 @@ public abstract class SessionFactoryController {
     if (isPostgresDatabase) {
       return COLUMN_QUERY_POSTGRES;
     }
-
-    return COLUMN_QUERY_ORACLE.replace("${bbdd.user}", bbddUser);
+    return COLUMN_QUERY_ORACLE;
   }
 }

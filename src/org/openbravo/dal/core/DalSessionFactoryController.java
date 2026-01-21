@@ -43,7 +43,6 @@ import org.openbravo.base.session.SessionFactoryController;
 import com.etendoerp.sequences.services.NonTransactionalSequenceService;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Instance;
