@@ -30,10 +30,8 @@ import java.util.Map.Entry;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.provider.OBProvider;
@@ -165,13 +163,13 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
     }
   }
 
-  @BeforeClass
+  @BeforeAll
   public static void setRole() {
     ensureDalInitialized();
     setQAAdminContext();
   }
 
-  @AfterClass
+  @AfterAll
   public static void removeCreatedObjects() {
     OBContext.setOBContext("0");
     OBContext.setAdminMode(false);
@@ -197,8 +195,7 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
    * @param allowCrossOrgColumns
    *          value to set
    */
-  static void setUpAllowedCrossOrg(List<String> colIds, boolean allowCrossOrgColumns)
-      throws Exception {
+  static void setUpAllowedCrossOrg(List<String> colIds, boolean allowCrossOrgColumns) {
     OBContext.setOBContext("0");
     for (String colId : colIds) {
       Column col = OBDal.getInstance().get(Column.class, colId);
