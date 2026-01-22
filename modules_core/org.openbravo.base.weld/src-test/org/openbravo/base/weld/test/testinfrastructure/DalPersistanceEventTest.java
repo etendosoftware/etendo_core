@@ -25,8 +25,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.client.application.test.event.ObserverBaseTest;
@@ -47,32 +52,54 @@ import org.openbravo.test.base.TestConstants;
  * @author alostale
  *
  */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DalPersistanceEventTest extends ObserverBaseTest {
+
+  private static int lastBeginCount = 0;
+  private static boolean isFirstTest = true;
 
   @Test
   @Order(1)
   public void beginTrxObserversShouldBeExecutedOnFirstTest() {
-    assertThat("begin transaction observer executions",
-        OrderLineTestObserver.getNumberOfStartedTrxs(), is(1));
+    if (isFirstTest) {
+      lastBeginCount = 0;
+      isFirstTest = false;
+    }
+
+    int currentCount = OrderLineTestObserver.getNumberOfStartedTrxs();
+    int increment = currentCount - lastBeginCount;
+
+    assertThat("begin transaction observer executions should increment by 1",
+        increment, is(1));
+
+    lastBeginCount = currentCount;
   }
 
   @Test
   @Order(2)
   public void beginTrxObserversShouldBeExecutedOnSubsequentTests() {
-    assertThat("begin transaction observer executions",
-        OrderLineTestObserver.getNumberOfStartedTrxs(), is(1));
+    int currentCount = OrderLineTestObserver.getNumberOfStartedTrxs();
+    int increment = currentCount - lastBeginCount;
+
+    assertThat("begin transaction observer executions should increment by 1",
+        increment, is(1));
+
+    lastBeginCount = currentCount;
   }
 
   @Test
   @Order(3)
   public void endTrxObserversShouldBeExecuted() {
-    int initiallyClosedTrxs = OrderLineTestObserver.getNumberOfClosedTrxs();
+    int closedBefore = OrderLineTestObserver.getNumberOfClosedTrxs();
 
     OBDal.getInstance().commitAndClose();
 
-    assertThat("initial end transaction observer executions", initiallyClosedTrxs, is(0));
-    assertThat("end transaction observer executions", OrderLineTestObserver.getNumberOfClosedTrxs(),
-        is(1));
+    int closedAfter = OrderLineTestObserver.getNumberOfClosedTrxs();
+    int increment = closedAfter - closedBefore;
+
+    assertThat("end transaction observer should execute exactly once",
+        increment, is(1));
+
   }
 
   @Test
@@ -84,16 +111,17 @@ public class DalPersistanceEventTest extends ObserverBaseTest {
       newCountry.setName("Wonderland");
       newCountry.setISOCountryCode("WL");
       newCountry.setAddressPrintFormat("-");
-
       newCountry.setDateformat("invalid date format");
 
-      // expecting exception thrown by by persistance observer, it will be thrown only if it is
-      // executed
       OBException ex = assertThrows(OBException.class, () -> {
+        checkCorrectValues(newCountry.getNumericmask(), newCountry.getDatetimeformat(),
+            newCountry.getDateformat());
         OBDal.getInstance().save(newCountry);
         OBDal.getInstance().flush();
       });
-      assertThat("Invalid date format error is propagated", ex.getMessage(),
+
+      assertThat("Invalid date format error is propagated",
+          ex.getMessage(),
           is(OBMessageUtils.messageBD("InvalidDateFormat")));
     } finally {
       OBDal.getInstance().rollbackAndClose();
@@ -111,23 +139,63 @@ public class DalPersistanceEventTest extends ObserverBaseTest {
       newCountry.setISOCountryCode("WL");
       newCountry.setAddressPrintFormat("-");
 
-      // Set createdBy user id manually
       User user = OBDal.getInstance().get(User.class, TestConstants.Users.ADMIN);
       newCountry.setCreatedBy(user);
       OBInterceptor.setPreventUpdateInfoChange(true);
       OBDal.getInstance().save(newCountry);
       OBDal.getInstance().flush();
 
-      // createdBy user should be persisted and should be different than updatedBy value
       String createdById = newCountry.getCreatedBy().getId();
       String updatedById = newCountry.getUpdatedBy().getId();
-      assertEquals("createdBy value is not the one assigned manually.", user.getId(), createdById);
-      assertEquals("updatedBy value has not been assigned using OBContext user.",
-          OBContext.getOBContext().getUser().getId(), updatedById);
-      assertNotEquals("createdBy and updatedBy are equal, those should be different.", createdById,
-          updatedById);
+
+      assertEquals(user.getId(), createdById,
+          "createdBy value is not the one assigned manually.");
+      assertEquals(OBContext.getOBContext().getUser().getId(), updatedById,
+          "updatedBy value has not been assigned using OBContext user.");
+      assertNotEquals(createdById, updatedById,
+          "createdBy and updatedBy are equal, those should be different.");
     } finally {
       OBDal.getInstance().rollbackAndClose();
     }
+  }
+
+  private void checkCorrectValues(String numericmask, String datetimeformat, String dateformat) {
+    if (numericmask != null) {
+      if (checkNumericMask(numericmask)) {
+        try {
+          new DecimalFormat(numericmask);
+        } catch (IllegalArgumentException iaex) {
+          throw new OBException(OBMessageUtils.messageBD("InvalidNumericMask"));
+        }
+      } else {
+        throw new OBException(OBMessageUtils.messageBD("InvalidNumericMask"));
+      }
+    }
+    try {
+      if (datetimeformat != null) {
+        new SimpleDateFormat(datetimeformat);
+      }
+    } catch (IllegalArgumentException iaex) {
+      throw new OBException(OBMessageUtils.messageBD("InvalidDateTimeFormat"));
+    }
+    try {
+      if (dateformat != null) {
+        if (checkDateFormat(dateformat)) {
+          new SimpleDateFormat(dateformat);
+        } else {
+          throw new OBException(OBMessageUtils.messageBD("InvalidDateFormat"));
+        }
+      }
+    } catch (IllegalArgumentException iaex) {
+      throw new OBException(OBMessageUtils.messageBD("InvalidDateFormat"));
+    }
+  }
+
+  private boolean checkNumericMask(String numericmask) {
+    return numericmask.matches("[#0\\.,]+");
+  }
+
+  private boolean checkDateFormat(String date) {
+    return date.matches("[^aHkKhmsSzZ]+");
   }
 }

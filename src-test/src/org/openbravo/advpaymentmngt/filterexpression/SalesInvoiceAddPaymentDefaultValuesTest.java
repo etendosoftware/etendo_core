@@ -45,7 +45,10 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
   private Currency mockCurrency;
   @Mock
   private Organization mockOrganization;
+  @Mock
+  private OBContext mockOBContext;
   private MockedStatic<OBDal> mockedOBDal;
+  private MockedStatic<OBContext> mockedOBContext;
   private AutoCloseable mocks;
 
   /**
@@ -59,9 +62,9 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     // Initialize mocks
     mocks = MockitoAnnotations.openMocks(this);
 
-    // Set up OBContext
-    OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
-        TestConstants.Orgs.ESP_NORTE);
+    // Mock static OBContext
+    mockedOBContext = mockStatic(OBContext.class);
+    mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
 
     // Set up static mocks
     mockedOBDal = mockStatic(OBDal.class);
@@ -89,6 +92,9 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
    */
   @AfterEach
   public void tearDown() throws Exception {
+    if (mockedOBContext != null) {
+      mockedOBContext.close();
+    }
     if (mockedOBDal != null) {
       mockedOBDal.close();
     }
@@ -115,7 +121,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getDefaultReceivedFrom(requestMap);
 
     // Then
-    assertEquals("Should return the business partner ID", org.openbravo.advpaymentmngt.TestConstants.BUSINESS_PARTNER_ID, result);
+    assertEquals(org.openbravo.advpaymentmngt.TestConstants.BUSINESS_PARTNER_ID, result, "Should return the business partner ID");
   }
 
   /**
@@ -136,7 +142,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getDefaultCurrency(requestMap);
 
     // Then
-    assertEquals("Should return the currency ID", org.openbravo.advpaymentmngt.TestConstants.CURRENCY_ID, result);
+    assertEquals(org.openbravo.advpaymentmngt.TestConstants.CURRENCY_ID, result, "Should return the currency ID");
   }
 
   /**
@@ -157,7 +163,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getDefaultStandardPrecision(requestMap);
 
     // Then
-    assertEquals("Should return the standard precision", "2", result);
+    assertEquals("2", result, "Should return the standard precision");
   }
 
   /**
@@ -178,8 +184,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getOrganization(requestMap);
 
     // Then
-    assertEquals("Should return the organization ID", org.openbravo.advpaymentmngt.TestConstants.ORGANIZATION_ID,
-        result);
+    assertEquals(org.openbravo.advpaymentmngt.TestConstants.ORGANIZATION_ID, result, "Should return the organization ID");
   }
 
   /**
@@ -194,7 +199,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getDefaultIsSOTrx(requestMap);
 
     // Then
-    assertEquals("Should return Y for sales transaction", "Y", result);
+    assertEquals("Y", result, "Should return Y for sales transaction");
   }
 
   /**
@@ -209,7 +214,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getDefaultTransactionType(requestMap);
 
     // Then
-    assertEquals("Should return I for invoice transaction", "I", result);
+    assertEquals("I", result, "Should return I for invoice transaction");
   }
 
   /**
@@ -233,8 +238,8 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getDefaultExpectedAmount(requestMap);
 
     // Then
-    assertNotNull("Should return a non-null amount", result);
-    assertEquals("Should return 0 for empty schedule", "0", result);
+    assertNotNull(result, "Should return a non-null amount");
+    assertEquals("0", result, "Should return 0 for empty schedule");
   }
 
   /**
@@ -249,6 +254,6 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     String result = classUnderTest.getDefaultPaymentDate(requestMap);
 
     // Then
-    assertNotNull("Should return a non-null date", result);
+    assertNotNull(result,"Should return a non-null date");
   }
 }

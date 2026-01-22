@@ -18,6 +18,7 @@
  */
 package org.openbravo.client.application.test.event;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.model.Entity;
@@ -42,9 +43,10 @@ import org.openbravo.model.common.order.OrderLine;
  * @author alostale
  *
  */
+@Dependent
 public class OrderLineTestObserver extends EntityPersistenceEventObserver {
   static final String FORCED_DESCRIPTION = "test description";
-  private static Entity[] entities = {
+  private static final Entity[] entities = {
       ModelProvider.getInstance().getEntity(OrderLine.ENTITY_NAME) };
   private static int executionCount = 0;
   private static int beginTrx = 0;
