@@ -42,8 +42,8 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
-import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -373,7 +373,7 @@ public class OBBaseTest {
    *
    * @see TestLogAppender
    */
-  @BeforeClass
+  @BeforeAll
   public static void classSetUp() throws Exception {
     initializeTestLogAppender();
     staticInitializeDalLayer();
@@ -394,6 +394,7 @@ public class OBBaseTest {
   @BeforeEach
   public void setUp() throws Exception {
     // clear the session otherwise it keeps the old model
+    ensureDalInitialized();
     setTestUserContext();
     if (shouldMockServletContext()) {
       setMockServletContext();
@@ -682,5 +683,23 @@ public class OBBaseTest {
   protected <T extends BaseOBObject> int count(Class<T> clz) {
     final OBCriteria<T> obc = OBDal.getInstance().createCriteria(clz);
     return obc.count();
+  }
+
+  /**
+   * Ensures DAL is initialized before running tests
+   */
+  private static synchronized void ensureDalInitialized() {
+    DalLayerInitializer initializer = DalLayerInitializer.getInstance();
+    if (!initializer.isInitialized()) {
+      try {
+        log.info("Initializing DAL layer for test...");
+        staticInitializeDalLayer();
+        initializer.initialize(true);
+        log.info("DAL layer initialized successfully");
+      } catch (Exception e) {
+        log.error("Failed to initialize DAL layer", e);
+        throw new RuntimeException("Cannot initialize DAL layer", e);
+      }
+    }
   }
 }

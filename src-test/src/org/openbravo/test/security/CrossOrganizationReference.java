@@ -36,6 +36,7 @@ import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.structure.BaseOBObject;
+import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.datamodel.Column;
@@ -80,7 +81,6 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
   private static final String TAX = "3271411A5AFB490A91FB618B6B789C24";
 
   protected static List<BaseOBObject> createdObjects = new ArrayList<BaseOBObject>();
-  private static boolean dalInitialized = false;
 
   /** Creates a default order */
   protected Order createOrder(String orgId) {
@@ -197,12 +197,17 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
    */
   static void setUpAllowedCrossOrg(List<String> colIds, boolean allowCrossOrgColumns) {
     OBContext.setOBContext("0");
-    for (String colId : colIds) {
-      Column col = OBDal.getInstance().get(Column.class, colId);
-      Property p = ModelProvider.getInstance()
-          .getEntityByTableId(col.getTable().getId())
-          .getPropertyByColumnName(col.getDBColumnName());
-      p.setAllowedCrossOrgReference(allowCrossOrgColumns);
+    try{
+      for (String colId : colIds) {
+        Column col = OBDal.getInstance().get(Column.class, colId);
+        Property p = ModelProvider.getInstance()
+            .getEntityByTableId(col.getTable().getId())
+            .getPropertyByColumnName(col.getDBColumnName());
+        p.setAllowedCrossOrgReference(allowCrossOrgColumns);
+      }
+      OBDal.getInstance().flush();
+    } finally {
+      OBContext.restorePreviousMode();
     }
   }
 
@@ -210,11 +215,11 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
    * Ensures DAL is initialized before running tests
    */
   private static synchronized void ensureDalInitialized() {
-    if (!dalInitialized) {
+    DalLayerInitializer initializer = DalLayerInitializer.getInstance();
+    if (!initializer.isInitialized()) {
       try {
         log.info("Initializing DAL layer for test...");
-        staticInitializeDalLayer();
-        dalInitialized = true;
+        initializer.initialize(true);
         log.info("DAL layer initialized successfully");
       } catch (Exception e) {
         log.error("Failed to initialize DAL layer", e);
