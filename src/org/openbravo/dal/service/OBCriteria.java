@@ -217,21 +217,26 @@ public class OBCriteria<E extends BaseOBObject> {
   @SuppressWarnings("unchecked")
   private <F> List<F> executeProjectionQuery(Class<F> className) {
     CriteriaBuilder cb = session.getCriteriaBuilder();
-    CriteriaQuery<F> cq = cb.createQuery(className);
-    Root<F> root = cq.from(className);
+    CriteriaQuery<Object> cq = cb.createQuery(Object.class);
+    Root<E> root = cq.from(entityClass);
 
     // Apply projection
     Expression<?> projectionExpr = projection.toExpression(cb, root);
-    cq.select((Selection<? extends F>) projectionExpr);
+    cq.select(projectionExpr);
 
     applyPredicates(cb, cq, root);
     applyAliases(root);
 
-    Query<F> query = session.createQuery(cq);
+    Query<Object> query = session.createQuery(cq);
     applyPagination(query);
     applyTimeout(query);
 
-    return query.getResultList();
+    List<Object> rawResults = query.getResultList();
+    List<F> results = new ArrayList<>();
+    for (Object result : rawResults) {
+      results.add((F) result);
+    }
+    return results;
   }
 
   /**
@@ -323,7 +328,6 @@ public class OBCriteria<E extends BaseOBObject> {
     } else {
       throw new OBException("Projection must be set to use this method");
     }
-
   }
 
   /**
@@ -645,11 +649,15 @@ public class OBCriteria<E extends BaseOBObject> {
   }
 
   public Projection getProjection() {
-    return projection.getProjection();
+    return projection != null ? projection.getProjection() : null;
   }
 
   public void setProjection(Projection projection) {
-    this.projection.setProjection(projection);
+    if (this.projection == null) {
+      this.projection = new ProjectionEntry(projection);
+    } else {
+      this.projection.setProjection(projection);
+    }
   }
 
   // Inner classes
