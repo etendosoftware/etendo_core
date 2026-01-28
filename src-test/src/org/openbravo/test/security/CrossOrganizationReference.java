@@ -197,12 +197,17 @@ public class CrossOrganizationReference extends BaseDataSourceTestDal {
    */
   static void setUpAllowedCrossOrg(List<String> colIds, boolean allowCrossOrgColumns) {
     OBContext.setOBContext("0");
-    for (String colId : colIds) {
-      Column col = OBDal.getInstance().get(Column.class, colId);
-      Property p = ModelProvider.getInstance()
-          .getEntityByTableId(col.getTable().getId())
-          .getPropertyByColumnName(col.getDBColumnName());
-      p.setAllowedCrossOrgReference(allowCrossOrgColumns);
+    try{
+      for (String colId : colIds) {
+        Column col = OBDal.getInstance().get(Column.class, colId);
+        Property p = ModelProvider.getInstance()
+            .getEntityByTableId(col.getTable().getId())
+            .getPropertyByColumnName(col.getDBColumnName());
+        p.setAllowedCrossOrgReference(allowCrossOrgColumns);
+      }
+      OBDal.getInstance().flush();
+    } finally {
+      OBContext.restorePreviousMode();
     }
   }
 
