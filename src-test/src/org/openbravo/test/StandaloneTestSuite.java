@@ -21,6 +21,7 @@ package org.openbravo.test;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import org.openbravo.advpaymentmngt.process.FINPaymentMonitorProcessQueryTest;
 import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.advpaymentmngt.test.DocumentNumberGeneration;
 import org.openbravo.advpaymentmngt.test.ReversePaymentTest;
@@ -307,6 +308,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // AdvPayment
     AdvPaymentMngtTestSuite.class, //
+    FINPaymentMonitorProcessQueryTest.class, //
 
     // Inventory Status
     InventoryStatusTest.class, //
