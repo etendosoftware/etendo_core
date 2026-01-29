@@ -12,6 +12,7 @@ List<String> _dependenciesListCOMPILATION = [
   'com.fasterxml.jackson.core:jackson-annotations:2.11.2',
   'com.fasterxml.jackson.core:jackson-core:2.11.2',
   'com.fasterxml.jackson.core:jackson-databind:2.11.2',
+  'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.2',
   'com.fasterxml:classmate:1.3.4',
   'org.codehaus.jettison:jettison:1.3',
 
@@ -34,7 +35,10 @@ List<String> _dependenciesListCOMPILATION = [
   // Reporting and Document Generation
   'com.lowagie:itext:2.1.7',
   'jfree:jfreechart:1.0.12',
+  'net.sf.jasperreports:jasperreports:7.0.3',
   'net.sf.jasperreports:jasperreports-servlets:7.0.3',
+  'net.sf.jasperreports:jasperreports-chart-themes:7.0.3',
+  'net.sf.jasperreports:jasperreports-jdt:7.0.0',
 
   // Database Drivers and Persistence Connectors
   'com.oracle.database.jdbc:ojdbc8:23.9.0.25.07',

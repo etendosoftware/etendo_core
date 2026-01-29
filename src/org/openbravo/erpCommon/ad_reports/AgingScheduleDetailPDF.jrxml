@@ -1,35 +1,34 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PaymentReportPDF" pageWidth="670" pageHeight="842" columnWidth="610" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20">
+<!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 7.0.3-41034ca841d452f3305ba55b9042260aaa1ab5dd  -->
+<jasperReport name="PaymentReportPDF" language="java" pageWidth="670" pageHeight="842" columnWidth="610" leftMargin="30" rightMargin="30" topMargin="20" bottomMargin="20" uuid="702c1b52-c51e-47b9-9b6a-3f1858f0e416">
 	<property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
 	<property name="ireport.scriptlethandling" value="0"/>
 	<property name="ireport.encoding" value="UTF-8"/>
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<import value="net.sf.jasperreports.engine.*"/>
-	<import value="java.util.*"/>
-	<import value="net.sf.jasperreports.engine.data.*"/>
-	<style name="default" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="8"/>
-	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18"/>
-	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14"/>
-	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11" isBold="false"/>
-	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="12" isBold="true"/>
-	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Group_Data_Field" fontName="Bitstream Vera Sans" fontSize="11"/>
-	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="10" isBold="true"/>
-	<style name="Detail_Line" fontName="Bitstream Vera Sans" fontSize="8">
-		<conditionalStyle>
+	<import>net.sf.jasperreports.engine.*</import>
+	<import>java.util.*</import>
+	<import>net.sf.jasperreports.engine.data.*</import>
+	<style name="default" vTextAlign="Middle" vImageAlign="Middle" fontName="Bitstream Vera Sans" fontSize="8.0"/>
+	<style name="Report_Title" fontName="Bitstream Vera Sans" fontSize="18.0"/>
+	<style name="Report_Subtitle" forecolor="#555555" fontName="Bitstream Vera Sans" fontSize="14.0"/>
+	<style name="Report_Data_Label" fontName="Bitstream Vera Sans" fontSize="11.0" bold="true"/>
+	<style name="Report_Data_Field" fontName="Bitstream Vera Sans" fontSize="11.0" bold="false"/>
+	<style name="Total_Field" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC" vTextAlign="Middle" vImageAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11.0" bold="true"/>
+	<style name="GroupHeader_DarkGray" mode="Opaque" forecolor="#FFFFFF" backcolor="#555555" vTextAlign="Middle" vImageAlign="Middle" fontName="Bitstream Vera Sans" fontSize="12.0" bold="true"/>
+	<style name="Group_Data_Label" fontName="Bitstream Vera Sans" fontSize="11.0" bold="true"/>
+	<style name="Group_Data_Field" fontName="Bitstream Vera Sans" fontSize="11.0"/>
+	<style name="Detail_Header" mode="Opaque" forecolor="#FFFFFF" backcolor="#5D5D5D" vTextAlign="Middle" vImageAlign="Middle" fontName="Bitstream Vera Sans" fontSize="10.0" bold="true"/>
+	<style name="Detail_Line" fontName="Bitstream Vera Sans" fontSize="8.0">
+		<conditionalStyle mode="Opaque" backcolor="#CCCCCC">
 			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue()%2==0)]]></conditionExpression>
-			<style mode="Opaque" backcolor="#CCCCCC"/>
 		</conditionalStyle>
 	</style>
 	<style name="Total_Gray" mode="Opaque" forecolor="#000000" backcolor="#CCCCCC"/>
-	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="10" isBold="true"/>
-	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="10"/>
-	<style name="Group_Footer" fontName="Bitstream Vera Sans" fontSize="11" isBold="true"/>
-	<style name="Report_Footer" isDefault="true" vAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11"/>
+	<style name="Detail_Data_Label" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="10.0" bold="true"/>
+	<style name="Detail_Data_Field" mode="Opaque" backcolor="#CCCCCC" fontName="Bitstream Vera Sans" fontSize="10.0"/>
+	<style name="Group_Footer" fontName="Bitstream Vera Sans" fontSize="11.0" bold="true"/>
+	<style name="Report_Footer" default="true" vTextAlign="Middle" vImageAlign="Middle" fontName="Bitstream Vera Sans" fontSize="11.0"/>
 	<parameter name="AMOUNTFORMAT" class="java.text.DecimalFormat"/>
 	<parameter name="DATEFORMATTER" class="java.text.DateFormat">
 		<defaultValueExpression><![CDATA[$P{REPORT_FORMAT_FACTORY}.createDateFormat("", $P{REPORT_LOCALE}, $P{REPORT_TIME_ZONE})]]></defaultValueExpression>
@@ -55,12 +54,10 @@
 	<parameter name="inpLabel3" class="java.lang.String"/>
 	<parameter name="inpLabel4" class="java.lang.String"/>
 	<parameter name="inpLabel5" class="java.lang.String"/>
-	<queryString>
-		<![CDATA[SELECT 'hello' AS BP_GROUP, 'hello' AS BPARTNER, 'hello' AS PROJECT, 'hello' AS PAYMENT, 'hello' AS SALES_PERSON, 1234 AS INVOICE_NUMBER, to_Date('01/01/2010') AS INVOICE_DATE,
+	<query language="sql"><![CDATA[SELECT 'hello' AS BP_GROUP, 'hello' AS BPARTNER, 'hello' AS PROJECT, 'hello' AS PAYMENT, 'hello' AS SALES_PERSON, 1234 AS INVOICE_NUMBER, to_Date('01/01/2010') AS INVOICE_DATE,
        to_Date('01/03/2010') AS DUE_DATE, 1234 AS PLANNED_DSO, 1234 AS CURRENT_DSO, 1234 AS OVERDUE, 1234 AS DAYS_OVERDUE, 1234 AS AMOUNT,
        'hello' AS CURRENCY, 1234 AS BASE_AMOUNT, 'hello' AS BASE_CURRENCY, 'hello' AS PAYMENT_METHOD, 'hello' AS FINANCIAL_ACCOUNT
-FROM DUAL]]>
-	</queryString>
+FROM DUAL]]></query>
 	<field name="INVOICE_NUMBER" class="java.lang.String"/>
 	<field name="INVOICE_ID" class="java.lang.String"/>
 	<field name="AMOUNT0" class="java.math.BigDecimal"/>
@@ -76,711 +73,393 @@ FROM DUAL]]>
 	<field name="TABID" class="java.lang.String"/>
 	<field name="INVOICE_DATE" class="java.util.Date"/>
 	<field name="SHOW_NETDUE" class="java.math.BigDecimal"/>
-	<variable name="SUMAMT0" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT0}]]></variableExpression>
+	<variable name="SUMAMT0" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT0}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMNET" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{NETDUE}]]></variableExpression>
+	<variable name="SUMNET" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{NETDUE}]]></expression>
 	</variable>
-	<variable name="SUMAMT1" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT1}]]></variableExpression>
+	<variable name="SUMAMT1" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT1}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT2" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT2}]]></variableExpression>
+	<variable name="SUMAMT2" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT2}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT3" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT3}]]></variableExpression>
+	<variable name="SUMAMT3" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT3}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT4" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT4}]]></variableExpression>
+	<variable name="SUMAMT4" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT4}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT5" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT5}]]></variableExpression>
+	<variable name="SUMAMT5" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT5}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT0TOTAL" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT0}]]></variableExpression>
+	<variable name="SUMAMT0TOTAL" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT0}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMNETTOTAL" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{NETDUE}]]></variableExpression>
+	<variable name="SUMNETTOTAL" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{NETDUE}]]></expression>
 	</variable>
-	<variable name="SUMAMT1TOTAL" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT1}]]></variableExpression>
+	<variable name="SUMAMT1TOTAL" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT1}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT2TOTAL" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT2}]]></variableExpression>
+	<variable name="SUMAMT2TOTAL" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT2}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT3TOTAL" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT3}]]></variableExpression>
+	<variable name="SUMAMT3TOTAL" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT3}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT4TOTAL" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT4}]]></variableExpression>
+	<variable name="SUMAMT4TOTAL" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT4}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMAMT5TOTAL" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT5}]]></variableExpression>
+	<variable name="SUMAMT5TOTAL" calculation="Sum" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT5}]]></expression>
 		<initialValueExpression><![CDATA[BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
-	<variable name="SUMCREDIT" class="java.math.BigDecimal" resetType="Group" resetGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$F{AMOUNT6}]]></variableExpression>
+	<variable name="SUMCREDIT" resetType="Group" calculation="Sum" resetGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$F{AMOUNT6}]]></expression>
 		<initialValueExpression><![CDATA[]]></initialValueExpression>
 	</variable>
-	<variable name="SUMCREDITSTOTAL" class="java.math.BigDecimal" incrementType="Group" incrementGroup="Group" calculation="Sum">
-		<variableExpression><![CDATA[$V{SUMCREDIT}]]></variableExpression>
+	<variable name="SUMCREDITSTOTAL" incrementType="Group" calculation="Sum" incrementGroup="Group" class="java.math.BigDecimal">
+		<expression><![CDATA[$V{SUMCREDIT}]]></expression>
 	</variable>
 	<group name="Totals">
 		<groupFooter>
 			<band height="63">
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="364" y="58" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="178" y="39" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="426" y="58" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="178" y="58" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="109" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT0TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT0TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="302" y="58" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="552" y="39" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="364" y="60" width="58" height="1"/>
-				</line>
-				<textField>
-					<reportElement x="0" y="0" width="610" height="28"/>
-					<textElement>
-						<font size="16"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA["Total"]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="116" y="39" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="171" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT1TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT1TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="302" y="60" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="240" y="39" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="116" y="58" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="233" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT2TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT2TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="426" y="39" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="302" y="39" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="false">
-					<reportElement key="textField-22" style="Report_Footer" x="543" y="42" width="64" height="14"/>
-					<box rightPadding="2"/>
-					<textElement textAlignment="Right">
-						<font size="6" isBold="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$P{AMOUNTFORMAT}.format(($V{SUMNETTOTAL}==null ? BigDecimal.ZERO : $V{SUMNETTOTAL}).subtract($V{SUMCREDITSTOTAL}==null ? BigDecimal.ZERO : $V{SUMCREDITSTOTAL}))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="364" y="39" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="116" y="60" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="552" y="58" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="426" y="60" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="419" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT5TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT5TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="0" y="29" width="610" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="552" y="60" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="178" y="60" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="295" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT3TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT3TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="240" y="58" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="357" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT4TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT4TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="240" y="60" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="488" y="60" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="481" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMCREDITSTOTAL} != null ? "(" + $P{AMOUNTFORMAT}.format($V{SUMCREDITSTOTAL}) + ")" : "(" + $P{AMOUNTFORMAT}.format(new BigDecimal("0")) + ")"]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="488" y="58" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="488" y="39" width="58" height="1"/>
-				</line>
+				<element kind="line" uuid="b439ab6a-f834-40f7-8559-c68792bd9068" key="line-33" x="364" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="40bf9150-2148-465d-87e1-3bba660211bb" key="line-33" x="178" y="39" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="a79577d4-c46f-4dee-9221-790affe43913" key="line-33" x="426" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="e45ce410-b4f0-4a51-b7ee-e05b5d103d5a" key="line-33" x="178" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="6c07d1be-1645-4729-be75-0af10f4f47a9" key="textField-6" x="109" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT0TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT0TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="41c54531-de5f-4242-9fcd-66860c017521" key="line-33" x="302" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="830c4edc-ed7c-493d-99ce-c0fdc31f63d7" key="line-33" x="552" y="39" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="e556f068-23f8-4743-a9c4-526e290ce975" key="line-33" x="364" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="ede15dbf-1caa-4a54-8a30-af96eb39d1ad" x="0" y="0" width="610" height="28" fontSize="16.0">
+					<expression><![CDATA["Total"]]></expression>
+				</element>
+				<element kind="line" uuid="6757317f-65c3-4f2d-a9ff-92bc70916fa5" key="line-33" x="116" y="39" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="3911fd88-852f-46fe-b0e9-b0536df7b626" key="textField-6" x="171" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT1TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT1TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="dd27b900-727a-4631-b588-e4db2603f56f" key="line-33" x="302" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="608ec4a1-3a58-46eb-b21e-a0daa088d6e6" key="line-33" x="240" y="39" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="a38ce0e0-f948-4785-aa7e-4dfbd34240fe" key="line-33" x="116" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="3c61c0fb-220c-425f-a235-c3102972d44f" key="textField-6" x="233" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT2TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT2TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="97a037c1-36f0-463f-96b2-aa98ac2c2586" key="line-33" x="426" y="39" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="ce87450b-7290-4be4-bf97-16ef07b22334" key="line-33" x="302" y="39" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="2a1197f5-0ef1-42ca-befb-2e91432fe3c6" key="textField-22" x="543" y="42" width="64" height="14" fontSize="6.0" blankWhenNull="false" bold="false" hTextAlign="Right" style="Report_Footer">
+					<expression><![CDATA[$P{AMOUNTFORMAT}.format(($V{SUMNETTOTAL}==null ? BigDecimal.ZERO : $V{SUMNETTOTAL}).subtract($V{SUMCREDITSTOTAL}==null ? BigDecimal.ZERO : $V{SUMCREDITSTOTAL}))]]></expression>
+					<box rightPadding="2" style="Report_Footer"/>
+				</element>
+				<element kind="line" uuid="42fd84b5-35ea-4e4b-a5b9-2cd3be4eebb8" key="line-33" x="364" y="39" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="cc8dc0fc-b9f9-4b0a-8ecd-1885c26b4b77" key="line-33" x="116" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="48db295a-ca75-432c-9358-35e835a81a7e" key="line-33" x="552" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="4975a6d0-d265-4b9b-a5be-199fa01c8747" key="line-33" x="426" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="6ffa484a-c909-4d6c-8e93-2def93da3fe1" key="textField-6" x="419" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT5TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT5TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="a397ab01-c239-4dba-a6ab-64ea6e959d0e" key="line-33" x="0" y="29" width="610" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="85702488-1ba9-43d3-aec6-d416ac2c7478" key="line-33" x="552" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="2c3e4f5f-99e9-4dc1-98e2-74af68facd54" key="line-33" x="178" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="2c3323e9-c871-4e9e-a68c-96b5e3424a32" key="textField-6" x="295" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT3TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT3TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="602e1449-daf6-4925-84a4-3930d4853baf" key="line-33" x="240" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="72fa7f44-b1dd-4962-b3ec-0f4d3793c087" key="textField-6" x="357" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT4TOTAL} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT4TOTAL}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="c994dead-bda8-41f5-886b-78f86cf73283" key="line-33" x="240" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="d914aa56-7f2e-429a-b53a-1c460a6bc252" key="line-33" x="488" y="60" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="d3271d0c-379c-49cd-8ee2-5f9925c352f9" key="textField-6" x="481" y="42" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMCREDITSTOTAL} != null ? "(" + $P{AMOUNTFORMAT}.format($V{SUMCREDITSTOTAL}) + ")" : "(" + $P{AMOUNTFORMAT}.format(new BigDecimal("0")) + ")"]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="3552b1ab-a1a8-4aca-a543-9d626217a151" key="line-33" x="488" y="58" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="2fcdf693-adb3-41e5-9bf3-d7c252cb9201" key="line-33" x="488" y="39" width="58" height="1" style="Report_Footer"/>
 			</band>
 		</groupFooter>
 	</group>
 	<group name="Group" keepTogether="true">
-		<groupExpression><![CDATA[$F{BPARTNER}]]></groupExpression>
+		<expression><![CDATA[$F{BPARTNER}]]></expression>
 		<groupHeader>
 			<band height="19" splitType="Stretch">
-				<textField>
-					<reportElement x="0" y="0" width="610" height="18"/>
-					<textElement>
-						<font size="10"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$F{BPARTNERNAME}]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="0" y="18" width="610" height="1"/>
-				</line>
+				<element kind="textField" uuid="2b2dc421-bbd2-4bd0-9d34-11d8407b3b50" x="0" y="0" width="610" height="18" fontSize="10.0">
+					<expression><![CDATA[$F{BPARTNERNAME}]]></expression>
+				</element>
+				<element kind="line" uuid="4d4afaa4-f54e-4c7b-838a-7978f351e5a6" key="line-33" x="0" y="18" width="610" height="1" style="Report_Footer"/>
 			</band>
 		</groupHeader>
 		<groupFooter>
 			<band height="27" splitType="Stretch">
-				<textField isBlankWhenNull="false">
-					<reportElement key="textField-22" style="Report_Footer" x="539" y="5" width="68" height="14"/>
-					<box rightPadding="2"/>
-					<textElement textAlignment="Right">
-						<font size="6" isBold="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$P{AMOUNTFORMAT}.format(($V{SUMNET}==null ? BigDecimal.ZERO : $V{SUMNET}).subtract($V{SUMCREDIT}==null ? BigDecimal.ZERO : $V{SUMCREDIT}))]]></textFieldExpression>
-				</textField>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="291" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT3} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT3}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="353" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT4} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT4}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="105" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT0} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT0}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="229" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT2} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT2}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="167" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT1} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT1}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="415" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMAMT5} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT5}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="364" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="302" y="2" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="552" y="23" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="426" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="552" y="2" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="302" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="552" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="178" y="2" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="240" y="23" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="364" y="23" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="178" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="302" y="23" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="116" y="2" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="426" y="23" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="426" y="2" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="240" y="2" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="240" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="116" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="364" y="2" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="178" y="23" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="116" y="23" width="58" height="1"/>
-				</line>
-				<textField isBlankWhenNull="true" hyperlinkType="Reference">
-					<reportElement key="textField-6" style="Detail_Header" x="477" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-					<box leftPadding="2"/>
-					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font size="6" isBold="false" isUnderline="false"/>
-					</textElement>
-					<textFieldExpression class="java.lang.String"><![CDATA[$V{SUMCREDIT} != null ? "(" + $P{AMOUNTFORMAT}.format($V{SUMCREDIT}) + ")" : "(" + $P{AMOUNTFORMAT}.format(new BigDecimal("0")) + ")"]]></textFieldExpression>
-				</textField>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="488" y="21" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="488" y="23" width="58" height="1"/>
-				</line>
-				<line>
-					<reportElement key="line-33" style="Report_Footer" x="488" y="2" width="58" height="1"/>
-				</line>
+				<element kind="textField" uuid="2f91c171-3b9d-40ae-b1e3-dcc46c3ff81e" key="textField-22" x="539" y="5" width="68" height="14" fontSize="6.0" blankWhenNull="false" bold="false" hTextAlign="Right" style="Report_Footer">
+					<expression><![CDATA[$P{AMOUNTFORMAT}.format(($V{SUMNET}==null ? BigDecimal.ZERO : $V{SUMNET}).subtract($V{SUMCREDIT}==null ? BigDecimal.ZERO : $V{SUMCREDIT}))]]></expression>
+					<box rightPadding="2" style="Report_Footer"/>
+				</element>
+				<element kind="textField" uuid="de2d3b43-f108-4892-b3a1-64f9475bb220" key="textField-6" x="291" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT3} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT3}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="textField" uuid="717ca8f1-718b-4700-9a1c-95ed760b2d5b" key="textField-6" x="353" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT4} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT4}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="textField" uuid="4bc3085e-6687-48c7-a56e-3627db972019" key="textField-6" x="105" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT0} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT0}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="textField" uuid="69becf48-7da8-46b6-b855-5a39d6ace128" key="textField-6" x="229" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT2} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT2}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="textField" uuid="3c30283b-230f-4dff-8d84-11600e66bebe" key="textField-6" x="167" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT1} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT1}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="textField" uuid="5d335d4f-ec19-416f-9cc2-b63d12b6c9c6" key="textField-6" x="415" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMAMT5} != null ? $P{AMOUNTFORMAT}.format($V{SUMAMT5}) : $P{AMOUNTFORMAT}.format(new BigDecimal("0"))]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="73a94b20-9cd8-429b-8cd3-2eab65a9d3c1" key="line-33" x="364" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="ef7265f9-5f5f-4685-9563-0ecfcced10dd" key="line-33" x="302" y="2" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="0300f961-5518-4bab-ae96-9c55692c1905" key="line-33" x="552" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="b9e35aa2-3439-44ce-a8a6-193e327ce1f8" key="line-33" x="426" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="0438a151-ce71-4c9e-a82a-8ea1b7d78164" key="line-33" x="552" y="2" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="298c5145-b4cd-4a54-80f0-888919c69906" key="line-33" x="302" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="59c1bff7-af71-4d19-bd86-78a6ed9f2bf4" key="line-33" x="552" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="b3c7ff02-58b3-4a56-a094-6d55d5097e53" key="line-33" x="178" y="2" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="d6f4d371-7b4e-41b0-8f3d-2cb5c1656dcd" key="line-33" x="240" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="76255121-2f84-4161-9088-93531e1cf4bd" key="line-33" x="364" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="9a3d893e-a706-4d5d-a403-e4047f2cc796" key="line-33" x="178" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="800a4bb1-17b1-4518-a235-d41e1d2b04d7" key="line-33" x="302" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="0a6e1306-c984-4122-9343-1709bcc8adb8" key="line-33" x="116" y="2" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="8e7888c4-a7f9-46a0-8c8f-588d4972a0fb" key="line-33" x="426" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="3cbe234a-2164-4d39-9b59-bcb93e15ca41" key="line-33" x="426" y="2" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="ff98f400-4dae-4b10-88be-8d6abde61a46" key="line-33" x="240" y="2" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="7eea60a5-1877-4f85-9dc5-e73fa9d71223" key="line-33" x="240" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="631a90c7-a0ac-42f2-b3ed-aac38080bcd4" key="line-33" x="116" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="209ab389-42d3-41e1-a2f9-08d99b3c0b15" key="line-33" x="364" y="2" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="bc8c62c7-f223-4e03-9181-e93231d1c956" key="line-33" x="178" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="a8007beb-2121-4889-8f7f-58a8c25be308" key="line-33" x="116" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="textField" uuid="c24d153a-0c8e-4aaf-b034-683c243ffdc8" key="textField-6" x="477" y="5" width="62" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" bold="false" hTextAlign="Right" vTextAlign="Middle" style="Detail_Header">
+					<expression><![CDATA[$V{SUMCREDIT} != null ? "(" + $P{AMOUNTFORMAT}.format($V{SUMCREDIT}) + ")" : "(" + $P{AMOUNTFORMAT}.format(new BigDecimal("0")) + ")"]]></expression>
+					<box leftPadding="2" style="Detail_Header"/>
+				</element>
+				<element kind="line" uuid="a4c0d296-77ae-4c6f-87f0-19412544c550" key="line-33" x="488" y="21" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="6a6f29e1-de90-4129-98f1-4009a9d9cc5a" key="line-33" x="488" y="23" width="58" height="1" style="Report_Footer"/>
+				<element kind="line" uuid="df728895-b7af-47b9-8fd1-9055b74325c1" key="line-33" x="488" y="2" width="58" height="1" style="Report_Footer"/>
 			</band>
 		</groupFooter>
 	</group>
-	<background>
-		<band splitType="Stretch"/>
-	</background>
-	<title>
-		<band height="137" splitType="Stretch">
-			<staticText>
-				<reportElement key="staticText-24" style="Report_Footer" x="0" y="73" width="108" height="18"/>
-				<textElement textAlignment="Right">
-					<font size="9"/>
-				</textElement>
-				<text><![CDATA[Organization:]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText-26" style="Report_Footer" x="0" y="93" width="108" height="18"/>
-				<textElement textAlignment="Right">
-					<font size="9"/>
-				</textElement>
-				<text><![CDATA[As Of Date:]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText-27" style="Report_Footer" x="277" y="73" width="136" height="18"/>
-				<textElement textAlignment="Right">
-					<font size="9"/>
-				</textElement>
-				<text><![CDATA[General Ledger:]]></text>
-			</staticText>
-			<textField isBlankWhenNull="true">
-				<reportElement key="textField-25" style="Report_Footer" x="113" y="73" width="152" height="18"/>
-				<textElement>
-					<font size="9"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{Organization}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement key="textField-25" style="Report_Footer" x="113" y="93" width="152" height="18"/>
-				<textElement>
-					<font size="9"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{currentDate}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement key="textField-25" style="Report_Footer" x="418" y="73" width="179" height="18"/>
-				<textElement>
-					<font size="9"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{AccSchema}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="11" y="11" width="400" height="28"/>
-				<textElement>
-					<font size="16"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{title}]]></textFieldExpression>
-			</textField>
-		</band>
+	<background splitType="Stretch"/>
+	<title height="137" splitType="Stretch">
+		<element kind="staticText" uuid="6462258b-df73-48a7-9a6a-4eae3677a8e1" key="staticText-24" x="0" y="73" width="108" height="18" fontSize="9.0" hTextAlign="Right" style="Report_Footer">
+			<text><![CDATA[Organization:]]></text>
+		</element>
+		<element kind="staticText" uuid="ededb7fb-9934-4116-85ca-d269c5490622" key="staticText-26" x="0" y="93" width="108" height="18" fontSize="9.0" hTextAlign="Right" style="Report_Footer">
+			<text><![CDATA[As Of Date:]]></text>
+		</element>
+		<element kind="staticText" uuid="1654d45a-23fd-4e86-a3c3-415ef7a14e0b" key="staticText-27" x="277" y="73" width="136" height="18" fontSize="9.0" hTextAlign="Right" style="Report_Footer">
+			<text><![CDATA[General Ledger:]]></text>
+		</element>
+		<element kind="textField" uuid="b75f33b8-81da-4291-8595-1a2120e46420" key="textField-25" x="113" y="73" width="152" height="18" fontSize="9.0" blankWhenNull="true" style="Report_Footer">
+			<expression><![CDATA[$P{Organization}]]></expression>
+		</element>
+		<element kind="textField" uuid="0cc2e8b0-6bd3-404e-9111-c14af321bc6c" key="textField-25" x="113" y="93" width="152" height="18" fontSize="9.0" blankWhenNull="true" style="Report_Footer">
+			<expression><![CDATA[$P{currentDate}]]></expression>
+		</element>
+		<element kind="textField" uuid="c16e390c-a8b8-4d2f-9782-91a64a5f9b2b" key="textField-25" x="418" y="73" width="179" height="18" fontSize="9.0" blankWhenNull="true" style="Report_Footer">
+			<expression><![CDATA[$P{AccSchema}]]></expression>
+		</element>
+		<element kind="textField" uuid="f80508fa-05a6-4795-be3e-c42767424c1e" x="11" y="11" width="400" height="28" fontSize="16.0">
+			<expression><![CDATA[$P{title}]]></expression>
+		</element>
 	</title>
-	<pageHeader>
-		<band height="18" splitType="Stretch">
-			<staticText>
-				<reportElement key="staticText-25" style="Detail_Header" x="0" y="0" width="5" height="18"/>
-				<box leftPadding="5" rightPadding="2">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-				</box>
-				<textElement textAlignment="Center">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText-25" style="Detail_Header" x="601" y="0" width="9" height="18"/>
-				<box leftPadding="5" rightPadding="2">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-				</box>
-				<textElement textAlignment="Right">
-					<font size="8" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[]]></text>
-			</staticText>
-			<textField>
-				<reportElement key="staticText-25" style="Detail_Header" x="291" y="0" width="62" height="18"/>
-				<textElement textAlignment="Right" markup="none">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{inpLabel3}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement key="staticText-25" style="Detail_Header" x="229" y="0" width="62" height="18"/>
-				<textElement textAlignment="Right" markup="none">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{inpLabel2}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement key="staticText-25" style="Detail_Header" x="105" y="0" width="62" height="18"/>
-				<box leftPadding="5" rightPadding="2">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-				</box>
-				<textElement textAlignment="Right">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[Current]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText-25" style="Detail_Header" x="5" y="0" width="50" height="18"/>
-				<box leftPadding="5" rightPadding="2">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-				</box>
-				<textElement>
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[Document No.]]></text>
-			</staticText>
-			<textField>
-				<reportElement key="staticText-25" style="Detail_Header" x="353" y="0" width="62" height="18"/>
-				<textElement textAlignment="Right" markup="none">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{inpLabel4}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement key="staticText-25" style="Detail_Header" x="415" y="0" width="62" height="18"/>
-				<textElement textAlignment="Right" markup="none">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{inpLabel5}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement key="staticText-25" style="Detail_Header" x="167" y="0" width="62" height="18"/>
-				<textElement textAlignment="Right" markup="none">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{inpLabel1}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement key="staticText-25" style="Detail_Header" x="539" y="0" width="62" height="18"/>
-				<box leftPadding="5" rightPadding="2">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-				</box>
-				<textElement textAlignment="Right">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[Net Due]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText-25" style="Detail_Header" x="477" y="0" width="62" height="18"/>
-				<box leftPadding="5" rightPadding="2">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-				</box>
-				<textElement textAlignment="Right">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[Credits]]></text>
-			</staticText>
-			<staticText>
-				<reportElement key="staticText-25" style="Detail_Header" x="55" y="0" width="50" height="18"/>
-				<box leftPadding="5" rightPadding="2">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
-				</box>
-				<textElement textAlignment="Center">
-					<font size="6" pdfFontName="Helvetica-Bold"/>
-				</textElement>
-				<text><![CDATA[Document Date]]></text>
-			</staticText>
-		</band>
+	<pageHeader height="18" splitType="Stretch">
+		<element kind="staticText" uuid="294dd5f3-0ea4-4606-a6d9-fcbb16f85413" key="staticText-25" x="0" y="0" width="5" height="18" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Center" style="Detail_Header">
+			<text><![CDATA[]]></text>
+			<box leftPadding="5" rightPadding="2" style="Detail_Header">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="12c9ff49-3548-4b1e-ac42-7ffe10fbb831" key="staticText-25" x="601" y="0" width="9" height="18" fontSize="8.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<text><![CDATA[]]></text>
+			<box leftPadding="5" rightPadding="2" style="Detail_Header">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			</box>
+		</element>
+		<element kind="textField" uuid="947ae3ef-eb3b-4414-ab93-eefd032cc4c3" key="staticText-25" x="291" y="0" width="62" height="18" markup="none" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<expression><![CDATA[$P{inpLabel3}]]></expression>
+		</element>
+		<element kind="textField" uuid="f42c1ca4-711a-4da6-9f6e-c1357cbc3bd6" key="staticText-25" x="229" y="0" width="62" height="18" markup="none" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<expression><![CDATA[$P{inpLabel2}]]></expression>
+		</element>
+		<element kind="staticText" uuid="eff1fd8f-7a8a-4a11-bcf5-66bf28461c00" key="staticText-25" x="105" y="0" width="62" height="18" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<text><![CDATA[Current]]></text>
+			<box leftPadding="5" rightPadding="2" style="Detail_Header">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="66d278fa-25b6-4ac3-9381-68cca163b0a9" key="staticText-25" x="5" y="0" width="50" height="18" fontSize="6.0" pdfFontName="Helvetica-Bold" style="Detail_Header">
+			<text><![CDATA[Document No.]]></text>
+			<box leftPadding="5" rightPadding="2" style="Detail_Header">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			</box>
+		</element>
+		<element kind="textField" uuid="35f7de64-f42a-4b1e-9c9b-b28e0aed6fee" key="staticText-25" x="353" y="0" width="62" height="18" markup="none" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<expression><![CDATA[$P{inpLabel4}]]></expression>
+		</element>
+		<element kind="textField" uuid="a8b9c3e8-d692-4098-8bad-68554f564ec1" key="staticText-25" x="415" y="0" width="62" height="18" markup="none" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<expression><![CDATA[$P{inpLabel5}]]></expression>
+		</element>
+		<element kind="textField" uuid="e5dcb783-cc9f-4fb8-bfee-8a726fe10e38" key="staticText-25" x="167" y="0" width="62" height="18" markup="none" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<expression><![CDATA[$P{inpLabel1}]]></expression>
+		</element>
+		<element kind="staticText" uuid="e9d39a3f-4b6c-492d-8683-fa626c575051" key="staticText-25" x="539" y="0" width="62" height="18" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<text><![CDATA[Net Due]]></text>
+			<box leftPadding="5" rightPadding="2" style="Detail_Header">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="70a0a919-7f37-4460-b6a7-9717a37d026a" key="staticText-25" x="477" y="0" width="62" height="18" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Right" style="Detail_Header">
+			<text><![CDATA[Credits]]></text>
+			<box leftPadding="5" rightPadding="2" style="Detail_Header">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="b5ec9203-cd16-4308-949e-f12a819af983" key="staticText-25" x="55" y="0" width="50" height="18" fontSize="6.0" pdfFontName="Helvetica-Bold" hTextAlign="Center" style="Detail_Header">
+			<text><![CDATA[Document Date]]></text>
+			<box leftPadding="5" rightPadding="2" style="Detail_Header">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#FFFFFF"/>
+			</box>
+		</element>
 	</pageHeader>
-	<columnHeader>
-		<band splitType="Stretch"/>
-	</columnHeader>
+	<columnHeader splitType="Stretch"/>
 	<detail>
 		<band height="14" splitType="Stretch">
-			<textField isBlankWhenNull="true">
-				<reportElement key="textField-15" x="539" y="0" width="62" height="14"/>
+			<element kind="textField" uuid="4c2fece7-70fd-43ad-853f-04645ccf00a6" key="textField-15" x="539" y="0" width="62" height="14" fontSize="6.0" blankWhenNull="true" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{SHOW_NETDUE} == null ? null : ($F{NETDUE} == null
+    ? "(" + $P{AMOUNTFORMAT}.format($F{SHOW_NETDUE}) + ")" : $P{AMOUNTFORMAT}.format($F{SHOW_NETDUE}))]]></expression>
 				<box rightPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{SHOW_NETDUE} == null ? null : ($F{NETDUE} == null
-    ? "(" + $P{AMOUNTFORMAT}.format($F{SHOW_NETDUE}) + ")" : $P{AMOUNTFORMAT}.format($F{SHOW_NETDUE}))]]></textFieldExpression>
-			</textField>
-			<textField isStretchWithOverflow="true" isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="5" y="0" width="50" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="6e7efdf4-ccf8-4790-8e3c-efa882d914ce" key="textField-6" x="5" y="0" width="50" height="14" forecolor="#000000" fontSize="6.0" textAdjust="StretchHeight" linkType="Reference" blankWhenNull="true" underline="false" vTextAlign="Middle">
+				<expression><![CDATA[$F{INVOICE_NUMBER}]]></expression>
 				<box leftPadding="2"/>
-				<textElement verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{INVOICE_NUMBER}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="105" y="0" width="62" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="e8c8f086-698e-45dd-9643-db214db330c3" key="textField-6" x="105" y="0" width="62" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{AMOUNT0} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT0}) : null]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{AMOUNT0} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT0}) : null]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement key="textField-15" x="601" y="0" width="8" height="14"/>
+			</element>
+			<element kind="textField" uuid="0fec0488-14df-4f07-b3c8-ba2b06d72429" key="textField-15" x="601" y="0" width="8" height="14" fontSize="8.0" blankWhenNull="true" hTextAlign="Right" vTextAlign="Middle">
 				<box rightPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="8"/>
-				</textElement>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="167" y="0" width="62" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="515457b7-4eb1-47ef-bb4c-05b9796aa53f" key="textField-6" x="167" y="0" width="62" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{AMOUNT1} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT1}) : null]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{AMOUNT1} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT1}) : null]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="229" y="0" width="62" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="845b1a22-4538-4ac2-bdd5-47143ed999dc" key="textField-6" x="229" y="0" width="62" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{AMOUNT2} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT2}) : null]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{AMOUNT2} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT2}) : null]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="291" y="0" width="62" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="1076489a-b040-4a32-ae00-d97950aa2b07" key="textField-6" x="291" y="0" width="62" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{AMOUNT3} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT3}) : null]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{AMOUNT3} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT3}) : null]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="353" y="0" width="62" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="f0a7d3ce-6e58-4cf3-a76a-faa1f33ef9b2" key="textField-6" x="353" y="0" width="62" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{AMOUNT4} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT4}) : null]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{AMOUNT4} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT4}) : null]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="415" y="0" width="62" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="b9d02a37-f3d4-4f03-998e-66b21846f4a2" key="textField-6" x="415" y="0" width="62" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{AMOUNT5} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT5}) : null]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{AMOUNT5} != null ? $P{AMOUNTFORMAT}.format($F{AMOUNT5}) : null]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="477" y="0" width="62" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="77a96dd4-d78b-4962-9627-ff89d2741257" key="textField-6" x="477" y="0" width="62" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Right" vTextAlign="Middle">
+				<expression><![CDATA[$F{AMOUNT6} != null ? "(" + $P{AMOUNTFORMAT}.format($F{AMOUNT6}) + ")" : null]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$F{AMOUNT6} != null ? "(" + $P{AMOUNTFORMAT}.format($F{AMOUNT6}) + ")" : null]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true" hyperlinkType="Reference">
-				<reportElement key="textField-6" x="55" y="0" width="50" height="14" forecolor="#000000"/>
+			</element>
+			<element kind="textField" uuid="b374715b-4f27-452c-85d7-886e13b10bc2" key="textField-6" x="55" y="0" width="50" height="14" forecolor="#000000" fontSize="6.0" linkType="Reference" blankWhenNull="true" underline="false" hTextAlign="Center" vTextAlign="Middle">
+				<expression><![CDATA[$P{DATEFORMATTER}.format($F{INVOICE_DATE})]]></expression>
 				<box leftPadding="2"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="6" isUnderline="false"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA[$P{DATEFORMATTER}.format($F{INVOICE_DATE})]]></textFieldExpression>
-			</textField>
+			</element>
 		</band>
 	</detail>
-	<pageFooter>
-		<band height="14" splitType="Stretch">
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="475" y="0" width="95" height="14"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Right">
-					<font size="6"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
-			</textField>
-			<textField pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="298" y="0" width="113" height="14"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement verticalAlignment="Middle">
-					<font fontName="Times-Roman" size="6"/>
-				</textElement>
-				<textFieldExpression class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement key="staticText-1" x="216" y="0" width="78" height="14"/>
-				<box leftPadding="5">
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<font fontName="Bitstream Vera Sans" size="6"/>
-				</textElement>
-				<text><![CDATA[Generated on]]></text>
-			</staticText>
-			<textField evaluationTime="Report" pattern="" isBlankWhenNull="false">
-				<reportElement key="textField" x="574" y="0" width="36" height="14" forecolor="#000000" backcolor="#FFFFFF"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement>
-					<font size="6"/>
-				</textElement>
-				<textFieldExpression class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
-			</textField>
-		</band>
+	<pageFooter height="14" splitType="Stretch">
+		<element kind="textField" uuid="92a596b1-f7fa-4258-b953-15c5d649ccb8" key="textField" x="475" y="0" width="95" height="14" fontSize="6.0" pattern="" blankWhenNull="false" hTextAlign="Right">
+			<expression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="textField" uuid="9e8adecc-fdf2-4bdd-8fdd-dc89cf5fa451" key="textField" x="298" y="0" width="113" height="14" fontName="Times-Roman" fontSize="6.0" pattern="" blankWhenNull="false" vTextAlign="Middle">
+			<expression><![CDATA[new Date()]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="staticText" uuid="0667ce08-d7f3-42a8-b836-0494a92f69f0" key="staticText-1" x="216" y="0" width="78" height="14" fontName="Bitstream Vera Sans" fontSize="6.0" hTextAlign="Right" vTextAlign="Middle">
+			<text><![CDATA[Generated on]]></text>
+			<box leftPadding="5">
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
+		<element kind="textField" uuid="65e2b44e-dde3-4ac0-a944-2456d9844647" key="textField" x="574" y="0" width="36" height="14" forecolor="#000000" backcolor="#FFFFFF" fontSize="6.0" evaluationTime="Report" pattern="" blankWhenNull="false">
+			<expression><![CDATA["" + $V{PAGE_NUMBER}]]></expression>
+			<box>
+				<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				<bottomPen lineWidth="0.0" lineColor="#000000"/>
+				<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+			</box>
+		</element>
 	</pageFooter>
 </jasperReport>
