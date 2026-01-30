@@ -40,7 +40,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.apache.commons.lang.mutable.MutableBoolean;
 import org.hibernate.Session;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
