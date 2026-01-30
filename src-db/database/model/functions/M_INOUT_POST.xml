@@ -70,6 +70,8 @@
     Cur_OrderLine RECORD;
     Cur_Lines RECORD;
     Cur_Reservation RECORD;
+    Cur_SILines RECORD;
+    Cur_SOLines RECORD;
     --
     v_Result NUMBER:=1;
     v_AD_Org_ID VARCHAR2(32);
@@ -81,6 +83,8 @@
     v_QuantityOrder NUMBER;
     v_RDocumentNo VARCHAR2(40) ;
     v_RInOut_ID VARCHAR2(32);
+    v_MatchSI_ID VARCHAR2(32);
+    v_MatchSO_ID VARCHAR2(32);
     v_IsStocked NUMBER;
     v_DoctypeReversed_ID VARCHAR2(32);
     --MODIFIED BY F.IRIAZABAL
@@ -1021,7 +1025,105 @@
               IF (v_Message_aux IS NOT NULL) THEN
                 RAISE_APPLICATION_ERROR(-20000, v_Message_aux);
               END IF;
+
+              v_ResultStr := 'MatchSO';
+              FOR Cur_SOLines IN
+                (SELECT sl.AD_Client_ID,
+                        sl.AD_Org_ID,
+                        sl.C_OrderLine_ID,
+                        sl.M_InOutLine_ID,
+                        sl.M_Product_ID,
+                        sl.MovementQty,
+                        Cur_InOut.DateAcct AS DateAcct
+                    FROM M_InOutLine sl
+                  WHERE sl.M_InOut_ID = Cur_InOut.M_InOut_ID
+                    AND sl.C_OrderLine_ID IS NOT NULL)
+              LOOP
+                SELECT COALESCE(COUNT(*), 0)
+                  INTO v_Count
+                  FROM M_MATCHSO
+                  WHERE C_OrderLine_ID = Cur_SOLines.C_OrderLine_ID
+                    AND M_InOutLine_ID = Cur_SOLines.M_InOutLine_ID;
+
+                IF (v_Count = 0) THEN
+                  v_Qty := Cur_SOLines.MovementQty;
+                  v_MatchSO_ID := get_uuid();
+                  v_ResultStr := 'InsertMatchSO ' || v_MatchSO_ID;
+
+                  INSERT INTO M_MATCHSO
+                    (M_MATCHSO_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+                      CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+                      C_ORDERLINE_ID, M_INOUTLINE_ID, M_PRODUCT_ID, DATETRX,
+                      QTY, PROCESSING, PROCESSED, POSTED)
+                  VALUES
+                    (v_MatchSO_ID, Cur_SOLines.AD_Client_ID, Cur_SOLines.AD_Org_ID, 'Y',
+                      now(), v_User, now(), v_User,
+                      Cur_SOLines.C_OrderLine_ID, Cur_SOLines.M_InOutLine_ID,
+                      Cur_SOLines.M_Product_ID, Cur_SOLines.DateAcct,
+                      v_Qty, 'N', 'Y', 'N');
+                END IF;
+              END LOOP;
+
+              v_ResultStr := 'MatchSI';
+              FOR Cur_SILines IN
+                (SELECT sl.AD_Client_ID,
+                        sl.AD_Org_ID,
+                        il.C_InvoiceLine_ID,
+                        sl.M_InOutLine_ID,
+                        sl.M_Product_ID,
+                        sl.MovementQty,
+                        i.DateAcct
+                  FROM M_INOUTLINE   sl,
+                        C_INVOICELINE il,
+                        C_INVOICE     i
+                  WHERE sl.M_InOutLine_ID = il.M_InOutLine_ID
+                    AND sl.M_InOut_ID     = Cur_InOut.M_InOut_ID
+                    AND i.C_INVOICE_ID    = il.C_INVOICE_ID)
+              LOOP
+                SELECT COALESCE(COUNT(*), 0)
+                  INTO v_Count
+                  FROM M_MATCHSI
+                WHERE M_INOUTLINE_ID   = Cur_SILines.M_InOutLine_ID
+                  AND C_INVOICELINE_ID = Cur_SILines.C_InvoiceLine_ID;
+
+                IF (v_Count = 0) THEN
+                  v_Qty := Cur_SILines.MovementQty;
+                  v_MatchSI_ID := get_uuid();
+                  v_ResultStr := 'InsertMatchSI ' || v_MatchSI_ID;
+
+                  INSERT INTO M_MATCHSI
+                    (M_MATCHSI_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+                    CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+                    M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID, DATETRX,
+                    QTY, PROCESSING, PROCESSED, POSTED)
+                  VALUES
+                    (v_MatchSI_ID, Cur_SILines.AD_Client_ID, Cur_SILines.AD_Org_ID, 'Y',
+                    now(), v_User, now(), v_User,
+                    Cur_SILines.M_InOutLine_ID, Cur_SILines.C_InvoiceLine_ID,
+                    Cur_SILines.M_Product_ID, Cur_SILines.DateAcct,
+                    v_Qty, 'N', 'Y', 'N');
+                END IF;
+              END LOOP;
             END IF;
+          END IF;
+
+          -- Set the quantity invoiced in qtyinvoiced if created from an invoice
+          IF Cur_InOut.IsSOTrx = 'N' THEN
+            UPDATE m_inoutline iol
+            SET qtyinvoiced = COALESCE((
+              SELECT SUM(mi.qty)
+              FROM m_matchinv mi
+              WHERE mi.m_inoutline_id = iol.m_inoutline_id
+            ), 0)
+            WHERE iol.m_inout_id = Cur_InOut.m_inout_id;
+          ELSE
+            UPDATE m_inoutline iol
+            SET qtyinvoiced = COALESCE((
+              SELECT SUM(msi.qty)
+              FROM m_matchsi msi
+              WHERE msi.m_inoutline_id = iol.m_inoutline_id
+            ), 0)
+            WHERE iol.m_inout_id = Cur_InOut.m_inout_id;
           END IF;
           -- Close Shipment
           v_ResultStr:='CloseShipment';
@@ -1215,6 +1317,19 @@
               v_NextNo, MI.C_INVOICELINE_ID, MI.M_PRODUCT_ID, MI.DATETRX, -MI.QTY, 'N', 'Y', 'N'
             FROM M_MATCHINV MI
             WHERE MI.M_INOUTLINE_ID = Cur_InOutLine.M_InOutLine_ID;
+
+            IF Cur_InOut.IsSOTrx = 'Y' THEN
+              INSERT INTO M_MATCHSI
+                (M_MATCHSI_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+                 M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID, DATETRX, QTY, PROCESSING, PROCESSED, POSTED)
+              SELECT
+                GET_UUID(), MSI.AD_CLIENT_ID, MSI.AD_ORG_ID, MSI.ISACTIVE,
+                now(), '0', now(), '0',
+                v_NextNo, MSI.C_INVOICELINE_ID, MSI.M_PRODUCT_ID, MSI.DATETRX,
+                -MSI.QTY, 'N', 'Y', 'N'
+              FROM M_MATCHSI MSI
+              WHERE MSI.M_INOUTLINE_ID = Cur_InOutLine.M_InOutLine_ID;
+            END IF;
 
           END LOOP;
           -- Close Order
