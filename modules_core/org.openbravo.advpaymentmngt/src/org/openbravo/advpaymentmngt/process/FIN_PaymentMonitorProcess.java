@@ -91,25 +91,41 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
 
       //@formatter:off
       String hql =
-                    "as i" +
-                    "  left join i.fINPaymentScheduleList fps " +
-                    " where i.processed=true" +
-                    "   and (i.paymentComplete=false " +
-                    "     or fps.updated >= i.lastCalculatedOnDate " +
-                    "     or i.outstandingAmount <> 0";
+          "as i " +
+              "where i.processed = true" +
+              "  and (" +
+              "    (i.paymentComplete = false and (" +
+              "      exists (" +
+              "        select 1 from FIN_Payment_Schedule fps " +
+              "        where fps.invoice = i " +
+              "        and fps.updated >= coalesce(i.lastCalculatedOnDate, i.creationDate)" +
+              "      )" +
+              "      or exists (" +
+              "        select 1 from FIN_Payment_ScheduleDetail psd " +
+              "        join psd.invoicePaymentSchedule fps " +
+              "        where fps.invoice = i " +
+              "        and psd.updated >= coalesce(i.lastCalculatedOnDate, i.creationDate)" +
+              "      )" +
+              "    ))" +
+              "    or (i.outstandingAmount <> 0 and i.lastCalculatedOnDate is null)" +
+              "    or (i.paymentComplete = true and i.finalSettlementDate is null and i.outstandingAmount = 0)";
       //@formatter:on
 
       if (migration != null) {
         //@formatter:off
-                   hql += 
-                    "     or (i.finalSettlementDate is null" +
-                    "       and fps.id is not null" +
-                    "       and i.aprmtIsmigrated = 'N'))";
+        hql +=
+            "    or (i.finalSettlementDate is null" +
+                "      and i.aprmtIsmigrated = 'N'" +
+                "      and exists (" +
+                "        select 1 from FIN_Payment_Schedule fps2" +
+                "        where fps2.invoice = i" +
+                "      )" +
+                "    )" +
+                "  )";
         //@formatter:on
       } else {
         //@formatter:off
-                   hql += 
-                    "   or i.finalSettlementDate is null)";
+        hql += "  )";
         //@formatter:on
       }
 
