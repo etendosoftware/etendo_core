@@ -97,6 +97,7 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
   public static final String GREATEROREQUAL = "greaterorequal";
   public static final String GREATER_EQUAL_QUERY_SYMBOL = " >= :";
   public static final String LESSOREQUAL = "lessorequal";
+  public static final String CREATION_DATE = "creationDate";
 
   @Override
   public String transformHqlQuery(String _hqlQuery, Map<String, String> requestParameters,
@@ -216,7 +217,7 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     return StringUtils.equalsIgnoreCase(DEBIT, fieldName)
         || StringUtils.equalsIgnoreCase(CREDIT, fieldName)
         || StringUtils.equalsIgnoreCase("description", fieldName)
-        || StringUtils.equalsIgnoreCase("created", fieldName)
+        || StringUtils.equalsIgnoreCase(CREATION_DATE, fieldName)
         || StringUtils.equalsIgnoreCase(UPDATED, fieldName);
   }
 
@@ -227,7 +228,7 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
       return "CASE WHEN Sum(fa.credit - fa.debit) > 0 THEN Sum(fa.credit - fa.debit) ELSE 0 END";
     } else if (StringUtils.equalsIgnoreCase("description", fieldName)) {
       return "Max(fa.description)";
-    } else if (StringUtils.equalsIgnoreCase("created", fieldName)) {
+    } else if (StringUtils.equalsIgnoreCase(CREATION_DATE, fieldName)) {
       return "Max(fa.creationDate)";
     } else if (StringUtils.equalsIgnoreCase(UPDATED, fieldName)) {
       return "Max(fa.updated)";
@@ -242,7 +243,7 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
       return null;
     }
 
-    boolean isDateField = expr.contains("creationDate") || expr.contains(UPDATED);
+    boolean isDateField = expr.contains(CREATION_DATE) || expr.contains(UPDATED);
     Object paramValue = convertValueToAppropriateType(expr, value, isDateField);
 
     if (paramValue == null) {
