@@ -35,6 +35,7 @@ public class AccountingFactEndYearTransformerTest {
   public static final String WHERE = "WHERE";
   public static final String DESCRIPTION_FILTER = "upper(Max(fa.description)) like upper(:alias_0) escape '|'";
   public static final String SHOULD_KEEP_CLIENT_ID_PARAMETER = "Should keep clientId parameter";
+  public static final String SHOULD_HAVE_REMOVED_ALIAS_0 = "Should have removed alias_0";
   private AccountingFactEndYearTransformer transformer;
   private Map<String, String> requestParameters;
   private Map<String, Object> queryNamedParameters;
@@ -210,7 +211,7 @@ public class AccountingFactEndYearTransformerTest {
 
     assertFalse("Should not contain upper(Max(fa.description)) in WHERE", whereClause.contains(UPPER_MAX_FA_DESCRIPTION));
     assertFalse("Should not contain Max(fa.creationDate) > in WHERE", whereClause.contains("Max(fa.creationDate) >"));
-    assertFalse("Should have removed alias_0", queryNamedParameters.containsKey(ALIAS_0));
+    assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
     assertFalse("Should have removed alias_1", queryNamedParameters.containsKey(ALIAS_1));
     assertTrue("Should contain 1=1 replacements", whereClause.contains("1=1"));
   }
@@ -377,7 +378,7 @@ public class AccountingFactEndYearTransformerTest {
     
     assertFalse("Should remove the aggregate condition", result.contains(DESCRIPTION_FILTER));
     assertTrue("Should keep non-aggregate condition", result.contains("fa.type = :alias_1"));
-    assertFalse("Should have removed alias_0", queryNamedParameters.containsKey(ALIAS_0));
+    assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
     assertTrue("Should keep alias_1", queryNamedParameters.containsKey(ALIAS_1));
   }
 
@@ -608,7 +609,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithNestedParens, requestParameters, queryNamedParameters);
     
     assertFalse("Should remove nested aggregate condition", result.contains(DESCRIPTION_FILTER));
-    assertFalse("Should have removed alias_0", queryNamedParameters.containsKey(ALIAS_0));
+    assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
     assertTrue(SHOULD_KEEP_CLIENT_ID_PARAMETER, queryNamedParameters.containsKey(CLIENT_ID));
     assertTrue("Should contain WHERE clause", result.contains(WHERE));
     assertTrue("Should contain clientId condition", result.contains("fa.client.id in (:clientId)"));

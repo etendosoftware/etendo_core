@@ -516,20 +516,15 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
       if (currentChar == '(') {
         parenDepth++;
       } else if (currentChar == ')') {
-        pos = handleEscapeClauseIfPresent(query, pos);
-        if (pos >= query.length()) {
+        ClosingParenResult result = handleClosingParen(query, pos, parenDepth);
+        if (result.shouldReturn) {
+          return result.position;
+        }
+        if (result.shouldSkip) {
+          pos = result.position;
           continue;
         }
-
-        currentChar = query.charAt(pos);
-        if (currentChar != ')') {
-          continue;
-        }
-
         parenDepth--;
-        if (shouldStopAtCloseParen(query, pos, parenDepth)) {
-          return pos;
-        }
       } else if (parenDepth == 0) {
         int keywordPos = checkForTerminatingKeyword(query, pos);
         if (keywordPos != -1) {
@@ -542,9 +537,42 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     return query.length();
   }
 
-  private int handleEscapeClauseIfPresent(String query, int pos) {
+  private ClosingParenResult handleClosingParen(String query, int pos, int parenDepth) {
     int escapeEndPos = checkForEscapeClause(query, pos);
-    return (escapeEndPos != -1) ? escapeEndPos : pos;
+    if (escapeEndPos != -1) {
+      return ClosingParenResult.skip(escapeEndPos);
+    }
+
+    parenDepth--;
+    if (shouldStopAtCloseParen(query, pos, parenDepth)) {
+      return ClosingParenResult.returnPosition(pos);
+    }
+
+    return ClosingParenResult.continueProcessing();
+  }
+
+  private static class ClosingParenResult {
+    final int position;
+    final boolean shouldReturn;
+    final boolean shouldSkip;
+
+    private ClosingParenResult(int position, boolean shouldReturn, boolean shouldSkip) {
+      this.position = position;
+      this.shouldReturn = shouldReturn;
+      this.shouldSkip = shouldSkip;
+    }
+
+    static ClosingParenResult returnPosition(int position) {
+      return new ClosingParenResult(position, true, false);
+    }
+
+    static ClosingParenResult skip(int position) {
+      return new ClosingParenResult(position, false, true);
+    }
+
+    static ClosingParenResult continueProcessing() {
+      return new ClosingParenResult(0, false, false);
+    }
   }
 
   private boolean shouldStopAtCloseParen(String query, int pos, int parenDepth) {
@@ -592,7 +620,10 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
       cleaned = cleaned.replace("AND1=1", "AND 1=1");
       cleaned = cleaned.replace("1=1AND", "1=1 AND");
 
-      // Remove duplicate 1=1 conditions
+      // CRITICAL: Remove "1=1 1=1" patterns (no operator between them)
+      cleaned = cleaned.replaceAll("1=1\\s+1=1", "1=1");
+
+      // Remove duplicate 1=1 conditions with operators
       cleaned = cleaned.replaceAll("1=1\\s+and\\s+1=1", "1=1");
       cleaned = cleaned.replaceAll("1=1\\s+AND\\s+1=1", "1=1");
 
