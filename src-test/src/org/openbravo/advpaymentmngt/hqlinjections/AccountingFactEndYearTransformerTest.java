@@ -30,6 +30,12 @@ public class AccountingFactEndYearTransformerTest {
   private static final String ALIAS_1 = "alias_1";
   private static final String FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST = "{\"fieldName\":\"description\",\"operator\":\"iContains\",\"value\":\"test\"}";
   private static final String HAVING_PARAM = "havingParam_";
+  private static final String FIELD_NAME_CREATION_DATE_OPERATOR_EQUALS_VALUE_DATE = "{\"fieldName\":\"creationDate\",\"operator\":\"equals\",\"value\":\"2024-01-01\"}";
+  private static final String FIELD_NAME_UPDATED_OPERATOR_GREATER_THAN_VALUE_DATE = "{\"fieldName\":\"updated\",\"operator\":\"greaterThan\",\"value\":\"2024-01-01T10:00:00\"}";
+  public static final String WHERE = "WHERE";
+  public static final String DESCRIPTION_FILTER = "upper(Max(fa.description)) like upper(:alias_0) escape '|'";
+  public static final String SHOULD_KEEP_CLIENT_ID_PARAMETER = "Should keep clientId parameter";
+  public static final String SHOULD_HAVE_REMOVED_ALIAS_0 = "Should have removed alias_0";
   private AccountingFactEndYearTransformer transformer;
   private Map<String, String> requestParameters;
   private Map<String, Object> queryNamedParameters;
@@ -169,11 +175,11 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithAggregateFilter, requestParameters, queryNamedParameters);
 
     // Verify the aggregate condition was removed from WHERE
-    assertFalse("Should not contain upper(Max(fa.description)) in result", result.contains(UPPER_MAX_FA_DESCRIPTION));
+    assertFalse("Should not contain the aggregate condition", result.contains(DESCRIPTION_FILTER));
     assertFalse("Should have removed alias_0 parameter", queryNamedParameters.containsKey(ALIAS_0));
-    assertTrue("Should keep clientId parameter", queryNamedParameters.containsKey(CLIENT_ID));
+    assertTrue(SHOULD_KEEP_CLIENT_ID_PARAMETER, queryNamedParameters.containsKey(CLIENT_ID));
     // The WHERE clause should still exist with clientId condition
-    assertTrue("Should contain WHERE clause", result.contains("WHERE"));
+    assertTrue("Should contain WHERE clause", result.contains(WHERE));
     assertTrue("Should contain clientId condition", result.contains("fa.client.id in (:clientId)"));
   }
 
@@ -199,13 +205,13 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithMultipleAggregates, requestParameters, queryNamedParameters);
 
     // Extract the WHERE clause to verify aggregate removal (not SELECT clause)
-    int whereIndex = result.indexOf("WHERE");
+    int whereIndex = result.indexOf(WHERE);
     int groupByIndex = result.indexOf("GROUP BY");
     String whereClause = result.substring(whereIndex, groupByIndex);
 
     assertFalse("Should not contain upper(Max(fa.description)) in WHERE", whereClause.contains(UPPER_MAX_FA_DESCRIPTION));
     assertFalse("Should not contain Max(fa.creationDate) > in WHERE", whereClause.contains("Max(fa.creationDate) >"));
-    assertFalse("Should have removed alias_0", queryNamedParameters.containsKey(ALIAS_0));
+    assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
     assertFalse("Should have removed alias_1", queryNamedParameters.containsKey(ALIAS_1));
     assertTrue("Should contain 1=1 replacements", whereClause.contains("1=1"));
   }
@@ -300,7 +306,7 @@ public class AccountingFactEndYearTransformerTest {
 
     // Should not add HAVING clause since clientId is not debit/credit
     assertFalse("Should not add havingParam for non-aggregate field", result.contains(HAVING_PARAM));
-    assertTrue("Should keep clientId parameter", queryNamedParameters.containsKey(CLIENT_ID));
+    assertTrue(SHOULD_KEEP_CLIENT_ID_PARAMETER, queryNamedParameters.containsKey(CLIENT_ID));
   }
 
   /**
@@ -369,10 +375,10 @@ public class AccountingFactEndYearTransformerTest {
             + "]}");
 
     String result = transformer.transformHqlQuery(complexQuery, requestParameters, queryNamedParameters);
-
-    assertFalse("Should remove Max aggregate condition", result.contains(UPPER_MAX_FA_DESCRIPTION));
+    
+    assertFalse("Should remove the aggregate condition", result.contains(DESCRIPTION_FILTER));
     assertTrue("Should keep non-aggregate condition", result.contains("fa.type = :alias_1"));
-    assertFalse("Should have removed alias_0", queryNamedParameters.containsKey(ALIAS_0));
+    assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
     assertTrue("Should keep alias_1", queryNamedParameters.containsKey(ALIAS_1));
   }
 
@@ -551,5 +557,61 @@ public class AccountingFactEndYearTransformerTest {
       assertFalse("Should remove all aggregate conditions", result.contains("Max(fa.field" + i + ")"));
       assertFalse("Should remove all alias parameters", queryNamedParameters.containsKey("alias_" + i));
     }
+  }
+
+  /**
+   * Verifies that date fields with equals operator use date range conditions (tests parseDate and buildDateRangeCondition).
+   */
+  @Test
+  public void testDateFieldEqualsOperatorUsesDateRange() {
+    requestParameters.put(CRITERIA, FIELD_NAME_CREATION_DATE_OPERATOR_EQUALS_VALUE_DATE);
+    
+    String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
+    
+    assertTrue("Should contain HAVING clause for date field", result.contains(HAVING));
+    assertTrue("Should have start and end parameters", queryNamedParameters.containsKey("havingParam_0_start"));
+    assertTrue("Should have start and end parameters", queryNamedParameters.containsKey("havingParam_0_end"));
+    assertTrue("Should contain date range condition", result.contains("Max(fa.creationDate) >= :havingParam_0_start"));
+    assertTrue("Should contain date range condition", result.contains("Max(fa.creationDate) <= :havingParam_0_end"));
+  }
+
+  /**
+   * Verifies that date fields with greaterThan operator parse dates correctly (tests parseDate).
+   */
+  @Test
+  public void testDateFieldGreaterThanOperatorParsesDate() {
+    requestParameters.put(CRITERIA, FIELD_NAME_UPDATED_OPERATOR_GREATER_THAN_VALUE_DATE);
+    
+    String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
+    
+    assertTrue("Should contain HAVING clause for date field", result.contains(HAVING));
+    assertTrue("Should have parameter for greater than", queryNamedParameters.containsKey(HAVING_PARAM_0));
+    assertTrue("Should contain greater than condition", result.contains("Max(fa.updated) > :havingParam_0"));
+    // Verify the parameter is a Date object
+    Object paramValue = queryNamedParameters.get(HAVING_PARAM_0);
+    assertTrue("Parameter should be Date", paramValue instanceof java.util.Date);
+  }
+
+  /**
+   * Verifies that nested parentheses in aggregate conditions are handled correctly (tests findMatchingOpenParen).
+   */
+  @Test
+  public void testNestedParenthesesInAggregateConditions() {
+    String queryWithNestedParens = "SELECT max(fa.id), Max(fa.description) "
+        + "FROM FinancialMgmtAccountingFact fa "
+        + "WHERE fa.client.id in (:clientId) AND ((( upper(Max(fa.description)) like upper(:alias_0) escape '|' ))) "
+        + "GROUP BY fa.client.id";
+    
+    queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
+    queryNamedParameters.put(ALIAS_0, TEST);
+    requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
+    
+    String result = transformer.transformHqlQuery(queryWithNestedParens, requestParameters, queryNamedParameters);
+    
+    assertFalse("Should remove nested aggregate condition", result.contains(DESCRIPTION_FILTER));
+    assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
+    assertTrue(SHOULD_KEEP_CLIENT_ID_PARAMETER, queryNamedParameters.containsKey(CLIENT_ID));
+    assertTrue("Should contain WHERE clause", result.contains(WHERE));
+    assertTrue("Should contain clientId condition", result.contains("fa.client.id in (:clientId)"));
   }
 }
