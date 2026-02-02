@@ -81,6 +81,22 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
 
   private static final Logger log = LogManager.getLogger();
   private static final String CRITERIA = "criteria";
+  public static final String WHERE = "WHERE ";
+  public static final String AND = " AND ";
+  public static final String DEBIT = "debit";
+  public static final String CREDIT = "credit";
+  public static final String UPDATED = "updated";
+  public static final String ICONTAINS = "icontains";
+  public static final String ISTARTSWITH = "istartswith";
+  public static final String STARTSWITH = "startswith";
+  public static final String IENDSWITH = "iendswith";
+  public static final String ENDSWITH = "endswith";
+  public static final String NOTEQUAL = "notequal";
+  public static final String GREATERTHAN = "greaterthan";
+  public static final String LESSTHAN = "lessthan";
+  public static final String GREATEROREQUAL = "greaterorequal";
+  public static final String GREATER_EQUAL_QUERY_SYMBOL = " >= :";
+  public static final String LESSOREQUAL = "lessorequal";
 
   @Override
   public String transformHqlQuery(String _hqlQuery, Map<String, String> requestParameters,
@@ -191,22 +207,32 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     return false;
   }
 
+  private String getJoinOperator(JSONObject criteria) {
+    String operator = criteria.optString("operator", "and");
+    return StringUtils.equalsIgnoreCase("or", operator) ? " OR " : AND;
+  }
+
   private boolean isAggregateField(String fieldName) {
-    return StringUtils.equalsIgnoreCase("debit", fieldName) 
-        || StringUtils.equalsIgnoreCase("credit", fieldName);
+    return StringUtils.equalsIgnoreCase(DEBIT, fieldName)
+        || StringUtils.equalsIgnoreCase(CREDIT, fieldName)
+        || StringUtils.equalsIgnoreCase("description", fieldName)
+        || StringUtils.equalsIgnoreCase("created", fieldName)
+        || StringUtils.equalsIgnoreCase(UPDATED, fieldName);
   }
 
   private String getAggregateExpression(String fieldName) {
-    if (StringUtils.equalsIgnoreCase("debit", fieldName)) {
+    if (StringUtils.equalsIgnoreCase(DEBIT, fieldName)) {
       return "CASE WHEN Sum(fa.debit - fa.credit) > 0 THEN Sum(fa.debit - fa.credit) ELSE 0 END";
-    } else {
+    } else if (StringUtils.equalsIgnoreCase(CREDIT, fieldName)) {
       return "CASE WHEN Sum(fa.credit - fa.debit) > 0 THEN Sum(fa.credit - fa.debit) ELSE 0 END";
+    } else if (StringUtils.equalsIgnoreCase("description", fieldName)) {
+      return "Max(fa.description)";
+    } else if (StringUtils.equalsIgnoreCase("created", fieldName)) {
+      return "Max(fa.creationDate)";
+    } else if (StringUtils.equalsIgnoreCase(UPDATED, fieldName)) {
+      return "Max(fa.updated)";
     }
-  }
-
-  private String getJoinOperator(JSONObject criteria) {
-    String operator = criteria.optString("operator", "and");
-    return StringUtils.equalsIgnoreCase("or", operator) ? " OR " : " AND ";
+    return null;
   }
 
   private String buildCondition(String expr, String operator, Object value,
@@ -215,39 +241,153 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     if (value == null) {
       return null;
     }
-    
-    // Convert Double to BigDecimal if needed (debit/credit are BigDecimal fields)
-    Object paramValue = value;
-    if (value instanceof Double) {
-      paramValue = BigDecimal.valueOf((Double) value);
-    } else if (value instanceof Integer) {
-      paramValue = BigDecimal.valueOf((Integer) value);
-    } else if (value instanceof Long) {
-      paramValue = BigDecimal.valueOf((Long) value);
+
+    boolean isDateField = expr.contains("creationDate") || expr.contains(UPDATED);
+    Object paramValue = convertValueToAppropriateType(expr, value, isDateField);
+
+    if (paramValue == null) {
+      return null; // Conversion failed
     }
-    
+
     String paramName = "havingParam_" + paramCounter[0]++;
-    queryNamedParameters.put(paramName, paramValue);
-    
-    switch (operator.toLowerCase()) {
-      case "notequal":
-        return expr + " <> :" + paramName;
-      case "greaterthan":
-        return expr + " > :" + paramName;
-      case "lessthan":
-        return expr + " < :" + paramName;
-      case "greaterorequal":
-        return expr + " >= :" + paramName;
-      case "lessorequal":
-        return expr + " <= :" + paramName;
-      default:
-        return expr + " = :" + paramName;
+    return buildConditionByOperator(expr, operator, paramValue, isDateField, paramName, queryNamedParameters);
+  }
+
+  private Object convertValueToAppropriateType(String expr, Object value, boolean isDateField) {
+    // For numeric fields (debit/credit), convert to BigDecimal
+    if (expr.contains("Sum(") && (expr.contains(DEBIT) || expr.contains(CREDIT))) {
+      return convertToBigDecimal(value);
+    }
+    // For date fields (created/updated), convert String to Date
+    else if (isDateField && value instanceof String) {
+      return parseDate((String) value);
+    }
+
+    return value;
+  }
+
+  private Object convertToBigDecimal(Object value) {
+    if (value instanceof Double) {
+      return BigDecimal.valueOf((Double) value);
+    } else if (value instanceof Integer) {
+      return BigDecimal.valueOf((Integer) value);
+    } else if (value instanceof Long) {
+      return BigDecimal.valueOf((Long) value);
+    }
+    return value;
+  }
+
+  private Object parseDate(String dateValue) {
+    try {
+      // Parse ISO date string to Date
+      java.text.SimpleDateFormat isoFormat = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+      isoFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+      return isoFormat.parse(dateValue);
+    } catch (Exception e) {
+      // Try alternative format without time
+      try {
+        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        return dateFormat.parse(dateValue);
+      } catch (Exception e2) {
+        log.error("Failed to parse date value: " + dateValue, e2);
+        return null;
+      }
     }
   }
 
+  private String buildConditionByOperator(String expr, String operator, Object paramValue,
+      boolean isDateField, String paramName, Map<String, Object> queryNamedParameters) {
+
+    switch (operator.toLowerCase()) {
+      case ICONTAINS:
+      case "contains":
+        return buildLikeCondition(expr, paramValue, paramName, queryNamedParameters, "%", "%");
+      case ISTARTSWITH:
+      case STARTSWITH:
+        return buildLikeCondition(expr, paramValue, paramName, queryNamedParameters, "", "%");
+      case IENDSWITH:
+      case ENDSWITH:
+        return buildLikeCondition(expr, paramValue, paramName, queryNamedParameters, "%", "");
+      case NOTEQUAL:
+        queryNamedParameters.put(paramName, paramValue);
+        return expr + " <> :" + paramName;
+      case GREATERTHAN:
+        queryNamedParameters.put(paramName, paramValue);
+        return expr + " > :" + paramName;
+      case LESSTHAN:
+        queryNamedParameters.put(paramName, paramValue);
+        return expr + " < :" + paramName;
+      case GREATEROREQUAL:
+      case "between":
+        queryNamedParameters.put(paramName, paramValue);
+        return expr + GREATER_EQUAL_QUERY_SYMBOL + paramName;
+      case LESSOREQUAL:
+        queryNamedParameters.put(paramName, paramValue);
+        return expr + " <= :" + paramName;
+      case "equals":
+      default:
+        return buildEqualsCondition(expr, paramValue, isDateField, paramName, queryNamedParameters);
+    }
+  }
+
+  private String buildLikeCondition(String expr, Object paramValue, String paramName,
+      Map<String, Object> queryNamedParameters, String prefix, String suffix) {
+
+    String likeValue = paramValue.toString();
+    if (!prefix.isEmpty() && !likeValue.startsWith(prefix)) {
+      likeValue = prefix + likeValue;
+    }
+    if (!suffix.isEmpty() && !likeValue.endsWith(suffix)) {
+      likeValue = likeValue + suffix;
+    }
+
+    queryNamedParameters.put(paramName, likeValue);
+    return "upper(" + expr + ") like upper(:" + paramName + ")";
+  }
+
+  private String buildEqualsCondition(String expr, Object paramValue, boolean isDateField,
+      String paramName, Map<String, Object> queryNamedParameters) {
+
+    // CRITICAL FIX: For date fields with "equals" operator, use a range
+    // because the original query uses >= and <= for date comparisons
+    if (isDateField && paramValue instanceof java.util.Date) {
+      return buildDateRangeCondition(expr, (java.util.Date) paramValue, paramName, queryNamedParameters);
+    } else {
+      queryNamedParameters.put(paramName, paramValue);
+      return expr + " = :" + paramName;
+    }
+  }
+
+  private String buildDateRangeCondition(String expr, java.util.Date dateValue, String paramName,
+      Map<String, Object> queryNamedParameters) {
+
+    java.util.Calendar cal = java.util.Calendar.getInstance();
+    cal.setTime(dateValue);
+
+    // Start of day (00:00:00)
+    cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+    cal.set(java.util.Calendar.MINUTE, 0);
+    cal.set(java.util.Calendar.SECOND, 0);
+    cal.set(java.util.Calendar.MILLISECOND, 0);
+    java.util.Date startDate = cal.getTime();
+
+    // End of day (23:59:59.999)
+    cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+    cal.set(java.util.Calendar.MINUTE, 59);
+    cal.set(java.util.Calendar.SECOND, 59);
+    cal.set(java.util.Calendar.MILLISECOND, 999);
+    java.util.Date endDate = cal.getTime();
+
+    String startParamName = paramName + "_start";
+    String endParamName = paramName + "_end";
+
+    queryNamedParameters.put(startParamName, startDate);
+    queryNamedParameters.put(endParamName, endDate);
+
+    return "(" + expr + GREATER_EQUAL_QUERY_SYMBOL + startParamName + AND + expr + " <= :" + endParamName + ")";
+  }
+
   private String removeAggregateConditionsFromWhere(String hqlQuery, Map<String, Object> queryNamedParameters) {
-    // Pattern to match any condition that contains aggregate functions (Sum, Max, etc.)
-    // This handles nested cases where DAL generates complex nested expressions
     Set<String> paramsToRemove = new HashSet<>();
     String cleaned = hqlQuery;
     
@@ -255,36 +395,29 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     boolean foundMatch = true;
     int iterations = 0;
 
-    while (foundMatch && iterations < 20) { // increased safety limit
+    while (foundMatch && iterations < 20) {
       iterations++;
       foundMatch = false;
-      
-      // Find any parameter :alias_N in the query, then check if its condition contains aggregates
-      // This handles cases like: upper(Max(fa.description)) like upper(:alias_0)
-      Pattern paramPattern = Pattern.compile(
-        ":(alias_\\d+)"
-      );
+
+      Pattern paramPattern = Pattern.compile(":(alias_\\d+)");
       Matcher paramMatcher = paramPattern.matcher(cleaned);
 
       while (paramMatcher.find()) {
         String paramName = paramMatcher.group(1);
         int paramPos = paramMatcher.start();
 
-        // Look backwards from paramPos to find the start of this condition
-        // We need to find the opening of the expression (after AND, OR, or opening paren)
+        // Extract the condition containing this parameter
         int conditionStart = findConditionStart(cleaned, paramPos);
-        // Look forwards from paramPos to find the end of this condition
         int conditionEnd = findConditionEnd(cleaned, paramMatcher.end());
         String condition = cleaned.substring(conditionStart, conditionEnd);
 
-        // Check if this condition contains any aggregate function
         if (containsAggregateFunction(condition)) {
           paramsToRemove.add(paramName);
           
           // Replace the entire condition with 1=1
           cleaned = cleaned.substring(0, conditionStart) + "1=1" + cleaned.substring(conditionEnd);
           foundMatch = true;
-          break; // Restart the search after modification
+          break;
         }
       }
     }
@@ -292,85 +425,104 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     if (iterations >= 20) {
       log.warn("Reached maximum iterations while removing aggregate conditions");
     }
-    // Clean up dangling AND/OR operators and empty conditions
-    // Handle "and1=1" or "1=1and" (missing space)
-    cleaned = cleaned.replace("and1=1", "and 1=1");
-    cleaned = cleaned.replace("1=1and", "1=1 and");
-    
-    // Handle multiple 1=1 with AND between them
-    cleaned = cleaned.replace("1=1\\s+and\\s+1=1", "1=1");
-    cleaned = cleaned.replace("AND\\s+1=1\\s+AND", "AND");
-    cleaned = cleaned.replace("\\s+AND\\s+1=1\\s*\\)", ")");
-    cleaned = cleaned.replace("\\(\\s*1=1\\s+AND\\s+", "(");
-    cleaned = cleaned.replace("\\s+AND\\s+1=1\\s+GROUP", " GROUP");
-    cleaned = cleaned.replace("WHERE\\s+1=1\\s+AND\\s+", "WHERE ");
-    cleaned = cleaned.replace("\\(\\(\\s*1=1\\s+and\\s+", "((");
-    cleaned = cleaned.replace("\\s+and\\s+1=1\\s+and\\s+", " and ");
-    cleaned = cleaned.replace("\\(\\s*1=1\\s+and\\s+", "(");
-    
-    // Final cleanup: remove standalone 1=1 in parentheses
-    cleaned = cleaned.replace("\\(\\s*1=1\\s*\\)", "");
-    cleaned = cleaned.replace("\\(\\(\\s*\\)", "((");
-    cleaned = cleaned.replace("\\(\\s*and\\s+", "(");
-    
-    // Remove only the parameters that were used in the removed aggregate conditions
+
+    // Clean up conditions and parentheses
+    cleaned = cleanupConditions(cleaned);
+
     for (String paramName : paramsToRemove) {
       queryNamedParameters.remove(paramName);
     }
-    
+
     return cleaned;
   }
-  
-  private boolean containsAggregateFunction(String expression) {
-    // Check if expression contains common aggregate functions
-    String upper = expression.toUpperCase();
-    return upper.contains("SUM(") || 
-           upper.contains("MAX(") || 
-           upper.contains("MIN(") || 
-           upper.contains("AVG(") || 
-           upper.contains("COUNT(");
-  }
-  
+
   private int findConditionStart(String query, int fromPos) {
-    // Look backwards to find where this condition starts
-    // Condition starts after: AND, OR, WHERE
-    // We DON'T stop at parentheses because they might be part of functions like upper(:param)
     int pos = fromPos - 1;
-    
+    int parenDepth = 0;
+
     while (pos >= 0) {
-      // Check for AND, OR, WHERE at current position
-      if (pos >= 4 && StringUtils.equalsIgnoreCase(" AND", query.substring(pos - 4, pos))) {
-        return pos;
+      char currentChar = query.charAt(pos);
+      parenDepth = updateDepthForChar(currentChar, parenDepth);
+
+      if (shouldStopAtOpenParen(query, pos, currentChar, parenDepth)) {
+        return pos + 1;
       }
-      if (pos >= 3 && StringUtils.equalsIgnoreCase(" OR", query.substring(pos - 3, pos))) {
-        return pos;
+
+      if (parenDepth == 0) {
+        int keywordPos = findStartKeywordAtPosition(query, pos);
+        if (keywordPos != -1) {
+          return keywordPos;
+        }
       }
-      if (pos >= 6 && StringUtils.equalsIgnoreCase("WHERE ", query.substring(pos - 6, pos))) {
-        return pos;
-      }
-      // Check for opening double parenthesis which marks start of filter conditions: ((
-      if (pos >= 2 && StringUtils.equalsIgnoreCase("((", query.substring(pos - 2, pos))) {
-        return pos;
-      }
+
       pos--;
     }
-    
-    return 0; // Start of string
+
+    return 0;
   }
-  
+
+  private int updateDepthForChar(char c, int currentDepth) {
+    if (c == ')') {
+      return currentDepth + 1;
+    } else if (c == '(') {
+      return currentDepth - 1;
+    }
+    return currentDepth;
+  }
+
+  private boolean shouldStopAtOpenParen(String query, int pos, char c, int parenDepth) {
+    if (c != '(' || parenDepth >= 0) {
+      return false;
+    }
+    return !isFunctionOpenParen(query, pos);
+  }
+
+  private boolean isFunctionOpenParen(String query, int pos) {
+    if (pos == 0) {
+      return false;
+    }
+
+    int checkPos = pos - 1;
+    while (checkPos >= 0 && isWordCharacter(query.charAt(checkPos))) {
+      checkPos--;
+    }
+    return checkPos < pos - 1;
+  }
+
+  private boolean isWordCharacter(char c) {
+    return Character.isLetterOrDigit(c) || c == '_';
+  }
+
+  private int findStartKeywordAtPosition(String query, int pos) {
+    if (matchesKeywordAtPosition(query, pos, AND, 5)) {
+      return pos + 1;
+    }
+    if (matchesKeywordAtPosition(query, pos, " OR ", 4)) {
+      return pos + 1;
+    }
+    if (matchesKeywordAtPosition(query, pos, WHERE, 6)) {
+      return pos + 1;
+    }
+    return -1;
+  }
+
   private int findConditionEnd(String query, int fromPos) {
     int pos = fromPos;
     int parenDepth = 0;
-    
+
     while (pos < query.length()) {
-      char c = query.charAt(pos);
-      
-      if (c == '(') {
+      char currentChar = query.charAt(pos);
+
+      if (currentChar == '(') {
         parenDepth++;
-      } else if (c == ')') {
-        int endPos = handleClosingParen(query, pos, parenDepth);
-        if (endPos != -1) {
-          return endPos;
+      } else if (currentChar == ')') {
+        ClosingParenResult result = handleClosingParen(query, pos, parenDepth);
+        if (result.shouldReturn) {
+          return result.position;
+        }
+        if (result.shouldSkip) {
+          pos = result.position;
+          continue;
         }
         parenDepth--;
       } else if (parenDepth == 0) {
@@ -381,21 +533,263 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
       }
       pos++;
     }
-    
+
     return query.length();
   }
 
-  private int handleClosingParen(String query, int pos, int parenDepth) {
-    if (parenDepth != 0) {
-      return -1;
-    }
-    
+  private ClosingParenResult handleClosingParen(String query, int pos, int parenDepth) {
     int escapeEndPos = checkForEscapeClause(query, pos);
     if (escapeEndPos != -1) {
-      return escapeEndPos;
+      return ClosingParenResult.skip(escapeEndPos);
     }
-    
-    return pos;
+
+    parenDepth--;
+    if (shouldStopAtCloseParen(query, pos, parenDepth)) {
+      return ClosingParenResult.returnPosition(pos);
+    }
+
+    return ClosingParenResult.continueProcessing();
+  }
+
+  private static class ClosingParenResult {
+    final int position;
+    final boolean shouldReturn;
+    final boolean shouldSkip;
+
+    private ClosingParenResult(int position, boolean shouldReturn, boolean shouldSkip) {
+      this.position = position;
+      this.shouldReturn = shouldReturn;
+      this.shouldSkip = shouldSkip;
+    }
+
+    static ClosingParenResult returnPosition(int position) {
+      return new ClosingParenResult(position, true, false);
+    }
+
+    static ClosingParenResult skip(int position) {
+      return new ClosingParenResult(position, false, true);
+    }
+
+    static ClosingParenResult continueProcessing() {
+      return new ClosingParenResult(0, false, false);
+    }
+  }
+
+  private boolean shouldStopAtCloseParen(String query, int pos, int parenDepth) {
+    if (parenDepth < 0) {
+      return true;
+    }
+    if (parenDepth > 0) {
+      return false;
+    }
+    return !closesFunction(query, pos);
+  }
+
+  private boolean closesFunction(String query, int pos) {
+    int matchPos = findMatchingOpenParen(query, pos);
+    if (matchPos <= 0) {
+      return false;
+    }
+    return isFunctionOpenParen(query, matchPos);
+  }
+
+  private int findMatchingOpenParen(String query, int closingPos) {
+    int depth = 1;
+    for (int i = closingPos - 1; i >= 0; i--) {
+      if (query.charAt(i) == ')') {
+        depth++;
+      } else if (query.charAt(i) == '(') {
+        depth--;
+        if (depth == 0) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  private String cleanupConditions(String query) {
+    String cleaned = query;
+
+    // Multiple passes to handle nested cleanup
+    for (int pass = 0; pass < 5; pass++) {
+
+      // Handle spacing issues with 1=1
+      cleaned = cleaned.replace("and1=1", "and 1=1");
+      cleaned = cleaned.replace("1=1and", "1=1 and");
+      cleaned = cleaned.replace("AND1=1", "AND 1=1");
+      cleaned = cleaned.replace("1=1AND", "1=1 AND");
+
+      // CRITICAL: Remove "1=1 1=1" patterns (no operator between them)
+      cleaned = cleaned.replaceAll("1=1\\s+1=1", "1=1");
+
+      // Remove duplicate 1=1 conditions with operators
+      cleaned = cleaned.replaceAll("1=1\\s+and\\s+1=1", "1=1");
+      cleaned = cleaned.replaceAll("1=1\\s+AND\\s+1=1", "1=1");
+
+      // Remove "AND 1=1 AND" patterns
+      cleaned = cleaned.replaceAll("\\s+AND\\s+1=1\\s+AND\\s+", AND);
+      cleaned = cleaned.replaceAll("\\s+and\\s+1=1\\s+and\\s+", " and ");
+
+      // Remove "1=1 AND" at start of parenthetical group
+      cleaned = cleaned.replaceAll("\\(\\s*1=1\\s+AND\\s+", "(");
+      cleaned = cleaned.replaceAll("\\(\\s*1=1\\s+and\\s+", "(");
+
+      // Remove "AND 1=1" at end of parenthetical group
+      cleaned = cleaned.replaceAll("\\s+AND\\s+1=1\\s*\\)", ")");
+      cleaned = cleaned.replaceAll("\\s+and\\s+1=1\\s*\\)", ")");
+
+      // Remove standalone "1=1" in parentheses
+      cleaned = cleaned.replaceAll("\\(\\s*1=1\\s*\\)", "");
+
+      // Remove empty parentheses
+      cleaned = cleaned.replaceAll("\\(\\s*\\)", "");
+
+      // NEW: Remove orphaned "and" or "AND" at the start of parentheses
+      cleaned = cleaned.replaceAll("\\(\\s*and\\s+", "(");
+      cleaned = cleaned.replaceAll("\\(\\s*AND\\s+", "(");
+
+      // NEW: Remove orphaned "and" or "AND" after opening double parens
+      cleaned = cleaned.replaceAll("\\(\\(\\s*and\\s+", "((");
+      cleaned = cleaned.replaceAll("\\(\\(\\s*AND\\s+", "((");
+
+      // Clean up "AND ()" or "() AND" patterns
+      cleaned = cleaned.replaceAll("\\s+AND\\s+\\(\\s*\\)\\s+", AND);
+      cleaned = cleaned.replaceAll("\\s+and\\s+\\(\\s*\\)\\s+", " and ");
+      cleaned = cleaned.replaceAll("\\(\\s*\\)\\s+AND\\s+", "");
+      cleaned = cleaned.replaceAll("\\(\\s*\\)\\s+and\\s+", "");
+
+      // Fix "AND  AND" or "and  and" (double operators)
+      cleaned = cleaned.replaceAll("AND\\s+AND", "AND");
+      cleaned = cleaned.replaceAll("and\\s+and", "and");
+      cleaned = cleaned.replaceAll("AND\\s+and", "AND");
+      cleaned = cleaned.replaceAll("and\\s+AND", "and");
+
+      // Fix "WHERE 1=1 AND" -> "WHERE"
+      cleaned = cleaned.replaceAll("WHERE\\s+1=1\\s+AND\\s+", WHERE);
+      cleaned = cleaned.replaceAll("WHERE\\s+1=1\\s+and\\s+", WHERE);
+
+      // NEW: Remove patterns like "1=1 and 1=1 and" -> "1=1 and"
+      cleaned = cleaned.replaceAll("1=1\\s+and\\s+1=1\\s+and\\s+", "");
+      cleaned = cleaned.replaceAll("1=1\\s+AND\\s+1=1\\s+AND\\s+", "");
+
+      // CRITICAL FIX: Remove double parentheses patterns like ((condition))
+      // This fixes the issue where AND ((pc.id = :alias_7 )) becomes AND (pc.id = :alias_7 )
+      cleaned = cleaned.replaceAll("\\(\\s*\\(\\s*([^()]+)\\s*\\)\\s*\\)", "($1)");
+
+      // Handle triple or more nested empty parentheses
+      cleaned = cleaned.replace("\\(\\(\\(", "((");
+      cleaned = cleaned.replace("\\)\\)\\)", "))");
+    }
+
+    // Final cleanup: balance parentheses
+    cleaned = balanceParentheses(cleaned);
+
+    return cleaned;
+  }
+
+  private String balanceParentheses(String query) {
+    ParenthesisCount count = countParentheses(query);
+
+    if (count.isBalanced()) {
+      return query;
+    }
+
+    if (count.hasExcessClosing()) {
+      return removeExcessClosingParens(query, count.getExcessCount());
+    }
+
+    return query;
+  }
+
+  private ParenthesisCount countParentheses(String query) {
+    int openCount = 0;
+    int closeCount = 0;
+
+    for (char c : query.toCharArray()) {
+      if (c == '(') {
+        openCount++;
+      } else if (c == ')') {
+        closeCount++;
+      }
+    }
+
+    return new ParenthesisCount(openCount, closeCount);
+  }
+
+  private String removeExcessClosingParens(String query, int toRemove) {
+    StringBuilder result = new StringBuilder(query);
+    String upperQuery = result.toString().toUpperCase();
+
+    int wherePos = upperQuery.indexOf(" WHERE ");
+    int groupPos = upperQuery.indexOf(" GROUP BY");
+
+    if (!canSafelyBalance(wherePos, groupPos)) {
+      return query;
+    }
+
+    return removeParensInWhereClause(result, wherePos, groupPos, toRemove);
+  }
+
+  private boolean canSafelyBalance(int wherePos, int groupPos) {
+    return wherePos != -1 && groupPos != -1;
+  }
+
+  private String removeParensInWhereClause(StringBuilder query, int wherePos, int groupPos, int toRemove) {
+    int remaining = toRemove;
+
+    for (int i = groupPos - 1; i > wherePos && remaining > 0; i--) {
+      if (query.charAt(i) == ')' && hasNegativeBalance(query, wherePos, i)) {
+        query.deleteCharAt(i);
+        remaining--;
+      }
+    }
+
+    return query.toString();
+  }
+
+  private boolean hasNegativeBalance(StringBuilder query, int start, int end) {
+    int balance = 0;
+    for (int j = start; j < end; j++) {
+      if (query.charAt(j) == '(') {
+        balance++;
+      } else if (query.charAt(j) == ')') {
+        balance--;
+      }
+    }
+    return balance < 0;
+  }
+
+  private static class ParenthesisCount {
+    private final int openCount;
+    private final int closeCount;
+
+    ParenthesisCount(int openCount, int closeCount) {
+      this.openCount = openCount;
+      this.closeCount = closeCount;
+    }
+
+    boolean isBalanced() {
+      return openCount == closeCount;
+    }
+
+    boolean hasExcessClosing() {
+      return closeCount > openCount;
+    }
+
+    int getExcessCount() {
+      return closeCount - openCount;
+    }
+  }
+
+  private boolean containsAggregateFunction(String expression) {
+    // Check if expression contains common aggregate functions
+    String upper = expression.toUpperCase();
+    return upper.contains("SUM(") ||
+        upper.contains("MAX(") ||
+        upper.contains("MIN(") ||
+        upper.contains("AVG(") ||
+        upper.contains("COUNT(");
   }
 
   private int checkForEscapeClause(String query, int closingParenPos) {
