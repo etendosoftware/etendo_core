@@ -30,7 +30,7 @@ public class AccountingFactEndYearTransformerTest {
   private static final String ALIAS_1 = "alias_1";
   private static final String FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST = "{\"fieldName\":\"description\",\"operator\":\"iContains\",\"value\":\"test\"}";
   private static final String HAVING_PARAM = "havingParam_";
-  private static final String FIELD_NAME_CREATED_OPERATOR_EQUALS_VALUE_DATE = "{\"fieldName\":\"created\",\"operator\":\"equals\",\"value\":\"2024-01-01\"}";
+  private static final String FIELD_NAME_CREATION_DATE_OPERATOR_EQUALS_VALUE_DATE = "{\"fieldName\":\"creationDate\",\"operator\":\"equals\",\"value\":\"2024-01-01\"}";
   private static final String FIELD_NAME_UPDATED_OPERATOR_GREATER_THAN_VALUE_DATE = "{\"fieldName\":\"updated\",\"operator\":\"greaterThan\",\"value\":\"2024-01-01T10:00:00\"}";
   public static final String WHERE = "WHERE";
   public static final String DESCRIPTION_FILTER = "upper(Max(fa.description)) like upper(:alias_0) escape '|'";
@@ -564,7 +564,7 @@ public class AccountingFactEndYearTransformerTest {
    */
   @Test
   public void testDateFieldEqualsOperatorUsesDateRange() {
-    requestParameters.put(CRITERIA, FIELD_NAME_CREATED_OPERATOR_EQUALS_VALUE_DATE);
+    requestParameters.put(CRITERIA, FIELD_NAME_CREATION_DATE_OPERATOR_EQUALS_VALUE_DATE);
     
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
     
