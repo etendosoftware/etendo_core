@@ -437,60 +437,21 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
   }
 
   private int findConditionStart(String query, int fromPos) {
-    // Look backwards to find where this condition starts
     int pos = fromPos - 1;
     int parenDepth = 0;
 
     while (pos >= 0) {
-      char c = query.charAt(pos);
+      char currentChar = query.charAt(pos);
+      parenDepth = updateDepthForChar(currentChar, parenDepth);
 
-      if (c == ')') {
-        parenDepth++;
-      } else if (c == '(') {
-        parenDepth--;
-
-        // Check if this is a function opening paren (has word characters immediately before)
-        boolean isFunctionParen = false;
-        if (pos > 0) {
-          int checkPos = pos - 1;
-          // Skip backwards over word characters to see if this is a function
-          while (checkPos >= 0 && (Character.isLetterOrDigit(query.charAt(checkPos)) || query.charAt(checkPos) == '_')) {
-            checkPos--;
-          }
-          // If we found word chars, this is a function paren like "upper(" or "Max("
-          isFunctionParen = (checkPos < pos - 1);
-        }
-
-        // If it's NOT a function paren and we're going negative depth, stop here
-        if (!isFunctionParen && parenDepth < 0) {
-          return pos + 1; // Start after the opening paren
-        }
+      if (shouldStopAtOpenParen(query, pos, currentChar, parenDepth)) {
+        return pos + 1;
       }
 
-      // Only check for keywords when at depth 0 and not inside function parens
       if (parenDepth == 0) {
-        // Check for " AND " (with spaces)
-        if (pos >= 5) {
-          String substr = query.substring(pos - 4, pos + 1);
-          if (substr.equalsIgnoreCase(AND)) {
-            return pos + 1;
-          }
-        }
-
-        // Check for " OR " (with spaces)
-        if (pos >= 4) {
-          String substr = query.substring(pos - 3, pos + 1);
-          if (substr.equalsIgnoreCase(" OR ")) {
-            return pos + 1;
-          }
-        }
-
-        // Check for "WHERE "
-        if (pos >= 6) {
-          String substr = query.substring(pos - 5, pos + 1);
-          if (substr.equalsIgnoreCase(WHERE)) {
-            return pos + 1;
-          }
+        int keywordPos = findStartKeywordAtPosition(query, pos);
+        if (keywordPos != -1) {
+          return keywordPos;
         }
       }
 
@@ -500,46 +461,71 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     return 0;
   }
 
+  private int updateDepthForChar(char c, int currentDepth) {
+    if (c == ')') {
+      return currentDepth + 1;
+    } else if (c == '(') {
+      return currentDepth - 1;
+    }
+    return currentDepth;
+  }
+
+  private boolean shouldStopAtOpenParen(String query, int pos, char c, int parenDepth) {
+    if (c != '(' || parenDepth >= 0) {
+      return false;
+    }
+    return !isFunctionOpenParen(query, pos);
+  }
+
+  private boolean isFunctionOpenParen(String query, int pos) {
+    if (pos == 0) {
+      return false;
+    }
+
+    int checkPos = pos - 1;
+    while (checkPos >= 0 && isWordCharacter(query.charAt(checkPos))) {
+      checkPos--;
+    }
+    return checkPos < pos - 1;
+  }
+
+  private boolean isWordCharacter(char c) {
+    return Character.isLetterOrDigit(c) || c == '_';
+  }
+
+  private int findStartKeywordAtPosition(String query, int pos) {
+    if (matchesKeywordAtPosition(query, pos, AND, 5)) {
+      return pos + 1;
+    }
+    if (matchesKeywordAtPosition(query, pos, " OR ", 4)) {
+      return pos + 1;
+    }
+    if (matchesKeywordAtPosition(query, pos, WHERE, 6)) {
+      return pos + 1;
+    }
+    return -1;
+  }
+
   private int findConditionEnd(String query, int fromPos) {
     int pos = fromPos;
     int parenDepth = 0;
-    
+
     while (pos < query.length()) {
-      char c = query.charAt(pos);
-      
-      if (c == '(') {
+      char currentChar = query.charAt(pos);
+
+      if (currentChar == '(') {
         parenDepth++;
-      } else if (c == ')') {
-        // Check for escape clause before considering this a real closing paren
-        int escapeEndPos = checkForEscapeClause(query, pos);
-        if (escapeEndPos != -1) {
-          pos = escapeEndPos;
+      } else if (currentChar == ')') {
+        ClosingParenResult result = handleClosingParen(query, pos, parenDepth);
+        if (result.shouldReturn) {
+          return result.position;
+        }
+        if (result.shouldSkip) {
+          pos = result.position;
           continue;
         }
-
         parenDepth--;
-
-        // Check if this closes a function (has word chars before the matching open paren)
-        boolean closesFunctionParen = false;
-        if (parenDepth >= 0) {
-          // Find the matching opening paren
-          int matchPos = findMatchingOpenParen(query, pos);
-          if (matchPos > 0) {
-            // Check if there's a function name before it
-            int checkPos = matchPos - 1;
-            while (checkPos >= 0 && (Character.isLetterOrDigit(query.charAt(checkPos)) || query.charAt(checkPos) == '_')) {
-              checkPos--;
-            }
-            closesFunctionParen = (checkPos < matchPos - 1);
-          }
-        }
-
-        // If we're at depth 0 or below, and this is NOT a function paren, we've found the end
-        if (parenDepth < 0 || (parenDepth == 0 && !closesFunctionParen)) {
-          return pos;
-        }
       } else if (parenDepth == 0) {
-        // Check for terminating keywords only at depth 0
         int keywordPos = checkForTerminatingKeyword(query, pos);
         if (keywordPos != -1) {
           return keywordPos;
@@ -549,6 +535,62 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     }
 
     return query.length();
+  }
+
+  private ClosingParenResult handleClosingParen(String query, int pos, int parenDepth) {
+    int escapeEndPos = checkForEscapeClause(query, pos);
+    if (escapeEndPos != -1) {
+      return ClosingParenResult.skip(escapeEndPos);
+    }
+
+    parenDepth--;
+    if (shouldStopAtCloseParen(query, pos, parenDepth)) {
+      return ClosingParenResult.returnPosition(pos);
+    }
+
+    return ClosingParenResult.continueProcessing();
+  }
+
+  private static class ClosingParenResult {
+    final int position;
+    final boolean shouldReturn;
+    final boolean shouldSkip;
+
+    private ClosingParenResult(int position, boolean shouldReturn, boolean shouldSkip) {
+      this.position = position;
+      this.shouldReturn = shouldReturn;
+      this.shouldSkip = shouldSkip;
+    }
+
+    static ClosingParenResult returnPosition(int position) {
+      return new ClosingParenResult(position, true, false);
+    }
+
+    static ClosingParenResult skip(int position) {
+      return new ClosingParenResult(position, false, true);
+    }
+
+    static ClosingParenResult continueProcessing() {
+      return new ClosingParenResult(0, false, false);
+    }
+  }
+
+  private boolean shouldStopAtCloseParen(String query, int pos, int parenDepth) {
+    if (parenDepth < 0) {
+      return true;
+    }
+    if (parenDepth > 0) {
+      return false;
+    }
+    return !closesFunction(query, pos);
+  }
+
+  private boolean closesFunction(String query, int pos) {
+    int matchPos = findMatchingOpenParen(query, pos);
+    if (matchPos <= 0) {
+      return false;
+    }
+    return isFunctionOpenParen(query, matchPos);
   }
 
   private int findMatchingOpenParen(String query, int closingPos) {
@@ -578,7 +620,10 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
       cleaned = cleaned.replace("AND1=1", "AND 1=1");
       cleaned = cleaned.replace("1=1AND", "1=1 AND");
 
-      // Remove duplicate 1=1 conditions
+      // CRITICAL: Remove "1=1 1=1" patterns (no operator between them)
+      cleaned = cleaned.replaceAll("1=1\\s+1=1", "1=1");
+
+      // Remove duplicate 1=1 conditions with operators
       cleaned = cleaned.replaceAll("1=1\\s+and\\s+1=1", "1=1");
       cleaned = cleaned.replaceAll("1=1\\s+AND\\s+1=1", "1=1");
 
@@ -644,53 +689,97 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
   }
 
   private String balanceParentheses(String query) {
+    ParenthesisCount count = countParentheses(query);
+
+    if (count.isBalanced()) {
+      return query;
+    }
+
+    if (count.hasExcessClosing()) {
+      return removeExcessClosingParens(query, count.getExcessCount());
+    }
+
+    return query;
+  }
+
+  private ParenthesisCount countParentheses(String query) {
     int openCount = 0;
     int closeCount = 0;
 
     for (char c : query.toCharArray()) {
-      if (c == '(') openCount++;
-      else if (c == ')') closeCount++;
+      if (c == '(') {
+        openCount++;
+      } else if (c == ')') {
+        closeCount++;
+      }
     }
 
-    if (openCount == closeCount) {
+    return new ParenthesisCount(openCount, closeCount);
+  }
+
+  private String removeExcessClosingParens(String query, int toRemove) {
+    StringBuilder result = new StringBuilder(query);
+    String upperQuery = result.toString().toUpperCase();
+
+    int wherePos = upperQuery.indexOf(" WHERE ");
+    int groupPos = upperQuery.indexOf(" GROUP BY");
+
+    if (!canSafelyBalance(wherePos, groupPos)) {
       return query;
     }
 
-    if (closeCount > openCount) {
-      int toRemove = closeCount - openCount;
-      StringBuilder result = new StringBuilder(query);
+    return removeParensInWhereClause(result, wherePos, groupPos, toRemove);
+  }
 
-      // Find the WHERE clause to focus cleanup there
-      String upperQuery = result.toString().toUpperCase();
-      int wherePos = upperQuery.indexOf(" WHERE ");
-      int groupPos = upperQuery.indexOf(" GROUP BY");
+  private boolean canSafelyBalance(int wherePos, int groupPos) {
+    return wherePos != -1 && groupPos != -1;
+  }
 
-      if (wherePos == -1 || groupPos == -1) {
-        return query; // Can't safely clean up
+  private String removeParensInWhereClause(StringBuilder query, int wherePos, int groupPos, int toRemove) {
+    int remaining = toRemove;
+
+    for (int i = groupPos - 1; i > wherePos && remaining > 0; i--) {
+      if (query.charAt(i) == ')' && hasNegativeBalance(query, wherePos, i)) {
+        query.deleteCharAt(i);
+        remaining--;
       }
-
-      // Remove extra closing parens in the WHERE clause area, working backwards
-      for (int i = groupPos - 1; i > wherePos && toRemove > 0; i--) {
-        if (result.charAt(i) == ')') {
-          // Count balance from WHERE to this position
-          int balance = 0;
-          for (int j = wherePos; j < i; j++) {
-            if (result.charAt(j) == '(') balance++;
-            else if (result.charAt(j) == ')') balance--;
-          }
-
-          // If balance is negative, we have too many closing parens
-          if (balance < 0) {
-            result.deleteCharAt(i);
-            toRemove--;
-          }
-        }
-      }
-
-      return result.toString();
     }
 
-    return query;
+    return query.toString();
+  }
+
+  private boolean hasNegativeBalance(StringBuilder query, int start, int end) {
+    int balance = 0;
+    for (int j = start; j < end; j++) {
+      if (query.charAt(j) == '(') {
+        balance++;
+      } else if (query.charAt(j) == ')') {
+        balance--;
+      }
+    }
+    return balance < 0;
+  }
+
+  private static class ParenthesisCount {
+    private final int openCount;
+    private final int closeCount;
+
+    ParenthesisCount(int openCount, int closeCount) {
+      this.openCount = openCount;
+      this.closeCount = closeCount;
+    }
+
+    boolean isBalanced() {
+      return openCount == closeCount;
+    }
+
+    boolean hasExcessClosing() {
+      return closeCount > openCount;
+    }
+
+    int getExcessCount() {
+      return closeCount - openCount;
+    }
   }
 
   private boolean containsAggregateFunction(String expression) {
