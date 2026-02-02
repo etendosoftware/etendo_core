@@ -19,7 +19,6 @@
 package org.openbravo.financial;
 
 
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,11 +37,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
-import org.openbravo.client.application.process.ResponseActionsBuilder;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -61,6 +63,7 @@ import javax.persistence.PersistenceException;
 public class ResetAccounting {
   static final int FETCH_SIZE = 1000;
   private static final Logger log4j = LogManager.getLogger();
+  private static final String PERIOD_CLOSED_FOR_UN_POSTING = "@PeriodClosedForUnPosting@";
 
   ResetAccounting() {
     log4j.debug("Sonar rule");
@@ -193,6 +196,13 @@ public class ResetAccounting {
               scroll.close();
             }
 
+            if (StringUtils.isNotBlank(localRecordId)) {
+              Set<String> orgPeriodControls = new HashSet<>(organizationPeriodControl.values());
+              for (String opc : orgPeriodControls) {
+                validateNoFactsInClosedPeriods(clientId, tableId, localRecordId, orgIds, dbt, opc);
+              }
+            }
+
             int docUpdated = 0;
             int docDeleted = 0;
             for (final String organization : orgIds) {
@@ -311,9 +321,68 @@ public class ResetAccounting {
           OBContext.restorePreviousMode();
         }
       }
-      throw new OBException("@PeriodClosedForUnPosting@");
+      throw new OBException(PERIOD_CLOSED_FOR_UN_POSTING);
     }
     return results;
+  }
+
+  /**
+   * Validates that no accounting facts exist in closed periods for the given record.
+   *
+   * <p>Checks the accounting facts matching the provided client, table, record, and organizations, and
+   * throws an {@link OBException} if any fact is associated with a period that is not open according
+   * to the given period control settings.</p>
+   *
+   * @param clientId
+   *     the client identifier used to filter accounting facts
+   * @param tableId
+   *     the table identifier of the source record
+   * @param recordId
+   *     the record identifier to validate
+   * @param orgIds
+   *     the organization identifiers used to filter accounting facts
+   * @param docBaseType
+   *     the document base type used for period control lookup
+   * @param orgPeriodControl
+   *     the organization identifier used for period control lookup
+   * @throws OBException
+   *     if any accounting fact exists in a period that is not open for the given period control
+   */
+  private static void validateNoFactsInClosedPeriods(String clientId, String tableId, String recordId,
+      Set<String> orgIds, String docBaseType, String orgPeriodControl) {
+
+    if (StringUtils.isBlank(recordId)) {
+      return;
+    }
+    final Table table = OBDal.getInstance().getProxy(Table.class, tableId);
+    final OBCriteria<AccountingFact> factCrit = OBDal.getInstance().createCriteria(AccountingFact.class);
+    factCrit.setFilterOnReadableClients(false);
+    factCrit.setFilterOnReadableOrganization(false);
+    factCrit.setFilterOnActive(false);
+    factCrit.createAlias(AccountingFact.PROPERTY_PERIOD, "faperiod");
+    factCrit.add(Restrictions.eq(AccountingFact.PROPERTY_CLIENT + ".id", clientId));
+    factCrit.add(Restrictions.eq(AccountingFact.PROPERTY_TABLE, table));
+    factCrit.add(Restrictions.eq(AccountingFact.PROPERTY_RECORDID, recordId));
+    factCrit.add(Restrictions.in(AccountingFact.PROPERTY_ORGANIZATION + ".id", orgIds));
+    factCrit.add(Restrictions.eq(AccountingFact.PROPERTY_DOCUMENTCATEGORY, docBaseType));
+
+    final DetachedCriteria pcExists = DetachedCriteria
+        .forEntityName("FinancialMgmtPeriodControl", "pc")
+        .setProjection(Projections.property("pc.id"))
+        .createAlias("pc.period", "pcperiod")
+        .add(Property.forName("pcperiod.id").eqProperty("faperiod.id"))
+        .add(Restrictions.eq("pc.organization.id", orgPeriodControl))
+        .add(Restrictions.eq("pc.documentCategory", docBaseType))
+        .add(Restrictions.eq("pc.periodStatus", "O"));
+
+    factCrit.add(Subqueries.notExists(pcExists));
+
+    factCrit.setMaxResults(1);
+    factCrit.setProjection(Projections.property(AccountingFact.PROPERTY_ID));
+
+    if (!factCrit.list().isEmpty()) {
+      throw new OBException(PERIOD_CLOSED_FOR_UN_POSTING);
+    }
   }
 
   private static HashMap<String, Integer> delete(final List<String> transactionIds, final String tableId,
@@ -748,7 +817,7 @@ public class ResetAccounting {
         .setMaxResults(1)
         .uniqueResult();
     if (period == null) {
-      throw new OBException("@PeriodClosedForUnPosting@");
+      throw new OBException(PERIOD_CLOSED_FOR_UN_POSTING);
     }
     return period;
   }
@@ -865,7 +934,7 @@ public class ResetAccounting {
           results = delete(toDelete, tableId, clientId);
         } else {
           if (recordId != null && !"".equals(recordId)) {
-            throw new OBException("@PeriodClosedForUnPosting@");
+            throw new OBException(PERIOD_CLOSED_FOR_UN_POSTING);
           }
         }
       }
@@ -998,7 +1067,7 @@ public class ResetAccounting {
               orgPeriodControl));
       List<Period> periodsOpen = getOpenPeriods(parameters, orgIds);
       if (periodsOpen.isEmpty()) {
-        throw new OBException("@PeriodClosedForUnPosting@");
+        throw new OBException(PERIOD_CLOSED_FOR_UN_POSTING);
       }
     }
   }
