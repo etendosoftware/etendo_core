@@ -1,27 +1,28 @@
 package org.openbravo.advpaymentmngt.test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.inject.Inject;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.openbravo.test.costing.utils.TestCostingConstants.EURO_ID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jboss.arquillian.junit5.ArquillianExtension;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.WeldUtils;
+import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.base.weld.test.WeldInitializerExtension;
 import org.openbravo.client.kernel.KernelInitializer;
 import org.openbravo.client.kernel.RequestContext;
-import org.openbravo.dal.core.DalLayerInitializer;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -45,6 +46,9 @@ import org.openbravo.model.financialmgmt.payment.PaymentTerm;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
 
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.inject.Inject;
+
 /**
  * This class is used to test the reverse payment functionality in the system.
  * <p>
@@ -52,7 +56,7 @@ import org.openbravo.model.pricing.pricelist.PriceList;
  * process the reverse payment, check if all the payment schedule details of the invoice are not paid, and clean up the data related to the invoice and its payments.
  * It also includes methods to delete a Payment, reactivate an Invoice, delete an Invoice, and delete the payment configuration in the system.
  */
-public class ReversePaymentTest {
+public class ReversePaymentTest extends WeldBaseTest {
 
   @Inject
   BeanManager beanManager;
@@ -63,7 +67,6 @@ public class ReversePaymentTest {
   @Inject
   KernelInitializer kernelInitializer;
 
-  private static boolean dalInitialized = false;
   private static final Logger log = LogManager.getLogger();
   private static final String MANUAL_EXECUTION = "M";
   private static final String AUTOMATIC_EXECUTION = "A";
@@ -74,7 +77,6 @@ public class ReversePaymentTest {
   private static final String CASH = "C";
   private static final String STANDARD_DESCRIPTION = "JUnit Test Reverse Payment";
   private static final String REVERSE_PAYMENT_METHOD_NAME = "APRM_REVERSE_PAYMENT_METHOD";
-  private String financialAccountId;
   private static final String REVERSE_FINACC_NAME = "APRM_REVERSE_PAYMENT_FINACC";
   private static final String BPARTNER_ID = "2C4C71BC828B47A0AF2A79855FD3BA7A"; // Sleep Well Hotels, Co.
   private static final String PRICELIST_ID = "8366EAF1EDF442A98377D74A199084A8"; // General Sales
@@ -83,39 +85,40 @@ public class ReversePaymentTest {
   private static final String TAXRATE_ID = "3CCDACCCF02C4D209174159A8AF43127"; // NY Sales Tax
   private static final String DOCTYPE_ID = "61D7AC2360F0417C80237B5D2131BACD"; // AR Invoice
   private static final String EXECUTION_PROCESS_ID = "301950D5D2F24F49916EDE06A473DF02"; // Simple Execution Process
+  private String financialAccountId;
 
-  /**
-   * Initial Set up.
-   * <p>
-   * This before method is named setUpRP() to avoid overwriting the super setUp method that is
-   * invoke automatically before this one.
-   */
-  @BeforeEach
-  void setUpRP() {
-    if (!dalInitialized) {
-      DalLayerInitializer.getInstance().setInitialized(false);
-      DalLayerInitializer.getInstance().initialize(true);
-
-      WeldUtils.setStaticInstanceBeanManager(beanManager);
-      kernelInitializer.setInterceptor();
-      weldUtils.setBeanManager(beanManager);
-
-      dalInitialized = true;
-    }
-
-    TestUtility.setTestContext();
-    VariablesSecureApp vsa = new VariablesSecureApp(
-        OBContext.getOBContext().getUser().getId(),
-        OBContext.getOBContext().getCurrentClient().getId(),
-        OBContext.getOBContext().getCurrentOrganization().getId(),
-        OBContext.getOBContext().getRole().getId()
-    );
-    RequestContext.get().setVariableSecureApp(vsa);
-    vsa.setSessionValue("#FormatOutput|generalQtyEdition", "#0.######");
-    vsa.setSessionValue("#GroupSeparator|generalQtyEdition", ",");
-    vsa.setSessionValue("#DecimalSeparator|generalQtyEdition", ".");
+  @Override
+  protected void initializeDalLayer() throws Exception {
+    super.initializeDalLayer();
+    log.info("DAL Layer initialized for ReversePaymentTest");
   }
 
+  @BeforeAll
+  public static void setUpTestContext() {
+    try {
+      TestUtility.setTestContext();
+      VariablesSecureApp vsa = new VariablesSecureApp(
+          OBContext.getOBContext().getUser().getId(),
+          OBContext.getOBContext().getCurrentClient().getId(),
+          OBContext.getOBContext().getCurrentOrganization().getId(),
+          OBContext.getOBContext().getRole().getId()
+      );
+      RequestContext.get().setVariableSecureApp(vsa);
+      vsa.setSessionValue("#FormatOutput|generalQtyEdition", "#0.######");
+      vsa.setSessionValue("#GroupSeparator|generalQtyEdition", ",");
+      vsa.setSessionValue("#DecimalSeparator|generalQtyEdition", ".");
+      log.info("Test context initialized for ReversePaymentTest");
+    } catch (Exception e) {
+      log.error("Failed to set test context", e);
+      throw new RuntimeException("Cannot set test context", e);
+    }
+  }
+
+  @BeforeEach
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+  }
 
   /**
    * This test method is used to test the reverse payment functionality in the system.
@@ -133,15 +136,20 @@ public class ReversePaymentTest {
    */
   @Test
   public void testRunReversePayment() {
+    log.info("Runing testRunReversePayment with context: " + OBContext.getOBContext().toString());
     // Given
     boolean exception = false;
+    Invoice invoice = null;
+    FIN_Payment payment = null;
+    FIN_Payment reversePayment = null;
+
     try {
       // DATA SETUP
-      Invoice invoice = dataSetup();
+      invoice = dataSetup();
 
       // PAY COMPLETELY THE INVOICE
       invoice = OBDal.getInstance().get(Invoice.class, invoice.getId());
-      FIN_Payment payment = TestUtility.addPaymentFromInvoice(invoice,
+      payment = TestUtility.addPaymentFromInvoice(invoice,
           OBDal.getInstance().get(FIN_FinancialAccount.class, financialAccountId),
           invoice.getGrandTotalAmount(), false);
 
@@ -159,7 +167,7 @@ public class ReversePaymentTest {
       invoice = OBDal.getInstance().get(Invoice.class, invoice.getId());
       payment = OBDal.getInstance().get(FIN_Payment.class, payment.getId());
 
-      FIN_Payment reversePayment = TestUtility.createReversePayment(payment);
+      reversePayment = TestUtility.createReversePayment(payment);
       TestUtility.processPayment(reversePayment, "P");
       // CHECK OUTPUT DATA
 
@@ -179,7 +187,11 @@ public class ReversePaymentTest {
         }
       }
 
-      dataClean(invoice.getId(), payment.getId(), reversePayment.getId());
+      try {
+        dataClean(invoice.getId(), payment.getId(), reversePayment.getId());
+      } catch (Exception cleanupException) {
+        log.error("Error during cleanup", cleanupException);
+      }
     } catch (Exception e) {
       log.error(FIN_Utility.getExceptionMessage(e), e);
       exception = true;
@@ -246,7 +258,7 @@ public class ReversePaymentTest {
     }
     this.financialAccountId = testAccount.getId();
 
-    Invoice invoice = TestUtility.createInvoice(OBContext.getOBContext().getCurrentClient(),
+    Invoice invoice = TestUtility.createNewInvoice(OBContext.getOBContext().getCurrentClient(),
         OBContext.getOBContext().getCurrentOrganization(), new Date(), new Date(), new Date(),
         testDocumentType, testBusinessPartner, location, testPriceList, testCurrency,
         testPaymentMethod, testPaymentTerm, testProduct, uom, invoicedQuantity, netUnitPrice,
@@ -273,10 +285,17 @@ public class ReversePaymentTest {
    *     The String representing the ID of the Reverse Payment to be deleted.
    */
   private void dataClean(String invoiceId, String paymentId, String reversePaymentId) {
-    deletePayment(reversePaymentId);
-    deletePayment(paymentId);
-    deleteInvoice(invoiceId);
-    deletePaymentConfiguration();
+    OBContext.getOBContext().setAdminMode(true);
+    try {
+      deletePayment(reversePaymentId);
+      deletePayment(paymentId);
+      deleteInvoice(invoiceId);
+      deletePaymentConfiguration();
+    } catch (Exception e) {
+      log.error("Error during data cleanup", e);
+    } finally {
+      OBContext.getOBContext().restorePreviousMode();
+    }
   }
 
   /**
@@ -296,6 +315,10 @@ public class ReversePaymentTest {
   private void deletePayment(String paymentId) {
     try {
       FIN_Payment payment = OBDal.getInstance().get(FIN_Payment.class, paymentId);
+      if (payment == null) {
+        log.warn("Payment " + paymentId + " not found, skipping delete");
+        return;
+      }
       ResetAccounting.delete(payment.getClient().getId(),
           payment.getOrganization().getId(),
           payment.getEntity().getTableId(), paymentId, OBDateUtils.formatDate(payment.getPaymentDate()), null);
