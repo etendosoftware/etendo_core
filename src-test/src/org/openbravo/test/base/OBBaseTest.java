@@ -55,9 +55,11 @@ import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.provider.OBConfigFileProvider;
+import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.dal.core.DalContextListener;
 import org.openbravo.dal.core.DalLayerInitializer;
+import org.openbravo.dal.core.DalSessionFactoryController;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBCriteria;
@@ -376,7 +378,7 @@ public class OBBaseTest {
   @BeforeAll
   public static void classSetUp() throws Exception {
     initializeTestLogAppender();
-    staticInitializeDalLayer();
+    ensureDalInitialized();
     initializeDisabledTestCases();
   }
 
@@ -485,10 +487,11 @@ public class OBBaseTest {
     staticInitializeDalLayer();
   }
 
-  protected static void staticInitializeDalLayer() throws Exception {
-    DalLayerInitializer initializer = DalLayerInitializer.getInstance();
-    if (!initializer.isInitialized()) {
-      initializer.initialize(true);
+  protected static void staticInitializeDalLayer() {
+    if (SessionFactoryController.getInstance() == null) {
+      DalSessionFactoryController controller = new DalSessionFactoryController();
+      controller.initialize();
+      SessionFactoryController.setInstance(controller);
     }
   }
 

@@ -109,10 +109,10 @@ public class DalLayerInitializer implements OBSingleton {
     DalSessionFactoryController dsfc;
     try {
       dsfc = WeldUtils.getInstanceFromStaticBeanManager(DalSessionFactoryController.class);
-    } catch (Throwable t) {
+    } catch (Exception e) {
       // retrieving the DalSessionFactoryController instance with weld can fail in some build tasks
       // or when executing the tests
-      log.debug("Could not instantiate DalSessionFactoryController using weld", t);
+      log.debug("Could not instantiate DalSessionFactoryController using weld", e);
       dsfc = OBProvider.getInstance().get(DalSessionFactoryController.class);
     }
     if (sqlFunctions != null && !sqlFunctions.isEmpty()) {

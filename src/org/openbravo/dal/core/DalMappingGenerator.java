@@ -95,8 +95,7 @@ public class DalMappingGenerator implements OBSingleton {
         .getOpenbravoProperties()
         .getProperty(HIBERNATE_READ_FILE_PROPERTY);
 
-    if (hibernateFileLocation != null && readMappingFromFile != null
-        && Boolean.parseBoolean(readMappingFromFile)) {
+    if (hibernateFileLocation != null && Boolean.parseBoolean(readMappingFromFile)) {
       try {
         File hbm = new File(hibernateFileLocation);
         if (hbm.exists()) {
