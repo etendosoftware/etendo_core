@@ -35,6 +35,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletException;
 
 // TODO: Migrado a CriteriaBuilder - import org.hibernate.criterion.Projections;
@@ -79,6 +80,7 @@ import org.openbravo.model.project.Project;
 import org.openbravo.model.sales.SalesRegion;
 import org.openbravo.scheduling.ProcessBundle;
 
+@Dependent
 public class FIN_AddPayment {
   private static AdvPaymentMngtDao dao;
 
