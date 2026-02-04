@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.servlet.ServletContext;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +36,7 @@ import org.openbravo.base.model.Module;
  * 
  * @author Martin Taal
  */
+@Dependent
 public class OBConfigFileProvider implements OBSingleton {
   private final Logger log = LogManager.getLogger();
 
