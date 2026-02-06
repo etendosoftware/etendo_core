@@ -33,7 +33,7 @@ import org.openbravo.test.base.TestConstants;
 /**
  * Unit tests for the SalesInvoiceAddPaymentDefaultValues class.
  */
-public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
+public class SalesInvoiceAddPaymentDefaultValuesTest {
 
   @InjectMocks
   private SalesInvoiceAddPaymentDefaultValues classUnderTest;

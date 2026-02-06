@@ -26,7 +26,7 @@ import org.openbravo.test.base.OBBaseTest;
 /**
  * Test class for MatchStatementTransformer.
  */
-public class MatchStatementTransformerTest extends OBBaseTest {
+public class MatchStatementTransformerTest {
 
   /**
    * Rule for handling expected exceptions in tests.

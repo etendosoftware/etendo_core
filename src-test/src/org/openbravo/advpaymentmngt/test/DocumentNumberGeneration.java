@@ -13,11 +13,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
@@ -40,11 +45,47 @@ import org.openbravo.service.db.DalConnectionProvider;
  * @author alostale
  */
 public class DocumentNumberGeneration extends WeldBaseTest {
+
+  private static final Logger log = LogManager.getLogger();
+
   private static final String DOC_TYPE_ID = "466AF4B0136A4A3F9F84129711DA8BD3";
   private static final String TABLE_NAME = "C_Order";
   private static final int WAIT_MS = 200;
 
   public DocumentNumberGeneration() {
+  }
+
+  @Override
+  protected void initializeDalLayer() throws Exception {
+    super.initializeDalLayer();
+    log.info("DAL Layer initialized for ReversePaymentTest");
+  }
+
+  @BeforeAll
+  public static void setUpTestContext() {
+    try {
+      TestUtility.setTestContext();
+      VariablesSecureApp vsa = new VariablesSecureApp(
+          OBContext.getOBContext().getUser().getId(),
+          OBContext.getOBContext().getCurrentClient().getId(),
+          OBContext.getOBContext().getCurrentOrganization().getId(),
+          OBContext.getOBContext().getRole().getId()
+      );
+      RequestContext.get().setVariableSecureApp(vsa);
+      vsa.setSessionValue("#FormatOutput|generalQtyEdition", "#0.######");
+      vsa.setSessionValue("#GroupSeparator|generalQtyEdition", ",");
+      vsa.setSessionValue("#DecimalSeparator|generalQtyEdition", ".");
+      log.info("Test context initialized for ReversePaymentTest");
+    } catch (Exception e) {
+      log.error("Failed to set test context", e);
+      throw new RuntimeException("Cannot set test context", e);
+    }
+  }
+
+  @BeforeEach
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
   }
 
   /** 2 concurrent dal calls */
