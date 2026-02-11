@@ -247,13 +247,13 @@ public class JsonUtils {
         } else {
           error.put("message", "OBUIAPP_QueryTimeOut");
         }
-        error.put("messageType", obError.getType());
+        error.put("type", obError.getType());
         error.put("title", obError.getTitle());
         jsonResponse.put(JsonConstants.RESPONSE_ERROR, error);
       } else if (obError != null) {
         final JSONObject error = new JSONObject();
         error.put("message", obError.getMessage());
-        error.put("messageType", obError.getType());
+        error.put("type", obError.getType());
         error.put("title", obError.getTitle());
         jsonResponse.put(JsonConstants.RESPONSE_ERROR, error);
       } else {
