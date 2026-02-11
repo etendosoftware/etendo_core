@@ -22,12 +22,7 @@ package org.openbravo.test.referencedinventory;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import java.util.Arrays;
-
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.transaction.InternalMovement;
 
@@ -37,13 +32,9 @@ import org.openbravo.model.materialmgmt.transaction.InternalMovement;
  */
 public class ReferencedInventoryFullUnboxPartialReservation
     extends ReferencedInventoryUnboxReservationTest {
-  @Rule
-  public ParameterCdiTestRule<ParamsUnboxReservationTest> parameterValuesRule2 = new ParameterCdiTestRule<ParamsUnboxReservationTest>(
-      Arrays.asList(new ParamsUnboxReservationTest[] { new ParamsUnboxReservationTest(
-          "Full unbox of a partial reservation. Storage detail should be reserved and out of the box",
-          "10", "10", "4") }));
-
-  protected @ParameterCdiTest ParamsUnboxReservationTest params;
+  private static final ParamsUnboxReservationTest PARAMS = new ParamsUnboxReservationTest(
+      "Full unbox of a partial reservation. Storage detail should be reserved and out of the box",
+      "10", "10", "4");
 
   @Test
   public void allTests() throws Exception {
@@ -51,7 +42,7 @@ public class ReferencedInventoryFullUnboxPartialReservation
       for (String[] product : PRODUCTS) {
         for (String toBinId : BINS) {
           final TestUnboxOutputParams outParams = testUnboxReservation(toBinId, product[0],
-              product[1], params.qtyToBox, params.qtyToUnbox, params.reservationQty, isAllocated);
+              product[1], PARAMS.qtyToBox, PARAMS.qtyToUnbox, PARAMS.reservationQty, isAllocated);
           assertsReferenceInventoryIsEmpty(outParams.refInv);
           OBDal.getInstance().getSession().clear();
         }
