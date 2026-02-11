@@ -43,6 +43,7 @@ import org.openbravo.dal.service.OBDao;
 import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.materialmgmt.ReservationUtils;
+import org.openbravo.materialmgmt.refinventory.ReferencedInventoryUtil;
 import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
@@ -142,9 +143,10 @@ class ReferencedInventoryTestUtils {
     refInv.setClient(OBContext.getOBContext().getCurrentClient());
     refInv.setOrganization(OBDal.getInstance().getProxy(Organization.class, orgId));
     refInv.setReferencedInventoryType(refInvType);
-    refInv.setSearchKey(
-        refInvType.getSequence() == null ? StringUtils.left(UUID.randomUUID().toString(), 30)
-            : "<to be replaced>");
+    final String searchKey = refInvType.getSequence() == null
+        ? StringUtils.left(UUID.randomUUID().toString(), 30)
+        : ReferencedInventoryUtil.getProposedValueFromSequenceOrNull(refInvType.getId(), true);
+    refInv.setSearchKey(searchKey);
     OBDal.getInstance().save(refInv);
     assertThat("Referenced Inventory is successfully created", refInv, notNullValue());
     assertThat("Referenced Inventory is empty", refInv.getMaterialMgmtStorageDetailList(), empty());

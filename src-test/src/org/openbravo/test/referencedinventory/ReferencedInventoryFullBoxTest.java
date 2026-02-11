@@ -19,12 +19,7 @@
 
 package org.openbravo.test.referencedinventory;
 
-import java.util.Arrays;
-
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.dal.service.OBDal;
 
 /**
@@ -34,20 +29,16 @@ import org.openbravo.dal.service.OBDal;
 public class ReferencedInventoryFullBoxTest extends ReferencedInventoryBoxTest {
   private static final String QTYTOBOX = "10";
 
-  @Rule
-  public ParameterCdiTestRule<ParamsBoxTest> parameterValuesRule = new ParameterCdiTestRule<ParamsBoxTest>(
-      Arrays.asList(new ParamsBoxTest[] { new ParamsBoxTest(
-          "Box of " + QTYTOBOX
-              + " unit of the 10 units available in the storage detail without reservations",
-          QTYTOBOX) }));
-
-  protected @ParameterCdiTest ParamsBoxTest params;
+  private static final ParamsBoxTest PARAMS = new ParamsBoxTest(
+      "Box of " + QTYTOBOX
+          + " unit of the 10 units available in the storage detail without reservations",
+      QTYTOBOX);
 
   @Test
   public void allTests() throws Exception {
     for (String[] product : PRODUCTS) {
       for (String toBinId : BINS) {
-        testBox(toBinId, product[0], product[1], params.qtyToBox, null, false);
+        testBox(toBinId, product[0], product[1], PARAMS.qtyToBox, null, false);
         OBDal.getInstance().getSession().clear();
       }
     }

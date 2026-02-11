@@ -23,11 +23,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
+import java.util.List;
 
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.transaction.InternalMovement;
 
@@ -37,28 +35,26 @@ import org.openbravo.model.materialmgmt.transaction.InternalMovement;
  */
 public class ReferencedInventoryPartialUnboxPartialReservation2MovementLinesUnboxTest
     extends ReferencedInventoryUnboxReservationTest {
-  @Rule
-  public ParameterCdiTestRule<ParamsUnboxReservationTest> parameterValuesRule = new ParameterCdiTestRule<ParamsUnboxReservationTest>(
-      Arrays.asList(new ParamsUnboxReservationTest[] {
-          new ParamsUnboxReservationTest(
-              "Unbox more quantity than reserved one. Part of the reservation is still in box",
-              "10", "7", "4"),
-          new ParamsUnboxReservationTest(
-              "Unbox less quantity than reserved one. Part of the reservation is still in box",
-              "10", "3", "8") }));
-
-  protected @ParameterCdiTest ParamsUnboxReservationTest params;
+  private static final List<ParamsUnboxReservationTest> PARAMS = Arrays.asList(
+      new ParamsUnboxReservationTest(
+          "Unbox more quantity than reserved one. Part of the reservation is still in box", "10",
+          "7", "4"),
+      new ParamsUnboxReservationTest(
+          "Unbox less quantity than reserved one. Part of the reservation is still in box", "10",
+          "3", "8"));
 
   @Test
   public void allTests() throws Exception {
     for (boolean isAllocated : ISALLOCATED) {
       for (String[] product : PRODUCTS) {
-        for (String toBinId : BINS) {
-          final TestUnboxOutputParams outParams = testUnboxReservation(toBinId, product[0],
-              product[1], params.qtyToBox, params.qtyToUnbox, params.reservationQty, isAllocated);
-          assertsReferenceInventoryIsNotEmpty(outParams.refInv,
-              params.qtyToBox.subtract(params.qtyToUnbox));
-          OBDal.getInstance().getSession().clear();
+        for (ParamsUnboxReservationTest params : PARAMS) {
+          for (String toBinId : BINS) {
+            final TestUnboxOutputParams outParams = testUnboxReservation(toBinId, product[0],
+                product[1], params.qtyToBox, params.qtyToUnbox, params.reservationQty, isAllocated);
+            assertsReferenceInventoryIsNotEmpty(outParams.refInv,
+                params.qtyToBox.subtract(params.qtyToUnbox));
+            OBDal.getInstance().getSession().clear();
+          }
         }
       }
     }
