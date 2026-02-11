@@ -18,7 +18,7 @@
  */
 package org.openbravo.test.generalsetup.enterprise.organization;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.test.base.OBBaseTest;
 
 public class ADOrgPersistInfoSetReadyTest extends OBBaseTest {
