@@ -20,7 +20,7 @@ package org.openbravo.test.generalsetup.enterprise.organization;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.test.base.OBBaseTest;
 
 /**
