@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBCriteria;
@@ -104,7 +105,7 @@ public class TestUtils {
    */
   public static Order cloneOrder(final String orderId, final String docNo) {
     final Order oldOrder = OBDal.getInstance().get(Order.class, orderId);
-    final Order newOrder = (Order) DalUtil.copy(oldOrder, false);
+    final Order newOrder = (Order) DalUtil.copy((Order) Hibernate.unproxy(oldOrder), false);
     int numberOfOrdersWithSameDocNo = getNumberOfOrders(docNo) + 1;
 
     newOrder.setId(SequenceIdData.getUUID());

@@ -19,10 +19,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBDal;
@@ -41,7 +39,6 @@ import org.openbravo.service.db.DalBaseProcess;
  * This class includes unit tests for the behavior of the
  * GenerateAggregatedDataBackground process in different scenarios.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class GenerateAggregatedDataBackgroundTest {
 
   private static final String TEST_ORG_ID = "TestOrgId";
@@ -55,25 +52,13 @@ public class GenerateAggregatedDataBackgroundTest {
   private MockedStatic<OBMessageUtils> mockedOBMessageUtils;
   private MockedStatic<ResetValuedStockAggregated> mockedResetValuedStockAggregated;
 
-  @Mock
   private ProcessBundle mockBundle;
-
-  @Mock
   private ProcessLogger mockLogger;
 
-  @Mock
   private OBContext mockOBContext;
-
-  @Mock
   private OBDal mockOBDal;
-
-  @Mock
   private Client mockClient;
-
-  @Mock
   private Organization mockOrganization;
-
-  @Mock
   private OrganizationStructureProvider mockOSP;
 
 
@@ -84,6 +69,15 @@ public class GenerateAggregatedDataBackgroundTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    // Defensive: ensure these are mocks even if runner fails to initialize them
+    mockBundle = mock(ProcessBundle.class);
+    mockLogger = mock(ProcessLogger.class);
+    mockOBContext = mock(OBContext.class);
+    mockOBDal = mock(OBDal.class);
+    mockClient = mock(Client.class);
+    mockOrganization = mock(Organization.class);
+    mockOSP = mock(OrganizationStructureProvider.class);
     processUnderTest = new GenerateAggregatedDataBackground();
 
     if (mockedOBDal != null) {
@@ -129,7 +123,7 @@ public class GenerateAggregatedDataBackgroundTest {
    * Closes mocked static instances after each test.
    */
   @After
-  public void tearDown() {
+  public void tearDown() throws Exception {
     if (mockedOBDal != null) {
       mockedOBDal.close();
     }
