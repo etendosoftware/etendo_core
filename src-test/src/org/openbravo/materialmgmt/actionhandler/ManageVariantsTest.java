@@ -25,11 +25,11 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
@@ -48,7 +48,6 @@ import org.openbravo.service.db.DbUtility;
  * Test class for the {@link ManageVariants} class.
  * This class contains unit tests for the methods in the ManageVariants class.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class ManageVariantsTest {
 
   private static final String SUCCESS = "Success";
@@ -62,6 +61,7 @@ public class ManageVariantsTest {
   private MockedStatic<OBProvider> mockedOBProvider;
   private MockedStatic<OBDao> mockedOBDao;
   private MockedStatic<DbUtility> mockedDbUtility;
+  private AutoCloseable mocks;
 
   // Mocked instances
   @Mock
@@ -85,6 +85,8 @@ public class ManageVariantsTest {
    */
   @Before
   public void setUp() throws Exception {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     // Initialization of mocked static instances
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
@@ -131,6 +133,13 @@ public class ManageVariantsTest {
     }
     if (mockedDbUtility != null) {
       mockedDbUtility.close();
+    }
+    if (mocks != null) {
+      try {
+        mocks.close();
+      } catch (Exception ignored) {
+        // no-op
+      }
     }
   }
 

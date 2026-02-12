@@ -31,11 +31,11 @@ import org.hibernate.query.Query;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
@@ -58,7 +58,6 @@ import org.openbravo.model.materialmgmt.onhandquantity.ValuedStockAggregated;
  * This class includes unit tests for the behavior of the
  * ResetValuedStockAggregated process in different scenarios.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class ResetValuedStockAggregatedTest {
 
   private static final String SUCCESS = "Success";
@@ -73,6 +72,7 @@ public class ResetValuedStockAggregatedTest {
   private MockedStatic<OBDateUtils> mockedOBDateUtils;
   private MockedStatic<Utility> mockedUtility;
   private MockedStatic<GenerateValuedStockAggregatedData> mockedGenerateValuedStockAggregatedData;
+  private AutoCloseable mocks;
 
   // Mock dependencies
   @Mock
@@ -124,6 +124,8 @@ public class ResetValuedStockAggregatedTest {
    */
   @Before
   public void setUp() throws Exception {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     processUnderTest = new ResetValuedStockAggregated();
 
     // Initialize static mocks
@@ -151,8 +153,7 @@ public class ResetValuedStockAggregatedTest {
     when(mockOBDal.createQuery(eq(CostingRule.class), anyString())).thenReturn(mockOBQueryCostingRule);
 
     // Configure criteria and query
-  // Hibernate 6 migration: replace generic add(Predicate) stubbing with addEqual
-    when(mockOBCriteria.add(Restrictions.eq(anyString(), any()))).thenReturn(mockOBCriteria);
+    when(mockOBCriteria.add(any())).thenReturn(mockOBCriteria);
     when(mockOBCriteria.uniqueResult()).thenReturn(null);
     when(mockOBCriteria.list()).thenReturn(new ArrayList<>());
 
@@ -205,7 +206,7 @@ public class ResetValuedStockAggregatedTest {
    * Closes mocked static instances after each test.
    */
   @After
-  public void tearDown() {
+  public void tearDown() throws Exception {
     if (mockedOBDal != null) {
       mockedOBDal.close();
     }
@@ -223,6 +224,9 @@ public class ResetValuedStockAggregatedTest {
     }
     if (mockedGenerateValuedStockAggregatedData != null) {
       mockedGenerateValuedStockAggregatedData.close();
+    }
+    if (mocks != null) {
+      mocks.close();
     }
   }
 
