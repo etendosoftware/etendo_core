@@ -1225,13 +1225,20 @@
               AND NOT EXISTS (
                 SELECT 1
                 FROM m_inoutline l
-                LEFT JOIN m_inoutline_totalinvoiced_v v
-                  ON l.m_inoutline_id = v.m_inoutline_id
+                LEFT JOIN (
+                  SELECT ms.m_inoutline_id,
+                        SUM(CASE WHEN l2.movementqty >= 0 THEN ABS(ms.qty) ELSE -ABS(ms.qty) END) as totalinvoiced
+                  FROM m_matchsi ms
+                  JOIN m_inoutline l2 ON ms.m_inoutline_id = l2.m_inoutline_id
+                  WHERE ms.c_invoiceline_id IS NOT NULL
+                    AND l2.m_inout_id = Cur_InOut.M_INOUT_ID
+                  GROUP BY ms.m_inoutline_id
+                ) invoiced ON l.m_inoutline_id = invoiced.m_inoutline_id
                 WHERE l.m_inout_id = m.m_inout_id
                   AND (
-                    (l.movementqty >= 0 AND l.movementqty > COALESCE(v.totalinvoiced, 0))
+                    (l.movementqty >= 0 AND l.movementqty > COALESCE(invoiced.totalinvoiced, 0))
                     OR
-                    (l.movementqty < 0 AND l.movementqty < COALESCE(v.totalinvoiced, 0))
+                    (l.movementqty < 0 AND l.movementqty < COALESCE(invoiced.totalinvoiced, 0))
                   )
               );
           END IF;
