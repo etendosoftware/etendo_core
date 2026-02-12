@@ -49,8 +49,7 @@ public class OpenbravoOracleJDBCDelegateTest {
    */
   @BeforeEach
   public void setUp() throws SQLException {
-    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+    // no-op
   }
 
   /**
@@ -120,6 +119,7 @@ public class OpenbravoOracleJDBCDelegateTest {
     long checkInTime = System.currentTimeMillis();
     String status = "STARTED";
 
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
     when(mockPreparedStatement.executeUpdate()).thenReturn(1);
 
     // WHEN
@@ -141,6 +141,8 @@ public class OpenbravoOracleJDBCDelegateTest {
   @Test
   public void testSchedulersStarted() throws SQLException {
     // GIVEN
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
     when(mockResultSet.next()).thenReturn(true);
     when(mockResultSet.getInt(1)).thenReturn(1);
 
