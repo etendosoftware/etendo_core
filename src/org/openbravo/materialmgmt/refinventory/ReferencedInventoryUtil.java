@@ -74,12 +74,24 @@ public class ReferencedInventoryUtil {
   public static final AttributeSetInstance cloneAttributeSetInstance(
       final AttributeSetInstance _originalAttributeSetInstance,
       final ReferencedInventory referencedInventory) {
-    final AttributeSetInstance originalAttributeSetInstance = _originalAttributeSetInstance == null
-        ? OBDal.getInstance().get(AttributeSetInstance.class, "0")
-        : _originalAttributeSetInstance;
+    final AttributeSetInstance originalAttributeSetInstance;
+    if (_originalAttributeSetInstance == null) {
+      originalAttributeSetInstance = OBDal.getInstance().get(AttributeSetInstance.class, "0");
+    } else {
+      // Avoid copying Hibernate proxies (unregistered class names) by reloading the real entity
+      originalAttributeSetInstance = OBDal.getInstance().get(AttributeSetInstance.class,
+          _originalAttributeSetInstance.getId());
+    }
 
-    final AttributeSetInstance newAttributeSetInstance = (AttributeSetInstance) DalUtil
-        .copy(originalAttributeSetInstance, false);
+    final AttributeSetInstance newAttributeSetInstance = OBProvider.getInstance()
+        .get(AttributeSetInstance.class);
+    newAttributeSetInstance.setAttributeSet(originalAttributeSetInstance.getAttributeSet());
+    newAttributeSetInstance.setSerialNo(originalAttributeSetInstance.getSerialNo());
+    newAttributeSetInstance.setLotName(originalAttributeSetInstance.getLotName());
+    newAttributeSetInstance.setExpirationDate(originalAttributeSetInstance.getExpirationDate());
+    newAttributeSetInstance.setLot(originalAttributeSetInstance.getLot());
+    newAttributeSetInstance.setLocked(originalAttributeSetInstance.isLocked());
+    newAttributeSetInstance.setLockDescription(originalAttributeSetInstance.getLockDescription());
     newAttributeSetInstance.setActive(true);
     newAttributeSetInstance.setClient(referencedInventory.getClient());
     newAttributeSetInstance.setOrganization(originalAttributeSetInstance.getOrganization());

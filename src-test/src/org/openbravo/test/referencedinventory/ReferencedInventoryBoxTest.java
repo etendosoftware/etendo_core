@@ -232,7 +232,7 @@ public abstract class ReferencedInventoryBoxTest extends ReferencedInventoryTest
     }
   }
 
-  protected class ParamsBoxTest {
+  protected static class ParamsBoxTest {
     String testDesc;
     BigDecimal qtyToBox;
 
@@ -247,7 +247,7 @@ public abstract class ReferencedInventoryBoxTest extends ReferencedInventoryTest
     }
   }
 
-  protected class ParamsBoxReservationTest extends ParamsBoxTest {
+  protected static class ParamsBoxReservationTest extends ParamsBoxTest {
     BigDecimal reservationQty;
 
     ParamsBoxReservationTest(String testDesc, String qtyToBox, String reservationQty) {
