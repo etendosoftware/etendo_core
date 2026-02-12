@@ -17,11 +17,11 @@ import org.hibernate.Session;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.SessionHandler;
@@ -35,7 +35,6 @@ import org.openbravo.service.importprocess.ImportEntryManager;
  * This class verifies the behavior of the VariantChDescUpdateProcessor and its inner class
  * VariantChDescUpdateRunnable using mock dependencies and static method mocking.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class VariantChDescUpdateProcessorTest {
 
   private static final String TEST_PRODUCT_ID = "TEST_PRODUCT_ID";
@@ -49,6 +48,7 @@ public class VariantChDescUpdateProcessorTest {
   private MockedStatic<WeldUtils> mockedWeldUtils;
   private MockedStatic<SessionHandler> mockedSessionHandler;
   private MockedStatic<ImportEntryManager> mockedImportEntryManager;
+  private AutoCloseable mocks;
 
   @Mock
   private ImportEntry mockImportEntry;
@@ -75,6 +75,8 @@ public class VariantChDescUpdateProcessorTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedWeldUtils = mockStatic(WeldUtils.class);
@@ -108,6 +110,13 @@ public class VariantChDescUpdateProcessorTest {
     }
     if (mockedImportEntryManager != null) {
       mockedImportEntryManager.close();
+    }
+    if (mocks != null) {
+      try {
+        mocks.close();
+      } catch (Exception ignored) {
+        // no-op
+      }
     }
   }
 

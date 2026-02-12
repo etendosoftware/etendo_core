@@ -22,11 +22,11 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.DalUtil;
@@ -42,7 +42,6 @@ import org.openbravo.model.pricing.pricelist.ProductPrice;
 /**
  * Test class for the VariantAutomaticGenerationProcess.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class VariantAutomaticGenerationProcessAdditionalTest {
 
   private static final String RUN_CHECKS_METHOD_NAME = "runChecks";
@@ -55,6 +54,7 @@ public class VariantAutomaticGenerationProcessAdditionalTest {
   private MockedStatic<OBProvider> mockedOBProvider;
   private MockedStatic<FIN_Utility> mockedFINUtility;
   private MockedStatic<DalUtil> mockedDalUtil;
+  private AutoCloseable mocks;
 
   @Mock
   private OBDal mockOBDal;
@@ -70,6 +70,8 @@ public class VariantAutomaticGenerationProcessAdditionalTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBMessageUtils = mockStatic(OBMessageUtils.class);
     mockedOBDao = mockStatic(OBDao.class);
@@ -106,6 +108,13 @@ public class VariantAutomaticGenerationProcessAdditionalTest {
     }
     if (mockedDalUtil != null) {
       mockedDalUtil.close();
+    }
+    if (mocks != null) {
+      try {
+        mocks.close();
+      } catch (Exception ignored) {
+        // no-op
+      }
     }
   }
 

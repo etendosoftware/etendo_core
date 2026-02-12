@@ -1,14 +1,15 @@
 package org.openbravo.test.materialMgmt.invoiceFromShipment;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -40,7 +41,7 @@ public class InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest extends OB
 
   private InvoiceFromGoodsShipmentDefaultValueFilterExpression filterExpression;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID);
     filterExpression = new InvoiceFromGoodsShipmentDefaultValueFilterExpression();
@@ -122,13 +123,12 @@ public class InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest extends OB
   /**
    * Tests the filter expression with an invalid request map
    */
-  @Test(expected = OBException.class)
+  @Test
   public void testFilterExpressionWithInvalidRequest() {
     // Prepare an invalid request map
     Map<String, String> requestMap = new HashMap<>();
     requestMap.put(CONTEXT, "{ invalid JSON }");
 
-    // Execute the filter expression - should throw OBException
-    filterExpression.getExpression(requestMap);
+    assertThrows(OBException.class, () -> filterExpression.getExpression(requestMap));
   }
 }
