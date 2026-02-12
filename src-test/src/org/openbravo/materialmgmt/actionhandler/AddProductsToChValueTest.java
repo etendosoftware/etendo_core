@@ -24,11 +24,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBError;
@@ -41,7 +41,6 @@ import org.openbravo.service.db.DbUtility;
 /**
  * Unit tests for {@link AddProductsToChValue}.
  */
-@RunWith(MockitoJUnitRunner.class)
 public class AddProductsToChValueTest {
 
   private static final String TEST_CH_VALUE_ID = "TEST_CH_VALUE_ID";
@@ -59,6 +58,7 @@ public class AddProductsToChValueTest {
   private MockedStatic<CharacteristicsUtils> mockedCharacteristicsUtils;
   private MockedStatic<OBMessageUtils> mockedOBMessageUtils;
   private MockedStatic<DbUtility> mockedDbUtility;
+  private AutoCloseable mocks;
 
   @Mock
   private OBDal obDal;
@@ -83,6 +83,8 @@ public class AddProductsToChValueTest {
    */
   @Before
   public void setUp() throws Exception {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBDal = mockStatic(OBDal.class);
     mockedCharacteristicsUtils = mockStatic(CharacteristicsUtils.class);
@@ -115,6 +117,13 @@ public class AddProductsToChValueTest {
     }
     if (mockedDbUtility != null) {
       mockedDbUtility.close();
+    }
+    if (mocks != null) {
+      try {
+        mocks.close();
+      } catch (Exception ignored) {
+        // no-op
+      }
     }
   }
 

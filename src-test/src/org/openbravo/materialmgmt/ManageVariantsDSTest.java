@@ -23,11 +23,11 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -46,10 +46,6 @@ import org.openbravo.service.json.JsonUtils;
 /**
  * Test class for ManageVariantsDS.
  */
-// Removed MockitoSettings annotation (not available in current Mockito version). If UnnecessaryStubbingException appears,
-// consider refactoring unused stubbings or using Mockito.lenient() for specific stubs.
-// Use Silent runner to suppress UnnecessaryStubbingException due to legacy/unused stubs after migration
-@RunWith(MockitoJUnitRunner.Silent.class)
 public class ManageVariantsDSTest extends WeldBaseTest {
 
   private static final String MANAGE_VARIANTS_LIMIT = "ManageVariantsLimit";
@@ -67,6 +63,7 @@ public class ManageVariantsDSTest extends WeldBaseTest {
   private MockedStatic<ModelProvider> mockedModelProvider;
   private MockedStatic<Preferences> mockedPreferences;
   private MockedStatic<JsonUtils> mockedJsonUtils;
+  private AutoCloseable mocks;
 
   @Mock
   private OBDal obDal;
@@ -94,6 +91,8 @@ public class ManageVariantsDSTest extends WeldBaseTest {
    */
   @Before
   public void setUp() {
+    Mockito.framework().clearInlineMocks();
+    mocks = MockitoAnnotations.openMocks(this);
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedModelProvider = mockStatic(ModelProvider.class);
@@ -126,6 +125,13 @@ public class ManageVariantsDSTest extends WeldBaseTest {
     }
     if (mockedJsonUtils != null) {
       mockedJsonUtils.close();
+    }
+    if (mocks != null) {
+      try {
+        mocks.close();
+      } catch (Exception ignored) {
+        // no-op
+      }
     }
   }
 
