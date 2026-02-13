@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
  */
 public class CloneRecords extends Action {
     Logger log = LogManager.getLogger();
-
-    private static final Pattern POSTGRESQL_ERROR_PATTERN = Pattern.compile("^ERROR:\\s*(.+?)(?:\\n|$)", Pattern.DOTALL);
+    
+    private static final Pattern POSTGRESQL_ERROR_PATTERN = Pattern.compile("^ERROR:\\s*+(.+)$", Pattern.MULTILINE);
     private static final Pattern MESSAGE_CODE_PATTERN = Pattern.compile("@([^@]+)@");
     
     @Inject
