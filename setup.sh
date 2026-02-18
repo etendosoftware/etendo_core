@@ -23,5 +23,5 @@ if [ -n "$EXISTING" ]; then
 fi
 
 echo "Starting GitHub authentication UI..."
-java setup.java "$TASK"
+java gradle/setup.java "$TASK"
 exit $?

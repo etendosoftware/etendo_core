@@ -97,3 +97,4 @@ target
 /volumes
 test_output.log
 build-cache/setup.class
+setup.class
