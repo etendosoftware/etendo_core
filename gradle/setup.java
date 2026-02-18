@@ -33,26 +33,17 @@ public class setup {
     static volatile int expiresIn = 900;
 
     public static void main(String[] args) throws Exception {
-        String task = args.length > 0 ? args[0] : "setup.web";
 
-        // 1. Check if token already set
-        String existing = getExistingToken();
-        if (existing != null && !existing.isEmpty()) {
-            System.out.println("githubToken already set in " + PROPS_FILE + ". Skipping auth.");
-            launchGradle(task);
-            return;
-        }
-
-        // 2. Start Device Flow
+        // 1. Start Device Flow
         System.out.println();
-        System.out.println("githubToken is not set. Starting GitHub authentication UI...");
+        System.out.println("githubToken is not set. Starting GitHub authentication...");
         System.out.println();
 
         if (!startDeviceFlow()) {
             System.exit(1);
         }
 
-        // 3. Start HTTP server
+        // 2. Start HTTP server
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         server.createContext("/", setup::handleIndex);
         server.createContext("/api/status", setup::handleStatus);
@@ -60,10 +51,10 @@ public class setup {
         server.start();
         System.out.println("Auth UI running at http://localhost:" + PORT);
 
-        // 4. Open browser
+        // 3. Open browser
         openBrowser("http://localhost:" + PORT);
 
-        // 5. Background thread polls GitHub until token received
+        // 4. Background thread polls GitHub until token received
         CompletableFuture<String> tokenFuture = CompletableFuture.supplyAsync(() -> {
             long deadline = System.currentTimeMillis() + (expiresIn * 1000L);
             while (System.currentTimeMillis() < deadline) {
@@ -93,18 +84,16 @@ public class setup {
         server.stop(0);
 
         if (token == null || token.isEmpty()) {
-            System.err.println("Error: " + errorMessage.get());
+            System.err.println("ERROR: " + errorMessage.get());
             System.exit(1);
         }
 
-        // 6. Save token
+        // 5. Save token — setup.sh will launch Gradle
         saveToken(token);
         String masked = token.substring(0, 4) + "..." + token.substring(token.length() - 4);
         System.out.println("Token saved to " + PROPS_FILE + " (" + masked + ")");
         System.out.println();
-
-        // 7. Launch Gradle
-        launchGradle(task);
+        // Exit 0 — caller (setup.sh / setup.bat) continues to run gradlew
     }
 
     // ---- Device Flow ----
@@ -248,17 +237,6 @@ public class setup {
             lines.add("githubToken=" + token);
         }
         Files.write(PROPS_FILE, lines);
-    }
-
-    // ---- Gradle launcher ----
-
-    static void launchGradle(String task) throws Exception {
-        String gradlew = System.getProperty("os.name").toLowerCase().contains("win")
-                ? "gradlew.bat" : "./gradlew";
-        ProcessBuilder pb = new ProcessBuilder(gradlew, task);
-        pb.inheritIO();
-        Process proc = pb.start();
-        System.exit(proc.waitFor());
     }
 
     // ---- Browser ----
