@@ -95,3 +95,5 @@ target
 /config/backup.properties
 /config/redisson-config.yaml
 /volumes
+test_output.log
+build-cache/setup.class
