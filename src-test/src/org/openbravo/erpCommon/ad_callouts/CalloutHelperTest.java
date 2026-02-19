@@ -38,9 +38,7 @@ public class CalloutHelperTest {
 
   @Test
   public void testGenerateArrayWithNullData() throws Exception {
-    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY, FieldProvider[].class);
-    method.setAccessible(true);
-    String result = (String) method.invoke(instance, (Object) null);
+    String result = invokeGenerateArray((FieldProvider[]) null);
     assertEquals("null", result);
   }
   /**
@@ -50,9 +48,7 @@ public class CalloutHelperTest {
 
   @Test
   public void testGenerateArrayWithEmptyData() throws Exception {
-    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY, FieldProvider[].class);
-    method.setAccessible(true);
-    String result = (String) method.invoke(instance, (Object) new FieldProvider[0]);
+    String result = invokeGenerateArray(new FieldProvider[0]);
     assertEquals("null", result);
   }
   /**
@@ -62,13 +58,9 @@ public class CalloutHelperTest {
 
   @Test
   public void testGenerateArrayWithSingleElement() throws Exception {
-    FieldProvider fp = mock(FieldProvider.class);
-    when(fp.getField("id")).thenReturn("100");
-    when(fp.getField("name")).thenReturn(TEST_NAME);
+    FieldProvider fp = createFieldProvider("100", TEST_NAME);
 
-    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY, FieldProvider[].class);
-    method.setAccessible(true);
-    String result = (String) method.invoke(instance, (Object) new FieldProvider[] { fp });
+    String result = invokeGenerateArray(new FieldProvider[] { fp });
 
     assertTrue(result.startsWith("new Array("));
     assertTrue(result.contains("\"100\""));
@@ -82,14 +74,9 @@ public class CalloutHelperTest {
 
   @Test
   public void testGenerateArrayWithSelectedElement() throws Exception {
-    FieldProvider fp = mock(FieldProvider.class);
-    when(fp.getField("id")).thenReturn("100");
-    when(fp.getField("name")).thenReturn(TEST_NAME);
+    FieldProvider fp = createFieldProvider("100", TEST_NAME);
 
-    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY,
-        FieldProvider[].class, String.class);
-    method.setAccessible(true);
-    String result = (String) method.invoke(instance, new FieldProvider[] { fp }, "100");
+    String result = invokeGenerateArrayWithSelection(new FieldProvider[] { fp }, "100");
 
     assertTrue(result.contains("\"true\""));
   }
@@ -100,14 +87,9 @@ public class CalloutHelperTest {
 
   @Test
   public void testGenerateArrayWithNonSelectedElement() throws Exception {
-    FieldProvider fp = mock(FieldProvider.class);
-    when(fp.getField("id")).thenReturn("100");
-    when(fp.getField("name")).thenReturn(TEST_NAME);
+    FieldProvider fp = createFieldProvider("100", TEST_NAME);
 
-    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY,
-        FieldProvider[].class, String.class);
-    method.setAccessible(true);
-    String result = (String) method.invoke(instance, new FieldProvider[] { fp }, "999");
+    String result = invokeGenerateArrayWithSelection(new FieldProvider[] { fp }, "999");
 
     assertTrue(result.contains("\"false\""));
   }
@@ -118,22 +100,36 @@ public class CalloutHelperTest {
 
   @Test
   public void testGenerateArrayWithMultipleElements() throws Exception {
-    FieldProvider fp1 = mock(FieldProvider.class);
-    when(fp1.getField("id")).thenReturn("1");
-    when(fp1.getField("name")).thenReturn("First");
+    FieldProvider fp1 = createFieldProvider("1", "First");
+    FieldProvider fp2 = createFieldProvider("2", "Second");
 
-    FieldProvider fp2 = mock(FieldProvider.class);
-    when(fp2.getField("id")).thenReturn("2");
-    when(fp2.getField("name")).thenReturn("Second");
-
-    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY, FieldProvider[].class);
-    method.setAccessible(true);
-    String result = (String) method.invoke(instance, (Object) new FieldProvider[] { fp1, fp2 });
+    String result = invokeGenerateArray(new FieldProvider[] { fp1, fp2 });
 
     assertTrue(result.contains("\"1\""));
     assertTrue(result.contains("\"2\""));
     assertTrue(result.contains("First"));
     assertTrue(result.contains("Second"));
+  }
+
+  private FieldProvider createFieldProvider(String id, String name) {
+    FieldProvider fp = mock(FieldProvider.class);
+    when(fp.getField("id")).thenReturn(id);
+    when(fp.getField("name")).thenReturn(name);
+    return fp;
+  }
+
+  private String invokeGenerateArray(FieldProvider[] data) throws Exception {
+    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY, FieldProvider[].class);
+    method.setAccessible(true);
+    return (String) method.invoke(instance, (Object) data);
+  }
+
+  private String invokeGenerateArrayWithSelection(FieldProvider[] data, String selectedId)
+      throws Exception {
+    Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY,
+        FieldProvider[].class, String.class);
+    method.setAccessible(true);
+    return (String) method.invoke(instance, data, selectedId);
   }
   /** Command in command list match found. */
 

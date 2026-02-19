@@ -86,27 +86,7 @@ public class ApplyModuleTest {
 
   @Test
   public void testGetProcessInstanceMessageSimpleSuccess() throws Exception {
-    pInstanceStatic = mockStatic(PInstanceProcessData.class);
-
-    ObjenesisStd objenesis = new ObjenesisStd();
-    PInstanceProcessData data = objenesis.newInstance(PInstanceProcessData.class);
-    data.result = "1";
-    data.errormsg = "Process completed successfully";
-
-    PInstanceProcessData[] dataArray = new PInstanceProcessData[] { data };
-    pInstanceStatic.when(() -> PInstanceProcessData.select(mockPool, "PINSTANCE1"))
-        .thenReturn(dataArray);
-
-    // Set the static pool field so the method can use it
-    Field poolField = ApplyModule.class.getDeclaredField("pool");
-    poolField.setAccessible(true);
-    poolField.set(null, mockPool);
-
-    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
-        ConnectionProvider.class, String.class);
-    method.setAccessible(true);
-
-    OBError result = (OBError) method.invoke(null, mockPool, "PINSTANCE1");
+    OBError result = invokeGetProcessInstanceMessage("PINSTANCE1", "1", "Process completed successfully");
 
     assertEquals("Success", result.getType());
   }
@@ -117,26 +97,7 @@ public class ApplyModuleTest {
 
   @Test
   public void testGetProcessInstanceMessageSimpleError() throws Exception {
-    pInstanceStatic = mockStatic(PInstanceProcessData.class);
-
-    ObjenesisStd objenesis = new ObjenesisStd();
-    PInstanceProcessData data = objenesis.newInstance(PInstanceProcessData.class);
-    data.result = "0";
-    data.errormsg = "Something went wrong";
-
-    PInstanceProcessData[] dataArray = new PInstanceProcessData[] { data };
-    pInstanceStatic.when(() -> PInstanceProcessData.select(mockPool, "PINSTANCE2"))
-        .thenReturn(dataArray);
-
-    Field poolField = ApplyModule.class.getDeclaredField("pool");
-    poolField.setAccessible(true);
-    poolField.set(null, mockPool);
-
-    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
-        ConnectionProvider.class, String.class);
-    method.setAccessible(true);
-
-    OBError result = (OBError) method.invoke(null, mockPool, "PINSTANCE2");
+    OBError result = invokeGetProcessInstanceMessage("PINSTANCE2", "0", "Something went wrong");
 
     assertEquals("Error", result.getType());
   }
@@ -147,26 +108,7 @@ public class ApplyModuleTest {
 
   @Test
   public void testGetProcessInstanceMessageSimpleWithErrorMarker() throws Exception {
-    pInstanceStatic = mockStatic(PInstanceProcessData.class);
-
-    ObjenesisStd objenesis = new ObjenesisStd();
-    PInstanceProcessData data = objenesis.newInstance(PInstanceProcessData.class);
-    data.result = "0";
-    data.errormsg = "prefix @ERROR=Actual error message";
-
-    PInstanceProcessData[] dataArray = new PInstanceProcessData[] { data };
-    pInstanceStatic.when(() -> PInstanceProcessData.select(mockPool, "PINSTANCE3"))
-        .thenReturn(dataArray);
-
-    Field poolField = ApplyModule.class.getDeclaredField("pool");
-    poolField.setAccessible(true);
-    poolField.set(null, mockPool);
-
-    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
-        ConnectionProvider.class, String.class);
-    method.setAccessible(true);
-
-    OBError result = (OBError) method.invoke(null, mockPool, "PINSTANCE3");
+    OBError result = invokeGetProcessInstanceMessage("PINSTANCE3", "0", "prefix @ERROR=Actual error message");
 
     assertEquals("Error", result.getType());
     assertEquals("Actual error message", result.getMessage());
@@ -178,20 +120,8 @@ public class ApplyModuleTest {
 
   @Test
   public void testGetProcessInstanceMessageSimpleEmptyData() throws Exception {
-    pInstanceStatic = mockStatic(PInstanceProcessData.class);
-
-    pInstanceStatic.when(() -> PInstanceProcessData.select(mockPool, "PINSTANCE_EMPTY"))
-        .thenReturn(new PInstanceProcessData[0]);
-
-    Field poolField = ApplyModule.class.getDeclaredField("pool");
-    poolField.setAccessible(true);
-    poolField.set(null, mockPool);
-
-    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
-        ConnectionProvider.class, String.class);
-    method.setAccessible(true);
-
-    OBError result = (OBError) method.invoke(null, mockPool, "PINSTANCE_EMPTY");
+    OBError result = invokeGetProcessInstanceMessageWithRawData("PINSTANCE_EMPTY",
+        new PInstanceProcessData[0]);
 
     // When no data, OBError is returned with defaults (no type set explicitly)
     assertTrue(result != null);
@@ -223,10 +153,31 @@ public class ApplyModuleTest {
 
   @Test
   public void testGetProcessInstanceMessageSimpleNullData() throws Exception {
+    OBError result = invokeGetProcessInstanceMessageWithRawData("PINSTANCE_NULL", null);
+
+    // When null data, OBError is returned with no type set
+    assertTrue(result != null);
+  }
+
+  // --- Helper methods ---
+
+  private OBError invokeGetProcessInstanceMessage(String pinstanceId, String resultCode,
+      String errorMsg) throws Exception {
+    ObjenesisStd objenesis = new ObjenesisStd();
+    PInstanceProcessData data = objenesis.newInstance(PInstanceProcessData.class);
+    data.result = resultCode;
+    data.errormsg = errorMsg;
+
+    return invokeGetProcessInstanceMessageWithRawData(pinstanceId,
+        new PInstanceProcessData[] { data });
+  }
+
+  private OBError invokeGetProcessInstanceMessageWithRawData(String pinstanceId,
+      PInstanceProcessData[] dataArray) throws Exception {
     pInstanceStatic = mockStatic(PInstanceProcessData.class);
 
-    pInstanceStatic.when(() -> PInstanceProcessData.select(mockPool, "PINSTANCE_NULL"))
-        .thenReturn(null);
+    pInstanceStatic.when(() -> PInstanceProcessData.select(mockPool, pinstanceId))
+        .thenReturn(dataArray);
 
     Field poolField = ApplyModule.class.getDeclaredField("pool");
     poolField.setAccessible(true);
@@ -236,9 +187,6 @@ public class ApplyModuleTest {
         ConnectionProvider.class, String.class);
     method.setAccessible(true);
 
-    OBError result = (OBError) method.invoke(null, mockPool, "PINSTANCE_NULL");
-
-    // When null data, OBError is returned with no type set
-    assertTrue(result != null);
+    return (OBError) method.invoke(null, mockPool, pinstanceId);
   }
 }

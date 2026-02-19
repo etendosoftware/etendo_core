@@ -109,25 +109,14 @@ public class CostingRuleProcessActionHandlerTest {
 
   @Test
   public void testDoExecuteWithExceptionReturnsErrorMessage() throws Exception {
-    OBError translatedError = new OBError();
-    translatedError.setMessage("Translated error");
-    obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(anyString()))
-        .thenReturn(translatedError);
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
-        .thenReturn(ERROR);
-    dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+    setupErrorMocks("Translated error");
 
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("processId", PROCESS_ID);
+    Map<String, Object> parameters = createProcessParameters();
 
     // Invalid JSON will cause an exception
     JSONObject result = invokeDoExecute(parameters, "invalid json");
 
-    assertNotNull(result);
-    assertTrue(result.has(MESSAGE));
-    JSONObject msg = result.getJSONObject(MESSAGE);
-    assertEquals("error", msg.getString("severity"));
+    assertErrorResult(result);
   }
   /**
    * Do execute with missing rule id returns error.
@@ -136,23 +125,36 @@ public class CostingRuleProcessActionHandlerTest {
 
   @Test
   public void testDoExecuteWithMissingRuleIdReturnsError() throws Exception {
-    OBError translatedError = new OBError();
-    translatedError.setMessage("Missing rule id");
-    obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(anyString()))
-        .thenReturn(translatedError);
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
-        .thenReturn(ERROR);
-    dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
-        .thenAnswer(inv -> inv.getArgument(0));
+    setupErrorMocks("Missing rule id");
 
-    Map<String, Object> parameters = new HashMap<>();
-    parameters.put("processId", PROCESS_ID);
+    Map<String, Object> parameters = createProcessParameters();
 
     JSONObject content = new JSONObject();
     // Missing M_Costing_Rule_ID will cause JSONException
 
     JSONObject result = invokeDoExecute(parameters, content.toString());
 
+    assertErrorResult(result);
+  }
+
+  private void setupErrorMocks(String errorMessage) {
+    OBError translatedError = new OBError();
+    translatedError.setMessage(errorMessage);
+    obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(anyString()))
+        .thenReturn(translatedError);
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
+        .thenReturn(ERROR);
+    dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+  }
+
+  private Map<String, Object> createProcessParameters() {
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("processId", PROCESS_ID);
+    return parameters;
+  }
+
+  private void assertErrorResult(JSONObject result) throws Exception {
     assertNotNull(result);
     assertTrue(result.has(MESSAGE));
     JSONObject msg = result.getJSONObject(MESSAGE);

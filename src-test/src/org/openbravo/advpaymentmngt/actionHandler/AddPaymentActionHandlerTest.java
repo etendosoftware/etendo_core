@@ -705,26 +705,16 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationNoAccounting() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     lenient().when(mockFinAccPM.getUponReceiptUse()).thenReturn("INT");
 
     // Empty accounting list
     lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(new ArrayList<>());
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, true, "100", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, true, "100", true);
 
     assertFalse(result);
   }
@@ -735,31 +725,19 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationZeroAmount() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     lenient().when(mockFinAccPM.getUponReceiptUse()).thenReturn("INT");
 
     org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
         mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
 
     // Zero amount payment - should set confirmation true
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, true, "0", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, true, "0", true);
 
     assertTrue(result);
   }
@@ -770,11 +748,6 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationExceptionReturnsDefault() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
@@ -782,7 +755,7 @@ public class AddPaymentActionHandlerTest {
     lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class))
         .thenThrow(new RuntimeException("DB error"));
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, true, "100", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, true, "100", true);
 
     assertFalse(result);
   }
@@ -793,26 +766,16 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationPaymentOut() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     // isReceipt = false, isPayment = true => should use getUponPaymentUse
     lenient().when(mockFinAccPM.getUponPaymentUse()).thenReturn("INT");
 
     lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(new ArrayList<>());
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, false, "100", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, false, "100", true);
 
     assertFalse(result);
   }
@@ -823,32 +786,20 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationDepositUse() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     // isReceipt = true, isPayment = false => should use getUponDepositUse
     lenient().when(mockFinAccPM.getUponDepositUse()).thenReturn("DEP");
 
     org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
         mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
     lenient().when(mockAcct.getDepositAccount()).thenReturn(mock(AccountingCombination.class));
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, true, "100", false);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, true, "100", false);
 
     assertTrue(result);
   }
@@ -859,32 +810,20 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationWithdrawalUse() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     // isReceipt = false, isPayment = false => getUponWithdrawalUse
     lenient().when(mockFinAccPM.getUponWithdrawalUse()).thenReturn("WIT");
 
     org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
         mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
     lenient().when(mockAcct.getWithdrawalAccount()).thenReturn(mock(AccountingCombination.class));
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, false, "100", false);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, false, "100", false);
 
     assertTrue(result);
   }
@@ -1444,31 +1383,19 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationCLEReceiptPath() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     lenient().when(mockFinAccPM.getUponReceiptUse()).thenReturn("CLE");
 
     org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
         mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
     lenient().when(mockAcct.getClearedPaymentAccount()).thenReturn(mock(AccountingCombination.class));
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, true, "100", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, true, "100", true);
 
     assertTrue(result);
   }
@@ -1479,31 +1406,19 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationCLEPaymentOutPath() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     lenient().when(mockFinAccPM.getUponPaymentUse()).thenReturn("CLE");
 
     org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
         mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
     lenient().when(mockAcct.getClearedPaymentAccountOUT()).thenReturn(mock(AccountingCombination.class));
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, false, "100", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, false, "100", true);
 
     assertTrue(result);
   }
@@ -1516,31 +1431,19 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationINTPaymentOutPath() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     lenient().when(mockFinAccPM.getUponPaymentUse()).thenReturn("INT");
 
     org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
         mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
     lenient().when(mockAcct.getFINOutIntransitAcct()).thenReturn(mock(AccountingCombination.class));
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, false, "100", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, false, "100", true);
 
     assertTrue(result);
   }
@@ -1553,31 +1456,19 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationINTReceiptPath() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
-    OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
-    lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
-    lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-
-    FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
-    lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
     lenient().when(mockFinAccPM.getUponReceiptUse()).thenReturn("INT");
 
     org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
         mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
     lenient().when(mockAcct.getInTransitPaymentAccountIN()).thenReturn(mock(AccountingCombination.class));
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
 
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, true, "100", true);
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, true, "100", true);
 
     assertTrue(result);
   }
@@ -1590,36 +1481,55 @@ public class AddPaymentActionHandlerTest {
 
   @Test
   public void testGetDocumentConfirmationDEPReceiptPath() throws Exception {
-    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
-        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
-    method.setAccessible(true);
-
     FIN_FinancialAccount finAccount = mock(FIN_FinancialAccount.class);
     FIN_PaymentMethod paymentMethod = mock(FIN_PaymentMethod.class);
 
+    FinAccPaymentMethod mockFinAccPM = setupFinAccPaymentMethodCriteria();
+    lenient().when(mockFinAccPM.getUponReceiptUse()).thenReturn("DEP");
+
+    org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
+        mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
+    lenient().when(mockAcct.getDepositAccount()).thenReturn(mock(AccountingCombination.class));
+    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(
+        createAcctList(mockAcct));
+
+    boolean result = invokeGetDocumentConfirmation(finAccount, paymentMethod, true, "100", true);
+
+    assertTrue(result);
+  }
+
+  // ===== Helper Methods =====
+
+  @SuppressWarnings("unchecked")
+  private FinAccPaymentMethod setupFinAccPaymentMethodCriteria() {
     OBCriteria<FinAccPaymentMethod> mockCriteria = mock(OBCriteria.class);
     lenient().when(mockOBDal.createCriteria(FinAccPaymentMethod.class)).thenReturn(mockCriteria);
     lenient().when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
 
     FinAccPaymentMethod mockFinAccPM = mock(FinAccPaymentMethod.class);
     lenient().when(mockCriteria.uniqueResult()).thenReturn(mockFinAccPM);
-    lenient().when(mockFinAccPM.getUponReceiptUse()).thenReturn("DEP");
-
-    org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting mockAcct =
-        mock(org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting.class);
-    lenient().when(mockAcct.getDepositAccount()).thenReturn(mock(AccountingCombination.class));
-    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
-        new ArrayList<>();
-    acctList.add(mockAcct);
-    lenient().when(finAccount.getFINFinancialAccountAcctList()).thenReturn(acctList);
-
-    boolean result = (boolean) method.invoke(handler, finAccount, paymentMethod, true, "100", true);
-
-    assertTrue(result);
+    return mockFinAccPM;
   }
 
-  // ===== Helper Methods =====
+  private List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> createAcctList(
+      org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting... accts) {
+    List<org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting> acctList =
+        new ArrayList<>();
+    for (org.openbravo.model.financialmgmt.accounting.FIN_FinancialAccountAccounting acct : accts) {
+      acctList.add(acct);
+    }
+    return acctList;
+  }
+
+  private boolean invokeGetDocumentConfirmation(FIN_FinancialAccount finAccount,
+      FIN_PaymentMethod paymentMethod, boolean isReceipt, String amount,
+      boolean isPayment) throws Exception {
+    Method method = AddPaymentActionHandler.class.getDeclaredMethod(
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
+        FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
+    method.setAccessible(true);
+    return (boolean) method.invoke(handler, finAccount, paymentMethod, isReceipt, amount, isPayment);
+  }
 
   private void setPrivateField(Object target, String fieldName, Object value) throws IllegalAccessException, NoSuchFieldException {
     Field field = findField(target.getClass(), fieldName);

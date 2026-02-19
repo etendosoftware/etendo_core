@@ -68,18 +68,10 @@ public class AttachmentWindowComponentTest {
 
   @Test
   public void testGetWindowClientClassNameNotInDevelopment() throws Exception {
-    // Arrange - need adcs mock for isInDevelopment
-    org.openbravo.client.application.window.ApplicationDictionaryCachedStructures mockAdcs =
-        mock(org.openbravo.client.application.window.ApplicationDictionaryCachedStructures.class);
-    when(mockAdcs.isInDevelopment()).thenReturn(false);
-    Field adcsField = findField(instance.getClass(), "adcs");
-    adcsField.setAccessible(true);
-    adcsField.set(instance, mockAdcs);
+    setupAdcsWithDevelopmentMode(false);
 
-    // Act
     String result = instance.getWindowClientClassName();
 
-    // Assert
     String expected = KernelConstants.ID_PREFIX + TEST_TAB_ID + KernelConstants.ID_PREFIX
         + TEST_ATT_METHOD_ID;
     assertEquals(expected, result);
@@ -91,21 +83,22 @@ public class AttachmentWindowComponentTest {
 
   @Test
   public void testGetWindowClientClassNameInDevelopment() throws Exception {
-    // Arrange
-    org.openbravo.client.application.window.ApplicationDictionaryCachedStructures mockAdcs =
-        mock(org.openbravo.client.application.window.ApplicationDictionaryCachedStructures.class);
-    when(mockAdcs.isInDevelopment()).thenReturn(true);
-    Field adcsField = findField(instance.getClass(), "adcs");
-    adcsField.setAccessible(true);
-    adcsField.set(instance, mockAdcs);
+    setupAdcsWithDevelopmentMode(true);
 
-    // Act
     String result = instance.getWindowClientClassName();
 
-    // Assert
     String expected = KernelConstants.ID_PREFIX + TEST_TAB_ID + KernelConstants.ID_PREFIX
         + TEST_ATT_METHOD_ID + KernelConstants.ID_PREFIX + "12345";
     assertEquals(expected, result);
+  }
+
+  private void setupAdcsWithDevelopmentMode(boolean inDevelopment) throws Exception {
+    org.openbravo.client.application.window.ApplicationDictionaryCachedStructures mockAdcs =
+        mock(org.openbravo.client.application.window.ApplicationDictionaryCachedStructures.class);
+    when(mockAdcs.isInDevelopment()).thenReturn(inDevelopment);
+    Field adcsField = findField(instance.getClass(), "adcs");
+    adcsField.setAccessible(true);
+    adcsField.set(instance, mockAdcs);
   }
   /** Get attachment method id. */
 
@@ -138,22 +131,12 @@ public class AttachmentWindowComponentTest {
 
   @Test
   public void testParseValidationExtractsColumns() throws Exception {
-    // Arrange
-    Validation validation = mock(Validation.class);
-    when(validation.getValidationCode()).thenReturn("'colA' = 'colB'");
-
-    Map<String, List<String>> dynCols = new HashMap<>();
     List<String> allParams = new ArrayList<>();
     allParams.add("colA");
     allParams.add("colB");
 
-    // Act
-    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod(PARSE_VALIDATION,
-        Validation.class, Map.class, List.class, String.class);
-    parseValidation.setAccessible(true);
-    parseValidation.invoke(instance, validation, dynCols, allParams, PARAM_X);
+    Map<String, List<String>> dynCols = invokeParseValidation("'colA' = 'colB'", allParams);
 
-    // Assert - dynCols should have been populated
     assertNotNull(dynCols);
   }
   /**
@@ -163,20 +146,8 @@ public class AttachmentWindowComponentTest {
 
   @Test
   public void testParseValidationNoQuotesInCode() throws Exception {
-    // Arrange
-    Validation validation = mock(Validation.class);
-    when(validation.getValidationCode()).thenReturn("no quotes here");
+    Map<String, List<String>> dynCols = invokeParseValidation("no quotes here", new ArrayList<>());
 
-    Map<String, List<String>> dynCols = new HashMap<>();
-    List<String> allParams = new ArrayList<>();
-
-    // Act
-    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod(PARSE_VALIDATION,
-        Validation.class, Map.class, List.class, String.class);
-    parseValidation.setAccessible(true);
-    parseValidation.invoke(instance, validation, dynCols, allParams, PARAM_X);
-
-    // Assert - no dynamic columns should have been added
     assertEquals(0, dynCols.size());
   }
   /**
@@ -186,23 +157,28 @@ public class AttachmentWindowComponentTest {
 
   @Test
   public void testParseValidationWithDoubleQuotes() throws Exception {
-    // Arrange - double quotes should be converted to single quotes
-    Validation validation = mock(Validation.class);
-    when(validation.getValidationCode()).thenReturn("\"colA\" == \"colB\"");
-
-    Map<String, List<String>> dynCols = new HashMap<>();
     List<String> allParams = new ArrayList<>();
     allParams.add("colA");
     allParams.add("colB");
 
-    // Act
+    Map<String, List<String>> dynCols = invokeParseValidation("\"colA\" == \"colB\"", allParams);
+
+    assertNotNull(dynCols);
+  }
+
+  private Map<String, List<String>> invokeParseValidation(String validationCode,
+      List<String> allParams) throws Exception {
+    Validation validation = mock(Validation.class);
+    when(validation.getValidationCode()).thenReturn(validationCode);
+
+    Map<String, List<String>> dynCols = new HashMap<>();
+
     Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod(PARSE_VALIDATION,
         Validation.class, Map.class, List.class, String.class);
     parseValidation.setAccessible(true);
     parseValidation.invoke(instance, validation, dynCols, allParams, PARAM_X);
 
-    // Assert
-    assertNotNull(dynCols);
+    return dynCols;
   }
 
   private void setPrivateField(Object target, String fieldName, Object value) throws IllegalAccessException, NoSuchFieldException {

@@ -119,12 +119,8 @@ public class CreateStandardsTest {
 
   @Test
   public void testAddDaysPositive() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2025, Calendar.JANUARY, 1, 0, 0, 0);
-    cal.set(Calendar.MILLISECOND, 0);
-    Date baseDate = cal.getTime();
-
-    Date result = invokeAddDays(baseDate, 10);
+    Calendar cal = createCalendar(2025, Calendar.JANUARY, 1);
+    Date result = invokeAddDays(cal.getTime(), 10);
 
     cal.add(Calendar.DATE, 10);
     assertEquals(cal.getTime(), result);
@@ -136,9 +132,7 @@ public class CreateStandardsTest {
 
   @Test
   public void testAddDaysZero() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2025, Calendar.JUNE, 15, 0, 0, 0);
-    cal.set(Calendar.MILLISECOND, 0);
+    Calendar cal = createCalendar(2025, Calendar.JUNE, 15);
     Date baseDate = cal.getTime();
 
     Date result = invokeAddDays(baseDate, 0);
@@ -152,12 +146,8 @@ public class CreateStandardsTest {
 
   @Test
   public void testAddDaysNegative() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2025, Calendar.MARCH, 10, 0, 0, 0);
-    cal.set(Calendar.MILLISECOND, 0);
-    Date baseDate = cal.getTime();
-
-    Date result = invokeAddDays(baseDate, -5);
+    Calendar cal = createCalendar(2025, Calendar.MARCH, 10);
+    Date result = invokeAddDays(cal.getTime(), -5);
 
     cal.add(Calendar.DATE, -5);
     assertEquals(cal.getTime(), result);
@@ -169,12 +159,8 @@ public class CreateStandardsTest {
 
   @Test
   public void testAddDaysCrossesMonth() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2025, Calendar.JANUARY, 28, 0, 0, 0);
-    cal.set(Calendar.MILLISECOND, 0);
-    Date baseDate = cal.getTime();
-
-    Date result = invokeAddDays(baseDate, 5);
+    Calendar cal = createCalendar(2025, Calendar.JANUARY, 28);
+    Date result = invokeAddDays(cal.getTime(), 5);
 
     cal.add(Calendar.DATE, 5);
     assertEquals(cal.getTime(), result);
@@ -191,6 +177,13 @@ public class CreateStandardsTest {
   }
 
   // --- Helper methods ---
+
+  private Calendar createCalendar(int year, int month, int day) {
+    Calendar cal = Calendar.getInstance();
+    cal.set(year, month, day, 0, 0, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    return cal;
+  }
 
   private String invokeReplace(String input) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = CreateStandards.class.getDeclaredMethod("replace", String.class);

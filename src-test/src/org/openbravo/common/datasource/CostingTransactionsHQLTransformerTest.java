@@ -66,12 +66,7 @@ public class CostingTransactionsHQLTransformerTest {
 
   @Test
   public void testTransformHqlQueryWithNullCostingIdReturnsFallback() {
-    Map<String, String> requestParams = new HashMap<>();
-    requestParams.put(MATERIAL_MGMT_COSTING_ID, null);
-    Map<String, Object> namedParams = new HashMap<>();
-
-    String hqlQuery = SELECT_WHERE_CLAUSE_PREVIOUS_COSTING_COS;
-    String result = instance.transformHqlQuery(hqlQuery, requestParams, namedParams);
+    String result = transformWithCostingId(null);
 
     assertNotNull(result);
     assertTrue(result.contains(VAL_1_2));
@@ -81,12 +76,7 @@ public class CostingTransactionsHQLTransformerTest {
 
   @Test
   public void testTransformHqlQueryWithNullStringCostingIdReturnsFallback() {
-    Map<String, String> requestParams = new HashMap<>();
-    requestParams.put(MATERIAL_MGMT_COSTING_ID, "null");
-    Map<String, Object> namedParams = new HashMap<>();
-
-    String hqlQuery = SELECT_WHERE_CLAUSE_PREVIOUS_COSTING_COS;
-    String result = instance.transformHqlQuery(hqlQuery, requestParams, namedParams);
+    String result = transformWithCostingId("null");
 
     assertNotNull(result);
     assertTrue(result.contains(VAL_1_2));
@@ -96,10 +86,8 @@ public class CostingTransactionsHQLTransformerTest {
   @Test
   public void testTransformHqlQueryWithMissingCostingParamReturnsFallback() {
     Map<String, String> requestParams = new HashMap<>();
-    Map<String, Object> namedParams = new HashMap<>();
-
-    String hqlQuery = SELECT_WHERE_CLAUSE_PREVIOUS_COSTING_COS;
-    String result = instance.transformHqlQuery(hqlQuery, requestParams, namedParams);
+    String result = instance.transformHqlQuery(SELECT_WHERE_CLAUSE_PREVIOUS_COSTING_COS,
+        requestParams, new HashMap<>());
 
     assertNotNull(result);
     assertTrue(result.contains(VAL_1_2));
@@ -108,17 +96,9 @@ public class CostingTransactionsHQLTransformerTest {
 
   @Test
   public void testTransformHqlQueryWithNonAvaCostTypeReturnsFallback() {
-    Costing mockCosting = mock(Costing.class);
-    when(mockCosting.getCostType()).thenReturn("STA");
-    when(mockCosting.getInventoryTransaction()).thenReturn(null);
-    when(mockOBDal.get(Costing.class, "COSTING_001")).thenReturn(mockCosting);
+    setupCostingMock("COSTING_001", "STA", null);
 
-    Map<String, String> requestParams = new HashMap<>();
-    requestParams.put(MATERIAL_MGMT_COSTING_ID, "COSTING_001");
-    Map<String, Object> namedParams = new HashMap<>();
-
-    String hqlQuery = SELECT_WHERE_CLAUSE_PREVIOUS_COSTING_COS;
-    String result = instance.transformHqlQuery(hqlQuery, requestParams, namedParams);
+    String result = transformWithCostingId("COSTING_001");
 
     assertNotNull(result);
     assertTrue(result.contains(VAL_1_2));
@@ -127,17 +107,9 @@ public class CostingTransactionsHQLTransformerTest {
 
   @Test
   public void testTransformHqlQueryWithAvaButNullTransactionReturnsFallback() {
-    Costing mockCosting = mock(Costing.class);
-    when(mockCosting.getCostType()).thenReturn("AVA");
-    when(mockCosting.getInventoryTransaction()).thenReturn(null);
-    when(mockOBDal.get(Costing.class, "COSTING_002")).thenReturn(mockCosting);
+    setupCostingMock("COSTING_002", "AVA", null);
 
-    Map<String, String> requestParams = new HashMap<>();
-    requestParams.put(MATERIAL_MGMT_COSTING_ID, "COSTING_002");
-    Map<String, Object> namedParams = new HashMap<>();
-
-    String hqlQuery = SELECT_WHERE_CLAUSE_PREVIOUS_COSTING_COS;
-    String result = instance.transformHqlQuery(hqlQuery, requestParams, namedParams);
+    String result = transformWithCostingId("COSTING_002");
 
     assertNotNull(result);
     assertTrue(result.contains(VAL_1_2));
@@ -219,5 +191,22 @@ public class CostingTransactionsHQLTransformerTest {
     assertTrue(result.contains(VAL_10_00));
     assertTrue(result.contains("8.50"));
     assertTrue(result.contains("case when"));
+  }
+
+  // --- Helper methods ---
+
+  private String transformWithCostingId(String costingId) {
+    Map<String, String> requestParams = new HashMap<>();
+    requestParams.put(MATERIAL_MGMT_COSTING_ID, costingId);
+    return instance.transformHqlQuery(SELECT_WHERE_CLAUSE_PREVIOUS_COSTING_COS,
+        requestParams, new HashMap<>());
+  }
+
+  private void setupCostingMock(String costingId, String costType,
+      org.openbravo.model.materialmgmt.transaction.MaterialTransaction transaction) {
+    Costing mockCosting = mock(Costing.class);
+    when(mockCosting.getCostType()).thenReturn(costType);
+    when(mockCosting.getInventoryTransaction()).thenReturn(transaction);
+    when(mockOBDal.get(Costing.class, costingId)).thenReturn(mockCosting);
   }
 }

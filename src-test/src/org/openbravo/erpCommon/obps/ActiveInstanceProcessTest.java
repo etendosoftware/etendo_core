@@ -133,13 +133,8 @@ public class ActiveInstanceProcessTest {
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
          MockedStatic<OBProvider> obProviderStatic = mockStatic(OBProvider.class)) {
 
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      obProviderStatic.when(OBProvider::getInstance).thenReturn(obProvider);
-
-      when(obDal.getSession()).thenReturn(session);
-      when(session.createQuery(anyString())).thenReturn(updateQuery);
-      when(updateQuery.setParameter(eq(VALUE), eq("Y"))).thenReturn(updateQuery);
-      when(updateQuery.executeUpdate()).thenReturn(1); // One row updated
+      setupOBDalAndOBProvider(obDalStatic, obProviderStatic);
+      setupUpdateQuery(updateQuery, "Y", 1);
 
       // Act
       ActiveInstanceProcess.updateShowProductionFields("Y");
@@ -160,13 +155,8 @@ public class ActiveInstanceProcessTest {
     try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
          MockedStatic<OBProvider> obProviderStatic = mockStatic(OBProvider.class)) {
 
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      obProviderStatic.when(OBProvider::getInstance).thenReturn(obProvider);
-
-      when(obDal.getSession()).thenReturn(session);
-      when(session.createQuery(anyString())).thenReturn(updateQuery);
-      when(updateQuery.setParameter(eq(VALUE), eq("N"))).thenReturn(updateQuery);
-      when(updateQuery.executeUpdate()).thenReturn(0);
+      setupOBDalAndOBProvider(obDalStatic, obProviderStatic);
+      setupUpdateQuery(updateQuery, "N", 0);
 
       // Act
       ActiveInstanceProcess.updateShowProductionFields("N");
@@ -279,39 +269,14 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodSuccessfulResponse() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks(VAL_1_0_0, SYS123, DB456,
+        "@Success@\nactivationKeyValue",
+        PUBLIC_KEY123, "P", "instanceNo456", true, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@Success@\nactivationKeyValue");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "P", "instanceNo456", true, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals(SUCCESS, result[0]);
-      assertEquals("activationKeyValue", result[1]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals(SUCCESS, result[0]);
+    assertEquals("activationKeyValue", result[1]);
   }
   /**
    * Send method with cancellation.
@@ -320,38 +285,13 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithCancellation() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks(VAL_1_0_0, SYS123, DB456,
+        "@Success@\ncancelledKey",
+        PUBLIC_KEY123, "E", null, false, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@Success@\ncancelledKey");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act - activate=false means cancel
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "E", null, false, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals(SUCCESS, result[0]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals(SUCCESS, result[0]);
   }
   /**
    * Send method with connection exception.
@@ -360,39 +300,14 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithConnectionException() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocksThrowingOnSend(VAL_1_0_0, SYS123, DB456,
+        new RuntimeException("Connection failed"),
+        PUBLIC_KEY123, "P", "instanceNo456", true, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenThrow(new RuntimeException("Connection failed"));
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "P", "instanceNo456", true, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals("@HB_SECURE_CONNECTION_ERROR@", result[0]);
-      assertEquals("", result[1]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals("@HB_SECURE_CONNECTION_ERROR@", result[0]);
+    assertEquals("", result[1]);
   }
   /**
    * Send method with updated parameter.
@@ -401,37 +316,12 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithUpdatedParameter() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks("2.0.0", SYS123, DB456,
+        "@NoChange@\n",
+        PUBLIC_KEY123, "P", "inst789", true, "2024-01-01T00:00:00");
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("2.0.0");
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@NoChange@\n");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "P", "inst789", true, "2024-01-01T00:00:00");
-
-      // Assert
-      assertNotNull(result);
-      assertEquals("@NoChange@", result[0]);
-    }
+    assertNotNull(result);
+    assertEquals("@NoChange@", result[0]);
   }
   /**
    * Send method with empty instance no.
@@ -440,38 +330,13 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithEmptyInstanceNo() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks(VAL_1_0_0, SYS123, DB456,
+        "@Success@\nnewActivationKey",
+        PUBLIC_KEY123, "E", "", true, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@Success@\nnewActivationKey");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act - empty string instanceNo should be treated like null
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "E", "", true, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals(SUCCESS, result[0]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals(SUCCESS, result[0]);
   }
   /**
    * Send method with null instance no.
@@ -480,39 +345,14 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithNullInstanceNo() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks(VAL_1_0_0, SYS123, DB456,
+        "@Success@\nnewActivationKey",
+        PUBLIC_KEY123, "P", null, true, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@Success@\nnewActivationKey");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "P", null, true, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals(SUCCESS, result[0]);
-      assertEquals("newActivationKey", result[1]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals(SUCCESS, result[0]);
+    assertEquals("newActivationKey", result[1]);
   }
   /**
    * Send method with evaluation purpose.
@@ -521,39 +361,14 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithEvaluationPurpose() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks(VAL_1_0_0, SYS123, DB456,
+        "@Success@\nevaluationKey",
+        PUBLIC_KEY123, "E", INST123, true, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@Success@\nevaluationKey");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act - "E" for evaluation purpose
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "E", INST123, true, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals(SUCCESS, result[0]);
-      assertEquals("evaluationKey", result[1]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals(SUCCESS, result[0]);
+    assertEquals("evaluationKey", result[1]);
   }
   /**
    * Send method with error response.
@@ -562,39 +377,14 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithErrorResponse() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks(VAL_1_0_0, SYS123, DB456,
+        "@Error@\nInvalid public key",
+        "invalidKey", "P", INST123, true, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@Error@\nInvalid public key");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "invalidKey", "P", INST123, true, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals("@Error@", result[0]);
-      assertEquals("Invalid public key", result[1]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals("@Error@", result[0]);
+    assertEquals("Invalid public key", result[1]);
   }
   /**
    * Set modules as not in development not in web container.
@@ -663,38 +453,13 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithSpecialCharactersInPublicKey() throws Exception {
-    // Arrange
-    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
+    String[] result = invokeSendWithMocks(VAL_1_0_0, "SYS+123=", "DB/456",
+        "@Success@\nencodedKey",
+        "publicKey+with/special=chars", "P", INST123, true, null);
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
-
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
-
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS+123=");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB/456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
-
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@Success@\nencodedKey");
-
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
-
-      // Act - public key with special characters that need URL encoding
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey+with/special=chars", "P", INST123, true, null);
-
-      // Assert
-      assertNotNull(result);
-      assertEquals(2, result.length);
-      assertEquals(SUCCESS, result[0]);
-    }
+    assertNotNull(result);
+    assertEquals(2, result.length);
+    assertEquals(SUCCESS, result[0]);
   }
   /**
    * Send method with single line response.
@@ -703,38 +468,84 @@ public class ActiveInstanceProcessTest {
 
   @Test
   public void testSendMethodWithSingleLineResponse() throws Exception {
-    // Arrange
+    String[] result = invokeSendWithMocks(VAL_1_0_0, SYS123, DB456,
+        "@SingleLineError@",
+        PUBLIC_KEY123, "P", INST123, true, null);
+
+    assertNotNull(result);
+    assertEquals(1, result.length);
+    assertEquals("@SingleLineError@", result[0]);
+  }
+
+  // ==================== Helper Methods ====================
+
+  private void setupOBDalAndOBProvider(MockedStatic<OBDal> obDalStatic,
+      MockedStatic<OBProvider> obProviderStatic) {
+    obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
+    obProviderStatic.when(OBProvider::getInstance).thenReturn(obProvider);
+  }
+
+  private void setupUpdateQuery(Query<Object> updateQuery, String paramValue, int rowsUpdated) {
+    when(obDal.getSession()).thenReturn(session);
+    when(session.createQuery(anyString())).thenReturn(updateQuery);
+    when(updateQuery.setParameter(eq(VALUE), eq(paramValue))).thenReturn(updateQuery);
+    when(updateQuery.executeUpdate()).thenReturn(rowsUpdated);
+  }
+
+  private void setupSendMethodMocks(MockedStatic<OBDal> obDalMock,
+      MockedStatic<SystemInfo> systemInfoMock,
+      String coreVersion, String sysId, String dbId) {
+    obDalMock.when(OBDal::getInstance).thenReturn(obDal);
+    when(obDal.get(Module.class, "0")).thenReturn(coreModule);
+    when(coreModule.getVersion()).thenReturn(coreVersion);
+
+    systemInfoMock.when(SystemInfo::getSystemIdentifier).thenReturn(sysId);
+    systemInfoMock.when(SystemInfo::getDBIdentifier).thenReturn(dbId);
+    systemInfoMock.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
+  }
+
+  private Method getSendMethod() throws NoSuchMethodException {
+    Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
+        "send", String.class, String.class, String.class, boolean.class, String.class);
+    sendMethod.setAccessible(true);
+    return sendMethod;
+  }
+
+  private String[] invokeSendWithMocks(String coreVersion, String sysId, String dbId,
+      String httpsResponse, String publicKey, String purpose, String instanceNo,
+      boolean activate, String lastUpdate) throws Exception {
     ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
 
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class);
-         MockedStatic<OBContext> obContextStatic = mockStatic(OBContext.class);
-         MockedStatic<SystemInfo> systemInfoStatic = mockStatic(SystemInfo.class);
-         MockedStatic<HttpsUtils> httpsUtilsStatic = mockStatic(HttpsUtils.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
+         MockedStatic<OBContext> obContextMock = mockStatic(OBContext.class);
+         MockedStatic<SystemInfo> systemInfoMock = mockStatic(SystemInfo.class);
+         MockedStatic<HttpsUtils> httpsUtilsMock = mockStatic(HttpsUtils.class)) {
 
-      obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
+      setupSendMethodMocks(obDalMock, systemInfoMock, coreVersion, sysId, dbId);
+      httpsUtilsMock.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
+          .thenReturn(httpsResponse);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
+      return (String[]) getSendMethod().invoke(
+          activeInstanceProcess, publicKey, purpose, instanceNo, activate, lastUpdate);
+    }
+  }
 
-      // Response with only one line (no newline)
-      httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
-          .thenReturn("@SingleLineError@");
+  private String[] invokeSendWithMocksThrowingOnSend(String coreVersion, String sysId, String dbId,
+      Throwable exception, String publicKey, String purpose, String instanceNo,
+      boolean activate, String lastUpdate) throws Exception {
+    ActiveInstanceProcess activeInstanceProcess = new ActiveInstanceProcess();
 
-      Method sendMethod = ActiveInstanceProcess.class.getDeclaredMethod(
-          "send", String.class, String.class, String.class, boolean.class, String.class);
-      sendMethod.setAccessible(true);
+    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
+         MockedStatic<OBContext> obContextMock = mockStatic(OBContext.class);
+         MockedStatic<SystemInfo> systemInfoMock = mockStatic(SystemInfo.class);
+         MockedStatic<HttpsUtils> httpsUtilsMock = mockStatic(HttpsUtils.class)) {
 
-      // Act
-      String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, PUBLIC_KEY123, "P", INST123, true, null);
+      setupSendMethodMocks(obDalMock, systemInfoMock, coreVersion, sysId, dbId);
+      httpsUtilsMock.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
+          .thenThrow(exception);
 
-      // Assert
-      assertNotNull(result);
-      assertEquals(1, result.length);
-      assertEquals("@SingleLineError@", result[0]);
+      return (String[]) getSendMethod().invoke(
+          activeInstanceProcess, publicKey, purpose, instanceNo, activate, lastUpdate);
     }
   }
 }

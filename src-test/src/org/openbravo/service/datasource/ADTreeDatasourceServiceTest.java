@@ -107,10 +107,7 @@ public class ADTreeDatasourceServiceTest {
   /** Get table tree returns table tree. */
   @Test
   public void testGetTableTreeReturnsTableTree() {
-    OBCriteria<TableTree> mockCriteria = mock(OBCriteria.class);
-    when(mockOBDal.createCriteria(TableTree.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-    when(mockCriteria.uniqueResult()).thenReturn(mockTableTree);
+    setupTableTreeCriteria(mockTableTree);
 
     TableTree result = instance.getTableTree(mockTable);
 
@@ -121,14 +118,18 @@ public class ADTreeDatasourceServiceTest {
   /** Get table tree returns null when not found. */
   @Test
   public void testGetTableTreeReturnsNullWhenNotFound() {
-    OBCriteria<TableTree> mockCriteria = mock(OBCriteria.class);
-    when(mockOBDal.createCriteria(TableTree.class)).thenReturn(mockCriteria);
-    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
-    when(mockCriteria.uniqueResult()).thenReturn(null);
+    setupTableTreeCriteria(null);
 
     TableTree result = instance.getTableTree(mockTable);
 
     assertNull(result);
+  }
+
+  private void setupTableTreeCriteria(TableTree returnValue) {
+    OBCriteria<TableTree> mockCriteria = mock(OBCriteria.class);
+    when(mockOBDal.createCriteria(TableTree.class)).thenReturn(mockCriteria);
+    when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
+    when(mockCriteria.uniqueResult()).thenReturn(returnValue);
   }
 
   /**
@@ -137,17 +138,9 @@ public class ADTreeDatasourceServiceTest {
    */
   @Test
   public void testIsOrderedReturnsTrueWhenTableTreeIsOrdered() throws Exception {
-    List<TableTree> tableTreeList = new ArrayList<>();
-    tableTreeList.add(mockTableTree);
-    when(mockTree.getTable()).thenReturn(mockTable);
-    when(mockTable.getADTableTreeList()).thenReturn(tableTreeList);
-    when(mockTableTree.isOrdered()).thenReturn(true);
+    setupTreeWithSingleTableTree(true);
 
-    Method method = ADTreeDatasourceService.class.getDeclaredMethod(IS_ORDERED, Tree.class);
-    method.setAccessible(true);
-    boolean result = (boolean) method.invoke(instance, mockTree);
-
-    assertTrue(result);
+    assertTrue(invokeIsOrdered());
   }
 
   /**
@@ -156,17 +149,9 @@ public class ADTreeDatasourceServiceTest {
    */
   @Test
   public void testIsOrderedReturnsFalseWhenTableTreeIsNotOrdered() throws Exception {
-    List<TableTree> tableTreeList = new ArrayList<>();
-    tableTreeList.add(mockTableTree);
-    when(mockTree.getTable()).thenReturn(mockTable);
-    when(mockTable.getADTableTreeList()).thenReturn(tableTreeList);
-    when(mockTableTree.isOrdered()).thenReturn(false);
+    setupTreeWithSingleTableTree(false);
 
-    Method method = ADTreeDatasourceService.class.getDeclaredMethod(IS_ORDERED, Tree.class);
-    method.setAccessible(true);
-    boolean result = (boolean) method.invoke(instance, mockTree);
-
-    assertFalse(result);
+    assertFalse(invokeIsOrdered());
   }
 
   /**
@@ -181,11 +166,21 @@ public class ADTreeDatasourceServiceTest {
     when(mockTree.getTable()).thenReturn(mockTable);
     when(mockTable.getADTableTreeList()).thenReturn(tableTreeList);
 
+    assertFalse(invokeIsOrdered());
+  }
+
+  private void setupTreeWithSingleTableTree(boolean ordered) {
+    List<TableTree> tableTreeList = new ArrayList<>();
+    tableTreeList.add(mockTableTree);
+    when(mockTree.getTable()).thenReturn(mockTable);
+    when(mockTable.getADTableTreeList()).thenReturn(tableTreeList);
+    when(mockTableTree.isOrdered()).thenReturn(ordered);
+  }
+
+  private boolean invokeIsOrdered() throws Exception {
     Method method = ADTreeDatasourceService.class.getDeclaredMethod(IS_ORDERED, Tree.class);
     method.setAccessible(true);
-    boolean result = (boolean) method.invoke(instance, mockTree);
-
-    assertFalse(result);
+    return (boolean) method.invoke(instance, mockTree);
   }
 
   /** Get datasource specific params with tab id. */
@@ -280,18 +275,7 @@ public class ADTreeDatasourceServiceTest {
   /** Node conforms to where clause with null where clause. */
   @Test
   public void testNodeConformsToWhereClauseWithNullWhereClause() {
-    when(mockTableTree.getTable()).thenReturn(mockTable);
-    when(mockTable.getId()).thenReturn(TEST_TABLE_ID);
-
-    Entity mockEntity = mock(Entity.class);
-    when(mockModelProvider.getEntityByTableId(TEST_TABLE_ID)).thenReturn(mockEntity);
-    when(mockEntity.getName()).thenReturn("TestEntity");
-
-    org.openbravo.dal.service.OBQuery mockQuery = mock(org.openbravo.dal.service.OBQuery.class);
-    when(mockOBDal.createQuery(anyString(), anyString())).thenReturn(mockQuery);
-    when(mockQuery.setFilterOnActive(anyBoolean())).thenReturn(mockQuery);
-    when(mockQuery.setNamedParameter(anyString(), any())).thenReturn(mockQuery);
-    when(mockQuery.count()).thenReturn(1);
+    setupNodeConformsQuery(1);
 
     boolean result = instance.nodeConformsToWhereClause(mockTableTree, "NODE_1", null);
 
@@ -301,6 +285,14 @@ public class ADTreeDatasourceServiceTest {
   /** Node conforms to where clause returns false when no match. */
   @Test
   public void testNodeConformsToWhereClauseReturnsFalseWhenNoMatch() {
+    setupNodeConformsQuery(0);
+
+    boolean result = instance.nodeConformsToWhereClause(mockTableTree, "NODE_1", null);
+
+    assertFalse(result);
+  }
+
+  private void setupNodeConformsQuery(int queryCount) {
     when(mockTableTree.getTable()).thenReturn(mockTable);
     when(mockTable.getId()).thenReturn(TEST_TABLE_ID);
 
@@ -312,10 +304,6 @@ public class ADTreeDatasourceServiceTest {
     when(mockOBDal.createQuery(anyString(), anyString())).thenReturn(mockQuery);
     when(mockQuery.setFilterOnActive(anyBoolean())).thenReturn(mockQuery);
     when(mockQuery.setNamedParameter(anyString(), any())).thenReturn(mockQuery);
-    when(mockQuery.count()).thenReturn(0);
-
-    boolean result = instance.nodeConformsToWhereClause(mockTableTree, "NODE_1", null);
-
-    assertFalse(result);
+    when(mockQuery.count()).thenReturn(queryCount);
   }
 }

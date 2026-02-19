@@ -18,19 +18,23 @@ public class DefaultProcessorProviderTest {
 
   @Test
   public void testSupportsReturnsFalse() {
-    assertFalse(provider.supports("anyType"));
+    assertSupportsReturnsFalse("anyType");
   }
   /** Supports returns false for null. */
 
   @Test
   public void testSupportsReturnsFalseForNull() {
-    assertFalse(provider.supports(null));
+    assertSupportsReturnsFalse(null);
   }
   /** Supports returns false for empty. */
 
   @Test
   public void testSupportsReturnsFalseForEmpty() {
-    assertFalse(provider.supports(""));
+    assertSupportsReturnsFalse("");
+  }
+
+  private void assertSupportsReturnsFalse(String input) {
+    assertFalse(provider.supports(input));
   }
   /** Get box processor class returns box processor. */
 

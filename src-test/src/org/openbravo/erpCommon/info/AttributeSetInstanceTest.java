@@ -27,6 +27,7 @@ public class AttributeSetInstanceTest {
   private static final String TEST_ATTRIBUTE_ID_2 = "200";
 
   private AttributeSetInstance instance;
+  private final ObjenesisStd objenesis = new ObjenesisStd();
   /**
    * Sets up test fixtures.
    * @throws Exception if an error occurs
@@ -34,7 +35,6 @@ public class AttributeSetInstanceTest {
 
   @Before
   public void setUp() throws Exception {
-    ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(AttributeSetInstance.class);
   }
 
@@ -259,7 +259,6 @@ public class AttributeSetInstanceTest {
 
   private AttributeSetInstanceData createInstanceData(String attributeId, String value,
       String attributeValueId) {
-    ObjenesisStd objenesis = new ObjenesisStd();
     AttributeSetInstanceData data = objenesis.newInstance(AttributeSetInstanceData.class);
     data.mAttributeId = attributeId;
     data.value = value;
@@ -270,7 +269,6 @@ public class AttributeSetInstanceTest {
   private AttributeSetInstanceData createFieldData(String elementName, String islist,
       String islot, String isserno, String isguaranteedate, String islockable,
       String ismandatory) {
-    ObjenesisStd objenesis = new ObjenesisStd();
     AttributeSetInstanceData data = objenesis.newInstance(AttributeSetInstanceData.class);
     data.elementname = elementName;
     data.islist = islist;

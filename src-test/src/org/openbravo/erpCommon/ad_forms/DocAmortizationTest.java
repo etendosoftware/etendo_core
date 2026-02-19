@@ -34,15 +34,8 @@ public class DocAmortizationTest {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(DocAmortization.class);
 
-    // Set ZERO field from AcctServer parent
-    Field zeroField = findField(instance.getClass(), "ZERO");
-    zeroField.setAccessible(true);
-    zeroField.set(instance, BigDecimal.ZERO);
-
-    // Set SeqNo field
-    Field seqNoField = DocAmortization.class.getDeclaredField("SeqNo");
-    seqNoField.setAccessible(true);
-    seqNoField.set(instance, "0");
+    setFieldValue(instance, "ZERO", BigDecimal.ZERO);
+    setFieldValue(instance, "SeqNo", "0");
   }
   /** Get balance returns zero. */
 
@@ -110,6 +103,12 @@ public class DocAmortizationTest {
   @Test
   public void testGetServletInfo() {
     assertEquals("Servlet for the accounting", instance.getServletInfo());
+  }
+
+  private void setFieldValue(Object target, String fieldName, Object value) throws Exception {
+    Field field = findField(target.getClass(), fieldName);
+    field.setAccessible(true);
+    field.set(target, value);
   }
 
   private Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {

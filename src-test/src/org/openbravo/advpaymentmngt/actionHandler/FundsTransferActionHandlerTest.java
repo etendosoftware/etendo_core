@@ -75,14 +75,7 @@ public class FundsTransferActionHandlerTest {
 
   @Test
   public void testConvertAmountWithRate() throws Exception {
-    BigDecimal amount = new BigDecimal(VAL_100_00);
-    BigDecimal rate = new BigDecimal("1.5");
-
-    Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
-        BigDecimal.class, FIN_FinancialAccount.class, FIN_FinancialAccount.class, Date.class, BigDecimal.class);
-    method.setAccessible(true);
-
-    BigDecimal result = (BigDecimal) method.invoke(null, amount, mockAccountFrom, mockAccountTo, new Date(), rate);
+    BigDecimal result = invokeConvertAmount(new BigDecimal(VAL_100_00), new Date(), new BigDecimal("1.5"));
     assertEquals(new BigDecimal("150.00"), result);
   }
   /**
@@ -92,14 +85,7 @@ public class FundsTransferActionHandlerTest {
 
   @Test
   public void testConvertAmountWithRateRoundsToScale() throws Exception {
-    BigDecimal amount = new BigDecimal(VAL_100_00);
-    BigDecimal rate = new BigDecimal("1.333");
-
-    Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
-        BigDecimal.class, FIN_FinancialAccount.class, FIN_FinancialAccount.class, Date.class, BigDecimal.class);
-    method.setAccessible(true);
-
-    BigDecimal result = (BigDecimal) method.invoke(null, amount, mockAccountFrom, mockAccountTo, new Date(), rate);
+    BigDecimal result = invokeConvertAmount(new BigDecimal(VAL_100_00), new Date(), new BigDecimal("1.333"));
     assertEquals(new BigDecimal("133.30"), result);
   }
   /**
@@ -117,11 +103,7 @@ public class FundsTransferActionHandlerTest {
         amount, mockCurrencyFrom, mockCurrencyTo, date, mockOrg, null))
         .thenReturn(expectedConverted);
 
-    Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
-        BigDecimal.class, FIN_FinancialAccount.class, FIN_FinancialAccount.class, Date.class, BigDecimal.class);
-    method.setAccessible(true);
-
-    BigDecimal result = (BigDecimal) method.invoke(null, amount, mockAccountFrom, mockAccountTo, date, (BigDecimal) null);
+    BigDecimal result = invokeConvertAmount(amount, date, null);
     assertEquals(expectedConverted, result);
   }
   /**
@@ -131,21 +113,8 @@ public class FundsTransferActionHandlerTest {
 
   @Test
   public void testLineNumberUtilGetNextLineNumber() throws Exception {
-    Class<?> lineNumClass = Class.forName(
-        "org.openbravo.advpaymentmngt.actionHandler.FundsTransferActionHandler$LineNumberUtil");
-    java.lang.reflect.Constructor<?> constructor = lineNumClass.getDeclaredConstructor();
-    constructor.setAccessible(true);
-    Object lineNoUtil = constructor.newInstance();
-
-    // Set the lastLineNo map with a pre-existing value
-    java.lang.reflect.Field field = lineNumClass.getDeclaredField("lastLineNo");
-    field.setAccessible(true);
-    HashMap<FIN_FinancialAccount, Long> map = new HashMap<>();
-    map.put(mockAccountFrom, 10L);
-    field.set(lineNoUtil, map);
-
-    Method getNext = lineNumClass.getDeclaredMethod("getNextLineNumber", FIN_FinancialAccount.class);
-    getNext.setAccessible(true);
+    Object lineNoUtil = createLineNumberUtil(10L);
+    Method getNext = getNextLineNumberMethod();
 
     Long result = (Long) getNext.invoke(lineNoUtil, mockAccountFrom);
     assertEquals(Long.valueOf(20L), result);
@@ -157,6 +126,24 @@ public class FundsTransferActionHandlerTest {
 
   @Test
   public void testLineNumberUtilIncrementsSequentially() throws Exception {
+    Object lineNoUtil = createLineNumberUtil(10L);
+    Method getNext = getNextLineNumberMethod();
+
+    Long first = (Long) getNext.invoke(lineNoUtil, mockAccountFrom);
+    Long second = (Long) getNext.invoke(lineNoUtil, mockAccountFrom);
+    assertEquals(Long.valueOf(20L), first);
+    assertEquals(Long.valueOf(30L), second);
+  }
+
+  private BigDecimal invokeConvertAmount(BigDecimal amount, Date date, BigDecimal rate)
+      throws Exception {
+    Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
+        BigDecimal.class, FIN_FinancialAccount.class, FIN_FinancialAccount.class, Date.class, BigDecimal.class);
+    method.setAccessible(true);
+    return (BigDecimal) method.invoke(null, amount, mockAccountFrom, mockAccountTo, date, rate);
+  }
+
+  private Object createLineNumberUtil(long initialLineNo) throws Exception {
     Class<?> lineNumClass = Class.forName(
         "org.openbravo.advpaymentmngt.actionHandler.FundsTransferActionHandler$LineNumberUtil");
     java.lang.reflect.Constructor<?> constructor = lineNumClass.getDeclaredConstructor();
@@ -166,15 +153,17 @@ public class FundsTransferActionHandlerTest {
     java.lang.reflect.Field field = lineNumClass.getDeclaredField("lastLineNo");
     field.setAccessible(true);
     HashMap<FIN_FinancialAccount, Long> map = new HashMap<>();
-    map.put(mockAccountFrom, 10L);
+    map.put(mockAccountFrom, initialLineNo);
     field.set(lineNoUtil, map);
 
+    return lineNoUtil;
+  }
+
+  private Method getNextLineNumberMethod() throws Exception {
+    Class<?> lineNumClass = Class.forName(
+        "org.openbravo.advpaymentmngt.actionHandler.FundsTransferActionHandler$LineNumberUtil");
     Method getNext = lineNumClass.getDeclaredMethod("getNextLineNumber", FIN_FinancialAccount.class);
     getNext.setAccessible(true);
-
-    Long first = (Long) getNext.invoke(lineNoUtil, mockAccountFrom);
-    Long second = (Long) getNext.invoke(lineNoUtil, mockAccountFrom);
-    assertEquals(Long.valueOf(20L), first);
-    assertEquals(Long.valueOf(30L), second);
+    return getNext;
   }
 }

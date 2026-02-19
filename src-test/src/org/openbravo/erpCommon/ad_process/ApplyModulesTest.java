@@ -82,25 +82,10 @@ public class ApplyModulesTest {
 
   @Test
   public void testPrintExternalRebuildWithRestartTrue() throws Exception {
-    // Arrange
-    when(mockVars.getLanguage()).thenReturn("en_US");
-    when(mockVars.getTheme()).thenReturn(DEFAULT);
-    when(mockXmlEngine.readXmlTemplate(anyString(), any(String[].class)))
-        .thenReturn(mockXmlTemplate);
-    when(mockXmlTemplate.createXmlDocument()).thenReturn(mockXmlDocument);
-    when(mockXmlDocument.print()).thenReturn("<html>test</html>");
+    setupPrintExternalRebuildMocks();
 
-    StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
-    when(mockResponse.getWriter()).thenReturn(printWriter);
+    invokePrintExternalRebuild(true);
 
-    // Act
-    Method method = ApplyModules.class.getDeclaredMethod("printExternalRebuild",
-        HttpServletResponse.class, VariablesSecureApp.class, boolean.class);
-    method.setAccessible(true);
-    method.invoke(instance, mockResponse, mockVars, true);
-
-    // Assert
     verify(mockResponse).setContentType("text/html; charset=UTF-8");
     verify(mockXmlDocument).setParameter("language", "defaultLang=\"en_US\";");
     verify(mockXmlDocument).setParameter("theme", DEFAULT);
@@ -112,7 +97,17 @@ public class ApplyModulesTest {
 
   @Test
   public void testPrintExternalRebuildWithRestartFalse() throws Exception {
-    // Arrange
+    setupPrintExternalRebuildMocks();
+
+    invokePrintExternalRebuild(false);
+
+    verify(mockResponse).setContentType("text/html; charset=UTF-8");
+    verify(mockXmlEngine).readXmlTemplate(
+        org.mockito.ArgumentMatchers.eq("org/openbravo/erpCommon/ad_process/ApplyModulesExternal"),
+        any(String[].class));
+  }
+
+  private void setupPrintExternalRebuildMocks() throws Exception {
     when(mockVars.getLanguage()).thenReturn("en_US");
     when(mockVars.getTheme()).thenReturn(DEFAULT);
     when(mockXmlEngine.readXmlTemplate(anyString(), any(String[].class)))
@@ -123,18 +118,13 @@ public class ApplyModulesTest {
     StringWriter stringWriter = new StringWriter();
     PrintWriter printWriter = new PrintWriter(stringWriter);
     when(mockResponse.getWriter()).thenReturn(printWriter);
+  }
 
-    // Act
+  private void invokePrintExternalRebuild(boolean restart) throws Exception {
     Method method = ApplyModules.class.getDeclaredMethod("printExternalRebuild",
         HttpServletResponse.class, VariablesSecureApp.class, boolean.class);
     method.setAccessible(true);
-    method.invoke(instance, mockResponse, mockVars, false);
-
-    // Assert
-    verify(mockResponse).setContentType("text/html; charset=UTF-8");
-    verify(mockXmlEngine).readXmlTemplate(
-        org.mockito.ArgumentMatchers.eq("org/openbravo/erpCommon/ad_process/ApplyModulesExternal"),
-        any(String[].class));
+    method.invoke(instance, mockResponse, mockVars, restart);
   }
 
   private Field findField(Class<?> clazz, String fieldName) {

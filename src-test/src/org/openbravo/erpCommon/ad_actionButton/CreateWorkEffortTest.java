@@ -103,19 +103,7 @@ public class CreateWorkEffortTest {
 
   @Test
   public void testExecuteWithNullWorkRequirementHandlesError() throws Exception {
-    HashMap<String, Object> params = new HashMap<>();
-    params.put(MA_WORKREQUIREMENT_ID, NONEXISTENT_ID);
-    params.put("date", VAL_15_01_2024);
-    params.put(STARTTIME, "08:00:00");
-    params.put(ENDTIME, "17:00:00");
-    when(mockBundle.getParams()).thenReturn(params);
-
-    lenient().when(mockOBDal.get(any(Class.class), anyString())).thenReturn(null);
-
-    utilityStatic.when(() -> Utility.messageBD(any(ConnectionProvider.class), anyString(), anyString()))
-        .thenReturn(ERROR);
-
-    instance.execute(mockBundle);
+    setupBundleAndExecute("08:00:00", "17:00:00");
 
     verify(mockBundle).setResult(any(OBError.class));
   }
@@ -126,19 +114,7 @@ public class CreateWorkEffortTest {
 
   @Test
   public void testExecuteWithNullStartEndTimeDefaults() throws Exception {
-    HashMap<String, Object> params = new HashMap<>();
-    params.put(MA_WORKREQUIREMENT_ID, NONEXISTENT_ID);
-    params.put("date", VAL_15_01_2024);
-    params.put(STARTTIME, null);
-    params.put(ENDTIME, null);
-    when(mockBundle.getParams()).thenReturn(params);
-
-    lenient().when(mockOBDal.get(any(Class.class), anyString())).thenReturn(null);
-
-    utilityStatic.when(() -> Utility.messageBD(any(ConnectionProvider.class), anyString(), anyString()))
-        .thenReturn(ERROR);
-
-    instance.execute(mockBundle);
+    setupBundleAndExecute(null, null);
 
     verify(mockBundle).setResult(any(OBError.class));
   }
@@ -149,11 +125,17 @@ public class CreateWorkEffortTest {
 
   @Test
   public void testExecuteWithEmptyStartEndTimeDefaults() throws Exception {
+    setupBundleAndExecute("", "");
+
+    verify(mockBundle).setResult(any(OBError.class));
+  }
+
+  private void setupBundleAndExecute(String startTime, String endTime) throws Exception {
     HashMap<String, Object> params = new HashMap<>();
     params.put(MA_WORKREQUIREMENT_ID, NONEXISTENT_ID);
     params.put("date", VAL_15_01_2024);
-    params.put(STARTTIME, "");
-    params.put(ENDTIME, "");
+    params.put(STARTTIME, startTime);
+    params.put(ENDTIME, endTime);
     when(mockBundle.getParams()).thenReturn(params);
 
     lenient().when(mockOBDal.get(any(Class.class), anyString())).thenReturn(null);
@@ -162,7 +144,5 @@ public class CreateWorkEffortTest {
         .thenReturn(ERROR);
 
     instance.execute(mockBundle);
-
-    verify(mockBundle).setResult(any(OBError.class));
   }
 }

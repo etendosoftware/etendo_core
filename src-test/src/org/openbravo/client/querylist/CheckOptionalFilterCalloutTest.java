@@ -133,14 +133,7 @@ public class CheckOptionalFilterCalloutTest {
 
   @Test
   public void testExecuteWithCanBeFilteredYAndHqlContainsOptionalFilters() throws Exception {
-    when(mockInfo.getStringParameter(INP_LAST_FIELD_CHANGED, null)).thenReturn(INPCAN_BE_FILTERED);
-    when(mockInfo.getStringParameter(INPCAN_BE_FILTERED, null)).thenReturn("Y");
-    when(mockInfo.getStringParameter(INPOBCQL_QUERY_COLUMN_ID, null)).thenReturn(QUERY_COLUMN_ID);
-
-    when(mockOBDal.exists(OBCQL_QUERY_COLUMN, QUERY_COLUMN_ID)).thenReturn(true);
-    when(mockOBDal.get(OBCQL_QueryColumn.class, QUERY_COLUMN_ID)).thenReturn(mockQueryColumn);
-    when(mockQueryColumn.getWidgetQuery()).thenReturn(mockWidgetQuery);
-    when(mockWidgetQuery.getHQL()).thenReturn("SELECT e FROM Entity e WHERE @optional_filters@");
+    setupCanBeFilteredYWithHql("SELECT e FROM Entity e WHERE @optional_filters@");
 
     invokeExecute();
 
@@ -153,14 +146,7 @@ public class CheckOptionalFilterCalloutTest {
 
   @Test
   public void testExecuteWithCanBeFilteredYAndHqlMissingOptionalFilters() throws Exception {
-    when(mockInfo.getStringParameter(INP_LAST_FIELD_CHANGED, null)).thenReturn(INPCAN_BE_FILTERED);
-    when(mockInfo.getStringParameter(INPCAN_BE_FILTERED, null)).thenReturn("Y");
-    when(mockInfo.getStringParameter(INPOBCQL_QUERY_COLUMN_ID, null)).thenReturn(QUERY_COLUMN_ID);
-
-    when(mockOBDal.exists(OBCQL_QUERY_COLUMN, QUERY_COLUMN_ID)).thenReturn(true);
-    when(mockOBDal.get(OBCQL_QueryColumn.class, QUERY_COLUMN_ID)).thenReturn(mockQueryColumn);
-    when(mockQueryColumn.getWidgetQuery()).thenReturn(mockWidgetQuery);
-    when(mockWidgetQuery.getHQL()).thenReturn("SELECT e FROM Entity e");
+    setupCanBeFilteredYWithHql("SELECT e FROM Entity e");
 
     invokeExecute();
 
@@ -173,14 +159,7 @@ public class CheckOptionalFilterCalloutTest {
 
   @Test
   public void testExecuteWithCanBeFilteredYAndEmptyHql() throws Exception {
-    when(mockInfo.getStringParameter(INP_LAST_FIELD_CHANGED, null)).thenReturn(INPCAN_BE_FILTERED);
-    when(mockInfo.getStringParameter(INPCAN_BE_FILTERED, null)).thenReturn("Y");
-    when(mockInfo.getStringParameter(INPOBCQL_QUERY_COLUMN_ID, null)).thenReturn(QUERY_COLUMN_ID);
-
-    when(mockOBDal.exists(OBCQL_QUERY_COLUMN, QUERY_COLUMN_ID)).thenReturn(true);
-    when(mockOBDal.get(OBCQL_QueryColumn.class, QUERY_COLUMN_ID)).thenReturn(mockQueryColumn);
-    when(mockQueryColumn.getWidgetQuery()).thenReturn(mockWidgetQuery);
-    when(mockWidgetQuery.getHQL()).thenReturn("");
+    setupCanBeFilteredYWithHql("");
 
     invokeExecute();
 
@@ -193,10 +172,7 @@ public class CheckOptionalFilterCalloutTest {
 
   @Test
   public void testExecuteWithCanBeFilteredYAndColumnNotFound() throws Exception {
-    when(mockInfo.getStringParameter(INP_LAST_FIELD_CHANGED, null)).thenReturn(INPCAN_BE_FILTERED);
-    when(mockInfo.getStringParameter(INPCAN_BE_FILTERED, null)).thenReturn("Y");
-    when(mockInfo.getStringParameter(INPOBCQL_QUERY_COLUMN_ID, null)).thenReturn(QUERY_COLUMN_ID);
-
+    setupCanBeFilteredYParams();
     when(mockOBDal.exists(OBCQL_QUERY_COLUMN, QUERY_COLUMN_ID)).thenReturn(false);
 
     invokeExecute();
@@ -210,17 +186,24 @@ public class CheckOptionalFilterCalloutTest {
 
   @Test
   public void testExecuteWithCanBeFilteredYAndNullHql() throws Exception {
-    when(mockInfo.getStringParameter(INP_LAST_FIELD_CHANGED, null)).thenReturn(INPCAN_BE_FILTERED);
-    when(mockInfo.getStringParameter(INPCAN_BE_FILTERED, null)).thenReturn("Y");
-    when(mockInfo.getStringParameter(INPOBCQL_QUERY_COLUMN_ID, null)).thenReturn(QUERY_COLUMN_ID);
-
-    when(mockOBDal.exists(OBCQL_QUERY_COLUMN, QUERY_COLUMN_ID)).thenReturn(true);
-    when(mockOBDal.get(OBCQL_QueryColumn.class, QUERY_COLUMN_ID)).thenReturn(mockQueryColumn);
-    when(mockQueryColumn.getWidgetQuery()).thenReturn(mockWidgetQuery);
-    when(mockWidgetQuery.getHQL()).thenReturn(null);
+    setupCanBeFilteredYWithHql(null);
 
     invokeExecute();
 
     verify(mockInfo, never()).addResult(eq(WARNING), anyString());
+  }
+
+  private void setupCanBeFilteredYParams() {
+    when(mockInfo.getStringParameter(INP_LAST_FIELD_CHANGED, null)).thenReturn(INPCAN_BE_FILTERED);
+    when(mockInfo.getStringParameter(INPCAN_BE_FILTERED, null)).thenReturn("Y");
+    when(mockInfo.getStringParameter(INPOBCQL_QUERY_COLUMN_ID, null)).thenReturn(QUERY_COLUMN_ID);
+  }
+
+  private void setupCanBeFilteredYWithHql(String hql) {
+    setupCanBeFilteredYParams();
+    when(mockOBDal.exists(OBCQL_QUERY_COLUMN, QUERY_COLUMN_ID)).thenReturn(true);
+    when(mockOBDal.get(OBCQL_QueryColumn.class, QUERY_COLUMN_ID)).thenReturn(mockQueryColumn);
+    when(mockQueryColumn.getWidgetQuery()).thenReturn(mockWidgetQuery);
+    when(mockWidgetQuery.getHQL()).thenReturn(hql);
   }
 }

@@ -42,25 +42,13 @@ public class DocLine_DPManagementTest {
 
   @Test
   public void testFieldsDefaultNull() {
-    assertNull(instance.Amount);
-    assertNull(instance.Isreceipt);
-    assertNull(instance.StatusTo);
-    assertNull(instance.StatusFrom);
-    assertNull(instance.conversionDate);
-    assertNull(instance.IsManual);
-    assertNull(instance.IsDirectPosting);
+    assertAllFieldsNull();
   }
   /** Set fields directly. */
 
   @Test
   public void testSetFieldsDirectly() {
-    instance.Amount = "100.00";
-    instance.Isreceipt = "Y";
-    instance.StatusTo = "ACTIVE";
-    instance.StatusFrom = "PENDING";
-    instance.conversionDate = "2024-01-01";
-    instance.IsManual = "N";
-    instance.IsDirectPosting = "Y";
+    setAllFields("100.00", "Y", "ACTIVE", "PENDING", "2024-01-01", "N", "Y");
 
     assertEquals("100.00", instance.Amount);
     assertEquals("Y", instance.Isreceipt);
@@ -69,6 +57,27 @@ public class DocLine_DPManagementTest {
     assertEquals("2024-01-01", instance.conversionDate);
     assertEquals("N", instance.IsManual);
     assertEquals("Y", instance.IsDirectPosting);
+  }
+
+  private void assertAllFieldsNull() {
+    assertNull(instance.Amount);
+    assertNull(instance.Isreceipt);
+    assertNull(instance.StatusTo);
+    assertNull(instance.StatusFrom);
+    assertNull(instance.conversionDate);
+    assertNull(instance.IsManual);
+    assertNull(instance.IsDirectPosting);
+  }
+
+  private void setAllFields(String amount, String isReceipt, String statusTo, String statusFrom,
+      String convDate, String isManual, String isDirectPosting) {
+    instance.Amount = amount;
+    instance.Isreceipt = isReceipt;
+    instance.StatusTo = statusTo;
+    instance.StatusFrom = statusFrom;
+    instance.conversionDate = convDate;
+    instance.IsManual = isManual;
+    instance.IsDirectPosting = isDirectPosting;
   }
   /** Get servlet info. */
 

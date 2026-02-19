@@ -39,17 +39,9 @@ public class AutologonAuthenticationManagerTest {
 
   @Test
   public void testDoAuthenticateReturnsUserIdWhenValid() throws Exception {
-    AutologonAuthenticationManager manager = new AutologonAuthenticationManager();
-    setPrivateField(manager, M_S_USER_ID, VALID_USER_ID);
-    setPrivateField(manager, M_S_AUTOLOGON_USERNAME, AUTOLOGON_USERNAME);
+    AutologonAuthenticationManager manager = createManagerWithFields(VALID_USER_ID, AUTOLOGON_USERNAME);
 
-    Method doAuthenticate = AutologonAuthenticationManager.class.getDeclaredMethod(
-        DO_AUTHENTICATE,
-        javax.servlet.http.HttpServletRequest.class,
-        javax.servlet.http.HttpServletResponse.class);
-    doAuthenticate.setAccessible(true);
-
-    String result = (String) doAuthenticate.invoke(manager, null, null);
+    String result = (String) invokeDoAuthenticate(manager);
     assertEquals(VALID_USER_ID, result);
   }
   /**
@@ -59,21 +51,7 @@ public class AutologonAuthenticationManagerTest {
 
   @Test(expected = AuthenticationException.class)
   public void testDoAuthenticateThrowsWhenUserIdIsNull() throws Throwable {
-    AutologonAuthenticationManager manager = new AutologonAuthenticationManager();
-    setPrivateField(manager, M_S_USER_ID, null);
-    setPrivateField(manager, M_S_AUTOLOGON_USERNAME, AUTOLOGON_USERNAME);
-
-    Method doAuthenticate = AutologonAuthenticationManager.class.getDeclaredMethod(
-        DO_AUTHENTICATE,
-        javax.servlet.http.HttpServletRequest.class,
-        javax.servlet.http.HttpServletResponse.class);
-    doAuthenticate.setAccessible(true);
-
-    try {
-      doAuthenticate.invoke(manager, null, null);
-    } catch (java.lang.reflect.InvocationTargetException e) {
-      throw e.getCause();
-    }
+    invokeDoAuthenticateExpectingException(null, AUTOLOGON_USERNAME);
   }
   /**
    * Do authenticate throws when user id is empty.
@@ -82,21 +60,7 @@ public class AutologonAuthenticationManagerTest {
 
   @Test(expected = AuthenticationException.class)
   public void testDoAuthenticateThrowsWhenUserIdIsEmpty() throws Throwable {
-    AutologonAuthenticationManager manager = new AutologonAuthenticationManager();
-    setPrivateField(manager, M_S_USER_ID, "");
-    setPrivateField(manager, M_S_AUTOLOGON_USERNAME, AUTOLOGON_USERNAME);
-
-    Method doAuthenticate = AutologonAuthenticationManager.class.getDeclaredMethod(
-        DO_AUTHENTICATE,
-        javax.servlet.http.HttpServletRequest.class,
-        javax.servlet.http.HttpServletResponse.class);
-    doAuthenticate.setAccessible(true);
-
-    try {
-      doAuthenticate.invoke(manager, null, null);
-    } catch (java.lang.reflect.InvocationTargetException e) {
-      throw e.getCause();
-    }
+    invokeDoAuthenticateExpectingException("", AUTOLOGON_USERNAME);
   }
   /**
    * Do authenticate throws when user id is minus one.
@@ -105,21 +69,7 @@ public class AutologonAuthenticationManagerTest {
 
   @Test(expected = AuthenticationException.class)
   public void testDoAuthenticateThrowsWhenUserIdIsMinusOne() throws Throwable {
-    AutologonAuthenticationManager manager = new AutologonAuthenticationManager();
-    setPrivateField(manager, M_S_USER_ID, "-1");
-    setPrivateField(manager, M_S_AUTOLOGON_USERNAME, AUTOLOGON_USERNAME);
-
-    Method doAuthenticate = AutologonAuthenticationManager.class.getDeclaredMethod(
-        DO_AUTHENTICATE,
-        javax.servlet.http.HttpServletRequest.class,
-        javax.servlet.http.HttpServletResponse.class);
-    doAuthenticate.setAccessible(true);
-
-    try {
-      doAuthenticate.invoke(manager, null, null);
-    } catch (java.lang.reflect.InvocationTargetException e) {
-      throw e.getCause();
-    }
+    invokeDoAuthenticateExpectingException("-1", AUTOLOGON_USERNAME);
   }
   /**
    * Do authenticate throws with empty autologon username.
@@ -128,21 +78,7 @@ public class AutologonAuthenticationManagerTest {
 
   @Test(expected = AuthenticationException.class)
   public void testDoAuthenticateThrowsWithEmptyAutologonUsername() throws Throwable {
-    AutologonAuthenticationManager manager = new AutologonAuthenticationManager();
-    setPrivateField(manager, M_S_USER_ID, null);
-    setPrivateField(manager, M_S_AUTOLOGON_USERNAME, "");
-
-    Method doAuthenticate = AutologonAuthenticationManager.class.getDeclaredMethod(
-        DO_AUTHENTICATE,
-        javax.servlet.http.HttpServletRequest.class,
-        javax.servlet.http.HttpServletResponse.class);
-    doAuthenticate.setAccessible(true);
-
-    try {
-      doAuthenticate.invoke(manager, null, null);
-    } catch (java.lang.reflect.InvocationTargetException e) {
-      throw e.getCause();
-    }
+    invokeDoAuthenticateExpectingException(null, "");
   }
   /**
    * Do authenticate throws with null autologon username.
@@ -151,19 +87,32 @@ public class AutologonAuthenticationManagerTest {
 
   @Test(expected = AuthenticationException.class)
   public void testDoAuthenticateThrowsWithNullAutologonUsername() throws Throwable {
-    AutologonAuthenticationManager manager = new AutologonAuthenticationManager();
-    setPrivateField(manager, M_S_USER_ID, null);
-    setPrivateField(manager, M_S_AUTOLOGON_USERNAME, null);
+    invokeDoAuthenticateExpectingException(null, null);
+  }
 
+  private AutologonAuthenticationManager createManagerWithFields(String userId, String username)
+      throws Exception {
+    AutologonAuthenticationManager manager = new AutologonAuthenticationManager();
+    setPrivateField(manager, M_S_USER_ID, userId);
+    setPrivateField(manager, M_S_AUTOLOGON_USERNAME, username);
+    return manager;
+  }
+
+  private Object invokeDoAuthenticate(AutologonAuthenticationManager manager) throws Exception {
     Method doAuthenticate = AutologonAuthenticationManager.class.getDeclaredMethod(
         DO_AUTHENTICATE,
         javax.servlet.http.HttpServletRequest.class,
         javax.servlet.http.HttpServletResponse.class);
     doAuthenticate.setAccessible(true);
+    return doAuthenticate.invoke(manager, null, null);
+  }
 
+  private void invokeDoAuthenticateExpectingException(String userId, String username)
+      throws Throwable {
+    AutologonAuthenticationManager manager = createManagerWithFields(userId, username);
     try {
-      doAuthenticate.invoke(manager, null, null);
-    } catch (java.lang.reflect.InvocationTargetException e) {
+      invokeDoAuthenticate(manager);
+    } catch (InvocationTargetException e) {
       throw e.getCause();
     }
   }

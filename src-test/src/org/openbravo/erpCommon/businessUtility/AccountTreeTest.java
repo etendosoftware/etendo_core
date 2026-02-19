@@ -319,21 +319,9 @@ public class AccountTreeTest {
   @Test
   public void testSetDataQtyWithDebitSign() throws Exception {
     AccountTree instance = createAccountTreeInstance();
+    setupFactAndElement(instance, NODE_ID_1, QTY_100, QTY_50, "200", "150");
 
-    AccountTreeData fact = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
-    fact.id = NODE_ID_1;
-    fact.qty = QTY_100;
-    fact.qtyRef = QTY_50;
-    fact.qtycredit = "200";
-    fact.qtycreditRef = "150";
-
-    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[]{fact});
-
-    AccountTreeData element = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
-    element.id = NODE_ID_1;
-    element.showvaluecond = "A";
-    element.issummary = "N";
-
+    AccountTreeData element = createSetDataQtyElement(NODE_ID_1);
     AccountTreeData result = invokeSetDataQty(instance, element, "D");
 
     assertEquals(QTY_100, result.qtyOperation);
@@ -348,21 +336,9 @@ public class AccountTreeTest {
   @Test
   public void testSetDataQtyWithCreditSign() throws Exception {
     AccountTree instance = createAccountTreeInstance();
+    setupFactAndElement(instance, NODE_ID_1, QTY_100, QTY_50, "200", "150");
 
-    AccountTreeData fact = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
-    fact.id = NODE_ID_1;
-    fact.qty = QTY_100;
-    fact.qtyRef = QTY_50;
-    fact.qtycredit = "200";
-    fact.qtycreditRef = "150";
-
-    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[]{fact});
-
-    AccountTreeData element = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
-    element.id = NODE_ID_1;
-    element.showvaluecond = "A";
-    element.issummary = "N";
-
+    AccountTreeData element = createSetDataQtyElement(NODE_ID_1);
     AccountTreeData result = invokeSetDataQty(instance, element, "C");
 
     assertEquals("200", result.qtyOperation);
@@ -592,27 +568,9 @@ public class AccountTreeTest {
     AccountTree instance = createAccountTreeInstance();
 
     AccountTreeData[] elements = new AccountTreeData[3];
-
-    elements[0] = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
-    elements[0].elementLevel = "0";
-    elements[0].svcreset = "Y";
-    elements[0].svcresetref = "N";
-    elements[0].qty = QTY_100;
-    elements[0].qtyRef = QTY_50;
-
-    elements[1] = createAccountTreeDataElement(NODE_ID_2, NODE_ID_1);
-    elements[1].elementLevel = "1";
-    elements[1].svcreset = "N";
-    elements[1].svcresetref = "N";
-    elements[1].qty = "200";
-    elements[1].qtyRef = "150";
-
-    elements[2] = createAccountTreeDataElement(NODE_ID_3, NODE_ID_2);
-    elements[2].elementLevel = "2";
-    elements[2].svcreset = "N";
-    elements[2].svcresetref = "N";
-    elements[2].qty = "300";
-    elements[2].qtyRef = "250";
+    elements[0] = createSvcElement(NODE_ID_1, PARENT_ID_ROOT, "0", "Y", "N", QTY_100, QTY_50);
+    elements[1] = createSvcElement(NODE_ID_2, NODE_ID_1, "1", "N", "N", "200", "150");
+    elements[2] = createSvcElement(NODE_ID_3, NODE_ID_2, "2", "N", "N", "300", "250");
 
     setPrivateField(instance, REPORT_ELEMENTS, elements);
 
@@ -633,20 +591,8 @@ public class AccountTreeTest {
     AccountTree instance = createAccountTreeInstance();
 
     AccountTreeData[] elements = new AccountTreeData[2];
-
-    elements[0] = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
-    elements[0].elementLevel = "0";
-    elements[0].svcreset = "N";
-    elements[0].svcresetref = "Y";
-    elements[0].qty = QTY_100;
-    elements[0].qtyRef = QTY_50;
-
-    elements[1] = createAccountTreeDataElement(NODE_ID_2, NODE_ID_1);
-    elements[1].elementLevel = "1";
-    elements[1].svcreset = "N";
-    elements[1].svcresetref = "N";
-    elements[1].qty = "200";
-    elements[1].qtyRef = "150";
+    elements[0] = createSvcElement(NODE_ID_1, PARENT_ID_ROOT, "0", "N", "Y", QTY_100, QTY_50);
+    elements[1] = createSvcElement(NODE_ID_2, NODE_ID_1, "1", "N", "N", "200", "150");
 
     setPrivateField(instance, REPORT_ELEMENTS, elements);
 
@@ -911,20 +857,8 @@ public class AccountTreeTest {
     AccountTree instance = createAccountTreeInstance();
 
     AccountTreeData[] elements = new AccountTreeData[2];
-
-    elements[0] = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
-    elements[0].elementLevel = "1";
-    elements[0].svcreset = "Y";
-    elements[0].svcresetref = "N";
-    elements[0].qty = QTY_100;
-    elements[0].qtyRef = QTY_50;
-
-    elements[1] = createAccountTreeDataElement(NODE_ID_2, NODE_ID_1);
-    elements[1].elementLevel = "1";
-    elements[1].svcreset = "N";
-    elements[1].svcresetref = "N";
-    elements[1].qty = "200";
-    elements[1].qtyRef = "150";
+    elements[0] = createSvcElement(NODE_ID_1, PARENT_ID_ROOT, "1", "Y", "N", QTY_100, QTY_50);
+    elements[1] = createSvcElement(NODE_ID_2, NODE_ID_1, "1", "N", "N", "200", "150");
 
     setPrivateField(instance, REPORT_ELEMENTS, elements);
 
@@ -1039,6 +973,45 @@ public class AccountTreeTest {
     data.isalwaysshown = "N";
     data.sign = "1";
     return data;
+  }
+
+  /**
+   * Creates an AccountTreeData element configured for setDataQty tests.
+   */
+  private AccountTreeData createSetDataQtyElement(String nodeId) {
+    AccountTreeData element = createAccountTreeDataElement(nodeId, PARENT_ID_ROOT);
+    element.id = nodeId;
+    element.showvaluecond = "A";
+    element.issummary = "N";
+    return element;
+  }
+
+  /**
+   * Sets up a fact element in accountsFacts for setDataQty tests.
+   */
+  private void setupFactAndElement(AccountTree instance, String nodeId,
+      String qty, String qtyRef, String qtycredit, String qtycreditRef) throws Exception {
+    AccountTreeData fact = createAccountTreeDataElement(nodeId, PARENT_ID_ROOT);
+    fact.id = nodeId;
+    fact.qty = qty;
+    fact.qtyRef = qtyRef;
+    fact.qtycredit = qtycredit;
+    fact.qtycreditRef = qtycreditRef;
+    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[]{fact});
+  }
+
+  /**
+   * Creates an AccountTreeData element configured for filterSVC tests.
+   */
+  private AccountTreeData createSvcElement(String nodeId, String parentId, String level,
+      String svcreset, String svcresetref, String qty, String qtyRef) {
+    AccountTreeData element = createAccountTreeDataElement(nodeId, parentId);
+    element.elementLevel = level;
+    element.svcreset = svcreset;
+    element.svcresetref = svcresetref;
+    element.qty = qty;
+    element.qtyRef = qtyRef;
+    return element;
   }
 
   /**

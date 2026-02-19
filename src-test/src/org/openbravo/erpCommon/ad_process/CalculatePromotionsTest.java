@@ -113,24 +113,14 @@ public class CalculatePromotionsTest {
 
   @Test
   public void testDoExecuteWithOrderTable() throws Exception {
-    Map<String, Object> params = new HashMap<>();
-    params.put(TAB_ID, TEST_TAB_ID);
-    params.put("c_order_ID", TEST_ORDER_ID);
-    when(mockBundle.getParams()).thenReturn(params);
-    when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
-    when(mockTab.getTable()).thenReturn(mockTable);
-    when(mockTable.getDBTableName()).thenReturn("c_order");
+    setupBundleWithTableName("c_order_ID", TEST_ORDER_ID, "c_order");
     when(mockCallStoredProcedure.call(anyString(), anyList(), isNull(), eq(true), eq(false)))
         .thenReturn(null);
 
-    Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
-    doExecute.setAccessible(true);
-    doExecute.invoke(instance, mockBundle);
+    invokeDoExecute();
 
     verify(mockCallStoredProcedure).call(eq("M_PROMOTION_CALCULATE"), anyList(), isNull(), eq(true), eq(false));
-    ArgumentCaptor<OBError> captor = ArgumentCaptor.forClass(OBError.class);
-    verify(mockBundle).setResult(captor.capture());
-    assertEquals(SUCCESS, captor.getValue().getType());
+    assertBundleResultType(SUCCESS);
   }
   /**
    * Do execute with invoice table.
@@ -139,24 +129,14 @@ public class CalculatePromotionsTest {
 
   @Test
   public void testDoExecuteWithInvoiceTable() throws Exception {
-    Map<String, Object> params = new HashMap<>();
-    params.put(TAB_ID, TEST_TAB_ID);
-    params.put("c_invoice_ID", TEST_INVOICE_ID);
-    when(mockBundle.getParams()).thenReturn(params);
-    when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
-    when(mockTab.getTable()).thenReturn(mockTable);
-    when(mockTable.getDBTableName()).thenReturn("c_invoice");
+    setupBundleWithTableName("c_invoice_ID", TEST_INVOICE_ID, "c_invoice");
     when(mockCallStoredProcedure.call(anyString(), anyList(), isNull(), eq(true), eq(false)))
         .thenReturn(null);
 
-    Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
-    doExecute.setAccessible(true);
-    doExecute.invoke(instance, mockBundle);
+    invokeDoExecute();
 
     verify(mockCallStoredProcedure).call(eq("M_PROMOTION_CALCULATE"), anyList(), isNull(), eq(true), eq(false));
-    ArgumentCaptor<OBError> captor = ArgumentCaptor.forClass(OBError.class);
-    verify(mockBundle).setResult(captor.capture());
-    assertEquals(SUCCESS, captor.getValue().getType());
+    assertBundleResultType(SUCCESS);
   }
   /**
    * Do execute handles exception gracefully.
@@ -165,22 +145,39 @@ public class CalculatePromotionsTest {
 
   @Test
   public void testDoExecuteHandlesExceptionGracefully() throws Exception {
-    Map<String, Object> params = new HashMap<>();
-    params.put(TAB_ID, TEST_TAB_ID);
-    when(mockBundle.getParams()).thenReturn(params);
-    when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
-    when(mockTab.getTable()).thenReturn(mockTable);
-    when(mockTable.getDBTableName()).thenReturn("c_order");
+    setupBundleWithTableName(null, null, "c_order");
     when(mockCallStoredProcedure.call(anyString(), anyList(), isNull(), eq(true), eq(false)))
         .thenThrow(new RuntimeException("DB error"));
 
-    Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
-    doExecute.setAccessible(true);
-    doExecute.invoke(instance, mockBundle);
+    invokeDoExecute();
 
     ArgumentCaptor<OBError> captor = ArgumentCaptor.forClass(OBError.class);
     verify(mockBundle).setResult(captor.capture());
     assertEquals("Error", captor.getValue().getType());
     assertEquals("DB error", captor.getValue().getMessage());
+  }
+
+  private void setupBundleWithTableName(String paramKey, String paramValue, String tableName) {
+    Map<String, Object> params = new HashMap<>();
+    params.put(TAB_ID, TEST_TAB_ID);
+    if (paramKey != null) {
+      params.put(paramKey, paramValue);
+    }
+    when(mockBundle.getParams()).thenReturn(params);
+    when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
+    when(mockTab.getTable()).thenReturn(mockTable);
+    when(mockTable.getDBTableName()).thenReturn(tableName);
+  }
+
+  private void invokeDoExecute() throws Exception {
+    Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
+    doExecute.setAccessible(true);
+    doExecute.invoke(instance, mockBundle);
+  }
+
+  private void assertBundleResultType(String expectedType) {
+    ArgumentCaptor<OBError> captor = ArgumentCaptor.forClass(OBError.class);
+    verify(mockBundle).setResult(captor.capture());
+    assertEquals(expectedType, captor.getValue().getType());
   }
 }

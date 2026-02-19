@@ -58,21 +58,23 @@ public class AbsoluteDateTimeDomainTypeTest {
 
   @Test
   public void testCreateFromStringWithNull() {
-    Object result = domainType.createFromString(null);
-    assertNull(result);
+    assertCreateFromStringReturnsNull(null);
   }
   /** Create from string with empty string. */
 
   @Test
   public void testCreateFromStringWithEmptyString() {
-    Object result = domainType.createFromString("");
-    assertNull(result);
+    assertCreateFromStringReturnsNull("");
   }
   /** Create from string with whitespace. */
 
   @Test
   public void testCreateFromStringWithWhitespace() {
-    Object result = domainType.createFromString("   ");
+    assertCreateFromStringReturnsNull("   ");
+  }
+
+  private void assertCreateFromStringReturnsNull(String input) {
+    Object result = domainType.createFromString(input);
     assertNull(result);
   }
   /** Create from string parses valid date. */

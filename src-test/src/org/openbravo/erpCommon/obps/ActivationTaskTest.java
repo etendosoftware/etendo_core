@@ -190,15 +190,7 @@ public class ActivationTaskTest {
     setField(task, PUBLIC_KEY, null);
     setField(task, PUBLIC_KEY_FILE, null);
 
-    when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
-
-    org.openbravo.model.ad.domain.List listItem = mock(
-        org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
-
-    List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
-    listItems.add(listItem);
-    when(purposeRef.getADListList()).thenReturn(listItems);
+    setupPurposeReferenceMock(VALID_PURPOSE);
 
     try {
       invokeVerifyParameters();
@@ -220,15 +212,7 @@ public class ActivationTaskTest {
     setField(task, PUBLIC_KEY, "somePublicKey");
     setField(task, PUBLIC_KEY_FILE, new File("/tmp/notbase/key.pub"));
 
-    when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
-
-    org.openbravo.model.ad.domain.List listItem = mock(
-        org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
-
-    List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
-    listItems.add(listItem);
-    when(purposeRef.getADListList()).thenReturn(listItems);
+    setupPurposeReferenceMock(VALID_PURPOSE);
 
     try {
       invokeVerifyParameters();
@@ -250,15 +234,7 @@ public class ActivationTaskTest {
     setField(task, PUBLIC_KEY, "somePublicKey");
     setField(task, PUBLIC_KEY_FILE, null);
 
-    when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
-
-    org.openbravo.model.ad.domain.List listItem = mock(
-        org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
-
-    List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
-    listItems.add(listItem);
-    when(purposeRef.getADListList()).thenReturn(listItems);
+    setupPurposeReferenceMock(VALID_PURPOSE);
 
     // Should not throw
     invokeVerifyParameters();
@@ -278,15 +254,7 @@ public class ActivationTaskTest {
     emptyFile.deleteOnExit();
     setField(task, PUBLIC_KEY_FILE, emptyFile);
 
-    when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
-
-    org.openbravo.model.ad.domain.List listItem = mock(
-        org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
-
-    List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
-    listItems.add(listItem);
-    when(purposeRef.getADListList()).thenReturn(listItems);
+    setupPurposeReferenceMock(VALID_PURPOSE);
 
     try {
       invokeVerifyParameters();
@@ -309,15 +277,7 @@ public class ActivationTaskTest {
     setField(task, PUBLIC_KEY_FILE,
         new File("/tmp/nonexistent_key_file_12345.pub"));
 
-    when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
-
-    org.openbravo.model.ad.domain.List listItem = mock(
-        org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
-
-    List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
-    listItems.add(listItem);
-    when(purposeRef.getADListList()).thenReturn(listItems);
+    setupPurposeReferenceMock(VALID_PURPOSE);
 
     try {
       invokeVerifyParameters();
@@ -329,6 +289,18 @@ public class ActivationTaskTest {
   }
 
   // --- Helper methods ---
+
+  private void setupPurposeReferenceMock(String searchKey) {
+    when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
+
+    org.openbravo.model.ad.domain.List listItem = mock(
+        org.openbravo.model.ad.domain.List.class);
+    when(listItem.getSearchKey()).thenReturn(searchKey);
+
+    List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
+    listItems.add(listItem);
+    when(purposeRef.getADListList()).thenReturn(listItems);
+  }
 
   private void invokeVerifyParameters() throws Exception{
     Method method = ActivationTask.class.getDeclaredMethod("verifyParameters");

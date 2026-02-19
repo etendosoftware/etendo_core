@@ -33,29 +33,15 @@ public class DocBankTest {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(DocBank.class);
 
-    // Set ZERO field from AcctServer parent
-    Field zeroField = findField(instance.getClass(), "ZERO");
-    zeroField.setAccessible(true);
-    zeroField.set(instance, BigDecimal.ZERO);
+    setFieldValue(instance, "ZERO", BigDecimal.ZERO);
+    setFieldValue(instance, "SeqNo", "0");
 
-    // Set SeqNo field
-    Field seqNoField = DocBank.class.getDeclaredField("SeqNo");
-    seqNoField.setAccessible(true);
-    seqNoField.set(instance, "0");
-
-    // Initialize Amounts array from AcctServer parent
-    Field amountsField = findField(instance.getClass(), "Amounts");
-    amountsField.setAccessible(true);
     String[] amounts = new String[10];
     for (int i = 0; i < amounts.length; i++) {
       amounts[i] = "0";
     }
-    amountsField.set(instance, amounts);
-
-    // Initialize p_lines as empty array for getBalance
-    Field pLinesField = findField(instance.getClass(), "p_lines");
-    pLinesField.setAccessible(true);
-    pLinesField.set(instance, new DocLine[0]);
+    setFieldValue(instance, "Amounts", amounts);
+    setFieldValue(instance, "p_lines", new DocLine[0]);
   }
   /** Next seq no increments by10. */
 
@@ -103,6 +89,12 @@ public class DocBankTest {
   @Test
   public void testGetSerialVersionUID() {
     assertEquals(1L, DocBank.getSerialVersionUID());
+  }
+
+  private void setFieldValue(Object target, String fieldName, Object value) throws Exception {
+    Field field = findField(target.getClass(), fieldName);
+    field.setAccessible(true);
+    field.set(target, value);
   }
 
   private Field findField(Class<?> clazz, String fieldName) throws NoSuchFieldException {

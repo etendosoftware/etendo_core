@@ -226,32 +226,13 @@ public class AcctServerProcessTest {
   @Test
   public void testDoExecuteWithDirectChannel() throws Exception {
     // Arrange
-    setupBasicBundleMocks();
-    when(mockVars.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockVars.getOrg()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockContext.getOrganization()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
-
-    when(mockBundle.getChannel()).thenReturn(Channel.DIRECT);
-    when(mockBundle.getPinstanceId()).thenReturn(TEST_PINSTANCE_ID);
+    setupNonSystemClientDirectChannel();
 
     AcctServerProcessData[] emptyData = new AcctServerProcessData[0];
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
         eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
         .thenReturn(emptyData);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTable(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectOrg(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn(TEST_ORG_ID);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateFrom(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateTo(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
+    setupDirectChannelPInstanceData("", "", "");
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
         .thenReturn(false);
 
@@ -271,15 +252,7 @@ public class AcctServerProcessTest {
   @Test
   public void testDoExecuteWithSpecificTable() throws Exception {
     // Arrange
-    setupBasicBundleMocks();
-    when(mockVars.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockVars.getOrg()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockContext.getOrganization()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
-
-    when(mockBundle.getChannel()).thenReturn(Channel.DIRECT);
-    when(mockBundle.getPinstanceId()).thenReturn(TEST_PINSTANCE_ID);
+    setupNonSystemClientDirectChannel();
 
     AcctServerProcessData[] tableData = new AcctServerProcessData[1];
     tableData[0] = createAcctServerProcessData(TEST_TABLE_ID);
@@ -287,18 +260,7 @@ public class AcctServerProcessTest {
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
         eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
         .thenReturn(tableData);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTable(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn(TEST_TABLE_ID);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectOrg(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn(TEST_ORG_ID);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateFrom(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateTo(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
+    setupDirectChannelPInstanceData(TEST_TABLE_ID, "", "");
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
         .thenReturn(false);
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDescription(
@@ -330,15 +292,7 @@ public class AcctServerProcessTest {
   @Test
   public void testDoExecuteWhenAcctServerIsNull() throws Exception {
     // Arrange
-    setupBasicBundleMocks();
-    when(mockVars.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockVars.getOrg()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockContext.getOrganization()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
-
-    when(mockBundle.getChannel()).thenReturn(Channel.DIRECT);
-    when(mockBundle.getPinstanceId()).thenReturn(TEST_PINSTANCE_ID);
+    setupNonSystemClientDirectChannel();
 
     AcctServerProcessData[] tableData = new AcctServerProcessData[1];
     tableData[0] = createAcctServerProcessData(TEST_TABLE_ID);
@@ -346,18 +300,7 @@ public class AcctServerProcessTest {
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
         eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
         .thenReturn(tableData);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTable(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn(TEST_TABLE_ID);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectOrg(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn(TEST_ORG_ID);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateFrom(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateTo(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
+    setupDirectChannelPInstanceData(TEST_TABLE_ID, "", "");
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
         .thenReturn(false);
 
@@ -568,31 +511,13 @@ public class AcctServerProcessTest {
   @Test
   public void testProcessClientWithNullVarsAndEmptyUserOrg() throws Exception {
     // Arrange
-    setupBasicBundleMocks();
-    when(mockVars.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockContext.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
-    when(mockContext.getOrganization()).thenReturn(TEST_ORG_ID);
-    when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
-
-    when(mockBundle.getChannel()).thenReturn(Channel.DIRECT);
-    when(mockBundle.getPinstanceId()).thenReturn(TEST_PINSTANCE_ID);
+    setupNonSystemClientDirectChannel();
 
     AcctServerProcessData[] emptyData = new AcctServerProcessData[0];
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectAcctTable(
         eq(mockConnection), eq(NON_SYSTEM_CLIENT_ID), eq(TEST_ORG_ID)))
         .thenReturn(emptyData);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTable(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("");
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectOrg(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn(TEST_ORG_ID);
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateFrom(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("2024-01-01");
-    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateTo(
-        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
-        .thenReturn("2024-12-31");
+    setupDirectChannelPInstanceData("", "2024-01-01", "2024-12-31");
     acctServerProcessDataStatic.when(() -> AcctServerProcessData.useRequestProcessOrg(mockConnection))
         .thenReturn(false);
 
@@ -690,6 +615,39 @@ public class AcctServerProcessTest {
 
     // Assert - process should complete without throwing
     verify(mockLogger).log(anyString());
+  }
+
+  /**
+   * Sets up mocks for a non-system client with DIRECT channel mode.
+   */
+  private void setupNonSystemClientDirectChannel() {
+    setupBasicBundleMocks();
+    when(mockVars.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
+    when(mockVars.getOrg()).thenReturn(TEST_ORG_ID);
+    when(mockContext.getClient()).thenReturn(NON_SYSTEM_CLIENT_ID);
+    when(mockContext.getOrganization()).thenReturn(TEST_ORG_ID);
+    when(mockContext.getLanguage()).thenReturn(TEST_LANGUAGE);
+
+    when(mockBundle.getChannel()).thenReturn(Channel.DIRECT);
+    when(mockBundle.getPinstanceId()).thenReturn(TEST_PINSTANCE_ID);
+  }
+
+  /**
+   * Sets up DIRECT channel PInstance data lookup mocks.
+   */
+  private void setupDirectChannelPInstanceData(String tableId, String dateFrom, String dateTo) {
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectTable(
+        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
+        .thenReturn(tableId);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectOrg(
+        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
+        .thenReturn(TEST_ORG_ID);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateFrom(
+        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
+        .thenReturn(dateFrom);
+    acctServerProcessDataStatic.when(() -> AcctServerProcessData.selectDateTo(
+        eq(mockConnection), eq(TEST_PINSTANCE_ID)))
+        .thenReturn(dateTo);
   }
 
   /**

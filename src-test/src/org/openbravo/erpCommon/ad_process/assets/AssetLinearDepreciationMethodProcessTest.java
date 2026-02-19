@@ -124,19 +124,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanZeroAmount() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("TI");
-    when(mockAsset.getAmortize()).thenReturn("MO");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(12L);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(1L);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("TI", "MO", 12L, 1L, BigDecimal.ZERO, BigDecimal.ZERO);
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
 
@@ -149,19 +137,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanNegativeAmount() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("TI");
-    when(mockAsset.getAmortize()).thenReturn("MO");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(12L);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(1L);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal("-100"));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("TI", "MO", 12L, 1L, BigDecimal.ZERO, new BigDecimal("-100"));
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
 
@@ -174,19 +150,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanPercentageZeroAnnualDepreciation() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("PE");
-    when(mockAsset.getAmortize()).thenReturn("YE");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(null);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(null);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal(VAL_10000));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("PE", "YE", null, null, BigDecimal.ZERO, new BigDecimal(VAL_10000));
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
 
@@ -199,19 +163,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanMonthlyZeroUsableLifeMonths() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("TI");
-    when(mockAsset.getAmortize()).thenReturn("MO");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(0L);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(null);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal(VAL_10000));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("TI", "MO", 0L, null, BigDecimal.ZERO, new BigDecimal(VAL_10000));
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
 
@@ -224,19 +176,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanYearlyZeroUsableLifeYears() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("TI");
-    when(mockAsset.getAmortize()).thenReturn("YE");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(null);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(0L);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal(VAL_10000));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("TI", "YE", null, 0L, BigDecimal.ZERO, new BigDecimal(VAL_10000));
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
 
@@ -249,19 +189,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanNullCurrency() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("PE");
-    when(mockAsset.getAmortize()).thenReturn("YE");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(null);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(null);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(new BigDecimal("10"));
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal(VAL_10000));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("PE", "YE", null, null, new BigDecimal("10"), new BigDecimal(VAL_10000));
     when(mockAsset.getCurrency()).thenReturn(null);
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
@@ -275,18 +203,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanFullyDepreciated() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("TI");
-    when(mockAsset.getAmortize()).thenReturn("MO");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(12L);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(1L);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal(VAL_10000));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
+    setupAssetMocksWithoutAmortizationLines("TI", "MO", 12L, 1L, BigDecimal.ZERO, new BigDecimal(VAL_10000));
 
     // Create amortization lines that sum up to full amount
     List<AmortizationLine> lines = new ArrayList<>();
@@ -314,19 +231,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanUnsupportedCalculateType() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("INVALID");
-    when(mockAsset.getAmortize()).thenReturn("MO");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(12L);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(1L);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal(VAL_10000));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("INVALID", "MO", 12L, 1L, BigDecimal.ZERO, new BigDecimal(VAL_10000));
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
 
@@ -339,19 +244,7 @@ public class AssetLinearDepreciationMethodProcessTest {
 
   @Test
   public void testGenerateAmortizationPlanUnsupportedFrequency() throws Exception {
-    Calendar cal = Calendar.getInstance();
-    cal.set(2024, Calendar.JANUARY, 1);
-    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
-    when(mockAsset.getDepreciationType()).thenReturn("LI");
-    when(mockAsset.getCalculateType()).thenReturn("TI");
-    when(mockAsset.getAmortize()).thenReturn("INVALID");
-    when(mockAsset.getUsableLifeMonths()).thenReturn(12L);
-    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
-    when(mockAsset.getUsableLifeYears()).thenReturn(1L);
-    when(mockAsset.getAnnualDepreciation()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getDepreciationAmt()).thenReturn(new BigDecimal(VAL_10000));
-    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
-    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+    setupAssetMocks("TI", "INVALID", 12L, 1L, BigDecimal.ZERO, new BigDecimal(VAL_10000));
 
     OBError result = instance.generateAmortizationPlan(mockAsset);
 
@@ -410,4 +303,30 @@ public class AssetLinearDepreciationMethodProcessTest {
     assertEquals(0, result.compareTo(new BigDecimal("365")));
   }
 
+  // --- Helper methods ---
+
+  private void setupAssetMocks(String calculateType, String amortize,
+      Long usableLifeMonths, Long usableLifeYears,
+      BigDecimal annualDepreciation, BigDecimal depreciationAmt) {
+    setupAssetMocksWithoutAmortizationLines(calculateType, amortize,
+        usableLifeMonths, usableLifeYears, annualDepreciation, depreciationAmt);
+    when(mockAsset.getFinancialMgmtAmortizationLineList()).thenReturn(new ArrayList<>());
+  }
+
+  private void setupAssetMocksWithoutAmortizationLines(String calculateType, String amortize,
+      Long usableLifeMonths, Long usableLifeYears,
+      BigDecimal annualDepreciation, BigDecimal depreciationAmt) {
+    Calendar cal = Calendar.getInstance();
+    cal.set(2024, Calendar.JANUARY, 1);
+    when(mockAsset.getDepreciationStartDate()).thenReturn(cal.getTime());
+    when(mockAsset.getDepreciationType()).thenReturn("LI");
+    when(mockAsset.getCalculateType()).thenReturn(calculateType);
+    when(mockAsset.getAmortize()).thenReturn(amortize);
+    when(mockAsset.getUsableLifeMonths()).thenReturn(usableLifeMonths);
+    when(mockAsset.isEveryMonthIs30Days()).thenReturn(false);
+    when(mockAsset.getUsableLifeYears()).thenReturn(usableLifeYears);
+    when(mockAsset.getAnnualDepreciation()).thenReturn(annualDepreciation);
+    when(mockAsset.getDepreciationAmt()).thenReturn(depreciationAmt);
+    when(mockAsset.getPreviouslyDepreciatedAmt()).thenReturn(BigDecimal.ZERO);
+  }
 }
