@@ -91,6 +91,7 @@ public class DocBankTest {
     assertEquals(1L, DocBank.getSerialVersionUID());
   }
 
+  @SuppressWarnings("java:S112")
   private void setFieldValue(Object target, String fieldName, Object value) throws Exception {
     Field field = findField(target.getClass(), fieldName);
     field.setAccessible(true);

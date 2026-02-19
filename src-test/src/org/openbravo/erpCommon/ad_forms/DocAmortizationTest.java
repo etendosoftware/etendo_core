@@ -105,6 +105,7 @@ public class DocAmortizationTest {
     assertEquals("Servlet for the accounting", instance.getServletInfo());
   }
 
+  @SuppressWarnings("java:S112")
   private void setFieldValue(Object target, String fieldName, Object value) throws Exception {
     Field field = findField(target.getClass(), fieldName);
     field.setAccessible(true);

@@ -511,6 +511,7 @@ public class ActiveInstanceProcessTest {
     return sendMethod;
   }
 
+  @SuppressWarnings("java:S107")
   private String[] invokeSendWithMocks(String coreVersion, String sysId, String dbId,
       String httpsResponse, String publicKey, String purpose, String instanceNo,
       boolean activate, String lastUpdate) throws Exception {
@@ -530,6 +531,7 @@ public class ActiveInstanceProcessTest {
     }
   }
 
+  @SuppressWarnings("java:S107")
   private String[] invokeSendWithMocksThrowingOnSend(String coreVersion, String sysId, String dbId,
       Throwable exception, String publicKey, String purpose, String instanceNo,
       boolean activate, String lastUpdate) throws Exception {

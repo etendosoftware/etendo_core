@@ -118,12 +118,14 @@ public class CalloutHelperTest {
     return fp;
   }
 
+  @SuppressWarnings("java:S112")
   private String invokeGenerateArray(FieldProvider[] data) throws Exception {
     Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY, FieldProvider[].class);
     method.setAccessible(true);
     return (String) method.invoke(instance, (Object) data);
   }
 
+  @SuppressWarnings("java:S112")
   private String invokeGenerateArrayWithSelection(FieldProvider[] data, String selectedId)
       throws Exception {
     Method method = CalloutHelper.class.getDeclaredMethod(GENERATE_ARRAY,

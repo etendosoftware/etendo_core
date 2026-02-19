@@ -177,6 +177,7 @@ public class ADTreeDatasourceServiceTest {
     when(mockTableTree.isOrdered()).thenReturn(ordered);
   }
 
+  @SuppressWarnings("java:S112")
   private boolean invokeIsOrdered() throws Exception {
     Method method = ADTreeDatasourceService.class.getDeclaredMethod(IS_ORDERED, Tree.class);
     method.setAccessible(true);

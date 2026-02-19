@@ -135,6 +135,7 @@ public class FundsTransferActionHandlerTest {
     assertEquals(Long.valueOf(30L), second);
   }
 
+  @SuppressWarnings("java:S112")
   private BigDecimal invokeConvertAmount(BigDecimal amount, Date date, BigDecimal rate)
       throws Exception {
     Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
@@ -159,6 +160,7 @@ public class FundsTransferActionHandlerTest {
     return lineNoUtil;
   }
 
+  @SuppressWarnings("java:S112")
   private Method getNextLineNumberMethod() throws Exception {
     Class<?> lineNumClass = Class.forName(
         "org.openbravo.advpaymentmngt.actionHandler.FundsTransferActionHandler$LineNumberUtil");

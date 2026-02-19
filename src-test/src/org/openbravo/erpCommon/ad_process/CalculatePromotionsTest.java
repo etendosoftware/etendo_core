@@ -169,6 +169,7 @@ public class CalculatePromotionsTest {
     when(mockTable.getDBTableName()).thenReturn(tableName);
   }
 
+  @SuppressWarnings("java:S112")
   private void invokeDoExecute() throws Exception {
     Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
     doExecute.setAccessible(true);
