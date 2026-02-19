@@ -755,6 +755,29 @@
     <Parameter name="mInoutlineId"/>
     <Parameter name="cInvoiceId"/>
   </SqlMethod>
+  <SqlMethod name="insertMatchSI" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      INSERT INTO M_MATCHSI
+        (
+        M_MATCHSI_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY,
+        UPDATED, UPDATEDBY, M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID,
+        DATETRX, QTY, PROCESSING, PROCESSED, POSTED
+        )
+      SELECT
+        GET_UUID(), iol.AD_CLIENT_ID, iol.AD_ORG_ID, 'Y', NOW(), ?,
+        NOW(), ?, iol.M_INOUTLINE_ID, il.C_INVOICELINE_ID, iol.M_PRODUCT_ID,
+        i.DATEACCT, iol.MOVEMENTQTY, 'N', 'Y', 'N'
+      FROM M_INOUTLINE iol
+        JOIN C_INVOICELINE il ON il.C_INVOICELINE_ID = ?
+        JOIN C_INVOICE i ON i.C_INVOICE_ID = il.C_INVOICE_ID
+      WHERE iol.M_INOUTLINE_ID = ?
+    </Sql>
+    <Parameter name="adUserId"/>
+    <Parameter name="adUserId"/>
+    <Parameter name="cInvoiceLineId"/>
+    <Parameter name="mInoutlineId"/>
+  </SqlMethod>
   <SqlMethod name="selectInvoiceInOut" type="preparedStatement" connection="true" return="string">
     <SqlMethodComment></SqlMethodComment>
     <Sql>

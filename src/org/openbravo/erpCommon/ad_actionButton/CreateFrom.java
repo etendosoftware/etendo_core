@@ -1125,12 +1125,18 @@ public class CreateFrom extends HttpSecureAppServlet {
                 }
 
                 if (!strInvoice.equals("")) {
-                  CreateFromShipmentData.updateInvoice(conn, this, strSequence,
-                      data[i].cInvoicelineId);
-                  CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
+                  String strInOutLineId = CreateFromShipmentData.selectInvoiceInOut(conn, this, data[i].cInvoicelineId);
+
+                  if (strInOutLineId == null || strInOutLineId.isEmpty()) {
+                    CreateFromShipmentData.updateInvoice(conn, this, strSequence, data[i].cInvoicelineId);
+                    CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
+                  } else {
+                    CreateFromShipmentData.insertMatchSI(conn, this, vars.getUser(), data[i].cInvoicelineId,
+                        strSequence);
+                    CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
+                  }
                 } else {
-                  CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence,
-                      data[i].cOrderlineId);
+                  CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence, data[i].cOrderlineId);
                 }
               } catch (final ServletException ex) {
                 myMessage = Utility.translateError(this, vars, vars.getLanguage(), ex.getMessage());
