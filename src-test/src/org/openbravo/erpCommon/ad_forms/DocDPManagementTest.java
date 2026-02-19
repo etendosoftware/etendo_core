@@ -10,11 +10,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+/** Tests for {@link DocDPManagement}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DocDPManagementTest {
 
   private DocDPManagement instance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -25,22 +31,29 @@ public class DocDPManagementTest {
     seqNoField.setAccessible(true);
     seqNoField.set(instance, "0");
   }
+  /** Get seq no default. */
 
   @Test
   public void testGetSeqNoDefault() {
     assertEquals("0", instance.getSeqNo());
   }
+  /** Set seq no. */
 
   @Test
   public void testSetSeqNo() {
     instance.setSeqNo("50");
     assertEquals("50", instance.getSeqNo());
   }
+  /** Get serial version uid. */
 
   @Test
   public void testGetSerialVersionUID() {
     assertEquals(1L, DocDPManagement.getSerialVersionUID());
   }
+  /**
+   * Get balance returns zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetBalanceReturnsZero() throws Exception {
@@ -52,6 +65,7 @@ public class DocDPManagementTest {
     BigDecimal balance = instance.getBalance();
     assertEquals(BigDecimal.ZERO, balance);
   }
+  /** Next seq no from zero. */
 
   @Test
   public void testNextSeqNoFromZero() {
@@ -59,6 +73,7 @@ public class DocDPManagementTest {
     assertEquals("10", result);
     assertEquals("10", instance.getSeqNo());
   }
+  /** Next seq no from ten. */
 
   @Test
   public void testNextSeqNoFromTen() {
@@ -66,6 +81,7 @@ public class DocDPManagementTest {
     assertEquals("20", result);
     assertEquals("20", instance.getSeqNo());
   }
+  /** Next seq no from large number. */
 
   @Test
   public void testNextSeqNoFromLargeNumber() {
@@ -73,6 +89,7 @@ public class DocDPManagementTest {
     assertEquals("1000", result);
     assertEquals("1000", instance.getSeqNo());
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {

@@ -22,11 +22,13 @@ import org.openbravo.client.application.process.ResponseActionsBuilder;
 public class ActionResultTest {
 
   private ActionResult actionResult;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     actionResult = new ActionResult();
   }
+  /** Get output returns empty when not set. */
 
   @Test
   public void testGetOutputReturnsEmptyWhenNotSet() {
@@ -34,6 +36,7 @@ public class ActionResultTest {
     assertNotNull(output);
     assertFalse(output.isPresent());
   }
+  /** Set and get output. */
 
   @Test
   public void testSetAndGetOutput() {
@@ -44,6 +47,7 @@ public class ActionResultTest {
     assertTrue(output.isPresent());
     assertSame(mockData, output.get());
   }
+  /** Get response actions builder returns empty when not set. */
 
   @Test
   public void testGetResponseActionsBuilderReturnsEmptyWhenNotSet() {
@@ -51,6 +55,7 @@ public class ActionResultTest {
     assertNotNull(builder);
     assertFalse(builder.isPresent());
   }
+  /** Set and get response actions builder. */
 
   @Test
   public void testSetAndGetResponseActionsBuilder() {
@@ -61,11 +66,13 @@ public class ActionResultTest {
     assertTrue(builder.isPresent());
     assertSame(mockBuilder, builder.get());
   }
+  /** Get response actions returns empty when builder not set. */
 
   @Test
   public void testGetResponseActionsReturnsEmptyWhenBuilderNotSet() {
     assertFalse(actionResult.getResponseActions().isPresent());
   }
+  /** Inherited type and message. */
 
   @Test
   public void testInheritedTypeAndMessage() {
@@ -75,18 +82,21 @@ public class ActionResultTest {
     assertEquals(Result.Type.SUCCESS, actionResult.getType());
     assertEquals("Operation completed", actionResult.getMessage());
   }
+  /** Set output with null. */
 
   @Test
   public void testSetOutputWithNull() {
     actionResult.setOutput(null);
     assertFalse(actionResult.getOutput().isPresent());
   }
+  /** Set response actions builder with null. */
 
   @Test
   public void testSetResponseActionsBuilderWithNull() {
     actionResult.setResponseActionsBuilder(null);
     assertFalse(actionResult.getResponseActionsBuilder().isPresent());
   }
+  /** All result types. */
 
   @Test
   public void testAllResultTypes() {
@@ -95,6 +105,7 @@ public class ActionResultTest {
       assertEquals(type, actionResult.getType());
     }
   }
+  /** Set output overwrite. */
 
   @Test
   public void testSetOutputOverwrite() {

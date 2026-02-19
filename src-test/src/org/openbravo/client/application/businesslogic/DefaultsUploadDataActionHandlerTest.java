@@ -27,6 +27,7 @@ public class DefaultsUploadDataActionHandlerTest {
   private DefaultsUploadDataActionHandler handler;
 
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -34,11 +35,16 @@ public class DefaultsUploadDataActionHandlerTest {
     handler = objenesis.newInstance(DefaultsUploadDataActionHandler.class);
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obContextStatic != null) obContextStatic.close();
   }
+  /**
+   * Execute returns json with defaults.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteReturnsJsonWithDefaults() throws Exception {
@@ -52,6 +58,10 @@ public class DefaultsUploadDataActionHandlerTest {
     assertNotNull(result);
     assertTrue(result.has("defaults"));
   }
+  /**
+   * Execute returns empty defaults.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteReturnsEmptyDefaults() throws Exception {

@@ -17,22 +17,26 @@ import org.junit.Test;
 public class AbsoluteTimeDomainTypeTest {
 
   private AbsoluteTimeDomainType domainType;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     domainType = new AbsoluteTimeDomainType();
   }
+  /** Get primitive type returns timestamp. */
 
   @Test
   public void testGetPrimitiveTypeReturnsTimestamp() {
     assertEquals(Timestamp.class, domainType.getPrimitiveType());
   }
+  /** Convert to string with null returns empty. */
 
   @Test
   public void testConvertToStringWithNullReturnsEmpty() {
     String result = domainType.convertToString(null);
     assertEquals("", result);
   }
+  /** Convert to string with timestamp. */
 
   @Test
   public void testConvertToStringWithTimestamp() {
@@ -42,24 +46,28 @@ public class AbsoluteTimeDomainTypeTest {
     assertTrue(result.contains("2024"));
     assertTrue(result.contains("10:30:45"));
   }
+  /** Create from string with null. */
 
   @Test
   public void testCreateFromStringWithNull() {
     Object result = domainType.createFromString(null);
     assertNull(result);
   }
+  /** Create from string with empty string. */
 
   @Test
   public void testCreateFromStringWithEmptyString() {
     Object result = domainType.createFromString("");
     assertNull(result);
   }
+  /** Create from string with whitespace. */
 
   @Test
   public void testCreateFromStringWithWhitespace() {
     Object result = domainType.createFromString("   ");
     assertNull(result);
   }
+  /** Create from string with valid date. */
 
   @Test
   public void testCreateFromStringWithValidDate() {
@@ -68,6 +76,7 @@ public class AbsoluteTimeDomainTypeTest {
     assertNotNull(result);
     assertTrue(result instanceof Timestamp);
   }
+  /** Round trip conversion. */
 
   @Test
   public void testRoundTripConversion() {
@@ -79,16 +88,19 @@ public class AbsoluteTimeDomainTypeTest {
     Timestamp result = (Timestamp) parsed;
     assertEquals(original.getTime(), result.getTime());
   }
+  /** Create from string with invalid format. */
 
   @Test(expected = IllegalArgumentException.class)
   public void testCreateFromStringWithInvalidFormat() {
     domainType.createFromString("not-a-date");
   }
+  /** Get xml schema type. */
 
   @Test
   public void testGetXMLSchemaType() {
     assertEquals("ob:dateTime", domainType.getXMLSchemaType());
   }
+  /** Convert to string formats correctly. */
 
   @Test
   public void testConvertToStringFormatsCorrectly() {

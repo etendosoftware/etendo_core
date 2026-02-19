@@ -39,8 +39,13 @@ import org.openbravo.service.db.CallStoredProcedure;
 /**
  * Tests for {@link CalculatePromotions}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class CalculatePromotionsTest {
+
+  private static final String SUCCESS = "Success";
+  private static final String TAB_ID = "tabId";
+  private static final String DO_EXECUTE = "doExecute";
 
   private static final String TEST_TAB_ID = "100";
   private static final String TEST_ORDER_ID = "ORDER001";
@@ -68,6 +73,7 @@ public class CalculatePromotionsTest {
   private MockedStatic<OBContext> obContextStatic;
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
   private MockedStatic<CallStoredProcedure> callStoredProcedureStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -83,7 +89,7 @@ public class CalculatePromotionsTest {
     obContextStatic.when(() -> OBContext.restorePreviousMode()).thenAnswer(inv -> null);
 
     obMessageUtilsStatic = mockStatic(OBMessageUtils.class);
-    lenient().when(OBMessageUtils.messageBD(anyString())).thenReturn("Success");
+    lenient().when(OBMessageUtils.messageBD(anyString())).thenReturn(SUCCESS);
 
     callStoredProcedureStatic = mockStatic(CallStoredProcedure.class);
     callStoredProcedureStatic.when(CallStoredProcedure::getInstance).thenReturn(mockCallStoredProcedure);
@@ -91,6 +97,7 @@ public class CalculatePromotionsTest {
     lenient().when(mockOBContext.getUser()).thenReturn(mockUser);
     lenient().when(mockUser.getId()).thenReturn(TEST_USER_ID);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -99,11 +106,15 @@ public class CalculatePromotionsTest {
     if (obMessageUtilsStatic != null) obMessageUtilsStatic.close();
     if (callStoredProcedureStatic != null) callStoredProcedureStatic.close();
   }
+  /**
+   * Do execute with order table.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteWithOrderTable() throws Exception {
     Map<String, Object> params = new HashMap<>();
-    params.put("tabId", TEST_TAB_ID);
+    params.put(TAB_ID, TEST_TAB_ID);
     params.put("c_order_ID", TEST_ORDER_ID);
     when(mockBundle.getParams()).thenReturn(params);
     when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
@@ -112,20 +123,24 @@ public class CalculatePromotionsTest {
     when(mockCallStoredProcedure.call(anyString(), anyList(), isNull(), eq(true), eq(false)))
         .thenReturn(null);
 
-    Method doExecute = CalculatePromotions.class.getDeclaredMethod("doExecute", ProcessBundle.class);
+    Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
     doExecute.setAccessible(true);
     doExecute.invoke(instance, mockBundle);
 
     verify(mockCallStoredProcedure).call(eq("M_PROMOTION_CALCULATE"), anyList(), isNull(), eq(true), eq(false));
     ArgumentCaptor<OBError> captor = ArgumentCaptor.forClass(OBError.class);
     verify(mockBundle).setResult(captor.capture());
-    assertEquals("Success", captor.getValue().getType());
+    assertEquals(SUCCESS, captor.getValue().getType());
   }
+  /**
+   * Do execute with invoice table.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteWithInvoiceTable() throws Exception {
     Map<String, Object> params = new HashMap<>();
-    params.put("tabId", TEST_TAB_ID);
+    params.put(TAB_ID, TEST_TAB_ID);
     params.put("c_invoice_ID", TEST_INVOICE_ID);
     when(mockBundle.getParams()).thenReturn(params);
     when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
@@ -134,20 +149,24 @@ public class CalculatePromotionsTest {
     when(mockCallStoredProcedure.call(anyString(), anyList(), isNull(), eq(true), eq(false)))
         .thenReturn(null);
 
-    Method doExecute = CalculatePromotions.class.getDeclaredMethod("doExecute", ProcessBundle.class);
+    Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
     doExecute.setAccessible(true);
     doExecute.invoke(instance, mockBundle);
 
     verify(mockCallStoredProcedure).call(eq("M_PROMOTION_CALCULATE"), anyList(), isNull(), eq(true), eq(false));
     ArgumentCaptor<OBError> captor = ArgumentCaptor.forClass(OBError.class);
     verify(mockBundle).setResult(captor.capture());
-    assertEquals("Success", captor.getValue().getType());
+    assertEquals(SUCCESS, captor.getValue().getType());
   }
+  /**
+   * Do execute handles exception gracefully.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteHandlesExceptionGracefully() throws Exception {
     Map<String, Object> params = new HashMap<>();
-    params.put("tabId", TEST_TAB_ID);
+    params.put(TAB_ID, TEST_TAB_ID);
     when(mockBundle.getParams()).thenReturn(params);
     when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
     when(mockTab.getTable()).thenReturn(mockTable);
@@ -155,7 +174,7 @@ public class CalculatePromotionsTest {
     when(mockCallStoredProcedure.call(anyString(), anyList(), isNull(), eq(true), eq(false)))
         .thenThrow(new RuntimeException("DB error"));
 
-    Method doExecute = CalculatePromotions.class.getDeclaredMethod("doExecute", ProcessBundle.class);
+    Method doExecute = CalculatePromotions.class.getDeclaredMethod(DO_EXECUTE, ProcessBundle.class);
     doExecute.setAccessible(true);
     doExecute.invoke(instance, mockBundle);
 

@@ -16,8 +16,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 /**
  * Tests for {@link ClientAuthenticator}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class ClientAuthenticatorTest {
+  /** Get password authentication returns credentials. */
 
   @Test
   public void testGetPasswordAuthenticationReturnsCredentials() {
@@ -29,6 +31,7 @@ public class ClientAuthenticatorTest {
     assertEquals("user@example.com", auth.getUserName());
     assertEquals("secret123", auth.getPassword());
   }
+  /** Get password authentication with empty credentials. */
 
   @Test
   public void testGetPasswordAuthenticationWithEmptyCredentials() {
@@ -40,6 +43,7 @@ public class ClientAuthenticatorTest {
     assertEquals("", auth.getUserName());
     assertEquals("", auth.getPassword());
   }
+  /** Get password authentication with null credentials. */
 
   @Test
   public void testGetPasswordAuthenticationWithNullCredentials() {

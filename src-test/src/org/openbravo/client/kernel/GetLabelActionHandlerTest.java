@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -22,13 +23,18 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
+/** Tests for {@link GetLabelActionHandler}. */
+@SuppressWarnings("java:S112")
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class GetLabelActionHandlerTest {
 
+  private static final String EXECUTE = "execute";
+
   private GetLabelActionHandler instance;
   private MockedStatic<OBContext> obContextStatic;
   private MockedStatic<KernelUtils> kernelUtilsStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -36,6 +42,7 @@ public class GetLabelActionHandlerTest {
     obContextStatic = mockStatic(OBContext.class);
     kernelUtilsStatic = mockStatic(KernelUtils.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -46,14 +53,20 @@ public class GetLabelActionHandlerTest {
       kernelUtilsStatic.close();
     }
   }
+  /**
+   * Execute throws when key parameter missing.
+   * @throws IllegalAccessException if an error occurs
+   * @throws InvocationTargetException if an error occurs
+   * @throws NoSuchMethodException if an error occurs
+   */
 
   @Test(expected = OBException.class)
-  public void testExecuteThrowsWhenKeyParameterMissing() throws Exception {
+  public void testExecuteThrowsWhenKeyParameterMissing() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     // Arrange
     Map<String, Object> parameters = new HashMap<>();
 
     // Act
-    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod("execute", Map.class, String.class);
+    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod(EXECUTE, Map.class, String.class);
     executeMethod.setAccessible(true);
     try {
       executeMethod.invoke(instance, parameters, null);
@@ -64,6 +77,10 @@ public class GetLabelActionHandlerTest {
       throw new RuntimeException(e);
     }
   }
+  /**
+   * Execute returns label when found.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteReturnsLabelWhenFound() throws Exception {
@@ -76,7 +93,7 @@ public class GetLabelActionHandlerTest {
     when(mockKernelUtils.getI18N(eq("OBUIAPP_ActionButton"), any())).thenReturn("Action Button");
 
     // Act
-    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod("execute", Map.class, String.class);
+    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod(EXECUTE, Map.class, String.class);
     executeMethod.setAccessible(true);
     JSONObject result = (JSONObject) executeMethod.invoke(instance, parameters, null);
 
@@ -84,6 +101,10 @@ public class GetLabelActionHandlerTest {
     assertNotNull(result);
     assertEquals("Action Button", result.getString("label"));
   }
+  /**
+   * Execute returns empty json when label not found.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteReturnsEmptyJsonWhenLabelNotFound() throws Exception {
@@ -96,7 +117,7 @@ public class GetLabelActionHandlerTest {
     when(mockKernelUtils.getI18N(eq("NONEXISTENT_KEY"), any())).thenReturn(null);
 
     // Act
-    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod("execute", Map.class, String.class);
+    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod(EXECUTE, Map.class, String.class);
     executeMethod.setAccessible(true);
     JSONObject result = (JSONObject) executeMethod.invoke(instance, parameters, null);
 
@@ -104,6 +125,10 @@ public class GetLabelActionHandlerTest {
     assertNotNull(result);
     assertFalse(result.has("label"));
   }
+  /**
+   * Execute wraps exception from kernel utils.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = OBException.class)
   public void testExecuteWrapsExceptionFromKernelUtils() throws Exception {
@@ -116,7 +141,7 @@ public class GetLabelActionHandlerTest {
     when(mockKernelUtils.getI18N(eq("ERROR_KEY"), any())).thenThrow(new RuntimeException("DB error"));
 
     // Act
-    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod("execute", Map.class, String.class);
+    Method executeMethod = GetLabelActionHandler.class.getDeclaredMethod(EXECUTE, Map.class, String.class);
     executeMethod.setAccessible(true);
     try {
       executeMethod.invoke(instance, parameters, null);

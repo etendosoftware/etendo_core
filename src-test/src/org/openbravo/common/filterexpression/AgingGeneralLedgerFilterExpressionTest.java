@@ -45,6 +45,7 @@ public class AgingGeneralLedgerFilterExpressionTest {
   private HttpSession httpSession;
 
   private AgingGeneralLedgerFilterExpression filterExpression;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -57,6 +58,7 @@ public class AgingGeneralLedgerFilterExpressionTest {
     parameterUtilsStatic = mockStatic(ParameterUtils.class);
     obLedgerUtilsStatic = mockStatic(OBLedgerUtils.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -70,6 +72,10 @@ public class AgingGeneralLedgerFilterExpressionTest {
       requestContextStatic.close();
     }
   }
+  /**
+   * Get expression returns ledger for org.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetExpressionReturnsLedgerForOrg() throws Exception {
@@ -87,6 +93,7 @@ public class AgingGeneralLedgerFilterExpressionTest {
     String result = filterExpression.getExpression(requestMap);
     assertEquals(expectedLedger, result);
   }
+  /** Get expression returns null on exception. */
 
   @Test
   public void testGetExpressionReturnsNullOnException() {
@@ -99,6 +106,10 @@ public class AgingGeneralLedgerFilterExpressionTest {
     String result = filterExpression.getExpression(requestMap);
     assertNull(result);
   }
+  /**
+   * Get expression returns null when org is null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetExpressionReturnsNullWhenOrgIsNull() throws Exception {
@@ -114,6 +125,10 @@ public class AgingGeneralLedgerFilterExpressionTest {
     String result = filterExpression.getExpression(requestMap);
     assertNull(result);
   }
+  /**
+   * Get expression returns empty string when ledger empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetExpressionReturnsEmptyStringWhenLedgerEmpty() throws Exception {

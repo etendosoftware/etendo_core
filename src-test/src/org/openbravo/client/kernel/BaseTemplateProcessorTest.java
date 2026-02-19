@@ -24,8 +24,13 @@ import org.openbravo.model.ad.module.Module;
 /**
  * Tests for {@link BaseTemplateProcessor}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BaseTemplateProcessorTest {
+
+  private static final String TEMPLATE_CACHE = "templateCache";
+  private static final String COMPILED_TEMPLATE = "compiledTemplate";
+  private static final String SOURCE = "source";
 
   private TestableTemplateProcessor instance;
 
@@ -34,11 +39,17 @@ public class BaseTemplateProcessorTest {
 
   @Mock
   private Module mockModule;
+  /**
+   * Sets up test fixtures.
+   * @throws IllegalAccessException if an error occurs
+   * @throws NoSuchFieldException if an error occurs
+   */
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() throws IllegalAccessException, NoSuchFieldException {
     instance = new TestableTemplateProcessor();
   }
+  /** Get template implementation returns null when id is null. */
 
   @Test
   public void testGetTemplateImplementationReturnsNullWhenIdIsNull() {
@@ -47,6 +58,7 @@ public class BaseTemplateProcessorTest {
     Object result = instance.getTemplateImplementation(mockTemplate);
     assertNull(result);
   }
+  /** Get template implementation returns null when not cached. */
 
   @Test
   public void testGetTemplateImplementationReturnsNullWhenNotCached() {
@@ -55,6 +67,10 @@ public class BaseTemplateProcessorTest {
     Object result = instance.getTemplateImplementation(mockTemplate);
     assertNull(result);
   }
+  /**
+   * Get template implementation returns cached template.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTemplateImplementationReturnsCachedTemplate() throws Exception {
@@ -62,7 +78,7 @@ public class BaseTemplateProcessorTest {
     when(mockTemplate.getId()).thenReturn(templateId);
 
     // Put a value in the cache via reflection
-    Field cacheField = BaseTemplateProcessor.class.getDeclaredField("templateCache");
+    Field cacheField = BaseTemplateProcessor.class.getDeclaredField(TEMPLATE_CACHE);
     cacheField.setAccessible(true);
     ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
     cache.put(templateId, "cachedTemplate");
@@ -71,6 +87,10 @@ public class BaseTemplateProcessorTest {
     Object result = instance.getTemplateImplementation(mockTemplate);
     assertEquals("cachedTemplate", result);
   }
+  /**
+   * Create set free marker template in cache caches when not in development.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCreateSetFreeMarkerTemplateInCacheCachesWhenNotInDevelopment() throws Exception {
@@ -79,19 +99,23 @@ public class BaseTemplateProcessorTest {
     when(mockTemplate.getModule()).thenReturn(mockModule);
     when(mockModule.isInDevelopment()).thenReturn(false);
 
-    instance.setNextCreatedTemplate("compiledTemplate");
+    instance.setNextCreatedTemplate(COMPILED_TEMPLATE);
 
-    String result = instance.createSetFreeMarkerTemplateInCache(mockTemplate, "source");
+    String result = instance.createSetFreeMarkerTemplateInCache(mockTemplate, SOURCE);
 
-    assertEquals("compiledTemplate", result);
+    assertEquals(COMPILED_TEMPLATE, result);
 
     // Verify it was cached
-    Field cacheField = BaseTemplateProcessor.class.getDeclaredField("templateCache");
+    Field cacheField = BaseTemplateProcessor.class.getDeclaredField(TEMPLATE_CACHE);
     cacheField.setAccessible(true);
     @SuppressWarnings("unchecked")
     Map<String, String> cache = (Map<String, String>) cacheField.get(instance);
-    assertEquals("compiledTemplate", cache.get(templateId));
+    assertEquals(COMPILED_TEMPLATE, cache.get(templateId));
   }
+  /**
+   * Create set free marker template in cache does not cache when in development.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCreateSetFreeMarkerTemplateInCacheDoesNotCacheWhenInDevelopment() throws Exception {
@@ -101,17 +125,21 @@ public class BaseTemplateProcessorTest {
 
     instance.setNextCreatedTemplate("devTemplate");
 
-    String result = instance.createSetFreeMarkerTemplateInCache(mockTemplate, "source");
+    String result = instance.createSetFreeMarkerTemplateInCache(mockTemplate, SOURCE);
 
     assertEquals("devTemplate", result);
 
     // Verify it was NOT cached
-    Field cacheField = BaseTemplateProcessor.class.getDeclaredField("templateCache");
+    Field cacheField = BaseTemplateProcessor.class.getDeclaredField(TEMPLATE_CACHE);
     cacheField.setAccessible(true);
     @SuppressWarnings("unchecked")
     Map<String, String> cache = (Map<String, String>) cacheField.get(instance);
     assertNull(cache.get("DEV_TEMPLATE"));
   }
+  /**
+   * Create set free marker template in cache does not cache when id null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCreateSetFreeMarkerTemplateInCacheDoesNotCacheWhenIdNull() throws Exception {
@@ -120,15 +148,19 @@ public class BaseTemplateProcessorTest {
 
     instance.setNextCreatedTemplate("noIdTemplate");
 
-    String result = instance.createSetFreeMarkerTemplateInCache(mockTemplate, "source");
+    String result = instance.createSetFreeMarkerTemplateInCache(mockTemplate, SOURCE);
 
     assertEquals("noIdTemplate", result);
   }
+  /**
+   * Clear cache resets template cache.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testClearCacheResetsTemplateCache() throws Exception {
     // Put something in cache
-    Field cacheField = BaseTemplateProcessor.class.getDeclaredField("templateCache");
+    Field cacheField = BaseTemplateProcessor.class.getDeclaredField(TEMPLATE_CACHE);
     cacheField.setAccessible(true);
     ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
     cache.put("key", "value");
@@ -147,6 +179,7 @@ public class BaseTemplateProcessorTest {
   private static class TestableTemplateProcessor extends BaseTemplateProcessor<String> {
 
     private String nextCreatedTemplate = "default";
+    /** Set next created template. */
 
     public void setNextCreatedTemplate(String template) {
       this.nextCreatedTemplate = template;
@@ -161,11 +194,13 @@ public class BaseTemplateProcessorTest {
     protected String createTemplateImplementation(Template template, String source) {
       return nextCreatedTemplate;
     }
+    /** Validate. */
 
     @Override
     public void validate(Template template) {
       // no-op
     }
+    /** Get template language. */
 
     @Override
     public String getTemplateLanguage() {

@@ -12,11 +12,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+/** Tests for {@link DocOrder}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DocOrderTest {
 
+  private static final String VAL_900_00 = "900.00";
+
   private DocOrder instance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -27,11 +35,13 @@ public class DocOrderTest {
     zeroField.setAccessible(true);
     zeroField.set(instance, BigDecimal.ZERO);
   }
+  /** Get serial version uid. */
 
   @Test
   public void testGetSerialVersionUID() {
     assertEquals(1L, DocOrder.getSerialVersionUID());
   }
+  /** Get set m taxes. */
 
   @Test
   public void testGetSetMTaxes() {
@@ -42,16 +52,22 @@ public class DocOrderTest {
 
     assertEquals(1, instance.getM_taxes().length);
   }
+  /** Get document confirmation always true. */
 
   @Test
   public void testGetDocumentConfirmationAlwaysTrue() {
     assertTrue(instance.getDocumentConfirmation(null, "any_id"));
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {
     assertEquals("Servlet for the accounting", instance.getServletInfo());
   }
+  /**
+   * Get balance with amounts only.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetBalanceWithAmountsOnly() throws Exception {
@@ -60,7 +76,7 @@ public class DocOrderTest {
     amountsField.setAccessible(true);
     String[] amounts = new String[AcctServer.AMTTYPE_Charge + 1];
     amounts[AcctServer.AMTTYPE_Gross] = "1000.00";
-    amounts[AcctServer.AMTTYPE_Net] = "900.00";
+    amounts[AcctServer.AMTTYPE_Net] = VAL_900_00;
     amounts[AcctServer.AMTTYPE_Charge] = "50.00";
     amountsField.set(instance, amounts);
 
@@ -77,6 +93,10 @@ public class DocOrderTest {
     BigDecimal balance = instance.getBalance();
     assertEquals(new BigDecimal("950.00"), balance);
   }
+  /**
+   * Get balance with taxes.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetBalanceWithTaxes() throws Exception {
@@ -84,7 +104,7 @@ public class DocOrderTest {
     amountsField.setAccessible(true);
     String[] amounts = new String[AcctServer.AMTTYPE_Charge + 1];
     amounts[AcctServer.AMTTYPE_Gross] = "1000.00";
-    amounts[AcctServer.AMTTYPE_Net] = "900.00";
+    amounts[AcctServer.AMTTYPE_Net] = VAL_900_00;
     amounts[AcctServer.AMTTYPE_Charge] = "0";
     amountsField.set(instance, amounts);
 
@@ -99,6 +119,6 @@ public class DocOrderTest {
 
     // Balance = 1000 - 0 - 100 = 900
     BigDecimal balance = instance.getBalance();
-    assertEquals(new BigDecimal("900.00"), balance);
+    assertEquals(new BigDecimal(VAL_900_00), balance);
   }
 }

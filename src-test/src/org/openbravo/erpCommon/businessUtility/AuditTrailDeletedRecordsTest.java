@@ -35,13 +35,11 @@ import org.openbravo.model.ad.ui.Window;
 /**
  * Tests for {@link AuditTrailDeletedRecords}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AuditTrailDeletedRecordsTest {
 
   private static final String TEST_TAB_ID = "TAB001";
-  private static final String TEST_TABLE_ID = "TABLE001";
-  private static final String TEST_WINDOW_ID = "WIN001";
-  private static final String TEST_COLUMN_ID = "COL001";
 
   @Mock
   private ConnectionProvider mockConn;
@@ -73,6 +71,7 @@ public class AuditTrailDeletedRecordsTest {
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<ModelProvider> modelProviderStatic;
   private MockedStatic<Utility> utilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -83,6 +82,7 @@ public class AuditTrailDeletedRecordsTest {
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
     modelProviderStatic.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -90,6 +90,7 @@ public class AuditTrailDeletedRecordsTest {
     if (modelProviderStatic != null) modelProviderStatic.close();
     if (utilityStatic != null) utilityStatic.close();
   }
+  /** Get deleted records returns null on exception. */
 
   @Test
   public void testGetDeletedRecordsReturnsNullOnException() {
@@ -103,6 +104,7 @@ public class AuditTrailDeletedRecordsTest {
     // Assert
     assertNull(result);
   }
+  /** Get deleted records with fk returns null on exception. */
 
   @Test
   public void testGetDeletedRecordsWithFkReturnsNullOnException() {
@@ -116,6 +118,7 @@ public class AuditTrailDeletedRecordsTest {
     // Assert
     assertNull(result);
   }
+  /** Get deleted records overload delegates to main. */
 
   @Test
   public void testGetDeletedRecordsOverloadDelegatesToMain() {

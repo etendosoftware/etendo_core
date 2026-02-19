@@ -12,15 +12,22 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
+/** Tests for {@link DocFINBankStatementTemplate}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DocFINBankStatementTemplateTest {
 
   private DocFINBankStatementTemplate instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     instance = new DocFINBankStatementTemplate() {
+      /**
+       * Create fact.
+       * @throws ServletException if an error occurs
+       */
       @Override
       public Fact createFact(DocFINBankStatement docBST, AcctSchema as,
           ConnectionProvider conn, Connection con, VariablesSecureApp vars)
@@ -29,6 +36,7 @@ public class DocFINBankStatementTemplateTest {
       }
     };
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {

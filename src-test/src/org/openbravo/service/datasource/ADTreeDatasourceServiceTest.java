@@ -50,6 +50,10 @@ import org.openbravo.service.json.DataToJsonConverter;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ADTreeDatasourceServiceTest {
 
+  private static final String TEST_TAB_ID = "TEST_TAB_ID";
+  private static final String TEST_TABLE_ID = "TEST_TABLE_ID";
+  private static final String IS_ORDERED = "isOrdered";
+
   private ADTreeDatasourceService instance;
 
   @Mock
@@ -74,6 +78,7 @@ public class ADTreeDatasourceServiceTest {
   private MockedStatic<ModelProvider> modelProviderStatic;
   private MockedStatic<OBProvider> obProviderStatic;
 
+  /** Sets up test fixtures. */
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
@@ -90,6 +95,7 @@ public class ADTreeDatasourceServiceTest {
     obProviderStatic.when(OBProvider::getInstance).thenReturn(mockOBProvider);
   }
 
+  /** Tears down test fixtures. */
   @After
   public void tearDown() {
     if (obDalStatic != null) obDalStatic.close();
@@ -98,6 +104,7 @@ public class ADTreeDatasourceServiceTest {
     if (obProviderStatic != null) obProviderStatic.close();
   }
 
+  /** Get table tree returns table tree. */
   @Test
   public void testGetTableTreeReturnsTableTree() {
     OBCriteria<TableTree> mockCriteria = mock(OBCriteria.class);
@@ -111,6 +118,7 @@ public class ADTreeDatasourceServiceTest {
     assertEquals(mockTableTree, result);
   }
 
+  /** Get table tree returns null when not found. */
   @Test
   public void testGetTableTreeReturnsNullWhenNotFound() {
     OBCriteria<TableTree> mockCriteria = mock(OBCriteria.class);
@@ -123,6 +131,10 @@ public class ADTreeDatasourceServiceTest {
     assertNull(result);
   }
 
+  /**
+   * Is ordered returns true when table tree is ordered.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testIsOrderedReturnsTrueWhenTableTreeIsOrdered() throws Exception {
     List<TableTree> tableTreeList = new ArrayList<>();
@@ -131,13 +143,17 @@ public class ADTreeDatasourceServiceTest {
     when(mockTable.getADTableTreeList()).thenReturn(tableTreeList);
     when(mockTableTree.isOrdered()).thenReturn(true);
 
-    Method method = ADTreeDatasourceService.class.getDeclaredMethod("isOrdered", Tree.class);
+    Method method = ADTreeDatasourceService.class.getDeclaredMethod(IS_ORDERED, Tree.class);
     method.setAccessible(true);
     boolean result = (boolean) method.invoke(instance, mockTree);
 
     assertTrue(result);
   }
 
+  /**
+   * Is ordered returns false when table tree is not ordered.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testIsOrderedReturnsFalseWhenTableTreeIsNotOrdered() throws Exception {
     List<TableTree> tableTreeList = new ArrayList<>();
@@ -146,13 +162,17 @@ public class ADTreeDatasourceServiceTest {
     when(mockTable.getADTableTreeList()).thenReturn(tableTreeList);
     when(mockTableTree.isOrdered()).thenReturn(false);
 
-    Method method = ADTreeDatasourceService.class.getDeclaredMethod("isOrdered", Tree.class);
+    Method method = ADTreeDatasourceService.class.getDeclaredMethod(IS_ORDERED, Tree.class);
     method.setAccessible(true);
     boolean result = (boolean) method.invoke(instance, mockTree);
 
     assertFalse(result);
   }
 
+  /**
+   * Is ordered returns false when multiple table trees.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testIsOrderedReturnsFalseWhenMultipleTableTrees() throws Exception {
     List<TableTree> tableTreeList = new ArrayList<>();
@@ -161,22 +181,23 @@ public class ADTreeDatasourceServiceTest {
     when(mockTree.getTable()).thenReturn(mockTable);
     when(mockTable.getADTableTreeList()).thenReturn(tableTreeList);
 
-    Method method = ADTreeDatasourceService.class.getDeclaredMethod("isOrdered", Tree.class);
+    Method method = ADTreeDatasourceService.class.getDeclaredMethod(IS_ORDERED, Tree.class);
     method.setAccessible(true);
     boolean result = (boolean) method.invoke(instance, mockTree);
 
     assertFalse(result);
   }
 
+  /** Get datasource specific params with tab id. */
   @Test
   public void testGetDatasourceSpecificParamsWithTabId() {
     Map<String, String> parameters = new HashMap<>();
-    parameters.put("tabId", "TEST_TAB_ID");
+    parameters.put("tabId", TEST_TAB_ID);
     parameters.put("treeReferenceId", null);
 
-    when(mockOBDal.get(Tab.class, "TEST_TAB_ID")).thenReturn(mockTab);
+    when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
     when(mockTab.getTable()).thenReturn(mockTable);
-    when(mockTable.getId()).thenReturn("TEST_TABLE_ID");
+    when(mockTable.getId()).thenReturn(TEST_TABLE_ID);
 
     OBCriteria<Tree> mockCriteria = mock(OBCriteria.class);
     when(mockOBDal.createCriteria(Tree.class)).thenReturn(mockCriteria);
@@ -190,6 +211,7 @@ public class ADTreeDatasourceServiceTest {
     assertEquals(mockTree, result.get("tree"));
   }
 
+  /** Get datasource specific params with no params. */
   @Test
   public void testGetDatasourceSpecificParamsWithNoParams() {
     Map<String, String> parameters = new HashMap<>();
@@ -200,6 +222,10 @@ public class ADTreeDatasourceServiceTest {
     assertNull(result.get("tree"));
   }
 
+  /**
+   * Fetch filtered nodes for trees with multi parent nodes returns empty array.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testFetchFilteredNodesForTreesWithMultiParentNodesReturnsEmptyArray()
       throws Exception {
@@ -214,22 +240,24 @@ public class ADTreeDatasourceServiceTest {
     assertEquals(0, result.length());
   }
 
+  /**
+   * Get json object by node id delegates to get json object by record id.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testGetJSONObjectByNodeIdDelegatesToGetJSONObjectByRecordId() throws Exception {
-    // getJSONObjectByNodeId just delegates to getJSONObjectByRecordId
-    // We test that the delegation happens by verifying the same parameters are used
     Map<String, String> parameters = new HashMap<>();
-    parameters.put("tabId", "TEST_TAB_ID");
+    parameters.put("tabId", TEST_TAB_ID);
     Map<String, Object> datasourceParameters = new HashMap<>();
     datasourceParameters.put("tree", mockTree);
 
-    when(mockOBDal.get(Tab.class, "TEST_TAB_ID")).thenReturn(mockTab);
+    when(mockOBDal.get(Tab.class, TEST_TAB_ID)).thenReturn(mockTab);
     when(mockTab.getHqlwhereclause()).thenReturn(null);
     when(mockTree.getTable()).thenReturn(mockTable);
-    when(mockTable.getId()).thenReturn("TEST_TABLE_ID");
+    when(mockTable.getId()).thenReturn(TEST_TABLE_ID);
 
     Entity mockEntity = mock(Entity.class);
-    when(mockModelProvider.getEntityByTableId("TEST_TABLE_ID")).thenReturn(mockEntity);
+    when(mockModelProvider.getEntityByTableId(TEST_TABLE_ID)).thenReturn(mockEntity);
 
     DataToJsonConverter mockConverter = mock(DataToJsonConverter.class);
     when(mockOBProvider.get(DataToJsonConverter.class)).thenReturn(mockConverter);
@@ -242,20 +270,21 @@ public class ADTreeDatasourceServiceTest {
 
     // This will likely throw NPE internally since treeNode is null, but the method
     // catches exceptions and returns null
-    JSONObject result = instance.getJSONObjectByNodeId(parameters, datasourceParameters,
+    instance.getJSONObjectByNodeId(parameters, datasourceParameters,
         "TEST_NODE");
 
     // The result may be null since the tree node lookup returned null
     // and the method catches exceptions internally
   }
 
+  /** Node conforms to where clause with null where clause. */
   @Test
   public void testNodeConformsToWhereClauseWithNullWhereClause() {
     when(mockTableTree.getTable()).thenReturn(mockTable);
-    when(mockTable.getId()).thenReturn("TEST_TABLE_ID");
+    when(mockTable.getId()).thenReturn(TEST_TABLE_ID);
 
     Entity mockEntity = mock(Entity.class);
-    when(mockModelProvider.getEntityByTableId("TEST_TABLE_ID")).thenReturn(mockEntity);
+    when(mockModelProvider.getEntityByTableId(TEST_TABLE_ID)).thenReturn(mockEntity);
     when(mockEntity.getName()).thenReturn("TestEntity");
 
     org.openbravo.dal.service.OBQuery mockQuery = mock(org.openbravo.dal.service.OBQuery.class);
@@ -269,13 +298,14 @@ public class ADTreeDatasourceServiceTest {
     assertTrue(result);
   }
 
+  /** Node conforms to where clause returns false when no match. */
   @Test
   public void testNodeConformsToWhereClauseReturnsFalseWhenNoMatch() {
     when(mockTableTree.getTable()).thenReturn(mockTable);
-    when(mockTable.getId()).thenReturn("TEST_TABLE_ID");
+    when(mockTable.getId()).thenReturn(TEST_TABLE_ID);
 
     Entity mockEntity = mock(Entity.class);
-    when(mockModelProvider.getEntityByTableId("TEST_TABLE_ID")).thenReturn(mockEntity);
+    when(mockModelProvider.getEntityByTableId(TEST_TABLE_ID)).thenReturn(mockEntity);
     when(mockEntity.getName()).thenReturn("TestEntity");
 
     org.openbravo.dal.service.OBQuery mockQuery = mock(org.openbravo.dal.service.OBQuery.class);

@@ -23,11 +23,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class CheckTreeOperationManagerTest {
 
   private TestableCheckTreeOperationManager manager;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     manager = new TestableCheckTreeOperationManager();
   }
+  /** Action response success only constructor. */
 
   @Test
   public void testActionResponseSuccessOnlyConstructor() {
@@ -36,12 +38,14 @@ public class CheckTreeOperationManagerTest {
     assertNull(response.getMessage());
     assertNull(response.getMessageType());
   }
+  /** Action response failure only constructor. */
 
   @Test
   public void testActionResponseFailureOnlyConstructor() {
     CheckTreeOperationManager.ActionResponse response = manager.createResponse(false);
     assertFalse(response.isSuccess());
   }
+  /** Action response full constructor. */
 
   @Test
   public void testActionResponseFullConstructor() {
@@ -51,6 +55,7 @@ public class CheckTreeOperationManagerTest {
     assertEquals("info", response.getMessageType());
     assertEquals("Operation completed", response.getMessage());
   }
+  /** Action response setters. */
 
   @Test
   public void testActionResponseSetters() {
@@ -63,6 +68,7 @@ public class CheckTreeOperationManagerTest {
     assertEquals("warning", response.getMessageType());
     assertEquals("Some warning", response.getMessage());
   }
+  /** Action response error message. */
 
   @Test
   public void testActionResponseErrorMessage() {
@@ -78,16 +84,19 @@ public class CheckTreeOperationManagerTest {
    * class.
    */
   private static class TestableCheckTreeOperationManager extends CheckTreeOperationManager {
+    /** Check node movement. */
 
     @Override
     public ActionResponse checkNodeMovement(Map<String, String> parameters, String nodeId,
         String newParentId, String prevNodeId, String nextNodeId) {
       return new ActionResponse(true);
     }
+    /** Create response. */
 
     public ActionResponse createResponse(boolean success) {
       return new ActionResponse(success);
     }
+    /** Create response. */
 
     public ActionResponse createResponse(boolean success, String messageType, String message) {
       return new ActionResponse(success, messageType, message);

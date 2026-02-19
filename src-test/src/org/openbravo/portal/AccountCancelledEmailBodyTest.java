@@ -26,6 +26,7 @@ import org.openbravo.model.ad.access.User;
 /**
  * Tests for {@link AccountCancelledEmailBody}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AccountCancelledEmailBodyTest {
 
@@ -38,6 +39,7 @@ public class AccountCancelledEmailBodyTest {
   private Template template;
 
   private AccountCancelledEmailBody emailBody;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -47,6 +49,7 @@ public class AccountCancelledEmailBodyTest {
     ObjenesisStd objenesis = new ObjenesisStd();
     emailBody = objenesis.newInstance(AccountCancelledEmailBody.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -54,6 +57,7 @@ public class AccountCancelledEmailBodyTest {
       obDalStatic.close();
     }
   }
+  /** Set data and get user. */
 
   @Test
   public void testSetDataAndGetUser() {
@@ -61,17 +65,20 @@ public class AccountCancelledEmailBodyTest {
     emailBody.setData(user);
     assertEquals(user, emailBody.getUser());
   }
+  /** Get user returns null before set data. */
 
   @Test
   public void testGetUserReturnsNullBeforeSetData() {
     assertNull(emailBody.getUser());
   }
+  /** Get data returns self. */
 
   @Test
   public void testGetDataReturnsSelf() {
     Object result = emailBody.getData();
     assertSame(emailBody, result);
   }
+  /** Get component template uses correct id. */
 
   @Test
   public void testGetComponentTemplateUsesCorrectId() {
@@ -87,6 +94,7 @@ public class AccountCancelledEmailBodyTest {
       throw new RuntimeException(e);
     }
   }
+  /** Set data overwrites previous user. */
 
   @Test
   public void testSetDataOverwritesPreviousUser() {

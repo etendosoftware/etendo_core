@@ -24,10 +24,15 @@ import org.openbravo.base.model.Reference;
 public class BaseDomainTypeTest {
 
   private BaseDomainType instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     instance = new BaseDomainType() {
+      /**
+       * Check is valid value.
+       * @throws ValidationException if an error occurs
+       */
       @Override
       public void checkIsValidValue(org.openbravo.base.model.Property property, Object value)
           throws org.openbravo.base.validation.ValidationException {
@@ -35,11 +40,13 @@ public class BaseDomainTypeTest {
       }
     };
   }
+  /** Initialize does not throw. */
 
   @Test
   public void testInitializeDoesNotThrow() {
     instance.initialize();
   }
+  /** Set and get reference. */
 
   @Test
   public void testSetAndGetReference() {
@@ -47,11 +54,13 @@ public class BaseDomainTypeTest {
     instance.setReference(ref);
     assertEquals(ref, instance.getReference());
   }
+  /** Get reference default null. */
 
   @Test
   public void testGetReferenceDefaultNull() {
     assertNull(instance.getReference());
   }
+  /** Set and get model provider. */
 
   @Test
   public void testSetAndGetModelProvider() {
@@ -59,11 +68,13 @@ public class BaseDomainTypeTest {
     instance.setModelProvider(provider);
     assertEquals(provider, instance.getModelProvider());
   }
+  /** Get model provider default null. */
 
   @Test
   public void testGetModelProviderDefaultNull() {
     assertNull(instance.getModelProvider());
   }
+  /** Get classes returns empty list. */
 
   @Test
   public void testGetClassesReturnsEmptyList() {
@@ -71,6 +82,7 @@ public class BaseDomainTypeTest {
     assertNotNull(classes);
     assertTrue(classes.isEmpty());
   }
+  /** Get classes returns mutable list. */
 
   @Test
   public void testGetClassesReturnsMutableList() {
@@ -78,12 +90,20 @@ public class BaseDomainTypeTest {
     classes.add(String.class);
     assertEquals(1, classes.size());
   }
+  /**
+   * Check object is valid.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCheckObjectIsValid() throws Exception {
     // Create a concrete subclass that tracks calls
     final boolean[] called = { false };
     BaseDomainType tracker = new BaseDomainType() {
+      /**
+       * Check is valid value.
+       * @throws ValidationException if an error occurs
+       */
       @Override
       public void checkIsValidValue(org.openbravo.base.model.Property property, Object value)
           throws org.openbravo.base.validation.ValidationException {

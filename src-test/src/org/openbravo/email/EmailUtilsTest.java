@@ -50,6 +50,7 @@ public class EmailUtilsTest {
 
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -62,18 +63,21 @@ public class EmailUtilsTest {
     lenient().when(mockOBContext.getCurrentClient()).thenReturn(mockClient);
     lenient().when(mockOBDal.createCriteria(EmailServerConfiguration.class)).thenReturn(mockCriteria);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obDalStatic != null) obDalStatic.close();
     if (obContextStatic != null) obContextStatic.close();
   }
+  /** Get email configuration returns null for null org. */
 
   @Test
   public void testGetEmailConfigurationReturnsNullForNullOrg() {
     EmailServerConfiguration result = EmailUtils.getEmailConfiguration(null);
     assertNull(result);
   }
+  /** Get email configuration returns config for org zero. */
 
   @Test
   public void testGetEmailConfigurationReturnsConfigForOrgZero() {
@@ -87,6 +91,7 @@ public class EmailUtilsTest {
     EmailServerConfiguration result = EmailUtils.getEmailConfiguration(mockOrg);
     assertEquals(mockConfig, result);
   }
+  /** Get email configuration returns null when no config for org zero. */
 
   @Test
   public void testGetEmailConfigurationReturnsNullWhenNoConfigForOrgZero() {

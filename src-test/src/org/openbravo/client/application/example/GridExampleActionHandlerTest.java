@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -22,12 +23,15 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
+/** Tests for {@link GridExampleActionHandler}. */
+@SuppressWarnings("java:S112")
 
 @RunWith(MockitoJUnitRunner.class)
 public class GridExampleActionHandlerTest {
 
   private GridExampleActionHandler instance;
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -35,6 +39,7 @@ public class GridExampleActionHandlerTest {
     instance = objenesis.newInstance(GridExampleActionHandler.class);
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -42,6 +47,10 @@ public class GridExampleActionHandlerTest {
       obContextStatic.close();
     }
   }
+  /**
+   * Execute without command param throws.
+   * @throws Throwable if an error occurs
+   */
 
   @Test(expected = OBException.class)
   public void testExecuteWithoutCommandParamThrows() throws Throwable {
@@ -55,6 +64,10 @@ public class GridExampleActionHandlerTest {
       throw e.getCause();
     }
   }
+  /**
+   * Execute with unknown command throws.
+   * @throws Throwable if an error occurs
+   */
 
   @Test(expected = OBException.class)
   public void testExecuteWithUnknownCommandThrows() throws Throwable {
@@ -68,6 +81,10 @@ public class GridExampleActionHandlerTest {
       throw e.getCause();
     }
   }
+  /**
+   * Do execute command with selected records.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteCommandWithSelectedRecords() throws Exception {
@@ -99,6 +116,10 @@ public class GridExampleActionHandlerTest {
     assertTrue(message.contains("Module A"));
     assertTrue(message.contains("Module B"));
   }
+  /**
+   * Do execute command with empty selection.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteCommandWithEmptySelection() throws Exception {

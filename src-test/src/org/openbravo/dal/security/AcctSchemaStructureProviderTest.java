@@ -27,6 +27,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
+/** Tests for {@link AcctSchemaStructureProvider}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AcctSchemaStructureProviderTest {
@@ -49,6 +50,7 @@ public class AcctSchemaStructureProviderTest {
 
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -60,12 +62,14 @@ public class AcctSchemaStructureProviderTest {
     obContextStatic = mockStatic(OBContext.class);
     obContextStatic.when(OBContext::getOBContext).thenReturn(mockOBContext);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obDalStatic != null) obDalStatic.close();
     if (obContextStatic != null) obContextStatic.close();
   }
+  /** Set and get client id. */
 
   @Test
   public void testSetAndGetClientId() {
@@ -73,6 +77,10 @@ public class AcctSchemaStructureProviderTest {
     provider.setClientId(TEST_CLIENT_ID);
     assertEquals(TEST_CLIENT_ID, provider.getClientId());
   }
+  /**
+   * Get acct schemas caches result.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAcctSchemasCachesResult() throws Exception {
@@ -95,6 +103,10 @@ public class AcctSchemaStructureProviderTest {
     assertEquals(SCHEMA_ID_2, result.get(1));
     assertSame(schemas, result);
   }
+  /**
+   * Get acct schemas initializes from db.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAcctSchemasInitializesFromDB() throws Exception {
@@ -120,6 +132,10 @@ public class AcctSchemaStructureProviderTest {
     assertEquals(SCHEMA_ID_1, result.get(0));
     assertEquals(TEST_CLIENT_ID, provider.getClientId());
   }
+  /**
+   * Get acct schemas uses provided client id when already set.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAcctSchemasUsesProvidedClientIdWhenAlreadySet() throws Exception {

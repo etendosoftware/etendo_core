@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+/** Tests for {@link CalloutHttpServletResponse}. */
 
 @RunWith(MockitoJUnitRunner.class)
 public class CalloutHttpServletResponseTest {
@@ -21,23 +22,33 @@ public class CalloutHttpServletResponseTest {
   private HttpServletResponse wrappedResponse;
 
   private CalloutHttpServletResponse response;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     response = new CalloutHttpServletResponse(wrappedResponse);
   }
+  /** Get output from writer returns empty initially. */
 
   @Test
   public void testGetOutputFromWriterReturnsEmptyInitially() {
     String output = response.getOutputFromWriter();
     assertEquals("", output);
   }
+  /**
+   * Get writer returns print writer.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetWriterReturnsPrintWriter() throws Exception {
     PrintWriter writer = response.getWriter();
     assertNotNull(writer);
   }
+  /**
+   * Writer output captured.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testWriterOutputCaptured() throws Exception {
@@ -46,6 +57,10 @@ public class CalloutHttpServletResponseTest {
     writer.flush();
     assertEquals("test content", response.getOutputFromWriter());
   }
+  /**
+   * Multiple writes captured.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testMultipleWritesCaptured() throws Exception {
@@ -55,6 +70,10 @@ public class CalloutHttpServletResponseTest {
     writer.flush();
     assertEquals("first second", response.getOutputFromWriter());
   }
+  /**
+   * Send redirect does nothing.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendRedirectDoesNothing() throws Exception {
@@ -63,6 +82,10 @@ public class CalloutHttpServletResponseTest {
     // No exception should be thrown, and no redirect should occur
     assertEquals("", response.getOutputFromWriter());
   }
+  /**
+   * Get writer returns same instance.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetWriterReturnsSameInstance() throws Exception {

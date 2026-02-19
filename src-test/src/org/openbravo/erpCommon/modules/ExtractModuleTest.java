@@ -11,17 +11,24 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+/** Tests for {@link ExtractModule}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExtractModuleTest {
 
   private ExtractModule instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(ExtractModule.class);
   }
+  /**
+   * Set dest dir.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetDestDir() throws Exception {
@@ -30,6 +37,10 @@ public class ExtractModuleTest {
     field.setAccessible(true);
     assertEquals("/tmp/output", field.get(instance));
   }
+  /**
+   * Set export reference data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetExportReferenceData() throws Exception {
@@ -38,6 +49,10 @@ public class ExtractModuleTest {
     field.setAccessible(true);
     assertTrue((Boolean) field.get(instance));
   }
+  /**
+   * Set export reference data false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetExportReferenceDataFalse() throws Exception {
@@ -46,6 +61,10 @@ public class ExtractModuleTest {
     field.setAccessible(true);
     assertFalse((Boolean) field.get(instance));
   }
+  /**
+   * Set add all dependencies.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAddAllDependencies() throws Exception {
@@ -54,6 +73,10 @@ public class ExtractModuleTest {
     field.setAccessible(true);
     assertTrue((Boolean) field.get(instance));
   }
+  /**
+   * Extract name throws when id is null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExtractNameThrowsWhenIdIsNull() throws Exception {

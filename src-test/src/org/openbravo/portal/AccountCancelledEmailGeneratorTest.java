@@ -37,6 +37,8 @@ import org.openbravo.model.ad.system.Client;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AccountCancelledEmailGeneratorTest {
 
+  private static final String ACCOUNT_CANCELLED = "accountCancelled";
+
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
 
   @Mock
@@ -49,6 +51,10 @@ public class AccountCancelledEmailGeneratorTest {
   private Client client;
 
   private AccountCancelledEmailGenerator generator;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -65,6 +71,7 @@ public class AccountCancelledEmailGeneratorTest {
     lenient().when(user.getClient()).thenReturn(client);
     lenient().when(client.getName()).thenReturn("Test Client");
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -72,6 +79,7 @@ public class AccountCancelledEmailGeneratorTest {
       obMessageUtilsStatic.close();
     }
   }
+  /** Get subject uses client name. */
 
   @Test
   public void testGetSubjectUsesClientName() {
@@ -79,58 +87,67 @@ public class AccountCancelledEmailGeneratorTest {
         () -> OBMessageUtils.getI18NMessage(eq("Portal_AccountCancelledSubject"), any(String[].class)))
         .thenReturn("Account cancelled for Test Client");
 
-    String result = generator.getSubject(user, "accountCancelled");
+    String result = generator.getSubject(user, ACCOUNT_CANCELLED);
     assertEquals("Account cancelled for Test Client", result);
   }
+  /** Get body sets data and generates. */
 
   @Test
   public void testGetBodySetsDataAndGenerates() {
     when(body.generate()).thenReturn("<html>body</html>");
 
-    String result = generator.getBody(user, "accountCancelled");
+    String result = generator.getBody(user, ACCOUNT_CANCELLED);
 
     verify(body).setData(user);
     verify(body).generate();
     assertEquals("<html>body</html>", result);
   }
+  /** Get content type. */
 
   @Test
   public void testGetContentType() {
     assertEquals("text/html; charset=utf-8", generator.getContentType());
   }
+  /** Is valid event returns true for account cancelled. */
 
   @Test
   public void testIsValidEventReturnsTrueForAccountCancelled() {
-    assertTrue(generator.isValidEvent("accountCancelled", user));
+    assertTrue(generator.isValidEvent(ACCOUNT_CANCELLED, user));
   }
+  /** Is valid event returns false for other event. */
 
   @Test
   public void testIsValidEventReturnsFalseForOtherEvent() {
     assertFalse(generator.isValidEvent("accountCreated", user));
   }
+  /** Is valid event returns false for null. */
 
   @Test
   public void testIsValidEventReturnsFalseForNull() {
     assertFalse(generator.isValidEvent(null, user));
   }
+  /** Get priority. */
 
   @Test
   public void testGetPriority() {
     assertEquals(100, generator.getPriority());
   }
+  /** Prevents others execution returns false. */
 
   @Test
   public void testPreventsOthersExecutionReturnsFalse() {
     assertFalse(generator.preventsOthersExecution());
   }
+  /** Is asynchronous returns true. */
 
   @Test
   public void testIsAsynchronousReturnsTrue() {
     assertTrue(generator.isAsynchronous());
   }
+  /** Get attachments returns null. */
 
   @Test
   public void testGetAttachmentsReturnsNull() {
-    assertNull(generator.getAttachments(user, "accountCancelled"));
+    assertNull(generator.getAttachments(user, ACCOUNT_CANCELLED));
   }
 }

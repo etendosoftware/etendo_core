@@ -17,7 +17,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.objenesis.ObjenesisStd;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
 import org.openbravo.base.model.Property;
@@ -35,9 +34,10 @@ import org.openbravo.model.ad.ui.Field;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ADTableNavigationEventHandlerTest {
 
+  private static final String UPDATE_TABLE_ID = "updateTableId";
+
   private static final String TEST_TABLE_ID = "100";
 
-  private ADTableNavigationEventHandler handler;
 
   @Mock
   private OBDal mockOBDal;
@@ -65,12 +65,10 @@ public class ADTableNavigationEventHandlerTest {
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<ModelProvider> modelProviderStatic;
   private MockedStatic<KernelUtils> kernelUtilsStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
-    ObjenesisStd objenesis = new ObjenesisStd();
-    handler = objenesis.newInstance(ADTableNavigationEventHandler.class);
-
     obDalStatic = mockStatic(OBDal.class);
     modelProviderStatic = mockStatic(ModelProvider.class);
     kernelUtilsStatic = mockStatic(KernelUtils.class);
@@ -80,6 +78,7 @@ public class ADTableNavigationEventHandlerTest {
     kernelUtilsStatic.when(() -> KernelUtils.getProperty(any(Field.class)))
         .thenReturn(mockFieldProperty);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -87,6 +86,10 @@ public class ADTableNavigationEventHandlerTest {
     if (modelProviderStatic != null) modelProviderStatic.close();
     if (kernelUtilsStatic != null) kernelUtilsStatic.close();
   }
+  /**
+   * Update table id sets table when field is not null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testUpdateTableIdSetsTableWhenFieldIsNotNull() throws Exception {
@@ -99,7 +102,7 @@ public class ADTableNavigationEventHandlerTest {
     when(mockTableNavEntity.getProperty(TableNavigation.PROPERTY_TABLE))
         .thenReturn(mockTableNavTableProperty);
 
-    Method method = ADTableNavigationEventHandler.class.getDeclaredMethod("updateTableId",
+    Method method = ADTableNavigationEventHandler.class.getDeclaredMethod(UPDATE_TABLE_ID,
         EntityPersistenceEvent.class);
     method.setAccessible(true);
 
@@ -121,13 +124,17 @@ public class ADTableNavigationEventHandlerTest {
       }
     };
 
-    Method updateMethod = ADTableNavigationEventHandler.class.getDeclaredMethod("updateTableId",
+    Method updateMethod = ADTableNavigationEventHandler.class.getDeclaredMethod(UPDATE_TABLE_ID,
         EntityPersistenceEvent.class);
     updateMethod.setAccessible(true);
     updateMethod.invoke(testHandler, mockNewEvent);
 
     verify(mockNewEvent).setCurrentState(mockTableNavTableProperty, mockTable);
   }
+  /**
+   * Update table id does nothing when field is null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testUpdateTableIdDoesNothingWhenFieldIsNull() throws Exception {
@@ -146,13 +153,17 @@ public class ADTableNavigationEventHandlerTest {
     when(mockNewEvent.getTargetInstance()).thenReturn(mockTableNavigation);
     when(mockTableNavigation.getField()).thenReturn(null);
 
-    Method updateMethod = ADTableNavigationEventHandler.class.getDeclaredMethod("updateTableId",
+    Method updateMethod = ADTableNavigationEventHandler.class.getDeclaredMethod(UPDATE_TABLE_ID,
         EntityPersistenceEvent.class);
     updateMethod.setAccessible(true);
     updateMethod.invoke(testHandler, mockNewEvent);
 
     verify(mockOBDal, never()).get(any(Class.class), any(String.class));
   }
+  /**
+   * Update table id returns when event not valid.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testUpdateTableIdReturnsWhenEventNotValid() throws Exception {
@@ -168,7 +179,7 @@ public class ADTableNavigationEventHandlerTest {
       }
     };
 
-    Method updateMethod = ADTableNavigationEventHandler.class.getDeclaredMethod("updateTableId",
+    Method updateMethod = ADTableNavigationEventHandler.class.getDeclaredMethod(UPDATE_TABLE_ID,
         EntityPersistenceEvent.class);
     updateMethod.setAccessible(true);
     updateMethod.invoke(testHandler, mockNewEvent);

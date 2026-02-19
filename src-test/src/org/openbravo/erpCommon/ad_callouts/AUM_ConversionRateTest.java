@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -31,8 +32,16 @@ import org.openbravo.model.common.uom.UOMConversion;
 /**
  * Tests for AUM_ConversionRate callout.
  */
+@SuppressWarnings({"java:S101", "java:S120", "java:S112"})
 @RunWith(MockitoJUnitRunner.class)
 public class AUM_ConversionRateTest {
+
+  private static final String UOM_001 = "UOM_001";
+  private static final String PROD_001 = "PROD_001";
+  private static final String UOM_BASE = "UOM_BASE";
+  private static final String INPC_UOM_ID = "inpcUomId";
+  private static final String INPM_PRODUCT_ID = "inpmProductId";
+  private static final String INPCONVERSIONRATE = "inpconversionrate";
 
   private AUM_ConversionRate callout;
 
@@ -53,6 +62,7 @@ public class AUM_ConversionRateTest {
 
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -63,6 +73,7 @@ public class AUM_ConversionRateTest {
 
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -73,16 +84,20 @@ public class AUM_ConversionRateTest {
       obContextStatic.close();
     }
   }
+  /**
+   * Execute with direct conversion found.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithDirectConversionFound() throws Exception {
     // Arrange
-    String uomId = "UOM_001";
-    String productId = "PROD_001";
-    String productUomId = "UOM_BASE";
+    String uomId = UOM_001;
+    String productId = PROD_001;
+    String productUomId = UOM_BASE;
 
-    when(mockInfo.getStringParameter("inpcUomId", null)).thenReturn(uomId);
-    when(mockInfo.getStringParameter("inpmProductId", null)).thenReturn(productId);
+    when(mockInfo.getStringParameter(INPC_UOM_ID, null)).thenReturn(uomId);
+    when(mockInfo.getStringParameter(INPM_PRODUCT_ID, null)).thenReturn(productId);
     when(mockOBDal.get(Product.class, productId)).thenReturn(mockProduct);
     when(mockProduct.getUOM()).thenReturn(mockUOM);
     when(mockUOM.getId()).thenReturn(productUomId);
@@ -100,18 +115,22 @@ public class AUM_ConversionRateTest {
     invokeExecute(callout, mockInfo);
 
     // Assert
-    verify(mockInfo).addResult("inpconversionrate", new BigDecimal("2.5"));
+    verify(mockInfo).addResult(INPCONVERSIONRATE, new BigDecimal("2.5"));
   }
+  /**
+   * Execute with reverse conversion found.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithReverseConversionFound() throws Exception {
     // Arrange
-    String uomId = "UOM_001";
-    String productId = "PROD_001";
-    String productUomId = "UOM_BASE";
+    String uomId = UOM_001;
+    String productId = PROD_001;
+    String productUomId = UOM_BASE;
 
-    when(mockInfo.getStringParameter("inpcUomId", null)).thenReturn(uomId);
-    when(mockInfo.getStringParameter("inpmProductId", null)).thenReturn(productId);
+    when(mockInfo.getStringParameter(INPC_UOM_ID, null)).thenReturn(uomId);
+    when(mockInfo.getStringParameter(INPM_PRODUCT_ID, null)).thenReturn(productId);
     when(mockOBDal.get(Product.class, productId)).thenReturn(mockProduct);
     when(mockProduct.getUOM()).thenReturn(mockUOM);
     when(mockUOM.getId()).thenReturn(productUomId);
@@ -133,18 +152,22 @@ public class AUM_ConversionRateTest {
     invokeExecute(callout, mockInfo);
 
     // Assert
-    verify(mockInfo).addResult("inpconversionrate", new BigDecimal("0.4"));
+    verify(mockInfo).addResult(INPCONVERSIONRATE, new BigDecimal("0.4"));
   }
+  /**
+   * Execute with no conversion found returns zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithNoConversionFoundReturnsZero() throws Exception {
     // Arrange
-    String uomId = "UOM_001";
-    String productId = "PROD_001";
-    String productUomId = "UOM_BASE";
+    String uomId = UOM_001;
+    String productId = PROD_001;
+    String productUomId = UOM_BASE;
 
-    when(mockInfo.getStringParameter("inpcUomId", null)).thenReturn(uomId);
-    when(mockInfo.getStringParameter("inpmProductId", null)).thenReturn(productId);
+    when(mockInfo.getStringParameter(INPC_UOM_ID, null)).thenReturn(uomId);
+    when(mockInfo.getStringParameter(INPM_PRODUCT_ID, null)).thenReturn(productId);
     when(mockOBDal.get(Product.class, productId)).thenReturn(mockProduct);
     when(mockProduct.getUOM()).thenReturn(mockUOM);
     when(mockUOM.getId()).thenReturn(productUomId);
@@ -160,11 +183,11 @@ public class AUM_ConversionRateTest {
     invokeExecute(callout, mockInfo);
 
     // Assert
-    verify(mockInfo).addResult("inpconversionrate", BigDecimal.ZERO);
+    verify(mockInfo).addResult(INPCONVERSIONRATE, BigDecimal.ZERO);
   }
 
   private void invokeExecute(AUM_ConversionRate instance, SimpleCallout.CalloutInfo info)
-      throws Exception {
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AUM_ConversionRate.class.getDeclaredMethod("execute",
         SimpleCallout.CalloutInfo.class);
     method.setAccessible(true);

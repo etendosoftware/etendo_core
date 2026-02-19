@@ -7,6 +7,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -30,8 +31,12 @@ import org.openbravo.model.ad.ui.Window;
 /**
  * Tests for {@link ComputeSelectedRecordActionHandler}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.class)
 public class ComputeSelectedRecordActionHandlerTest {
+
+  private static final String ENTITY1 = "Entity1";
+  private static final String GET_TAB = "getTab";
 
   private ComputeSelectedRecordActionHandler instance;
 
@@ -39,6 +44,7 @@ public class ComputeSelectedRecordActionHandlerTest {
   private Window mockWindow;
 
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -46,71 +52,88 @@ public class ComputeSelectedRecordActionHandlerTest {
     instance = objenesis.newInstance(ComputeSelectedRecordActionHandler.class);
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obContextStatic != null) obContextStatic.close();
   }
+  /**
+   * Get tab returns matching tab.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTabReturnsMatchingTab() throws Exception {
-    Tab activeTab = createMockTab("Entity1", true, true);
+    Tab activeTab = createMockTab(ENTITY1, true, true);
     Tab inactiveTab = createMockTab("Entity2", false, true);
     List<Tab> tabs = new ArrayList<>();
     tabs.add(activeTab);
     tabs.add(inactiveTab);
     when(mockWindow.getADTabList()).thenReturn(tabs);
 
-    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod("getTab",
+    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod(GET_TAB,
         Window.class, String.class);
     getTab.setAccessible(true);
 
-    Tab result = (Tab) getTab.invoke(instance, mockWindow, "Entity1");
+    Tab result = (Tab) getTab.invoke(instance, mockWindow, ENTITY1);
 
     assertNotNull(result);
     assertEquals(activeTab, result);
   }
+  /**
+   * Get tab returns null for inactive tab.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTabReturnsNullForInactiveTab() throws Exception {
-    Tab inactiveTab = createMockTab("Entity1", false, true);
+    Tab inactiveTab = createMockTab(ENTITY1, false, true);
     List<Tab> tabs = new ArrayList<>();
     tabs.add(inactiveTab);
     when(mockWindow.getADTabList()).thenReturn(tabs);
 
-    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod("getTab",
+    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod(GET_TAB,
         Window.class, String.class);
     getTab.setAccessible(true);
 
-    Tab result = (Tab) getTab.invoke(instance, mockWindow, "Entity1");
+    Tab result = (Tab) getTab.invoke(instance, mockWindow, ENTITY1);
 
     assertNull(result);
   }
+  /**
+   * Get tab returns null for disabled module.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTabReturnsNullForDisabledModule() throws Exception {
-    Tab tab = createMockTab("Entity1", true, false);
+    Tab tab = createMockTab(ENTITY1, true, false);
     List<Tab> tabs = new ArrayList<>();
     tabs.add(tab);
     when(mockWindow.getADTabList()).thenReturn(tabs);
 
-    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod("getTab",
+    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod(GET_TAB,
         Window.class, String.class);
     getTab.setAccessible(true);
 
-    Tab result = (Tab) getTab.invoke(instance, mockWindow, "Entity1");
+    Tab result = (Tab) getTab.invoke(instance, mockWindow, ENTITY1);
 
     assertNull(result);
   }
+  /**
+   * Get tab returns null for non matching entity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTabReturnsNullForNonMatchingEntity() throws Exception {
-    Tab tab = createMockTab("Entity1", true, true);
+    Tab tab = createMockTab(ENTITY1, true, true);
     List<Tab> tabs = new ArrayList<>();
     tabs.add(tab);
     when(mockWindow.getADTabList()).thenReturn(tabs);
 
-    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod("getTab",
+    Method getTab = ComputeSelectedRecordActionHandler.class.getDeclaredMethod(GET_TAB,
         Window.class, String.class);
     getTab.setAccessible(true);
 
@@ -118,6 +141,10 @@ public class ComputeSelectedRecordActionHandlerTest {
 
     assertNull(result);
   }
+  /**
+   * Execute with parameters throws unsupported operation exception.
+   * @throws Throwable if an error occurs
+   */
 
   @Test(expected = UnsupportedOperationException.class)
   public void testExecuteWithParametersThrowsUnsupportedOperationException() throws Throwable {

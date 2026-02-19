@@ -27,8 +27,12 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinancialAccount;
 /**
  * Tests for {@link FundsTransferActionHandler}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FundsTransferActionHandlerTest {
+
+  private static final String VAL_100_00 = "100.00";
+  private static final String CONVERT_AMOUNT = "convertAmount";
 
   @Mock
   private FIN_FinancialAccount mockAccountFrom;
@@ -46,6 +50,7 @@ public class FundsTransferActionHandlerTest {
   private Organization mockOrg;
 
   private MockedStatic<FinancialUtils> financialUtilsStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -55,6 +60,7 @@ public class FundsTransferActionHandlerTest {
     lenient().when(mockAccountFrom.getOrganization()).thenReturn(mockOrg);
     lenient().when(mockCurrencyTo.getStandardPrecision()).thenReturn(2L);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -62,36 +68,48 @@ public class FundsTransferActionHandlerTest {
       financialUtilsStatic.close();
     }
   }
+  /**
+   * Convert amount with rate.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertAmountWithRate() throws Exception {
-    BigDecimal amount = new BigDecimal("100.00");
+    BigDecimal amount = new BigDecimal(VAL_100_00);
     BigDecimal rate = new BigDecimal("1.5");
 
-    Method method = FundsTransferActionHandler.class.getDeclaredMethod("convertAmount",
+    Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
         BigDecimal.class, FIN_FinancialAccount.class, FIN_FinancialAccount.class, Date.class, BigDecimal.class);
     method.setAccessible(true);
 
     BigDecimal result = (BigDecimal) method.invoke(null, amount, mockAccountFrom, mockAccountTo, new Date(), rate);
     assertEquals(new BigDecimal("150.00"), result);
   }
+  /**
+   * Convert amount with rate rounds to scale.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertAmountWithRateRoundsToScale() throws Exception {
-    BigDecimal amount = new BigDecimal("100.00");
+    BigDecimal amount = new BigDecimal(VAL_100_00);
     BigDecimal rate = new BigDecimal("1.333");
 
-    Method method = FundsTransferActionHandler.class.getDeclaredMethod("convertAmount",
+    Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
         BigDecimal.class, FIN_FinancialAccount.class, FIN_FinancialAccount.class, Date.class, BigDecimal.class);
     method.setAccessible(true);
 
     BigDecimal result = (BigDecimal) method.invoke(null, amount, mockAccountFrom, mockAccountTo, new Date(), rate);
     assertEquals(new BigDecimal("133.30"), result);
   }
+  /**
+   * Convert amount with null rate uses financial utils.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertAmountWithNullRateUsesFinancialUtils() throws Exception {
-    BigDecimal amount = new BigDecimal("100.00");
+    BigDecimal amount = new BigDecimal(VAL_100_00);
     BigDecimal expectedConverted = new BigDecimal("200.00");
     Date date = new Date();
 
@@ -99,13 +117,17 @@ public class FundsTransferActionHandlerTest {
         amount, mockCurrencyFrom, mockCurrencyTo, date, mockOrg, null))
         .thenReturn(expectedConverted);
 
-    Method method = FundsTransferActionHandler.class.getDeclaredMethod("convertAmount",
+    Method method = FundsTransferActionHandler.class.getDeclaredMethod(CONVERT_AMOUNT,
         BigDecimal.class, FIN_FinancialAccount.class, FIN_FinancialAccount.class, Date.class, BigDecimal.class);
     method.setAccessible(true);
 
     BigDecimal result = (BigDecimal) method.invoke(null, amount, mockAccountFrom, mockAccountTo, date, (BigDecimal) null);
     assertEquals(expectedConverted, result);
   }
+  /**
+   * Line number util get next line number.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testLineNumberUtilGetNextLineNumber() throws Exception {
@@ -128,6 +150,10 @@ public class FundsTransferActionHandlerTest {
     Long result = (Long) getNext.invoke(lineNoUtil, mockAccountFrom);
     assertEquals(Long.valueOf(20L), result);
   }
+  /**
+   * Line number util increments sequentially.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testLineNumberUtilIncrementsSequentially() throws Exception {

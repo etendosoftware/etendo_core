@@ -15,10 +15,15 @@ import org.objenesis.ObjenesisStd;
  * Tests for {@link DocCash}.
  * Tests the public nextSeqNo, getBalance, and SeqNo getter/setter methods.
  */
+@SuppressWarnings({"java:S120", "java:S112"})
 @RunWith(MockitoJUnitRunner.class)
 public class DocCashTest {
 
   private DocCash instance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -31,30 +36,35 @@ public class DocCashTest {
   }
 
   // --- Tests for nextSeqNo ---
+  /** Next seq no from zero. */
 
   @Test
   public void testNextSeqNoFromZero() {
     String result = instance.nextSeqNo("0");
     assertEquals("10", result);
   }
+  /** Next seq no from ten. */
 
   @Test
   public void testNextSeqNoFromTen() {
     String result = instance.nextSeqNo("10");
     assertEquals("20", result);
   }
+  /** Next seq no from large number. */
 
   @Test
   public void testNextSeqNoFromLargeNumber() {
     String result = instance.nextSeqNo("990");
     assertEquals("1000", result);
   }
+  /** Next seq no updates internal seq no. */
 
   @Test
   public void testNextSeqNoUpdatesInternalSeqNo() {
     instance.nextSeqNo("0");
     assertEquals("10", instance.getSeqNo());
   }
+  /** Next seq no sequential calls. */
 
   @Test
   public void testNextSeqNoSequentialCalls() {
@@ -64,11 +74,13 @@ public class DocCashTest {
   }
 
   // --- Tests for getSeqNo / setSeqNo ---
+  /** Get seq no returns initial value. */
 
   @Test
   public void testGetSeqNoReturnsInitialValue() {
     assertEquals("0", instance.getSeqNo());
   }
+  /** Set seq no updates value. */
 
   @Test
   public void testSetSeqNoUpdatesValue() {
@@ -77,6 +89,7 @@ public class DocCashTest {
   }
 
   // --- Tests for getDocumentConfirmation ---
+  /** Get document confirmation returns true. */
 
   @Test
   public void testGetDocumentConfirmationReturnsTrue() {
@@ -84,6 +97,7 @@ public class DocCashTest {
   }
 
   // --- Tests for getServletInfo ---
+  /** Get servlet info returns expected string. */
 
   @Test
   public void testGetServletInfoReturnsExpectedString() {
@@ -91,21 +105,11 @@ public class DocCashTest {
   }
 
   // --- Tests for getSerialVersionUID ---
+  /** Get serial version uid returns one. */
 
   @Test
   public void testGetSerialVersionUIDReturnsOne() {
     assertEquals(1L, DocCash.getSerialVersionUID());
   }
 
-  private Field findField(Class<?> clazz, String fieldName) {
-    Class<?> current = clazz;
-    while (current != null) {
-      try {
-        return current.getDeclaredField(fieldName);
-      } catch (NoSuchFieldException e) {
-        current = current.getSuperclass();
-      }
-    }
-    throw new RuntimeException("Field not found: " + fieldName);
-  }
 }

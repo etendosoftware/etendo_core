@@ -17,6 +17,7 @@ import org.openbravo.erpCommon.utility.OBError;
 public class AuthenticationExceptionTest {
 
   private static final String TEST_MESSAGE = "Authentication failed";
+  /** Constructor with message. */
 
   @Test
   public void testConstructorWithMessage() {
@@ -25,6 +26,7 @@ public class AuthenticationExceptionTest {
     assertEquals(TEST_MESSAGE, exception.getMessage());
     assertNull(exception.getOBError());
   }
+  /** Constructor with message and log flag. */
 
   @Test
   public void testConstructorWithMessageAndLogFlag() {
@@ -33,6 +35,7 @@ public class AuthenticationExceptionTest {
     assertEquals(TEST_MESSAGE, exception.getMessage());
     assertNull(exception.getOBError());
   }
+  /** Constructor with message and cause. */
 
   @Test
   public void testConstructorWithMessageAndCause() {
@@ -43,6 +46,7 @@ public class AuthenticationExceptionTest {
     assertNotNull(exception.getCause());
     assertNull(exception.getOBError());
   }
+  /** Constructor with message and ob error. */
 
   @Test
   public void testConstructorWithMessageAndOBError() {
@@ -55,6 +59,7 @@ public class AuthenticationExceptionTest {
     assertEquals(TEST_MESSAGE, exception.getMessage());
     assertSame(error, exception.getOBError());
   }
+  /** Constructor with message ob error and log flag. */
 
   @Test
   public void testConstructorWithMessageOBErrorAndLogFlag() {
@@ -68,6 +73,7 @@ public class AuthenticationExceptionTest {
     assertEquals(TEST_MESSAGE, exception.getMessage());
     assertSame(error, exception.getOBError());
   }
+  /** Get ob error returns null when not set. */
 
   @Test
   public void testGetOBErrorReturnsNullWhenNotSet() {
@@ -75,6 +81,7 @@ public class AuthenticationExceptionTest {
 
     assertNull(exception.getOBError());
   }
+  /** Is runtime exception. */
 
   @Test
   public void testIsRuntimeException() {

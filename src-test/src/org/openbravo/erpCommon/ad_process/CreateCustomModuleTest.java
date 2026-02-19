@@ -39,6 +39,7 @@ import org.openbravo.scheduling.ProcessBundle;
 /**
  * Tests for {@link CreateCustomModule}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class CreateCustomModuleTest {
 
@@ -62,6 +63,7 @@ public class CreateCustomModuleTest {
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBProvider> obProviderStatic;
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -75,6 +77,7 @@ public class CreateCustomModuleTest {
 
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -88,6 +91,10 @@ public class CreateCustomModuleTest {
       obDalStatic.close();
     }
   }
+  /**
+   * Execute when module already exists.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings("unchecked")
   @Test
@@ -100,6 +107,10 @@ public class CreateCustomModuleTest {
     verify(mockBundle).setResult(any(OBError.class));
     verify(mockOBDal, never()).save(any());
   }
+  /**
+   * Execute creates module when not exists.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings("unchecked")
   @Test
@@ -141,6 +152,10 @@ public class CreateCustomModuleTest {
     verify(mockOBDal).commitAndClose();
     verify(mockBundle).setResult(any(OBError.class));
   }
+  /**
+   * Execute restores previous mode on success.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteRestoresPreviousModeOnSuccess() throws Exception {
@@ -151,6 +166,10 @@ public class CreateCustomModuleTest {
 
     obContextStatic.verify(OBContext::restorePreviousMode);
   }
+  /**
+   * Execute restores previous mode on exception.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings("unchecked")
   @Test

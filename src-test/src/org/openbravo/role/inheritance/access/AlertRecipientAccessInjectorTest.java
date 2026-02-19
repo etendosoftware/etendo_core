@@ -40,6 +40,7 @@ public class AlertRecipientAccessInjectorTest {
 
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<Utility> utilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -49,22 +50,26 @@ public class AlertRecipientAccessInjectorTest {
     obDalStatic = mockStatic(OBDal.class);
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obDalStatic != null) obDalStatic.close();
     if (utilityStatic != null) utilityStatic.close();
   }
+  /** Get secured element getter. */
 
   @Test
   public void testGetSecuredElementGetter() {
     assertEquals("getAlertRule", injector.getSecuredElementGetter());
   }
+  /** Get secured element name. */
 
   @Test
   public void testGetSecuredElementName() {
     assertEquals(AlertRecipient.PROPERTY_ALERTRULE, injector.getSecuredElementName());
   }
+  /** Is inheritable returns true when user contact is null. */
 
   @Test
   public void testIsInheritableReturnsTrueWhenUserContactIsNull() {
@@ -75,6 +80,7 @@ public class AlertRecipientAccessInjectorTest {
 
     assertTrue(result);
   }
+  /** Is inheritable returns false when user contact is set. */
 
   @Test
   public void testIsInheritableReturnsFalseWhenUserContactIsSet() {
@@ -86,6 +92,7 @@ public class AlertRecipientAccessInjectorTest {
 
     assertFalse(result);
   }
+  /** Add entity where clause. */
 
   @Test
   public void testAddEntityWhereClause() {
@@ -95,6 +102,7 @@ public class AlertRecipientAccessInjectorTest {
 
     assertEquals(baseWhere + " and p.userContact is null", result);
   }
+  /** Get skipped properties contains role. */
 
   @Test
   public void testGetSkippedPropertiesContainsRole() {
@@ -105,6 +113,7 @@ public class AlertRecipientAccessInjectorTest {
     assertTrue(skippedProperties.contains("creationDate"));
     assertTrue(skippedProperties.contains("createdBy"));
   }
+  /** Check access existence when no duplicate. */
 
   @Test
   public void testCheckAccessExistenceWhenNoDuplicate() {
@@ -120,6 +129,7 @@ public class AlertRecipientAccessInjectorTest {
     // Should not throw when no duplicate exists
     injector.checkAccessExistence(mockRecipient);
   }
+  /** Check access existence when duplicate exists. */
 
   @Test
   public void testCheckAccessExistenceWhenDuplicateExists() {
@@ -140,6 +150,7 @@ public class AlertRecipientAccessInjectorTest {
 
     utilityStatic.verify(() -> Utility.throwErrorMessage("DuplicatedAlertRecipientForTemplate"));
   }
+  /** Check access existence with user contact. */
 
   @Test
   public void testCheckAccessExistenceWithUserContact() {

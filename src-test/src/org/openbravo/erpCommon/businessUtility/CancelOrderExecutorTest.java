@@ -20,6 +20,7 @@ import org.openbravo.dal.core.OBContext;
 /**
  * Tests for {@link CancelOrderExecutor}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class CancelOrderExecutorTest {
 
@@ -29,6 +30,7 @@ public class CancelOrderExecutorTest {
   private CancelOrderExecutor instance;
 
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -37,6 +39,7 @@ public class CancelOrderExecutorTest {
 
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -44,6 +47,10 @@ public class CancelOrderExecutorTest {
       obContextStatic.close();
     }
   }
+  /**
+   * Init sets fields.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInitSetsFields() throws Exception {
@@ -69,6 +76,10 @@ public class CancelOrderExecutorTest {
     useDocNoField.setAccessible(true);
     assertEquals(true, useDocNoField.get(instance));
   }
+  /**
+   * Init with false use document no.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInitWithFalseUseDocumentNo() throws Exception {
@@ -82,6 +93,10 @@ public class CancelOrderExecutorTest {
     useDocNoField.setAccessible(true);
     assertEquals(false, useDocNoField.get(instance));
   }
+  /**
+   * Init overwrites previous values.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInitOverwritesPreviousValues() throws Exception {

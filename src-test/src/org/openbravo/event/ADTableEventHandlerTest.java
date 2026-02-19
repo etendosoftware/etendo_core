@@ -42,6 +42,9 @@ import java.lang.reflect.Method;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ADTableEventHandlerTest {
 
+  private static final String COM_EXAMPLE = "com.example";
+  private static final String CHECK_CLASS_NAME_FOR_DUPLICATES = "checkClassNameForDuplicates";
+
   private static final String TEST_TABLE_ID = "TEST_TABLE_001";
   private static final String TEST_JAVA_CLASS = "com.example.TestEntity";
   private static final String TEST_LANGUAGE = "en_US";
@@ -75,6 +78,7 @@ public class ADTableEventHandlerTest {
   private MockedStatic<OBContext> obContextStatic;
   private MockedStatic<ModelProvider> modelProviderStatic;
   private MockedStatic<Utility> utilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -101,6 +105,7 @@ public class ADTableEventHandlerTest {
     lenient().when(mockOBContext.getLanguage()).thenReturn(mockLanguage);
     lenient().when(mockLanguage.getLanguage()).thenReturn(TEST_LANGUAGE);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -109,13 +114,17 @@ public class ADTableEventHandlerTest {
     if (modelProviderStatic != null) modelProviderStatic.close();
     if (utilityStatic != null) utilityStatic.close();
   }
+  /**
+   * Check class name no duplicate does not throw.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCheckClassNameNoDuplicateDoesNotThrow() throws Exception {
     when(mockNewEvent.getTargetInstance()).thenReturn(mock(Table.class));
     when(mockNewEvent.getTargetInstance().getId()).thenReturn(TEST_TABLE_ID);
     when(mockNewEvent.getCurrentState(mockJavaClassNameProperty)).thenReturn(TEST_JAVA_CLASS);
-    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn("com.example");
+    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn(COM_EXAMPLE);
     when(mockNewEvent.getCurrentState(mockDataOriginTypeProperty))
         .thenReturn(ApplicationConstants.TABLEBASEDTABLE);
 
@@ -123,18 +132,22 @@ public class ADTableEventHandlerTest {
     when(mockCriteria.add(any(Criterion.class))).thenReturn(mockCriteria);
     when(mockCriteria.count()).thenReturn(0);
 
-    Method method = ADTableEventHandler.class.getDeclaredMethod("checkClassNameForDuplicates",
+    Method method = ADTableEventHandler.class.getDeclaredMethod(CHECK_CLASS_NAME_FOR_DUPLICATES,
         EntityPersistenceEvent.class);
     method.setAccessible(true);
     method.invoke(handler, mockNewEvent);
   }
+  /**
+   * Check class name with duplicate throws exception.
+   * @throws Throwable if an error occurs
+   */
 
   @Test(expected = OBException.class)
   public void testCheckClassNameWithDuplicateThrowsException() throws Throwable {
     when(mockNewEvent.getTargetInstance()).thenReturn(mock(Table.class));
     when(mockNewEvent.getTargetInstance().getId()).thenReturn(TEST_TABLE_ID);
     when(mockNewEvent.getCurrentState(mockJavaClassNameProperty)).thenReturn(TEST_JAVA_CLASS);
-    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn("com.example");
+    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn(COM_EXAMPLE);
     when(mockNewEvent.getCurrentState(mockDataOriginTypeProperty))
         .thenReturn(ApplicationConstants.TABLEBASEDTABLE);
 
@@ -145,7 +158,7 @@ public class ADTableEventHandlerTest {
     utilityStatic.when(() -> Utility.messageBD(any(), anyString(), anyString()))
         .thenReturn("Duplicate Java Class Name");
 
-    Method method = ADTableEventHandler.class.getDeclaredMethod("checkClassNameForDuplicates",
+    Method method = ADTableEventHandler.class.getDeclaredMethod(CHECK_CLASS_NAME_FOR_DUPLICATES,
         EntityPersistenceEvent.class);
     method.setAccessible(true);
     try {
@@ -154,33 +167,41 @@ public class ADTableEventHandlerTest {
       throw e.getCause();
     }
   }
+  /**
+   * Check class name skips when not table based.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCheckClassNameSkipsWhenNotTableBased() throws Exception {
     when(mockNewEvent.getTargetInstance()).thenReturn(mock(Table.class));
     when(mockNewEvent.getTargetInstance().getId()).thenReturn(TEST_TABLE_ID);
     when(mockNewEvent.getCurrentState(mockJavaClassNameProperty)).thenReturn(TEST_JAVA_CLASS);
-    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn("com.example");
+    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn(COM_EXAMPLE);
     when(mockNewEvent.getCurrentState(mockDataOriginTypeProperty)).thenReturn("OTHER");
 
-    Method method = ADTableEventHandler.class.getDeclaredMethod("checkClassNameForDuplicates",
+    Method method = ADTableEventHandler.class.getDeclaredMethod(CHECK_CLASS_NAME_FOR_DUPLICATES,
         EntityPersistenceEvent.class);
     method.setAccessible(true);
     method.invoke(handler, mockNewEvent);
 
     verify(mockOBDal, never()).createCriteria(Table.class);
   }
+  /**
+   * Check class name skips when java class name is null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCheckClassNameSkipsWhenJavaClassNameIsNull() throws Exception {
     when(mockNewEvent.getTargetInstance()).thenReturn(mock(Table.class));
     when(mockNewEvent.getTargetInstance().getId()).thenReturn(TEST_TABLE_ID);
     when(mockNewEvent.getCurrentState(mockJavaClassNameProperty)).thenReturn(null);
-    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn("com.example");
+    when(mockNewEvent.getCurrentState(mockPackageNameProperty)).thenReturn(COM_EXAMPLE);
     when(mockNewEvent.getCurrentState(mockDataOriginTypeProperty))
         .thenReturn(ApplicationConstants.TABLEBASEDTABLE);
 
-    Method method = ADTableEventHandler.class.getDeclaredMethod("checkClassNameForDuplicates",
+    Method method = ADTableEventHandler.class.getDeclaredMethod(CHECK_CLASS_NAME_FOR_DUPLICATES,
         EntityPersistenceEvent.class);
     method.setAccessible(true);
     method.invoke(handler, mockNewEvent);

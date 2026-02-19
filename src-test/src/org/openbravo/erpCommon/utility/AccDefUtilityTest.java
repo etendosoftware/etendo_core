@@ -36,8 +36,14 @@ import org.openbravo.model.financialmgmt.calendar.Year;
 /**
  * Tests for {@link AccDefUtility}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class AccDefUtilityTest {
+
+  private static final String PROD1 = "prod1";
+  private static final String PLAN_TYPE = "planType";
+  private static final String PERIOD_NUMBER = "periodNumber";
+  private static final String STARTING_PERIOD_ID = "startingPeriodId";
 
   @Mock
   private OBDal obDal;
@@ -50,6 +56,7 @@ public class AccDefUtilityTest {
 
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OrganizationStructureProvider> ospStatic;
+  /** Sets up test fixtures. */
 
   @SuppressWarnings("unchecked")
   @Before
@@ -62,6 +69,7 @@ public class AccDefUtilityTest {
     lenient().when(periodCriteria.createAlias(any(), any())).thenReturn(periodCriteria);
     lenient().when(periodCriteria.add(any())).thenReturn(periodCriteria);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -72,6 +80,7 @@ public class AccDefUtilityTest {
       ospStatic.close();
     }
   }
+  /** Get calendar with zero org. */
 
   @Test
   public void testGetCalendarWithZeroOrg() {
@@ -80,6 +89,7 @@ public class AccDefUtilityTest {
     Calendar result = AccDefUtility.getCalendar(org);
     assertNull(result);
   }
+  /** Get calendar returns org calendar. */
 
   @Test
   public void testGetCalendarReturnsOrgCalendar() {
@@ -90,6 +100,7 @@ public class AccDefUtilityTest {
     Calendar result = AccDefUtility.getCalendar(org);
     assertEquals(calendar, result);
   }
+  /** Get current period returns period. */
 
   @Test
   public void testGetCurrentPeriodReturnsPeriod() {
@@ -104,6 +115,7 @@ public class AccDefUtilityTest {
     assertNotNull(result);
     assertEquals(period, result);
   }
+  /** Get current period returns null when no periods. */
 
   @Test
   public void testGetCurrentPeriodReturnsNullWhenNoPeriods() {
@@ -114,51 +126,56 @@ public class AccDefUtilityTest {
     Period result = AccDefUtility.getCurrentPeriod(date, calendar);
     assertNull(result);
   }
+  /** Get deferred plan with empty invoice id. */
 
   @Test
   public void testGetDeferredPlanWithEmptyInvoiceId() {
-    HashMap<String, String> result = AccDefUtility.getDeferredPlanForInvoiceProduct("", "prod1");
-    assertEquals("", result.get("planType"));
-    assertEquals("", result.get("periodNumber"));
-    assertEquals("", result.get("startingPeriodId"));
+    HashMap<String, String> result = AccDefUtility.getDeferredPlanForInvoiceProduct("", PROD1);
+    assertEquals("", result.get(PLAN_TYPE));
+    assertEquals("", result.get(PERIOD_NUMBER));
+    assertEquals("", result.get(STARTING_PERIOD_ID));
   }
+  /** Get deferred plan with empty product id. */
 
   @Test
   public void testGetDeferredPlanWithEmptyProductId() {
     HashMap<String, String> result = AccDefUtility.getDeferredPlanForInvoiceProduct("inv1", "");
-    assertEquals("", result.get("planType"));
-    assertEquals("", result.get("periodNumber"));
-    assertEquals("", result.get("startingPeriodId"));
+    assertEquals("", result.get(PLAN_TYPE));
+    assertEquals("", result.get(PERIOD_NUMBER));
+    assertEquals("", result.get(STARTING_PERIOD_ID));
   }
+  /** Get deferred plan with both empty. */
 
   @Test
   public void testGetDeferredPlanWithBothEmpty() {
     HashMap<String, String> result = AccDefUtility.getDeferredPlanForInvoiceProduct("", "");
-    assertEquals("", result.get("planType"));
-    assertEquals("", result.get("periodNumber"));
-    assertEquals("", result.get("startingPeriodId"));
+    assertEquals("", result.get(PLAN_TYPE));
+    assertEquals("", result.get(PERIOD_NUMBER));
+    assertEquals("", result.get(STARTING_PERIOD_ID));
   }
+  /** Get deferred plan result contains all keys. */
 
   @Test
   public void testGetDeferredPlanResultContainsAllKeys() {
     HashMap<String, String> result = AccDefUtility.getDeferredPlanForInvoiceProduct("", "");
-    assertNotNull(result.get("planType"));
-    assertNotNull(result.get("periodNumber"));
-    assertNotNull(result.get("startingPeriodId"));
+    assertNotNull(result.get(PLAN_TYPE));
+    assertNotNull(result.get(PERIOD_NUMBER));
+    assertNotNull(result.get(STARTING_PERIOD_ID));
   }
+  /** Get deferred plan non deferred product. */
 
   @Test
   public void testGetDeferredPlanNonDeferredProduct() {
     Invoice invoice = mock(Invoice.class);
     Product product = mock(Product.class);
     when(obDal.get(Invoice.class, "inv1")).thenReturn(invoice);
-    when(obDal.get(Product.class, "prod1")).thenReturn(product);
+    when(obDal.get(Product.class, PROD1)).thenReturn(product);
     when(invoice.isSalesTransaction()).thenReturn(true);
     when(product.isDeferredRevenue()).thenReturn(false);
 
     HashMap<String, String> result = AccDefUtility.getDeferredPlanForInvoiceProduct("inv1",
-        "prod1");
-    assertEquals("", result.get("planType"));
-    assertEquals("", result.get("periodNumber"));
+        PROD1);
+    assertEquals("", result.get(PLAN_TYPE));
+    assertEquals("", result.get(PERIOD_NUMBER));
   }
 }

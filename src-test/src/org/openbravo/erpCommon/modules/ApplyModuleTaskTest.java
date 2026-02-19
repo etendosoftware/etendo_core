@@ -12,6 +12,8 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
 import org.openbravo.base.session.OBPropertiesProvider;
+/** Tests for {@link ApplyModuleTask}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.class)
 public class ApplyModuleTaskTest {
@@ -19,12 +21,17 @@ public class ApplyModuleTaskTest {
   private static final String TEST_OB_DIR = "/test/openbravo";
 
   private ApplyModuleTask instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(ApplyModuleTask.class);
   }
+  /**
+   * Set ob dir.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetObDir() throws Exception {
@@ -34,6 +41,10 @@ public class ApplyModuleTaskTest {
     obDirField.setAccessible(true);
     assertEquals(TEST_OB_DIR, obDirField.get(instance));
   }
+  /**
+   * Set force ref data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetForceRefData() throws Exception {
@@ -43,6 +54,10 @@ public class ApplyModuleTaskTest {
     forceField.setAccessible(true);
     assertTrue((Boolean) forceField.get(instance));
   }
+  /**
+   * Set force ref data false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetForceRefDataFalse() throws Exception {
@@ -52,6 +67,7 @@ public class ApplyModuleTaskTest {
     forceField.setAccessible(true);
     assertFalse((Boolean) forceField.get(instance));
   }
+  /** Set friendly warnings. */
 
   @Test
   public void testSetFriendlyWarnings() {
@@ -61,6 +77,7 @@ public class ApplyModuleTaskTest {
     instance.setFriendlyWarnings(false);
     assertFalse(OBPropertiesProvider.isFriendlyWarnings());
   }
+  /** Get friendly warnings. */
 
   @Test
   public void testGetFriendlyWarnings() {

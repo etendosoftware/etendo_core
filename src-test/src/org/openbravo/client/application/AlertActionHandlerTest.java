@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -23,12 +24,14 @@ import org.openbravo.dal.core.OBContext;
 /**
  * Tests for {@link AlertActionHandler}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AlertActionHandlerTest {
 
   private AlertActionHandler handler;
 
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -36,11 +39,16 @@ public class AlertActionHandlerTest {
     handler = objenesis.newInstance(AlertActionHandler.class);
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obContextStatic != null) obContextStatic.close();
   }
+  /**
+   * Execute with parameters throws unsupported operation.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = UnsupportedOperationException.class)
   public void testExecuteWithParametersThrowsUnsupportedOperation() throws Exception {
@@ -52,6 +60,10 @@ public class AlertActionHandlerTest {
       throw (Exception) e.getCause();
     }
   }
+  /**
+   * Get filter sql with null filter clause.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetFilterSQLWithNullFilterClause() throws Exception {
@@ -69,6 +81,10 @@ public class AlertActionHandlerTest {
       // If it throws, the method is handling it internally
     }
   }
+  /**
+   * Write response format.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testWriteResponseFormat() throws Exception {

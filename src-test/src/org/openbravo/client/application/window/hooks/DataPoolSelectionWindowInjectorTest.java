@@ -30,6 +30,8 @@ import org.openbravo.base.session.OBPropertiesProvider;
 @RunWith(MockitoJUnitRunner.class)
 public class DataPoolSelectionWindowInjectorTest {
 
+  private static final String WINDOW_ID = "windowId";
+
   private static final String DATA_POOL_SEL_WINDOW_ID = "48B7215F9BF6458E813E6B280DEDB958";
 
   private DataPoolSelectionWindowInjector injector;
@@ -38,6 +40,7 @@ public class DataPoolSelectionWindowInjectorTest {
   private OBPropertiesProvider mockPropertiesProvider;
 
   private MockedStatic<OBPropertiesProvider> propertiesProviderStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -46,21 +49,30 @@ public class DataPoolSelectionWindowInjectorTest {
     propertiesProviderStatic.when(OBPropertiesProvider::getInstance)
         .thenReturn(mockPropertiesProvider);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (propertiesProviderStatic != null) propertiesProviderStatic.close();
   }
+  /**
+   * Do add setting returns empty map for non matching window.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoAddSettingReturnsEmptyMapForNonMatchingWindow() throws Exception {
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("windowId", "SOME_OTHER_WINDOW_ID");
+    parameters.put(WINDOW_ID, "SOME_OTHER_WINDOW_ID");
 
     Map<String, Object> result = injector.doAddSetting(parameters, new JSONObject());
 
     assertTrue(result.isEmpty());
   }
+  /**
+   * Do add setting returns settings when ro pool not available.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoAddSettingReturnsSettingsWhenROPoolNotAvailable() throws Exception {
@@ -68,7 +80,7 @@ public class DataPoolSelectionWindowInjectorTest {
     when(mockPropertiesProvider.getOpenbravoProperties()).thenReturn(properties);
 
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("windowId", DATA_POOL_SEL_WINDOW_ID);
+    parameters.put(WINDOW_ID, DATA_POOL_SEL_WINDOW_ID);
 
     Map<String, Object> result = injector.doAddSetting(parameters, new JSONObject());
 
@@ -80,6 +92,10 @@ public class DataPoolSelectionWindowInjectorTest {
     assertEquals(1, callbacks.size());
     assertEquals("OB.Utilities.ExtraWindowSettingsActions.showInfoMessage", callbacks.get(0));
   }
+  /**
+   * Do add setting returns empty map when ro pool available.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoAddSettingReturnsEmptyMapWhenROPoolAvailable() throws Exception {
@@ -88,12 +104,16 @@ public class DataPoolSelectionWindowInjectorTest {
     when(mockPropertiesProvider.getOpenbravoProperties()).thenReturn(properties);
 
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("windowId", DATA_POOL_SEL_WINDOW_ID);
+    parameters.put(WINDOW_ID, DATA_POOL_SEL_WINDOW_ID);
 
     Map<String, Object> result = injector.doAddSetting(parameters, new JSONObject());
 
     assertTrue(result.isEmpty());
   }
+  /**
+   * Do add setting returns empty map when no window id.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoAddSettingReturnsEmptyMapWhenNoWindowId() throws Exception {

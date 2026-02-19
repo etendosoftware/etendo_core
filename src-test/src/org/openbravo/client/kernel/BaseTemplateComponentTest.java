@@ -41,6 +41,10 @@ public class BaseTemplateComponentTest {
   private TemplateProcessor.Registry mockRegistry;
 
   private MockedStatic<OBContext> obContextStatic;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -59,6 +63,7 @@ public class BaseTemplateComponentTest {
     parametersField.setAccessible(true);
     parametersField.set(instance, new HashMap<String, Object>());
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -66,6 +71,10 @@ public class BaseTemplateComponentTest {
       obContextStatic.close();
     }
   }
+  /**
+   * Generate returns processed template.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGenerateReturnsProcessedTemplate() throws Exception {
@@ -85,6 +94,10 @@ public class BaseTemplateComponentTest {
     obContextStatic.verify(() -> OBContext.setAdminMode());
     obContextStatic.verify(() -> OBContext.restorePreviousMode());
   }
+  /**
+   * Generate adds data parameter when not null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGenerateAddsDataParameterWhenNotNull() throws Exception {
@@ -103,18 +116,21 @@ public class BaseTemplateComponentTest {
     assertNotNull(params.get(BaseTemplateComponent.DATA_PARAMETER));
     assertEquals(instance, params.get(BaseTemplateComponent.DATA_PARAMETER));
   }
+  /** Get data returns this. */
 
   @Test
   public void testGetDataReturnsThis() {
     Object data = instance.getData();
     assertEquals(instance, data);
   }
+  /** Set and get component template. */
 
   @Test
   public void testSetAndGetComponentTemplate() {
     instance.setComponentTemplate(mockTemplate);
     assertEquals(mockTemplate, instance.getComponentTemplate());
   }
+  /** Constants. */
 
   @Test
   public void testConstants() {

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 
@@ -19,6 +20,8 @@ import org.objenesis.ObjenesisStd;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.service.centralrepository.Module;
+/** Tests for {@link CheckLocalConsistency}. */
+@SuppressWarnings({"java:S120", "java:S112"})
 
 @RunWith(MockitoJUnitRunner.class)
 public class CheckLocalConsistencyTest {
@@ -26,6 +29,7 @@ public class CheckLocalConsistencyTest {
   private CheckLocalConsistency instance;
 
   private MockedStatic<VersionUtility> versionUtilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -33,6 +37,7 @@ public class CheckLocalConsistencyTest {
     instance = objenesis.newInstance(CheckLocalConsistency.class);
     versionUtilityStatic = mockStatic(VersionUtility.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -41,11 +46,15 @@ public class CheckLocalConsistencyTest {
     }
   }
 
-  private void invokeDoExecute() throws Exception {
+  private void invokeDoExecute() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = CheckLocalConsistency.class.getDeclaredMethod("doExecute");
     method.setAccessible(true);
     method.invoke(instance);
   }
+  /**
+   * Do execute with satisfied dependencies.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteWithSatisfiedDependencies() throws Exception {
@@ -60,6 +69,10 @@ public class CheckLocalConsistencyTest {
     invokeDoExecute();
     // Should complete without exception
   }
+  /**
+   * Do execute with unsatisfied dependencies.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = BuildException.class)
   public void testDoExecuteWithUnsatisfiedDependencies() throws Exception {
@@ -80,6 +93,10 @@ public class CheckLocalConsistencyTest {
       throw new RuntimeException(e);
     }
   }
+  /**
+   * Do execute with check local throwing exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = BuildException.class)
   public void testDoExecuteWithCheckLocalThrowingException() throws Exception {

@@ -39,6 +39,10 @@ public class ConvertQuotationIntoOrderHookManagerTest {
 
   @Mock
   private Order mockOrder;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -50,6 +54,7 @@ public class ConvertQuotationIntoOrderHookManagerTest {
 
     when(mockHookInstance.select(any(Annotation[].class))).thenReturn(mockSelectedInstance);
   }
+  /** Execute hooks with no hooks. */
 
   @Test
   public void testExecuteHooksWithNoHooks() {
@@ -62,6 +67,7 @@ public class ConvertQuotationIntoOrderHookManagerTest {
 
     // Assert - no exception thrown, no hooks called
   }
+  /** Execute hooks calls single hook. */
 
   @Test
   public void testExecuteHooksCallsSingleHook() {
@@ -77,6 +83,7 @@ public class ConvertQuotationIntoOrderHookManagerTest {
     // Assert
     verify(hook).exec(mockOrder);
   }
+  /** Execute hooks calls multiple hooks in order. */
 
   @Test
   public void testExecuteHooksCallsMultipleHooksInOrder() {
@@ -97,6 +104,7 @@ public class ConvertQuotationIntoOrderHookManagerTest {
     inOrder.verify(hook2).exec(mockOrder);
     inOrder.verify(hook1).exec(mockOrder);
   }
+  /** Execute hooks skips null hooks. */
 
   @Test
   public void testExecuteHooksSkipsNullHooks() {
@@ -112,6 +120,10 @@ public class ConvertQuotationIntoOrderHookManagerTest {
     // Assert
     verify(hook).exec(mockOrder);
   }
+  /**
+   * Execute hooks with null instance field.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksWithNullInstanceField() throws Exception {
@@ -126,6 +138,7 @@ public class ConvertQuotationIntoOrderHookManagerTest {
 
     // Assert - no exception thrown
   }
+  /** Execute hooks with equal order values. */
 
   @Test
   public void testExecuteHooksWithEqualOrderValues() {

@@ -23,6 +23,7 @@ import org.openbravo.model.common.enterprise.Organization;
 /**
  * Tests for {@link BusinessPartnerSelectorFilterExpression}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class BusinessPartnerSelectorFilterExpressionTest {
 
@@ -38,6 +39,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
   private Organization mockOrganization;
 
   private MockedStatic<OBDal> obDalStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -47,6 +49,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
     lenient().when(mockOBDal.getProxy(Organization.class, TEST_ORG_ID)).thenReturn(mockOrganization);
     lenient().when(mockOrganization.getId()).thenReturn(TEST_ORG_ID);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -54,6 +57,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
       obDalStatic.close();
     }
   }
+  /** Get expression returns filter for c order. */
 
   @Test
   public void testGetExpressionReturnsFilterForCOrder() {
@@ -63,6 +67,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertFilterContainsOrgAndClient(result);
   }
+  /** Get expression returns filter for c order line. */
 
   @Test
   public void testGetExpressionReturnsFilterForCOrderLine() {
@@ -72,6 +77,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertFilterContainsOrgAndClient(result);
   }
+  /** Get expression returns filter for m in out. */
 
   @Test
   public void testGetExpressionReturnsFilterForMInOut() {
@@ -81,6 +87,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertFilterContainsOrgAndClient(result);
   }
+  /** Get expression returns filter for m in out line. */
 
   @Test
   public void testGetExpressionReturnsFilterForMInOutLine() {
@@ -90,6 +97,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertFilterContainsOrgAndClient(result);
   }
+  /** Get expression returns filter for c invoice. */
 
   @Test
   public void testGetExpressionReturnsFilterForCInvoice() {
@@ -99,6 +107,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertFilterContainsOrgAndClient(result);
   }
+  /** Get expression returns filter for c invoice line. */
 
   @Test
   public void testGetExpressionReturnsFilterForCInvoiceLine() {
@@ -108,6 +117,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertFilterContainsOrgAndClient(result);
   }
+  /** Get expression returns empty for unknown table. */
 
   @Test
   public void testGetExpressionReturnsEmptyForUnknownTable() {
@@ -117,6 +127,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertEquals("", result);
   }
+  /** Get expression returns empty when no table id. */
 
   @Test
   public void testGetExpressionReturnsEmptyWhenNoTableId() {
@@ -126,6 +137,7 @@ public class BusinessPartnerSelectorFilterExpressionTest {
 
     assertEquals("", result);
   }
+  /** Get expression uses default org when missing. */
 
   @Test
   public void testGetExpressionUsesDefaultOrgWhenMissing() {

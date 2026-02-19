@@ -33,8 +33,11 @@ import java.lang.reflect.Field;
 /**
  * Tests for {@link ApplyModules}.
  */
+@SuppressWarnings({"java:S120", "java:S112"})
 @RunWith(MockitoJUnitRunner.class)
 public class ApplyModulesTest {
+
+  private static final String DEFAULT = "Default";
 
   private ApplyModules instance;
 
@@ -52,6 +55,10 @@ public class ApplyModulesTest {
 
   @Mock
   private XmlDocument mockXmlDocument;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -68,12 +75,16 @@ public class ApplyModulesTest {
     strReplaceWithField.setAccessible(true);
     strReplaceWithField.set(instance, "/openbravo");
   }
+  /**
+   * Print external rebuild with restart true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testPrintExternalRebuildWithRestartTrue() throws Exception {
     // Arrange
     when(mockVars.getLanguage()).thenReturn("en_US");
-    when(mockVars.getTheme()).thenReturn("Default");
+    when(mockVars.getTheme()).thenReturn(DEFAULT);
     when(mockXmlEngine.readXmlTemplate(anyString(), any(String[].class)))
         .thenReturn(mockXmlTemplate);
     when(mockXmlTemplate.createXmlDocument()).thenReturn(mockXmlDocument);
@@ -92,14 +103,18 @@ public class ApplyModulesTest {
     // Assert
     verify(mockResponse).setContentType("text/html; charset=UTF-8");
     verify(mockXmlDocument).setParameter("language", "defaultLang=\"en_US\";");
-    verify(mockXmlDocument).setParameter("theme", "Default");
+    verify(mockXmlDocument).setParameter("theme", DEFAULT);
   }
+  /**
+   * Print external rebuild with restart false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testPrintExternalRebuildWithRestartFalse() throws Exception {
     // Arrange
     when(mockVars.getLanguage()).thenReturn("en_US");
-    when(mockVars.getTheme()).thenReturn("Default");
+    when(mockVars.getTheme()).thenReturn(DEFAULT);
     when(mockXmlEngine.readXmlTemplate(anyString(), any(String[].class)))
         .thenReturn(mockXmlTemplate);
     when(mockXmlTemplate.createXmlDocument()).thenReturn(mockXmlDocument);

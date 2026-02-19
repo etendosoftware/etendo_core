@@ -23,6 +23,7 @@ import org.openbravo.database.ConnectionProvider;
 /**
  * Tests for {@link Alert}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AlertTest {
 
@@ -34,11 +35,13 @@ public class AlertTest {
   private ConnectionProvider mockConn;
 
   private MockedStatic<AlertData> alertDataStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     alertDataStatic = mockStatic(AlertData.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -46,6 +49,7 @@ public class AlertTest {
       alertDataStatic.close();
     }
   }
+  /** Default constructor. */
 
   @Test
   public void testDefaultConstructor() {
@@ -53,6 +57,7 @@ public class AlertTest {
     assertEquals(0, alert.getAlertRuleId());
     assertNull(alert.getRecordId());
   }
+  /** Constructor with rule id. */
 
   @Test
   public void testConstructorWithRuleId() {
@@ -60,6 +65,7 @@ public class AlertTest {
     assertEquals(TEST_RULE_ID, alert.getAlertRuleId());
     assertNull(alert.getRecordId());
   }
+  /** Constructor with rule id and record id. */
 
   @Test
   public void testConstructorWithRuleIdAndRecordId() {
@@ -67,6 +73,7 @@ public class AlertTest {
     assertEquals(TEST_RULE_ID, alert.getAlertRuleId());
     assertEquals(TEST_RECORD_ID, alert.getRecordId());
   }
+  /** Set and get alert rule id. */
 
   @Test
   public void testSetAndGetAlertRuleId() {
@@ -74,6 +81,7 @@ public class AlertTest {
     alert.setAlertRuleId(TEST_RULE_ID);
     assertEquals(TEST_RULE_ID, alert.getAlertRuleId());
   }
+  /** Set and get record id. */
 
   @Test
   public void testSetAndGetRecordId() {
@@ -81,6 +89,7 @@ public class AlertTest {
     alert.setRecordId(TEST_RECORD_ID);
     assertEquals(TEST_RECORD_ID, alert.getRecordId());
   }
+  /** Set and get description. */
 
   @Test
   public void testSetAndGetDescription() {
@@ -88,6 +97,7 @@ public class AlertTest {
     alert.setDescription(TEST_DESCRIPTION);
     assertEquals(TEST_DESCRIPTION, alert.getDescription());
   }
+  /** Save returns false when rule id is zero. */
 
   @Test
   public void testSaveReturnsFalseWhenRuleIdIsZero() {
@@ -98,6 +108,7 @@ public class AlertTest {
 
     assertFalse(result);
   }
+  /** Save returns false when description is null. */
 
   @Test
   public void testSaveReturnsFalseWhenDescriptionIsNull() {
@@ -107,6 +118,7 @@ public class AlertTest {
 
     assertFalse(result);
   }
+  /** Save returns false when description is empty. */
 
   @Test
   public void testSaveReturnsFalseWhenDescriptionIsEmpty() {
@@ -117,6 +129,10 @@ public class AlertTest {
 
     assertFalse(result);
   }
+  /**
+   * Save with record id uses select method.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSaveWithRecordIdUsesSelectMethod() throws Exception {
@@ -133,6 +149,10 @@ public class AlertTest {
     alertDataStatic.verify(() -> AlertData.select(eq(mockConn),
         eq(String.valueOf(TEST_RULE_ID)), eq(TEST_RECORD_ID)));
   }
+  /**
+   * Save without record id uses select by description.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSaveWithoutRecordIdUsesSelectByDescription() throws Exception {
@@ -149,6 +169,10 @@ public class AlertTest {
     alertDataStatic.verify(() -> AlertData.selectByDescription(eq(mockConn),
         eq(String.valueOf(TEST_RULE_ID)), eq(TEST_DESCRIPTION)));
   }
+  /**
+   * Save inserts when no existing data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSaveInsertsWhenNoExistingData() throws Exception {
@@ -165,6 +189,10 @@ public class AlertTest {
     alertDataStatic.verify(() -> AlertData.insert(eq(mockConn), eq(TEST_DESCRIPTION),
         eq(String.valueOf(TEST_RULE_ID)), eq(TEST_RECORD_ID), eq("0")));
   }
+  /**
+   * Save does not insert when data exists.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSaveDoesNotInsertWhenDataExists() throws Exception {
@@ -182,6 +210,10 @@ public class AlertTest {
     alertDataStatic.verify(() -> AlertData.insert(eq(mockConn), anyString(),
         anyString(), anyString(), anyString()), never());
   }
+  /**
+   * Save returns false on exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSaveReturnsFalseOnException() throws Exception {

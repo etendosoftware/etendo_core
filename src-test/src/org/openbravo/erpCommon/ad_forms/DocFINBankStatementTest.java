@@ -16,11 +16,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatement;
 import org.openbravo.model.financialmgmt.payment.FIN_BankStatementLine;
+/** Tests for {@link DocFINBankStatement}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DocFINBankStatementTest {
 
   private DocFINBankStatement instance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -31,6 +37,10 @@ public class DocFINBankStatementTest {
     seqNoField.setAccessible(true);
     seqNoField.set(instance, "0");
   }
+  /**
+   * Get balance returns zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetBalanceReturnsZero() throws Exception {
@@ -41,18 +51,24 @@ public class DocFINBankStatementTest {
     BigDecimal balance = instance.getBalance();
     assertEquals(BigDecimal.ZERO, balance);
   }
+  /** Next seq no from zero. */
 
   @Test
   public void testNextSeqNoFromZero() {
     String result = instance.nextSeqNo("0");
     assertEquals("10", result);
   }
+  /** Next seq no from ten. */
 
   @Test
   public void testNextSeqNoFromTen() {
     String result = instance.nextSeqNo("10");
     assertEquals("20", result);
   }
+  /**
+   * Next seq no updates instance field.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testNextSeqNoUpdatesInstanceField() throws Exception {
@@ -61,6 +77,7 @@ public class DocFINBankStatementTest {
     seqNoField.setAccessible(true);
     assertEquals("40", seqNoField.get(instance));
   }
+  /** Get total amount with no lines. */
 
   @Test
   public void testGetTotalAmountWithNoLines() {
@@ -70,6 +87,7 @@ public class DocFINBankStatementTest {
     BigDecimal total = instance.getTotalAmount(bankStatement);
     assertEquals(BigDecimal.ZERO, total);
   }
+  /** Get total amount with debit lines. */
 
   @Test
   public void testGetTotalAmountWithDebitLines() {
@@ -87,6 +105,7 @@ public class DocFINBankStatementTest {
     BigDecimal total = instance.getTotalAmount(bankStatement);
     assertEquals(new BigDecimal("150.00"), total);
   }
+  /** Get total amount with credit lines. */
 
   @Test
   public void testGetTotalAmountWithCreditLines() {
@@ -100,6 +119,7 @@ public class DocFINBankStatementTest {
     BigDecimal total = instance.getTotalAmount(bankStatement);
     assertEquals(new BigDecimal("-200.00"), total);
   }
+  /** Get total amount mixed. */
 
   @Test
   public void testGetTotalAmountMixed() {

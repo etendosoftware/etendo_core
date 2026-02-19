@@ -28,6 +28,7 @@ import org.openbravo.model.common.order.Order;
 /**
  * Tests for {@link CloneOrderHookCaller}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class CloneOrderHookCallerTest {
 
@@ -44,6 +45,10 @@ public class CloneOrderHookCallerTest {
 
   @Mock
   private CloneOrderHook hook2;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -54,6 +59,10 @@ public class CloneOrderHookCallerTest {
     field.setAccessible(true);
     field.set(caller, hookInstance);
   }
+  /**
+   * Execute hook calls all hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookCallsAllHooks() throws Exception {
@@ -65,6 +74,10 @@ public class CloneOrderHookCallerTest {
     verify(hook1).exec(mockOrder);
     verify(hook2).exec(mockOrder);
   }
+  /**
+   * Execute hook with no hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookWithNoHooks() throws Exception {
@@ -75,6 +88,10 @@ public class CloneOrderHookCallerTest {
 
     verify(hook1, never()).exec(mockOrder);
   }
+  /**
+   * Execute hook with single hook.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookWithSingleHook() throws Exception {
@@ -86,6 +103,10 @@ public class CloneOrderHookCallerTest {
     verify(hook1).exec(mockOrder);
     verify(hook2, never()).exec(mockOrder);
   }
+  /**
+   * Execute hook propagates exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = Exception.class)
   public void testExecuteHookPropagatesException() throws Exception {

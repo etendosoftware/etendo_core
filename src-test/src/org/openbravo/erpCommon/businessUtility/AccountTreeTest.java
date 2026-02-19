@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import java.lang.reflect.InvocationTargetException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -58,8 +59,13 @@ import org.openbravo.model.financialmgmt.accounting.coa.ElementValue;
  * Uses Mockito to mock static dependencies and ObjenesisStd for instance creation
  * without invoking constructors.
  */
+@SuppressWarnings({"java:S120", "java:S1448", "java:S112"})
 @RunWith(MockitoJUnitRunner.class)
 public class AccountTreeTest {
+
+  private static final String REPORT_ELEMENTS = "reportElements";
+  private static final String ACCOUNTS_FACTS = "accountsFacts";
+  private static final String ACCOUNTS_TREE = "accountsTree";
 
   private static final String NODE_ID_1 = "NODE001";
   private static final String NODE_ID_2 = "NODE002";
@@ -90,11 +96,11 @@ public class AccountTreeTest {
   private MockedStatic<AccountTreeData> accountTreeDataStatic;
 
   private ObjenesisStd objenesis;
-  private AccountTree accountTree;
 
   /**
    * Sets up mock objects before each test.
    * Initializes static mocks for OBDal, Utility, and AccountTreeData.
+    * @throws ServletException if an error occurs
    */
   @Before
   public void setUp() throws ServletException {
@@ -139,13 +145,14 @@ public class AccountTreeTest {
 
   /**
    * Tests that getAccounts returns the reportElements array.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testGetAccountsReturnsReportElements() throws Exception {
     AccountTree instance = createAccountTreeInstance();
     AccountTreeData[] testData = createTestTreeData(2);
 
-    setPrivateField(instance, "reportElements", testData);
+    setPrivateField(instance, REPORT_ELEMENTS, testData);
 
     AccountTreeData[] result = instance.getAccounts();
 
@@ -156,11 +163,12 @@ public class AccountTreeTest {
 
   /**
    * Tests that getAccounts returns null when reportElements is null.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testGetAccountsReturnsNullWhenEmpty() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "reportElements", null);
+    setPrivateField(instance, REPORT_ELEMENTS, null);
 
     AccountTreeData[] result = instance.getAccounts();
 
@@ -170,6 +178,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method with "A" (Always) sign.
    * Should return the original quantity.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWithAlways() throws Exception {
@@ -184,6 +193,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method with "P" (Positive) sign for positive values.
    * Should return the quantity when positive.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWithPositiveSignAndPositiveValue() throws Exception {
@@ -198,6 +208,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method with "P" (Positive) sign for negative values.
    * Should return zero when value is negative.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWithPositiveSignAndNegativeValue() throws Exception {
@@ -212,6 +223,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method with "N" (Negative) sign for negative values.
    * Should return the quantity when negative.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWithNegativeSignAndNegativeValue() throws Exception {
@@ -226,6 +238,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method with "N" (Negative) sign for positive values.
    * Should return zero when value is positive.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWithNegativeSignAndPositiveValue() throws Exception {
@@ -240,6 +253,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method when isSummary is false.
    * Should return the original quantity regardless of sign.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWhenNotSummary() throws Exception {
@@ -254,6 +268,7 @@ public class AccountTreeTest {
   /**
    * Tests the setDataQty method when reportElement is null.
    * Should return null without throwing exception.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testSetDataQtyWithNullElement() throws Exception {
@@ -267,11 +282,12 @@ public class AccountTreeTest {
   /**
    * Tests the setDataQty method when accountsFacts is null.
    * Should return the original element unchanged.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testSetDataQtyWithNullFacts() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "accountsFacts", null);
+    setPrivateField(instance, ACCOUNTS_FACTS, null);
 
     AccountTreeData element = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
     AccountTreeData result = invokeSetDataQty(instance, element, "D");
@@ -282,11 +298,12 @@ public class AccountTreeTest {
   /**
    * Tests the setDataQty method when accountsFacts is empty.
    * Should return the original element unchanged.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testSetDataQtyWithEmptyFacts() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "accountsFacts", new AccountTreeData[0]);
+    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[0]);
 
     AccountTreeData element = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
     AccountTreeData result = invokeSetDataQty(instance, element, "D");
@@ -297,6 +314,7 @@ public class AccountTreeTest {
   /**
    * Tests the setDataQty method with Debit sign.
    * Should use qty field from accountsFacts.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testSetDataQtyWithDebitSign() throws Exception {
@@ -309,7 +327,7 @@ public class AccountTreeTest {
     fact.qtycredit = "200";
     fact.qtycreditRef = "150";
 
-    setPrivateField(instance, "accountsFacts", new AccountTreeData[]{fact});
+    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[]{fact});
 
     AccountTreeData element = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
     element.id = NODE_ID_1;
@@ -325,6 +343,7 @@ public class AccountTreeTest {
   /**
    * Tests the setDataQty method with Credit sign.
    * Should use qtycredit field from accountsFacts.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testSetDataQtyWithCreditSign() throws Exception {
@@ -337,7 +356,7 @@ public class AccountTreeTest {
     fact.qtycredit = "200";
     fact.qtycreditRef = "150";
 
-    setPrivateField(instance, "accountsFacts", new AccountTreeData[]{fact});
+    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[]{fact});
 
     AccountTreeData element = createAccountTreeDataElement(NODE_ID_1, PARENT_ID_ROOT);
     element.id = NODE_ID_1;
@@ -352,6 +371,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the hasOperand method when operand exists.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testHasOperandReturnsTrue() throws Exception {
@@ -370,6 +390,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the hasOperand method when operand does not exist.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testHasOperandReturnsFalse() throws Exception {
@@ -387,6 +408,7 @@ public class AccountTreeTest {
   /**
    * Tests the hasOperand method with null index.
    * Should return false.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testHasOperandWithNullIndex() throws Exception {
@@ -404,11 +426,12 @@ public class AccountTreeTest {
   /**
    * Tests the updateTreeQuantitiesSign method with null accountsTree.
    * Should return null.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testUpdateTreeQuantitiesSignWithNullTree() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "accountsTree", null);
+    setPrivateField(instance, ACCOUNTS_TREE, null);
 
     AccountTreeData[] result = invokeUpdateTreeQuantitiesSign(instance, null, 0, "D");
 
@@ -418,11 +441,12 @@ public class AccountTreeTest {
   /**
    * Tests the updateTreeQuantitiesSign method with empty accountsTree.
    * Should return empty array.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testUpdateTreeQuantitiesSignWithEmptyTree() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "accountsTree", new AccountTreeData[0]);
+    setPrivateField(instance, ACCOUNTS_TREE, new AccountTreeData[0]);
 
     AccountTreeData[] result = invokeUpdateTreeQuantitiesSign(instance, null, 0, "D");
 
@@ -432,6 +456,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the nodeIn method when node is in the list.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testNodeInReturnsTrue() throws Exception {
@@ -445,6 +470,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the nodeIn method when node is not in the list.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testNodeInReturnsFalse() throws Exception {
@@ -459,6 +485,7 @@ public class AccountTreeTest {
   /**
    * Tests the isAccountLevelLower method with "D" level and "S" element level.
    * Should return false as "S" is not lower than "D".
+    * @throws Exception if an error occurs
    */
   @Test
   public void testIsAccountLevelLowerWithDAndS() throws Exception {
@@ -475,6 +502,7 @@ public class AccountTreeTest {
   /**
    * Tests the isAccountLevelLower method with "D" level and "D" element level.
    * Should return true.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testIsAccountLevelLowerWithDAndD() throws Exception {
@@ -491,6 +519,7 @@ public class AccountTreeTest {
   /**
    * Tests the isAccountLevelLower method with non-D level.
    * Should always return true.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testIsAccountLevelLowerWithNonDLevel() throws Exception {
@@ -507,11 +536,12 @@ public class AccountTreeTest {
   /**
    * Tests the filter method when reportElements is null.
    * Should not throw exception.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterWithNullReportElements() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "reportElements", null);
+    setPrivateField(instance, REPORT_ELEMENTS, null);
     setPrivateField(instance, "reportNodes", new String[]{NODE_ID_1});
 
     instance.filter(true, "1", true);
@@ -523,11 +553,12 @@ public class AccountTreeTest {
   /**
    * Tests the filterSVC method when reportElements is null.
    * Should not throw exception.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterSVCWithNullReportElements() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "reportElements", null);
+    setPrivateField(instance, REPORT_ELEMENTS, null);
 
     instance.filterSVC();
 
@@ -538,11 +569,12 @@ public class AccountTreeTest {
   /**
    * Tests the filterSVC method when reportElements is empty.
    * Should not throw exception.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterSVCWithEmptyReportElements() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "reportElements", new AccountTreeData[0]);
+    setPrivateField(instance, REPORT_ELEMENTS, new AccountTreeData[0]);
 
     instance.filterSVC();
 
@@ -553,6 +585,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the filterSVC method resets qty for children when parent has svcreset=Y.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterSVCResetsChildQuantities() throws Exception {
@@ -581,7 +614,7 @@ public class AccountTreeTest {
     elements[2].qty = "300";
     elements[2].qtyRef = "250";
 
-    setPrivateField(instance, "reportElements", elements);
+    setPrivateField(instance, REPORT_ELEMENTS, elements);
 
     instance.filterSVC();
 
@@ -593,6 +626,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the filterSVC method resets qtyRef for children when parent has svcresetref=Y.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterSVCResetsRefQuantities() throws Exception {
@@ -614,7 +648,7 @@ public class AccountTreeTest {
     elements[1].qty = "200";
     elements[1].qtyRef = "150";
 
-    setPrivateField(instance, "reportElements", elements);
+    setPrivateField(instance, REPORT_ELEMENTS, elements);
 
     instance.filterSVC();
 
@@ -626,11 +660,12 @@ public class AccountTreeTest {
   /**
    * Tests the filterStructure method with null reportElements.
    * Should return null.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterStructureWithNullReportElements() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "reportElements", null);
+    setPrivateField(instance, REPORT_ELEMENTS, null);
 
     AccountTreeData[] result = instance.filterStructure(new String[]{NODE_ID_1}, true, "1", true);
 
@@ -640,11 +675,12 @@ public class AccountTreeTest {
   /**
    * Tests the filterStructure method with empty reportElements.
    * Should return empty array.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterStructureWithEmptyReportElements() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "reportElements", new AccountTreeData[0]);
+    setPrivateField(instance, REPORT_ELEMENTS, new AccountTreeData[0]);
 
     AccountTreeData[] result = instance.filterStructure(new String[]{NODE_ID_1}, true, "1", true);
 
@@ -654,6 +690,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the filterStructure method filters by showelement=Y.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterStructureFiltersShowElement() throws Exception {
@@ -677,7 +714,7 @@ public class AccountTreeTest {
     elements[1].qtyRef = "150";
     elements[1].isalwaysshown = "N";
 
-    setPrivateField(instance, "reportElements", elements);
+    setPrivateField(instance, REPORT_ELEMENTS, elements);
 
     AccountTreeData[] result = instance.filterStructure(new String[]{PARENT_ID_ROOT}, false, "1", true);
 
@@ -687,6 +724,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the filterStructure method includes isalwaysshown=Y elements.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterStructureIncludesAlwaysShown() throws Exception {
@@ -702,7 +740,7 @@ public class AccountTreeTest {
     elements[0].qtyRef = QTY_ZERO;
     elements[0].isalwaysshown = "Y";
 
-    setPrivateField(instance, "reportElements", elements);
+    setPrivateField(instance, REPORT_ELEMENTS, elements);
 
     AccountTreeData[] result = instance.filterStructure(new String[]{PARENT_ID_ROOT}, true, "1", true);
 
@@ -714,11 +752,12 @@ public class AccountTreeTest {
   /**
    * Tests the applySignAsPerParent method with null accountsTree.
    * Should not throw exception.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplySignAsPerParentWithNullTree() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "accountsTree", null);
+    setPrivateField(instance, ACCOUNTS_TREE, null);
 
     invokeApplySignAsPerParent(instance);
 
@@ -728,11 +767,12 @@ public class AccountTreeTest {
   /**
    * Tests the applySignAsPerParent method with empty accountsTree.
    * Should not throw exception.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplySignAsPerParentWithEmptyTree() throws Exception {
     AccountTree instance = createAccountTreeInstance();
-    setPrivateField(instance, "accountsTree", new AccountTreeData[0]);
+    setPrivateField(instance, ACCOUNTS_TREE, new AccountTreeData[0]);
 
     invokeApplySignAsPerParent(instance);
 
@@ -742,6 +782,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method with zero quantity.
    * Zero should be returned as positive (compareTo > 0 is false).
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWithZeroQuantity() throws Exception {
@@ -756,6 +797,7 @@ public class AccountTreeTest {
   /**
    * Tests the applyShowValueCond method with unknown sign value.
    * Should return the original quantity.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplyShowValueCondWithUnknownSign() throws Exception {
@@ -769,6 +811,7 @@ public class AccountTreeTest {
 
   /**
    * Tests updateTreeQuantitiesSign builds correct tree structure.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testUpdateTreeQuantitiesSignBuildsTree() throws Exception {
@@ -780,8 +823,8 @@ public class AccountTreeTest {
     tree[1] = createAccountTreeDataElement(NODE_ID_2, NODE_ID_1);
     tree[1].accountsign = "D";
 
-    setPrivateField(instance, "accountsTree", tree);
-    setPrivateField(instance, "accountsFacts", new AccountTreeData[0]);
+    setPrivateField(instance, ACCOUNTS_TREE, tree);
+    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[0]);
 
     AccountTreeData[] result = invokeUpdateTreeQuantitiesSign(instance, PARENT_ID_ROOT, 0, "D");
 
@@ -793,6 +836,7 @@ public class AccountTreeTest {
 
   /**
    * Tests nodeIn with empty array.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testNodeInWithEmptyArray() throws Exception {
@@ -806,6 +850,7 @@ public class AccountTreeTest {
 
   /**
    * Tests nodeIn with single element array matching.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testNodeInWithSingleElementMatch() throws Exception {
@@ -819,6 +864,7 @@ public class AccountTreeTest {
 
   /**
    * Tests hasOperand with empty forms array.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testHasOperandWithEmptyForms() throws Exception {
@@ -832,6 +878,7 @@ public class AccountTreeTest {
 
   /**
    * Tests that applySignAsPerParent keeps signs unchanged when they match parent.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testApplySignAsPerParentKeepsMatchingSign() throws Exception {
@@ -847,7 +894,7 @@ public class AccountTreeTest {
     tree[1].id = NODE_ID_2;
     tree[1].accountsign = "D";
 
-    setPrivateField(instance, "accountsTree", tree);
+    setPrivateField(instance, ACCOUNTS_TREE, tree);
 
     invokeApplySignAsPerParent(instance);
 
@@ -857,6 +904,7 @@ public class AccountTreeTest {
 
   /**
    * Tests the filterSVC resets values correctly when levels are equal.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterSVCWithSameLevelElements() throws Exception {
@@ -878,7 +926,7 @@ public class AccountTreeTest {
     elements[1].qty = "200";
     elements[1].qtyRef = "150";
 
-    setPrivateField(instance, "reportElements", elements);
+    setPrivateField(instance, REPORT_ELEMENTS, elements);
 
     instance.filterSVC();
 
@@ -889,6 +937,7 @@ public class AccountTreeTest {
 
   /**
    * Tests filterStructure with null strLevel parameter.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterStructureWithNullLevel() throws Exception {
@@ -901,7 +950,7 @@ public class AccountTreeTest {
     elements[0].qtyRef = QTY_50;
     elements[0].isalwaysshown = "N";
 
-    setPrivateField(instance, "reportElements", elements);
+    setPrivateField(instance, REPORT_ELEMENTS, elements);
 
     AccountTreeData[] result = instance.filterStructure(new String[]{PARENT_ID_ROOT}, false, null, true);
 
@@ -911,6 +960,7 @@ public class AccountTreeTest {
 
   /**
    * Tests filterStructure with empty strLevel parameter.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testFilterStructureWithEmptyLevel() throws Exception {
@@ -923,7 +973,7 @@ public class AccountTreeTest {
     elements[0].qtyRef = QTY_50;
     elements[0].isalwaysshown = "N";
 
-    setPrivateField(instance, "reportElements", elements);
+    setPrivateField(instance, REPORT_ELEMENTS, elements);
 
     AccountTreeData[] result = instance.filterStructure(new String[]{PARENT_ID_ROOT}, false, "", true);
 
@@ -940,9 +990,9 @@ public class AccountTreeTest {
     AccountTree instance = objenesis.newInstance(AccountTree.class);
     setPrivateField(instance, "vars", vars);
     setPrivateField(instance, "conn", conn);
-    setPrivateField(instance, "accountsTree", new AccountTreeData[0]);
-    setPrivateField(instance, "accountsFacts", new AccountTreeData[0]);
-    setPrivateField(instance, "reportElements", new AccountTreeData[0]);
+    setPrivateField(instance, ACCOUNTS_TREE, new AccountTreeData[0]);
+    setPrivateField(instance, ACCOUNTS_FACTS, new AccountTreeData[0]);
+    setPrivateField(instance, REPORT_ELEMENTS, new AccountTreeData[0]);
     setPrivateField(instance, "reportNodes", new String[]{NODE_ID_1});
     setPrivateField(instance, "resetFlag", false);
     setPrivateField(instance, "recursiveOperands", false);
@@ -994,7 +1044,7 @@ public class AccountTreeTest {
   /**
    * Sets a private field value using reflection.
    */
-  private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+  private void setPrivateField(Object target, String fieldName, Object value) throws Exception{
     Field field = AccountTree.class.getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);
@@ -1004,7 +1054,7 @@ public class AccountTreeTest {
    * Invokes the private applyShowValueCond method.
    */
   private BigDecimal invokeApplyShowValueCond(AccountTree instance, BigDecimal qty, String sign,
-      boolean isSummary) throws Exception {
+      boolean isSummary) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTree.class.getDeclaredMethod("applyShowValueCond", BigDecimal.class,
         String.class, boolean.class);
     method.setAccessible(true);
@@ -1015,7 +1065,7 @@ public class AccountTreeTest {
    * Invokes the private setDataQty method.
    */
   private AccountTreeData invokeSetDataQty(AccountTree instance, AccountTreeData reportElement,
-      String isDebitCredit) throws Exception {
+      String isDebitCredit) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTree.class.getDeclaredMethod("setDataQty", AccountTreeData.class,
         String.class);
     method.setAccessible(true);
@@ -1026,7 +1076,7 @@ public class AccountTreeTest {
    * Invokes the private hasOperand method.
    */
   private boolean invokeHasOperand(AccountTree instance, String indice, AccountTreeData[] forms)
-      throws Exception {
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTree.class.getDeclaredMethod("hasOperand", String.class,
         AccountTreeData[].class);
     method.setAccessible(true);
@@ -1037,7 +1087,7 @@ public class AccountTreeTest {
    * Invokes the private updateTreeQuantitiesSign method.
    */
   private AccountTreeData[] invokeUpdateTreeQuantitiesSign(AccountTree instance, String rootElement,
-      int level, String accountSign) throws Exception {
+      int level, String accountSign) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTree.class.getDeclaredMethod("updateTreeQuantitiesSign", String.class,
         int.class, String.class);
     method.setAccessible(true);
@@ -1048,7 +1098,7 @@ public class AccountTreeTest {
    * Invokes the private nodeIn method.
    */
   private boolean invokeNodeIn(AccountTree instance, String node, String[] listOfNodes)
-      throws Exception {
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTree.class.getDeclaredMethod("nodeIn", String.class, String[].class);
     method.setAccessible(true);
     return (Boolean) method.invoke(instance, node, listOfNodes);
@@ -1058,7 +1108,7 @@ public class AccountTreeTest {
    * Invokes the private isAccountLevelLower method.
    */
   private boolean invokeIsAccountLevelLower(AccountTree instance, String reportAccountLevel,
-      AccountTreeData accountToBeAdded) throws Exception {
+      AccountTreeData accountToBeAdded) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTree.class.getDeclaredMethod("isAccountLevelLower", String.class,
         AccountTreeData.class);
     method.setAccessible(true);
@@ -1068,7 +1118,7 @@ public class AccountTreeTest {
   /**
    * Invokes the private applySignAsPerParent method.
    */
-  private void invokeApplySignAsPerParent(AccountTree instance) throws Exception {
+  private void invokeApplySignAsPerParent(AccountTree instance) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTree.class.getDeclaredMethod("applySignAsPerParent");
     method.setAccessible(true);
     method.invoke(instance);

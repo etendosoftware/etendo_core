@@ -26,12 +26,14 @@ public class DataSourceFilterHookTest {
 
   @Mock
   private Instance<DataSourceFilterHook> mockHookInstance;
+  /** Default get priority returns zero. */
 
   @Test
   public void testDefaultGetPriorityReturnsZero() {
     DataSourceFilterHook hook = new DataSourceFilterHook() {};
     assertEquals(0, hook.getPriority());
   }
+  /** Default pre process does nothing. */
 
   @Test
   public void testDefaultPreProcessDoesNothing() {
@@ -41,6 +43,7 @@ public class DataSourceFilterHookTest {
     // Should not throw
     hook.preProcess(params, filters);
   }
+  /** Default post process does nothing. */
 
   @Test
   public void testDefaultPostProcessDoesNothing() {
@@ -50,6 +53,7 @@ public class DataSourceFilterHookTest {
     // Should not throw
     hook.postProcess(params, filters);
   }
+  /** Sort hooks by priority ascending. */
 
   @Test
   public void testSortHooksByPriorityAscending() {
@@ -67,6 +71,7 @@ public class DataSourceFilterHookTest {
     assertEquals(hook3, sorted.get(1)); // priority 20
     assertEquals(hook1, sorted.get(2)); // priority 30
   }
+  /** Sort hooks by priority empty list. */
 
   @Test
   public void testSortHooksByPriorityEmptyList() {
@@ -78,6 +83,7 @@ public class DataSourceFilterHookTest {
 
     assertEquals(0, sorted.size());
   }
+  /** Sort hooks by priority single element. */
 
   @Test
   public void testSortHooksByPrioritySingleElement() {
@@ -90,6 +96,7 @@ public class DataSourceFilterHookTest {
     assertEquals(1, sorted.size());
     assertEquals(hook, sorted.get(0));
   }
+  /** Sort hooks by priority equal priorities. */
 
   @Test
   public void testSortHooksByPriorityEqualPriorities() {
@@ -106,6 +113,7 @@ public class DataSourceFilterHookTest {
 
   private DataSourceFilterHook createHookWithPriority(int priority) {
     return new DataSourceFilterHook() {
+      /** Get priority. */
       @Override
       public int getPriority() {
         return priority;

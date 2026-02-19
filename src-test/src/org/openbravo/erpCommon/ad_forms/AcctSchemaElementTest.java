@@ -10,8 +10,11 @@ import org.mockito.junit.MockitoJUnitRunner;
  * Unit tests for {@link AcctSchemaElement}.
  * Tests the constructor and public fields, as well as segment type constants.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class AcctSchemaElementTest {
+
+  private static final String ACCOUNT = "Account";
 
   private static final String TEST_ID = "ELEM_001";
   private static final String TEST_SEQ_NO = "10";
@@ -21,6 +24,7 @@ public class AcctSchemaElementTest {
   private static final String TEST_DEFAULT_VALUE = "DEFAULT_ORG";
   private static final String TEST_MANDATORY = "Y";
   private static final String TEST_BALANCED = "N";
+  /** Constructor sets all fields. */
 
   @Test
   public void testConstructorSetsAllFields() {
@@ -37,16 +41,18 @@ public class AcctSchemaElementTest {
     assertEquals(TEST_MANDATORY, element.m_mandatory);
     assertEquals(TEST_BALANCED, element.m_balanced);
   }
+  /** Constructor with account segment. */
 
   @Test
   public void testConstructorWithAccountSegment() {
     AcctSchemaElement element = new AcctSchemaElement(
-        "E2", "20", "Account", "AC", "ELEM2", "ACCT_VAL", "Y", "Y");
+        "E2", "20", ACCOUNT, "AC", "ELEM2", "ACCT_VAL", "Y", "Y");
 
     assertEquals("AC", element.m_segmentType);
-    assertEquals("Account", element.m_name);
+    assertEquals(ACCOUNT, element.m_name);
     assertEquals("Y", element.m_balanced);
   }
+  /** Constructor with empty default value. */
 
   @Test
   public void testConstructorWithEmptyDefaultValue() {
@@ -56,6 +62,7 @@ public class AcctSchemaElementTest {
     assertEquals("", element.m_defaultValue);
     assertEquals("N", element.m_mandatory);
   }
+  /** Segment type constants. */
 
   @Test
   public void testSegmentTypeConstants() {
@@ -73,6 +80,7 @@ public class AcctSchemaElementTest {
     assertEquals("U1", AcctSchemaElement.SEGMENT_User1);
     assertEquals("U2", AcctSchemaElement.SEGMENT_User2);
   }
+  /** Default balanced value. */
 
   @Test
   public void testDefaultBalancedValue() {
@@ -81,12 +89,13 @@ public class AcctSchemaElementTest {
 
     assertEquals("N", element.m_balanced);
   }
+  /** Constructor with all segment types. */
 
   @Test
   public void testConstructorWithAllSegmentTypes() {
     String[][] segments = {
-        {"OO", "Organization"},
-        {"AC", "Account"},
+        {"OO", TEST_NAME},
+        {"AC", ACCOUNT},
         {"BP", "Business Partner"},
         {"PR", "Product"},
         {"AY", "Activity"},

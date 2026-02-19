@@ -3,6 +3,7 @@ package org.openbravo.client.application.event;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 
@@ -18,11 +19,16 @@ import org.objenesis.ObjenesisStd;
  * pure business logic for determining account sign based on account type and flags.
  * Uses ObjenesisStd to bypass static initializer that calls ModelProvider.
  */
+@SuppressWarnings({"java:S4144", "java:S112"})
 @RunWith(MockitoJUnitRunner.class)
 public class AcctSchemaEventHandlerTest {
 
   private AcctSchemaEventHandler instance;
   private Method getAccountSignMethod;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -37,18 +43,26 @@ public class AcctSchemaEventHandlerTest {
 
   private boolean invokeGetAccountSign(String accountType, boolean assetPositive,
       boolean liabilityPositive, boolean ownersEquityPositive,
-      boolean expensePositive, boolean revenuePositive) throws Exception {
+      boolean expensePositive, boolean revenuePositive) throws Exception{
     return (boolean) getAccountSignMethod.invoke(instance,
         accountType, assetPositive, liabilityPositive,
         ownersEquityPositive, expensePositive, revenuePositive);
   }
 
   // Asset tests
+  /**
+   * Asset positive returns false.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testAssetPositiveReturnsFalse() throws Exception {
     boolean result = invokeGetAccountSign("A", true, false, false, false, false);
     assertFalse(result);
   }
+  /**
+   * Asset not positive returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testAssetNotPositiveReturnsTrue() throws Exception {
@@ -57,11 +71,19 @@ public class AcctSchemaEventHandlerTest {
   }
 
   // Liability tests
+  /**
+   * Liability positive returns true.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testLiabilityPositiveReturnsTrue() throws Exception {
     boolean result = invokeGetAccountSign("L", false, true, false, false, false);
     assertTrue(result);
   }
+  /**
+   * Liability not positive returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testLiabilityNotPositiveReturnsFalse() throws Exception {
@@ -70,11 +92,19 @@ public class AcctSchemaEventHandlerTest {
   }
 
   // Owners Equity tests
+  /**
+   * Owners equity positive returns true.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testOwnersEquityPositiveReturnsTrue() throws Exception {
     boolean result = invokeGetAccountSign("O", false, false, true, false, false);
     assertTrue(result);
   }
+  /**
+   * Owners equity not positive returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOwnersEquityNotPositiveReturnsFalse() throws Exception {
@@ -83,11 +113,19 @@ public class AcctSchemaEventHandlerTest {
   }
 
   // Expense tests
+  /**
+   * Expense positive returns false.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testExpensePositiveReturnsFalse() throws Exception {
     boolean result = invokeGetAccountSign("E", false, false, false, true, false);
     assertFalse(result);
   }
+  /**
+   * Expense not positive returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExpenseNotPositiveReturnsTrue() throws Exception {
@@ -96,11 +134,19 @@ public class AcctSchemaEventHandlerTest {
   }
 
   // Revenue tests
+  /**
+   * Revenue positive returns true.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testRevenuePositiveReturnsTrue() throws Exception {
     boolean result = invokeGetAccountSign("R", false, false, false, false, true);
     assertTrue(result);
   }
+  /**
+   * Revenue not positive returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRevenueNotPositiveReturnsFalse() throws Exception {
@@ -109,11 +155,19 @@ public class AcctSchemaEventHandlerTest {
   }
 
   // Unknown type
+  /**
+   * Unknown account type returns false.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testUnknownAccountTypeReturnsFalse() throws Exception {
     boolean result = invokeGetAccountSign("X", true, true, true, true, true);
     assertFalse(result);
   }
+  /**
+   * Memo account type returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testMemoAccountTypeReturnsFalse() throws Exception {
@@ -122,29 +176,49 @@ public class AcctSchemaEventHandlerTest {
   }
 
   // All positive flags
+  /**
+   * Asset with all positive.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testAssetWithAllPositive() throws Exception {
     boolean result = invokeGetAccountSign("A", true, true, true, true, true);
     assertFalse(result);
   }
+  /**
+   * Liability with all positive.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testLiabilityWithAllPositive() throws Exception {
     boolean result = invokeGetAccountSign("L", true, true, true, true, true);
     assertTrue(result);
   }
+  /**
+   * Equity with all positive.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testEquityWithAllPositive() throws Exception {
     boolean result = invokeGetAccountSign("O", true, true, true, true, true);
     assertTrue(result);
   }
+  /**
+   * Expense with all positive.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExpenseWithAllPositive() throws Exception {
     boolean result = invokeGetAccountSign("E", true, true, true, true, true);
     assertFalse(result);
   }
+  /**
+   * Revenue with all positive.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRevenueWithAllPositive() throws Exception {
@@ -153,41 +227,69 @@ public class AcctSchemaEventHandlerTest {
   }
 
   // All negative flags
+  /**
+   * Asset with all negative.
+   * @throws Exception if an error occurs
+   */
   @Test
   public void testAssetWithAllNegative() throws Exception {
     boolean result = invokeGetAccountSign("A", false, false, false, false, false);
     assertTrue(result);
   }
+  /**
+   * Liability with all negative.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testLiabilityWithAllNegative() throws Exception {
     boolean result = invokeGetAccountSign("L", false, false, false, false, false);
     assertFalse(result);
   }
+  /**
+   * Equity with all negative.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testEquityWithAllNegative() throws Exception {
     boolean result = invokeGetAccountSign("O", false, false, false, false, false);
     assertFalse(result);
   }
+  /**
+   * Expense with all negative.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExpenseWithAllNegative() throws Exception {
     boolean result = invokeGetAccountSign("E", false, false, false, false, false);
     assertTrue(result);
   }
+  /**
+   * Revenue with all negative.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRevenueWithAllNegative() throws Exception {
     boolean result = invokeGetAccountSign("R", false, false, false, false, false);
     assertFalse(result);
   }
+  /**
+   * Null account type returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testNullAccountTypeReturnsFalse() throws Exception {
     boolean result = invokeGetAccountSign(null, true, true, true, true, true);
     assertFalse(result);
   }
+  /**
+   * Empty account type returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testEmptyAccountTypeReturnsFalse() throws Exception {

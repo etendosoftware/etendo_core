@@ -34,8 +34,15 @@ import org.openbravo.model.ad.domain.Reference;
 /**
  * Tests for {@link ActivationTask}.
  */
+@SuppressWarnings({"java:S1075", "java:S120", "java:S112"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ActivationTaskTest {
+
+  private static final String PUBLIC_KEY = "publicKey";
+  private static final String PUBLIC_KEY_FILE = "publicKeyFile";
+  private static final String PURPOSE = "purpose";
+  private static final String SOME_KEY = "someKey";
+  private static final String VALID_PURPOSE = "validPurpose";
 
   private static final String PURPOSE_REFERENCE_ID = "60E231391A7348DDA7171E780F62EF99";
 
@@ -48,6 +55,10 @@ public class ActivationTaskTest {
   private Reference purposeRef;
 
   private ActivationTask task;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -64,6 +75,7 @@ public class ActivationTaskTest {
     antProject.setBaseDir(baseDir);
     task.setProject(antProject);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -71,33 +83,40 @@ public class ActivationTaskTest {
       obDalStatic.close();
     }
   }
+  /** Set public key. */
 
   @Test
   public void testSetPublicKey() {
     task.setPublicKey("testKey123");
-    String value = getFieldValue(task, "publicKey");
+    String value = getFieldValue(task, PUBLIC_KEY);
     assertEquals("testKey123", value);
   }
+  /** Set public key file. */
 
   @Test
   public void testSetPublicKeyFile() {
     File file = new File("/tmp/key.pub");
     task.setPublicKeyFile(file);
-    File value = getFieldValue(task, "publicKeyFile");
+    File value = getFieldValue(task, PUBLIC_KEY_FILE);
     assertEquals(file, value);
   }
+  /** Set purpose. */
 
   @Test
   public void testSetPurpose() {
     task.setPurpose("testPurpose");
-    String value = getFieldValue(task, "purpose");
+    String value = getFieldValue(task, PURPOSE);
     assertEquals("testPurpose", value);
   }
+  /**
+   * Verify parameters throws when purpose is null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersThrowsWhenPurposeIsNull() throws Exception {
-    setField(task, "purpose", "purpose", null);
-    setField(task, "publicKey", "publicKey", "someKey");
+    setField(task, PURPOSE, null);
+    setField(task, PUBLIC_KEY, SOME_KEY);
 
     try {
       invokeVerifyParameters();
@@ -108,11 +127,15 @@ public class ActivationTaskTest {
       assertEquals("purpose parameter is required", e.getCause().getMessage());
     }
   }
+  /**
+   * Verify parameters throws when purpose is empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersThrowsWhenPurposeIsEmpty() throws Exception {
-    setField(task, "purpose", "purpose", "");
-    setField(task, "publicKey", "publicKey", "someKey");
+    setField(task, PURPOSE, "");
+    setField(task, PUBLIC_KEY, SOME_KEY);
 
     try {
       invokeVerifyParameters();
@@ -123,17 +146,21 @@ public class ActivationTaskTest {
       assertEquals("purpose parameter is required", e.getCause().getMessage());
     }
   }
+  /**
+   * Verify parameters throws when purpose not found in reference.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersThrowsWhenPurposeNotFoundInReference() throws Exception {
-    setField(task, "purpose", "purpose", "invalidPurpose");
-    setField(task, "publicKey", "publicKey", "someKey");
+    setField(task, PURPOSE, "invalidPurpose");
+    setField(task, PUBLIC_KEY, SOME_KEY);
 
     when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
 
     org.openbravo.model.ad.domain.List listItem = mock(
         org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn("validPurpose");
+    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
     when(listItem.getName()).thenReturn("Valid Purpose");
 
     List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
@@ -152,18 +179,22 @@ public class ActivationTaskTest {
       assertEquals(true, message.contains("valid values for purpose"));
     }
   }
+  /**
+   * Verify parameters throws when no public key provided.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersThrowsWhenNoPublicKeyProvided() throws Exception {
-    setField(task, "purpose", "purpose", "validPurpose");
-    setField(task, "publicKey", "publicKey", null);
-    setField(task, "publicKeyFile", "publicKeyFile", null);
+    setField(task, PURPOSE, VALID_PURPOSE);
+    setField(task, PUBLIC_KEY, null);
+    setField(task, PUBLIC_KEY_FILE, null);
 
     when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
 
     org.openbravo.model.ad.domain.List listItem = mock(
         org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn("validPurpose");
+    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
 
     List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
     listItems.add(listItem);
@@ -178,18 +209,22 @@ public class ActivationTaskTest {
       assertEquals(true, e.getCause().getMessage().contains("Public key must be provided"));
     }
   }
+  /**
+   * Verify parameters throws when both public key and file provided.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersThrowsWhenBothPublicKeyAndFileProvided() throws Exception {
-    setField(task, "purpose", "purpose", "validPurpose");
-    setField(task, "publicKey", "publicKey", "somePublicKey");
-    setField(task, "publicKeyFile", "publicKeyFile", new File("/tmp/notbase/key.pub"));
+    setField(task, PURPOSE, VALID_PURPOSE);
+    setField(task, PUBLIC_KEY, "somePublicKey");
+    setField(task, PUBLIC_KEY_FILE, new File("/tmp/notbase/key.pub"));
 
     when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
 
     org.openbravo.model.ad.domain.List listItem = mock(
         org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn("validPurpose");
+    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
 
     List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
     listItems.add(listItem);
@@ -204,18 +239,22 @@ public class ActivationTaskTest {
       assertEquals(true, e.getCause().getMessage().contains("Only one of the publicKey"));
     }
   }
+  /**
+   * Verify parameters succeeds with valid purpose and public key.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersSucceedsWithValidPurposeAndPublicKey() throws Exception {
-    setField(task, "purpose", "purpose", "validPurpose");
-    setField(task, "publicKey", "publicKey", "somePublicKey");
-    setField(task, "publicKeyFile", "publicKeyFile", null);
+    setField(task, PURPOSE, VALID_PURPOSE);
+    setField(task, PUBLIC_KEY, "somePublicKey");
+    setField(task, PUBLIC_KEY_FILE, null);
 
     when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
 
     org.openbravo.model.ad.domain.List listItem = mock(
         org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn("validPurpose");
+    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
 
     List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
     listItems.add(listItem);
@@ -224,22 +263,26 @@ public class ActivationTaskTest {
     // Should not throw
     invokeVerifyParameters();
   }
+  /**
+   * Verify parameters throws when public key file is empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersThrowsWhenPublicKeyFileIsEmpty() throws Exception {
-    setField(task, "purpose", "purpose", "validPurpose");
-    setField(task, "publicKey", "publicKey", null);
+    setField(task, PURPOSE, VALID_PURPOSE);
+    setField(task, PUBLIC_KEY, null);
 
     // Create a temporary empty file
     File emptyFile = File.createTempFile("emptykey", ".pub");
     emptyFile.deleteOnExit();
-    setField(task, "publicKeyFile", "publicKeyFile", emptyFile);
+    setField(task, PUBLIC_KEY_FILE, emptyFile);
 
     when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
 
     org.openbravo.model.ad.domain.List listItem = mock(
         org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn("validPurpose");
+    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
 
     List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
     listItems.add(listItem);
@@ -254,19 +297,23 @@ public class ActivationTaskTest {
       assertEquals(true, e.getCause().getMessage().contains("is empty"));
     }
   }
+  /**
+   * Verify parameters throws when public key file does not exist.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testVerifyParametersThrowsWhenPublicKeyFileDoesNotExist() throws Exception {
-    setField(task, "purpose", "purpose", "validPurpose");
-    setField(task, "publicKey", "publicKey", null);
-    setField(task, "publicKeyFile", "publicKeyFile",
+    setField(task, PURPOSE, VALID_PURPOSE);
+    setField(task, PUBLIC_KEY, null);
+    setField(task, PUBLIC_KEY_FILE,
         new File("/tmp/nonexistent_key_file_12345.pub"));
 
     when(obDal.get(Reference.class, PURPOSE_REFERENCE_ID)).thenReturn(purposeRef);
 
     org.openbravo.model.ad.domain.List listItem = mock(
         org.openbravo.model.ad.domain.List.class);
-    when(listItem.getSearchKey()).thenReturn("validPurpose");
+    when(listItem.getSearchKey()).thenReturn(VALID_PURPOSE);
 
     List<org.openbravo.model.ad.domain.List> listItems = new ArrayList<>();
     listItems.add(listItem);
@@ -283,22 +330,15 @@ public class ActivationTaskTest {
 
   // --- Helper methods ---
 
-  private void invokeVerifyParameters() throws Exception {
+  private void invokeVerifyParameters() throws Exception{
     Method method = ActivationTask.class.getDeclaredMethod("verifyParameters");
     method.setAccessible(true);
     method.invoke(task);
   }
 
-  private void setField(Object target, String fieldName, String declaredFieldName, Object value)
-      throws Exception {
+  private void setField(Object target, String declaredFieldName, Object value)
+      throws IllegalAccessException, NoSuchFieldException {
     Field field = findField(target.getClass(), declaredFieldName);
-    field.setAccessible(true);
-    field.set(target, value);
-  }
-
-  private void setField(Object target, String fieldName, Class<?> declaringClass, Object value)
-      throws Exception {
-    Field field = declaringClass.getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);
   }

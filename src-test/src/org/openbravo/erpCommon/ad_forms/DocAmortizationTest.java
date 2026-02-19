@@ -19,10 +19,15 @@ import org.objenesis.ObjenesisStd;
 /**
  * Tests for {@link DocAmortization}.
  */
+@SuppressWarnings({"java:S100", "java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class DocAmortizationTest {
 
   private DocAmortization instance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -39,30 +44,35 @@ public class DocAmortizationTest {
     seqNoField.setAccessible(true);
     seqNoField.set(instance, "0");
   }
+  /** Get balance returns zero. */
 
   @Test
   public void testGetBalanceReturnsZero() {
     BigDecimal balance = instance.getBalance();
     assertEquals(BigDecimal.ZERO, balance);
   }
+  /** Next seq no increments by10. */
 
   @Test
   public void testNextSeqNoIncrementsBy10() {
     String result = instance.nextSeqNo("0");
     assertEquals("10", result);
   }
+  /** Next seq no from non zero. */
 
   @Test
   public void testNextSeqNoFromNonZero() {
     String result = instance.nextSeqNo("10");
     assertEquals("20", result);
   }
+  /** Next seq no updates internal seq no. */
 
   @Test
   public void testNextSeqNoUpdatesInternalSeqNo() {
     instance.nextSeqNo("0");
     assertEquals("10", instance.getSeqNo());
   }
+  /** Next seq no multiple calls. */
 
   @Test
   public void testNextSeqNoMultipleCalls() {
@@ -70,27 +80,32 @@ public class DocAmortizationTest {
     String second = instance.nextSeqNo(instance.getSeqNo());
     assertEquals("20", second);
   }
+  /** Get set seq no. */
 
   @Test
   public void testGetSetSeqNo() {
     instance.setSeqNo("50");
     assertEquals("50", instance.getSeqNo());
   }
+  /** Get accttype_depreciation. */
 
   @Test
   public void testGetACCTTYPE_Depreciation() {
     assertEquals("1", DocAmortization.getACCTTYPE_Depreciation());
   }
+  /** Get accttype_accum depreciation. */
 
   @Test
   public void testGetACCTTYPE_AccumDepreciation() {
     assertEquals("2", DocAmortization.getACCTTYPE_AccumDepreciation());
   }
+  /** Get document confirmation returns true. */
 
   @Test
   public void testGetDocumentConfirmationReturnsTrue() {
     assertTrue(instance.getDocumentConfirmation(null, null));
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {

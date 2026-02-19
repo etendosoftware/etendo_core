@@ -16,6 +16,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -77,8 +78,33 @@ import com.smf.jobs.Result;
  * Tests the payment action handler logic including payment processing,
  * credit handling, GL item addition, and hook execution.
  */
+@SuppressWarnings({"java:S120", "java:S1448", "java:S4144", "java:S112"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AddPaymentActionHandlerTest {
+
+  private static final String PRE_PROCESS = "preProcess";
+  private static final String SEVERITY = "severity";
+  private static final String ERROR = "error";
+  private static final String MESSAGE = "message";
+  private static final String SUCCESS = "success";
+  private static final String PAY001 = "pay001";
+  private static final String VAL_100_00 = "100.00";
+  private static final String IS_FULLY_PAID = "isFullyPaid";
+  private static final String HAS_NEGATIVE_LINES = "hasNegativeLines";
+  private static final String GET_ACCOUNT_DIMENSION = "getAccountDimension";
+  private static final String BUSINESS_PARTNER = "businessPartner";
+  private static final String GET_DOCUMENT_CONFIRMATION = "getDocumentConfirmation";
+  private static final String MASSIVE_MESSAGE_HANDLER = "massiveMessageHandler";
+  private static final String INPUT = "input";
+  private static final String DOCUMENT_ACTION = "document_action";
+  private static final String PAY001_2 = "PAY001";
+  private static final String RETRY_EXECUTION = "retryExecution";
+  private static final String FIN_PAYMENT = "FIN_Payment";
+  private static final String ENTITY_NAME = "_entityName";
+  private static final String ACTION = "action";
+  private static final String REMOVE_NOT_SELECTED_PAYMENT_DETAILS = "removeNotSelectedPaymentDetails";
+  private static final String PD001 = "PD001";
+  private static final String PSD001 = "PSD001";
 
   private AddPaymentActionHandler handler;
 
@@ -112,6 +138,10 @@ public class AddPaymentActionHandlerTest {
   private MockedStatic<FIN_Utility> finUtilityStatic;
   private MockedStatic<OBDao> obDaoStatic;
   private MockedStatic<IsIDFilter> isIDFilterStatic;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -139,6 +169,7 @@ public class AddPaymentActionHandlerTest {
     // Set the hooks field
     setPrivateField(handler, "hooks", mockHooksInstance);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -156,6 +187,7 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for getInputClass =====
+  /** Get input class returns fin payment. */
 
   @Test
   public void testGetInputClassReturnsFINPayment() {
@@ -163,6 +195,10 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for executeHooks =====
+  /**
+   * Execute hooks pre process returns null when no errors.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksPreProcessReturnsNullWhenNoErrors() throws Exception {
@@ -175,10 +211,14 @@ public class AddPaymentActionHandlerTest {
     when(mockHook.preProcess(any())).thenReturn(null);
 
     JSONObject params = new JSONObject();
-    JSONObject result = handler.executeHooks(params, "preProcess");
+    JSONObject result = handler.executeHooks(params, PRE_PROCESS);
 
     assertNull(result);
   }
+  /**
+   * Execute hooks pre process returns result on error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksPreProcessReturnsResultOnError() throws Exception {
@@ -190,16 +230,20 @@ public class AddPaymentActionHandlerTest {
 
     JSONObject hookResult = new JSONObject();
     JSONObject message = new JSONObject();
-    message.put("severity", "error");
-    hookResult.put("message", message);
+    message.put(SEVERITY, ERROR);
+    hookResult.put(MESSAGE, message);
     when(mockHook.preProcess(any())).thenReturn(hookResult);
 
     JSONObject params = new JSONObject();
-    JSONObject result = handler.executeHooks(params, "preProcess");
+    JSONObject result = handler.executeHooks(params, PRE_PROCESS);
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
+    assertTrue(result.has(MESSAGE));
   }
+  /**
+   * Execute hooks post process returns null when no errors.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksPostProcessReturnsNullWhenNoErrors() throws Exception {
@@ -216,6 +260,10 @@ public class AddPaymentActionHandlerTest {
 
     assertNull(result);
   }
+  /**
+   * Execute hooks post process returns result on error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksPostProcessReturnsResultOnError() throws Exception {
@@ -227,8 +275,8 @@ public class AddPaymentActionHandlerTest {
 
     JSONObject hookResult = new JSONObject();
     JSONObject message = new JSONObject();
-    message.put("severity", "error");
-    hookResult.put("message", message);
+    message.put(SEVERITY, ERROR);
+    hookResult.put(MESSAGE, message);
     when(mockHook.posProcess(any())).thenReturn(hookResult);
 
     JSONObject params = new JSONObject();
@@ -236,6 +284,10 @@ public class AddPaymentActionHandlerTest {
 
     assertNotNull(result);
   }
+  /**
+   * Execute hooks with empty hook list.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksWithEmptyHookList() throws Exception {
@@ -244,10 +296,14 @@ public class AddPaymentActionHandlerTest {
         .thenReturn(hookList);
 
     JSONObject params = new JSONObject();
-    JSONObject result = handler.executeHooks(params, "preProcess");
+    JSONObject result = handler.executeHooks(params, PRE_PROCESS);
 
     assertNull(result);
   }
+  /**
+   * Execute hooks with non error severity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksWithNonErrorSeverity() throws Exception {
@@ -259,15 +315,19 @@ public class AddPaymentActionHandlerTest {
 
     JSONObject hookResult = new JSONObject();
     JSONObject message = new JSONObject();
-    message.put("severity", "success");
-    hookResult.put("message", message);
+    message.put(SEVERITY, SUCCESS);
+    hookResult.put(MESSAGE, message);
     when(mockHook.preProcess(any())).thenReturn(hookResult);
 
     JSONObject params = new JSONObject();
-    JSONObject result = handler.executeHooks(params, "preProcess");
+    JSONObject result = handler.executeHooks(params, PRE_PROCESS);
 
     assertNull(result);
   }
+  /**
+   * Execute hooks with unknown method.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksWithUnknownMethod() throws Exception {
@@ -282,6 +342,10 @@ public class AddPaymentActionHandlerTest {
 
     assertNull(result);
   }
+  /**
+   * Execute hooks multiple hooks first errors.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHooksMultipleHooksFirstErrors() throws Exception {
@@ -295,27 +359,37 @@ public class AddPaymentActionHandlerTest {
 
     JSONObject hookResult = new JSONObject();
     JSONObject message = new JSONObject();
-    message.put("severity", "error");
-    hookResult.put("message", message);
+    message.put(SEVERITY, ERROR);
+    hookResult.put(MESSAGE, message);
     when(mockHook1.preProcess(any())).thenReturn(hookResult);
 
     JSONObject params = new JSONObject();
-    JSONObject result = handler.executeHooks(params, "preProcess");
+    JSONObject result = handler.executeHooks(params, PRE_PROCESS);
 
     assertNotNull(result);
     // Second hook should not be called since first returned error
   }
 
   // ===== Tests for checkID (private) =====
+  /**
+   * Check id with valid id.
+   * @throws IllegalAccessException if an error occurs
+   * @throws InvocationTargetException if an error occurs
+   * @throws NoSuchMethodException if an error occurs
+   */
 
   @Test
-  public void testCheckIDWithValidId() throws Exception {
+  public void testCheckIDWithValidId() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method checkIDMethod = AddPaymentActionHandler.class.getDeclaredMethod("checkID", String.class);
     checkIDMethod.setAccessible(true);
 
     // Valid hex ID
     checkIDMethod.invoke(handler, "ABC123DEF456789012345678ABCDEF01");
   }
+  /**
+   * Check id with invalid id.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = Exception.class)
   public void testCheckIDWithInvalidId() throws Exception {
@@ -331,6 +405,10 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for getSelectedCreditLinesIds (private) =====
+  /**
+   * Get selected credit lines ids single row.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSelectedCreditLinesIdsSingleRow() throws Exception {
@@ -340,13 +418,17 @@ public class AddPaymentActionHandlerTest {
 
     JSONArray selection = new JSONArray();
     JSONObject row = new JSONObject();
-    row.put("id", "pay001");
+    row.put("id", PAY001);
     selection.put(row);
 
     String result = (String) method.invoke(handler, selection);
 
     assertEquals("(pay001)", result);
   }
+  /**
+   * Get selected credit lines ids multiple rows.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSelectedCreditLinesIdsMultipleRows() throws Exception {
@@ -356,7 +438,7 @@ public class AddPaymentActionHandlerTest {
 
     JSONArray selection = new JSONArray();
     JSONObject row1 = new JSONObject();
-    row1.put("id", "pay001");
+    row1.put("id", PAY001);
     JSONObject row2 = new JSONObject();
     row2.put("id", "pay002");
     selection.put(row1);
@@ -368,6 +450,10 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for getSelectedCreditLinesAndAmount (private) =====
+  /**
+   * Get selected credit lines and amount.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSelectedCreditLinesAndAmount() throws Exception {
@@ -376,12 +462,12 @@ public class AddPaymentActionHandlerTest {
     method.setAccessible(true);
 
     FIN_Payment creditPayment = mock(FIN_Payment.class);
-    when(creditPayment.getId()).thenReturn("pay001");
+    when(creditPayment.getId()).thenReturn(PAY001);
 
     JSONArray selection = new JSONArray();
     JSONObject row = new JSONObject();
-    row.put("id", "pay001");
-    row.put("paymentAmount", "100.00");
+    row.put("id", PAY001);
+    row.put("paymentAmount", VAL_100_00);
     selection.put(row);
 
     List<FIN_Payment> payments = new ArrayList<>();
@@ -392,8 +478,12 @@ public class AddPaymentActionHandlerTest {
         handler, selection, payments);
 
     assertNotNull(result);
-    assertEquals(new BigDecimal("100.00"), result.get("pay001"));
+    assertEquals(new BigDecimal(VAL_100_00), result.get(PAY001));
   }
+  /**
+   * Get selected credit lines and amount no match.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSelectedCreditLinesAndAmountNoMatch() throws Exception {
@@ -402,12 +492,12 @@ public class AddPaymentActionHandlerTest {
     method.setAccessible(true);
 
     FIN_Payment creditPayment = mock(FIN_Payment.class);
-    when(creditPayment.getId()).thenReturn("pay001");
+    when(creditPayment.getId()).thenReturn(PAY001);
 
     JSONArray selection = new JSONArray();
     JSONObject row = new JSONObject();
     row.put("id", "pay999");
-    row.put("paymentAmount", "100.00");
+    row.put("paymentAmount", VAL_100_00);
     selection.put(row);
 
     List<FIN_Payment> payments = new ArrayList<>();
@@ -422,11 +512,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for isFullyPaid (private) =====
+  /**
+   * Is fully paid true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsFullyPaidTrue() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "isFullyPaid", List.class, BigDecimal.class);
+        IS_FULLY_PAID, List.class, BigDecimal.class);
     method.setAccessible(true);
 
     FIN_PaymentScheduleDetail psd1 = mock(FIN_PaymentScheduleDetail.class);
@@ -436,15 +530,19 @@ public class AddPaymentActionHandlerTest {
 
     List<FIN_PaymentScheduleDetail> psds = Arrays.asList(psd1, psd2);
 
-    boolean result = (boolean) method.invoke(handler, psds, new BigDecimal("100.00"));
+    boolean result = (boolean) method.invoke(handler, psds, new BigDecimal(VAL_100_00));
 
     assertTrue(result);
   }
+  /**
+   * Is fully paid false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsFullyPaidFalse() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "isFullyPaid", List.class, BigDecimal.class);
+        IS_FULLY_PAID, List.class, BigDecimal.class);
     method.setAccessible(true);
 
     FIN_PaymentScheduleDetail psd1 = mock(FIN_PaymentScheduleDetail.class);
@@ -452,35 +550,43 @@ public class AddPaymentActionHandlerTest {
 
     List<FIN_PaymentScheduleDetail> psds = Collections.singletonList(psd1);
 
-    boolean result = (boolean) method.invoke(handler, psds, new BigDecimal("100.00"));
+    boolean result = (boolean) method.invoke(handler, psds, new BigDecimal(VAL_100_00));
 
     assertFalse(result);
   }
+  /**
+   * Is fully paid empty list.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsFullyPaidEmptyList() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "isFullyPaid", List.class, BigDecimal.class);
+        IS_FULLY_PAID, List.class, BigDecimal.class);
     method.setAccessible(true);
 
     List<FIN_PaymentScheduleDetail> psds = new ArrayList<>();
 
-    boolean result = (boolean) method.invoke(handler, psds, new BigDecimal("100.00"));
+    boolean result = (boolean) method.invoke(handler, psds, new BigDecimal(VAL_100_00));
 
     assertFalse(result);
   }
 
   // ===== Tests for hasNegativeLines (private) =====
+  /**
+   * Has negative lines true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testHasNegativeLinesTrue() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "hasNegativeLines", List.class);
+        HAS_NEGATIVE_LINES, List.class);
     method.setAccessible(true);
 
     FIN_PaymentScheduleDetail psd1 = mock(FIN_PaymentScheduleDetail.class);
     FIN_PaymentScheduleDetail psd2 = mock(FIN_PaymentScheduleDetail.class);
-    when(psd1.getAmount()).thenReturn(new BigDecimal("100.00"));
+    when(psd1.getAmount()).thenReturn(new BigDecimal(VAL_100_00));
     when(psd2.getAmount()).thenReturn(new BigDecimal("-50.00"));
 
     List<FIN_PaymentScheduleDetail> psds = Arrays.asList(psd1, psd2);
@@ -489,15 +595,19 @@ public class AddPaymentActionHandlerTest {
 
     assertTrue(result);
   }
+  /**
+   * Has negative lines false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testHasNegativeLinesFalse() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "hasNegativeLines", List.class);
+        HAS_NEGATIVE_LINES, List.class);
     method.setAccessible(true);
 
     FIN_PaymentScheduleDetail psd1 = mock(FIN_PaymentScheduleDetail.class);
-    when(psd1.getAmount()).thenReturn(new BigDecimal("100.00"));
+    when(psd1.getAmount()).thenReturn(new BigDecimal(VAL_100_00));
 
     List<FIN_PaymentScheduleDetail> psds = Collections.singletonList(psd1);
 
@@ -505,11 +615,15 @@ public class AddPaymentActionHandlerTest {
 
     assertFalse(result);
   }
+  /**
+   * Has negative lines empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testHasNegativeLinesEmpty() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "hasNegativeLines", List.class);
+        HAS_NEGATIVE_LINES, List.class);
     method.setAccessible(true);
 
     List<FIN_PaymentScheduleDetail> psds = new ArrayList<>();
@@ -520,11 +634,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for getAccountDimension (private) =====
+  /**
+   * Get account dimension with valid dimension.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAccountDimensionWithValidDimension() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getAccountDimension", JSONObject.class, String.class, Class.class);
+        GET_ACCOUNT_DIMENSION, JSONObject.class, String.class, Class.class);
     method.setAccessible(true);
 
     BusinessPartner mockBP = mock(BusinessPartner.class);
@@ -535,48 +653,60 @@ public class AddPaymentActionHandlerTest {
     when(mockFilter.accept(anyString())).thenReturn(true);
 
     JSONObject glItem = new JSONObject();
-    glItem.put("businessPartner", bpId);
+    glItem.put(BUSINESS_PARTNER, bpId);
 
     lenient().when(mockOBDal.get(BusinessPartner.class, bpId)).thenReturn(mockBP);
 
-    Object result = method.invoke(handler, glItem, "businessPartner", BusinessPartner.class);
+    Object result = method.invoke(handler, glItem, BUSINESS_PARTNER, BusinessPartner.class);
 
     assertEquals(mockBP, result);
   }
+  /**
+   * Get account dimension with null value.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAccountDimensionWithNullValue() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getAccountDimension", JSONObject.class, String.class, Class.class);
+        GET_ACCOUNT_DIMENSION, JSONObject.class, String.class, Class.class);
     method.setAccessible(true);
 
     JSONObject glItem = new JSONObject();
-    glItem.put("businessPartner", JSONObject.NULL);
+    glItem.put(BUSINESS_PARTNER, JSONObject.NULL);
 
-    Object result = method.invoke(handler, glItem, "businessPartner", BusinessPartner.class);
+    Object result = method.invoke(handler, glItem, BUSINESS_PARTNER, BusinessPartner.class);
 
     assertNull(result);
   }
+  /**
+   * Get account dimension with missing key.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAccountDimensionWithMissingKey() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getAccountDimension", JSONObject.class, String.class, Class.class);
+        GET_ACCOUNT_DIMENSION, JSONObject.class, String.class, Class.class);
     method.setAccessible(true);
 
     JSONObject glItem = new JSONObject();
 
-    Object result = method.invoke(handler, glItem, "businessPartner", BusinessPartner.class);
+    Object result = method.invoke(handler, glItem, BUSINESS_PARTNER, BusinessPartner.class);
 
     assertNull(result);
   }
 
   // ===== Tests for getDocumentConfirmation (private) =====
+  /**
+   * Get document confirmation no accounting.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationNoAccounting() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -598,11 +728,15 @@ public class AddPaymentActionHandlerTest {
 
     assertFalse(result);
   }
+  /**
+   * Get document confirmation zero amount.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationZeroAmount() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -629,11 +763,15 @@ public class AddPaymentActionHandlerTest {
 
     assertTrue(result);
   }
+  /**
+   * Get document confirmation exception returns default.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationExceptionReturnsDefault() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -648,11 +786,15 @@ public class AddPaymentActionHandlerTest {
 
     assertFalse(result);
   }
+  /**
+   * Get document confirmation payment out.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationPaymentOut() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -674,11 +816,15 @@ public class AddPaymentActionHandlerTest {
 
     assertFalse(result);
   }
+  /**
+   * Get document confirmation deposit use.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationDepositUse() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -706,11 +852,15 @@ public class AddPaymentActionHandlerTest {
 
     assertTrue(result);
   }
+  /**
+   * Get document confirmation withdrawal use.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationWithdrawalUse() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -740,11 +890,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for massiveMessageHandler (private) =====
+  /**
+   * Massive message handler all success.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testMassiveMessageHandlerAllSuccess() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "massiveMessageHandler", ActionResult.class, List.class, int.class, int.class);
+        MASSIVE_MESSAGE_HANDLER, ActionResult.class, List.class, int.class, int.class);
     method.setAccessible(true);
 
     ActionResult result = new ActionResult();
@@ -753,17 +907,21 @@ public class AddPaymentActionHandlerTest {
     List<FIN_Payment> payments = Arrays.asList(p1, p2);
 
     // Set up input on handler
-    setFieldOnSuperclass(handler, "input", mockData);
+    setFieldOnSuperclass(handler, INPUT, mockData);
 
     method.invoke(handler, result, payments, 0, 2);
 
     assertEquals(Result.Type.SUCCESS, result.getType());
   }
+  /**
+   * Massive message handler all errors.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testMassiveMessageHandlerAllErrors() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "massiveMessageHandler", ActionResult.class, List.class, int.class, int.class);
+        MASSIVE_MESSAGE_HANDLER, ActionResult.class, List.class, int.class, int.class);
     method.setAccessible(true);
 
     ActionResult result = new ActionResult();
@@ -771,17 +929,21 @@ public class AddPaymentActionHandlerTest {
     FIN_Payment p2 = mock(FIN_Payment.class);
     List<FIN_Payment> payments = Arrays.asList(p1, p2);
 
-    setFieldOnSuperclass(handler, "input", mockData);
+    setFieldOnSuperclass(handler, INPUT, mockData);
 
     method.invoke(handler, result, payments, 2, 0);
 
     assertEquals(Result.Type.ERROR, result.getType());
   }
+  /**
+   * Massive message handler mixed.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testMassiveMessageHandlerMixed() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "massiveMessageHandler", ActionResult.class, List.class, int.class, int.class);
+        MASSIVE_MESSAGE_HANDLER, ActionResult.class, List.class, int.class, int.class);
     method.setAccessible(true);
 
     ActionResult result = new ActionResult();
@@ -789,17 +951,21 @@ public class AddPaymentActionHandlerTest {
     FIN_Payment p2 = mock(FIN_Payment.class);
     List<FIN_Payment> payments = Arrays.asList(p1, p2);
 
-    setFieldOnSuperclass(handler, "input", mockData);
+    setFieldOnSuperclass(handler, INPUT, mockData);
 
     method.invoke(handler, result, payments, 1, 1);
 
     assertEquals(Result.Type.WARNING, result.getType());
   }
+  /**
+   * Massive message handler single record.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testMassiveMessageHandlerSingleRecord() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "massiveMessageHandler", ActionResult.class, List.class, int.class, int.class);
+        MASSIVE_MESSAGE_HANDLER, ActionResult.class, List.class, int.class, int.class);
     method.setAccessible(true);
 
     ActionResult result = new ActionResult();
@@ -815,13 +981,17 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for oldProcessPaymentHandler (WebService path) =====
+  /**
+   * Old process payment handler web service payment already processed.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOldProcessPaymentHandlerWebServicePaymentAlreadyProcessed() throws Exception {
     Map<String, Object> parameters = new HashMap<>();
     JSONObject content = new JSONObject();
-    content.put("document_action", "PRP");
-    String paymentId = "PAY001";
+    content.put(DOCUMENT_ACTION, "PRP");
+    String paymentId = PAY001_2;
 
     FIN_Payment payment = mock(FIN_Payment.class);
     when(payment.isProcessed()).thenReturn(true);
@@ -830,18 +1000,22 @@ public class AddPaymentActionHandlerTest {
     JSONObject result = handler.oldProcessPaymentHandler(parameters, content, paymentId, true);
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
-    JSONObject msg = result.getJSONObject("message");
-    assertEquals("error", msg.getString("severity"));
-    assertTrue(result.getBoolean("retryExecution"));
+    assertTrue(result.has(MESSAGE));
+    JSONObject msg = result.getJSONObject(MESSAGE);
+    assertEquals(ERROR, msg.getString(SEVERITY));
+    assertTrue(result.getBoolean(RETRY_EXECUTION));
   }
+  /**
+   * Old process payment handler web service payment not processed.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOldProcessPaymentHandlerWebServicePaymentNotProcessed() throws Exception {
     Map<String, Object> parameters = new HashMap<>();
     JSONObject content = new JSONObject();
-    content.put("document_action", "PRP");
-    String paymentId = "PAY001";
+    content.put(DOCUMENT_ACTION, "PRP");
+    String paymentId = PAY001_2;
 
     FIN_Payment payment = mock(FIN_Payment.class);
     when(payment.isProcessed()).thenReturn(false);
@@ -851,7 +1025,7 @@ public class AddPaymentActionHandlerTest {
     // processMultiPayment calls DalConnectionProvider and RequestContext internally
     // We'll use doReturn on the spy to bypass it
     org.openbravo.erpCommon.utility.OBError mockError = new org.openbravo.erpCommon.utility.OBError();
-    mockError.setType("success");
+    mockError.setType(SUCCESS);
     mockError.setMessage("Payment processed");
     mockError.setTitle("Success");
 
@@ -862,11 +1036,15 @@ public class AddPaymentActionHandlerTest {
     JSONObject result = handler.oldProcessPaymentHandler(parameters, content, paymentId, true);
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
-    assertTrue(result.getBoolean("retryExecution"));
+    assertTrue(result.has(MESSAGE));
+    assertTrue(result.getBoolean(RETRY_EXECUTION));
   }
 
   // ===== Tests for oldProcessPaymentHandler (non-WebService path with hooks) =====
+  /**
+   * Old process payment handler pre hook returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOldProcessPaymentHandlerPreHookReturnsError() throws Exception {
@@ -875,23 +1053,23 @@ public class AddPaymentActionHandlerTest {
 
     JSONObject jsonParams = new JSONObject();
     jsonParams.put("issotrx", true);
-    jsonParams.put("document_action", "actionId");
+    jsonParams.put(DOCUMENT_ACTION, "actionId");
     jsonParams.put("c_currency_id", "currId");
     jsonParams.put("received_from", "bpId");
     jsonParams.put("actual_payment", "100");
     jsonParams.put("payment_date", "2024-01-15");
-    jsonParams.put("fin_payment_id", "PAY001");
+    jsonParams.put("fin_payment_id", PAY001_2);
 
     JSONObject content = new JSONObject();
     content.put("_params", jsonParams);
-    content.put("_entityName", "FIN_Payment");
+    content.put(ENTITY_NAME, FIN_PAYMENT);
 
     // Setup hook to return an error
     JSONObject hookErrorResult = new JSONObject();
     JSONObject hookMessage = new JSONObject();
-    hookMessage.put("severity", "error");
+    hookMessage.put(SEVERITY, ERROR);
     hookMessage.put("text", "Hook error");
-    hookErrorResult.put("message", hookMessage);
+    hookErrorResult.put(MESSAGE, hookMessage);
 
     List<PaymentProcessHook> hookList = new ArrayList<>();
     PaymentProcessHook mockHook = mock(PaymentProcessHook.class);
@@ -900,19 +1078,23 @@ public class AddPaymentActionHandlerTest {
         .thenReturn(hookList);
     when(mockHook.preProcess(any())).thenReturn(hookErrorResult);
 
-    JSONObject result = handler.oldProcessPaymentHandler(parameters, content, "PAY001", false);
+    JSONObject result = handler.oldProcessPaymentHandler(parameters, content, PAY001_2, false);
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
+    assertTrue(result.has(MESSAGE));
   }
 
   // ===== Tests for action method (the main entry point) =====
+  /**
+   * Action with order multiple records returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testActionWithOrderMultipleRecordsReturnsError() throws Exception {
     // Set up input data
     JSONObject rawData = new JSONObject();
-    rawData.put("_entityName", "Order");
+    rawData.put(ENTITY_NAME, "Order");
 
     Data data = mock(Data.class);
     when(data.getRawData()).thenReturn(rawData);
@@ -922,21 +1104,25 @@ public class AddPaymentActionHandlerTest {
     paymentList.add(mock(FIN_Payment.class));
     when(data.getContents(FIN_Payment.class)).thenReturn(paymentList);
 
-    setFieldOnSuperclass(handler, "input", data);
+    setFieldOnSuperclass(handler, INPUT, data);
 
     Method actionMethod = AddPaymentActionHandler.class.getDeclaredMethod(
-        "action", JSONObject.class, MutableBoolean.class);
+        ACTION, JSONObject.class, MutableBoolean.class);
     actionMethod.setAccessible(true);
 
     ActionResult result = (ActionResult) actionMethod.invoke(handler, new JSONObject(), new MutableBoolean(false));
 
     assertEquals(Result.Type.ERROR, result.getType());
   }
+  /**
+   * Action with invoice multiple records returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testActionWithInvoiceMultipleRecordsReturnsError() throws Exception {
     JSONObject rawData = new JSONObject();
-    rawData.put("_entityName", "Invoice");
+    rawData.put(ENTITY_NAME, "Invoice");
 
     Data data = mock(Data.class);
     when(data.getRawData()).thenReturn(rawData);
@@ -946,21 +1132,25 @@ public class AddPaymentActionHandlerTest {
     paymentList.add(mock(FIN_Payment.class));
     when(data.getContents(FIN_Payment.class)).thenReturn(paymentList);
 
-    setFieldOnSuperclass(handler, "input", data);
+    setFieldOnSuperclass(handler, INPUT, data);
 
     Method actionMethod = AddPaymentActionHandler.class.getDeclaredMethod(
-        "action", JSONObject.class, MutableBoolean.class);
+        ACTION, JSONObject.class, MutableBoolean.class);
     actionMethod.setAccessible(true);
 
     ActionResult result = (ActionResult) actionMethod.invoke(handler, new JSONObject(), new MutableBoolean(false));
 
     assertEquals(Result.Type.ERROR, result.getType());
   }
+  /**
+   * Action with payment multiple records not web service returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testActionWithPaymentMultipleRecordsNotWebServiceReturnsError() throws Exception {
     JSONObject rawData = new JSONObject();
-    rawData.put("_entityName", "FIN_Payment");
+    rawData.put(ENTITY_NAME, FIN_PAYMENT);
 
     Data data = mock(Data.class);
     when(data.getRawData()).thenReturn(rawData);
@@ -970,24 +1160,28 @@ public class AddPaymentActionHandlerTest {
     paymentList.add(mock(FIN_Payment.class));
     when(data.getContents(FIN_Payment.class)).thenReturn(paymentList);
 
-    setFieldOnSuperclass(handler, "input", data);
+    setFieldOnSuperclass(handler, INPUT, data);
 
     Method actionMethod = AddPaymentActionHandler.class.getDeclaredMethod(
-        "action", JSONObject.class, MutableBoolean.class);
+        ACTION, JSONObject.class, MutableBoolean.class);
     actionMethod.setAccessible(true);
 
     ActionResult result = (ActionResult) actionMethod.invoke(handler, new JSONObject(), new MutableBoolean(false));
 
     assertEquals(Result.Type.ERROR, result.getType());
   }
+  /**
+   * Action with non payment entity calls old process.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testActionWithNonPaymentEntityCallsOldProcess() throws Exception {
     JSONObject rawData = new JSONObject();
-    rawData.put("_entityName", "Invoice");
+    rawData.put(ENTITY_NAME, "Invoice");
 
     JSONObject params = new JSONObject();
-    params.put("fin_payment_id", "PAY001");
+    params.put("fin_payment_id", PAY001_2);
     rawData.put("_params", params);
 
     Data data = mock(Data.class);
@@ -997,14 +1191,14 @@ public class AddPaymentActionHandlerTest {
     paymentList.add(mock(FIN_Payment.class));
     when(data.getContents(FIN_Payment.class)).thenReturn(paymentList);
 
-    setFieldOnSuperclass(handler, "input", data);
+    setFieldOnSuperclass(handler, INPUT, data);
 
     // Mock oldProcessPaymentHandler via spy - returns result with message
     JSONObject processResult = new JSONObject();
     JSONObject msg = new JSONObject();
-    msg.put("severity", "success");
+    msg.put(SEVERITY, SUCCESS);
     msg.put("text", "OK");
-    processResult.put("message", msg);
+    processResult.put(MESSAGE, msg);
 
     doReturn(processResult).when(handler).oldProcessPaymentHandler(any(), any(), anyString(), anyBoolean());
 
@@ -1014,7 +1208,7 @@ public class AddPaymentActionHandlerTest {
     // Actually this is internal to callPaymentProcess which creates a new ActionResult.
     // The simplest approach: verify oldProcessPaymentHandler is called.
     Method actionMethod = AddPaymentActionHandler.class.getDeclaredMethod(
-        "action", JSONObject.class, MutableBoolean.class);
+        ACTION, JSONObject.class, MutableBoolean.class);
     actionMethod.setAccessible(true);
 
     try {
@@ -1024,13 +1218,17 @@ public class AddPaymentActionHandlerTest {
       // but we can verify oldProcessPaymentHandler was called
     }
 
-    verify(handler).oldProcessPaymentHandler(any(), any(), eq("PAY001"), eq(false));
+    verify(handler).oldProcessPaymentHandler(any(), any(), eq(PAY001_2), eq(false));
   }
+  /**
+   * Action with payment web service document action missing.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testActionWithPaymentWebServiceDocumentActionMissing() throws Exception {
     JSONObject rawData = new JSONObject();
-    rawData.put("_entityName", "FIN_Payment");
+    rawData.put(ENTITY_NAME, FIN_PAYMENT);
     rawData.put("processByWebService", true);
     // No document_action
 
@@ -1038,52 +1236,56 @@ public class AddPaymentActionHandlerTest {
     when(data.getRawData()).thenReturn(rawData);
 
     FIN_Payment mockPay = mock(FIN_Payment.class);
-    when(mockPay.getId()).thenReturn("PAY001");
+    when(mockPay.getId()).thenReturn(PAY001_2);
     List<FIN_Payment> paymentList = new ArrayList<>();
     paymentList.add(mockPay);
     when(data.getContents(FIN_Payment.class)).thenReturn(paymentList);
 
-    setFieldOnSuperclass(handler, "input", data);
+    setFieldOnSuperclass(handler, INPUT, data);
 
     Method actionMethod = AddPaymentActionHandler.class.getDeclaredMethod(
-        "action", JSONObject.class, MutableBoolean.class);
+        ACTION, JSONObject.class, MutableBoolean.class);
     actionMethod.setAccessible(true);
 
     ActionResult result = (ActionResult) actionMethod.invoke(handler, new JSONObject(), new MutableBoolean(false));
 
     assertEquals(Result.Type.ERROR, result.getType());
   }
+  /**
+   * Action with payment web service with document action.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testActionWithPaymentWebServiceWithDocumentAction() throws Exception {
     JSONObject rawData = new JSONObject();
-    rawData.put("_entityName", "FIN_Payment");
+    rawData.put(ENTITY_NAME, FIN_PAYMENT);
     rawData.put("processByWebService", true);
-    rawData.put("document_action", "PRP");
+    rawData.put(DOCUMENT_ACTION, "PRP");
 
     Data data = mock(Data.class);
     when(data.getRawData()).thenReturn(rawData);
 
     FIN_Payment mockPay = mock(FIN_Payment.class);
-    when(mockPay.getId()).thenReturn("PAY001");
+    when(mockPay.getId()).thenReturn(PAY001_2);
     List<FIN_Payment> paymentList = new ArrayList<>();
     paymentList.add(mockPay);
     when(data.getContents(FIN_Payment.class)).thenReturn(paymentList);
 
-    setFieldOnSuperclass(handler, "input", data);
+    setFieldOnSuperclass(handler, INPUT, data);
 
     // Mock oldProcessPaymentHandler to return success
     JSONObject processResult = new JSONObject();
     JSONObject msg = new JSONObject();
-    msg.put("severity", "success");
+    msg.put(SEVERITY, SUCCESS);
     msg.put("text", "OK");
-    processResult.put("message", msg);
-    processResult.put("retryExecution", true);
+    processResult.put(MESSAGE, msg);
+    processResult.put(RETRY_EXECUTION, true);
 
     doReturn(processResult).when(handler).oldProcessPaymentHandler(any(), any(), anyString(), anyBoolean());
 
     Method actionMethod = AddPaymentActionHandler.class.getDeclaredMethod(
-        "action", JSONObject.class, MutableBoolean.class);
+        ACTION, JSONObject.class, MutableBoolean.class);
     actionMethod.setAccessible(true);
 
     try {
@@ -1092,22 +1294,26 @@ public class AddPaymentActionHandlerTest {
       // callPaymentProcess may fail on getResponseBuilder, that's OK
     }
 
-    verify(handler).oldProcessPaymentHandler(any(), any(), eq("PAY001"), eq(true));
+    verify(handler).oldProcessPaymentHandler(any(), any(), eq(PAY001_2), eq(true));
   }
+  /**
+   * Action exception rolls back and returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testActionExceptionRollsBackAndReturnsError() throws Exception {
     JSONObject rawData = new JSONObject();
-    rawData.put("_entityName", "FIN_Payment");
+    rawData.put(ENTITY_NAME, FIN_PAYMENT);
 
     Data data = mock(Data.class);
     when(data.getRawData()).thenReturn(rawData);
     when(data.getContents(FIN_Payment.class)).thenThrow(new RuntimeException("test exception"));
 
-    setFieldOnSuperclass(handler, "input", data);
+    setFieldOnSuperclass(handler, INPUT, data);
 
     Method actionMethod = AddPaymentActionHandler.class.getDeclaredMethod(
-        "action", JSONObject.class, MutableBoolean.class);
+        ACTION, JSONObject.class, MutableBoolean.class);
     actionMethod.setAccessible(true);
 
     ActionResult result = (ActionResult) actionMethod.invoke(handler, new JSONObject(), new MutableBoolean(false));
@@ -1117,11 +1323,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for removeNotSelectedPaymentDetails (private) =====
+  /**
+   * Remove not selected payment details empty list.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRemoveNotSelectedPaymentDetailsEmptyList() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "removeNotSelectedPaymentDetails", FIN_Payment.class, List.class);
+        REMOVE_NOT_SELECTED_PAYMENT_DETAILS, FIN_Payment.class, List.class);
     method.setAccessible(true);
 
     FIN_Payment payment = mock(FIN_Payment.class);
@@ -1130,11 +1340,15 @@ public class AddPaymentActionHandlerTest {
     // Should complete without error
     method.invoke(handler, payment, pdToRemove);
   }
+  /**
+   * Remove not selected payment details with gl item.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRemoveNotSelectedPaymentDetailsWithGLItem() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "removeNotSelectedPaymentDetails", FIN_Payment.class, List.class);
+        REMOVE_NOT_SELECTED_PAYMENT_DETAILS, FIN_Payment.class, List.class);
     method.setAccessible(true);
 
     FIN_Payment payment = mock(FIN_Payment.class);
@@ -1143,7 +1357,7 @@ public class AddPaymentActionHandlerTest {
     org.openbravo.model.financialmgmt.gl.GLItem glItem =
         mock(org.openbravo.model.financialmgmt.gl.GLItem.class);
 
-    when(mockOBDal.get(FIN_PaymentDetail.class, "PD001")).thenReturn(pd);
+    when(mockOBDal.get(FIN_PaymentDetail.class, PD001)).thenReturn(pd);
     when(pd.getGLItem()).thenReturn(glItem);
 
     List<FIN_PaymentScheduleDetail> psdList = new ArrayList<>();
@@ -1151,26 +1365,30 @@ public class AddPaymentActionHandlerTest {
     when(pd.getFINPaymentScheduleDetailList()).thenReturn(psdList);
 
     obDaoStatic.when(() -> OBDao.getIDListFromOBObject(any())).thenReturn(
-        new ArrayList<>(Collections.singletonList("PSD001")));
-    when(mockOBDal.get(FIN_PaymentScheduleDetail.class, "PSD001")).thenReturn(psd);
+        new ArrayList<>(Collections.singletonList(PSD001)));
+    when(mockOBDal.get(FIN_PaymentScheduleDetail.class, PSD001)).thenReturn(psd);
 
     List<FIN_PaymentDetail> paymentDetailList = new ArrayList<>();
     paymentDetailList.add(pd);
     when(payment.getFINPaymentDetailList()).thenReturn(paymentDetailList);
 
     List<String> pdToRemove = new ArrayList<>();
-    pdToRemove.add("PD001");
+    pdToRemove.add(PD001);
 
     method.invoke(handler, payment, pdToRemove);
 
     verify(mockOBDal).remove(psd);
     verify(mockOBDal).remove(pd);
   }
+  /**
+   * Remove not selected payment details without gl item and with outstanding.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRemoveNotSelectedPaymentDetailsWithoutGLItemAndWithOutstanding() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "removeNotSelectedPaymentDetails", FIN_Payment.class, List.class);
+        REMOVE_NOT_SELECTED_PAYMENT_DETAILS, FIN_Payment.class, List.class);
     method.setAccessible(true);
 
     FIN_Payment payment = mock(FIN_Payment.class);
@@ -1178,9 +1396,9 @@ public class AddPaymentActionHandlerTest {
     FIN_PaymentScheduleDetail psd = mock(FIN_PaymentScheduleDetail.class);
     FIN_PaymentScheduleDetail outstandingPsd = mock(FIN_PaymentScheduleDetail.class);
 
-    when(mockOBDal.get(FIN_PaymentDetail.class, "PD001")).thenReturn(pd);
+    when(mockOBDal.get(FIN_PaymentDetail.class, PD001)).thenReturn(pd);
     when(pd.getGLItem()).thenReturn(null);
-    when(psd.getAmount()).thenReturn(new BigDecimal("100.00"));
+    when(psd.getAmount()).thenReturn(new BigDecimal(VAL_100_00));
     when(psd.getWriteoffAmount()).thenReturn(BigDecimal.ZERO);
     when(psd.getDoubtfulDebtAmount()).thenReturn(BigDecimal.ZERO);
 
@@ -1189,8 +1407,8 @@ public class AddPaymentActionHandlerTest {
     when(pd.getFINPaymentScheduleDetailList()).thenReturn(psdList);
 
     obDaoStatic.when(() -> OBDao.getIDListFromOBObject(any())).thenReturn(
-        new ArrayList<>(Collections.singletonList("PSD001")));
-    when(mockOBDal.get(FIN_PaymentScheduleDetail.class, "PSD001")).thenReturn(psd);
+        new ArrayList<>(Collections.singletonList(PSD001)));
+    when(mockOBDal.get(FIN_PaymentScheduleDetail.class, PSD001)).thenReturn(psd);
 
     // getOutstandingPSDs returns one existing outstanding PSD
     List<FIN_PaymentScheduleDetail> outstandingList = new ArrayList<>();
@@ -1207,7 +1425,7 @@ public class AddPaymentActionHandlerTest {
     when(payment.getFINPaymentDetailList()).thenReturn(paymentDetailList);
 
     List<String> pdToRemove = new ArrayList<>();
-    pdToRemove.add("PD001");
+    pdToRemove.add(PD001);
 
     method.invoke(handler, payment, pdToRemove);
 
@@ -1219,11 +1437,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for CLE accounting path in getDocumentConfirmation =====
+  /**
+   * Get document confirmation cle receipt path.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationCLEReceiptPath() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -1250,11 +1472,15 @@ public class AddPaymentActionHandlerTest {
 
     assertTrue(result);
   }
+  /**
+   * Get document confirmation cle payment out path.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationCLEPaymentOutPath() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -1283,11 +1509,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for INT path in payment out for getDocumentConfirmation =====
+  /**
+   * Get document confirmation int payment out path.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationINTPaymentOutPath() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -1316,11 +1546,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for INT receipt path in getDocumentConfirmation =====
+  /**
+   * Get document confirmation int receipt path.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationINTReceiptPath() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -1349,11 +1583,15 @@ public class AddPaymentActionHandlerTest {
   }
 
   // ===== Tests for DEP receipt path =====
+  /**
+   * Get document confirmation dep receipt path.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDocumentConfirmationDEPReceiptPath() throws Exception {
     Method method = AddPaymentActionHandler.class.getDeclaredMethod(
-        "getDocumentConfirmation", FIN_FinancialAccount.class,
+        GET_DOCUMENT_CONFIRMATION, FIN_FinancialAccount.class,
         FIN_PaymentMethod.class, boolean.class, String.class, boolean.class);
     method.setAccessible(true);
 
@@ -1383,13 +1621,13 @@ public class AddPaymentActionHandlerTest {
 
   // ===== Helper Methods =====
 
-  private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+  private void setPrivateField(Object target, String fieldName, Object value) throws IllegalAccessException, NoSuchFieldException {
     Field field = findField(target.getClass(), fieldName);
     field.setAccessible(true);
     field.set(target, value);
   }
 
-  private void setFieldOnSuperclass(Object target, String fieldName, Object value) throws Exception {
+  private void setFieldOnSuperclass(Object target, String fieldName, Object value) throws IllegalAccessException, NoSuchFieldException {
     Field field = findField(target.getClass(), fieldName);
     field.setAccessible(true);
     field.set(target, value);

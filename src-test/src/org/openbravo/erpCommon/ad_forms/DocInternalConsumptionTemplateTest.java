@@ -12,13 +12,17 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
+/** Tests for {@link DocInternalConsumptionTemplate}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.class)
 public class DocInternalConsumptionTemplateTest {
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {
     DocInternalConsumptionTemplate instance = new DocInternalConsumptionTemplate() {
+      /** Create fact. */
       @Override
       public Fact createFact(DocInternalConsumption docInternalConsumption, AcctSchema as,
           ConnectionProvider conn, Connection con, VariablesSecureApp vars)
@@ -28,10 +32,12 @@ public class DocInternalConsumptionTemplateTest {
     };
     assertEquals("Servlet for the accounting", instance.getServletInfo());
   }
+  /** Constructor does not throw. */
 
   @Test
   public void testConstructorDoesNotThrow() {
     DocInternalConsumptionTemplate instance = new DocInternalConsumptionTemplate() {
+      /** Create fact. */
       @Override
       public Fact createFact(DocInternalConsumption docInternalConsumption, AcctSchema as,
           ConnectionProvider conn, Connection con, VariablesSecureApp vars)
@@ -41,6 +47,7 @@ public class DocInternalConsumptionTemplateTest {
     };
     assertNotNull(instance);
   }
+  /** Get serial version uid. */
 
   @Test
   public void testGetSerialVersionUID() {

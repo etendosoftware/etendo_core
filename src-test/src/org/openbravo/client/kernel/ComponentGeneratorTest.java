@@ -36,6 +36,7 @@ public class ComponentGeneratorTest {
 
   private MockedStatic<OBContext> obContextStatic;
   private MockedStatic<JSCompressor> jsCompressorStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -45,12 +46,14 @@ public class ComponentGeneratorTest {
     jsCompressorStatic = mockStatic(JSCompressor.class);
     jsCompressorStatic.when(JSCompressor::getInstance).thenReturn(mockCompressor);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obContextStatic != null) obContextStatic.close();
     if (jsCompressorStatic != null) jsCompressorStatic.close();
   }
+  /** Generate compresses java script not in development. */
 
   @Test
   public void testGenerateCompressesJavaScriptNotInDevelopment() {
@@ -64,6 +67,7 @@ public class ComponentGeneratorTest {
     assertEquals(COMPRESSED_JS, result);
     verify(mockCompressor).compress(ORIGINAL_JS);
   }
+  /** Generate does not compress java script in development. */
 
   @Test
   public void testGenerateDoesNotCompressJavaScriptInDevelopment() {
@@ -76,6 +80,7 @@ public class ComponentGeneratorTest {
     assertEquals(ORIGINAL_JS, result);
     verify(mockCompressor, never()).compress(anyString());
   }
+  /** Generate does not compress non java script component. */
 
   @Test
   public void testGenerateDoesNotCompressNonJavaScriptComponent() {
@@ -87,6 +92,7 @@ public class ComponentGeneratorTest {
     assertEquals("<div>html</div>", result);
     verify(mockCompressor, never()).compress(anyString());
   }
+  /** Get instance returns singleton. */
 
   @Test
   public void testGetInstanceReturnsSingleton() {
@@ -94,6 +100,7 @@ public class ComponentGeneratorTest {
     ComponentGenerator instance2 = ComponentGenerator.getInstance();
     assertEquals(instance1, instance2);
   }
+  /** Set instance updates instance. */
 
   @Test
   public void testSetInstanceUpdatesInstance() {

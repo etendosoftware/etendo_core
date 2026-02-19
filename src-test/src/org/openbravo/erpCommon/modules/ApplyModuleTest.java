@@ -18,29 +18,41 @@ import org.objenesis.ObjenesisStd;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.erpCommon.reference.PInstanceProcessData;
 import org.openbravo.erpCommon.utility.OBError;
+/** Tests for {@link ApplyModule}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ApplyModuleTest {
 
+  private static final String GET_PROCESS_INSTANCE_MESSAGE_SIMPLE = "getProcessInstanceMessageSimple";
+
   private static final String TEST_DIR = "/test/ob/dir";
-  private static final String TEST_MODULE_ID = "ABC123";
   private static final String CORE_MODULE_ID = "0";
 
   private ApplyModule instance;
   private ConnectionProvider mockPool;
 
   private MockedStatic<PInstanceProcessData> pInstanceStatic;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
     mockPool = mock(ConnectionProvider.class);
     instance = new ApplyModule(mockPool, TEST_DIR);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (pInstanceStatic != null) pInstanceStatic.close();
   }
+  /**
+   * Constructor sets fields.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConstructorSetsFields() throws Exception {
@@ -54,6 +66,10 @@ public class ApplyModuleTest {
     forceField.setAccessible(true);
     assertEquals(false, forceField.get(am));
   }
+  /**
+   * Constructor with force ref data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConstructorWithForceRefData() throws Exception {
@@ -63,6 +79,10 @@ public class ApplyModuleTest {
     forceField.setAccessible(true);
     assertEquals(true, forceField.get(am));
   }
+  /**
+   * Get process instance message simple success.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetProcessInstanceMessageSimpleSuccess() throws Exception {
@@ -82,7 +102,7 @@ public class ApplyModuleTest {
     poolField.setAccessible(true);
     poolField.set(null, mockPool);
 
-    Method method = ApplyModule.class.getDeclaredMethod("getProcessInstanceMessageSimple",
+    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
         ConnectionProvider.class, String.class);
     method.setAccessible(true);
 
@@ -90,6 +110,10 @@ public class ApplyModuleTest {
 
     assertEquals("Success", result.getType());
   }
+  /**
+   * Get process instance message simple error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetProcessInstanceMessageSimpleError() throws Exception {
@@ -108,7 +132,7 @@ public class ApplyModuleTest {
     poolField.setAccessible(true);
     poolField.set(null, mockPool);
 
-    Method method = ApplyModule.class.getDeclaredMethod("getProcessInstanceMessageSimple",
+    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
         ConnectionProvider.class, String.class);
     method.setAccessible(true);
 
@@ -116,6 +140,10 @@ public class ApplyModuleTest {
 
     assertEquals("Error", result.getType());
   }
+  /**
+   * Get process instance message simple with error marker.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetProcessInstanceMessageSimpleWithErrorMarker() throws Exception {
@@ -134,7 +162,7 @@ public class ApplyModuleTest {
     poolField.setAccessible(true);
     poolField.set(null, mockPool);
 
-    Method method = ApplyModule.class.getDeclaredMethod("getProcessInstanceMessageSimple",
+    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
         ConnectionProvider.class, String.class);
     method.setAccessible(true);
 
@@ -143,6 +171,10 @@ public class ApplyModuleTest {
     assertEquals("Error", result.getType());
     assertEquals("Actual error message", result.getMessage());
   }
+  /**
+   * Get process instance message simple empty data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetProcessInstanceMessageSimpleEmptyData() throws Exception {
@@ -155,7 +187,7 @@ public class ApplyModuleTest {
     poolField.setAccessible(true);
     poolField.set(null, mockPool);
 
-    Method method = ApplyModule.class.getDeclaredMethod("getProcessInstanceMessageSimple",
+    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
         ConnectionProvider.class, String.class);
     method.setAccessible(true);
 
@@ -164,6 +196,10 @@ public class ApplyModuleTest {
     // When no data, OBError is returned with defaults (no type set explicitly)
     assertTrue(result != null);
   }
+  /**
+   * Data set2import filename for core module.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDataSet2ImportFilenameForCoreModule() throws Exception {
@@ -180,6 +216,10 @@ public class ApplyModuleTest {
 
     assertEquals(TEST_DIR + "/referencedata/standard/Test_Dataset.xml", result);
   }
+  /**
+   * Get process instance message simple null data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetProcessInstanceMessageSimpleNullData() throws Exception {
@@ -192,7 +232,7 @@ public class ApplyModuleTest {
     poolField.setAccessible(true);
     poolField.set(null, mockPool);
 
-    Method method = ApplyModule.class.getDeclaredMethod("getProcessInstanceMessageSimple",
+    Method method = ApplyModule.class.getDeclaredMethod(GET_PROCESS_INSTANCE_MESSAGE_SIMPLE,
         ConnectionProvider.class, String.class);
     method.setAccessible(true);
 

@@ -15,6 +15,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -39,6 +40,7 @@ import org.openbravo.model.financialmgmt.accounting.coa.Element;
 /**
  * Tests for {@link AccountTreeDatasourceService}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AccountTreeDatasourceServiceTest {
 
@@ -73,6 +75,7 @@ public class AccountTreeDatasourceServiceTest {
   private DataSource accountTreeDatasource;
 
   private AccountTreeDatasourceService service;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -82,6 +85,7 @@ public class AccountTreeDatasourceServiceTest {
     ObjenesisStd objenesis = new ObjenesisStd();
     service = objenesis.newInstance(AccountTreeDatasourceService.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -91,6 +95,10 @@ public class AccountTreeDatasourceServiceTest {
   }
 
   // --- getDatasourceSpecificParams tests ---
+  /**
+   * Get datasource specific params returns empty when account tree id is null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDatasourceSpecificParamsReturnsEmptyWhenAccountTreeIdIsNull() throws Exception {
@@ -101,6 +109,10 @@ public class AccountTreeDatasourceServiceTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+  /**
+   * Get datasource specific params returns empty when account tree id is null string.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDatasourceSpecificParamsReturnsEmptyWhenAccountTreeIdIsNullString()
@@ -113,6 +125,10 @@ public class AccountTreeDatasourceServiceTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+  /**
+   * Get datasource specific params returns tree when table is set.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDatasourceSpecificParamsReturnsTreeWhenTableIsSet() throws Exception {
@@ -129,6 +145,10 @@ public class AccountTreeDatasourceServiceTest {
     assertNotNull(result);
     assertEquals(tree, result.get("tree"));
   }
+  /**
+   * Get datasource specific params sets table when tree table is null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDatasourceSpecificParamsSetsTableWhenTreeTableIsNull() throws Exception {
@@ -147,6 +167,10 @@ public class AccountTreeDatasourceServiceTest {
     assertNotNull(result);
     assertEquals(tree, result.get("tree"));
   }
+  /**
+   * Get datasource specific params does not set table when already set.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDatasourceSpecificParamsDoesNotSetTableWhenAlreadySet() throws Exception {
@@ -162,6 +186,10 @@ public class AccountTreeDatasourceServiceTest {
 
     verify(tree, never()).setTable(any(Table.class));
   }
+  /**
+   * Get datasource specific params with empty parameters.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDatasourceSpecificParamsWithEmptyParameters() throws Exception {
@@ -174,6 +202,10 @@ public class AccountTreeDatasourceServiceTest {
   }
 
   // --- getTableTree tests ---
+  /**
+   * Get table tree returns table tree.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTableTreeReturnsTableTree() throws Exception {
@@ -186,6 +218,10 @@ public class AccountTreeDatasourceServiceTest {
     assertNotNull(result);
     assertEquals(tableTree, result);
   }
+  /**
+   * Get table tree returns null when no criteria match.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTableTreeReturnsNullWhenNoCriteriaMatch() throws Exception {
@@ -197,6 +233,10 @@ public class AccountTreeDatasourceServiceTest {
 
     assertEquals(null, result);
   }
+  /**
+   * Get table tree sets max results to one.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTableTreeSetsMaxResultsToOne() throws Exception {
@@ -208,6 +248,10 @@ public class AccountTreeDatasourceServiceTest {
 
     verify(criteria).setMaxResults(1);
   }
+  /**
+   * Get table tree adds three restrictions.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTableTreeAddsThreeRestrictions() throws Exception {
@@ -225,14 +269,14 @@ public class AccountTreeDatasourceServiceTest {
 
   @SuppressWarnings("unchecked")
   private Map<String, Object> invokeGetDatasourceSpecificParams(Map<String, String> parameters)
-      throws Exception {
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTreeDatasourceService.class.getDeclaredMethod(
         "getDatasourceSpecificParams", Map.class);
     method.setAccessible(true);
     return (Map<String, Object>) method.invoke(service, parameters);
   }
 
-  private TableTree invokeGetTableTree(Table tableParam) throws Exception {
+  private TableTree invokeGetTableTree(Table tableParam) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AccountTreeDatasourceService.class.getDeclaredMethod("getTableTree",
         Table.class);
     method.setAccessible(true);

@@ -18,26 +18,34 @@ import org.objenesis.ObjenesisStd;
 /**
  * Tests for {@link AddMultiplePaymentsProcessAfterProcessHook}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AddMultiplePaymentsProcessAfterProcessHookTest {
 
   private AddMultiplePaymentsProcessAfterProcessHook hook;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     // Create a concrete subclass for testing
     hook = new AddMultiplePaymentsProcessAfterProcessHook() {
+      /** Execute hook. */
       @Override
       public int executeHook(JSONObject data) {
         return 0;
       }
     };
   }
+  /** Get priority returns default value. */
 
   @Test
   public void testGetPriorityReturnsDefaultValue() {
     assertEquals(100, hook.getPriority());
   }
+  /**
+   * Get priority returns modified value.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetPriorityReturnsModifiedValue() throws Exception {
@@ -48,6 +56,7 @@ public class AddMultiplePaymentsProcessAfterProcessHookTest {
 
     assertEquals(50, hook.getPriority());
   }
+  /** Default priority is one hundred. */
 
   @Test
   public void testDefaultPriorityIsOneHundred() {
@@ -59,10 +68,12 @@ public class AddMultiplePaymentsProcessAfterProcessHookTest {
     // This confirms that the default value 100 comes from the field initializer
     assertEquals(0, uninitializedHook.getPriority());
   }
+  /** Execute hook can return custom value. */
 
   @Test
   public void testExecuteHookCanReturnCustomValue() {
     AddMultiplePaymentsProcessAfterProcessHook customHook = new AddMultiplePaymentsProcessAfterProcessHook() {
+      /** Execute hook. */
       @Override
       public int executeHook(JSONObject data) {
         return 42;
@@ -71,11 +82,16 @@ public class AddMultiplePaymentsProcessAfterProcessHookTest {
 
     assertEquals(42, customHook.executeHook(null));
   }
+  /**
+   * Execute hook receives json data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookReceivesJsonData() throws Exception {
     final JSONObject[] capturedData = new JSONObject[1];
     AddMultiplePaymentsProcessAfterProcessHook capturingHook = new AddMultiplePaymentsProcessAfterProcessHook() {
+      /** Execute hook. */
       @Override
       public int executeHook(JSONObject data) {
         capturedData[0] = data;
@@ -92,6 +108,7 @@ public class AddMultiplePaymentsProcessAfterProcessHookTest {
 
   // Concrete subclass for Objenesis testing
   static class ConcreteHook extends AddMultiplePaymentsProcessAfterProcessHook {
+    /** Execute hook. */
     @Override
     public int executeHook(JSONObject data) {
       return 0;

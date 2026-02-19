@@ -11,6 +11,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_Payment;
 /**
  * Tests for APRM_MatchingUtility.
  */
+@SuppressWarnings({"java:S101", "java:S112"})
 @RunWith(MockitoJUnitRunner.class)
 public class APRM_MatchingUtilityTest {
 
@@ -43,6 +45,7 @@ public class APRM_MatchingUtilityTest {
 
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -51,6 +54,7 @@ public class APRM_MatchingUtilityTest {
 
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -61,6 +65,7 @@ public class APRM_MatchingUtilityTest {
       obContextStatic.close();
     }
   }
+  /** Fix mixed line receipt sets deposit not cleared. */
 
   @Test
   public void testFixMixedLineReceiptSetsDepositNotCleared() {
@@ -77,6 +82,7 @@ public class APRM_MatchingUtilityTest {
     verify(mixedLine).setReconciliation(null);
     verify(mockOBDal).save(mixedLine);
   }
+  /** Fix mixed line withdrawal sets withdrawal not cleared. */
 
   @Test
   public void testFixMixedLineWithdrawalSetsWithdrawalNotCleared() {
@@ -93,6 +99,7 @@ public class APRM_MatchingUtilityTest {
     verify(mixedLine).setReconciliation(null);
     verify(mockOBDal).save(mixedLine);
   }
+  /** Fix mixed line receipt with payment updates payment status. */
 
   @Test
   public void testFixMixedLineReceiptWithPaymentUpdatesPaymentStatus() {
@@ -111,6 +118,7 @@ public class APRM_MatchingUtilityTest {
     verify(mockOBDal).save(mixedLine);
     verify(mockOBDal).save(payment);
   }
+  /** Fix mixed line withdrawal with payment updates payment status. */
 
   @Test
   public void testFixMixedLineWithdrawalWithPaymentUpdatesPaymentStatus() {
@@ -127,6 +135,10 @@ public class APRM_MatchingUtilityTest {
     verify(mixedLine).setStatus(APRMConstants.PAYMENT_STATUS_WITHDRAWAL_NOT_CLEARED);
     verify(payment).setStatus(APRMConstants.PAYMENT_STATUS_WITHDRAWAL_NOT_CLEARED);
   }
+  /**
+   * Get matched document returns transaction when not created by algorithm.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetMatchedDocumentReturnsTransactionWhenNotCreatedByAlgorithm() throws Exception {
@@ -140,6 +152,10 @@ public class APRM_MatchingUtilityTest {
     // Assert
     assertEquals("T", result);
   }
+  /**
+   * Get matched document returns transaction when no payment.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetMatchedDocumentReturnsTransactionWhenNoPayment() throws Exception {
@@ -154,6 +170,10 @@ public class APRM_MatchingUtilityTest {
     // Assert
     assertEquals("T", result);
   }
+  /**
+   * Get matched document returns payment when payment not created by algorithm.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetMatchedDocumentReturnsPaymentWhenPaymentNotCreatedByAlgorithm()
@@ -172,7 +192,7 @@ public class APRM_MatchingUtilityTest {
     assertEquals("P", result);
   }
 
-  private String invokeGetMatchedDocument(FIN_FinaccTransaction transaction) throws Exception {
+  private String invokeGetMatchedDocument(FIN_FinaccTransaction transaction) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = APRM_MatchingUtility.class.getDeclaredMethod("getMatchedDocument",
         FIN_FinaccTransaction.class);
     method.setAccessible(true);

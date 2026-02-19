@@ -16,27 +16,32 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class DefaultBoxFilterProviderTest {
 
   private final DefaultBoxFilterProvider provider = new DefaultBoxFilterProvider();
+  /** Supports returns false. */
 
   @Test
   public void testSupportsReturnsFalse() {
     assertFalse(provider.supports("anyType"));
   }
+  /** Supports returns false for null. */
 
   @Test
   public void testSupportsReturnsFalseForNull() {
     assertFalse(provider.supports(null));
   }
+  /** Supports returns false for empty. */
 
   @Test
   public void testSupportsReturnsFalseForEmpty() {
     assertFalse(provider.supports(""));
   }
+  /** Get filter clause returns expected clause. */
 
   @Test
   public void testGetFilterClauseReturnsExpectedClause() {
     String result = provider.getFilterClause(new HashMap<>());
     assertEquals("and mgt.referencedInventory is null", result);
   }
+  /** Get filter clause returns expected clause with null map. */
 
   @Test
   public void testGetFilterClauseReturnsExpectedClauseWithNullMap() {

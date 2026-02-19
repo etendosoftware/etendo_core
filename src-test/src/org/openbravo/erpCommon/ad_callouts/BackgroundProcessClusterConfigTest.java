@@ -18,15 +18,21 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.erpCommon.utility.Utility;
+/** Tests for {@link BackgroundProcessClusterConfig}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BackgroundProcessClusterConfigTest {
+
+  private static final String SHOULD_RESCHEDULE_PROCESS_REQUESTS = "ShouldRescheduleProcessRequests";
+  private static final String ES_ES = "es_ES";
 
   private static final String TEST_LANGUAGE = "en_US";
   private static final String TEST_MESSAGE = "Please reschedule process requests";
 
   private BackgroundProcessClusterConfig instance;
   private MockedStatic<Utility> utilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -34,6 +40,7 @@ public class BackgroundProcessClusterConfigTest {
     instance = objenesis.newInstance(BackgroundProcessClusterConfig.class);
     utilityStatic = mockStatic(Utility.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -41,6 +48,10 @@ public class BackgroundProcessClusterConfigTest {
       utilityStatic.close();
     }
   }
+  /**
+   * Execute shows warning message.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteShowsWarningMessage() throws Exception {
@@ -50,7 +61,7 @@ public class BackgroundProcessClusterConfigTest {
     info.vars = vars;
     when(vars.getLanguage()).thenReturn(TEST_LANGUAGE);
     utilityStatic.when(() -> Utility.messageBD(any(BackgroundProcessClusterConfig.class),
-        eq("ShouldRescheduleProcessRequests"), eq(TEST_LANGUAGE)))
+        eq(SHOULD_RESCHEDULE_PROCESS_REQUESTS), eq(TEST_LANGUAGE)))
         .thenReturn(TEST_MESSAGE);
 
     // Act
@@ -62,6 +73,10 @@ public class BackgroundProcessClusterConfigTest {
     // Assert
     verify(info).showWarning(TEST_MESSAGE);
   }
+  /**
+   * Execute calls utility message bd.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteCallsUtilityMessageBD() throws Exception {
@@ -69,9 +84,9 @@ public class BackgroundProcessClusterConfigTest {
     SimpleCallout.CalloutInfo info = mock(SimpleCallout.CalloutInfo.class);
     VariablesSecureApp vars = mock(VariablesSecureApp.class);
     info.vars = vars;
-    when(vars.getLanguage()).thenReturn("es_ES");
+    when(vars.getLanguage()).thenReturn(ES_ES);
     utilityStatic.when(() -> Utility.messageBD(any(BackgroundProcessClusterConfig.class),
-        eq("ShouldRescheduleProcessRequests"), eq("es_ES")))
+        eq(SHOULD_RESCHEDULE_PROCESS_REQUESTS), eq(ES_ES)))
         .thenReturn("Mensaje de prueba");
 
     // Act
@@ -82,6 +97,6 @@ public class BackgroundProcessClusterConfigTest {
 
     // Assert
     utilityStatic.verify(() -> Utility.messageBD(any(BackgroundProcessClusterConfig.class),
-        eq("ShouldRescheduleProcessRequests"), eq("es_ES")));
+        eq(SHOULD_RESCHEDULE_PROCESS_REQUESTS), eq(ES_ES)));
   }
 }

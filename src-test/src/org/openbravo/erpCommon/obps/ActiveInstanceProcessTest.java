@@ -60,8 +60,18 @@ import org.openbravo.model.common.enterprise.Organization;
  * be fully mocked before class loading. Tests focus on static methods and the
  * private send() method via reflection.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class ActiveInstanceProcessTest {
+
+  private static final String VALUE = "value";
+  private static final String SYS123 = "SYS123";
+  private static final String DB456 = "DB456";
+  private static final String VAL_00_11_22_33_44_55 = "00:11:22:33:44:55";
+  private static final String VAL_1_0_0 = "1.0.0";
+  private static final String PUBLIC_KEY123 = "publicKey123";
+  private static final String SUCCESS = "@Success@";
+  private static final String INST123 = "inst123";
 
   @Mock
   private OBDal obDal;
@@ -80,6 +90,7 @@ public class ActiveInstanceProcessTest {
 
   @Mock
   private Organization organization;
+  /** Update show production fields with value y creates new preference. */
 
   @Test
   public void testUpdateShowProductionFieldsWithValueYCreatesNewPreference() {
@@ -96,7 +107,7 @@ public class ActiveInstanceProcessTest {
 
       when(obDal.getSession()).thenReturn(session);
       when(session.createQuery(anyString())).thenReturn(updateQuery);
-      when(updateQuery.setParameter(eq("value"), eq("Y"))).thenReturn(updateQuery);
+      when(updateQuery.setParameter(eq(VALUE), eq("Y"))).thenReturn(updateQuery);
       when(updateQuery.executeUpdate()).thenReturn(0); // No rows updated
       when(obProvider.get(Preference.class)).thenReturn(pref);
 
@@ -111,6 +122,7 @@ public class ActiveInstanceProcessTest {
       verify(obDal).save(pref);
     }
   }
+  /** Update show production fields with value y and rows updated. */
 
   @Test
   public void testUpdateShowProductionFieldsWithValueYAndRowsUpdated() {
@@ -126,7 +138,7 @@ public class ActiveInstanceProcessTest {
 
       when(obDal.getSession()).thenReturn(session);
       when(session.createQuery(anyString())).thenReturn(updateQuery);
-      when(updateQuery.setParameter(eq("value"), eq("Y"))).thenReturn(updateQuery);
+      when(updateQuery.setParameter(eq(VALUE), eq("Y"))).thenReturn(updateQuery);
       when(updateQuery.executeUpdate()).thenReturn(1); // One row updated
 
       // Act
@@ -137,6 +149,7 @@ public class ActiveInstanceProcessTest {
       verify(obProvider, never()).get(Preference.class);
     }
   }
+  /** Update show production fields with value n. */
 
   @Test
   public void testUpdateShowProductionFieldsWithValueN() {
@@ -152,7 +165,7 @@ public class ActiveInstanceProcessTest {
 
       when(obDal.getSession()).thenReturn(session);
       when(session.createQuery(anyString())).thenReturn(updateQuery);
-      when(updateQuery.setParameter(eq("value"), eq("N"))).thenReturn(updateQuery);
+      when(updateQuery.setParameter(eq(VALUE), eq("N"))).thenReturn(updateQuery);
       when(updateQuery.executeUpdate()).thenReturn(0);
 
       // Act
@@ -164,6 +177,7 @@ public class ActiveInstanceProcessTest {
       verify(obProvider, never()).get(Preference.class);
     }
   }
+  /** Update show production fields with value n and rows updated. */
 
   @Test
   public void testUpdateShowProductionFieldsWithValueNAndRowsUpdated() {
@@ -177,7 +191,7 @@ public class ActiveInstanceProcessTest {
 
       when(obDal.getSession()).thenReturn(session);
       when(session.createQuery(anyString())).thenReturn(updateQuery);
-      when(updateQuery.setParameter(eq("value"), eq("N"))).thenReturn(updateQuery);
+      when(updateQuery.setParameter(eq(VALUE), eq("N"))).thenReturn(updateQuery);
       when(updateQuery.executeUpdate()).thenReturn(5); // Multiple rows updated
 
       // Act
@@ -187,6 +201,10 @@ public class ActiveInstanceProcessTest {
       verify(updateQuery).executeUpdate();
     }
   }
+  /**
+   * Insert dummy hb log.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDummyHBLog() throws Exception {
@@ -199,9 +217,9 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       obProviderStatic.when(OBProvider::getInstance).thenReturn(obProvider);
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       when(obProvider.get(HeartbeatLog.class)).thenReturn(hbLog);
       when(obDal.get(Client.class, "0")).thenReturn(client);
@@ -214,12 +232,16 @@ public class ActiveInstanceProcessTest {
       verify(obProvider).get(HeartbeatLog.class);
       verify(hbLog).setClient(client);
       verify(hbLog).setOrganization(organization);
-      verify(hbLog).setSystemIdentifier("SYS123");
-      verify(hbLog).setDatabaseIdentifier("DB456");
-      verify(hbLog).setMacIdentifier("00:11:22:33:44:55");
+      verify(hbLog).setSystemIdentifier(SYS123);
+      verify(hbLog).setDatabaseIdentifier(DB456);
+      verify(hbLog).setMacIdentifier(VAL_00_11_22_33_44_55);
       verify(obDal).save(hbLog);
     }
   }
+  /**
+   * Insert dummy hb log with empty identifiers.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDummyHBLogWithEmptyIdentifiers() throws Exception {
@@ -250,6 +272,10 @@ public class ActiveInstanceProcessTest {
       verify(obDal).save(hbLog);
     }
   }
+  /**
+   * Send method successful response.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodSuccessfulResponse() throws Exception {
@@ -263,11 +289,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@Success@\nactivationKeyValue");
@@ -278,15 +304,19 @@ public class ActiveInstanceProcessTest {
 
       // Act
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "P", "instanceNo456", true, null);
+          activeInstanceProcess, PUBLIC_KEY123, "P", "instanceNo456", true, null);
 
       // Assert
       assertNotNull(result);
       assertEquals(2, result.length);
-      assertEquals("@Success@", result[0]);
+      assertEquals(SUCCESS, result[0]);
       assertEquals("activationKeyValue", result[1]);
     }
   }
+  /**
+   * Send method with cancellation.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithCancellation() throws Exception {
@@ -300,11 +330,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@Success@\ncancelledKey");
@@ -315,14 +345,18 @@ public class ActiveInstanceProcessTest {
 
       // Act - activate=false means cancel
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "E", null, false, null);
+          activeInstanceProcess, PUBLIC_KEY123, "E", null, false, null);
 
       // Assert
       assertNotNull(result);
       assertEquals(2, result.length);
-      assertEquals("@Success@", result[0]);
+      assertEquals(SUCCESS, result[0]);
     }
   }
+  /**
+   * Send method with connection exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithConnectionException() throws Exception {
@@ -336,11 +370,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenThrow(new RuntimeException("Connection failed"));
@@ -351,7 +385,7 @@ public class ActiveInstanceProcessTest {
 
       // Act
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "P", "instanceNo456", true, null);
+          activeInstanceProcess, PUBLIC_KEY123, "P", "instanceNo456", true, null);
 
       // Assert
       assertNotNull(result);
@@ -360,6 +394,10 @@ public class ActiveInstanceProcessTest {
       assertEquals("", result[1]);
     }
   }
+  /**
+   * Send method with updated parameter.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithUpdatedParameter() throws Exception {
@@ -375,9 +413,9 @@ public class ActiveInstanceProcessTest {
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
       when(coreModule.getVersion()).thenReturn("2.0.0");
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@NoChange@\n");
@@ -388,13 +426,17 @@ public class ActiveInstanceProcessTest {
 
       // Act
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "P", "inst789", true, "2024-01-01T00:00:00");
+          activeInstanceProcess, PUBLIC_KEY123, "P", "inst789", true, "2024-01-01T00:00:00");
 
       // Assert
       assertNotNull(result);
       assertEquals("@NoChange@", result[0]);
     }
   }
+  /**
+   * Send method with empty instance no.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithEmptyInstanceNo() throws Exception {
@@ -408,11 +450,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@Success@\nnewActivationKey");
@@ -423,14 +465,18 @@ public class ActiveInstanceProcessTest {
 
       // Act - empty string instanceNo should be treated like null
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "E", "", true, null);
+          activeInstanceProcess, PUBLIC_KEY123, "E", "", true, null);
 
       // Assert
       assertNotNull(result);
       assertEquals(2, result.length);
-      assertEquals("@Success@", result[0]);
+      assertEquals(SUCCESS, result[0]);
     }
   }
+  /**
+   * Send method with null instance no.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithNullInstanceNo() throws Exception {
@@ -444,11 +490,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@Success@\nnewActivationKey");
@@ -459,15 +505,19 @@ public class ActiveInstanceProcessTest {
 
       // Act
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "P", null, true, null);
+          activeInstanceProcess, PUBLIC_KEY123, "P", null, true, null);
 
       // Assert
       assertNotNull(result);
       assertEquals(2, result.length);
-      assertEquals("@Success@", result[0]);
+      assertEquals(SUCCESS, result[0]);
       assertEquals("newActivationKey", result[1]);
     }
   }
+  /**
+   * Send method with evaluation purpose.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithEvaluationPurpose() throws Exception {
@@ -481,11 +531,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@Success@\nevaluationKey");
@@ -496,15 +546,19 @@ public class ActiveInstanceProcessTest {
 
       // Act - "E" for evaluation purpose
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "E", "inst123", true, null);
+          activeInstanceProcess, PUBLIC_KEY123, "E", INST123, true, null);
 
       // Assert
       assertNotNull(result);
       assertEquals(2, result.length);
-      assertEquals("@Success@", result[0]);
+      assertEquals(SUCCESS, result[0]);
       assertEquals("evaluationKey", result[1]);
     }
   }
+  /**
+   * Send method with error response.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithErrorResponse() throws Exception {
@@ -518,11 +572,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@Error@\nInvalid public key");
@@ -533,7 +587,7 @@ public class ActiveInstanceProcessTest {
 
       // Act
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "invalidKey", "P", "inst123", true, null);
+          activeInstanceProcess, "invalidKey", "P", INST123, true, null);
 
       // Assert
       assertNotNull(result);
@@ -542,6 +596,10 @@ public class ActiveInstanceProcessTest {
       assertEquals("Invalid public key", result[1]);
     }
   }
+  /**
+   * Set modules as not in development not in web container.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetModulesAsNotInDevelopmentNotInWebContainer() throws Exception {
@@ -573,6 +631,7 @@ public class ActiveInstanceProcessTest {
       verify(updateQuery).executeUpdate();
     }
   }
+  /** Update show production fields query structure. */
 
   @Test
   public void testUpdateShowProductionFieldsQueryStructure() {
@@ -586,7 +645,7 @@ public class ActiveInstanceProcessTest {
 
       when(obDal.getSession()).thenReturn(session);
       when(session.createQuery(anyString())).thenReturn(updateQuery);
-      when(updateQuery.setParameter(eq("value"), anyString())).thenReturn(updateQuery);
+      when(updateQuery.setParameter(eq(VALUE), anyString())).thenReturn(updateQuery);
       when(updateQuery.executeUpdate()).thenReturn(1);
 
       // Act
@@ -597,6 +656,10 @@ public class ActiveInstanceProcessTest {
           "update ADPreference set searchKey = :value where property = 'showMRPandProductionFields' and module.id is null");
     }
   }
+  /**
+   * Send method with special characters in public key.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithSpecialCharactersInPublicKey() throws Exception {
@@ -610,11 +673,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
       systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS+123=");
       systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB/456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
           .thenReturn("@Success@\nencodedKey");
@@ -625,14 +688,18 @@ public class ActiveInstanceProcessTest {
 
       // Act - public key with special characters that need URL encoding
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey+with/special=chars", "P", "inst123", true, null);
+          activeInstanceProcess, "publicKey+with/special=chars", "P", INST123, true, null);
 
       // Assert
       assertNotNull(result);
       assertEquals(2, result.length);
-      assertEquals("@Success@", result[0]);
+      assertEquals(SUCCESS, result[0]);
     }
   }
+  /**
+   * Send method with single line response.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSendMethodWithSingleLineResponse() throws Exception {
@@ -646,11 +713,11 @@ public class ActiveInstanceProcessTest {
 
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(Module.class, "0")).thenReturn(coreModule);
-      when(coreModule.getVersion()).thenReturn("1.0.0");
+      when(coreModule.getVersion()).thenReturn(VAL_1_0_0);
 
-      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn("SYS123");
-      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn("DB456");
-      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn("00:11:22:33:44:55");
+      systemInfoStatic.when(SystemInfo::getSystemIdentifier).thenReturn(SYS123);
+      systemInfoStatic.when(SystemInfo::getDBIdentifier).thenReturn(DB456);
+      systemInfoStatic.when(SystemInfo::getMacAddress).thenReturn(VAL_00_11_22_33_44_55);
 
       // Response with only one line (no newline)
       httpsUtilsStatic.when(() -> HttpsUtils.sendSecure(any(URL.class), anyString()))
@@ -662,7 +729,7 @@ public class ActiveInstanceProcessTest {
 
       // Act
       String[] result = (String[]) sendMethod.invoke(
-          activeInstanceProcess, "publicKey123", "P", "inst123", true, null);
+          activeInstanceProcess, PUBLIC_KEY123, "P", INST123, true, null);
 
       // Assert
       assertNotNull(result);

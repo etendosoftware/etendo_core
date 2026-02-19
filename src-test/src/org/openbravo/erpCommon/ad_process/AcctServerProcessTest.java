@@ -61,8 +61,12 @@ import org.openbravo.scheduling.ProcessLogger;
  * Tests the accounting server process execution including handling of
  * system client vs regular client processing and different execution channels.
  */
+@SuppressWarnings({"java:S120", "java:S112"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AcctServerProcessTest {
+
+  private static final String CREATED_0 = "Created=0";
+  private static final String AD_TABLE_ID = "AD_Table_ID";
 
   private static final String SYSTEM_CLIENT_ID = "0";
   private static final String NON_SYSTEM_CLIENT_ID = "1000000";
@@ -109,6 +113,7 @@ public class AcctServerProcessTest {
   /**
    * Sets up the test environment before each test.
    * Initializes the AcctServerProcess instance and configures mocks.
+    * @throws Exception if an error occurs
    */
   @Before
   public void setUp() throws Exception {
@@ -116,8 +121,8 @@ public class AcctServerProcessTest {
     acctServerProcess = spy(objenesis.newInstance(AcctServerProcess.class));
 
     // Initialize fields via reflection
-    setPrivateField(acctServerProcess, "lastLog", new StringBuffer());
-    setPrivateField(acctServerProcess, "message", new StringBuffer());
+    setPrivateField(acctServerProcess, "lastLog", new StringBuilder());
+    setPrivateField(acctServerProcess, "message", new StringBuilder());
 
     obDalStatic = mockStatic(OBDal.class);
     acctServerProcessDataStatic = mockStatic(AcctServerProcessData.class);
@@ -146,6 +151,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute with a non-system client.
    * Verifies that processClient is called once for a regular client.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithNonSystemClient() throws Exception {
@@ -175,6 +181,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute with system client (client ID = "0").
    * Verifies that it iterates through all non-system clients.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithSystemClient() throws Exception {
@@ -214,6 +221,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute when running in DIRECT channel mode.
    * Verifies that direct mode specific parameters are retrieved.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithDirectChannel() throws Exception {
@@ -258,6 +266,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute when a specific table is selected for DIRECT channel.
    * Verifies that only that table is processed.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithSpecificTable() throws Exception {
@@ -301,7 +310,7 @@ public class AcctServerProcessTest {
         .thenReturn(mockAcctServer);
 
     when(mockAcctServer.checkDocuments(anyString(), anyString())).thenReturn(false);
-    when(mockAcctServer.getInfo(anyString())).thenReturn("Created=0");
+    when(mockAcctServer.getInfo(anyString())).thenReturn(CREATED_0);
 
     // Act
     acctServerProcess.doExecute(mockBundle);
@@ -316,6 +325,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute when AcctServer.get returns null.
    * Verifies that processing continues without error.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWhenAcctServerIsNull() throws Exception {
@@ -365,6 +375,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute when useRequestProcessOrg preference is enabled.
    * Verifies that the organization from vars is used.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithUseRequestProcessOrgPreference() throws Exception {
@@ -396,6 +407,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute with client "0" (system) but organization non-zero.
    * Verifies correct table selection query is used.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithSystemClientContextButNonZeroOrg() throws Exception {
@@ -426,6 +438,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute with client "0" and organization "0".
    * Verifies that selectAcctTable without parameters is used.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithZeroClientAndOrg() throws Exception {
@@ -454,6 +467,7 @@ public class AcctServerProcessTest {
   /**
    * Tests that checkDocuments loop processes documents correctly.
    * Verifies that run is called when documents are available.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithDocumentsToProcess() throws Exception {
@@ -488,7 +502,7 @@ public class AcctServerProcessTest {
         .thenReturn(true)
         .thenReturn(false);
     when(mockAcctServer.getInfo(anyString())).thenReturn("Created=1");
-    setPublicField(mockAcctServer, "AD_Table_ID", TEST_TABLE_ID);
+    setPublicField(mockAcctServer, AD_TABLE_ID, TEST_TABLE_ID);
 
     // Act
     acctServerProcess.doExecute(mockBundle);
@@ -501,6 +515,7 @@ public class AcctServerProcessTest {
   /**
    * Tests the addLog private method via reflection.
    * Verifies that messages are logged correctly in background mode.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testAddLogInBackgroundMode() throws Exception {
@@ -516,13 +531,14 @@ public class AcctServerProcessTest {
     // Assert
     verify(mockLogger).log("Test message\n");
 
-    StringBuffer message = (StringBuffer) getPrivateField(acctServerProcess, "message");
+    StringBuilder message = (StringBuilder) getPrivateField(acctServerProcess, "message");
     assertNotNull(message);
   }
 
   /**
    * Tests the addLog private method in direct mode.
    * Verifies that HTML formatting is applied correctly.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testAddLogInDirectMode() throws Exception {
@@ -538,7 +554,7 @@ public class AcctServerProcessTest {
     // Assert
     verify(mockLogger).log("Test message\n");
 
-    StringBuffer lastLog = (StringBuffer) getPrivateField(acctServerProcess, "lastLog");
+    StringBuilder lastLog = (StringBuilder) getPrivateField(acctServerProcess, "lastLog");
     assertNotNull(lastLog);
     String logContent = lastLog.toString();
     assertNotNull(logContent);
@@ -547,6 +563,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute when vars is null and selectUserOrg returns empty array.
    * Verifies that appropriate error logging occurs.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testProcessClientWithNullVarsAndEmptyUserOrg() throws Exception {
@@ -589,6 +606,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute when multiple tables need to be processed.
    * Verifies that each table is processed independently.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithMultipleTables() throws Exception {
@@ -632,10 +650,10 @@ public class AcctServerProcessTest {
 
     when(mockAcctServer1.checkDocuments(anyString(), anyString())).thenReturn(false);
     when(mockAcctServer2.checkDocuments(anyString(), anyString())).thenReturn(false);
-    when(mockAcctServer1.getInfo(anyString())).thenReturn("Created=0");
-    when(mockAcctServer2.getInfo(anyString())).thenReturn("Created=0");
-    setPublicField(mockAcctServer1, "AD_Table_ID", tableId1);
-    setPublicField(mockAcctServer2, "AD_Table_ID", tableId2);
+    when(mockAcctServer1.getInfo(anyString())).thenReturn(CREATED_0);
+    when(mockAcctServer2.getInfo(anyString())).thenReturn(CREATED_0);
+    setPublicField(mockAcctServer1, AD_TABLE_ID, tableId1);
+    setPublicField(mockAcctServer2, AD_TABLE_ID, tableId2);
 
     // Act
     acctServerProcess.doExecute(mockBundle);
@@ -650,6 +668,7 @@ public class AcctServerProcessTest {
   /**
    * Tests doExecute when an exception occurs during acct table selection.
    * Verifies that the process returns early without throwing.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWhenSelectAcctTableThrowsException() throws Exception {
@@ -704,7 +723,7 @@ public class AcctServerProcessTest {
    * @param fieldName the name of the field
    * @param value the value to set
    */
-  private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+  private void setPrivateField(Object target, String fieldName, Object value) throws IllegalAccessException, NoSuchFieldException {
     Field field = target.getClass().getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);
@@ -717,7 +736,7 @@ public class AcctServerProcessTest {
    * @param fieldName the name of the field
    * @return the field value
    */
-  private Object getPrivateField(Object target, String fieldName) throws Exception {
+  private Object getPrivateField(Object target, String fieldName) throws IllegalAccessException, NoSuchFieldException {
     Field field = target.getClass().getDeclaredField(fieldName);
     field.setAccessible(true);
     return field.get(target);

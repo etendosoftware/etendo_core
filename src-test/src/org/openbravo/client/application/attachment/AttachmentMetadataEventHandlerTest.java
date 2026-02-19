@@ -4,7 +4,6 @@ package org.openbravo.client.application.attachment;
 // ModelProvider.getInstance().getEntity(Parameter.class) at class load time.
 // This causes ExceptionInInitializerError in test context since ModelProvider is not initialized.
 // The static field:
-//   private static Entity[] entities = { ModelProvider.getInstance().getEntity(Parameter.class) };
 // Cannot be bypassed with mockStatic since class loading happens before mock setup.
 
 // Reason: Static initializer calling runtime services (ModelProvider.getInstance())

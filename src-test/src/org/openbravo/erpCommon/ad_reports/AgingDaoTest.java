@@ -8,6 +8,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -25,10 +26,15 @@ import org.mockito.junit.MockitoJUnitRunner;
 /**
  * Tests for {@link AgingDao}.
  */
+@SuppressWarnings({"java:S107", "java:S120", "java:S112"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AgingDaoTest {
 
+  private static final String DD_MM_YYYY = "dd-MM-yyyy";
+  private static final String NETDUE = "NETDUE";
+
   private AgingDao dao;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -36,6 +42,10 @@ public class AgingDaoTest {
   }
 
   // --- convertToDate tests ---
+  /**
+   * Convert to date subtracts days.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertToDateSubtractsDays() throws Exception {
@@ -47,6 +57,10 @@ public class AgingDaoTest {
     Calendar expected = new GregorianCalendar(2026, Calendar.JANUARY, 21);
     assertEquals(expected.getTime(), result);
   }
+  /**
+   * Convert to date subtracts zero days.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertToDateSubtractsZeroDays() throws Exception {
@@ -57,6 +71,10 @@ public class AgingDaoTest {
 
     assertEquals(currentDate, result);
   }
+  /**
+   * Convert to date crosses month boundary.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertToDateCrossesMonthBoundary() throws Exception {
@@ -68,6 +86,10 @@ public class AgingDaoTest {
     Calendar expected = new GregorianCalendar(2026, Calendar.FEBRUARY, 23);
     assertEquals(expected.getTime(), result);
   }
+  /**
+   * Convert to date crosses year boundary.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertToDateCrossesYearBoundary() throws Exception {
@@ -79,6 +101,10 @@ public class AgingDaoTest {
     Calendar expected = new GregorianCalendar(2025, Calendar.DECEMBER, 26);
     assertEquals(expected.getTime(), result);
   }
+  /**
+   * Convert to date large number of days.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConvertToDateLargeNumberOfDays() throws Exception {
@@ -92,6 +118,10 @@ public class AgingDaoTest {
   }
 
   // --- calculatePercentage tests ---
+  /**
+   * Calculate percentage returns zero when doubtful is zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculatePercentageReturnsZeroWhenDoubtfulIsZero() throws Exception {
@@ -102,6 +132,10 @@ public class AgingDaoTest {
 
     assertEquals(0, BigDecimal.ZERO.compareTo(result));
   }
+  /**
+   * Calculate percentage fifty percent.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculatePercentageFiftyPercent() throws Exception {
@@ -112,6 +146,10 @@ public class AgingDaoTest {
 
     assertEquals(0, new BigDecimal("50.00000").compareTo(result));
   }
+  /**
+   * Calculate percentage hundred percent.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculatePercentageHundredPercent() throws Exception {
@@ -122,6 +160,10 @@ public class AgingDaoTest {
 
     assertEquals(0, new BigDecimal("100.00000").compareTo(result));
   }
+  /**
+   * Calculate percentage small fraction.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculatePercentageSmallFraction() throws Exception {
@@ -135,10 +177,14 @@ public class AgingDaoTest {
   }
 
   // --- insertData tests ---
+  /**
+   * Insert data basic fields.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDataBasicFields() throws Exception {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DD_MM_YYYY);
     Date date = new GregorianCalendar(2026, Calendar.JANUARY, 15).getTime();
     BigDecimal amount = new BigDecimal("100.50");
 
@@ -153,10 +199,14 @@ public class AgingDaoTest {
     assertEquals("Test Partner", result.get("BPARTNERNAME"));
     assertEquals("263", result.get("TABID"));
   }
+  /**
+   * Insert data amount is null when zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDataAmountIsNullWhenZero() throws Exception {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DD_MM_YYYY);
     Date date = new GregorianCalendar(2026, Calendar.JANUARY, 15).getTime();
 
     HashMap<String, String> result = invokeInsertData("INV002", "id456", date,
@@ -164,10 +214,14 @@ public class AgingDaoTest {
 
     assertNull(result.get("AMOUNT1"));
   }
+  /**
+   * Insert data amount stored in correct scope.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDataAmountStoredInCorrectScope() throws Exception {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DD_MM_YYYY);
     Date date = new GregorianCalendar(2026, Calendar.JANUARY, 15).getTime();
     BigDecimal amount = new BigDecimal("500");
 
@@ -177,10 +231,14 @@ public class AgingDaoTest {
     assertEquals("500", result.get("AMOUNT3"));
     assertNull(result.get("AMOUNT1"));
   }
+  /**
+   * Insert data credit mode does not set netdue.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDataCreditModeDoesNotSetNetdue() throws Exception {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DD_MM_YYYY);
     Date date = new GregorianCalendar(2026, Calendar.JANUARY, 15).getTime();
     BigDecimal amount = new BigDecimal("200");
 
@@ -188,26 +246,34 @@ public class AgingDaoTest {
         "bp004", "Partner 4", 6, "C4B6506838E14A349D6717D6856F1B56", dateFormat, true,
         BigDecimal.ZERO);
 
-    assertNull(result.get("NETDUE"));
+    assertNull(result.get(NETDUE));
     assertEquals("200", result.get("SHOW_NETDUE"));
   }
+  /**
+   * Insert data non credit mode sets netdue.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDataNonCreditModeSetsNetdue() throws Exception {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DD_MM_YYYY);
     Date date = new GregorianCalendar(2026, Calendar.JANUARY, 15).getTime();
     BigDecimal amount = new BigDecimal("300");
 
     HashMap<String, String> result = invokeInsertData("INV004", "inv456", date, amount,
         "bp005", "Partner 5", 2, "263", dateFormat, false, BigDecimal.ZERO);
 
-    assertEquals("300", result.get("NETDUE"));
+    assertEquals("300", result.get(NETDUE));
     assertEquals("300", result.get("SHOW_NETDUE"));
   }
+  /**
+   * Insert data with doubtful debt.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDataWithDoubtfulDebt() throws Exception {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DD_MM_YYYY);
     Date date = new GregorianCalendar(2026, Calendar.JANUARY, 15).getTime();
     BigDecimal amount = new BigDecimal("400");
     BigDecimal doubtfulDebt = new BigDecimal("100");
@@ -216,13 +282,17 @@ public class AgingDaoTest {
         "bp006", "Partner 6", 1, "263", dateFormat, false, doubtfulDebt);
 
     assertEquals("100", result.get("DOUBTFUL_DEBT"));
-    assertEquals("500", result.get("NETDUE"));
+    assertEquals("500", result.get(NETDUE));
     assertNotNull(result.get("PERCENTAGE"));
   }
+  /**
+   * Insert data doubtful debt null when zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testInsertDataDoubtfulDebtNullWhenZero() throws Exception {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(DD_MM_YYYY);
     Date date = new GregorianCalendar(2026, Calendar.JANUARY, 15).getTime();
     BigDecimal amount = new BigDecimal("400");
 
@@ -235,14 +305,14 @@ public class AgingDaoTest {
 
   // --- Helper methods ---
 
-  private Date invokeConvertToDate(Date currentDate, String strcolumn) throws Exception {
+  private Date invokeConvertToDate(Date currentDate, String strcolumn) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AgingDao.class.getDeclaredMethod("convertToDate", Date.class, String.class);
     method.setAccessible(true);
     return (Date) method.invoke(dao, currentDate, strcolumn);
   }
 
   private BigDecimal invokeCalculatePercentage(BigDecimal totalAmount, BigDecimal doubtfulDebt)
-      throws Exception {
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AgingDao.class.getDeclaredMethod("calculatePercentage", BigDecimal.class,
         BigDecimal.class);
     method.setAccessible(true);
@@ -252,7 +322,7 @@ public class AgingDaoTest {
   @SuppressWarnings("unchecked")
   private HashMap<String, String> invokeInsertData(String documentNo, String id, Date date,
       BigDecimal amount, String bpartnerId, String bpartnerName, int group, String tabId,
-      SimpleDateFormat dateFormat, boolean credits, BigDecimal doubtfulDebt) throws Exception {
+      SimpleDateFormat dateFormat, boolean credits, BigDecimal doubtfulDebt) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = AgingDao.class.getDeclaredMethod("insertData", String.class, String.class,
         Date.class, BigDecimal.class, String.class, String.class, int.class, String.class,
         SimpleDateFormat.class, boolean.class, BigDecimal.class);

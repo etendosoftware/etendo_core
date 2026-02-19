@@ -16,12 +16,14 @@ import org.openbravo.model.common.order.OrderLine;
 public class CreateInvoiceLinesFromOrderLinesTest {
 
   private CreateInvoiceLinesFromOrderLines handler;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
     handler = objenesis.newInstance(CreateInvoiceLinesFromOrderLines.class);
   }
+  /** Get from class returns order line class. */
 
   @Test
   public void testGetFromClassReturnsOrderLineClass() {

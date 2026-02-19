@@ -32,6 +32,7 @@ import org.openbravo.financial.ResetAccounting;
  * Many methods depend heavily on database calls, so we focus on
  * the resetAccounting method which has testable logic paths.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ActionButtonUtilityTest {
 
@@ -49,6 +50,7 @@ public class ActionButtonUtilityTest {
 
   private MockedStatic<ResetAccounting> resetAccountingStatic;
   private MockedStatic<Utility> utilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -57,12 +59,14 @@ public class ActionButtonUtilityTest {
     resetAccountingStatic = mockStatic(ResetAccounting.class);
     utilityStatic = mockStatic(Utility.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (resetAccountingStatic != null) resetAccountingStatic.close();
     if (utilityStatic != null) utilityStatic.close();
   }
+  /** Reset accounting success. */
 
   @Test
   public void testResetAccountingSuccess() {
@@ -93,6 +97,7 @@ public class ActionButtonUtilityTest {
     assertNotNull(result);
     assertEquals("SUCCESS", result.getType());
   }
+  /** Reset accounting ob exception sets error. */
 
   @Test
   public void testResetAccountingOBExceptionSetsError() {

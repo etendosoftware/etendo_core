@@ -26,16 +26,19 @@ public class DefaultSequenceGeneratorTest {
 
   @Mock
   private Sequence mockSequence;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     instance = new TestSequenceGenerator("testProperty");
   }
+  /** Get property value returns constructor value. */
 
   @Test
   public void testGetPropertyValueReturnsConstructorValue() {
     assertEquals("testProperty", instance.getPropertyValue());
   }
+  /** Initialize sets property value from annotation. */
 
   @Test
   public void testInitializeSetsPropertyValueFromAnnotation() {
@@ -48,21 +51,25 @@ public class DefaultSequenceGeneratorTest {
     // Assert
     assertEquals("annotatedProperty", instance.getPropertyValue());
   }
+  /** Get generation timing returns insert. */
 
   @Test
   public void testGetGenerationTimingReturnsInsert() {
     assertEquals(GenerationTiming.INSERT, instance.getGenerationTiming());
   }
+  /** Reference column in sql returns false. */
 
   @Test
   public void testReferenceColumnInSqlReturnsFalse() {
     assertFalse(instance.referenceColumnInSql());
   }
+  /** Get database generated referenced column value returns null. */
 
   @Test
   public void testGetDatabaseGeneratedReferencedColumnValueReturnsNull() {
     assertNull(instance.getDatabaseGeneratedReferencedColumnValue());
   }
+  /** Get value generator returns non null. */
 
   @Test
   public void testGetValueGeneratorReturnsNonNull() {
@@ -78,6 +85,7 @@ public class DefaultSequenceGeneratorTest {
     TestSequenceGenerator(String propertyValue) {
       super(propertyValue);
     }
+    /** Generate value. */
 
     @Override
     public String generateValue(Session session, Object owner) {

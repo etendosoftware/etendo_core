@@ -15,18 +15,23 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.PropertyException;
+/** Tests for {@link Filter}. */
 
 @RunWith(MockitoJUnitRunner.class)
 public class FilterTest {
 
+  private static final String DEFAULT_BATCH_SIZE = "DEFAULT_BATCH_SIZE";
+
   private Filter instance;
   private MockedStatic<Preferences> prefStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(Filter.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -34,17 +39,25 @@ public class FilterTest {
       prefStatic.close();
     }
   }
+  /**
+   * Get results returns null initially.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetResultsReturnsNullInitially() throws Exception {
     // currentResult is null before hasNext() is called
     assertNull(instance.getResults());
   }
+  /**
+   * Next page advances current page.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testNextPageAdvancesCurrentPage() throws Exception {
     // Set DEFAULT_BATCH_SIZE via static field
-    Field batchField = Filter.class.getDeclaredField("DEFAULT_BATCH_SIZE");
+    Field batchField = Filter.class.getDeclaredField(DEFAULT_BATCH_SIZE);
     batchField.setAccessible(true);
     batchField.set(null, 1000);
 
@@ -58,10 +71,14 @@ public class FilterTest {
     // currentPage should be 0 + 1000 + 1 = 1001
     assertEquals(1001, pageField.get(instance));
   }
+  /**
+   * Next page advances from non zero page.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testNextPageAdvancesFromNonZeroPage() throws Exception {
-    Field batchField = Filter.class.getDeclaredField("DEFAULT_BATCH_SIZE");
+    Field batchField = Filter.class.getDeclaredField(DEFAULT_BATCH_SIZE);
     batchField.setAccessible(true);
     batchField.set(null, 500);
 
@@ -74,6 +91,10 @@ public class FilterTest {
     // currentPage should be 100 + 500 + 1 = 601
     assertEquals(601, pageField.get(instance));
   }
+  /**
+   * Constructor sets entity and rsql.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConstructorSetsEntityAndRsql() throws Exception {
@@ -93,6 +114,10 @@ public class FilterTest {
     rsqlField.setAccessible(true);
     assertEquals("name==John", rsqlField.get(filter));
   }
+  /**
+   * Constructor with valid batch size.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConstructorWithValidBatchSize() throws Exception {
@@ -101,9 +126,8 @@ public class FilterTest {
         (String) null, null, null, null, null))
         .thenReturn("2000");
 
-    Filter filter = new Filter("Product", "active==true");
 
-    Field batchField = Filter.class.getDeclaredField("DEFAULT_BATCH_SIZE");
+    Field batchField = Filter.class.getDeclaredField(DEFAULT_BATCH_SIZE);
     batchField.setAccessible(true);
     assertEquals(2000, batchField.get(null));
 

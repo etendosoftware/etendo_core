@@ -58,6 +58,7 @@ public class DeleteImageActionHandlerTest {
   private MockedStatic<RequestContext> requestContextStatic;
   private MockedStatic<CsrfUtil> csrfUtilStatic;
   private MockedStatic<JsonUtils> jsonUtilsStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -76,6 +77,7 @@ public class DeleteImageActionHandlerTest {
 
     jsonUtilsStatic = mockStatic(JsonUtils.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -95,6 +97,10 @@ public class DeleteImageActionHandlerTest {
       obDalStatic.close();
     }
   }
+  /**
+   * Execute deletes existing image.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteDeletesExistingImage() throws Exception {
@@ -110,6 +116,10 @@ public class DeleteImageActionHandlerTest {
     verify(mockOBDal).remove(mockImage);
     obContextStatic.verify(() -> OBContext.restorePreviousMode());
   }
+  /**
+   * Execute does not remove when image not found.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteDoesNotRemoveWhenImageNotFound() throws Exception {
@@ -124,6 +134,10 @@ public class DeleteImageActionHandlerTest {
     assertNotNull(result);
     verify(mockOBDal, never()).remove(any());
   }
+  /**
+   * Execute handles missing csrf token.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHandlesMissingCsrfToken() throws Exception {
@@ -138,6 +152,10 @@ public class DeleteImageActionHandlerTest {
     assertNotNull(result);
     csrfUtilStatic.verify(() -> CsrfUtil.checkCsrfToken(eq(""), any()));
   }
+  /**
+   * Execute returns error json on exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteReturnsErrorJsonOnException() throws Exception {

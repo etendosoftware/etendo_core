@@ -24,12 +24,16 @@ import org.openbravo.service.db.DalConnectionProvider;
 /**
  * Unit tests for {@link APRMSQLFunctionRegister}.
  */
+@SuppressWarnings({"java:S112", "java:S1191"})
 @RunWith(MockitoJUnitRunner.class)
 public class APRMSQLFunctionRegisterTest {
 
   private APRMSQLFunctionRegister instance;
-  private MockedStatic<DalConnectionProvider> dalConnStatic;
   private String originalRDBMS;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -40,6 +44,10 @@ public class APRMSQLFunctionRegisterTest {
     rdbmsField.setAccessible(true);
     originalRDBMS = (String) rdbmsField.get(null);
   }
+  /**
+   * Tears down test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @After
   public void tearDown() throws Exception {
@@ -62,6 +70,10 @@ public class APRMSQLFunctionRegisterTest {
     long offset = unsafe.staticFieldOffset(rdbmsField);
     unsafe.putObject(base, offset, rdbms);
   }
+  /**
+   * Get sql functions returns expected functions.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSQLFunctionsReturnsExpectedFunctions() throws Exception {
@@ -74,6 +86,10 @@ public class APRMSQLFunctionRegisterTest {
     assertTrue(functions.containsKey("ad_message_get2"));
     assertTrue(functions.containsKey("hqlagg"));
   }
+  /**
+   * Get aggregation sql for oracle.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAggregationSQLForOracle() throws Exception {
@@ -85,6 +101,10 @@ public class APRMSQLFunctionRegisterTest {
 
     assertEquals("listagg(to_char(?1), ',') WITHIN GROUP (ORDER BY ?1)", result);
   }
+  /**
+   * Get aggregation sql for postgres.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAggregationSQLForPostgres() throws Exception {

@@ -31,6 +31,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.ArrayList;
+/** Tests for {@link BackgroundRunner}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BackgroundRunnerTest {
@@ -48,6 +49,7 @@ public class BackgroundRunnerTest {
   private ProcessLogger mockLogger;
 
   private MockedStatic<JobManager> jobManagerStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -55,6 +57,7 @@ public class BackgroundRunnerTest {
     instance = objenesis.newInstance(BackgroundRunner.class);
     jobManagerStatic = mockStatic(JobManager.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -62,6 +65,10 @@ public class BackgroundRunnerTest {
       jobManagerStatic.close();
     }
   }
+  /**
+   * Do execute runs job and saves results.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteRunsJobAndSavesResults() throws Exception {
@@ -96,6 +103,10 @@ public class BackgroundRunnerTest {
     jobManagerStatic.verify(() -> JobManager.runJobSynchronously(
         eq(TEST_JOB_ID), eq(TEST_REQUEST_ID), any(MutableBoolean.class), eq(false)));
   }
+  /**
+   * Kill sets stopped.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testKillSetsStopped() throws Exception {

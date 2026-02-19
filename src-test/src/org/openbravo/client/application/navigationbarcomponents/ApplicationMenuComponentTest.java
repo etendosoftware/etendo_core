@@ -35,6 +35,10 @@ public class ApplicationMenuComponentTest {
 
   @Mock
   private MenuOption rootMenuOption;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -45,12 +49,14 @@ public class ApplicationMenuComponentTest {
     menuManagerField.setAccessible(true);
     menuManagerField.set(component, menuManager);
   }
+  /** Get id returns application menu id. */
 
   @Test
   public void testGetIdReturnsApplicationMenuId() {
     String id = component.getId();
     assertEquals(ApplicationConstants.APPLICATION_MENU_ID, id);
   }
+  /** Get root menu options returns children from menu manager. */
 
   @Test
   public void testGetRootMenuOptionsReturnsChildrenFromMenuManager() {
@@ -65,6 +71,7 @@ public class ApplicationMenuComponentTest {
     assertEquals(1, result.size());
     assertEquals(rootMenuOption, result.get(0));
   }
+  /** Get root menu options returns empty list when no children. */
 
   @Test
   public void testGetRootMenuOptionsReturnsEmptyListWhenNoChildren() {

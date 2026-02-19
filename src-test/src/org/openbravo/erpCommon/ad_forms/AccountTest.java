@@ -28,6 +28,7 @@ import org.openbravo.database.ConnectionProvider;
 /**
  * Tests for {@link Account}.
  */
+@SuppressWarnings({"java:S100", "java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class AccountTest {
 
@@ -43,11 +44,13 @@ public class AccountTest {
   private ConnectionProvider mockConn;
 
   private MockedStatic<AccountData> accountDataStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     accountDataStatic = mockStatic(AccountData.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -55,6 +58,7 @@ public class AccountTest {
       accountDataStatic.close();
     }
   }
+  /** Default constructor initializes fields. */
 
   @Test
   public void testDefaultConstructorInitializesFields() {
@@ -88,6 +92,10 @@ public class AccountTest {
     assertEquals("", account.m_OldAccount_ID);
     assertEquals("Y", account.m_changed);
   }
+  /**
+   * Constructor with empty id returns early.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testConstructorWithEmptyIdReturnsEarly() throws ServletException {
@@ -96,6 +104,10 @@ public class AccountTest {
     assertEquals("", account.C_ValidCombination_ID);
     assertEquals("N", account.fullyQualified);
   }
+  /**
+   * Constructor with null id calls load.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testConstructorWithNullIdCallsLoad() throws ServletException {
@@ -107,6 +119,10 @@ public class AccountTest {
     assertEquals("", account.C_ValidCombination_ID);
     assertEquals("N", account.fullyQualified);
   }
+  /**
+   * Constructor with valid id calls load.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testConstructorWithValidIdCallsLoad() throws ServletException {
@@ -145,6 +161,10 @@ public class AccountTest {
     assertEquals(TEST_COMBO_ID, account.C_ValidCombination_ID);
     assertEquals("N", account.m_changed);
   }
+  /**
+   * Load with no data does not set fields.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testLoadWithNoDataDoesNotSetFields() throws ServletException {
@@ -157,6 +177,10 @@ public class AccountTest {
     assertEquals("", account.AD_Client_ID);
     assertEquals("Y", account.m_changed);
   }
+  /**
+   * Load rethrows servlet exception.
+   * @throws ServletException if an error occurs
+   */
 
   @Test(expected = ServletException.class)
   public void testLoadRethrowsServletException() throws ServletException {
@@ -166,6 +190,7 @@ public class AccountTest {
     Account account = new Account();
     account.load(null, mockConn, TEST_COMBO_ID);
   }
+  /** Is balance sheet with asset type. */
 
   @Test
   public void testIsBalanceSheetWithAssetType() {
@@ -173,6 +198,7 @@ public class AccountTest {
     account.m_AcctType = 'A';
     assertTrue(account.isBalanceSheet());
   }
+  /** Is balance sheet with liability type. */
 
   @Test
   public void testIsBalanceSheetWithLiabilityType() {
@@ -180,6 +206,7 @@ public class AccountTest {
     account.m_AcctType = 'L';
     assertTrue(account.isBalanceSheet());
   }
+  /** Is balance sheet with owner equity type. */
 
   @Test
   public void testIsBalanceSheetWithOwnerEquityType() {
@@ -187,6 +214,7 @@ public class AccountTest {
     account.m_AcctType = 'O';
     assertTrue(account.isBalanceSheet());
   }
+  /** Is balance sheet with revenue type. */
 
   @Test
   public void testIsBalanceSheetWithRevenueType() {
@@ -194,6 +222,7 @@ public class AccountTest {
     account.m_AcctType = 'R';
     assertFalse(account.isBalanceSheet());
   }
+  /** Is balance sheet with expense type. */
 
   @Test
   public void testIsBalanceSheetWithExpenseType() {
@@ -201,6 +230,7 @@ public class AccountTest {
     account.m_AcctType = 'E';
     assertFalse(account.isBalanceSheet());
   }
+  /** Get ad_org_id. */
 
   @Test
   public void testGetAD_Org_ID() {
@@ -208,6 +238,7 @@ public class AccountTest {
     account.AD_Org_ID = TEST_ORG_ID;
     assertEquals(TEST_ORG_ID, account.getAD_Org_ID());
   }
+  /** Get account_id. */
 
   @Test
   public void testGetAccount_ID() {
@@ -215,6 +246,10 @@ public class AccountTest {
     account.Account_ID = TEST_ACCOUNT_ID;
     assertEquals(TEST_ACCOUNT_ID, account.getAccount_ID());
   }
+  /**
+   * Get account static method.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testGetAccountStaticMethod() throws ServletException {
@@ -225,6 +260,10 @@ public class AccountTest {
 
     assertNotNull(account);
   }
+  /**
+   * Get default with mandatory elements.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDefaultWithMandatoryElements() throws Exception {
@@ -239,6 +278,10 @@ public class AccountTest {
     assertEquals(TEST_BPARTNER_ID, account.C_BPartner_ID);
     assertEquals(TEST_PRODUCT_ID, account.M_Product_ID);
   }
+  /**
+   * Get default with optional null skips non mandatory.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDefaultWithOptionalNullSkipsNonMandatory() throws Exception {
@@ -253,6 +296,10 @@ public class AccountTest {
     assertEquals("", account.C_BPartner_ID);
     assertEquals("", account.M_Product_ID);
   }
+  /**
+   * Get default with optional null false sets non mandatory.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDefaultWithOptionalNullFalseSetsNonMandatory() throws Exception {

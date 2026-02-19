@@ -35,6 +35,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_Payment;
  * Unit tests for AddOrderOrInvoiceFilterExpressionHandler.
  * Tests the concrete methods of the abstract class using a test subclass.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AddOrderOrInvoiceFilterExpressionHandlerTest {
 
@@ -55,6 +56,10 @@ public class AddOrderOrInvoiceFilterExpressionHandlerTest {
   private OBDal mockOBDal;
 
   private TestHandler handler;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -65,6 +70,7 @@ public class AddOrderOrInvoiceFilterExpressionHandlerTest {
     setField(handler, AddOrderOrInvoiceFilterExpressionHandler.class,
         "addPaymentDefaultValuesHandlers", addPaymentDefaultValuesHandlers);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -72,6 +78,7 @@ public class AddOrderOrInvoiceFilterExpressionHandlerTest {
       obDalStatic.close();
     }
   }
+  /** Get defaults handler returns single handler. */
 
   @Test
   public void testGetDefaultsHandlerReturnsSingleHandler() {
@@ -87,6 +94,7 @@ public class AddOrderOrInvoiceFilterExpressionHandlerTest {
 
     assertEquals(mockHandler, result);
   }
+  /** Get defaults handler returns null when no handlers. */
 
   @Test
   public void testGetDefaultsHandlerReturnsNullWhenNoHandlers() {
@@ -100,6 +108,7 @@ public class AddOrderOrInvoiceFilterExpressionHandlerTest {
 
     assertNull(result);
   }
+  /** Get defaults handler returns lowest seq handler. */
 
   @Test
   public void testGetDefaultsHandlerReturnsLowestSeqHandler() {
@@ -133,7 +142,7 @@ public class AddOrderOrInvoiceFilterExpressionHandlerTest {
   // --- Helper ---
 
   private void setField(Object target, Class<?> clazz, String fieldName, Object value)
-      throws Exception {
+      throws IllegalAccessException, NoSuchFieldException {
     Field field = clazz.getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);

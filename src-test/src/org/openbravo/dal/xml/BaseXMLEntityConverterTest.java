@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -29,8 +30,11 @@ import org.openbravo.model.common.enterprise.Organization;
 /**
  * Tests for {@link BaseXMLEntityConverter}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BaseXMLEntityConverterTest {
+
+  private static final String ERROR = "error";
 
   private BaseXMLEntityConverter instance;
 
@@ -42,6 +46,10 @@ public class BaseXMLEntityConverterTest {
 
   @Mock
   private Organization mockOrganization;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -52,6 +60,7 @@ public class BaseXMLEntityConverterTest {
     lenient().when(mockClient.getId()).thenReturn("TEST_CLIENT_ID");
     lenient().when(mockOrganization.getId()).thenReturn("TEST_ORG_ID");
   }
+  /** Get set client. */
 
   @Test
   public void testGetSetClient() {
@@ -59,6 +68,7 @@ public class BaseXMLEntityConverterTest {
     instance.setClient(client);
     assertEquals(client, instance.getClient());
   }
+  /** Get set organization. */
 
   @Test
   public void testGetSetOrganization() {
@@ -66,6 +76,7 @@ public class BaseXMLEntityConverterTest {
     instance.setOrganization(org);
     assertEquals(org, instance.getOrganization());
   }
+  /** Get set option client import. */
 
   @Test
   public void testGetSetOptionClientImport() {
@@ -73,6 +84,7 @@ public class BaseXMLEntityConverterTest {
     instance.setOptionClientImport(true);
     assertTrue(instance.isOptionClientImport());
   }
+  /** Get set option import audit info. */
 
   @Test
   public void testGetSetOptionImportAuditInfo() {
@@ -80,6 +92,7 @@ public class BaseXMLEntityConverterTest {
     instance.setOptionImportAuditInfo(true);
     assertTrue(instance.isOptionImportAuditInfo());
   }
+  /** Get set import processor. */
 
   @Test
   public void testGetSetImportProcessor() {
@@ -88,32 +101,41 @@ public class BaseXMLEntityConverterTest {
     instance.setImportProcessor(processor);
     assertEquals(processor, instance.getImportProcessor());
   }
+  /** Get entity resolver. */
 
   @Test
   public void testGetEntityResolver() {
     assertEquals(mockEntityResolver, instance.getEntityResolver());
   }
+  /** To insert and to update lists initially empty. */
 
   @Test
   public void testToInsertAndToUpdateListsInitiallyEmpty() {
     assertTrue(instance.getToInsert().isEmpty());
     assertTrue(instance.getToUpdate().isEmpty());
   }
+  /** Error messages null when empty. */
 
   @Test
   public void testErrorMessagesNullWhenEmpty() {
     assertNull(instance.getErrorMessages());
   }
+  /** Warning messages null when empty. */
 
   @Test
   public void testWarningMessagesNullWhenEmpty() {
     assertNull(instance.getWarningMessages());
   }
+  /** Log messages null when empty. */
 
   @Test
   public void testLogMessagesNullWhenEmpty() {
     assertNull(instance.getLogMessages());
   }
+  /**
+   * Warn adds warning message.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testWarnAddsWarningMessage() throws Exception {
@@ -123,6 +145,10 @@ public class BaseXMLEntityConverterTest {
     warnMethod.invoke(instance, "test warning");
     assertEquals("test warning", instance.getWarningMessages());
   }
+  /**
+   * Warn multiple messages joined by newline.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testWarnMultipleMessagesJoinedByNewline() throws Exception {
@@ -133,6 +159,10 @@ public class BaseXMLEntityConverterTest {
     warnMethod.invoke(instance, "warning 2");
     assertEquals("warning 1\nwarning 2", instance.getWarningMessages());
   }
+  /**
+   * Log adds log message.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testLogAddsLogMessage() throws Exception {
@@ -142,6 +172,10 @@ public class BaseXMLEntityConverterTest {
     logMethod.invoke(instance, "log entry");
     assertEquals("log entry", instance.getLogMessages());
   }
+  /**
+   * Log multiple messages joined by newline.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testLogMultipleMessagesJoinedByNewline() throws Exception {
@@ -152,15 +186,23 @@ public class BaseXMLEntityConverterTest {
     logMethod.invoke(instance, "log 2");
     assertEquals("log 1\nlog 2", instance.getLogMessages());
   }
+  /**
+   * Error adds error message.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testErrorAddsErrorMessage() throws Exception {
-    Method errorMethod = BaseXMLEntityConverter.class.getDeclaredMethod("error", String.class);
+    Method errorMethod = BaseXMLEntityConverter.class.getDeclaredMethod(ERROR, String.class);
     errorMethod.setAccessible(true);
 
     errorMethod.invoke(instance, "error message");
     assertEquals("error message", instance.getErrorMessages());
   }
+  /**
+   * Has error occured false initially.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testHasErrorOccuredFalseInitially() throws Exception {
@@ -169,10 +211,14 @@ public class BaseXMLEntityConverterTest {
 
     assertFalse((Boolean) method.invoke(instance));
   }
+  /**
+   * Has error occured true after error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testHasErrorOccuredTrueAfterError() throws Exception {
-    Method errorMethod = BaseXMLEntityConverter.class.getDeclaredMethod("error", String.class);
+    Method errorMethod = BaseXMLEntityConverter.class.getDeclaredMethod(ERROR, String.class);
     errorMethod.setAccessible(true);
     errorMethod.invoke(instance, "some error");
 
@@ -180,10 +226,16 @@ public class BaseXMLEntityConverterTest {
     hasErrorMethod.setAccessible(true);
     assertTrue((Boolean) hasErrorMethod.invoke(instance));
   }
+  /**
+   * Error throws after too many errors.
+   * @throws IllegalAccessException if an error occurs
+   * @throws InvocationTargetException if an error occurs
+   * @throws NoSuchMethodException if an error occurs
+   */
 
   @Test(expected = EntityXMLException.class)
-  public void testErrorThrowsAfterTooManyErrors() throws Exception {
-    Method errorMethod = BaseXMLEntityConverter.class.getDeclaredMethod("error", String.class);
+  public void testErrorThrowsAfterTooManyErrors() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    Method errorMethod = BaseXMLEntityConverter.class.getDeclaredMethod(ERROR, String.class);
     errorMethod.setAccessible(true);
 
     try {
@@ -197,6 +249,7 @@ public class BaseXMLEntityConverterTest {
       throw e;
     }
   }
+  /** Replace value returns new value when no processor. */
 
   @Test
   public void testReplaceValueReturnsNewValueWhenNoProcessor() {
@@ -215,6 +268,10 @@ public class BaseXMLEntityConverterTest {
       throw new RuntimeException(e);
     }
   }
+  /**
+   * Replace value delegates to processor when set.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testReplaceValueDelegatesToProcessorWhenSet() throws Exception {
@@ -232,6 +289,10 @@ public class BaseXMLEntityConverterTest {
     Object result = replaceValueMethod.invoke(instance, mockBob, mockProperty, "input");
     assertEquals("replaced", result);
   }
+  /**
+   * Resolve calls entity resolver.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testResolveCallsEntityResolver() throws Exception {
@@ -245,6 +306,10 @@ public class BaseXMLEntityConverterTest {
     Object result = resolveMethod.invoke(instance, "TestEntity", "ID001", false);
     assertEquals(mockBob, result);
   }
+  /**
+   * Warn different client org skips when client import.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testWarnDifferentClientOrgSkipsWhenClientImport() throws Exception {

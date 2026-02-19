@@ -22,12 +22,16 @@ import org.openbravo.client.kernel.BaseKernelServlet.KernelHttpServletResponse;
 @RunWith(MockitoJUnitRunner.class)
 public class BaseKernelServletTest {
 
+  private static final String HTTP_REDIRECT_EXAMPLE_COM = "http://redirect.example.com";
+  /** Redirect target is null by default. */
+
   @Test
   public void testRedirectTargetIsNullByDefault() {
     HttpServletResponse mockResponse = mock(HttpServletResponse.class);
     KernelHttpServletResponse wrapper = new KernelHttpServletResponse(mockResponse);
     assertNull(wrapper.getRedirectTarget());
   }
+  /** Do logout is false by default. */
 
   @Test
   public void testDoLogoutIsFalseByDefault() {
@@ -35,6 +39,7 @@ public class BaseKernelServletTest {
     KernelHttpServletResponse wrapper = new KernelHttpServletResponse(mockResponse);
     assertFalse(wrapper.isDoLogout());
   }
+  /** Set redirect target. */
 
   @Test
   public void testSetRedirectTarget() {
@@ -43,6 +48,7 @@ public class BaseKernelServletTest {
     wrapper.setRedirectTarget("http://example.com");
     assertEquals("http://example.com", wrapper.getRedirectTarget());
   }
+  /** Set do logout. */
 
   @Test
   public void testSetDoLogout() {
@@ -51,24 +57,33 @@ public class BaseKernelServletTest {
     wrapper.setDoLogout(true);
     assertTrue(wrapper.isDoLogout());
   }
+  /**
+   * Send redirect sets redirect target.
+   * @throws IOException if an error occurs
+   */
 
   @Test
   public void testSendRedirectSetsRedirectTarget() throws IOException {
     HttpServletResponse mockResponse = mock(HttpServletResponse.class);
     KernelHttpServletResponse wrapper = new KernelHttpServletResponse(mockResponse);
-    wrapper.sendRedirect("http://redirect.example.com");
-    assertEquals("http://redirect.example.com", wrapper.getRedirectTarget());
+    wrapper.sendRedirect(HTTP_REDIRECT_EXAMPLE_COM);
+    assertEquals(HTTP_REDIRECT_EXAMPLE_COM, wrapper.getRedirectTarget());
   }
+  /**
+   * Send redirect does not call super send redirect.
+   * @throws IOException if an error occurs
+   */
 
   @Test
   public void testSendRedirectDoesNotCallSuperSendRedirect() throws IOException {
     HttpServletResponse mockResponse = mock(HttpServletResponse.class);
     KernelHttpServletResponse wrapper = new KernelHttpServletResponse(mockResponse);
-    wrapper.sendRedirect("http://redirect.example.com");
+    wrapper.sendRedirect(HTTP_REDIRECT_EXAMPLE_COM);
     // The original response's sendRedirect should NOT be called
     // because KernelHttpServletResponse overrides it to just store the target
     verify(mockResponse, org.mockito.Mockito.never()).sendRedirect(org.mockito.ArgumentMatchers.anyString());
   }
+  /** Set do logout back to false. */
 
   @Test
   public void testSetDoLogoutBackToFalse() {

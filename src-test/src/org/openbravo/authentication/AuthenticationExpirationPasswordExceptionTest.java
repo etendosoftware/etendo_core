@@ -17,6 +17,7 @@ import org.openbravo.erpCommon.utility.OBError;
 public class AuthenticationExpirationPasswordExceptionTest {
 
   private static final String TEST_MESSAGE = "Password has expired";
+  /** Constructor with message. */
 
   @Test
   public void testConstructorWithMessage() {
@@ -26,6 +27,7 @@ public class AuthenticationExpirationPasswordExceptionTest {
     assertEquals(TEST_MESSAGE, exception.getMessage());
     assertNull(exception.getOBError());
   }
+  /** Constructor with message and ob error. */
 
   @Test
   public void testConstructorWithMessageAndOBError() {
@@ -39,6 +41,7 @@ public class AuthenticationExpirationPasswordExceptionTest {
     assertEquals(TEST_MESSAGE, exception.getMessage());
     assertSame(error, exception.getOBError());
   }
+  /** Constructor with message and cause. */
 
   @Test
   public void testConstructorWithMessageAndCause() {
@@ -51,6 +54,7 @@ public class AuthenticationExpirationPasswordExceptionTest {
     assertNotNull(exception.getCause());
     assertNull(exception.getOBError());
   }
+  /** Extends authentication exception. */
 
   @Test
   public void testExtendsAuthenticationException() {
@@ -59,6 +63,7 @@ public class AuthenticationExpirationPasswordExceptionTest {
 
     assertEquals(true, exception instanceof AuthenticationException);
   }
+  /** Constructor with ob error and password expiration. */
 
   @Test
   public void testConstructorWithOBErrorAndPasswordExpiration() {

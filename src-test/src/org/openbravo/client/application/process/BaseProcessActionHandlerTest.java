@@ -38,6 +38,11 @@ import org.openbravo.erpCommon.businessUtility.Preferences;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BaseProcessActionHandlerTest {
 
+  private static final String DO_REFRESH_PARENT = "doRefreshParent";
+  private static final String REFRESH_PARENT = "refreshParent";
+  private static final String OBUIAPP_PROCESS_FILE_UPLOAD_MAX_SIZE = "OBUIAPP_ProcessFileUploadMaxSize";
+  private static final String IS_FILE_SIZE_WITHIN_LIMIT = "isFileSizeWithinLimit";
+
   private static final long BYTES_IN_A_MEGABYTE = 1024L * 1024L;
 
   @Mock
@@ -53,6 +58,7 @@ public class BaseProcessActionHandlerTest {
   private MockedStatic<EntityAccessChecker> accessCheckerStatic;
 
   private ConcreteProcessActionHandler instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -67,6 +73,7 @@ public class BaseProcessActionHandlerTest {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(ConcreteProcessActionHandler.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -75,106 +82,138 @@ public class BaseProcessActionHandlerTest {
     if (preferencesStatic != null) preferencesStatic.close();
     if (accessCheckerStatic != null) accessCheckerStatic.close();
   }
+  /**
+   * Do refresh parent sets true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoRefreshParentSetsTrue() throws Exception {
     JSONObject result = new JSONObject();
 
-    Method method = BaseProcessActionHandler.class.getDeclaredMethod("doRefreshParent", JSONObject.class);
+    Method method = BaseProcessActionHandler.class.getDeclaredMethod(DO_REFRESH_PARENT, JSONObject.class);
     method.setAccessible(true);
 
     JSONObject updated = (JSONObject) method.invoke(instance, result);
-    assertTrue(updated.getBoolean("refreshParent"));
+    assertTrue(updated.getBoolean(REFRESH_PARENT));
   }
+  /**
+   * Do refresh parent preserves true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoRefreshParentPreservesTrue() throws Exception {
     JSONObject result = new JSONObject();
-    result.put("refreshParent", true);
+    result.put(REFRESH_PARENT, true);
 
-    Method method = BaseProcessActionHandler.class.getDeclaredMethod("doRefreshParent", JSONObject.class);
+    Method method = BaseProcessActionHandler.class.getDeclaredMethod(DO_REFRESH_PARENT, JSONObject.class);
     method.setAccessible(true);
 
     JSONObject updated = (JSONObject) method.invoke(instance, result);
-    assertTrue(updated.getBoolean("refreshParent"));
+    assertTrue(updated.getBoolean(REFRESH_PARENT));
   }
+  /**
+   * Do refresh parent when false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoRefreshParentWhenFalse() throws Exception {
     JSONObject result = new JSONObject();
-    result.put("refreshParent", false);
+    result.put(REFRESH_PARENT, false);
 
-    Method method = BaseProcessActionHandler.class.getDeclaredMethod("doRefreshParent", JSONObject.class);
+    Method method = BaseProcessActionHandler.class.getDeclaredMethod(DO_REFRESH_PARENT, JSONObject.class);
     method.setAccessible(true);
 
     JSONObject updated = (JSONObject) method.invoke(instance, result);
-    assertFalse(updated.getBoolean("refreshParent"));
+    assertFalse(updated.getBoolean(REFRESH_PARENT));
   }
+  /**
+   * Is file size within limit under limit.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsFileSizeWithinLimitUnderLimit() throws Exception {
     preferencesStatic.when(() -> Preferences.getPreferenceValue(
-        eq("OBUIAPP_ProcessFileUploadMaxSize"), eq(true), any(), any(), any(), any(), (String) any()))
+        eq(OBUIAPP_PROCESS_FILE_UPLOAD_MAX_SIZE), eq(true), any(), any(), any(), any(), (String) any()))
         .thenReturn("10");
 
     Map<String, Object> fileParam = new HashMap<>();
     fileParam.put("size", 5L * BYTES_IN_A_MEGABYTE);
 
-    Method method = BaseProcessActionHandler.class.getDeclaredMethod("isFileSizeWithinLimit", Map.class);
+    Method method = BaseProcessActionHandler.class.getDeclaredMethod(IS_FILE_SIZE_WITHIN_LIMIT, Map.class);
     method.setAccessible(true);
 
     boolean result = (boolean) method.invoke(instance, fileParam);
     assertTrue(result);
   }
+  /**
+   * Is file size within limit over limit.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsFileSizeWithinLimitOverLimit() throws Exception {
     preferencesStatic.when(() -> Preferences.getPreferenceValue(
-        eq("OBUIAPP_ProcessFileUploadMaxSize"), eq(true), any(), any(), any(), any(), (String) any()))
+        eq(OBUIAPP_PROCESS_FILE_UPLOAD_MAX_SIZE), eq(true), any(), any(), any(), any(), (String) any()))
         .thenReturn("10");
 
     Map<String, Object> fileParam = new HashMap<>();
     fileParam.put("size", 15L * BYTES_IN_A_MEGABYTE);
 
-    Method method = BaseProcessActionHandler.class.getDeclaredMethod("isFileSizeWithinLimit", Map.class);
+    Method method = BaseProcessActionHandler.class.getDeclaredMethod(IS_FILE_SIZE_WITHIN_LIMIT, Map.class);
     method.setAccessible(true);
 
     boolean result = (boolean) method.invoke(instance, fileParam);
     assertFalse(result);
   }
+  /**
+   * Is file size exactly at limit.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsFileSizeExactlyAtLimit() throws Exception {
     preferencesStatic.when(() -> Preferences.getPreferenceValue(
-        eq("OBUIAPP_ProcessFileUploadMaxSize"), eq(true), any(), any(), any(), any(), (String) any()))
+        eq(OBUIAPP_PROCESS_FILE_UPLOAD_MAX_SIZE), eq(true), any(), any(), any(), any(), (String) any()))
         .thenReturn("10");
 
     Map<String, Object> fileParam = new HashMap<>();
     fileParam.put("size", 10L * BYTES_IN_A_MEGABYTE);
 
-    Method method = BaseProcessActionHandler.class.getDeclaredMethod("isFileSizeWithinLimit", Map.class);
+    Method method = BaseProcessActionHandler.class.getDeclaredMethod(IS_FILE_SIZE_WITHIN_LIMIT, Map.class);
     method.setAccessible(true);
 
     boolean result = (boolean) method.invoke(instance, fileParam);
     assertTrue(result);
   }
+  /**
+   * Is file size within limit when preference throws.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsFileSizeWithinLimitWhenPreferenceThrows() throws Exception {
     preferencesStatic.when(() -> Preferences.getPreferenceValue(
-        eq("OBUIAPP_ProcessFileUploadMaxSize"), eq(true), any(), any(), any(), any(), (String) any()))
+        eq(OBUIAPP_PROCESS_FILE_UPLOAD_MAX_SIZE), eq(true), any(), any(), any(), any(), (String) any()))
         .thenThrow(new RuntimeException("No preference"));
 
     Map<String, Object> fileParam = new HashMap<>();
     fileParam.put("size", 5L * BYTES_IN_A_MEGABYTE);
 
-    Method method = BaseProcessActionHandler.class.getDeclaredMethod("isFileSizeWithinLimit", Map.class);
+    Method method = BaseProcessActionHandler.class.getDeclaredMethod(IS_FILE_SIZE_WITHIN_LIMIT, Map.class);
     method.setAccessible(true);
 
     // When preference throws, default max is "10", so 5MB should be within limit
     boolean result = (boolean) method.invoke(instance, fileParam);
     assertTrue(result);
   }
+  /**
+   * Get response builder returns non null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetResponseBuilderReturnsNonNull() throws Exception {
@@ -184,6 +223,7 @@ public class BaseProcessActionHandlerTest {
     Object builder = method.invoke(null);
     assertNotNull(builder);
   }
+  /** Bytes in megabyte constant. */
 
   @Test
   public void testBytesInMegabyteConstant() {

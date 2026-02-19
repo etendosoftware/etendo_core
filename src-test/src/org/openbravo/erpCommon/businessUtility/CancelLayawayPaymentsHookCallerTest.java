@@ -23,6 +23,7 @@ import org.openbravo.model.common.order.Order;
 /**
  * Tests for {@link CancelLayawayPaymentsHookCaller}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class CancelLayawayPaymentsHookCallerTest {
 
@@ -36,6 +37,10 @@ public class CancelLayawayPaymentsHookCallerTest {
 
   @Mock
   private Order mockInverseOrder;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -45,6 +50,10 @@ public class CancelLayawayPaymentsHookCallerTest {
     hookField.setAccessible(true);
     hookField.set(caller, mockHookInstance);
   }
+  /**
+   * Execute hook calls all registered hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookCallsAllRegisteredHooks() throws Exception {
@@ -58,6 +67,10 @@ public class CancelLayawayPaymentsHookCallerTest {
     verify(hook1).exec(mockJsonOrder, mockInverseOrder);
     verify(hook2).exec(mockJsonOrder, mockInverseOrder);
   }
+  /**
+   * Execute hook with no registered hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookWithNoRegisteredHooks() throws Exception {
@@ -68,6 +81,10 @@ public class CancelLayawayPaymentsHookCallerTest {
     caller.executeHook(mockJsonOrder, mockInverseOrder);
     // No exception should be thrown
   }
+  /**
+   * Execute hook calls single hook.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookCallsSingleHook() throws Exception {
@@ -79,6 +96,10 @@ public class CancelLayawayPaymentsHookCallerTest {
 
     verify(hook).exec(mockJsonOrder, mockInverseOrder);
   }
+  /**
+   * Execute hook propagates exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = Exception.class)
   public void testExecuteHookPropagatesException() throws Exception {

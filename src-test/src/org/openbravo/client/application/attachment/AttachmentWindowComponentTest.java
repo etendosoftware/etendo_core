@@ -27,8 +27,12 @@ import org.openbravo.model.ad.utility.AttachmentMethod;
 /**
  * Tests for {@link AttachmentWindowComponent}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AttachmentWindowComponentTest {
+
+  private static final String PARSE_VALIDATION = "parseValidation";
+  private static final String PARAM_X = "paramX";
 
   private static final String TEST_TAB_ID = "TAB001";
   private static final String TEST_ATT_METHOD_ID = "ATT001";
@@ -40,6 +44,10 @@ public class AttachmentWindowComponentTest {
 
   @Mock
   private AttachmentMethod mockAttMethod;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -53,6 +61,10 @@ public class AttachmentWindowComponentTest {
     setPrivateField(instance, "attMethod", mockAttMethod);
     setPrivateField(instance, "uniqueString", "12345");
   }
+  /**
+   * Get window client class name not in development.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetWindowClientClassNameNotInDevelopment() throws Exception {
@@ -72,6 +84,10 @@ public class AttachmentWindowComponentTest {
         + TEST_ATT_METHOD_ID;
     assertEquals(expected, result);
   }
+  /**
+   * Get window client class name in development.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetWindowClientClassNameInDevelopment() throws Exception {
@@ -91,6 +107,7 @@ public class AttachmentWindowComponentTest {
         + TEST_ATT_METHOD_ID + KernelConstants.ID_PREFIX + "12345";
     assertEquals(expected, result);
   }
+  /** Get attachment method id. */
 
   @Test
   public void testGetAttachmentMethodId() {
@@ -100,6 +117,7 @@ public class AttachmentWindowComponentTest {
     // Assert
     assertEquals(TEST_ATT_METHOD_ID, result);
   }
+  /** Get parent window. */
 
   @Test
   public void testGetParentWindow() {
@@ -113,6 +131,10 @@ public class AttachmentWindowComponentTest {
     // Assert
     assertEquals(mockWindow, result);
   }
+  /**
+   * Parse validation extracts columns.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testParseValidationExtractsColumns() throws Exception {
@@ -126,14 +148,18 @@ public class AttachmentWindowComponentTest {
     allParams.add("colB");
 
     // Act
-    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod("parseValidation",
+    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod(PARSE_VALIDATION,
         Validation.class, Map.class, List.class, String.class);
     parseValidation.setAccessible(true);
-    parseValidation.invoke(instance, validation, dynCols, allParams, "paramX");
+    parseValidation.invoke(instance, validation, dynCols, allParams, PARAM_X);
 
     // Assert - dynCols should have been populated
     assertNotNull(dynCols);
   }
+  /**
+   * Parse validation no quotes in code.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testParseValidationNoQuotesInCode() throws Exception {
@@ -145,14 +171,18 @@ public class AttachmentWindowComponentTest {
     List<String> allParams = new ArrayList<>();
 
     // Act
-    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod("parseValidation",
+    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod(PARSE_VALIDATION,
         Validation.class, Map.class, List.class, String.class);
     parseValidation.setAccessible(true);
-    parseValidation.invoke(instance, validation, dynCols, allParams, "paramX");
+    parseValidation.invoke(instance, validation, dynCols, allParams, PARAM_X);
 
     // Assert - no dynamic columns should have been added
     assertEquals(0, dynCols.size());
   }
+  /**
+   * Parse validation with double quotes.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testParseValidationWithDoubleQuotes() throws Exception {
@@ -166,16 +196,16 @@ public class AttachmentWindowComponentTest {
     allParams.add("colB");
 
     // Act
-    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod("parseValidation",
+    Method parseValidation = AttachmentWindowComponent.class.getDeclaredMethod(PARSE_VALIDATION,
         Validation.class, Map.class, List.class, String.class);
     parseValidation.setAccessible(true);
-    parseValidation.invoke(instance, validation, dynCols, allParams, "paramX");
+    parseValidation.invoke(instance, validation, dynCols, allParams, PARAM_X);
 
     // Assert
     assertNotNull(dynCols);
   }
 
-  private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+  private void setPrivateField(Object target, String fieldName, Object value) throws IllegalAccessException, NoSuchFieldException {
     Field field = target.getClass().getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);

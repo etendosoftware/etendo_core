@@ -17,15 +17,20 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class ConfigureOptionTest {
 
+  private static final String OPTION_B = "Option B";
+  private static final String MY_VALUE = "my-value";
+
   private ArrayList<String> options;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     options = new ArrayList<>();
     options.add("Option A");
-    options.add("Option B");
+    options.add(OPTION_B);
     options.add("Option C");
   }
+  /** Constructor sets defaults. */
 
   @Test
   public void testConstructorSetsDefaults() {
@@ -36,12 +41,14 @@ public class ConfigureOptionTest {
     assertEquals(ConfigureOption.TYPE_OPT_CHOOSE, option.getType());
     assertEquals("Pick one", option.getAskInfo());
   }
+  /** Get max returns options size. */
 
   @Test
   public void testGetMaxReturnsOptionsSize() {
     ConfigureOption option = new ConfigureOption(ConfigureOption.TYPE_OPT_CHOOSE, "Pick", options);
     assertEquals(3, option.getMax());
   }
+  /** Set chosen valid index. */
 
   @Test
   public void testSetChosenValidIndex() {
@@ -49,6 +56,7 @@ public class ConfigureOptionTest {
     assertTrue(option.setChosen(1));
     assertEquals(1, option.getChosen());
   }
+  /** Set chosen invalid negative index. */
 
   @Test
   public void testSetChosenInvalidNegativeIndex() {
@@ -56,6 +64,7 @@ public class ConfigureOptionTest {
     assertFalse(option.setChosen(-1));
     assertEquals(0, option.getChosen());
   }
+  /** Set chosen invalid high index. */
 
   @Test
   public void testSetChosenInvalidHighIndex() {
@@ -63,6 +72,7 @@ public class ConfigureOptionTest {
     assertFalse(option.setChosen(3));
     assertEquals(0, option.getChosen());
   }
+  /** Set chosen boundary zero. */
 
   @Test
   public void testSetChosenBoundaryZero() {
@@ -70,6 +80,7 @@ public class ConfigureOptionTest {
     assertTrue(option.setChosen(0));
     assertEquals(0, option.getChosen());
   }
+  /** Set chosen boundary max minus one. */
 
   @Test
   public void testSetChosenBoundaryMaxMinusOne() {
@@ -77,13 +88,15 @@ public class ConfigureOptionTest {
     assertTrue(option.setChosen(2));
     assertEquals(2, option.getChosen());
   }
+  /** Get chosen option for choose type. */
 
   @Test
   public void testGetChosenOptionForChooseType() {
     ConfigureOption option = new ConfigureOption(ConfigureOption.TYPE_OPT_CHOOSE, "Pick", options);
     option.setChosen(1);
-    assertEquals("Option B", option.getChosenOption());
+    assertEquals(OPTION_B, option.getChosenOption());
   }
+  /** Get chosen option for string type. */
 
   @Test
   public void testGetChosenOptionForStringType() {
@@ -92,14 +105,16 @@ public class ConfigureOptionTest {
     option.setChosenString("http://localhost:8080");
     assertEquals("http://localhost:8080", option.getChosenOption());
   }
+  /** Set chosen string updates chosen for choose type. */
 
   @Test
   public void testSetChosenStringUpdatesChosenForChooseType() {
     ConfigureOption option = new ConfigureOption(ConfigureOption.TYPE_OPT_CHOOSE, "Pick", options);
-    option.setChosenString("Option B");
+    option.setChosenString(OPTION_B);
     assertEquals(1, option.getChosen());
-    assertEquals("Option B", option.getChosenString());
+    assertEquals(OPTION_B, option.getChosenString());
   }
+  /** Set chosen string non matching does not update chosen. */
 
   @Test
   public void testSetChosenStringNonMatchingDoesNotUpdateChosen() {
@@ -108,21 +123,24 @@ public class ConfigureOptionTest {
     assertEquals(0, option.getChosen());
     assertEquals("NonExistent", option.getChosenString());
   }
+  /** Set chosen string for string type. */
 
   @Test
   public void testSetChosenStringForStringType() {
     ConfigureOption option = new ConfigureOption(ConfigureOption.TYPE_OPT_STRING, "Enter",
         new ArrayList<>());
-    option.setChosenString("my-value");
-    assertEquals("my-value", option.getChosenString());
-    assertEquals("my-value", option.getChosenOption());
+    option.setChosenString(MY_VALUE);
+    assertEquals(MY_VALUE, option.getChosenString());
+    assertEquals(MY_VALUE, option.getChosenOption());
   }
+  /** Get chosen option default is first option. */
 
   @Test
   public void testGetChosenOptionDefaultIsFirstOption() {
     ConfigureOption option = new ConfigureOption(ConfigureOption.TYPE_OPT_CHOOSE, "Pick", options);
     assertEquals("Option A", option.getChosenOption());
   }
+  /** Get max with empty options. */
 
   @Test
   public void testGetMaxWithEmptyOptions() {

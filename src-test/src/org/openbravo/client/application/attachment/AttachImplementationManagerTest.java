@@ -40,8 +40,12 @@ import org.openbravo.client.kernel.ComponentProvider;
 /**
  * Tests for AttachImplementationManager.
  */
+@SuppressWarnings({"java:S4042", "java:S899", "java:S112"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AttachImplementationManagerTest {
+
+  private static final String TEST_ATTACHMENT = "test-attachment-";
+  private static final String DELETE_TEMP_FILE = "deleteTempFile";
 
   private static MockedStatic<ModelProvider> modelProviderStatic;
 
@@ -52,6 +56,7 @@ public class AttachImplementationManagerTest {
 
   @Mock
   private ApplicationDictionaryCachedStructures adcs;
+  /** Sets up test fixtures. */
 
   @BeforeClass
   public static void setUpClass() {
@@ -65,6 +70,7 @@ public class AttachImplementationManagerTest {
     modelProviderStatic = mockStatic(ModelProvider.class);
     modelProviderStatic.when(ModelProvider::getInstance).thenReturn(mockModelProvider);
   }
+  /** Tears down test fixtures. */
 
   @AfterClass
   public static void tearDownClass() {
@@ -72,6 +78,10 @@ public class AttachImplementationManagerTest {
       modelProviderStatic.close();
     }
   }
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -81,11 +91,16 @@ public class AttachImplementationManagerTest {
     setPrivateField(instance, "attachImplementationHandlers", attachImplementationHandlers);
     setPrivateField(instance, "adcs", adcs);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     // modelProviderStatic is managed at class level
   }
+  /**
+   * Get json value with non empty value.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetJSONValueWithNonEmptyValue() throws Exception {
@@ -98,6 +113,10 @@ public class AttachImplementationManagerTest {
     assertNotNull(result);
     assertEquals("testValue", result.getString("value"));
   }
+  /**
+   * Get json value with empty string.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetJSONValueWithEmptyString() throws Exception {
@@ -110,6 +129,7 @@ public class AttachImplementationManagerTest {
     assertNotNull(result);
     assertEquals("", result.getString("value"));
   }
+  /** Get handler returns null when no implementation. */
 
   @Test
   public void testGetHandlerReturnsNullWhenNoImplementation() {
@@ -122,6 +142,7 @@ public class AttachImplementationManagerTest {
 
     assertNull(result);
   }
+  /** Get handler returns single implementation. */
 
   @Test
   public void testGetHandlerReturnsSingleImplementation() {
@@ -137,13 +158,17 @@ public class AttachImplementationManagerTest {
     assertNotNull(result);
     assertEquals(mockHandler, result);
   }
+  /**
+   * Delete temp file in tmp dir.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDeleteTempFileInTmpDir() throws Exception {
-    File tempFile = File.createTempFile("test-attachment-", ".tmp");
+    File tempFile = File.createTempFile(TEST_ATTACHMENT, ".tmp");
     tempFile.deleteOnExit();
 
-    Method method = AttachImplementationManager.class.getDeclaredMethod("deleteTempFile",
+    Method method = AttachImplementationManager.class.getDeclaredMethod(DELETE_TEMP_FILE,
         File.class);
     method.setAccessible(true);
     method.invoke(instance, tempFile);
@@ -151,13 +176,17 @@ public class AttachImplementationManagerTest {
     // File should be deleted
     assertEquals(false, tempFile.exists());
   }
+  /**
+   * Delete temp file in sub directory.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDeleteTempFileInSubDirectory() throws Exception {
     Path tempDir = Files.createTempDirectory("test-attach-dir-");
-    File tempFile = Files.createTempFile(tempDir, "test-attachment-", ".tmp").toFile();
+    File tempFile = Files.createTempFile(tempDir, TEST_ATTACHMENT, ".tmp").toFile();
 
-    Method method = AttachImplementationManager.class.getDeclaredMethod("deleteTempFile",
+    Method method = AttachImplementationManager.class.getDeclaredMethod(DELETE_TEMP_FILE,
         File.class);
     method.setAccessible(true);
     method.invoke(instance, tempFile);
@@ -167,16 +196,20 @@ public class AttachImplementationManagerTest {
     // Parent dir should also be deleted (was empty)
     assertEquals(false, tempDir.toFile().exists());
   }
+  /**
+   * Delete temp file in non empty sub directory.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDeleteTempFileInNonEmptySubDirectory() throws Exception {
     Path tempDir = Files.createTempDirectory("test-attach-dir-");
-    File tempFile = Files.createTempFile(tempDir, "test-attachment-", ".tmp").toFile();
+    File tempFile = Files.createTempFile(tempDir, TEST_ATTACHMENT, ".tmp").toFile();
     File otherFile = Files.createTempFile(tempDir, "other-", ".tmp").toFile();
     otherFile.deleteOnExit();
     tempDir.toFile().deleteOnExit();
 
-    Method method = AttachImplementationManager.class.getDeclaredMethod("deleteTempFile",
+    Method method = AttachImplementationManager.class.getDeclaredMethod(DELETE_TEMP_FILE,
         File.class);
     method.setAccessible(true);
     method.invoke(instance, tempFile);
@@ -190,11 +223,13 @@ public class AttachImplementationManagerTest {
     otherFile.delete();
     tempDir.toFile().delete();
   }
+  /** Reference list constant. */
 
   @Test
   public void testReferenceListConstant() {
     assertEquals("17", AttachImplementationManager.REFERENCE_LIST);
   }
+  /** Reference selector constant. */
 
   @Test
   public void testReferenceSelectorConstant() {
@@ -202,7 +237,7 @@ public class AttachImplementationManagerTest {
         AttachImplementationManager.REFERENCE_SELECTOR_REFERENCE);
   }
 
-  private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+  private void setPrivateField(Object target, String fieldName, Object value) throws IllegalAccessException, NoSuchFieldException {
     Field field = target.getClass().getDeclaredField(fieldName);
     field.setAccessible(true);
     field.set(target, value);

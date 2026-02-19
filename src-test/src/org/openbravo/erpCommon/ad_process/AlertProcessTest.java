@@ -37,6 +37,7 @@ import org.openbravo.scheduling.ProcessLogger;
 /**
  * Tests for {@link AlertProcess}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AlertProcessTest {
 
@@ -62,6 +63,10 @@ public class AlertProcessTest {
   private MockedStatic<SequenceIdData> sequenceIdDataStatic;
   private MockedStatic<Utility> utilityStatic;
   private MockedStatic<OBPropertiesProvider> propertiesStatic;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -81,6 +86,7 @@ public class AlertProcessTest {
     lenient().when(mockBundle.getContext()).thenReturn(mockContext);
     lenient().when(mockContext.getLanguage()).thenReturn("en_US");
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -91,6 +97,10 @@ public class AlertProcessTest {
     if (utilityStatic != null) utilityStatic.close();
     if (propertiesStatic != null) propertiesStatic.close();
   }
+  /**
+   * Execute with system client processes all clients.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithSystemClientProcessesAllClients() throws Exception {
@@ -104,6 +114,10 @@ public class AlertProcessTest {
     alertProcessDataStatic.verify(() -> AlertProcessData.selectSQL(mockConn));
     verify(mockLogger).log("Starting Alert Backgrouond Process. Loop 0\n");
   }
+  /**
+   * Execute with non system client filters.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithNonSystemClientFilters() throws Exception {
@@ -116,6 +130,10 @@ public class AlertProcessTest {
 
     alertProcessDataStatic.verify(() -> AlertProcessData.selectSQL(mockConn, NON_SYSTEM_CLIENT_ID));
   }
+  /**
+   * Execute with null alert rules.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithNullAlertRules() throws Exception {
@@ -128,6 +146,10 @@ public class AlertProcessTest {
 
     verify(mockOBDal).commitAndClose();
   }
+  /**
+   * Execute with empty alert rules.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithEmptyAlertRules() throws Exception {
@@ -140,6 +162,10 @@ public class AlertProcessTest {
 
     verify(mockOBDal).commitAndClose();
   }
+  /**
+   * Process alert with empty sql.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testProcessAlertWithEmptySql() throws Exception {
@@ -154,6 +180,10 @@ public class AlertProcessTest {
 
     verify(mockLogger).log("Processing rule Test Rule\n");
   }
+  /**
+   * Process alert with non select sql.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testProcessAlertWithNonSelectSql() throws Exception {

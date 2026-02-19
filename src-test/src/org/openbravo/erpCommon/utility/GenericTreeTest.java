@@ -12,22 +12,28 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.data.FieldProvider;
+/** Tests for {@link GenericTree}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class GenericTreeTest {
 
   private GenericTree instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     instance = new GenericTree() {
       @Override
       protected void setRootTree() {
+    // No implementation needed
       }
 
       @Override
       protected void setSubTree(String nodeId, String level) {
+    // No implementation needed
       }
+      /** Get html description. */
 
       @Override
       public String getHTMLDescription(String node) {
@@ -50,6 +56,10 @@ public class GenericTreeTest {
       }
     };
   }
+  /**
+   * Set language sets lang field.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetLanguageSetsLangField() throws Exception {
@@ -64,6 +74,7 @@ public class GenericTreeTest {
     langField.setAccessible(true);
     assertEquals(language, langField.get(instance));
   }
+  /** Get data returns null by default. */
 
   @Test
   public void testGetDataReturnsNullByDefault() {
@@ -73,6 +84,7 @@ public class GenericTreeTest {
     // Assert
     assertNull(result);
   }
+  /** To html returns empty when data is null. */
 
   @Test
   public void testToHtmlReturnsEmptyWhenDataIsNull() {
@@ -82,6 +94,10 @@ public class GenericTreeTest {
     // Assert
     assertEquals("", result);
   }
+  /**
+   * To html returns empty when data is empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testToHtmlReturnsEmptyWhenDataIsEmpty() throws Exception {
@@ -96,6 +112,10 @@ public class GenericTreeTest {
     // Assert
     assertEquals("", result);
   }
+  /**
+   * Set notifications sets field.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetNotificationsSetsField() throws Exception {
@@ -110,6 +130,10 @@ public class GenericTreeTest {
     field.setAccessible(true);
     assertEquals(notifications, field.get(instance));
   }
+  /**
+   * Show notifications sets field.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testShowNotificationsSetsField() throws Exception {
@@ -121,6 +145,10 @@ public class GenericTreeTest {
     field.setAccessible(true);
     assertTrue((boolean) field.get(instance));
   }
+  /**
+   * Default lang is empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDefaultLangIsEmpty() throws Exception {
@@ -129,6 +157,10 @@ public class GenericTreeTest {
     langField.setAccessible(true);
     assertEquals("", langField.get(instance));
   }
+  /**
+   * Set is sub tree sets field.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetIsSubTreeSetsField() throws Exception {

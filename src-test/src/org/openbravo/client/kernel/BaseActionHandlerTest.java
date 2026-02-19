@@ -25,14 +25,21 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+/** Tests for {@link BaseActionHandler}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BaseActionHandlerTest {
+
+  private static final String VALUE1 = "value1";
+  private static final String VALUE2 = "value2";
+  private static final String MULTI = "multi";
+  private static final String CONTEXT = "context";
 
   private BaseActionHandler instance;
 
   @Mock
   private HttpServletRequest mockRequest;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -44,41 +51,44 @@ public class BaseActionHandlerTest {
       }
     };
   }
+  /** Extract parameters from request single values. */
 
   @Test
   public void testExtractParametersFromRequestSingleValues() {
     // Arrange
     when(mockRequest.getParameterNames()).thenReturn(
         Collections.enumeration(java.util.Arrays.asList("key1", "key2")));
-    when(mockRequest.getParameterValues("key1")).thenReturn(new String[]{"value1"});
-    when(mockRequest.getParameter("key1")).thenReturn("value1");
-    when(mockRequest.getParameterValues("key2")).thenReturn(new String[]{"value2"});
-    when(mockRequest.getParameter("key2")).thenReturn("value2");
+    when(mockRequest.getParameterValues("key1")).thenReturn(new String[]{VALUE1});
+    when(mockRequest.getParameter("key1")).thenReturn(VALUE1);
+    when(mockRequest.getParameterValues("key2")).thenReturn(new String[]{VALUE2});
+    when(mockRequest.getParameter("key2")).thenReturn(VALUE2);
 
     // Act
     Map<String, Object> result = instance.extractParametersFromRequest(mockRequest);
 
     // Assert
-    assertEquals("value1", result.get("key1"));
-    assertEquals("value2", result.get("key2"));
+    assertEquals(VALUE1, result.get("key1"));
+    assertEquals(VALUE2, result.get("key2"));
     assertEquals(2, result.size());
   }
+  /** Extract parameters from request multiple values. */
 
   @Test
   public void testExtractParametersFromRequestMultipleValues() {
     // Arrange
     String[] multiValues = new String[]{"val1", "val2"};
     when(mockRequest.getParameterNames()).thenReturn(
-        Collections.enumeration(Collections.singletonList("multi")));
-    when(mockRequest.getParameterValues("multi")).thenReturn(multiValues);
+        Collections.enumeration(Collections.singletonList(MULTI)));
+    when(mockRequest.getParameterValues(MULTI)).thenReturn(multiValues);
 
     // Act
     Map<String, Object> result = instance.extractParametersFromRequest(mockRequest);
 
     // Assert
-    assertTrue(result.get("multi") instanceof String[]);
-    assertEquals(2, ((String[]) result.get("multi")).length);
+    assertTrue(result.get(MULTI) instanceof String[]);
+    assertEquals(2, ((String[]) result.get(MULTI)).length);
   }
+  /** Extract parameters from request empty. */
 
   @Test
   public void testExtractParametersFromRequestEmpty() {
@@ -93,6 +103,10 @@ public class BaseActionHandlerTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+  /**
+   * Extract request content with content.
+   * @throws IOException if an error occurs
+   */
 
   @Test
   public void testExtractRequestContentWithContent() throws IOException {
@@ -110,6 +124,10 @@ public class BaseActionHandlerTest {
     assertTrue(result.contains("test content line1"));
     assertTrue(result.contains("line2"));
   }
+  /**
+   * Extract request content empty.
+   * @throws IOException if an error occurs
+   */
 
   @Test
   public void testExtractRequestContentEmpty() throws IOException {
@@ -124,6 +142,10 @@ public class BaseActionHandlerTest {
     // Assert
     assertNull(result);
   }
+  /**
+   * Fix request map filters http keys.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testFixRequestMapFiltersHttpKeys() throws Exception {
@@ -141,6 +163,10 @@ public class BaseActionHandlerTest {
     assertFalse(result.containsKey(KernelConstants.HTTP_REQUEST));
     assertFalse(result.containsKey(KernelConstants.HTTP_SESSION));
   }
+  /**
+   * Fix request map adds context.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testFixRequestMapAddsContext() throws Exception {
@@ -153,40 +179,48 @@ public class BaseActionHandlerTest {
     Map<String, String> result = instance.fixRequestMap(parameters, context);
 
     // Assert
-    assertTrue(result.containsKey("context"));
-    assertTrue(result.get("context").contains("testKey"));
+    assertTrue(result.containsKey(CONTEXT));
+    assertTrue(result.get(CONTEXT).contains("testKey"));
   }
+  /** Fix request map null context. */
 
   @Test
   public void testFixRequestMapNullContext() {
     // Arrange
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("key1", "value1");
+    parameters.put("key1", VALUE1);
 
     // Act
     Map<String, String> result = instance.fixRequestMap(parameters, null);
 
     // Assert
-    assertFalse(result.containsKey("context"));
-    assertEquals("value1", result.get("key1"));
+    assertFalse(result.containsKey(CONTEXT));
+    assertEquals(VALUE1, result.get("key1"));
   }
 
   private ServletInputStream createServletInputStream(ByteArrayInputStream bais) {
     return new ServletInputStream() {
+      /**
+       * Read.
+       * @throws IOException if an error occurs
+       */
       @Override
       public int read() throws IOException {
         return bais.read();
       }
+      /** Is finished. */
 
       @Override
       public boolean isFinished() {
         return bais.available() == 0;
       }
+      /** Is ready. */
 
       @Override
       public boolean isReady() {
         return true;
       }
+      /** Set read listener. */
 
       @Override
       public void setReadListener(ReadListener readListener) {

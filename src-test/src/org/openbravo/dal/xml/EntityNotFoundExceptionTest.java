@@ -9,9 +9,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.exception.OBException;
+/** Tests for {@link EntityNotFoundException}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class EntityNotFoundExceptionTest {
+
+  private static final String ENTITY_NOT_FOUND = "Entity not found";
+  /** Default constructor. */
 
   @Test
   public void testDefaultConstructor() {
@@ -19,13 +23,15 @@ public class EntityNotFoundExceptionTest {
     assertNull(ex.getMessage());
     assertNull(ex.getCause());
   }
+  /** Message constructor. */
 
   @Test
   public void testMessageConstructor() {
-    EntityNotFoundException ex = new EntityNotFoundException("Entity not found");
-    assertEquals("Entity not found", ex.getMessage());
+    EntityNotFoundException ex = new EntityNotFoundException(ENTITY_NOT_FOUND);
+    assertEquals(ENTITY_NOT_FOUND, ex.getMessage());
     assertNull(ex.getCause());
   }
+  /** Cause constructor. */
 
   @Test
   public void testCauseConstructor() {
@@ -33,14 +39,16 @@ public class EntityNotFoundExceptionTest {
     EntityNotFoundException ex = new EntityNotFoundException(cause);
     assertSame(cause, ex.getCause());
   }
+  /** Message and cause constructor. */
 
   @Test
   public void testMessageAndCauseConstructor() {
     RuntimeException cause = new RuntimeException("root cause");
-    EntityNotFoundException ex = new EntityNotFoundException("Entity not found", cause);
-    assertEquals("Entity not found", ex.getMessage());
+    EntityNotFoundException ex = new EntityNotFoundException(ENTITY_NOT_FOUND, cause);
+    assertEquals(ENTITY_NOT_FOUND, ex.getMessage());
     assertSame(cause, ex.getCause());
   }
+  /** Extends ob exception. */
 
   @Test
   public void testExtendsOBException() {

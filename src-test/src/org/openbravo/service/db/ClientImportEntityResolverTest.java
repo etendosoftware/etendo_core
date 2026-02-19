@@ -70,6 +70,10 @@ public class ClientImportEntityResolverTest {
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBProvider> obProviderStatic;
   private MockedStatic<ModelProvider> modelProviderStatic;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -102,6 +106,7 @@ public class ClientImportEntityResolverTest {
     clientZeroField.setAccessible(true);
     clientZeroField.set(resolver, mockClientZero);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -115,36 +120,45 @@ public class ClientImportEntityResolverTest {
       obDalStatic.close();
     }
   }
+  /** Resolve organization zero returns org zero. */
 
   @Test
   public void testResolveOrganizationZeroReturnsOrgZero() {
     BaseOBObject result = resolver.resolve(Organization.ENTITY_NAME, "0", false);
     assertEquals(mockOrgZero, result);
   }
+  /** Resolve client zero returns client zero. */
 
   @Test
   public void testResolveClientZeroReturnsClientZero() {
     BaseOBObject result = resolver.resolve(Client.ENTITY_NAME, "0", false);
     assertEquals(mockClientZero, result);
   }
+  /** Resolve client zero id returns client zero. */
 
   @Test
   public void testResolveClientZeroIdReturnsClientZero() {
     BaseOBObject result = resolver.resolve(Client.ENTITY_NAME, "0", false);
     assertEquals(mockClientZero, result);
   }
+  /** Resolve with filter organizations delegates to resolve. */
 
   @Test
   public void testResolveWithFilterOrganizationsDelegatesToResolve() {
     BaseOBObject result = resolver.resolve(Organization.ENTITY_NAME, "0", false, true);
     assertEquals(mockOrgZero, result);
   }
+  /** Resolve organization with filter organizations. */
 
   @Test
   public void testResolveOrganizationWithFilterOrganizations() {
     BaseOBObject result = resolver.resolve(Organization.ENTITY_NAME, "0", false, true);
     assertEquals(mockOrgZero, result);
   }
+  /**
+   * Find unique constrained object returns null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testFindUniqueConstrainedObjectReturnsNull() throws Exception {

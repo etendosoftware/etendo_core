@@ -39,6 +39,9 @@ import org.openbravo.model.financialmgmt.payment.PaymentExecutionProcess;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AddPaymentDefaultValuesHandlerTest {
 
+  private static final String CONTEXT = "context";
+  private static final String INPFIN_PAYMENT_ID = "inpfinPaymentId";
+
   private static final String FINANCIAL_ACCOUNT_ID = "FA001";
   private static final String CURRENCY_ID = "CUR001";
   private static final String PAYMENT_ID = "PAY001";
@@ -49,6 +52,7 @@ public class AddPaymentDefaultValuesHandlerTest {
   private OBDal mockOBDal;
 
   private TestableHandler handler;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -56,6 +60,7 @@ public class AddPaymentDefaultValuesHandlerTest {
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
     handler = new TestableHandler();
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -65,12 +70,20 @@ public class AddPaymentDefaultValuesHandlerTest {
   }
 
   // --- getDefaultCurrencyTo ---
+  /**
+   * Get default currency to null context.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultCurrencyToNullContext() throws JSONException {
     Map<String, String> requestMap = new HashMap<>();
     assertEquals("", handler.getDefaultCurrencyTo(requestMap));
   }
+  /**
+   * Get default currency to with financial account.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultCurrencyToWithFinancialAccount() throws JSONException {
@@ -84,13 +97,17 @@ public class AddPaymentDefaultValuesHandlerTest {
     context.put("inpfinFinancialAccountId", FINANCIAL_ACCOUNT_ID);
 
     Map<String, String> requestMap = new HashMap<>();
-    requestMap.put("context", context.toString());
+    requestMap.put(CONTEXT, context.toString());
 
     String result = handler.getDefaultCurrencyTo(requestMap);
     assertEquals(CURRENCY_ID, result);
   }
 
   // --- getDefaultGeneratedCredit ---
+  /**
+   * Get default generated credit.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultGeneratedCredit() throws JSONException {
@@ -99,6 +116,10 @@ public class AddPaymentDefaultValuesHandlerTest {
   }
 
   // --- getDefaultDocumentCategory ---
+  /**
+   * Get default document category so trx.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultDocumentCategorySOTrx() throws JSONException {
@@ -106,6 +127,10 @@ public class AddPaymentDefaultValuesHandlerTest {
     Map<String, String> requestMap = new HashMap<>();
     assertEquals("ARR", handler.getDefaultDocumentCategory(requestMap));
   }
+  /**
+   * Get default document category not so trx.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultDocumentCategoryNotSOTrx() throws JSONException {
@@ -115,44 +140,64 @@ public class AddPaymentDefaultValuesHandlerTest {
   }
 
   // --- getDefaultReferenceNo ---
+  /**
+   * Get default reference no null context.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultReferenceNoNullContext() throws JSONException {
     Map<String, String> requestMap = new HashMap<>();
     assertEquals("", handler.getDefaultReferenceNo(requestMap));
   }
+  /**
+   * Get default reference no no payment id.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultReferenceNoNoPaymentId() throws JSONException {
     JSONObject context = new JSONObject();
 
     Map<String, String> requestMap = new HashMap<>();
-    requestMap.put("context", context.toString());
+    requestMap.put(CONTEXT, context.toString());
 
     assertNull(handler.getDefaultReferenceNo(requestMap));
   }
+  /**
+   * Get default reference no null payment id.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultReferenceNoNullPaymentId() throws JSONException {
     JSONObject context = new JSONObject();
-    context.put("inpfinPaymentId", JSONObject.NULL);
+    context.put(INPFIN_PAYMENT_ID, JSONObject.NULL);
 
     Map<String, String> requestMap = new HashMap<>();
-    requestMap.put("context", context.toString());
+    requestMap.put(CONTEXT, context.toString());
 
     assertNull(handler.getDefaultReferenceNo(requestMap));
   }
+  /**
+   * Get default reference no empty payment id.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultReferenceNoEmptyPaymentId() throws JSONException {
     JSONObject context = new JSONObject();
-    context.put("inpfinPaymentId", "");
+    context.put(INPFIN_PAYMENT_ID, "");
 
     Map<String, String> requestMap = new HashMap<>();
-    requestMap.put("context", context.toString());
+    requestMap.put(CONTEXT, context.toString());
 
     assertNull(handler.getDefaultReferenceNo(requestMap));
   }
+  /**
+   * Get default reference no with payment.
+   * @throws JSONException if an error occurs
+   */
 
   @Test
   public void testGetDefaultReferenceNoWithPayment() throws JSONException {
@@ -161,21 +206,23 @@ public class AddPaymentDefaultValuesHandlerTest {
     when(mockOBDal.get(FIN_Payment.class, PAYMENT_ID)).thenReturn(mockPayment);
 
     JSONObject context = new JSONObject();
-    context.put("inpfinPaymentId", PAYMENT_ID);
+    context.put(INPFIN_PAYMENT_ID, PAYMENT_ID);
 
     Map<String, String> requestMap = new HashMap<>();
-    requestMap.put("context", context.toString());
+    requestMap.put(CONTEXT, context.toString());
 
     assertEquals("REF-123", handler.getDefaultReferenceNo(requestMap));
   }
 
   // --- getPendingAmt ---
+  /** Get pending amt empty list. */
 
   @Test
   public void testGetPendingAmtEmptyList() {
     List<FIN_PaymentSchedule> psList = new ArrayList<>();
     assertEquals(BigDecimal.ZERO, handler.getPendingAmt(psList));
   }
+  /** Get pending amt with invoice schedule. */
 
   @Test
   public void testGetPendingAmtWithInvoiceSchedule() {
@@ -195,6 +242,7 @@ public class AddPaymentDefaultValuesHandlerTest {
 
     assertEquals(new BigDecimal("100.00"), handler.getPendingAmt(psList));
   }
+  /** Get pending amt with order schedule. */
 
   @Test
   public void testGetPendingAmtWithOrderSchedule() {
@@ -214,6 +262,7 @@ public class AddPaymentDefaultValuesHandlerTest {
 
     assertEquals(new BigDecimal("250.50"), handler.getPendingAmt(psList));
   }
+  /** Get pending amt skips paid details. */
 
   @Test
   public void testGetPendingAmtSkipsPaidDetails() {
@@ -247,81 +296,97 @@ public class AddPaymentDefaultValuesHandlerTest {
     void setIsSOTrx(String value) {
       this.isSOTrx = value;
     }
+    /** Get default expected amount. */
 
     @Override
     public String getDefaultExpectedAmount(Map<String, String> requestMap) {
       return "0";
     }
+    /** Get default actual amount. */
 
     @Override
     public String getDefaultActualAmount(Map<String, String> requestMap) {
       return "0";
     }
+    /** Get default is so trx. */
 
     @Override
     public String getDefaultIsSOTrx(Map<String, String> requestMap) {
       return isSOTrx;
     }
+    /** Get default transaction type. */
 
     @Override
     public String getDefaultTransactionType(Map<String, String> requestMap) {
       return "";
     }
+    /** Get default payment type. */
 
     @Override
     public String getDefaultPaymentType(Map<String, String> requestMap) {
       return "";
     }
+    /** Get default order type. */
 
     @Override
     public String getDefaultOrderType(Map<String, String> requestMap) {
       return "";
     }
+    /** Get default invoice type. */
 
     @Override
     public String getDefaultInvoiceType(Map<String, String> requestMap) {
       return "";
     }
+    /** Get default conversion rate. */
 
     @Override
     public String getDefaultConversionRate(Map<String, String> requestMap) {
       return "1";
     }
+    /** Get default converted amount. */
 
     @Override
     public String getDefaultConvertedAmount(Map<String, String> requestMap) {
       return "0";
     }
+    /** Get default received from. */
 
     @Override
     public String getDefaultReceivedFrom(Map<String, String> requestMap) {
       return "";
     }
+    /** Get default standard precision. */
 
     @Override
     public String getDefaultStandardPrecision(Map<String, String> requestMap) {
       return "2";
     }
+    /** Get default currency. */
 
     @Override
     public String getDefaultCurrency(Map<String, String> requestMap) {
       return "";
     }
+    /** Get organization. */
 
     @Override
     public String getOrganization(Map<String, String> requestMap) {
       return "";
     }
+    /** Get default document. */
 
     @Override
     public String getDefaultDocument(Map<String, String> requestMap) {
       return "";
     }
+    /** Get default payment date. */
 
     @Override
     public String getDefaultPaymentDate(Map<String, String> requestMap) {
       return "";
     }
+    /** Get bank statement line amount. */
 
     @Override
     public String getBankStatementLineAmount(Map<String, String> requestMap) {

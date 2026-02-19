@@ -7,31 +7,38 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
+/** Tests for {@link DocLine_DPManagement}. */
+@SuppressWarnings({"java:S101", "java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DocLine_DPManagementTest {
 
   private DocLine_DPManagement instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     instance = new DocLine_DPManagement("DOCTYPE", "HEADER_001", "LINE_001");
   }
+  /** Constructor sets document type. */
 
   @Test
   public void testConstructorSetsDocumentType() {
     assertEquals("DOCTYPE", instance.p_DocumentType);
   }
+  /** Constructor sets header id. */
 
   @Test
   public void testConstructorSetsHeaderId() {
     assertEquals("HEADER_001", instance.m_TrxHeader_ID);
   }
+  /** Constructor sets line id. */
 
   @Test
   public void testConstructorSetsLineId() {
     assertEquals("LINE_001", instance.m_TrxLine_ID);
   }
+  /** Fields default null. */
 
   @Test
   public void testFieldsDefaultNull() {
@@ -43,6 +50,7 @@ public class DocLine_DPManagementTest {
     assertNull(instance.IsManual);
     assertNull(instance.IsDirectPosting);
   }
+  /** Set fields directly. */
 
   @Test
   public void testSetFieldsDirectly() {
@@ -62,6 +70,7 @@ public class DocLine_DPManagementTest {
     assertEquals("N", instance.IsManual);
     assertEquals("Y", instance.IsDirectPosting);
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -24,17 +25,25 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
 /**
  * Tests for {@link AverageCostAdjustment}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.class)
 public class AverageCostAdjustmentTest {
 
+  private static final String COST_CUR_PRECISSION = "costCurPrecission";
+  private static final String VAL_10_00 = "10.00";
+
   private AverageCostAdjustment instance;
-  private ObjenesisStd objenesis;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
-    objenesis = new ObjenesisStd();
+    ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(AverageCostAdjustment.class);
   }
+  /**
+   * Get transaction price with zero movement quantity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTransactionPriceWithZeroMovementQuantity() throws Exception {
@@ -46,42 +55,58 @@ public class AverageCostAdjustmentTest {
 
     assertEquals(BigDecimal.ZERO, result);
   }
+  /**
+   * Get transaction price with positive movement quantity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTransactionPriceWithPositiveMovementQuantity() throws Exception {
-    setPrivateField(instance, "costCurPrecission", 2);
+    setPrivateField(instance, COST_CUR_PRECISSION, 2);
     BigDecimal trxCost = new BigDecimal("100.00");
     BigDecimal negativeStockAdj = BigDecimal.ZERO;
     BigDecimal movementQty = new BigDecimal("10");
 
     BigDecimal result = invokeGetTransactionPrice(trxCost, negativeStockAdj, movementQty);
 
-    assertEquals(new BigDecimal("10.00"), result);
+    assertEquals(new BigDecimal(VAL_10_00), result);
   }
+  /**
+   * Get transaction price with negative movement quantity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTransactionPriceWithNegativeMovementQuantity() throws Exception {
-    setPrivateField(instance, "costCurPrecission", 2);
+    setPrivateField(instance, COST_CUR_PRECISSION, 2);
     BigDecimal trxCost = new BigDecimal("50.00");
     BigDecimal negativeStockAdj = BigDecimal.ZERO;
     BigDecimal movementQty = new BigDecimal("-5");
 
     BigDecimal result = invokeGetTransactionPrice(trxCost, negativeStockAdj, movementQty);
 
-    assertEquals(new BigDecimal("10.00"), result);
+    assertEquals(new BigDecimal(VAL_10_00), result);
   }
+  /**
+   * Get transaction price subtracts negative stock adj.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetTransactionPriceSubtractsNegativeStockAdj() throws Exception {
-    setPrivateField(instance, "costCurPrecission", 2);
+    setPrivateField(instance, COST_CUR_PRECISSION, 2);
     BigDecimal trxCost = new BigDecimal("120.00");
     BigDecimal negativeStockAdj = new BigDecimal("20.00");
     BigDecimal movementQty = new BigDecimal("10");
 
     BigDecimal result = invokeGetTransactionPrice(trxCost, negativeStockAdj, movementQty);
 
-    assertEquals(new BigDecimal("10.00"), result);
+    assertEquals(new BigDecimal(VAL_10_00), result);
   }
+  /**
+   * Is voided trx receipt void returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxReceiptVoidReturnsTrue() throws Exception {
@@ -91,6 +116,10 @@ public class AverageCostAdjustmentTest {
 
     assertTrue(result);
   }
+  /**
+   * Is voided trx shipment void returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxShipmentVoidReturnsTrue() throws Exception {
@@ -100,6 +129,10 @@ public class AverageCostAdjustmentTest {
 
     assertTrue(result);
   }
+  /**
+   * Is voided trx internal cons void returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxInternalConsVoidReturnsTrue() throws Exception {
@@ -109,6 +142,10 @@ public class AverageCostAdjustmentTest {
 
     assertTrue(result);
   }
+  /**
+   * Is voided trx receipt with vo status returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxReceiptWithVOStatusReturnsTrue() throws Exception {
@@ -123,6 +160,10 @@ public class AverageCostAdjustmentTest {
 
     assertTrue(result);
   }
+  /**
+   * Is voided trx receipt with non vo status returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxReceiptWithNonVOStatusReturnsFalse() throws Exception {
@@ -137,6 +178,10 @@ public class AverageCostAdjustmentTest {
 
     assertFalse(result);
   }
+  /**
+   * Is voided trx internal cons with vo status returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxInternalConsWithVOStatusReturnsTrue() throws Exception {
@@ -151,6 +196,10 @@ public class AverageCostAdjustmentTest {
 
     assertTrue(result);
   }
+  /**
+   * Is voided trx internal cons with non vo status returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxInternalConsWithNonVOStatusReturnsFalse() throws Exception {
@@ -165,6 +214,10 @@ public class AverageCostAdjustmentTest {
 
     assertFalse(result);
   }
+  /**
+   * Is voided trx inventory increase returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxInventoryIncreaseReturnsFalse() throws Exception {
@@ -174,6 +227,10 @@ public class AverageCostAdjustmentTest {
 
     assertFalse(result);
   }
+  /**
+   * Is voided trx bom product returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxBOMProductReturnsFalse() throws Exception {
@@ -183,6 +240,10 @@ public class AverageCostAdjustmentTest {
 
     assertFalse(result);
   }
+  /**
+   * Is voided trx shipment with vo status returns true.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxShipmentWithVOStatusReturnsTrue() throws Exception {
@@ -197,6 +258,10 @@ public class AverageCostAdjustmentTest {
 
     assertTrue(result);
   }
+  /**
+   * Is voided trx manufacturing produced returns false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsVoidedTrxManufacturingProducedReturnsFalse() throws Exception {
@@ -208,21 +273,21 @@ public class AverageCostAdjustmentTest {
   }
 
   private BigDecimal invokeGetTransactionPrice(BigDecimal trxCost,
-      BigDecimal trxNegativeStockAdjAmt, BigDecimal movementQuantity) throws Exception {
+      BigDecimal trxNegativeStockAdjAmt, BigDecimal movementQuantity) throws Exception{
     Method method = AverageCostAdjustment.class.getDeclaredMethod("getTransactionPrice",
         BigDecimal.class, BigDecimal.class, BigDecimal.class);
     method.setAccessible(true);
     return (BigDecimal) method.invoke(instance, trxCost, trxNegativeStockAdjAmt, movementQuantity);
   }
 
-  private boolean invokeIsVoidedTrx(MaterialTransaction trx, TrxType trxType) throws Exception {
+  private boolean invokeIsVoidedTrx(MaterialTransaction trx, TrxType trxType) throws Exception{
     Method method = AverageCostAdjustment.class.getDeclaredMethod("isVoidedTrx",
         MaterialTransaction.class, TrxType.class);
     method.setAccessible(true);
     return (boolean) method.invoke(instance, trx, trxType);
   }
 
-  private void setPrivateField(Object target, String fieldName, Object value) throws Exception {
+  private void setPrivateField(Object target, String fieldName, Object value) throws Exception{
     java.lang.reflect.Field field = findField(target.getClass(), fieldName);
     field.setAccessible(true);
     field.set(target, value);

@@ -22,6 +22,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.financialmgmt.accounting.coa.AcctSchema;
+/** Tests for {@link GetNameGeneralLedger}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class GetNameGeneralLedgerTest {
@@ -32,6 +33,7 @@ public class GetNameGeneralLedgerTest {
 
   @Mock
   private OBDal mockOBDal;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -40,6 +42,7 @@ public class GetNameGeneralLedgerTest {
     obDalStatic = mockStatic(OBDal.class);
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -50,6 +53,10 @@ public class GetNameGeneralLedgerTest {
       obDalStatic.close();
     }
   }
+  /**
+   * Execute returns empty json for non get name command.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteReturnsEmptyJsonForNonGetNameCommand() throws Exception {
@@ -67,6 +74,10 @@ public class GetNameGeneralLedgerTest {
     assertFalse(result.has("id"));
     assertFalse(result.has("name"));
   }
+  /**
+   * Execute returns schema data for get name command.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteReturnsSchemaDataForGetNameCommand() throws Exception {

@@ -24,6 +24,7 @@ import org.openbravo.data.ScrollableFieldProvider;
 /**
  * Tests for {@link AbstractScrollableFieldProviderFilter}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AbstractScrollableFieldProviderFilterTest {
 
@@ -34,11 +35,16 @@ public class AbstractScrollableFieldProviderFilterTest {
   private FieldProvider mockFieldProvider;
 
   private AbstractScrollableFieldProviderFilter filter;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     filter = new AbstractScrollableFieldProviderFilter(mockInput);
   }
+  /**
+   * Constructor sets input.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testConstructorSetsInput() throws Exception {
@@ -47,6 +53,7 @@ public class AbstractScrollableFieldProviderFilterTest {
     inputField.setAccessible(true);
     assertEquals(mockInput, inputField.get(filter));
   }
+  /** Has data delegates to input. */
 
   @Test
   public void testHasDataDelegatesToInput() {
@@ -54,12 +61,17 @@ public class AbstractScrollableFieldProviderFilterTest {
     assertTrue(filter.hasData());
     verify(mockInput).hasData();
   }
+  /** Has data returns false when input has no data. */
 
   @Test
   public void testHasDataReturnsFalseWhenInputHasNoData() {
     when(mockInput.hasData()).thenReturn(false);
     assertFalse(filter.hasData());
   }
+  /**
+   * Next delegates to input.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testNextDelegatesToInput() throws ServletException {
@@ -67,12 +79,20 @@ public class AbstractScrollableFieldProviderFilterTest {
     assertTrue(filter.next());
     verify(mockInput).next();
   }
+  /**
+   * Next returns false when input exhausted.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testNextReturnsFalseWhenInputExhausted() throws ServletException {
     when(mockInput.next()).thenReturn(false);
     assertFalse(filter.next());
   }
+  /**
+   * Get delegates to input.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testGetDelegatesToInput() throws ServletException {
@@ -82,12 +102,17 @@ public class AbstractScrollableFieldProviderFilterTest {
     assertEquals(mockFieldProvider, result);
     verify(mockInput).get();
   }
+  /** Close delegates to input. */
 
   @Test
   public void testCloseDelegatesToInput() {
     filter.close();
     verify(mockInput).close();
   }
+  /**
+   * Next called multiple times.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testNextCalledMultipleTimes() throws ServletException {

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -18,10 +19,12 @@ import org.mockito.junit.MockitoJUnitRunner;
  * Tests for {@link CopyFromOrdersProcessFilterExpression}.
  * Focuses on private utility methods: calculateLegalEntityField, calculateSoTrxField, getIsSoTrx.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.class)
 public class CopyFromOrdersProcessFilterExpressionTest {
 
   private CopyFromOrdersProcessFilterExpression instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -29,6 +32,10 @@ public class CopyFromOrdersProcessFilterExpressionTest {
   }
 
   // --- Tests for calculateLegalEntityField(Map) ---
+  /**
+   * Calculate legal entity field returns true when param is ad org id.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculateLegalEntityFieldReturnsTrueWhenParamIsAdOrgId() throws Exception {
@@ -38,6 +45,10 @@ public class CopyFromOrdersProcessFilterExpressionTest {
     boolean result = invokeCalculateLegalEntityField(requestMap);
     assertTrue(result);
   }
+  /**
+   * Calculate legal entity field returns false when param is different.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculateLegalEntityFieldReturnsFalseWhenParamIsDifferent() throws Exception {
@@ -47,6 +58,10 @@ public class CopyFromOrdersProcessFilterExpressionTest {
     boolean result = invokeCalculateLegalEntityField(requestMap);
     assertFalse(result);
   }
+  /**
+   * Calculate legal entity field returns false when no current param.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculateLegalEntityFieldReturnsFalseWhenNoCurrentParam() throws Exception {
@@ -57,6 +72,10 @@ public class CopyFromOrdersProcessFilterExpressionTest {
   }
 
   // --- Tests for calculateSoTrxField(Map) ---
+  /**
+   * Calculate so trx field returns true when column is is so trx.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculateSoTrxFieldReturnsTrueWhenColumnIsIsSoTrx() throws Exception {
@@ -66,6 +85,10 @@ public class CopyFromOrdersProcessFilterExpressionTest {
     boolean result = invokeCalculateSoTrxField(requestMap);
     assertTrue(result);
   }
+  /**
+   * Calculate so trx field returns false when column is different.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculateSoTrxFieldReturnsFalseWhenColumnIsDifferent() throws Exception {
@@ -75,6 +98,10 @@ public class CopyFromOrdersProcessFilterExpressionTest {
     boolean result = invokeCalculateSoTrxField(requestMap);
     assertFalse(result);
   }
+  /**
+   * Calculate so trx field returns false when no column.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCalculateSoTrxFieldReturnsFalseWhenNoColumn() throws Exception {
@@ -85,24 +112,40 @@ public class CopyFromOrdersProcessFilterExpressionTest {
   }
 
   // --- Tests for getIsSoTrx(String) ---
+  /**
+   * Get is so trx returns false for n.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetIsSoTrxReturnsFalseForN() throws Exception {
     String result = invokeGetIsSoTrx("N");
     assertEquals("false", result);
   }
+  /**
+   * Get is so trx returns true for y.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetIsSoTrxReturnsTrueForY() throws Exception {
     String result = invokeGetIsSoTrx("Y");
     assertEquals("true", result);
   }
+  /**
+   * Get is so trx returns true for empty string.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetIsSoTrxReturnsTrueForEmptyString() throws Exception {
     String result = invokeGetIsSoTrx("");
     assertEquals("true", result);
   }
+  /**
+   * Get is so trx returns true for null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetIsSoTrxReturnsTrueForNull() throws Exception {
@@ -111,6 +154,7 @@ public class CopyFromOrdersProcessFilterExpressionTest {
   }
 
   // --- Tests for getExpression (integration-level, with no context match) ---
+  /** Get expression returns null when no matching condition. */
 
   @Test
   public void testGetExpressionReturnsNullWhenNoMatchingCondition() {
@@ -120,6 +164,7 @@ public class CopyFromOrdersProcessFilterExpressionTest {
     String result = instance.getExpression(requestMap);
     assertNull(result);
   }
+  /** Get expression returns null when context is missing. */
 
   @Test
   public void testGetExpressionReturnsNullWhenContextIsMissing() {
@@ -131,21 +176,21 @@ public class CopyFromOrdersProcessFilterExpressionTest {
 
   // --- Helper methods ---
 
-  private boolean invokeCalculateLegalEntityField(Map<String, String> requestMap) throws Exception {
+  private boolean invokeCalculateLegalEntityField(Map<String, String> requestMap) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = CopyFromOrdersProcessFilterExpression.class
         .getDeclaredMethod("calculateLegalEntityField", Map.class);
     method.setAccessible(true);
     return (boolean) method.invoke(instance, requestMap);
   }
 
-  private boolean invokeCalculateSoTrxField(Map<String, String> requestMap) throws Exception {
+  private boolean invokeCalculateSoTrxField(Map<String, String> requestMap) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = CopyFromOrdersProcessFilterExpression.class
         .getDeclaredMethod("calculateSoTrxField", Map.class);
     method.setAccessible(true);
     return (boolean) method.invoke(instance, requestMap);
   }
 
-  private String invokeGetIsSoTrx(String inpissotrx) throws Exception {
+  private String invokeGetIsSoTrx(String inpissotrx) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = CopyFromOrdersProcessFilterExpression.class
         .getDeclaredMethod("getIsSoTrx", String.class);
     method.setAccessible(true);

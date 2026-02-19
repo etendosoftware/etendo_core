@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 
@@ -30,8 +31,13 @@ import org.openbravo.base.validation.ValidationException;
  * Tests for {@link BaseForeignKeyDomainType}.
  * Focuses on the getReferedTableName special cases and checkIsValidValue logic.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BaseForeignKeyDomainTypeTest {
+
+  private static final String C_BPARTNER_ID = "C_BPartner_ID";
+  private static final String C_BPARTNER = "C_BPartner";
+  private static final String BUSINESS_PARTNER = "BusinessPartner";
 
   private static final String TEST_REF_ID = "TEST_REF_123";
 
@@ -44,6 +50,10 @@ public class BaseForeignKeyDomainTypeTest {
   private MockedStatic<ModelProvider> modelProviderStatic;
 
   private BaseForeignKeyDomainType instance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -57,6 +67,7 @@ public class BaseForeignKeyDomainTypeTest {
 
     when(mockReference.getId()).thenReturn(TEST_REF_ID);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -67,66 +78,106 @@ public class BaseForeignKeyDomainTypeTest {
 
   // --- getReferedTableName tests ---
 
-  private String invokeGetReferedTableName(String columnName) throws Exception {
+  private String invokeGetReferedTableName(String columnName) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = BaseForeignKeyDomainType.class.getDeclaredMethod("getReferedTableName",
         String.class);
     method.setAccessible(true);
     return (String) method.invoke(instance, columnName);
   }
+  /**
+   * Get refered table name standard column.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameStandardColumn() throws Exception {
-    String result = invokeGetReferedTableName("C_BPartner_ID");
-    assertEquals("C_BPartner", result);
+    String result = invokeGetReferedTableName(C_BPARTNER_ID);
+    assertEquals(C_BPARTNER, result);
   }
+  /**
+   * Get refered table name removes id suffix.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameRemovesIdSuffix() throws Exception {
     String result = invokeGetReferedTableName("AD_Org_ID");
     assertEquals("AD_Org", result);
   }
+  /**
+   * Get refered table name ref order line.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameRefOrderLine() throws Exception {
     String result = invokeGetReferedTableName("Ref_OrderLine_ID");
     assertEquals("C_OrderLine", result);
   }
+  /**
+   * Get refered table name settlement cancel.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameSettlementCancel() throws Exception {
     String result = invokeGetReferedTableName("C_Settlement_Cancel_ID");
     assertEquals("C_Settlement", result);
   }
+  /**
+   * Get refered table name settlement generate.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameSettlementGenerate() throws Exception {
     String result = invokeGetReferedTableName("C_Settlement_Generate_ID");
     assertEquals("C_Settlement", result);
   }
+  /**
+   * Get refered table name fact acct ref.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameFactAcctRef() throws Exception {
     String result = invokeGetReferedTableName("Fact_Acct_Ref_ID");
     assertEquals("Fact_Acct", result);
   }
+  /**
+   * Get refered table name account id.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameAccountId() throws Exception {
     String result = invokeGetReferedTableName("Account_ID");
     assertEquals("C_ElementValue", result);
   }
+  /**
+   * Get refered table name created by.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameCreatedBy() throws Exception {
     String result = invokeGetReferedTableName("CreatedBy");
     assertEquals("AD_User", result);
   }
+  /**
+   * Get refered table name updated by.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameUpdatedBy() throws Exception {
     String result = invokeGetReferedTableName("UpdatedBy");
     assertEquals("AD_User", result);
   }
+  /**
+   * Get refered table name product attribute.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameProductAttribute() throws Exception {
@@ -134,6 +185,10 @@ public class BaseForeignKeyDomainTypeTest {
     String result = invokeGetReferedTableName("M_Product_ID");
     assertEquals("M_AttributeSetInstance", result);
   }
+  /**
+   * Get refered table name image blob.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameImageBlob() throws Exception {
@@ -141,6 +196,10 @@ public class BaseForeignKeyDomainTypeTest {
     String result = invokeGetReferedTableName("AD_Image_ID");
     assertEquals("AD_Image", result);
   }
+  /**
+   * Get refered table name null reference.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetReferedTableNameNullReference() throws Exception {
@@ -150,6 +209,10 @@ public class BaseForeignKeyDomainTypeTest {
   }
 
   // --- checkIsValidValue tests ---
+  /**
+   * Check is valid value null is valid.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCheckIsValidValueNullIsValid() throws Exception {
@@ -157,6 +220,7 @@ public class BaseForeignKeyDomainTypeTest {
     instance.checkIsValidValue(mockProperty, null);
     // Should not throw
   }
+  /** Check is valid value non base ob object throws. */
 
   @Test
   public void testCheckIsValidValueNonBaseOBObjectThrows() {
@@ -168,40 +232,45 @@ public class BaseForeignKeyDomainTypeTest {
       // expected
     }
   }
+  /**
+   * Check is valid value matching entity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCheckIsValidValueMatchingEntity() throws Exception {
     Property mockProperty = mock(Property.class);
-    when(mockProperty.getColumnName()).thenReturn("C_BPartner_ID");
+    when(mockProperty.getColumnName()).thenReturn(C_BPARTNER_ID);
 
     Entity mockEntity = mock(Entity.class);
-    when(mockEntity.getName()).thenReturn("BusinessPartner");
+    when(mockEntity.getName()).thenReturn(BUSINESS_PARTNER);
 
     BaseOBObjectDef mockObj = mock(BaseOBObjectDef.class);
     when(mockObj.getEntity()).thenReturn(mockEntity);
 
-    when(mockModelProvider.getEntity("BusinessPartner")).thenReturn(mockEntity);
-    when(mockModelProvider.getEntityByTableName("C_BPartner")).thenReturn(mockEntity);
+    when(mockModelProvider.getEntity(BUSINESS_PARTNER)).thenReturn(mockEntity);
+    when(mockModelProvider.getEntityByTableName(C_BPARTNER)).thenReturn(mockEntity);
 
     // Should not throw when entities match
     instance.checkIsValidValue(mockProperty, mockObj);
   }
+  /** Check is valid value mismatched entity throws. */
 
   @Test
   public void testCheckIsValidValueMismatchedEntityThrows() {
     Property mockProperty = mock(Property.class);
-    when(mockProperty.getColumnName()).thenReturn("C_BPartner_ID");
+    when(mockProperty.getColumnName()).thenReturn(C_BPARTNER_ID);
 
     Entity mockEntity1 = mock(Entity.class);
-    when(mockEntity1.getName()).thenReturn("BusinessPartner");
+    when(mockEntity1.getName()).thenReturn(BUSINESS_PARTNER);
 
     Entity mockEntity2 = mock(Entity.class);
 
     BaseOBObjectDef mockObj = mock(BaseOBObjectDef.class);
     when(mockObj.getEntity()).thenReturn(mockEntity1);
 
-    when(mockModelProvider.getEntity("BusinessPartner")).thenReturn(mockEntity1);
-    when(mockModelProvider.getEntityByTableName("C_BPartner")).thenReturn(mockEntity2);
+    when(mockModelProvider.getEntity(BUSINESS_PARTNER)).thenReturn(mockEntity1);
+    when(mockModelProvider.getEntityByTableName(C_BPARTNER)).thenReturn(mockEntity2);
 
     try {
       instance.checkIsValidValue(mockProperty, mockObj);
@@ -210,38 +279,50 @@ public class BaseForeignKeyDomainTypeTest {
       // expected
     }
   }
+  /**
+   * Check is valid value null refered entity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testCheckIsValidValueNullReferedEntity() throws Exception {
     Property mockProperty = mock(Property.class);
-    when(mockProperty.getColumnName()).thenReturn("C_BPartner_ID");
+    when(mockProperty.getColumnName()).thenReturn(C_BPARTNER_ID);
 
     Entity mockEntity = mock(Entity.class);
-    when(mockEntity.getName()).thenReturn("BusinessPartner");
+    when(mockEntity.getName()).thenReturn(BUSINESS_PARTNER);
 
     BaseOBObjectDef mockObj = mock(BaseOBObjectDef.class);
     when(mockObj.getEntity()).thenReturn(mockEntity);
 
-    when(mockModelProvider.getEntity("BusinessPartner")).thenReturn(mockEntity);
-    when(mockModelProvider.getEntityByTableName("C_BPartner")).thenReturn(null);
+    when(mockModelProvider.getEntity(BUSINESS_PARTNER)).thenReturn(mockEntity);
+    when(mockModelProvider.getEntityByTableName(C_BPARTNER)).thenReturn(null);
 
     // Should not throw when refered entity is null (TableDir case)
     instance.checkIsValidValue(mockProperty, mockObj);
   }
 
   // --- getForeignKeyColumn tests ---
+  /**
+   * Get foreign key column success.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetForeignKeyColumnSuccess() throws Exception {
     Table mockTable = mock(Table.class);
     Column mockColumn = mock(Column.class);
 
-    when(mockModelProvider.getTable("C_BPartner")).thenReturn(mockTable);
+    when(mockModelProvider.getTable(C_BPARTNER)).thenReturn(mockTable);
     when(mockTable.getPrimaryKeyColumns()).thenReturn(java.util.Collections.singletonList(mockColumn));
 
-    Column result = instance.getForeignKeyColumn("C_BPartner_ID");
+    Column result = instance.getForeignKeyColumn(C_BPARTNER_ID);
     assertEquals(mockColumn, result);
   }
+  /**
+   * Get foreign key column not found friendly warnings.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetForeignKeyColumnNotFoundFriendlyWarnings() throws Exception {

@@ -28,6 +28,7 @@ import org.openbravo.model.ad.access.UserRoles;
 import org.openbravo.model.ad.datamodel.Column;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.ui.Field;
+/** Tests for {@link ApplicationUtils}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ApplicationUtilsTest {
@@ -43,6 +44,7 @@ public class ApplicationUtilsTest {
 
   private MockedStatic<OBContext> obContextStatic;
   private MockedStatic<OBDal> obDalStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -54,24 +56,28 @@ public class ApplicationUtilsTest {
     obDalStatic = mockStatic(OBDal.class);
     obDalStatic.when(OBDal::getInstance).thenReturn(mockOBDal);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obContextStatic != null) obContextStatic.close();
     if (obDalStatic != null) obDalStatic.close();
   }
+  /** Is client admin returns true. */
 
   @Test
   public void testIsClientAdminReturnsTrue() {
     when(mockRole.isClientAdmin()).thenReturn(true);
     assertTrue(ApplicationUtils.isClientAdmin());
   }
+  /** Is client admin returns false. */
 
   @Test
   public void testIsClientAdminReturnsFalse() {
     when(mockRole.isClientAdmin()).thenReturn(false);
     assertFalse(ApplicationUtils.isClientAdmin());
   }
+  /** Is org admin returns true when admin orgs exist. */
 
   @Test
   public void testIsOrgAdminReturnsTrueWhenAdminOrgsExist() {
@@ -82,6 +88,7 @@ public class ApplicationUtilsTest {
 
     assertTrue(ApplicationUtils.isOrgAdmin());
   }
+  /** Is org admin returns false when no admin orgs. */
 
   @Test
   public void testIsOrgAdminReturnsFalseWhenNoAdminOrgs() {
@@ -92,6 +99,7 @@ public class ApplicationUtilsTest {
 
     assertFalse(ApplicationUtils.isOrgAdmin());
   }
+  /** Is role admin returns true when admin roles exist. */
 
   @Test
   public void testIsRoleAdminReturnsTrueWhenAdminRolesExist() {
@@ -102,6 +110,7 @@ public class ApplicationUtilsTest {
 
     assertTrue(ApplicationUtils.isRoleAdmin());
   }
+  /** Is role admin returns false when no admin roles. */
 
   @Test
   public void testIsRoleAdminReturnsFalseWhenNoAdminRoles() {
@@ -112,6 +121,7 @@ public class ApplicationUtilsTest {
 
     assertFalse(ApplicationUtils.isRoleAdmin());
   }
+  /** Get admin orgs returns empty list on exception. */
 
   @Test
   public void testGetAdminOrgsReturnsEmptyListOnException() {
@@ -119,6 +129,7 @@ public class ApplicationUtilsTest {
 
     assertEquals(Collections.emptyList(), ApplicationUtils.getAdminOrgs());
   }
+  /** Get admin roles returns empty list on exception. */
 
   @Test
   public void testGetAdminRolesReturnsEmptyListOnException() {
@@ -126,6 +137,7 @@ public class ApplicationUtilsTest {
 
     assertEquals(Collections.emptyList(), ApplicationUtils.getAdminRoles());
   }
+  /** Is ui button returns true for button reference. */
 
   @Test
   public void testIsUIButtonReturnsTrueForButtonReference() {
@@ -139,6 +151,7 @@ public class ApplicationUtilsTest {
 
     assertTrue(ApplicationUtils.isUIButton(field));
   }
+  /** Is ui button returns false for non button reference. */
 
   @Test
   public void testIsUIButtonReturnsFalseForNonButtonReference() {
@@ -152,6 +165,7 @@ public class ApplicationUtilsTest {
 
     assertFalse(ApplicationUtils.isUIButton(field));
   }
+  /** Is ui button returns false when column is null. */
 
   @Test
   public void testIsUIButtonReturnsFalseWhenColumnIsNull() {

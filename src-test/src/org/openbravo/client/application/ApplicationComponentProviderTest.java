@@ -22,6 +22,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.client.kernel.Component;
+/** Tests for {@link ApplicationComponentProvider}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ApplicationComponentProviderTest {
@@ -38,6 +39,10 @@ public class ApplicationComponentProviderTest {
   private MainLayoutComponent mockMainLayout;
   @Mock
   private ViewComponent mockViewComponent;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -50,11 +55,13 @@ public class ApplicationComponentProviderTest {
     weldUtilsStatic.when(() -> WeldUtils.getInstanceFromStaticBeanManager(ViewComponent.class))
         .thenReturn(mockViewComponent);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (weldUtilsStatic != null) weldUtilsStatic.close();
   }
+  /** Get component main layout. */
 
   @Test
   public void testGetComponentMainLayout() {
@@ -64,6 +71,7 @@ public class ApplicationComponentProviderTest {
     assertNotNull(result);
     assertEquals(mockMainLayout, result);
   }
+  /** Get component view component. */
 
   @Test
   public void testGetComponentViewComponent() {
@@ -73,12 +81,14 @@ public class ApplicationComponentProviderTest {
     assertNotNull(result);
     assertEquals(mockViewComponent, result);
   }
+  /** Get component unsupported id throws exception. */
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetComponentUnsupportedIdThrowsException() {
     Map<String, Object> parameters = new HashMap<>();
     instance.getComponent(UNSUPPORTED_ID, parameters);
   }
+  /** Get component unsupported id message. */
 
   @Test
   public void testGetComponentUnsupportedIdMessage() {
@@ -90,6 +100,7 @@ public class ApplicationComponentProviderTest {
       assertEquals("Component id " + UNSUPPORTED_ID + " not supported.", e.getMessage());
     }
   }
+  /** Qualifier constant. */
 
   @Test
   public void testQualifierConstant() {

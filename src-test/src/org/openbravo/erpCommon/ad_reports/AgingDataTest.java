@@ -14,12 +14,14 @@ import org.junit.Test;
 /**
  * Tests for {@link AgingData}.
  */
+@SuppressWarnings({"java:S120"})
 public class AgingDataTest {
 
   private static final String BP_ID = "TEST_BP_ID";
   private static final String BP_NAME = "Test Business Partner";
 
   // --- Constructor tests (full constructor) ---
+  /** Full constructor calculates total. */
 
   @Test
   public void testFullConstructorCalculatesTotal() {
@@ -40,6 +42,7 @@ public class AgingDataTest {
     BigDecimal expectedTotal = new BigDecimal("2100");
     assertEquals(expectedTotal, data.getTotal());
   }
+  /** Full constructor calculates net. */
 
   @Test
   public void testFullConstructorCalculatesNet() {
@@ -60,6 +63,7 @@ public class AgingDataTest {
     BigDecimal expectedNet = new BigDecimal("260");
     assertEquals(expectedNet, data.getNet());
   }
+  /** Full constructor calculates percentage with doubtful debt. */
 
   @Test
   public void testFullConstructorCalculatesPercentageWithDoubtfulDebt() {
@@ -82,6 +86,7 @@ public class AgingDataTest {
         .multiply(new BigDecimal("100"));
     assertEquals(expectedPercentage, data.getPercentage());
   }
+  /** Full constructor zero doubtful debt percentage. */
 
   @Test
   public void testFullConstructorZeroDoubtfulDebtPercentage() {
@@ -96,6 +101,7 @@ public class AgingDataTest {
   }
 
   // --- Constructor tests (index constructor) ---
+  /** Index constructor sets current for index0. */
 
   @Test
   public void testIndexConstructorSetsCurrentForIndex0() {
@@ -109,6 +115,7 @@ public class AgingDataTest {
     assertEquals(amount, data.getTotal());
     assertEquals(amount, data.getNet());
   }
+  /** Index constructor sets amount1for index1. */
 
   @Test
   public void testIndexConstructorSetsAmount1ForIndex1() {
@@ -119,6 +126,7 @@ public class AgingDataTest {
     assertEquals(amount, data.getamount1());
     assertEquals(BigDecimal.ZERO, data.getamount2());
   }
+  /** Index constructor sets amount5for index5. */
 
   @Test
   public void testIndexConstructorSetsAmount5ForIndex5() {
@@ -128,6 +136,7 @@ public class AgingDataTest {
     assertEquals(amount, data.getamount5());
     assertEquals(BigDecimal.ZERO, data.getamount4());
   }
+  /** Index constructor default index does not set amount. */
 
   @Test
   public void testIndexConstructorDefaultIndexDoesNotSetAmount() {
@@ -145,6 +154,7 @@ public class AgingDataTest {
   }
 
   // --- addAmount tests ---
+  /** Add amount to index0. */
 
   @Test
   public void testAddAmountToIndex0() {
@@ -156,6 +166,7 @@ public class AgingDataTest {
     assertEquals(new BigDecimal("150"), data.getTotal());
     assertEquals(new BigDecimal("150"), data.getNet());
   }
+  /** Add amount to index3. */
 
   @Test
   public void testAddAmountToIndex3() {
@@ -166,6 +177,7 @@ public class AgingDataTest {
     assertEquals(new BigDecimal("75"), data.getamount3());
     assertEquals(new BigDecimal("75"), data.getTotal());
   }
+  /** Add amount default index does nothing. */
 
   @Test
   public void testAddAmountDefaultIndexDoesNothing() {
@@ -179,6 +191,7 @@ public class AgingDataTest {
   }
 
   // --- addCredit tests ---
+  /** Add credit reduces net. */
 
   @Test
   public void testAddCreditReducesNet() {
@@ -191,6 +204,7 @@ public class AgingDataTest {
   }
 
   // --- addDoubtfulDebt tests ---
+  /** Add doubtful debt increases net. */
 
   @Test
   public void testAddDoubtfulDebtIncreasesNet() {
@@ -201,6 +215,7 @@ public class AgingDataTest {
     assertEquals(new BigDecimal("100"), data.getDoubtfulDebt());
     assertEquals(new BigDecimal("1100"), data.getNet());
   }
+  /** Add doubtful debt recalculates percentage. */
 
   @Test
   public void testAddDoubtfulDebtRecalculatesPercentage() {
@@ -215,6 +230,7 @@ public class AgingDataTest {
   }
 
   // --- getAmount array test ---
+  /** Get amount returns all six amounts. */
 
   @Test
   public void testGetAmountReturnsAllSixAmounts() {
@@ -235,6 +251,7 @@ public class AgingDataTest {
   }
 
   // --- compareTo tests ---
+  /** Compare to sorts by partner name ignoring case. */
 
   @Test
   public void testCompareToSortsByPartnerNameIgnoringCase() {
@@ -244,6 +261,7 @@ public class AgingDataTest {
     assertTrue(alpha.compareTo(beta) < 0);
     assertTrue(beta.compareTo(alpha) > 0);
   }
+  /** Compare to same name sorts by id. */
 
   @Test
   public void testCompareToSameNameSortsByID() {
@@ -252,6 +270,7 @@ public class AgingDataTest {
 
     assertTrue(first.compareTo(second) < 0);
   }
+  /** Compare to equal returns zero. */
 
   @Test
   public void testCompareToEqualReturnsZero() {
@@ -262,6 +281,7 @@ public class AgingDataTest {
   }
 
   // --- getter/setter tests ---
+  /** Set b partner id. */
 
   @Test
   public void testSetBPartnerID() {
@@ -269,6 +289,7 @@ public class AgingDataTest {
     data.setBPartnerID("NEW_ID");
     assertEquals("NEW_ID", data.getBPartnerID());
   }
+  /** Set b partner. */
 
   @Test
   public void testSetBPartner() {

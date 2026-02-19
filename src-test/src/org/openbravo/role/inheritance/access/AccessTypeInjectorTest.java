@@ -23,6 +23,7 @@ public class AccessTypeInjectorTest {
    * Concrete subclass for testing the non-abstract methods of AccessTypeInjector.
    */
   private static class TestableAccessTypeInjector extends AccessTypeInjector {
+    /** Get class name. */
 
     @Override
     public String getClassName() {
@@ -39,12 +40,14 @@ public class AccessTypeInjectorTest {
       return "role";
     }
   }
+  /** Get priority default. */
 
   @Test
   public void testGetPriorityDefault() {
     TestableAccessTypeInjector injector = new TestableAccessTypeInjector();
     assertEquals(100, injector.getPriority());
   }
+  /** Compare to same priority. */
 
   @Test
   public void testCompareToSamePriority() {
@@ -52,11 +55,13 @@ public class AccessTypeInjectorTest {
     TestableAccessTypeInjector injector2 = new TestableAccessTypeInjector();
     assertEquals(0, injector1.compareTo(injector2));
   }
+  /** Compare to lower priority. */
 
   @Test
   public void testCompareToLowerPriority() {
     TestableAccessTypeInjector injector1 = new TestableAccessTypeInjector();
     AccessTypeInjector injector2 = new TestableAccessTypeInjector() {
+      /** Get priority. */
       @Override
       public int getPriority() {
         return 200;
@@ -64,10 +69,12 @@ public class AccessTypeInjectorTest {
     };
     assertTrue(injector1.compareTo(injector2) < 0);
   }
+  /** Compare to higher priority. */
 
   @Test
   public void testCompareToHigherPriority() {
     TestableAccessTypeInjector injector1 = new TestableAccessTypeInjector() {
+      /** Get priority. */
       @Override
       public int getPriority() {
         return 200;
@@ -76,6 +83,7 @@ public class AccessTypeInjectorTest {
     TestableAccessTypeInjector injector2 = new TestableAccessTypeInjector();
     assertTrue(injector1.compareTo(injector2) > 0);
   }
+  /** Is inheritable default true. */
 
   @Test
   public void testIsInheritableDefaultTrue() {
@@ -83,12 +91,14 @@ public class AccessTypeInjectorTest {
     InheritedAccessEnabled access = mock(InheritedAccessEnabled.class);
     assertTrue(injector.isInheritable(access));
   }
+  /** Get role property. */
 
   @Test
   public void testGetRoleProperty() {
     TestableAccessTypeInjector injector = new TestableAccessTypeInjector();
     assertEquals("role.id", injector.getRoleProperty());
   }
+  /** Get skipped properties. */
 
   @Test
   public void testGetSkippedProperties() {
@@ -99,6 +109,7 @@ public class AccessTypeInjectorTest {
     assertTrue(skipped.contains("creationDate"));
     assertTrue(skipped.contains("createdBy"));
   }
+  /** Add entity where clause default. */
 
   @Test
   public void testAddEntityWhereClauseDefault() {
@@ -107,6 +118,7 @@ public class AccessTypeInjectorTest {
     String result = injector.addEntityWhereClause(whereClause);
     assertEquals(whereClause, result);
   }
+  /** Check access existence does not throw. */
 
   @Test
   public void testCheckAccessExistenceDoesNotThrow() {
@@ -114,6 +126,7 @@ public class AccessTypeInjectorTest {
     InheritedAccessEnabled access = mock(InheritedAccessEnabled.class);
     injector.checkAccessExistence(access);
   }
+  /** Clear inherit from field in childs does not throw. */
 
   @Test
   public void testClearInheritFromFieldInChildsDoesNotThrow() {
@@ -121,6 +134,7 @@ public class AccessTypeInjectorTest {
     InheritedAccessEnabled access = mock(InheritedAccessEnabled.class);
     injector.clearInheritFromFieldInChilds(access, true);
   }
+  /** Remove reference in parent list does not throw. */
 
   @Test
   public void testRemoveReferenceInParentListDoesNotThrow() {
@@ -128,6 +142,10 @@ public class AccessTypeInjectorTest {
     InheritedAccessEnabled access = mock(InheritedAccessEnabled.class);
     injector.removeReferenceInParentList(access);
   }
+  /**
+   * Clear inherited from field with null inherited from.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testClearInheritedFromFieldWithNullInheritedFrom() throws Exception {
@@ -141,6 +159,10 @@ public class AccessTypeInjectorTest {
     method.invoke(injector, access);
     // Should not throw - inherited from is null, so nothing happens
   }
+  /**
+   * Clear inherited from field with role id not matching.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testClearInheritedFromFieldWithRoleIdNotMatching() throws Exception {
@@ -156,6 +178,10 @@ public class AccessTypeInjectorTest {
     method.invoke(injector, access, "role2");
     // Should not nullify since role ids don't match
   }
+  /**
+   * Selector creation.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSelectorCreation() throws Exception {
@@ -164,6 +190,10 @@ public class AccessTypeInjectorTest {
     assertNotNull(selector.value());
     assertEquals(InheritedAccessEnabled.class, selector.value());
   }
+  /**
+   * Selector with invalid class.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = Exception.class)
   public void testSelectorWithInvalidClass() throws Exception {

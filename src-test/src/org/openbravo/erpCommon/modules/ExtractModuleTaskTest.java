@@ -11,17 +11,24 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+/** Tests for {@link ExtractModuleTask}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExtractModuleTaskTest {
 
   private ExtractModuleTask instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(ExtractModuleTask.class);
   }
+  /**
+   * Set dest dir.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetDestDir() throws Exception {
@@ -30,6 +37,10 @@ public class ExtractModuleTaskTest {
     field.setAccessible(true);
     assertEquals("/tmp/dest", field.get(instance));
   }
+  /**
+   * Set module name.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetModuleName() throws Exception {
@@ -38,6 +49,10 @@ public class ExtractModuleTaskTest {
     field.setAccessible(true);
     assertEquals("com.example.module", field.get(instance));
   }
+  /**
+   * Set module id.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetModuleID() throws Exception {
@@ -46,6 +61,10 @@ public class ExtractModuleTaskTest {
     field.setAccessible(true);
     assertEquals("ABC123", field.get(instance));
   }
+  /**
+   * Set ob dir.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetObDir() throws Exception {
@@ -54,6 +73,10 @@ public class ExtractModuleTaskTest {
     field.setAccessible(true);
     assertEquals("/opt/openbravo", field.get(instance));
   }
+  /**
+   * Set export rd.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetExportRD() throws Exception {
@@ -62,6 +85,10 @@ public class ExtractModuleTaskTest {
     field.setAccessible(true);
     assertTrue((Boolean) field.get(instance));
   }
+  /**
+   * Set add all dependencies.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAddAllDependencies() throws Exception {
@@ -70,6 +97,10 @@ public class ExtractModuleTaskTest {
     field.setAccessible(true);
     assertTrue((Boolean) field.get(instance));
   }
+  /**
+   * Export rd default is false.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExportRDDefaultIsFalse() throws Exception {

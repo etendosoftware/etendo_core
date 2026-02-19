@@ -39,6 +39,10 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class BaseReportActionHandlerTest {
 
+  private static final String GET_SAFE_FILENAME = "getSafeFilename";
+  private static final String REPORT_FILE = "report_file";
+  private static final String RESPONSE_ACTIONS = "responseActions";
+
   @Mock
   private OBDal mockOBDal;
   @Mock
@@ -51,6 +55,7 @@ public class BaseReportActionHandlerTest {
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
 
   private BaseReportActionHandler instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -67,6 +72,7 @@ public class BaseReportActionHandlerTest {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(ConcreteReportHandler.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -74,62 +80,94 @@ public class BaseReportActionHandlerTest {
     if (obContextStatic != null) obContextStatic.close();
     if (obMessageUtilsStatic != null) obMessageUtilsStatic.close();
   }
+  /**
+   * Get safe filename removes colons.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSafeFilenameRemovesColons() throws Exception {
-    Method method = BaseReportActionHandler.class.getDeclaredMethod("getSafeFilename", String.class);
+    Method method = BaseReportActionHandler.class.getDeclaredMethod(GET_SAFE_FILENAME, String.class);
     method.setAccessible(true);
     String result = (String) method.invoke(null, "report:2024");
     assertEquals("report_2024", result);
   }
+  /**
+   * Get safe filename removes backslashes.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSafeFilenameRemovesBackslashes() throws Exception {
-    Method method = BaseReportActionHandler.class.getDeclaredMethod("getSafeFilename", String.class);
+    Method method = BaseReportActionHandler.class.getDeclaredMethod(GET_SAFE_FILENAME, String.class);
     method.setAccessible(true);
     String result = (String) method.invoke(null, "report\\file");
-    assertEquals("report_file", result);
+    assertEquals(REPORT_FILE, result);
   }
+  /**
+   * Get safe filename removes slashes.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSafeFilenameRemovesSlashes() throws Exception {
-    Method method = BaseReportActionHandler.class.getDeclaredMethod("getSafeFilename", String.class);
+    Method method = BaseReportActionHandler.class.getDeclaredMethod(GET_SAFE_FILENAME, String.class);
     method.setAccessible(true);
     String result = (String) method.invoke(null, "report/file");
-    assertEquals("report_file", result);
+    assertEquals(REPORT_FILE, result);
   }
+  /**
+   * Get safe filename removes asterisks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSafeFilenameRemovesAsterisks() throws Exception {
-    Method method = BaseReportActionHandler.class.getDeclaredMethod("getSafeFilename", String.class);
+    Method method = BaseReportActionHandler.class.getDeclaredMethod(GET_SAFE_FILENAME, String.class);
     method.setAccessible(true);
     String result = (String) method.invoke(null, "report*file");
-    assertEquals("report_file", result);
+    assertEquals(REPORT_FILE, result);
   }
+  /**
+   * Get safe filename removes question mark.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSafeFilenameRemovesQuestionMark() throws Exception {
-    Method method = BaseReportActionHandler.class.getDeclaredMethod("getSafeFilename", String.class);
+    Method method = BaseReportActionHandler.class.getDeclaredMethod(GET_SAFE_FILENAME, String.class);
     method.setAccessible(true);
     String result = (String) method.invoke(null, "report?file");
-    assertEquals("report_file", result);
+    assertEquals(REPORT_FILE, result);
   }
+  /**
+   * Get safe filename removes pipe and angle brackets.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSafeFilenameRemovesPipeAndAngleBrackets() throws Exception {
-    Method method = BaseReportActionHandler.class.getDeclaredMethod("getSafeFilename", String.class);
+    Method method = BaseReportActionHandler.class.getDeclaredMethod(GET_SAFE_FILENAME, String.class);
     method.setAccessible(true);
     String result = (String) method.invoke(null, "report|<file>");
     assertEquals("report__file_", result);
   }
+  /**
+   * Get safe filename keeps valid chars.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetSafeFilenameKeepsValidChars() throws Exception {
-    Method method = BaseReportActionHandler.class.getDeclaredMethod("getSafeFilename", String.class);
+    Method method = BaseReportActionHandler.class.getDeclaredMethod(GET_SAFE_FILENAME, String.class);
     method.setAccessible(true);
     String result = (String) method.invoke(null, "Sales Report-2024_01");
     assertEquals("Sales Report-2024_01", result);
   }
+  /**
+   * Post actions with record id returns empty actions.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testPostActionsWithRecordIdReturnsEmptyActions() throws Exception {
@@ -139,9 +177,13 @@ public class BaseReportActionHandlerTest {
 
     instance.postActions(jrParams, result);
 
-    JSONArray actions = result.getJSONArray("responseActions");
+    JSONArray actions = result.getJSONArray(RESPONSE_ACTIONS);
     assertEquals(0, actions.length());
   }
+  /**
+   * Post actions default success message.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testPostActionsDefaultSuccessMessage() throws Exception {
@@ -150,13 +192,17 @@ public class BaseReportActionHandlerTest {
 
     instance.postActions(jrParams, result);
 
-    JSONArray actions = result.getJSONArray("responseActions");
+    JSONArray actions = result.getJSONArray(RESPONSE_ACTIONS);
     assertEquals(1, actions.length());
     JSONObject action = actions.getJSONObject(0);
     JSONObject showMsg = action.getJSONObject("showMsgInProcessView");
     assertEquals("success", showMsg.getString("msgType"));
     assertEquals("Report generated successfully", showMsg.getString("msgText"));
   }
+  /**
+   * Post actions with post action override.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testPostActionsWithPostActionOverride() throws Exception {
@@ -169,13 +215,17 @@ public class BaseReportActionHandlerTest {
 
     instance.postActions(jrParams, result);
 
-    JSONArray actions = result.getJSONArray("responseActions");
+    JSONArray actions = result.getJSONArray(RESPONSE_ACTIONS);
     assertEquals(1, actions.length());
     JSONObject action = actions.getJSONObject(0);
     JSONObject showMsg = action.getJSONObject("showMsgInProcessView");
     assertEquals("warning", showMsg.getString("msgType"));
     assertEquals("Custom warning", showMsg.getString("msgText"));
   }
+  /**
+   * Handle custom action throws by default.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = OBException.class)
   public void testHandleCustomActionThrowsByDefault() throws Exception {
@@ -184,6 +234,7 @@ public class BaseReportActionHandlerTest {
         .thenReturn("Unsupported action: customAction");
     instance.handleCustomAction(new JSONObject(), new HashMap<>(), new JSONObject(), "customAction");
   }
+  /** Is compiling subreports returns true. */
 
   @Test
   public void testIsCompilingSubreportsReturnsTrue() {

@@ -21,15 +21,21 @@ import org.objenesis.ObjenesisStd;
  * Unit tests for AcctServer.
  * Focuses on pure logic methods that can be tested without database/static dependencies.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AcctServerTest {
 
+  private static final String GET_STR_ACCOUNT = "getStrAccount";
+
   private AcctServer instance;
-  private ObjenesisStd objenesis;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
-    objenesis = new ObjenesisStd();
+    ObjenesisStd objenesis = new ObjenesisStd();
     // We need a concrete subclass to test AcctServer since it is abstract.
     // Use ObjenesisStd to create an instance of a concrete subclass.
     instance = objenesis.newInstance(DocGLJournal.class);
@@ -41,6 +47,7 @@ public class AcctServerTest {
 
     instance.ZERO = BigDecimal.ZERO;
   }
+  /** Constants. */
 
   @Test
   public void testConstants() {
@@ -58,6 +65,7 @@ public class AcctServerTest {
     assertEquals("T", AcctServer.STATUS_TableDisabled);
     assertEquals("-1", AcctServer.NO_CURRENCY);
   }
+  /** Doc type constants. */
 
   @Test
   public void testDocTypeConstants() {
@@ -69,6 +77,7 @@ public class AcctServerTest {
     assertEquals("MMS", AcctServer.DOCTYPE_MatShipment);
     assertEquals("MMR", AcctServer.DOCTYPE_MatReceipt);
   }
+  /** Table id constants. */
 
   @Test
   public void testTableIdConstants() {
@@ -77,6 +86,7 @@ public class AcctServerTest {
     assertEquals("4D8C3B3C31D1410DA046140C9F024D17", AcctServer.TABLEID_Transaction);
     assertEquals("224", AcctServer.TABLEID_GLJournal);
   }
+  /** Get amount with valid index. */
 
   @Test
   public void testGetAmountWithValidIndex() {
@@ -85,17 +95,23 @@ public class AcctServerTest {
     assertEquals("50", instance.getAmount(2));
     assertEquals("75", instance.getAmount(3));
   }
+  /** Get amount with negative index. */
 
   @Test
   public void testGetAmountWithNegativeIndex() {
     assertNull(instance.getAmount(-1));
   }
+  /** Get amount with index out of bounds. */
 
   @Test
   public void testGetAmountWithIndexOutOfBounds() {
     assertNull(instance.getAmount(4));
     assertNull(instance.getAmount(100));
   }
+  /**
+   * Get amount with empty string.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetAmountWithEmptyString() throws Exception {
@@ -107,11 +123,13 @@ public class AcctServerTest {
     assertEquals("200", instance.getAmount(1));
     assertEquals("0", instance.getAmount(2));
   }
+  /** Get amount no args. */
 
   @Test
   public void testGetAmountNoArgs() {
     assertEquals("100", instance.getAmount());
   }
+  /** Get and set status. */
 
   @Test
   public void testGetAndSetStatus() {
@@ -121,12 +139,17 @@ public class AcctServerTest {
     instance.setStatus("N");
     assertEquals("N", instance.getStatus());
   }
+  /**
+   * Is balanced when multi currency.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testIsBalancedWhenMultiCurrency() throws Exception {
     instance.MultiCurrency = true;
     assertTrue(instance.isBalanced());
   }
+  /** Set and get background. */
 
   @Test
   public void testSetAndGetBackground() {
@@ -136,17 +159,20 @@ public class AcctServerTest {
     instance.setBackground(false);
     assertFalse(instance.isBackground());
   }
+  /** Set batch size. */
 
   @Test
   public void testSetBatchSize() {
     instance.setBatchSize("500");
     assertEquals("500", instance.batchSize);
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {
     assertEquals("Servlet for the accounting", instance.getServletInfo());
   }
+  /** Get invalid account parameters. */
 
   @Test
   public void testGetInvalidAccountParameters() {
@@ -158,6 +184,7 @@ public class AcctServerTest {
     assertEquals("TestEntity", params.get(AcctServer.ENTITY));
     assertEquals("TestSchema", params.get(AcctServer.ACCOUNTING_SCHEMA));
   }
+  /** Get invalid cost parameters. */
 
   @Test
   public void testGetInvalidCostParameters() {
@@ -168,6 +195,7 @@ public class AcctServerTest {
     assertEquals("ProductA", params.get("Product"));
     assertEquals("2024-01-01", params.get("Date"));
   }
+  /** Set and get message result. */
 
   @Test
   public void testSetAndGetMessageResult() {
@@ -182,60 +210,88 @@ public class AcctServerTest {
     assertEquals("Error", instance.getMessageResult().getType());
     assertEquals("Test error", instance.getMessageResult().getMessage());
   }
+  /**
+   * Get str account receipt int.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetStrAccountReceiptINT() throws Exception {
-    Method method = AcctServer.class.getDeclaredMethod("getStrAccount", String.class, boolean.class);
+    Method method = AcctServer.class.getDeclaredMethod(GET_STR_ACCOUNT, String.class, boolean.class);
     method.setAccessible(true);
 
     String result = (String) method.invoke(null, "INT", true);
     assertEquals("@InTransitPaymentAccountIN@", result);
   }
+  /**
+   * Get str account receipt dep.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetStrAccountReceiptDEP() throws Exception {
-    Method method = AcctServer.class.getDeclaredMethod("getStrAccount", String.class, boolean.class);
+    Method method = AcctServer.class.getDeclaredMethod(GET_STR_ACCOUNT, String.class, boolean.class);
     method.setAccessible(true);
 
     String result = (String) method.invoke(null, "DEP", true);
     assertEquals("@DepositAccount@", result);
   }
+  /**
+   * Get str account receipt other.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetStrAccountReceiptOther() throws Exception {
-    Method method = AcctServer.class.getDeclaredMethod("getStrAccount", String.class, boolean.class);
+    Method method = AcctServer.class.getDeclaredMethod(GET_STR_ACCOUNT, String.class, boolean.class);
     method.setAccessible(true);
 
     String result = (String) method.invoke(null, "CLE", true);
     assertEquals("@ClearedPaymentAccount@", result);
   }
+  /**
+   * Get str account non receipt int.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetStrAccountNonReceiptINT() throws Exception {
-    Method method = AcctServer.class.getDeclaredMethod("getStrAccount", String.class, boolean.class);
+    Method method = AcctServer.class.getDeclaredMethod(GET_STR_ACCOUNT, String.class, boolean.class);
     method.setAccessible(true);
 
     String result = (String) method.invoke(null, "INT", false);
     assertEquals("@InTransitPaymentAccountOUT@", result);
   }
+  /**
+   * Get str account non receipt cle.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetStrAccountNonReceiptCLE() throws Exception {
-    Method method = AcctServer.class.getDeclaredMethod("getStrAccount", String.class, boolean.class);
+    Method method = AcctServer.class.getDeclaredMethod(GET_STR_ACCOUNT, String.class, boolean.class);
     method.setAccessible(true);
 
     String result = (String) method.invoke(null, "CLE", false);
     assertEquals("@ClearedPaymentAccountOUT@", result);
   }
+  /**
+   * Get str account non receipt wit.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetStrAccountNonReceiptWIT() throws Exception {
-    Method method = AcctServer.class.getDeclaredMethod("getStrAccount", String.class, boolean.class);
+    Method method = AcctServer.class.getDeclaredMethod(GET_STR_ACCOUNT, String.class, boolean.class);
     method.setAccessible(true);
 
     String result = (String) method.invoke(null, "WIT", false);
     assertEquals("@WithdrawalAccount@", result);
   }
+  /**
+   * Get connection provider.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetConnectionProvider() throws Exception {
@@ -246,6 +302,10 @@ public class AcctServerTest {
 
     assertEquals(mockConn, instance.getConnectionProvider());
   }
+  /**
+   * Get conversion date.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetConversionDate() throws Exception {
@@ -256,6 +316,7 @@ public class AcctServerTest {
     String result = (String) method.invoke(instance);
     assertEquals("2024-01-15", result);
   }
+  /** Object field provider. */
 
   @Test
   public void testObjectFieldProvider() {
@@ -266,6 +327,7 @@ public class AcctServerTest {
     assertNotNull(instance.getObjectFieldProvider());
     assertEquals(0, instance.getObjectFieldProvider().length);
   }
+  /** Amt type constants. */
 
   @Test
   public void testAmtTypeConstants() {
@@ -277,6 +339,7 @@ public class AcctServerTest {
     assertEquals(2, AcctServer.AMTTYPE_Discount);
     assertEquals(3, AcctServer.AMTTYPE_WriteOff);
   }
+  /** Insert note deprecated. */
 
   @Test
   public void testInsertNoteDeprecated() {

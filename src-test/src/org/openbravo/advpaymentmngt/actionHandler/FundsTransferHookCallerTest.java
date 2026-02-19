@@ -25,6 +25,7 @@ import org.openbravo.model.financialmgmt.payment.FIN_FinaccTransaction;
 /**
  * Tests for {@link FundsTransferHookCaller}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class FundsTransferHookCallerTest {
 
@@ -32,6 +33,10 @@ public class FundsTransferHookCallerTest {
 
   @Mock
   private Instance<FundsTransferPostProcessHook> mockHooksInstance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -42,6 +47,10 @@ public class FundsTransferHookCallerTest {
     hooksField.setAccessible(true);
     hooksField.set(instance, mockHooksInstance);
   }
+  /**
+   * Execute hook calls all hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookCallsAllHooks() throws Exception {
@@ -57,6 +66,10 @@ public class FundsTransferHookCallerTest {
     verify(hook1).exec(transactions);
     verify(hook2).exec(transactions);
   }
+  /**
+   * Execute hook with no hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookWithNoHooks() throws Exception {
@@ -67,6 +80,10 @@ public class FundsTransferHookCallerTest {
     instance.executeHook(transactions);
     // No exception, no hooks called
   }
+  /**
+   * Execute hook with single hook.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteHookWithSingleHook() throws Exception {
@@ -82,6 +99,10 @@ public class FundsTransferHookCallerTest {
 
     verify(hook).exec(transactions);
   }
+  /**
+   * Execute hook propagates exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test(expected = Exception.class)
   public void testExecuteHookPropagatesException() throws Exception {

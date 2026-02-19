@@ -26,7 +26,6 @@ import org.openbravo.base.structure.BaseOBObject;
 public class ActionTest {
 
   private Action instance;
-  private ObjenesisStd objenesis;
 
   /**
    * Concrete stub subclass for testing
@@ -43,12 +42,20 @@ public class ActionTest {
       return BaseOBObject.class;
     }
   }
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
-    objenesis = new ObjenesisStd();
+    ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(TestAction.class);
   }
+  /**
+   * Pre run returns input.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testPreRunReturnsInput() throws Exception {
@@ -64,6 +71,7 @@ public class ActionTest {
     // Assert
     assertSame(mockData, result);
   }
+  /** Post run returns result. */
 
   @Test
   public void testPostRunReturnsResult() {
@@ -74,6 +82,10 @@ public class ActionTest {
     ActionResult returned = instance.postRun(actionResult);
     assertSame(actionResult, returned);
   }
+  /**
+   * Set and get parameters.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAndGetParameters() throws Exception {
@@ -90,6 +102,10 @@ public class ActionTest {
 
     assertEquals("value1", storedParams.getString("key1"));
   }
+  /**
+   * Set and get input.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAndGetInput() throws Exception {
@@ -105,6 +121,10 @@ public class ActionTest {
 
     assertSame(mockData, result);
   }
+  /**
+   * Set and get request parameters.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAndGetRequestParameters() throws Exception {
@@ -122,6 +142,10 @@ public class ActionTest {
 
     assertEquals("valueA", result.get("paramA"));
   }
+  /**
+   * Get output class returns null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetOutputClassReturnsNull() throws Exception {
@@ -131,6 +155,10 @@ public class ActionTest {
 
     assertNull(result);
   }
+  /**
+   * Run pre action hooks with null hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRunPreActionHooksWithNullHooks() throws Exception {
@@ -145,6 +173,10 @@ public class ActionTest {
     // Should not throw
     runPreHooks.invoke(instance, new JSONObject());
   }
+  /**
+   * Run post action hooks with null hooks.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testRunPostActionHooksWithNullHooks() throws Exception {
@@ -159,6 +191,7 @@ public class ActionTest {
     // Should not throw
     runPostHooks.invoke(instance, new JSONObject(), new ActionResult());
   }
+  /** Params constant. */
 
   @Test
   public void testParamsConstant() {

@@ -12,15 +12,19 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.database.ConnectionProvider;
+/** Tests for {@link DocMovementTemplate}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class DocMovementTemplateTest {
 
   private DocMovementTemplate instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     instance = new DocMovementTemplate() {
+      /** Create fact. */
       @Override
       public Fact createFact(DocMovement docMovement, AcctSchema as,
           ConnectionProvider conn, Connection con, VariablesSecureApp vars)
@@ -29,6 +33,7 @@ public class DocMovementTemplateTest {
       }
     };
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {

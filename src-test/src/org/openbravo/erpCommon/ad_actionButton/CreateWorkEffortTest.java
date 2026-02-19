@@ -29,9 +29,18 @@ import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessContext;
+/** Tests for {@link CreateWorkEffort}. */
+@SuppressWarnings({"java:S120"})
 
 @RunWith(MockitoJUnitRunner.class)
 public class CreateWorkEffortTest {
+
+  private static final String MA_WORKREQUIREMENT_ID = "MA_Workrequirement_ID";
+  private static final String NONEXISTENT_ID = "NONEXISTENT_ID";
+  private static final String VAL_15_01_2024 = "15-01-2024";
+  private static final String STARTTIME = "starttime";
+  private static final String ENDTIME = "endtime";
+  private static final String ERROR = "Error";
 
   private CreateWorkEffort instance;
 
@@ -56,6 +65,7 @@ public class CreateWorkEffortTest {
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBPropertiesProvider> propsStatic;
   private MockedStatic<Utility> utilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -78,6 +88,7 @@ public class CreateWorkEffortTest {
     lenient().when(mockProcessContext.toVars()).thenReturn(mockVars);
     lenient().when(mockProcessContext.getLanguage()).thenReturn("en_US");
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -85,58 +96,70 @@ public class CreateWorkEffortTest {
     if (propsStatic != null) propsStatic.close();
     if (utilityStatic != null) utilityStatic.close();
   }
+  /**
+   * Execute with null work requirement handles error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithNullWorkRequirementHandlesError() throws Exception {
     HashMap<String, Object> params = new HashMap<>();
-    params.put("MA_Workrequirement_ID", "NONEXISTENT_ID");
-    params.put("date", "15-01-2024");
-    params.put("starttime", "08:00:00");
-    params.put("endtime", "17:00:00");
+    params.put(MA_WORKREQUIREMENT_ID, NONEXISTENT_ID);
+    params.put("date", VAL_15_01_2024);
+    params.put(STARTTIME, "08:00:00");
+    params.put(ENDTIME, "17:00:00");
     when(mockBundle.getParams()).thenReturn(params);
 
     lenient().when(mockOBDal.get(any(Class.class), anyString())).thenReturn(null);
 
     utilityStatic.when(() -> Utility.messageBD(any(ConnectionProvider.class), anyString(), anyString()))
-        .thenReturn("Error");
+        .thenReturn(ERROR);
 
     instance.execute(mockBundle);
 
     verify(mockBundle).setResult(any(OBError.class));
   }
+  /**
+   * Execute with null start end time defaults.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithNullStartEndTimeDefaults() throws Exception {
     HashMap<String, Object> params = new HashMap<>();
-    params.put("MA_Workrequirement_ID", "NONEXISTENT_ID");
-    params.put("date", "15-01-2024");
-    params.put("starttime", null);
-    params.put("endtime", null);
+    params.put(MA_WORKREQUIREMENT_ID, NONEXISTENT_ID);
+    params.put("date", VAL_15_01_2024);
+    params.put(STARTTIME, null);
+    params.put(ENDTIME, null);
     when(mockBundle.getParams()).thenReturn(params);
 
     lenient().when(mockOBDal.get(any(Class.class), anyString())).thenReturn(null);
 
     utilityStatic.when(() -> Utility.messageBD(any(ConnectionProvider.class), anyString(), anyString()))
-        .thenReturn("Error");
+        .thenReturn(ERROR);
 
     instance.execute(mockBundle);
 
     verify(mockBundle).setResult(any(OBError.class));
   }
+  /**
+   * Execute with empty start end time defaults.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithEmptyStartEndTimeDefaults() throws Exception {
     HashMap<String, Object> params = new HashMap<>();
-    params.put("MA_Workrequirement_ID", "NONEXISTENT_ID");
-    params.put("date", "15-01-2024");
-    params.put("starttime", "");
-    params.put("endtime", "");
+    params.put(MA_WORKREQUIREMENT_ID, NONEXISTENT_ID);
+    params.put("date", VAL_15_01_2024);
+    params.put(STARTTIME, "");
+    params.put(ENDTIME, "");
     when(mockBundle.getParams()).thenReturn(params);
 
     lenient().when(mockOBDal.get(any(Class.class), anyString())).thenReturn(null);
 
     utilityStatic.when(() -> Utility.messageBD(any(ConnectionProvider.class), anyString(), anyString()))
-        .thenReturn("Error");
+        .thenReturn(ERROR);
 
     instance.execute(mockBundle);
 

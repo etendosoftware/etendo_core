@@ -15,18 +15,27 @@ import org.mockito.junit.MockitoJUnitRunner;
 /**
  * Tests for {@link BusinessPartnerDocTypeValidation}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class BusinessPartnerDocTypeValidationTest {
+
+  private static final String INPC_DOCTYPE_ID = "inpcDoctypeId";
+  private static final String INPC_DOCTYPE_ID_R = "inpcDoctypeId_R";
 
   private BusinessPartnerDocTypeValidation callout;
 
   @Mock
   private SimpleCallout.CalloutInfo info;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     callout = new BusinessPartnerDocTypeValidation();
   }
+  /**
+   * Execute clears doc type when sales transaction changed.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testExecuteClearsDocTypeWhenSalesTransactionChanged() throws ServletException {
@@ -34,9 +43,13 @@ public class BusinessPartnerDocTypeValidationTest {
 
     callout.execute(info);
 
-    verify(info).addResult("inpcDoctypeId", "");
-    verify(info).addResult("inpcDoctypeId_R", "");
+    verify(info).addResult(INPC_DOCTYPE_ID, "");
+    verify(info).addResult(INPC_DOCTYPE_ID_R, "");
   }
+  /**
+   * Execute clears doc type when document category changed.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testExecuteClearsDocTypeWhenDocumentCategoryChanged() throws ServletException {
@@ -44,9 +57,13 @@ public class BusinessPartnerDocTypeValidationTest {
 
     callout.execute(info);
 
-    verify(info).addResult("inpcDoctypeId", "");
-    verify(info).addResult("inpcDoctypeId_R", "");
+    verify(info).addResult(INPC_DOCTYPE_ID, "");
+    verify(info).addResult(INPC_DOCTYPE_ID_R, "");
   }
+  /**
+   * Execute clears doc type when org changed.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testExecuteClearsDocTypeWhenOrgChanged() throws ServletException {
@@ -54,9 +71,13 @@ public class BusinessPartnerDocTypeValidationTest {
 
     callout.execute(info);
 
-    verify(info).addResult("inpcDoctypeId", "");
-    verify(info).addResult("inpcDoctypeId_R", "");
+    verify(info).addResult(INPC_DOCTYPE_ID, "");
+    verify(info).addResult(INPC_DOCTYPE_ID_R, "");
   }
+  /**
+   * Execute does not clear doc type for other fields.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testExecuteDoesNotClearDocTypeForOtherFields() throws ServletException {
@@ -64,9 +85,13 @@ public class BusinessPartnerDocTypeValidationTest {
 
     callout.execute(info);
 
-    verify(info, never()).addResult("inpcDoctypeId", "");
-    verify(info, never()).addResult("inpcDoctypeId_R", "");
+    verify(info, never()).addResult(INPC_DOCTYPE_ID, "");
+    verify(info, never()).addResult(INPC_DOCTYPE_ID_R, "");
   }
+  /**
+   * Execute does not clear doc type when field is null.
+   * @throws ServletException if an error occurs
+   */
 
   @Test
   public void testExecuteDoesNotClearDocTypeWhenFieldIsNull() throws ServletException {
@@ -74,7 +99,7 @@ public class BusinessPartnerDocTypeValidationTest {
 
     callout.execute(info);
 
-    verify(info, never()).addResult("inpcDoctypeId", "");
-    verify(info, never()).addResult("inpcDoctypeId_R", "");
+    verify(info, never()).addResult(INPC_DOCTYPE_ID, "");
+    verify(info, never()).addResult(INPC_DOCTYPE_ID_R, "");
   }
 }

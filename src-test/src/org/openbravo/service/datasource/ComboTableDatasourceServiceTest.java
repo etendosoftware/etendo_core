@@ -26,6 +26,7 @@ public class ComboTableDatasourceServiceTest {
   private ComboTableDatasourceService service;
 
   private MockedStatic<OBContext> obContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -33,29 +34,34 @@ public class ComboTableDatasourceServiceTest {
     service = objenesis.newInstance(ComboTableDatasourceService.class);
     obContextStatic = mockStatic(OBContext.class);
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (obContextStatic != null) obContextStatic.close();
   }
+  /** Remove throws ob exception. */
 
   @Test(expected = OBException.class)
   public void testRemoveThrowsOBException() {
     Map<String, String> parameters = new HashMap<>();
     service.remove(parameters);
   }
+  /** Add throws ob exception. */
 
   @Test(expected = OBException.class)
   public void testAddThrowsOBException() {
     Map<String, String> parameters = new HashMap<>();
     service.add(parameters, "{}");
   }
+  /** Update throws ob exception. */
 
   @Test(expected = OBException.class)
   public void testUpdateThrowsOBException() {
     Map<String, String> parameters = new HashMap<>();
     service.update(parameters, "{}");
   }
+  /** Check edit datasource access throws ob exception. */
 
   @Test(expected = OBException.class)
   public void testCheckEditDatasourceAccessThrowsOBException() {

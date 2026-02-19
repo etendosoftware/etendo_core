@@ -13,6 +13,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -61,8 +62,18 @@ import org.openbravo.service.json.JsonUtils;
  * Tests the action handler that creates and matches financial transactions
  * from bank statement lines with different transaction types (payment, GL item, bank fee).
  */
+@SuppressWarnings({"java:S120", "java:S112"})
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class AddTransactionActionHandlerTest {
+
+  private static final String VAL_100_00 = "100.00";
+  private static final String VAL_50_00 = "50.00";
+  private static final String VAL_200_00 = "200.00";
+  private static final String APRM_BANK_FEE = "APRM_BankFee";
+  private static final String BANK_FEE = "Bank Fee";
+  private static final String RESPONSE_ACTIONS = "responseActions";
+  private static final String RETRY_EXECUTION = "retryExecution";
+  private static final String VAL_10_00 = "10.00";
 
   private static final String TEST_FINANCIAL_ACCOUNT_ID = "FA001";
   private static final String TEST_BSL_ID = "BSL001";
@@ -126,6 +137,7 @@ public class AddTransactionActionHandlerTest {
   private MockedStatic<FIN_Utility> finUtilityStatic;
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
   private MockedStatic<DbUtility> dbUtilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -146,6 +158,7 @@ public class AddTransactionActionHandlerTest {
 
     setupDimensionMocks();
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -161,23 +174,24 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with a payment transaction type.
    * Verifies that the payment path is taken when a valid payment ID is provided.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithPaymentTransaction() throws Exception {
     // Arrange
-    String content = buildRequestContent("BPW", TEST_PAYMENT_ID, "null", "100.00", "0.00",
+    String content = buildRequestContent("BPW", TEST_PAYMENT_ID, "null", VAL_100_00, "0.00",
         "Test payment description");
 
     lenient().when(mockOBDal.get(FIN_Payment.class, TEST_PAYMENT_ID)).thenReturn(mockPayment);
     when(mockPayment.isReceipt()).thenReturn(true);
-    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal("100.00"));
+    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal(VAL_100_00));
     when(mockPayment.getDescription()).thenReturn("Payment desc");
     when(mockPayment.getCurrency()).thenReturn(mockCurrency);
     when(mockPayment.getFinancialTransactionConvertRate()).thenReturn(BigDecimal.ONE);
-    when(mockPayment.getAmount()).thenReturn(new BigDecimal("100.00"));
+    when(mockPayment.getAmount()).thenReturn(new BigDecimal(VAL_100_00));
 
     finUtilityStatic.when(() -> FIN_Utility.getDepositAmount(eq(true), any(BigDecimal.class)))
-        .thenReturn(new BigDecimal("100.00"));
+        .thenReturn(new BigDecimal(VAL_100_00));
     finUtilityStatic.when(() -> FIN_Utility.getPaymentAmount(eq(true), any(BigDecimal.class)))
         .thenReturn(BigDecimal.ZERO);
 
@@ -196,24 +210,25 @@ public class AddTransactionActionHandlerTest {
 
   /**
    * Tests doExecute with a payment that has a blank description, using the payment's own description.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithPaymentFallbackDescription() throws Exception {
     // Arrange
-    String content = buildRequestContent("BPW", TEST_PAYMENT_ID, "null", "100.00", "0.00", "");
+    String content = buildRequestContent("BPW", TEST_PAYMENT_ID, "null", VAL_100_00, "0.00", "");
 
     lenient().when(mockOBDal.get(FIN_Payment.class, TEST_PAYMENT_ID)).thenReturn(mockPayment);
     when(mockPayment.isReceipt()).thenReturn(false);
-    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal("50.00"));
+    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal(VAL_50_00));
     when(mockPayment.getDescription()).thenReturn("Original payment\ndescription");
     when(mockPayment.getCurrency()).thenReturn(mockCurrency);
     when(mockPayment.getFinancialTransactionConvertRate()).thenReturn(BigDecimal.ONE);
-    when(mockPayment.getAmount()).thenReturn(new BigDecimal("50.00"));
+    when(mockPayment.getAmount()).thenReturn(new BigDecimal(VAL_50_00));
 
     finUtilityStatic.when(() -> FIN_Utility.getDepositAmount(eq(false), any(BigDecimal.class)))
         .thenReturn(BigDecimal.ZERO);
     finUtilityStatic.when(() -> FIN_Utility.getPaymentAmount(eq(false), any(BigDecimal.class)))
-        .thenReturn(new BigDecimal("50.00"));
+        .thenReturn(new BigDecimal(VAL_50_00));
 
     // Act
     JSONObject result = callDoExecute(content);
@@ -231,22 +246,23 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with a payment that has a null/blank description.
    * Verifies that the description is empty when both the user input and payment description are blank.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithPaymentNullDescription() throws Exception {
     // Arrange
-    String content = buildRequestContent("BPW", TEST_PAYMENT_ID, "null", "200.00", "0.00", "");
+    String content = buildRequestContent("BPW", TEST_PAYMENT_ID, "null", VAL_200_00, "0.00", "");
 
     lenient().when(mockOBDal.get(FIN_Payment.class, TEST_PAYMENT_ID)).thenReturn(mockPayment);
     when(mockPayment.isReceipt()).thenReturn(true);
-    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal("200.00"));
+    when(mockPayment.getFinancialTransactionAmount()).thenReturn(new BigDecimal(VAL_200_00));
     when(mockPayment.getDescription()).thenReturn("");
     when(mockPayment.getCurrency()).thenReturn(mockCurrency);
     when(mockPayment.getFinancialTransactionConvertRate()).thenReturn(BigDecimal.ONE);
-    when(mockPayment.getAmount()).thenReturn(new BigDecimal("200.00"));
+    when(mockPayment.getAmount()).thenReturn(new BigDecimal(VAL_200_00));
 
     finUtilityStatic.when(() -> FIN_Utility.getDepositAmount(eq(true), any(BigDecimal.class)))
-        .thenReturn(new BigDecimal("200.00"));
+        .thenReturn(new BigDecimal(VAL_200_00));
     finUtilityStatic.when(() -> FIN_Utility.getPaymentAmount(eq(true), any(BigDecimal.class)))
         .thenReturn(BigDecimal.ZERO);
 
@@ -266,6 +282,7 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with a GL item transaction type.
    * Verifies that the GL item path is taken when a valid GL item ID is provided.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithGLItemTransaction() throws Exception {
@@ -292,11 +309,12 @@ public class AddTransactionActionHandlerTest {
 
   /**
    * Tests doExecute with a GL item transaction where user provides a custom description.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithGLItemAndCustomDescription() throws Exception {
     // Arrange
-    String content = buildRequestContent("BPW", "null", TEST_GLITEM_ID, "50.00", "0.00",
+    String content = buildRequestContent("BPW", "null", TEST_GLITEM_ID, VAL_50_00, "0.00",
         "Custom GL description");
 
     lenient().when(mockOBDal.get(GLItem.class, TEST_GLITEM_ID)).thenReturn(mockGLItem);
@@ -317,6 +335,7 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with a GL item where description equals "null" string.
    * Verifies that "null" string is treated as blank description.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithGLItemAndNullStringDescription() throws Exception {
@@ -345,6 +364,7 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with a bank fee transaction type (BF).
    * Verifies that both payment and GL item IDs are forced to "null".
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithBankFeeTransaction() throws Exception {
@@ -352,8 +372,8 @@ public class AddTransactionActionHandlerTest {
     String content = buildRequestContent("BF", TEST_PAYMENT_ID, TEST_GLITEM_ID, "0.00", "25.00",
         "");
 
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("APRM_BankFee"))
-        .thenReturn("Bank Fee");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(APRM_BANK_FEE))
+        .thenReturn(BANK_FEE);
 
     // Act
     JSONObject result = callDoExecute(content);
@@ -363,7 +383,7 @@ public class AddTransactionActionHandlerTest {
     // BF type forces both paymentId and glitemId to "null", so it takes the else branch
     matchingUtilityStatic.verify(() -> APRM_MatchingUtility.createAndMatchFinancialTransaction(
         anyString(), eq("BF"), any(Date.class), anyString(),
-        any(), any(), eq(null), eq("Bank Fee"), eq(null), eq(false),
+        any(), any(), eq(null), eq(BANK_FEE), eq(null), eq(false),
         any(BigDecimal.class), any(BigDecimal.class), eq(null), eq(null), eq(null),
         any(), any(), any(), any(), any(), any(), any(), any(), any(),
         any(), any(), any(), anyBoolean()));
@@ -372,6 +392,7 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with bank fee and a custom description.
    * Verifies the custom description takes precedence over the default bank fee message.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithBankFeeAndCustomDescription() throws Exception {
@@ -395,11 +416,12 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with a transaction where deposit equals withdrawal (both zero).
    * Verifies isReceipt is true when deposit >= withdrawal.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithEqualDepositAndWithdrawal() throws Exception {
     // Arrange
-    String content = buildRequestContent("BF", "null", "null", "50.00", "50.00", "Equal amounts");
+    String content = buildRequestContent("BF", "null", "null", VAL_50_00, VAL_50_00, "Equal amounts");
 
     // Act
     JSONObject result = callDoExecute(content);
@@ -418,6 +440,7 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute when an exception occurs during processing.
    * Verifies the error handling path including rollback and error message creation.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithException() throws Exception {
@@ -437,14 +460,15 @@ public class AddTransactionActionHandlerTest {
 
     // Assert
     assertNotNull(result);
-    assertTrue(result.has("responseActions"));
-    assertTrue(result.has("retryExecution"));
-    assertEquals(true, result.getBoolean("retryExecution"));
+    assertTrue(result.has(RESPONSE_ACTIONS));
+    assertTrue(result.has(RETRY_EXECUTION));
+    assertEquals(true, result.getBoolean(RETRY_EXECUTION));
   }
 
   /**
    * Tests doExecute when exception occurs and error message building also fails.
    * Verifies that the outer catch handles errors gracefully.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithExceptionAndMessageBuildFailure() throws Exception {
@@ -460,12 +484,13 @@ public class AddTransactionActionHandlerTest {
     // Assert
     assertNotNull(result);
     // Result should not have responseActions since the inner catch failed
-    assertTrue(!result.has("responseActions"));
+    assertTrue(!result.has(RESPONSE_ACTIONS));
   }
 
   /**
    * Tests doExecute when no optional params (fin_payment_id, c_glitem_id, description) are present.
    * Verifies that defaults are used.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithMissingOptionalParams() throws Exception {
@@ -474,7 +499,7 @@ public class AddTransactionActionHandlerTest {
     params.put("bankStatementLineId", TEST_BSL_ID);
     params.put("trxtype", "BF");
     params.put("trxdate", "2024-01-15");
-    params.put("depositamt", "10.00");
+    params.put("depositamt", VAL_10_00);
     params.put("withdrawalamt", "0.00");
     // Intentionally not adding: fin_payment_id, c_glitem_id, description
     params.put("ad_org_id", TEST_ORG_ID);
@@ -493,8 +518,8 @@ public class AddTransactionActionHandlerTest {
     request.put("inpTabId", TEST_TAB_ID);
     request.put("Fin_Financial_Account_ID", TEST_FINANCIAL_ACCOUNT_ID);
 
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("APRM_BankFee"))
-        .thenReturn("Bank Fee");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(APRM_BANK_FEE))
+        .thenReturn(BANK_FEE);
 
     // Act
     JSONObject result = callDoExecute(request.toString());
@@ -503,7 +528,7 @@ public class AddTransactionActionHandlerTest {
     assertNotNull(result);
     matchingUtilityStatic.verify(() -> APRM_MatchingUtility.createAndMatchFinancialTransaction(
         anyString(), anyString(), any(Date.class), anyString(),
-        any(), any(), eq(null), eq("Bank Fee"), eq(null), eq(true),
+        any(), any(), eq(null), eq(BANK_FEE), eq(null), eq(true),
         any(BigDecimal.class), any(BigDecimal.class), eq(null), eq(null), eq(null),
         any(), any(), any(), any(), any(), any(), any(), any(), any(),
         any(), any(), any(), anyBoolean()));
@@ -512,11 +537,12 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests doExecute with a deposit-only bank fee (no withdrawal).
    * Verifies isReceipt is true when deposit > 0 and withdrawal = 0.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithDepositOnlyBankFee() throws Exception {
     // Arrange
-    String content = buildRequestContent("BF", "null", "null", "100.00", "0.00", "Deposit only");
+    String content = buildRequestContent("BF", "null", "null", VAL_100_00, "0.00", "Deposit only");
 
     // Act
     JSONObject result = callDoExecute(content);
@@ -534,14 +560,15 @@ public class AddTransactionActionHandlerTest {
   /**
    * Tests the createAndMatchTransaction private method directly via reflection
    * with bank fee transaction type, verifying OBContext admin mode is set and restored.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testCreateAndMatchTransactionSetsAdminMode() throws Exception {
     // Arrange
-    String content = buildRequestContent("BF", "null", "null", "10.00", "0.00", "Test");
+    String content = buildRequestContent("BF", "null", "null", VAL_10_00, "0.00", "Test");
 
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("APRM_BankFee"))
-        .thenReturn("Bank Fee");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(APRM_BANK_FEE))
+        .thenReturn(BANK_FEE);
 
     // Act
     callDoExecute(content);
@@ -553,32 +580,34 @@ public class AddTransactionActionHandlerTest {
 
   /**
    * Tests that doExecute returns an empty JSONObject on success (no error).
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteReturnsEmptyResultOnSuccess() throws Exception {
     // Arrange
-    String content = buildRequestContent("BF", "null", "null", "10.00", "0.00", "Success test");
+    String content = buildRequestContent("BF", "null", "null", VAL_10_00, "0.00", "Success test");
 
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("APRM_BankFee"))
-        .thenReturn("Bank Fee");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(APRM_BANK_FEE))
+        .thenReturn(BANK_FEE);
 
     // Act
     JSONObject result = callDoExecute(content);
 
     // Assert
     assertNotNull(result);
-    assertTrue(!result.has("responseActions"));
-    assertTrue(!result.has("retryExecution"));
+    assertTrue(!result.has(RESPONSE_ACTIONS));
+    assertTrue(!result.has(RETRY_EXECUTION));
   }
 
   /**
    * Tests doExecute with GL item withdrawal greater than deposit.
    * Verifies isReceipt is false.
+    * @throws Exception if an error occurs
    */
   @Test
   public void testDoExecuteWithGLItemWithdrawalGreaterThanDeposit() throws Exception {
     // Arrange
-    String content = buildRequestContent("BPW", "null", TEST_GLITEM_ID, "10.00", "50.00",
+    String content = buildRequestContent("BPW", "null", TEST_GLITEM_ID, VAL_10_00, VAL_50_00,
         "Withdrawal GL");
 
     lenient().when(mockOBDal.get(GLItem.class, TEST_GLITEM_ID)).thenReturn(mockGLItem);
@@ -601,7 +630,7 @@ public class AddTransactionActionHandlerTest {
   /**
    * Invokes the protected doExecute method via reflection.
    */
-  private JSONObject callDoExecute(String content) throws Exception {
+  private JSONObject callDoExecute(String content) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method doExecuteMethod = AddTransactionActionHandler.class.getDeclaredMethod(
         "doExecute", Map.class, String.class);
     doExecuteMethod.setAccessible(true);

@@ -24,8 +24,15 @@ import org.objenesis.ObjenesisStd;
 @RunWith(MockitoJUnitRunner.class)
 public class DimensionListOriginalColumnFormatTest {
 
+  private static final String EM_DBPREF_COLUMN_NAME_ID = "Em_Dbpref_Column_Name_Id";
+  private static final String COLUMN_NAME_ID = "column_name_id";
+
   private DimensionListOriginalColumnFormat instance;
   private Map<String, SequenceDimension> dimensionMap;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -37,48 +44,55 @@ public class DimensionListOriginalColumnFormatTest {
     mapField.setAccessible(true);
     mapField.set(instance, dimensionMap);
   }
+  /** Transform key with external module prefix. */
 
   @Test
   public void testTransformKeyWithExternalModulePrefix() {
-    String result = instance.transformKey("Em_Dbpref_Column_Name_Id");
-    assertEquals("column_name_id", result);
+    String result = instance.transformKey(EM_DBPREF_COLUMN_NAME_ID);
+    assertEquals(COLUMN_NAME_ID, result);
   }
+  /** Transform key without external module prefix. */
 
   @Test
   public void testTransformKeyWithoutExternalModulePrefix() {
     String result = instance.transformKey("Column_Name_Id");
-    assertEquals("column_name_id", result);
+    assertEquals(COLUMN_NAME_ID, result);
   }
+  /** Transform key simple column. */
 
   @Test
   public void testTransformKeySimpleColumn() {
     String result = instance.transformKey("AD_Client_ID");
     assertEquals("ad_client_id", result);
   }
+  /** Set dimension transforming key stores with transformed key. */
 
   @Test
   public void testSetDimensionTransformingKeyStoresWithTransformedKey() {
     SequenceDimension dim = new ObjenesisStd().newInstance(SequenceDimension.class);
-    instance.setDimensionTransformingKey("Em_Dbpref_Column_Name_Id", dim);
+    instance.setDimensionTransformingKey(EM_DBPREF_COLUMN_NAME_ID, dim);
 
-    assertNotNull(dimensionMap.get("column_name_id"));
-    assertEquals(dim, dimensionMap.get("column_name_id"));
+    assertNotNull(dimensionMap.get(COLUMN_NAME_ID));
+    assertEquals(dim, dimensionMap.get(COLUMN_NAME_ID));
   }
+  /** Get dimension transforming key retrieves with transformed key. */
 
   @Test
   public void testGetDimensionTransformingKeyRetrievesWithTransformedKey() {
     SequenceDimension dim = new ObjenesisStd().newInstance(SequenceDimension.class);
-    dimensionMap.put("column_name_id", dim);
+    dimensionMap.put(COLUMN_NAME_ID, dim);
 
-    SequenceDimension result = instance.getDimensionTransformingKey("Em_Dbpref_Column_Name_Id");
+    SequenceDimension result = instance.getDimensionTransformingKey(EM_DBPREF_COLUMN_NAME_ID);
     assertEquals(dim, result);
   }
+  /** Get dimension transforming key returns null when not found. */
 
   @Test
   public void testGetDimensionTransformingKeyReturnsNullWhenNotFound() {
     SequenceDimension result = instance.getDimensionTransformingKey("Nonexistent_Column");
     assertNull(result);
   }
+  /** Set and get dimension round trip. */
 
   @Test
   public void testSetAndGetDimensionRoundTrip() {

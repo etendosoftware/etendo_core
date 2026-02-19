@@ -32,11 +32,15 @@ import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.service.db.DbUtility;
+/** Tests for {@link CostingRuleProcessActionHandler}. */
+@SuppressWarnings("java:S112")
 
 @RunWith(MockitoJUnitRunner.class)
 public class CostingRuleProcessActionHandlerTest {
 
-  private static final String RULE_ID = "TEST_RULE_001";
+  private static final String ERROR = "Error";
+  private static final String MESSAGE = "message";
+
   private static final String PROCESS_ID = "TEST_PROCESS_001";
 
   private CostingRuleProcessActionHandler instance;
@@ -58,6 +62,7 @@ public class CostingRuleProcessActionHandlerTest {
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
   private MockedStatic<DbUtility> dbUtilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -80,6 +85,7 @@ public class CostingRuleProcessActionHandlerTest {
     lenient().when(mockVars.getStringParameter("inpadClientId")).thenReturn("0");
     lenient().when(mockVars.getLanguage()).thenReturn("en_US");
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -96,6 +102,10 @@ public class CostingRuleProcessActionHandlerTest {
     method.setAccessible(true);
     return (JSONObject) method.invoke(instance, parameters, content);
   }
+  /**
+   * Do execute with exception returns error message.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteWithExceptionReturnsErrorMessage() throws Exception {
@@ -103,8 +113,8 @@ public class CostingRuleProcessActionHandlerTest {
     translatedError.setMessage("Translated error");
     obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(anyString()))
         .thenReturn(translatedError);
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("Error"))
-        .thenReturn("Error");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
+        .thenReturn(ERROR);
     dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
         .thenAnswer(inv -> inv.getArgument(0));
 
@@ -115,10 +125,14 @@ public class CostingRuleProcessActionHandlerTest {
     JSONObject result = invokeDoExecute(parameters, "invalid json");
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
-    JSONObject msg = result.getJSONObject("message");
+    assertTrue(result.has(MESSAGE));
+    JSONObject msg = result.getJSONObject(MESSAGE);
     assertEquals("error", msg.getString("severity"));
   }
+  /**
+   * Do execute with missing rule id returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteWithMissingRuleIdReturnsError() throws Exception {
@@ -126,8 +140,8 @@ public class CostingRuleProcessActionHandlerTest {
     translatedError.setMessage("Missing rule id");
     obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(anyString()))
         .thenReturn(translatedError);
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("Error"))
-        .thenReturn("Error");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
+        .thenReturn(ERROR);
     dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
         .thenAnswer(inv -> inv.getArgument(0));
 
@@ -140,8 +154,8 @@ public class CostingRuleProcessActionHandlerTest {
     JSONObject result = invokeDoExecute(parameters, content.toString());
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
-    JSONObject msg = result.getJSONObject("message");
+    assertTrue(result.has(MESSAGE));
+    JSONObject msg = result.getJSONObject(MESSAGE);
     assertEquals("error", msg.getString("severity"));
   }
 }

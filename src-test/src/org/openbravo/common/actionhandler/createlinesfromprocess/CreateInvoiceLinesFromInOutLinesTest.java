@@ -16,6 +16,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CreateInvoiceLinesFromInOutLinesTest {
+  /** Get from class returns shipment in out line. */
 
   @Test
   public void testGetFromClassReturnsShipmentInOutLine() {

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
+import java.lang.reflect.InvocationTargetException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.openbravo.erpCommon.utility.OBMessageUtils;
 /**
  * Tests for {@link ChangeInventoryStatusActionHandler}.
  */
+@SuppressWarnings("java:S112")
 @RunWith(MockitoJUnitRunner.class)
 public class ChangeInventoryStatusActionHandlerTest {
 
@@ -36,6 +38,7 @@ public class ChangeInventoryStatusActionHandlerTest {
 
   private MockedStatic<InventoryStatusUtils> inventoryStatusUtilsStatic;
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -46,12 +49,17 @@ public class ChangeInventoryStatusActionHandlerTest {
     obMessageUtilsStatic = mockStatic(OBMessageUtils.class);
     obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(anyString())).thenReturn("Success");
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
     if (inventoryStatusUtilsStatic != null) inventoryStatusUtilsStatic.close();
     if (obMessageUtilsStatic != null) obMessageUtilsStatic.close();
   }
+  /**
+   * Do execute successful status change.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteSuccessfulStatusChange() throws Exception {
@@ -65,6 +73,10 @@ public class ChangeInventoryStatusActionHandlerTest {
         () -> InventoryStatusUtils.changeStatusOfStorageBin(TEST_LOCATOR_ID,
             TEST_INVENTORY_STATUS_ID));
   }
+  /**
+   * Do execute handles warning exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteHandlesWarningException() throws Exception {
@@ -81,6 +93,10 @@ public class ChangeInventoryStatusActionHandlerTest {
 
     assertNotNull(result);
   }
+  /**
+   * Do execute handles generic exception.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testDoExecuteHandlesGenericException() throws Exception {
@@ -109,7 +125,7 @@ public class ChangeInventoryStatusActionHandlerTest {
   }
 
   private JSONObject invokeDoExecute(Map<String, Object> parameters, String content)
-      throws Exception {
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     java.lang.reflect.Method doExecute = ChangeInventoryStatusActionHandler.class.getDeclaredMethod(
         "doExecute", Map.class, String.class);
     doExecute.setAccessible(true);

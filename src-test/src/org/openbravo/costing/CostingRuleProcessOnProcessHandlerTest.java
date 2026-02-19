@@ -9,6 +9,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -30,9 +31,16 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.service.db.DbUtility;
+/** Tests for {@link CostingRuleProcessOnProcessHandler}. */
+@SuppressWarnings("java:S112")
 
 @RunWith(MockitoJUnitRunner.class)
 public class CostingRuleProcessOnProcessHandlerTest {
+
+  private static final String ERROR = "Error";
+  private static final String MESSAGE = "message";
+  private static final String SEVERITY = "severity";
+  private static final String ERROR_2 = "error";
 
   private static final String RULE_ID = "TEST_RULE_001";
 
@@ -55,6 +63,7 @@ public class CostingRuleProcessOnProcessHandlerTest {
   private MockedStatic<OBDal> obDalStatic;
   private MockedStatic<OBMessageUtils> obMessageUtilsStatic;
   private MockedStatic<DbUtility> dbUtilityStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -76,6 +85,7 @@ public class CostingRuleProcessOnProcessHandlerTest {
 
     lenient().when(mockVars.getLanguage()).thenReturn("en_US");
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -86,12 +96,16 @@ public class CostingRuleProcessOnProcessHandlerTest {
     if (dbUtilityStatic != null) dbUtilityStatic.close();
   }
 
-  private JSONObject invokeExecute(Map<String, Object> parameters, String content) throws Exception {
+  private JSONObject invokeExecute(Map<String, Object> parameters, String content) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = CostingRuleProcessOnProcessHandler.class.getDeclaredMethod("execute",
         Map.class, String.class);
     method.setAccessible(true);
     return (JSONObject) method.invoke(instance, parameters, content);
   }
+  /**
+   * Execute with invalid json returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithInvalidJsonReturnsError() throws Exception {
@@ -99,8 +113,8 @@ public class CostingRuleProcessOnProcessHandlerTest {
     translatedError.setMessage("Invalid JSON");
     obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(anyString()))
         .thenReturn(translatedError);
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("Error"))
-        .thenReturn("Error");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
+        .thenReturn(ERROR);
     dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
         .thenAnswer(inv -> inv.getArgument(0));
 
@@ -109,10 +123,14 @@ public class CostingRuleProcessOnProcessHandlerTest {
     JSONObject result = invokeExecute(parameters, "invalid json");
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
-    JSONObject msg = result.getJSONObject("message");
-    assertEquals("error", msg.getString("severity"));
+    assertTrue(result.has(MESSAGE));
+    JSONObject msg = result.getJSONObject(MESSAGE);
+    assertEquals(ERROR_2, msg.getString(SEVERITY));
   }
+  /**
+   * Execute with missing rule id returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithMissingRuleIdReturnsError() throws Exception {
@@ -120,8 +138,8 @@ public class CostingRuleProcessOnProcessHandlerTest {
     translatedError.setMessage("Missing ruleId");
     obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(anyString()))
         .thenReturn(translatedError);
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("Error"))
-        .thenReturn("Error");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
+        .thenReturn(ERROR);
     dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
         .thenAnswer(inv -> inv.getArgument(0));
 
@@ -131,10 +149,14 @@ public class CostingRuleProcessOnProcessHandlerTest {
     JSONObject result = invokeExecute(parameters, content.toString());
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
-    JSONObject msg = result.getJSONObject("message");
-    assertEquals("error", msg.getString("severity"));
+    assertTrue(result.has(MESSAGE));
+    JSONObject msg = result.getJSONObject(MESSAGE);
+    assertEquals(ERROR_2, msg.getString(SEVERITY));
   }
+  /**
+   * Execute with null rule returns error.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testExecuteWithNullRuleReturnsError() throws Exception {
@@ -142,8 +164,8 @@ public class CostingRuleProcessOnProcessHandlerTest {
     translatedError.setMessage("Null rule");
     obMessageUtilsStatic.when(() -> OBMessageUtils.translateError(any()))
         .thenReturn(translatedError);
-    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD("Error"))
-        .thenReturn("Error");
+    obMessageUtilsStatic.when(() -> OBMessageUtils.messageBD(ERROR))
+        .thenReturn(ERROR);
 
     NullPointerException npe = new NullPointerException("rule is null");
     dbUtilityStatic.when(() -> DbUtility.getUnderlyingSQLException(any(Exception.class)))
@@ -158,8 +180,8 @@ public class CostingRuleProcessOnProcessHandlerTest {
     JSONObject result = invokeExecute(parameters, content.toString());
 
     assertNotNull(result);
-    assertTrue(result.has("message"));
-    JSONObject msg = result.getJSONObject("message");
-    assertEquals("error", msg.getString("severity"));
+    assertTrue(result.has(MESSAGE));
+    JSONObject msg = result.getJSONObject(MESSAGE);
+    assertEquals(ERROR_2, msg.getString(SEVERITY));
   }
 }

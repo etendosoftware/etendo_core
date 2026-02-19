@@ -18,10 +18,15 @@ import org.objenesis.ObjenesisStd;
 /**
  * Tests for {@link DocBank}.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class DocBankTest {
 
   private DocBank instance;
+  /**
+   * Sets up test fixtures.
+   * @throws Exception if an error occurs
+   */
 
   @Before
   public void setUp() throws Exception {
@@ -52,41 +57,48 @@ public class DocBankTest {
     pLinesField.setAccessible(true);
     pLinesField.set(instance, new DocLine[0]);
   }
+  /** Next seq no increments by10. */
 
   @Test
   public void testNextSeqNoIncrementsBy10() {
     String result = instance.nextSeqNo("0");
     assertEquals("10", result);
   }
+  /** Next seq no from non zero. */
 
   @Test
   public void testNextSeqNoFromNonZero() {
     String result = instance.nextSeqNo("30");
     assertEquals("40", result);
   }
+  /** Next seq no updates internal seq no. */
 
   @Test
   public void testNextSeqNoUpdatesInternalSeqNo() {
     instance.nextSeqNo("0");
     assertEquals("10", instance.getSeqNo());
   }
+  /** Get set seq no. */
 
   @Test
   public void testGetSetSeqNo() {
     instance.setSeqNo("100");
     assertEquals("100", instance.getSeqNo());
   }
+  /** Get balance with no lines. */
 
   @Test
   public void testGetBalanceWithNoLines() {
     BigDecimal balance = instance.getBalance();
     assertEquals(0, BigDecimal.ZERO.compareTo(balance));
   }
+  /** Get servlet info. */
 
   @Test
   public void testGetServletInfo() {
     assertEquals("Servlet for the accounting", instance.getServletInfo());
   }
+  /** Get serial version uid. */
 
   @Test
   public void testGetSerialVersionUID() {

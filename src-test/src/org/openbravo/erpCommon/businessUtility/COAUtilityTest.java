@@ -3,6 +3,7 @@ package org.openbravo.erpCommon.businessUtility;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 
@@ -17,10 +18,12 @@ import org.objenesis.ObjenesisStd;
  * Focuses on testable private utility methods: setAccountType, setAccountSign,
  * operandProcess, nextSeqNo.
  */
+@SuppressWarnings({"java:S120"})
 @RunWith(MockitoJUnitRunner.class)
 public class COAUtilityTest {
 
   private COAUtility instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -29,12 +32,20 @@ public class COAUtilityTest {
   }
 
   // --- Tests for setAccountType(COAData) ---
+  /**
+   * Set account type returns null for null data.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeReturnsNullForNullData() throws Exception {
     String result = invokeSetAccountType(null);
     assertNull(result);
   }
+  /**
+   * Set account type returns asset type.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeReturnsAssetType() throws Exception {
@@ -42,6 +53,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("A", result);
   }
+  /**
+   * Set account type liability type.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeLiabilityType() throws Exception {
@@ -49,6 +64,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("L", result);
   }
+  /**
+   * Set account type owner equity.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeOwnerEquity() throws Exception {
@@ -56,6 +75,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("O", result);
   }
+  /**
+   * Set account type expense.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeExpense() throws Exception {
@@ -63,6 +86,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("E", result);
   }
+  /**
+   * Set account type revenue.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeRevenue() throws Exception {
@@ -70,6 +97,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("R", result);
   }
+  /**
+   * Set account type memo.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeMemo() throws Exception {
@@ -77,6 +108,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("M", result);
   }
+  /**
+   * Set account type defaults to e for unknown.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeDefaultsToEForUnknown() throws Exception {
@@ -84,6 +119,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("E", result);
   }
+  /**
+   * Set account type defaults to e for empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeDefaultsToEForEmpty() throws Exception {
@@ -91,6 +130,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountType(data);
     assertEquals("E", result);
   }
+  /**
+   * Set account type lower case.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountTypeLowerCase() throws Exception {
@@ -100,6 +143,10 @@ public class COAUtilityTest {
   }
 
   // --- Tests for setAccountSign(COAData) ---
+  /**
+   * Set account sign debit.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountSignDebit() throws Exception {
@@ -107,6 +154,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountSign(data);
     assertEquals("D", result);
   }
+  /**
+   * Set account sign credit.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountSignCredit() throws Exception {
@@ -114,6 +165,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountSign(data);
     assertEquals("C", result);
   }
+  /**
+   * Set account sign defaults to n for empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountSignDefaultsToNForEmpty() throws Exception {
@@ -121,6 +176,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountSign(data);
     assertEquals("N", result);
   }
+  /**
+   * Set account sign defaults to n for unknown.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountSignDefaultsToNForUnknown() throws Exception {
@@ -128,6 +187,10 @@ public class COAUtilityTest {
     String result = invokeSetAccountSign(data);
     assertEquals("N", result);
   }
+  /**
+   * Set account sign lower case.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testSetAccountSignLowerCase() throws Exception {
@@ -137,18 +200,30 @@ public class COAUtilityTest {
   }
 
   // --- Tests for operandProcess(String) ---
+  /**
+   * Operand process returns null for null.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOperandProcessReturnsNullForNull() throws Exception {
     String[][] result = invokeOperandProcess(null);
     assertNull(result);
   }
+  /**
+   * Operand process returns null for empty.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOperandProcessReturnsNullForEmpty() throws Exception {
     String[][] result = invokeOperandProcess("");
     assertNull(result);
   }
+  /**
+   * Operand process single value.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOperandProcessSingleValue() throws Exception {
@@ -158,6 +233,10 @@ public class COAUtilityTest {
     assertEquals("100", result[0][0]);
     assertEquals("+", result[0][1]);
   }
+  /**
+   * Operand process addition.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOperandProcessAddition() throws Exception {
@@ -168,6 +247,10 @@ public class COAUtilityTest {
     assertEquals("+", result[0][1]);
     assertEquals("200", result[1][0]);
   }
+  /**
+   * Operand process subtraction.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOperandProcessSubtraction() throws Exception {
@@ -179,6 +262,10 @@ public class COAUtilityTest {
     assertEquals("200", result[1][0]);
     assertEquals("-", result[1][1]);
   }
+  /**
+   * Operand process multiple operands.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testOperandProcessMultipleOperands() throws Exception {
@@ -191,18 +278,30 @@ public class COAUtilityTest {
   }
 
   // --- Tests for nextSeqNo(String) ---
+  /**
+   * Next seq no from ten.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testNextSeqNoFromTen() throws Exception {
     String result = invokeNextSeqNo("10");
     assertEquals("20", result);
   }
+  /**
+   * Next seq no from zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testNextSeqNoFromZero() throws Exception {
     String result = invokeNextSeqNo("0");
     assertEquals("10", result);
   }
+  /**
+   * Next seq no from large number.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testNextSeqNoFromLargeNumber() throws Exception {
@@ -212,25 +311,25 @@ public class COAUtilityTest {
 
   // --- Helper methods ---
 
-  private String invokeSetAccountType(COAData data) throws Exception {
+  private String invokeSetAccountType(COAData data) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = COAUtility.class.getDeclaredMethod("setAccountType", COAData.class);
     method.setAccessible(true);
     return (String) method.invoke(instance, data);
   }
 
-  private String invokeSetAccountSign(COAData data) throws Exception {
+  private String invokeSetAccountSign(COAData data) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = COAUtility.class.getDeclaredMethod("setAccountSign", COAData.class);
     method.setAccessible(true);
     return (String) method.invoke(instance, data);
   }
 
-  private String[][] invokeOperandProcess(String operand) throws Exception {
+  private String[][] invokeOperandProcess(String operand) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = COAUtility.class.getDeclaredMethod("operandProcess", String.class);
     method.setAccessible(true);
     return (String[][]) method.invoke(instance, operand);
   }
 
-  private String invokeNextSeqNo(String oldSeqNo) throws Exception {
+  private String invokeNextSeqNo(String oldSeqNo) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = COAUtility.class.getDeclaredMethod("nextSeqNo", String.class);
     method.setAccessible(true);
     return (String) method.invoke(instance, oldSeqNo);

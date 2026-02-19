@@ -2,6 +2,7 @@ package org.openbravo.advpaymentmngt.process;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ import static org.mockito.Mockito.when;
  * Tests for {@link FIN_DoubtfulDebtProcess}.
  * Tests the private getDifferenceOfAmountsOrZero utility method.
  */
+@SuppressWarnings({"java:S101", "java:S112"})
 @RunWith(MockitoJUnitRunner.class)
 public class FIN_DoubtfulDebtProcessTest {
 
@@ -26,6 +28,7 @@ public class FIN_DoubtfulDebtProcessTest {
 
   @Mock
   private FIN_PaymentScheduleDetail mockPsd;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -33,6 +36,10 @@ public class FIN_DoubtfulDebtProcessTest {
   }
 
   // --- Tests for getDifferenceOfAmountsOrZero ---
+  /**
+   * Get difference returns positive difference.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDifferenceReturnsPositiveDifference() throws Exception {
@@ -41,6 +48,10 @@ public class FIN_DoubtfulDebtProcessTest {
     BigDecimal result = invokeGetDifference(new BigDecimal("100"), mockPsd);
     assertEquals(new BigDecimal("70"), result);
   }
+  /**
+   * Get difference returns zero when equal.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDifferenceReturnsZeroWhenEqual() throws Exception {
@@ -49,6 +60,10 @@ public class FIN_DoubtfulDebtProcessTest {
     BigDecimal result = invokeGetDifference(new BigDecimal("50"), mockPsd);
     assertTrue(BigDecimal.ZERO.compareTo(result) == 0);
   }
+  /**
+   * Get difference returns zero when negative.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDifferenceReturnsZeroWhenNegative() throws Exception {
@@ -57,6 +72,10 @@ public class FIN_DoubtfulDebtProcessTest {
     BigDecimal result = invokeGetDifference(new BigDecimal("20"), mockPsd);
     assertTrue(BigDecimal.ZERO.compareTo(result) == 0);
   }
+  /**
+   * Get difference with decimal amounts.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDifferenceWithDecimalAmounts() throws Exception {
@@ -65,6 +84,10 @@ public class FIN_DoubtfulDebtProcessTest {
     BigDecimal result = invokeGetDifference(new BigDecimal("100.50"), mockPsd);
     assertEquals(new BigDecimal("70.25"), result);
   }
+  /**
+   * Get difference with small debt returns zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDifferenceWithSmallDebtReturnsZero() throws Exception {
@@ -73,6 +96,10 @@ public class FIN_DoubtfulDebtProcessTest {
     BigDecimal result = invokeGetDifference(new BigDecimal("0.01"), mockPsd);
     assertTrue(BigDecimal.ZERO.compareTo(result) == 0);
   }
+  /**
+   * Get difference with large amounts.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDifferenceWithLargeAmounts() throws Exception {
@@ -81,6 +108,10 @@ public class FIN_DoubtfulDebtProcessTest {
     BigDecimal result = invokeGetDifference(new BigDecimal("999999.99"), mockPsd);
     assertEquals(new BigDecimal("999998.98"), result);
   }
+  /**
+   * Get difference with zero debt returns zero.
+   * @throws Exception if an error occurs
+   */
 
   @Test
   public void testGetDifferenceWithZeroDebtReturnsZero() throws Exception {
@@ -93,7 +124,7 @@ public class FIN_DoubtfulDebtProcessTest {
   // --- Helper ---
 
   private BigDecimal invokeGetDifference(BigDecimal debtAmount, FIN_PaymentScheduleDetail psd)
-      throws Exception {
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     Method method = FIN_DoubtfulDebtProcess.class.getDeclaredMethod(
         "getDifferenceOfAmountsOrZero", BigDecimal.class, FIN_PaymentScheduleDetail.class);
     method.setAccessible(true);

@@ -10,17 +10,20 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.objenesis.ObjenesisStd;
+/** Tests for {@link DalInitializingTask}. */
 
 @RunWith(MockitoJUnitRunner.class)
 public class DalInitializingTaskTest {
 
   private DalInitializingTask instance;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
     ObjenesisStd objenesis = new ObjenesisStd();
     instance = objenesis.newInstance(DalInitializingTask.class);
   }
+  /** Get set properties file. */
 
   @Test
   public void testGetSetPropertiesFile() {
@@ -28,6 +31,7 @@ public class DalInitializingTaskTest {
     instance.setPropertiesFile("/tmp/Openbravo.properties");
     assertEquals("/tmp/Openbravo.properties", instance.getPropertiesFile());
   }
+  /** Get set user id. */
 
   @Test
   public void testGetSetUserId() {
@@ -35,6 +39,7 @@ public class DalInitializingTaskTest {
     instance.setUserId("100");
     assertEquals("100", instance.getUserId());
   }
+  /** Get set provider config directory. */
 
   @Test
   public void testGetSetProviderConfigDirectory() {
@@ -42,6 +47,7 @@ public class DalInitializingTaskTest {
     instance.setProviderConfigDirectory("/tmp/config");
     assertEquals("/tmp/config", instance.getProviderConfigDirectory());
   }
+  /** Is set admin mode. */
 
   @Test
   public void testIsSetAdminMode() {
@@ -49,6 +55,7 @@ public class DalInitializingTaskTest {
     instance.setAdminMode(true);
     assertTrue(instance.isAdminMode());
   }
+  /** Is set re initialize model. */
 
   @Test
   public void testIsSetReInitializeModel() {
@@ -56,6 +63,7 @@ public class DalInitializingTaskTest {
     instance.setReInitializeModel(true);
     assertTrue(instance.isReInitializeModel());
   }
+  /** Do execute default is no op. */
 
   @Test
   public void testDoExecuteDefaultIsNoOp() {

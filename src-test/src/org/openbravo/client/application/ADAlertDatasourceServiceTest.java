@@ -48,8 +48,15 @@ import org.openbravo.service.json.JsonConstants;
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class ADAlertDatasourceServiceTest {
 
+  private static final String RULE001 = "RULE001";
+  private static final String FILTER_A = "filterA";
+  private static final String RULE002 = "RULE002";
+  private static final String RULE003 = "RULE003";
+  private static final String GET_ALERT_RULES_GROUPED_BY_FILTER_CLAUSE = "getAlertRulesGroupedByFilterClause";
+  private static final String CLAUSE1 = "clause1";
+  private static final String GET_ALERT_IDS_FROM_ALERT_RULES = "getAlertIdsFromAlertRules";
+
   private static final String AD_TABLE_ID = "594";
-  private static final String ALERT_STATUS_KEY = "_alertStatus";
   private static final String TEST_USER_ID = "100";
   private static final String TEST_ROLE_ID = "200";
 
@@ -72,6 +79,7 @@ public class ADAlertDatasourceServiceTest {
   private MockedStatic<OBContext> obContextStatic;
   private MockedStatic<ModelProvider> modelProviderStatic;
   private MockedStatic<RequestContext> requestContextStatic;
+  /** Sets up test fixtures. */
 
   @Before
   public void setUp() {
@@ -100,6 +108,7 @@ public class ADAlertDatasourceServiceTest {
     lenient().when(mockOBContext.getReadableOrganizations())
         .thenReturn(new String[] { "0", "1000001" });
   }
+  /** Tears down test fixtures. */
 
   @After
   public void tearDown() {
@@ -114,6 +123,7 @@ public class ADAlertDatasourceServiceTest {
   }
 
   // --- getEntity() tests ---
+  /** Get entity returns entity by table id. */
 
   @Test
   public void testGetEntityReturnsEntityByTableId() {
@@ -126,6 +136,7 @@ public class ADAlertDatasourceServiceTest {
   }
 
   // --- checkFetchDatasourceAccess() tests ---
+  /** Check fetch datasource access does not throw. */
 
   @Test
   public void testCheckFetchDatasourceAccessDoesNotThrow() {
@@ -135,21 +146,25 @@ public class ADAlertDatasourceServiceTest {
   }
 
   // --- getAlertRulesGroupedByFilterClause() tests (private method via reflection) ---
+  /**
+   * Get alert rules grouped by filter clause with results.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
   public void testGetAlertRulesGroupedByFilterClauseWithResults() throws Exception {
     NativeQuery mockAlertRulesQuery = mock(NativeQuery.class);
 
-    Object[] row1 = new Object[] { "RULE001", "filterA" };
-    Object[] row2 = new Object[] { "RULE002", "filterA" };
-    Object[] row3 = new Object[] { "RULE003", null };
+    Object[] row1 = new Object[] { RULE001, FILTER_A };
+    Object[] row2 = new Object[] { RULE002, FILTER_A };
+    Object[] row3 = new Object[] { RULE003, null };
 
     List resultList = Arrays.asList(row1, row2, row3);
     when(mockAlertRulesQuery.list()).thenReturn(resultList);
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertRulesGroupedByFilterClause", NativeQuery.class);
+        GET_ALERT_RULES_GROUPED_BY_FILTER_CLAUSE, NativeQuery.class);
     method.setAccessible(true);
 
     Map<String, List<String>> result = (Map<String, List<String>>) method.invoke(instance,
@@ -157,9 +172,13 @@ public class ADAlertDatasourceServiceTest {
 
     assertNotNull(result);
     assertEquals(2, result.size());
-    assertEquals(Arrays.asList("RULE001", "RULE002"), result.get("filterA"));
-    assertEquals(Collections.singletonList("RULE003"), result.get(""));
+    assertEquals(Arrays.asList(RULE001, RULE002), result.get(FILTER_A));
+    assertEquals(Collections.singletonList(RULE003), result.get(""));
   }
+  /**
+   * Get alert rules grouped by filter clause empty results.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
@@ -168,7 +187,7 @@ public class ADAlertDatasourceServiceTest {
     when(mockAlertRulesQuery.list()).thenReturn(Collections.emptyList());
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertRulesGroupedByFilterClause", NativeQuery.class);
+        GET_ALERT_RULES_GROUPED_BY_FILTER_CLAUSE, NativeQuery.class);
     method.setAccessible(true);
 
     Map<String, List<String>> result = (Map<String, List<String>>) method.invoke(instance,
@@ -177,6 +196,10 @@ public class ADAlertDatasourceServiceTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+  /**
+   * Get alert rules grouped by filter clause handles sql grammar exception.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
@@ -186,7 +209,7 @@ public class ADAlertDatasourceServiceTest {
         .thenThrow(new SQLGrammarException("Bad SQL", new SQLException("syntax error")));
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertRulesGroupedByFilterClause", NativeQuery.class);
+        GET_ALERT_RULES_GROUPED_BY_FILTER_CLAUSE, NativeQuery.class);
     method.setAccessible(true);
 
     Map<String, List<String>> result = (Map<String, List<String>>) method.invoke(instance,
@@ -195,32 +218,40 @@ public class ADAlertDatasourceServiceTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+  /**
+   * Get alert rules grouped by filter clause multiple filter clauses.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
   public void testGetAlertRulesGroupedByFilterClauseMultipleFilterClauses() throws Exception {
     NativeQuery mockAlertRulesQuery = mock(NativeQuery.class);
 
-    Object[] row1 = new Object[] { "RULE001", "clause1" };
-    Object[] row2 = new Object[] { "RULE002", "clause2" };
-    Object[] row3 = new Object[] { "RULE003", "clause1" };
+    Object[] row1 = new Object[] { RULE001, CLAUSE1 };
+    Object[] row2 = new Object[] { RULE002, "clause2" };
+    Object[] row3 = new Object[] { RULE003, CLAUSE1 };
     Object[] row4 = new Object[] { "RULE004", "clause3" };
 
     List resultList = Arrays.asList(row1, row2, row3, row4);
     when(mockAlertRulesQuery.list()).thenReturn(resultList);
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertRulesGroupedByFilterClause", NativeQuery.class);
+        GET_ALERT_RULES_GROUPED_BY_FILTER_CLAUSE, NativeQuery.class);
     method.setAccessible(true);
 
     Map<String, List<String>> result = (Map<String, List<String>>) method.invoke(instance,
         mockAlertRulesQuery);
 
     assertEquals(3, result.size());
-    assertEquals(Arrays.asList("RULE001", "RULE003"), result.get("clause1"));
-    assertEquals(Collections.singletonList("RULE002"), result.get("clause2"));
+    assertEquals(Arrays.asList(RULE001, RULE003), result.get(CLAUSE1));
+    assertEquals(Collections.singletonList(RULE002), result.get("clause2"));
     assertEquals(Collections.singletonList("RULE004"), result.get("clause3"));
   }
+  /**
+   * Get alert rules grouped by filter clause null filter clause grouped as empty.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
@@ -228,24 +259,28 @@ public class ADAlertDatasourceServiceTest {
       throws Exception {
     NativeQuery mockAlertRulesQuery = mock(NativeQuery.class);
 
-    Object[] row1 = new Object[] { "RULE001", null };
-    Object[] row2 = new Object[] { "RULE002", null };
+    Object[] row1 = new Object[] { RULE001, null };
+    Object[] row2 = new Object[] { RULE002, null };
 
     List resultList = Arrays.asList(row1, row2);
     when(mockAlertRulesQuery.list()).thenReturn(resultList);
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertRulesGroupedByFilterClause", NativeQuery.class);
+        GET_ALERT_RULES_GROUPED_BY_FILTER_CLAUSE, NativeQuery.class);
     method.setAccessible(true);
 
     Map<String, List<String>> result = (Map<String, List<String>>) method.invoke(instance,
         mockAlertRulesQuery);
 
     assertEquals(1, result.size());
-    assertEquals(Arrays.asList("RULE001", "RULE002"), result.get(""));
+    assertEquals(Arrays.asList(RULE001, RULE002), result.get(""));
   }
 
   // --- getWhereAndFilterClause() tests (protected, via reflection) ---
+  /**
+   * Get where and filter clause empty alert list.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
@@ -269,6 +304,10 @@ public class ADAlertDatasourceServiceTest {
 
     assertEquals("1 = 2", result);
   }
+  /**
+   * Get where and filter clause small list.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
@@ -283,7 +322,7 @@ public class ADAlertDatasourceServiceTest {
         .thenReturn(mockNativeQuery);
 
     // First query returns alert rules, second returns alert IDs
-    Object[] alertRule = new Object[] { "RULE001", "" };
+    Object[] alertRule = new Object[] { RULE001, "" };
     List alertRulesList = Collections.singletonList(alertRule);
     List<String> alertIds = Arrays.asList("'A1'", "'A2'", "'A3'");
 
@@ -305,6 +344,10 @@ public class ADAlertDatasourceServiceTest {
   }
 
   // --- getAlertIdsFromAlertRules() tests ---
+  /**
+   * Get alert ids from alert rules empty map.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
@@ -312,7 +355,7 @@ public class ADAlertDatasourceServiceTest {
     Map<String, List<String>> emptyMap = new HashMap<>();
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertIdsFromAlertRules", Map.class, String.class);
+        GET_ALERT_IDS_FROM_ALERT_RULES, Map.class, String.class);
     method.setAccessible(true);
 
     List<String> result = (List<String>) method.invoke(instance, emptyMap, "NEW");
@@ -320,12 +363,16 @@ public class ADAlertDatasourceServiceTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+  /**
+   * Get alert ids from alert rules handles sql grammar exception.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
   public void testGetAlertIdsFromAlertRulesHandlesSQLGrammarException() throws Exception {
     Map<String, List<String>> alertRulesMap = new HashMap<>();
-    alertRulesMap.put("", Arrays.asList("RULE001"));
+    alertRulesMap.put("", Arrays.asList(RULE001));
 
     NativeQuery mockNativeQuery = mock(NativeQuery.class);
     when(mockSession.createNativeQuery(anyString())).thenReturn(mockNativeQuery);
@@ -344,7 +391,7 @@ public class ADAlertDatasourceServiceTest {
         .thenThrow(new SQLGrammarException("Bad SQL", new SQLException("error")));
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertIdsFromAlertRules", Map.class, String.class);
+        GET_ALERT_IDS_FROM_ALERT_RULES, Map.class, String.class);
     method.setAccessible(true);
 
     List<String> result = (List<String>) method.invoke(instance, alertRulesMap, "NEW");
@@ -352,12 +399,16 @@ public class ADAlertDatasourceServiceTest {
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
+  /**
+   * Get alert ids from alert rules returns alert ids.
+   * @throws Exception if an error occurs
+   */
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Test
   public void testGetAlertIdsFromAlertRulesReturnsAlertIds() throws Exception {
     Map<String, List<String>> alertRulesMap = new HashMap<>();
-    alertRulesMap.put("", Arrays.asList("RULE001"));
+    alertRulesMap.put("", Arrays.asList(RULE001));
 
     NativeQuery mockNativeQuery = mock(NativeQuery.class);
     when(mockSession.createNativeQuery(anyString())).thenReturn(mockNativeQuery);
@@ -375,7 +426,7 @@ public class ADAlertDatasourceServiceTest {
     when(mockNativeQuery.list()).thenReturn(expectedAlerts);
 
     Method method = ADAlertDatasourceService.class.getDeclaredMethod(
-        "getAlertIdsFromAlertRules", Map.class, String.class);
+        GET_ALERT_IDS_FROM_ALERT_RULES, Map.class, String.class);
     method.setAccessible(true);
 
     List<String> result = (List<String>) method.invoke(instance, alertRulesMap, "NEW");
