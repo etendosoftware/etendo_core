@@ -107,12 +107,15 @@ public class CreateFromOrder extends Action {
       result.setMessage(e.getMessage());
       OBDal.getInstance().rollbackAndClose();
     }
-
+    
+    var messageType = result.getType() == Result.Type.ERROR
+        ? ResponseActionsBuilder.MessageType.ERROR
+        : ResponseActionsBuilder.MessageType.SUCCESS;
     result.setResponseActionsBuilder(
         getResponseBuilder()
             .retryExecution()
             .refreshGridParameter(ORDER_GRID_PARAM)
-            .showMsgInProcessView(ResponseActionsBuilder.MessageType.SUCCESS, result.getMessage())
+            .showMsgInProcessView(messageType, result.getMessage())
     );
 
     return result;
