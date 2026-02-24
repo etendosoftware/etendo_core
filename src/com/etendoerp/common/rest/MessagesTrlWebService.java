@@ -305,10 +305,14 @@ public class MessagesTrlWebService implements WebService {
 
     JSONObject result = buildFromTranslations(lang, null, searchKeyList);
 
-    // Determine which requested keys had no translation record
+    // Determine which requested keys had no translation record.
+    // JSONObject.names() returns null when the object is empty, so guard against it.
     Set<String> found = new HashSet<>();
-    for (int i = 0; i < result.names().length(); i++) {
-      found.add(result.names().getString(i));
+    JSONArray foundNames = result.names();
+    if (foundNames != null) {
+      for (int i = 0; i < foundNames.length(); i++) {
+        found.add(foundNames.getString(i));
+      }
     }
 
     List<String> missing = new ArrayList<>();
@@ -321,9 +325,12 @@ public class MessagesTrlWebService implements WebService {
     if (!missing.isEmpty()) {
       // Fill missing keys from AD_Message (base language text)
       JSONObject fallback = buildFromBaseLanguage(null, missing);
-      for (int i = 0; i < fallback.names().length(); i++) {
-        String key = fallback.names().getString(i);
-        result.put(key, fallback.get(key));
+      JSONArray fallbackNames = fallback.names();
+      if (fallbackNames != null) {
+        for (int i = 0; i < fallbackNames.length(); i++) {
+          String key = fallbackNames.getString(i);
+          result.put(key, fallback.get(key));
+        }
       }
     }
 
