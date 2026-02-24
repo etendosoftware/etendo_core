@@ -40,6 +40,7 @@
     v_ExplodePhases CHAR;
     v_Quantity NUMBER;
     v_Multiplier NUMBER;
+    v_CountVersion NUMBER;
     v_Processed CHAR;
     v_LaunchDate DATE;
     v_Startdate DATE;
@@ -116,6 +117,22 @@
     END IF; --FINISH_PROCESS
     IF(NOT FINISH_PROCESS) THEN
       IF(v_ExplodePhases='Y') THEN
+
+        SELECT COUNT(*)
+          INTO v_CountVersion
+        FROM MA_ProcessPlan_Version p
+        WHERE p.MA_ProcessPlan_ID = v_ProcessPlan_ID
+          AND p.IsActive = 'Y'
+          AND p.DateFrom <= v_LaunchDate
+          AND p.DateTo   >  v_LaunchDate;
+        IF (v_CountVersion = 0) THEN
+          v_Message := '@NoActiveProcessPlanVersion@';
+          IF (p_PInstance_ID IS NOT NULL) THEN
+            AD_UPDATE_PINSTANCE(p_PInstance_ID, NULL, 'N', 0, v_Message);
+          END IF;
+          RETURN;
+        END IF;
+
         -- Data insertion begins
         FOR Cur_Sequence IN
           (SELECT s.MA_Sequence_ID,
