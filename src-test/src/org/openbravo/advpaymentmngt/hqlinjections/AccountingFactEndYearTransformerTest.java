@@ -36,6 +36,21 @@ public class AccountingFactEndYearTransformerTest {
   public static final String DESCRIPTION_FILTER = "upper(Max(fa.description)) like upper(:alias_0) escape '|'";
   public static final String SHOULD_KEEP_CLIENT_ID_PARAMETER = "Should keep clientId parameter";
   public static final String SHOULD_HAVE_REMOVED_ALIAS_0 = "Should have removed alias_0";
+  public static final String ALIAS_10 = "alias_10";
+  public static final String SHOULD_CONTAIN_HAVING_CLAUSE = "Should contain HAVING clause";
+  public static final String SHOULD_HAVE_ADDED_PARAMETER = "Should have added parameter";
+  public static final String DATE241231 = "2024-12-31";
+  public static final String SHOULD_HAVE_BALANCED_PARENTHESES = "Should have balanced parentheses";
+  public static final String DATE240101 = "2024-01-01";
+  public static final String GROUP_BY = "GROUP BY";
+  public static final String SHOULD_PRESERVE_DESC = "Should preserve DESC";
+  public static final String TEST_PC_ID = "test-pc-id";
+  public static final String TEST_PC = "test-pc";
+  public static final String ORDER_BY = "ORDER BY";
+  public static final String MAX_FA_DESCRIPTION = "Max(fa.description)";
+  public static final String SHOULD_CONTAIN_ORDER_BY = "Should contain ORDER BY";
+  public static final String ALIAS_2 = "alias_2";
+  public static final String RESULT_SHOULD_NOT_BE_NULL = "Result should not be null";
   private AccountingFactEndYearTransformer transformer;
   private Map<String, String> requestParameters;
   private Map<String, Object> queryNamedParameters;
@@ -88,7 +103,7 @@ public class AccountingFactEndYearTransformerTest {
     
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
     
-    assertNotNull("Result should not be null", result);
+    assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
   }
 
   /**
@@ -102,10 +117,10 @@ public class AccountingFactEndYearTransformerTest {
     
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
     
-    assertTrue("Should contain HAVING clause", result.contains(HAVING));
+    assertTrue(SHOULD_CONTAIN_HAVING_CLAUSE, result.contains(HAVING));
     assertTrue("Should contain debit condition", result.contains("CASE WHEN Sum(fa.debit - fa.credit)"));
     assertTrue("Should contain havingParam", result.contains(HAVING_PARAM));
-    assertTrue("Should have added parameter", queryNamedParameters.containsKey(HAVING_PARAM_0));
+    assertTrue(SHOULD_HAVE_ADDED_PARAMETER, queryNamedParameters.containsKey(HAVING_PARAM_0));
     assertEquals("Parameter should be BigDecimal", BigDecimal.valueOf(100.0), queryNamedParameters.get(HAVING_PARAM_0));
   }
 
@@ -118,9 +133,9 @@ public class AccountingFactEndYearTransformerTest {
     
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
     
-    assertTrue("Should contain HAVING clause", result.contains(HAVING));
+    assertTrue(SHOULD_CONTAIN_HAVING_CLAUSE, result.contains(HAVING));
     assertTrue("Should contain credit condition", result.contains("CASE WHEN Sum(fa.credit - fa.debit)"));
-    assertTrue("Should have added parameter", queryNamedParameters.containsKey(HAVING_PARAM_0));
+    assertTrue(SHOULD_HAVE_ADDED_PARAMETER, queryNamedParameters.containsKey(HAVING_PARAM_0));
   }
 
   /**
@@ -195,7 +210,7 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(ALIAS_0, TEST);
-    queryNamedParameters.put(ALIAS_1, "2024-01-01");
+    queryNamedParameters.put(ALIAS_1, DATE240101);
     requestParameters.put(CRITERIA,
         "{\"operator\":\"and\",\"criteria\":["
         + FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST + ","
@@ -206,7 +221,7 @@ public class AccountingFactEndYearTransformerTest {
     
     // Extract the WHERE clause to verify aggregate removal (not SELECT clause)
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     assertFalse("Should not contain upper(Max(fa.description)) in WHERE", whereClause.contains(UPPER_MAX_FA_DESCRIPTION));
@@ -431,7 +446,7 @@ public class AccountingFactEndYearTransformerTest {
     
     queryNamedParameters.put(ALIAS_0, "1");
     queryNamedParameters.put(ALIAS_1, "100");
-    queryNamedParameters.put("alias_2", "10");
+    queryNamedParameters.put(ALIAS_2, "10");
     requestParameters.put(CRITERIA, "{\"fieldName\":\"id\",\"operator\":\"equals\",\"value\":1}");
     
     String result = transformer.transformHqlQuery(queryWithMultiple, requestParameters, queryNamedParameters);
@@ -487,9 +502,9 @@ public class AccountingFactEndYearTransformerTest {
     
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
     
-    assertTrue("Should preserve ORDER BY", result.contains("ORDER BY"));
+    assertTrue("Should preserve ORDER BY", result.contains(ORDER_BY));
     int havingIndex = result.indexOf(HAVING);
-    int orderByIndex = result.indexOf("ORDER BY");
+    int orderByIndex = result.indexOf(ORDER_BY);
     assertTrue("HAVING should come before ORDER BY", havingIndex < orderByIndex);
   }
 
@@ -627,21 +642,21 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc-id");
+    queryNamedParameters.put(ALIAS_10, TEST_PC_ID);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWithUnbalancedParens, requestParameters, queryNamedParameters);
     
     // Count parentheses in WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     long openCount = whereClause.chars().filter(ch -> ch == '(').count();
     long closeCount = whereClause.chars().filter(ch -> ch == ')').count();
     
-    assertEquals("Should have balanced parentheses", openCount, closeCount);
-    assertTrue("Should contain GROUP BY", result.contains("GROUP BY"));
+    assertEquals(SHOULD_HAVE_BALANCED_PARENTHESES, openCount, closeCount);
+    assertTrue("Should contain GROUP BY", result.contains(GROUP_BY));
   }
 
   /**
@@ -665,7 +680,7 @@ public class AccountingFactEndYearTransformerTest {
     
     // The subquery conditions should be removed from WHERE
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     assertFalse("Should not contain subquery in WHERE", whereClause.contains("(select ev.name"));
@@ -693,7 +708,7 @@ public class AccountingFactEndYearTransformerTest {
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
     queryNamedParameters.put(ALIAS_1, "O");
-    queryNamedParameters.put("alias_2", TEST);
+    queryNamedParameters.put(ALIAS_2, TEST);
     requestParameters.put(CRITERIA, 
         "{\"operator\":\"and\",\"criteria\":["
         + "{\"fieldName\":\"type\",\"operator\":\"equals\",\"value\":\"O\"},"
@@ -704,7 +719,7 @@ public class AccountingFactEndYearTransformerTest {
     
     // Both alias_1 and alias_2 should be removed because the subquery condition might have captured both
     assertFalse("Should have removed alias_1", queryNamedParameters.containsKey(ALIAS_1));
-    assertFalse("Should have removed alias_2", queryNamedParameters.containsKey("alias_2"));
+    assertFalse("Should have removed alias_2", queryNamedParameters.containsKey(ALIAS_2));
     assertTrue(SHOULD_KEEP_CLIENT_ID_PARAMETER, queryNamedParameters.containsKey(CLIENT_ID));
     
     // The result should not contain these parameters
@@ -745,17 +760,17 @@ public class AccountingFactEndYearTransformerTest {
         + "ORDER BY fa.type DESC";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put(ALIAS_0, "%test%");
+    queryNamedParameters.put(ALIAS_0, TEST);
     queryNamedParameters.put(ALIAS_1, "O");
-    queryNamedParameters.put("alias_2", "%account%");
+    queryNamedParameters.put(ALIAS_2, "%account%");
     queryNamedParameters.put("alias_3", BigDecimal.valueOf(100));
     queryNamedParameters.put("alias_4", BigDecimal.valueOf(200));
     queryNamedParameters.put("alias_5", "%desc%");
-    queryNamedParameters.put("alias_6", "2024-01-01");
-    queryNamedParameters.put("alias_7", "2024-12-31");
-    queryNamedParameters.put("alias_8", "2024-01-01");
-    queryNamedParameters.put("alias_9", "2024-12-31");
-    queryNamedParameters.put("alias_10", "test-pc-id");
+    queryNamedParameters.put("alias_6", DATE240101);
+    queryNamedParameters.put("alias_7", DATE241231);
+    queryNamedParameters.put("alias_8", DATE240101);
+    queryNamedParameters.put("alias_9", DATE241231);
+    queryNamedParameters.put(ALIAS_10, TEST_PC_ID);
     
     requestParameters.put(CRITERIA,
         "{\"operator\":\"and\",\"criteria\":["
@@ -773,10 +788,10 @@ public class AccountingFactEndYearTransformerTest {
     
     // All aggregate conditions should be removed from WHERE
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
-    assertFalse("Should not contain Max(fa.description) in WHERE", whereClause.contains("Max(fa.description)"));
+    assertFalse("Should not contain Max(fa.description) in WHERE", whereClause.contains(MAX_FA_DESCRIPTION));
     assertFalse("Should not contain Max(fa.creationDate) in WHERE", whereClause.contains("Max(fa.creationDate)"));
     assertFalse("Should not contain Max(fa.updated) in WHERE", whereClause.contains("Max(fa.updated)"));
     assertFalse("Should not contain Sum aggregate in WHERE", whereClause.contains("Sum(fa.debit"));
@@ -789,14 +804,14 @@ public class AccountingFactEndYearTransformerTest {
     // Non-aggregate conditions should still be present
     assertTrue("Should keep alias_10 (non-aggregate)", result.contains(":alias_10"));
     assertTrue(SHOULD_KEEP_CLIENT_ID_PARAMETER, queryNamedParameters.containsKey(CLIENT_ID));
-    assertTrue("Should keep alias_10 parameter", queryNamedParameters.containsKey("alias_10"));
+    assertTrue("Should keep alias_10 parameter", queryNamedParameters.containsKey(ALIAS_10));
     
     // Should have HAVING clause with aggregate filters
-    assertTrue("Should contain HAVING clause", result.contains(HAVING));
-    assertTrue("Should contain havingParam in HAVING", result.contains("havingParam_"));
+    assertTrue(SHOULD_CONTAIN_HAVING_CLAUSE, result.contains(HAVING));
+    assertTrue("Should contain havingParam in HAVING", result.contains(HAVING_PARAM));
     
     // Should contain ORDER BY
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
   }
 
   /**
@@ -804,33 +819,33 @@ public class AccountingFactEndYearTransformerTest {
    */
   @Test
   public void testMultiple1eq1ConditionsAreCollapsed() {
-    String queryWithMultiple1_1 = "SELECT max(fa.id), Max(fa.description) "
+    String queryWithMultiple1eq1 = "SELECT max(fa.id), Max(fa.description) "
         + "FROM FinancialMgmtAccountingFact fa "
         + "WHERE fa.client.id in (:clientId) AND ((1=1 and (1=1 and (1=1 1=1) and (1=1 1=1) and pc.id = :alias_10 ))) "
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc-id");
+    queryNamedParameters.put(ALIAS_10, TEST_PC_ID);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
-    String result = transformer.transformHqlQuery(queryWithMultiple1_1, requestParameters, queryNamedParameters);
+    String result = transformer.transformHqlQuery(queryWithMultiple1eq1, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // Should not contain "1=1 1=1" pattern (missing operator)
     assertFalse("Should not contain '1=1 1=1' pattern", whereClause.contains("1=1 1=1"));
     
     // Should have fewer 1=1 occurrences after cleanup
-    int count1_1 = whereClause.split("1=1", -1).length - 1;
-    assertTrue("Should have minimized 1=1 occurrences", count1_1 <= 2);
+    int count1eq1 = whereClause.split("1=1", -1).length - 1;
+    assertTrue("Should have minimized 1=1 occurrences", count1eq1 <= 2);
     
     // Parentheses should be balanced
     long openCount = whereClause.chars().filter(ch -> ch == '(').count();
     long closeCount = whereClause.chars().filter(ch -> ch == ')').count();
-    assertEquals("Should have balanced parentheses", openCount, closeCount);
+    assertEquals(SHOULD_HAVE_BALANCED_PARENTHESES, openCount, closeCount);
   }
 
   /**
@@ -845,14 +860,14 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put(ALIAS_0, "2024-12-31");
+    queryNamedParameters.put(ALIAS_0, DATE241231);
     requestParameters.put(CRITERIA, FIELD_NAME_UPDATED_OPERATOR_GREATER_THAN_VALUE_DATE);
     
     String result = transformer.transformHqlQuery(queryWithDoubleNested, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     assertFalse("Should not contain Max(Max aggregate in WHERE", whereClause.contains("Max(Max("));
@@ -910,7 +925,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryNoWhere, requestParameters, queryNamedParameters);
     
     // Should add HAVING clause even without WHERE
-    assertTrue("Should contain HAVING clause", result.contains(HAVING));
+    assertTrue(SHOULD_CONTAIN_HAVING_CLAUSE, result.contains(HAVING));
     assertTrue("Should contain havingParam", result.contains(HAVING_PARAM));
   }
 
@@ -934,10 +949,10 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithOrderBySubquery, requestParameters, queryNamedParameters);
     
     // ORDER BY should use alias instead of subquery
-    int orderByIndex = result.indexOf("ORDER BY");
+    int orderByIndex = result.indexOf(ORDER_BY);
     if (orderByIndex != -1) {
       // Should either use the alias or at least not have the subquery repeated in ORDER BY
-      assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+      assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
     }
   }
 
@@ -960,7 +975,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithOrderByCase, requestParameters, queryNamedParameters);
     
     // Should have ORDER BY (possibly transformed to use alias)
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
   }
 
   /**
@@ -982,9 +997,9 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithOrderByMax, requestParameters, queryNamedParameters);
     
     // Should have ORDER BY
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
     // Likely transformed to use "Description" alias
-    int orderByIndex = result.indexOf("ORDER BY");
+    int orderByIndex = result.indexOf(ORDER_BY);
     String orderByPart = result.substring(orderByIndex);
     assertTrue("Should have ASC or DESC", orderByPart.contains("ASC") || orderByPart.contains("DESC"));
   }
@@ -1022,14 +1037,14 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc");
+    queryNamedParameters.put(ALIAS_10, TEST_PC);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWithEmptyParens, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // Should not contain empty parentheses
@@ -1049,19 +1064,19 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc");
+    queryNamedParameters.put(ALIAS_10, TEST_PC);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWithAnd1And, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // Should have minimized 1=1 occurrences
-    int count1_1 = whereClause.split("1=1", -1).length - 1;
-    assertTrue("Should have fewer 1=1 patterns", count1_1 <= 2);
+    int count1eq1 = whereClause.split("1=1", -1).length - 1;
+    assertTrue("Should have fewer 1=1 patterns", count1eq1 <= 2);
   }
 
   /**
@@ -1076,14 +1091,14 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc");
+    queryNamedParameters.put(ALIAS_10, TEST_PC);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWith1AtStart, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // Should not have "(1=1 AND" pattern
@@ -1102,14 +1117,14 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc");
+    queryNamedParameters.put(ALIAS_10, TEST_PC);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWith1AtEnd, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // Should not have "AND 1=1)" pattern
@@ -1128,7 +1143,7 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc");
+    queryNamedParameters.put(ALIAS_10, TEST_PC);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWithWhere1And, requestParameters, queryNamedParameters);
@@ -1157,11 +1172,11 @@ public class AccountingFactEndYearTransformerTest {
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // The aggregate condition should be removed (replaced and cleaned up)
-    assertFalse("Should not contain original aggregate", whereClause.contains("upper(Max(fa.description))"));
+    assertFalse("Should not contain original aggregate", whereClause.contains(UPPER_MAX_FA_DESCRIPTION));
     // The alias_0 parameter should be removed since aggregate was removed
     assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
     // Should keep clientId parameter (non-aggregate)
@@ -1169,7 +1184,7 @@ public class AccountingFactEndYearTransformerTest {
     // Parentheses should be balanced
     long openCount = whereClause.chars().filter(ch -> ch == '(').count();
     long closeCount = whereClause.chars().filter(ch -> ch == ')').count();
-    assertEquals("Should have balanced parentheses", openCount, closeCount);
+    assertEquals(SHOULD_HAVE_BALANCED_PARENTHESES, openCount, closeCount);
   }
 
   /**
@@ -1184,14 +1199,14 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc");
+    queryNamedParameters.put(ALIAS_10, TEST_PC);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWithOrphanedAnd, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // Should not have "(and" pattern
@@ -1210,14 +1225,14 @@ public class AccountingFactEndYearTransformerTest {
         + "GROUP BY fa.client.id";
     
     queryNamedParameters.put(CLIENT_ID, TEST_CLIENT);
-    queryNamedParameters.put("alias_10", "test-pc");
+    queryNamedParameters.put(ALIAS_10, TEST_PC);
     requestParameters.put(CRITERIA, FIELD_NAME_DESCRIPTION_OPERATOR_I_CONTAINS_VALUE_TEST);
     
     String result = transformer.transformHqlQuery(queryWithDoubleAnd, requestParameters, queryNamedParameters);
     
     // Extract WHERE clause
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     // Should not have "AND AND" pattern
@@ -1277,8 +1292,8 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
     
     // Should process the array value correctly
-    assertTrue("Should contain HAVING clause", result.contains(HAVING));
-    assertTrue("Should have added parameter", queryNamedParameters.containsKey(HAVING_PARAM_0));
+    assertTrue(SHOULD_CONTAIN_HAVING_CLAUSE, result.contains(HAVING));
+    assertTrue(SHOULD_HAVE_ADDED_PARAMETER, queryNamedParameters.containsKey(HAVING_PARAM_0));
     Object paramValue = queryNamedParameters.get(HAVING_PARAM_0);
     assertNotNull("Parameter value should not be null", paramValue);
     assertEquals("Should extract single value from array", BigDecimal.valueOf(100.0), paramValue);
@@ -1295,8 +1310,8 @@ public class AccountingFactEndYearTransformerTest {
     
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
     
-    assertTrue("Should contain HAVING clause", result.contains(HAVING));
-    assertTrue("Should have added parameter", queryNamedParameters.containsKey(HAVING_PARAM_0));
+    assertTrue(SHOULD_CONTAIN_HAVING_CLAUSE, result.contains(HAVING));
+    assertTrue(SHOULD_HAVE_ADDED_PARAMETER, queryNamedParameters.containsKey(HAVING_PARAM_0));
     Object paramValue = queryNamedParameters.get(HAVING_PARAM_0);
     assertNotNull("Parameter value should not be null", paramValue);
     assertEquals("Should use first value from array", BigDecimal.valueOf(100.0), paramValue);
@@ -1314,7 +1329,7 @@ public class AccountingFactEndYearTransformerTest {
     
     // Empty array should be treated as no value, may not add HAVING param
     // The behavior should be graceful - no exceptions
-    assertNotNull("Result should not be null", result);
+    assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
   }
 
   /**
@@ -1338,10 +1353,10 @@ public class AccountingFactEndYearTransformerTest {
     // This implicitly tests closesFunction because it needs to identify
     // where Max(...) ends to extract the full condition
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
-    assertFalse("Should remove Max(fa.description) from WHERE", whereClause.contains("Max(fa.description)"));
+    assertFalse("Should remove Max(fa.description) from WHERE", whereClause.contains(MAX_FA_DESCRIPTION));
     assertFalse(SHOULD_HAVE_REMOVED_ALIAS_0, queryNamedParameters.containsKey(ALIAS_0));
   }
 
@@ -1362,7 +1377,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithNested, requestParameters, queryNamedParameters);
     
     // Should correctly handle nested functions in SELECT without errors
-    assertTrue("Should preserve nested function in SELECT", result.contains("upper(Max(fa.description))"));
+    assertTrue("Should preserve nested function in SELECT", result.contains(UPPER_MAX_FA_DESCRIPTION));
     assertTrue("Should add HAVING clause", result.contains(HAVING));
     assertTrue(SHOULD_KEEP_CLIENT_ID_PARAMETER, queryNamedParameters.containsKey(CLIENT_ID));
     assertTrue("Should add havingParam for debit filter", queryNamedParameters.containsKey(HAVING_PARAM_0));
@@ -1388,12 +1403,12 @@ public class AccountingFactEndYearTransformerTest {
     // Should correctly match parentheses when extracting conditions
     // Parentheses should remain balanced
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     long openCount = whereClause.chars().filter(ch -> ch == '(').count();
     long closeCount = whereClause.chars().filter(ch -> ch == ')').count();
-    assertEquals("Should have balanced parentheses", openCount, closeCount);
+    assertEquals(SHOULD_HAVE_BALANCED_PARENTHESES, openCount, closeCount);
   }
 
   /**
@@ -1415,7 +1430,7 @@ public class AccountingFactEndYearTransformerTest {
     
     // Should correctly match through nested parentheses
     int whereIndex = result.indexOf(WHERE);
-    int groupByIndex = result.indexOf("GROUP BY");
+    int groupByIndex = result.indexOf(GROUP_BY);
     String whereClause = result.substring(whereIndex, groupByIndex);
     
     long openCount = whereClause.chars().filter(ch -> ch == '(').count();
@@ -1443,10 +1458,10 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithDescOrder, requestParameters, queryNamedParameters);
     
     // Should preserve DESC keyword after transforming ORDER BY
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
-    assertTrue("Should preserve DESC", result.contains("DESC"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
+    assertTrue(SHOULD_PRESERVE_DESC, result.contains("DESC"));
     // Should transform Max(fa.description) to use alias
-    int orderByIndex = result.indexOf("ORDER BY");
+    int orderByIndex = result.indexOf(ORDER_BY);
     String orderByPart = result.substring(orderByIndex);
     // After transformation, should not have Max() directly in ORDER BY
     // (it should be replaced with alias reference)
@@ -1472,7 +1487,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithAscOrder, requestParameters, queryNamedParameters);
     
     // Should preserve ASC keyword
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
     assertTrue("Should preserve ASC", result.contains("ASC"));
   }
 
@@ -1495,7 +1510,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithNoDirection, requestParameters, queryNamedParameters);
     
     // Should still process ORDER BY even without explicit direction
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
     assertNotNull("Result should be valid", result);
   }
 
@@ -1518,8 +1533,8 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithSpaces, requestParameters, queryNamedParameters);
     
     // Should handle whitespace correctly
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
-    assertTrue("Should preserve DESC", result.contains("DESC"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
+    assertTrue(SHOULD_PRESERVE_DESC, result.contains("DESC"));
   }
 
   /**
@@ -1542,8 +1557,8 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithMultipleOrder, requestParameters, queryNamedParameters);
     
     // Should handle multiple ORDER BY expressions
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
-    assertTrue("Should preserve DESC", result.contains("DESC"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
+    assertTrue(SHOULD_PRESERVE_DESC, result.contains("DESC"));
     assertTrue("Should preserve ASC", result.contains("ASC"));
   }
 
@@ -1567,7 +1582,7 @@ public class AccountingFactEndYearTransformerTest {
     
     // Should successfully transform despite multiple FROM keywords
     assertTrue("Should contain main FROM", result.contains("FROM FinancialMgmtAccountingFact"));
-    assertTrue("Should contain HAVING clause", result.contains(HAVING));
+    assertTrue(SHOULD_CONTAIN_HAVING_CLAUSE, result.contains(HAVING));
     assertTrue("Should preserve subqueries", result.contains("from FinancialMgmtAcctSchema"));
   }
 
@@ -1613,7 +1628,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithSpecialChars, requestParameters, queryNamedParameters);
     
     // Should handle extra spaces and extract words correctly
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
     assertTrue("Should preserve Description alias", result.contains("Description"));
     assertTrue("Should preserve Created alias", result.contains("Created"));
   }
@@ -1637,7 +1652,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithAliasProperty, requestParameters, queryNamedParameters);
     
     // Should replace Createdby.name with just Createdby in ORDER BY
-    int orderByPos = result.toUpperCase().indexOf("ORDER BY");
+    int orderByPos = result.toUpperCase().indexOf(ORDER_BY);
     String orderByClause = result.substring(orderByPos);
     
     assertTrue("ORDER BY should contain Createdby alias", orderByClause.contains("Createdby"));
@@ -1662,7 +1677,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithUnknownAlias, requestParameters, queryNamedParameters);
     
     // Should keep fa.type as-is since 'fa' is not a known alias
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
     assertTrue("Should keep fa.type property access", result.contains("fa.type") || result.contains("fa.client.id"));
   }
 
@@ -1686,7 +1701,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithMultipleAliasProps, requestParameters, queryNamedParameters);
     
     // Should replace both Createdby.name and Updatedby.name with just the aliases
-    int orderByPos = result.toUpperCase().indexOf("ORDER BY");
+    int orderByPos = result.toUpperCase().indexOf(ORDER_BY);
     String orderByClause = result.substring(orderByPos);
     
     assertTrue("ORDER BY should contain Createdby", orderByClause.contains("Createdby"));
@@ -1714,7 +1729,7 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithMalformedSubquery, requestParameters, queryNamedParameters);
     
     // Should handle malformed query gracefully without throwing exception
-    assertNotNull("Result should not be null", result);
+    assertNotNull(RESULT_SHOULD_NOT_BE_NULL, result);
     assertTrue("Should still contain HAVING clause", result.contains(HAVING));
   }
 
@@ -1738,13 +1753,13 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithAggregatesOnly, requestParameters, queryNamedParameters);
     
     // Should replace aggregates with aliases in ORDER BY
-    int orderByPos = result.toUpperCase().indexOf("ORDER BY");
+    int orderByPos = result.toUpperCase().indexOf(ORDER_BY);
     String orderByClause = result.substring(orderByPos);
     
     assertTrue("ORDER BY should exist", orderByClause.length() > 8);
     // After replacement, ORDER BY should use aliases instead of aggregate functions
     assertFalse("Should not have Max(fa.description) in ORDER BY", 
-        orderByClause.contains("Max(fa.description)"));
+        orderByClause.contains(MAX_FA_DESCRIPTION));
   }
 
   /**
@@ -1765,9 +1780,9 @@ public class AccountingFactEndYearTransformerTest {
     String result = transformer.transformHqlQuery(queryWithRemovableOrderBy, requestParameters, queryNamedParameters);
     
     // Should handle unmapped ORDER BY expression
-    assertTrue("Should contain ORDER BY", result.contains("ORDER BY"));
+    assertTrue(SHOULD_CONTAIN_ORDER_BY, result.contains(ORDER_BY));
     // Should use a default order field (fa.client.id from GROUP BY)
-    String orderByClause = result.substring(result.toUpperCase().indexOf("ORDER BY"));
+    String orderByClause = result.substring(result.toUpperCase().indexOf(ORDER_BY));
     assertFalse("Should not contain unmapped subquery", orderByClause.contains("UnknownTable"));
   }
 }

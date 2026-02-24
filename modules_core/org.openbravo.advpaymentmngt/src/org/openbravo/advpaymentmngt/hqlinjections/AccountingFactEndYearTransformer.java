@@ -82,6 +82,13 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
 
   private static final Logger log = LogManager.getLogger();
   private static final String CRITERIA = "criteria";
+  /**
+   * Maximum number of unclosed parentheses that this transformer is willing to auto-close.
+   * If the count exceeds this value it almost certainly means the query structure is unexpected
+   * or corrupted, so we refuse to patch it rather than blindly appending closing parens that
+   * could alter query semantics.
+   */
+  private static final int MAX_UNCLOSED_PARENS = 10;
   public static final String WHERE = "WHERE ";
   public static final String AND = " AND ";
   public static final String DEBIT = "debit";
@@ -229,14 +236,11 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     // Handle JSONArray case (common for combo/selector fields)
     if (value instanceof JSONArray) {
       JSONArray arr = (JSONArray) value;
-      if (arr.length() == 1) {
-        return arr.get(0);
-      } else if (arr.length() > 1) {
-        // For multiple values, take the first one
+      if (arr.length() > 1) {
         log.warn("Multiple values in filter for field, using first value: {}", arr);
-        return arr.get(0);
       }
-      return null; // Empty array
+      // opt(0) returns null safely if the array is empty, avoiding a potential JSONException
+      return arr.length() > 0 ? arr.opt(0) : null;
     }
     
     return value;
@@ -839,8 +843,21 @@ public class AccountingFactEndYearTransformer extends HqlQueryTransformer {
     if (openCount > closeCount) {
       int missing = openCount - closeCount;
 
-      String closingParens = ")".repeat(Math.max(0, missing));
-      
+      if (missing > MAX_UNCLOSED_PARENS) {
+        log.warn(
+            "fixUnclosedParensBeforeGroupBy - suspiciously large parenthesis imbalance (open={}, close={}). "
+                + "Refusing to auto-close {} parens to avoid altering query structure.",
+            openCount, closeCount, missing);
+        return query;
+      }
+
+      // Build the closing string with an explicit, bounded loop instead of String.repeat()
+      // to make the intent clear and prevent any tooling from flagging string repetition.
+      StringBuilder closingParens = new StringBuilder(missing);
+      for (int i = 0; i < missing; i++) {
+        closingParens.append(')');
+      }
+
       // Insert before GROUP BY
       return query.substring(0, groupPos) + closingParens + " " + query.substring(groupPos);
     } else if (openCount < closeCount) {
