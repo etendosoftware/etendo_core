@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -303,11 +304,11 @@ public class MessagesTrlWebServiceTest extends BaseWSTest {
   }
 
   /** Reads the response body; falls back to the error stream for 4xx/5xx responses. */
-  private String readBody(HttpURLConnection hc) throws Exception {
+  private String readBody(HttpURLConnection hc) throws IOException {
     InputStream is;
     try {
       is = hc.getInputStream();
-    } catch (Exception e) {
+    } catch (IOException e) {
       is = hc.getErrorStream();
     }
     if (is == null) {
