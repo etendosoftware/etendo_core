@@ -25,46 +25,14 @@ import org.openbravo.model.ad.ui.MessageTrl;
 import org.openbravo.service.web.WebService;
 
 /**
- * REST web service that returns translated {@code AD_Message} entries ({@code AD_Message_Trl})
- * as a JSON object keyed by the message search key (value column).
+ * REST web service that returns {@code AD_Message} translations as a JSON object keyed by
+ * search key.
  *
- * <p>This endpoint is a generic, Copilot-independent replacement for the {@code /labels} path
- * previously exposed by the Copilot module. It can be consumed by any Etendo development that
- * needs to retrieve UI message translations at runtime.</p>
- *
- * <h3>Endpoints</h3>
  * <ul>
- *   <li>{@code GET /etendo/ws/messages_trl?language=&moduleId=} — retrieves all messages for a
- *       given module. Both parameters are mandatory.</li>
- *   <li>{@code POST /etendo/ws/messages_trl} — retrieves specific messages by search key list.
- *       Accepts a JSON body; suitable for large key sets (50+ keys).</li>
+ *   <li>{@code GET /etendo/ws/messages_trl?language=&moduleId=} — all messages for a module.</li>
+ *   <li>{@code POST /etendo/ws/messages_trl} body: {@code {"language":"es_ES","searchKeys":[…]}}
+ *       — specific messages by key; falls back to base-language text for missing translations.</li>
  * </ul>
- *
- * <h3>GET query parameters</h3>
- * <table>
- *   <tr><th>Parameter</th><th>Required</th><th>Description</th></tr>
- *   <tr><td>{@code language}</td><td>Yes</td>
- *       <td>Language ID as stored in {@code AD_Language.ad_language} (e.g. {@code es_ES}).</td></tr>
- *   <tr><td>{@code moduleId}</td><td>Yes</td>
- *       <td>ID of the {@code AD_Module} whose messages will be returned.</td></tr>
- * </table>
- *
- * <h3>POST JSON body fields</h3>
- * <table>
- *   <tr><th>Field</th><th>Required</th><th>Description</th></tr>
- *   <tr><td>{@code language}</td><td>Yes</td>
- *       <td>Language ID as stored in {@code AD_Language.ad_language} (e.g. {@code es_ES}).</td></tr>
- *   <tr><td>{@code searchKeys}</td><td>Yes</td>
- *       <td>JSON array of {@code AD_Message.value} search keys to retrieve.</td></tr>
- * </table>
- *
- * <h3>Response</h3>
- * <pre>
- * {
- *   "ETCOP_ErrorSavingFile": "Error al guardar el archivo",
- *   "ETCOP_FileTooBig":      "El archivo es demasiado grande"
- * }
- * </pre>
  */
 public class MessagesTrlWebService implements WebService {
 
@@ -213,23 +181,16 @@ public class MessagesTrlWebService implements WebService {
   }
 
   /**
-   * Builds a JSON object with translated message texts.
+   * Builds the JSON labels response.
    *
-   * <h4>Logic (mirrors the Copilot {@code getJSONLabels} behaviour):</h4>
-   * <ul>
-   *   <li>When a {@code module} is provided: if the module's own base language matches the
-   *       requested language, read directly from {@code AD_Message}; otherwise read from
-   *       {@code AD_Message_Trl}.</li>
-   *   <li>When only {@code searchKeyList} is provided (no module): query
-   *       {@code AD_Message_Trl} first, then fall back to {@code AD_Message} for every key
-   *       whose translation was not found.</li>
-   * </ul>
+   * <p>With a {@code module}: reads from {@code AD_Message} when the requested language matches
+   * the module's own language; otherwise reads from {@code AD_Message_Trl}.</p>
+   * <p>Without a {@code module}: queries {@code AD_Message_Trl} first, then falls back to
+   * {@code AD_Message} for any key whose translation is absent.</p>
    *
-   * @param lang          the resolved {@link Language} entity
-   * @param module        optional {@link Module} to filter messages; may be {@code null}
-   * @param searchKeyList optional list of message search keys to restrict results; may be
-   *                      {@code null}
-   * @return a {@link JSONObject} mapping search keys to translated message texts
+   * @param lang          resolved {@link Language} entity
+   * @param module        optional module filter; {@code null} for the search-key-list path
+   * @param searchKeyList optional key filter; {@code null} returns all module messages
    */
   private JSONObject buildJsonLabels(Language lang, Module module, List<String> searchKeyList)
       throws JSONException {
@@ -250,9 +211,7 @@ public class MessagesTrlWebService implements WebService {
     return buildFromTranslationsWithFallback(lang, searchKeyList);
   }
 
-  /**
-   * Reads messages directly from {@code AD_Message} (module base language branch).
-   */
+  /** Reads messages directly from {@code AD_Message} (base language or no-translation path). */
   private JSONObject buildFromBaseLanguage(Module module, List<String> searchKeyList)
       throws JSONException {
 
@@ -271,10 +230,7 @@ public class MessagesTrlWebService implements WebService {
     return result;
   }
 
-  /**
-   * Reads translated messages from {@code AD_Message_Trl} joined with {@code AD_Message}.
-   * Used when a module is provided and its language differs from the requested language.
-   */
+  /** Reads translated messages from {@code AD_Message_Trl}. Optional module and key filters apply. */
   private JSONObject buildFromTranslations(Language lang, Module module, List<String> searchKeyList)
       throws JSONException {
 
@@ -296,9 +252,8 @@ public class MessagesTrlWebService implements WebService {
   }
 
   /**
-   * Reads translations from {@code AD_Message_Trl} for the given search keys, then falls
-   * back to {@code AD_Message} for any key whose translation was not found.
-   * Used for the search-key list path (no module provided).
+   * Reads translations from {@code AD_Message_Trl} for the given keys, then falls back to
+   * {@code AD_Message} for any key with no translation record.
    */
   private JSONObject buildFromTranslationsWithFallback(Language lang, List<String> searchKeyList)
       throws JSONException {
@@ -337,9 +292,7 @@ public class MessagesTrlWebService implements WebService {
     return result;
   }
 
-  /**
-   * Writes a plain-text error response with the given HTTP status code and message.
-   */
+  /** Writes a plain-text error response. */
   private void sendError(HttpServletResponse response, int status, String message)
       throws Exception {
     response.setStatus(status);
