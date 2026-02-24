@@ -118,7 +118,7 @@
     IF(NOT FINISH_PROCESS) THEN
       IF(v_ExplodePhases='Y') THEN
 
-        SELECT COUNT(*)
+        SELECT COUNT(1)
           INTO v_CountVersion
         FROM MA_ProcessPlan_Version p
         WHERE p.MA_ProcessPlan_ID = v_ProcessPlan_ID
