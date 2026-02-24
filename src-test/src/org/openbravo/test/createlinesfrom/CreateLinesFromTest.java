@@ -191,23 +191,27 @@ public class CreateLinesFromTest extends WeldBaseTest {
   }
 
   private Order processOrder(Order testOrder) {
+    OBDal.getInstance().flush();
     final List<Object> params = new ArrayList<Object>();
     params.add(null);
     params.add(testOrder.getId());
     CallStoredProcedure.getInstance()
         .call(ORDER_COMPLETE_PROCEDURE_NAME, params, null, true, false);
-    OBDal.getInstance().refresh(testOrder);
-    return testOrder;
+    OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
+    return OBDal.getInstance().get(Order.class, testOrder.getId());
   }
 
   private Invoice processInvoice(Invoice invoice) {
+    OBDal.getInstance().flush();
     final List<Object> params = new ArrayList<Object>();
     params.add(null);
     params.add(invoice.getId());
     CallStoredProcedure.getInstance()
         .call(INVOICE_COMPLETE_PROCEDURE_NAME, params, null, true, false);
-    OBDal.getInstance().refresh(invoice);
-    return invoice;
+    OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
+    return OBDal.getInstance().get(Invoice.class, invoice.getId());
   }
 
   private JSONArray createSelectedLinesFromOrder(Order order) {
@@ -294,12 +298,14 @@ public class CreateLinesFromTest extends WeldBaseTest {
   }
 
   private ShipmentInOut processShipmentInOut(ShipmentInOut shipmentInOut) {
+    OBDal.getInstance().flush();
     final List<Object> params = new ArrayList<Object>();
     params.add(null);
     params.add(shipmentInOut.getId());
     CallStoredProcedure.getInstance()
         .call(SHIPMENT_INOUT_COMPLETE_PROCEDURE_NAME, params, null, true, false);
-    OBDal.getInstance().refresh(shipmentInOut);
-    return shipmentInOut;
+    OBDal.getInstance().flush();
+    OBDal.getInstance().getSession().clear();
+    return OBDal.getInstance().get(ShipmentInOut.class, shipmentInOut.getId());
   }
 }

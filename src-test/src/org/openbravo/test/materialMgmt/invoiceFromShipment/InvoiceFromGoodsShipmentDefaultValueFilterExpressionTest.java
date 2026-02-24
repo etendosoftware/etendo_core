@@ -30,20 +30,17 @@ public class InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest extends OB
   private static final String TEST_FILTER_EXPRESSION_SAME = "TestFilterExpression_Same";
   private static final String CONTEXT = "context";
 
-  private static final String CLIENT_ID = "4028E6C72959682B01295A070852010D";
-  private static final String ORG_ID = "357947E87C284935AD1D783CF6F099A1";
-  private static final String USER_ID = "100";
-  private static final String ROLE_ID = "4028E6C72959682B01295A071429011E";
-
   private static final String GOODS_SHIPMENT_ID = "8BEAC8CAFFCE444FA15D0170F897B641";
   private static final String SALES_ORDER = "5B29AF263D004CD3830D4F9B23C17DFD";
   private static final String T_SHIRTS_PRODUCT_ID = "0CF7C882B8BD4D249F3BCC8727A736D1";
 
   private InvoiceFromGoodsShipmentDefaultValueFilterExpression filterExpression;
 
+  @Override
   @BeforeEach
-  public void setUp() {
-    OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID);
+  public void setUp() throws Exception {
+    super.setUp();
+    setQAAdminContext();
     filterExpression = new InvoiceFromGoodsShipmentDefaultValueFilterExpression();
   }
 

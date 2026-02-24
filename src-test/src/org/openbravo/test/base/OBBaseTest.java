@@ -51,6 +51,7 @@ import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.extension.TestWatcher;
+import org.mockito.Mockito;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -187,6 +188,9 @@ public class OBBaseTest {
     if (shouldMockServletContext()) {
       cleanMockServletContext();
     }
+
+    // Defensive cleanup: avoid leaking inline static mocks between tests in the same thread.
+    Mockito.framework().clearInlineMocks();
   }
 
   private String getTestName(ExtensionContext context) {
