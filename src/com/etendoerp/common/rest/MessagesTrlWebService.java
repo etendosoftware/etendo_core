@@ -3,7 +3,9 @@ package com.etendoerp.common.rest;
 import java.io.BufferedReader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -213,9 +215,15 @@ public class MessagesTrlWebService implements WebService {
   /**
    * Builds a JSON object with translated message texts.
    *
-   * <p>Uses the base-language branch (reads from {@code AD_Message}) when the requested language
-   * is the system language <em>or</em> matches the module's own base language. Otherwise reads
-   * translated texts from {@code AD_Message_Trl}.</p>
+   * <h4>Logic (mirrors the Copilot {@code getJSONLabels} behaviour):</h4>
+   * <ul>
+   *   <li>When a {@code module} is provided: if the module's own base language matches the
+   *       requested language, read directly from {@code AD_Message}; otherwise read from
+   *       {@code AD_Message_Trl}.</li>
+   *   <li>When only {@code searchKeyList} is provided (no module): query
+   *       {@code AD_Message_Trl} first, then fall back to {@code AD_Message} for every key
+   *       whose translation was not found.</li>
+   * </ul>
    *
    * @param lang          the resolved {@link Language} entity
    * @param module        optional {@link Module} to filter messages; may be {@code null}
@@ -226,21 +234,24 @@ public class MessagesTrlWebService implements WebService {
   private JSONObject buildJsonLabels(Language lang, Module module, List<String> searchKeyList)
       throws JSONException {
 
-    // Use the base-language branch when the requested language is the system language (en_US)
-    // OR when it matches the module's own base language (a module may ship in a language other
-    // than en_US, in which case AD_Message already stores its native texts and AD_Message_Trl
-    // would hold the en_US translation instead).
-    boolean useBaseLanguage = lang.isSystemLanguage()
-        || (module != null && lang.getId().equals(module.getLanguage().getId()));
-
-    if (useBaseLanguage) {
-      return buildFromBaseLanguage(module, searchKeyList);
+    if (module != null) {
+      // Module-scoped: use the same branch logic as Copilot's getJSONLabels.
+      // If the requested language IS the module's own base language, AD_Message already
+      // contains the native text — no translation record exists for it.
+      boolean useBaseLanguage = lang.getId().equals(module.getLanguage().getId());
+      if (useBaseLanguage) {
+        return buildFromBaseLanguage(module, searchKeyList);
+      }
+      return buildFromTranslations(lang, module, searchKeyList);
     }
-    return buildFromTranslations(lang, module, searchKeyList);
+
+    // No module: search-key list path.
+    // Try translations first, then fill any missing keys from AD_Message.
+    return buildFromTranslationsWithFallback(lang, searchKeyList);
   }
 
   /**
-   * Reads messages directly from {@code AD_Message} (base / system language).
+   * Reads messages directly from {@code AD_Message} (module base language branch).
    */
   private JSONObject buildFromBaseLanguage(Module module, List<String> searchKeyList)
       throws JSONException {
@@ -262,6 +273,7 @@ public class MessagesTrlWebService implements WebService {
 
   /**
    * Reads translated messages from {@code AD_Message_Trl} joined with {@code AD_Message}.
+   * Used when a module is provided and its language differs from the requested language.
    */
   private JSONObject buildFromTranslations(Language lang, Module module, List<String> searchKeyList)
       throws JSONException {
@@ -280,6 +292,41 @@ public class MessagesTrlWebService implements WebService {
     for (MessageTrl msgTrl : crit.list()) {
       result.put(msgTrl.getMessage().getSearchKey(), msgTrl.getMessageText());
     }
+    return result;
+  }
+
+  /**
+   * Reads translations from {@code AD_Message_Trl} for the given search keys, then falls
+   * back to {@code AD_Message} for any key whose translation was not found.
+   * Used for the search-key list path (no module provided).
+   */
+  private JSONObject buildFromTranslationsWithFallback(Language lang, List<String> searchKeyList)
+      throws JSONException {
+
+    JSONObject result = buildFromTranslations(lang, null, searchKeyList);
+
+    // Determine which requested keys had no translation record
+    Set<String> found = new HashSet<>();
+    for (int i = 0; i < result.names().length(); i++) {
+      found.add(result.names().getString(i));
+    }
+
+    List<String> missing = new ArrayList<>();
+    for (String key : searchKeyList) {
+      if (!found.contains(key)) {
+        missing.add(key);
+      }
+    }
+
+    if (!missing.isEmpty()) {
+      // Fill missing keys from AD_Message (base language text)
+      JSONObject fallback = buildFromBaseLanguage(null, missing);
+      for (int i = 0; i < fallback.names().length(); i++) {
+        String key = fallback.names().getString(i);
+        result.put(key, fallback.get(key));
+      }
+    }
+
     return result;
   }
 
