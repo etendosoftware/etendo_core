@@ -21205,7 +21205,7 @@ The column has been set in the Dimension list to filter a Sequence.]]></MSGTEXT>
 <!--6D71039E9786499F9A9846F0D4B68A43-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--6D71039E9786499F9A9846F0D4B68A43-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--6D71039E9786499F9A9846F0D4B68A43-->  <VALUE><![CDATA[NoActiveProcessPlanVersion]]></VALUE>
-<!--6D71039E9786499F9A9846F0D4B68A43-->  <MSGTEXT><![CDATA[Phases cannot be exploded because there is no active version of the selected production plan.]]></MSGTEXT>
+<!--6D71039E9786499F9A9846F0D4B68A43-->  <MSGTEXT><![CDATA[Cannot process Work Requirement. The selected Process Plan does not have a valid version.]]></MSGTEXT>
 <!--6D71039E9786499F9A9846F0D4B68A43-->  <MSGTYPE><![CDATA[E]]></MSGTYPE>
 <!--6D71039E9786499F9A9846F0D4B68A43-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--6D71039E9786499F9A9846F0D4B68A43-->  <ISINCLUDEINI18N><![CDATA[N]]></ISINCLUDEINI18N>
