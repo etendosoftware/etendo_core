@@ -64,6 +64,8 @@ public abstract class CreateLinesFromTestData {
         .get(Order.class,
             isSales() ? CLFTestDataConstants.SALESORDER_ID : CLFTestDataConstants.PURCHASEORDER_ID);
     Order clonedOrder = (Order) DalUtil.copy(order, false);
+    // Avoid dangling copied order-level taxes; they are rebuilt when posting the order.
+    clonedOrder.getOrderLineTaxList().clear();
     updateOrderHeader(clonedOrder);
     OBDal.getInstance().save(clonedOrder);
 
@@ -72,6 +74,8 @@ public abstract class CreateLinesFromTestData {
     for (int i = 0; i < orderLineData.size(); i++) {
       OrderLineData lineData = orderLineData.get(i);
       OrderLine clonedOrderLine = (OrderLine) DalUtil.copy(orderLine, false);
+      // Avoid keeping copied OrderLineTax rows: c_orderline trigger regenerates them on insert.
+      clonedOrderLine.getOrderLineTaxList().clear();
 
       clonedOrderLine.setLineNo((long) ((i + 1) * 10));
       updateOrderLine(clonedOrderLine, lineData);
