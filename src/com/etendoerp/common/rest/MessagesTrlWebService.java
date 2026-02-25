@@ -22,6 +22,7 @@ import org.openbravo.model.ad.module.Module;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Message;
 import org.openbravo.model.ad.ui.MessageTrl;
+import org.openbravo.service.json.JsonConstants;
 import org.openbravo.service.web.WebService;
 
 /**
@@ -43,8 +44,6 @@ public class MessagesTrlWebService implements WebService {
   /** JSON field (POST): array of AD_Message search keys (mandatory for POST). */
   public static final String PARAM_SEARCH_KEYS = "searchKeys";
 
-  public static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json;charset=UTF-8";
-
   // -------------------------------------------------------------------------
   // GET — all messages for a module: ?language=&moduleId=
   // -------------------------------------------------------------------------
@@ -53,7 +52,9 @@ public class MessagesTrlWebService implements WebService {
   public void doGet(String path, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
 
-    final String languageId = request.getParameter(PARAM_LANGUAGE);
+    final String languageId = StringUtils.defaultIfBlank(
+        request.getParameter(PARAM_LANGUAGE),
+        OBContext.getOBContext().getLanguage().getLanguage());
     final String moduleId = request.getParameter(PARAM_MODULE_ID);
 
     if (StringUtils.isBlank(moduleId)) {
@@ -89,7 +90,9 @@ public class MessagesTrlWebService implements WebService {
       return;
     }
 
-    final String languageId = body.optString(PARAM_LANGUAGE, null);
+    final String languageId = StringUtils.defaultIfBlank(
+        body.optString(PARAM_LANGUAGE, null),
+        OBContext.getOBContext().getLanguage().getLanguage());
 
     if (!body.has(PARAM_SEARCH_KEYS)) {
       sendError(response, HttpServletResponse.SC_BAD_REQUEST,
@@ -167,9 +170,9 @@ public class MessagesTrlWebService implements WebService {
 
       JSONObject jsonLabels = buildJsonLabels(lang, module, searchKeyList);
 
-      response.setContentType(APPLICATION_JSON_CHARSET_UTF_8);
+      response.setContentType(JsonConstants.JSON_CONTENT_TYPE);
       final Writer w = response.getWriter();
-      w.write(jsonLabels.toString());
+      w.write(jsonLabels.toString(2));
       w.close();
 
     } catch (JSONException e) {
