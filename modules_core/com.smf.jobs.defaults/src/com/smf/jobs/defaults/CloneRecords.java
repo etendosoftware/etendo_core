@@ -15,6 +15,7 @@ import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.ComponentProvider;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.service.json.DataResolvingMode;
 import org.openbravo.service.json.DataToJsonConverter;
 
@@ -23,6 +24,8 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An action that clones any record.
@@ -31,7 +34,10 @@ import java.util.Map;
  */
 public class CloneRecords extends Action {
     Logger log = LogManager.getLogger();
-
+    
+    private static final Pattern POSTGRESQL_ERROR_PATTERN = Pattern.compile("^ERROR:\\s*+(.+)$", Pattern.MULTILINE);
+    private static final Pattern MESSAGE_CODE_PATTERN = Pattern.compile("@([^@]+)@");
+    
     @Inject
     @Any
     private Instance<CloneRecordHook> cloneHooks;
@@ -92,7 +98,7 @@ public class CloneRecords extends Action {
             jsonOutput = new JSONArray();
             log.error(e.getMessage(), e);
             result.setType(Result.Type.ERROR);
-            result.setMessage(e.getMessage());
+            result.setMessage(getRootCauseMessage(e));
         }
 
         output.setContents(outputContents);
@@ -127,5 +133,83 @@ public class CloneRecords extends Action {
     @Override
     protected Class<BaseOBObject> getInputClass() {
         return BaseOBObject.class;
+    }
+
+    /**
+     * Returns the message of the deepest cause of the given exception.
+     * @param e the exception to inspect
+     * @return the cleaned and translated root-cause message, or an empty string if none is available
+     */
+    protected String getRootCauseMessage(Exception e) {
+        Throwable rootCause = e;
+        while (rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+        String message = rootCause.getMessage();
+        if (message == null) {
+            return "";
+        }
+        message = cleanPostgreSQLMessage(message);
+        message = translateMessageCodes(message);
+        return message.trim();
+    }
+
+    /**
+     * Extracts and normalizes the main PostgreSQL error text from a raw exception message.
+     * @param message the raw exception message
+     * @return the extracted PostgreSQL error text, or an empty string if the input is {@code null}
+     */
+    private String cleanPostgreSQLMessage(String message) {
+        if (message == null) {
+            return "";
+        }
+        Matcher matcher = POSTGRESQL_ERROR_PATTERN.matcher(message);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return message;
+    }
+
+    /**
+     * Replaces all message codes in the {@code @CODE@} format with their translated values.
+     * @param message the message that may contain {@code @CODE@} tokens
+     * @return the message with all codes translated (when possible)
+     */
+    private String translateMessageCodes(String message) {
+        if (message == null || !message.contains("@")) {
+            return message;
+        }
+        try {
+            OBDal.getInstance().rollbackAndClose();
+        } catch (Exception ex) {
+            log.debug("Could not rollback session before translating message codes.", ex);
+        }
+        Matcher matcher = MESSAGE_CODE_PATTERN.matcher(message);
+        StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
+            String messageCode = matcher.group(1);
+            String translation = resolveMessageCode(messageCode);
+            matcher.appendReplacement(result, Matcher.quoteReplacement(translation));
+        }
+        matcher.appendTail(result);
+        return result.toString();
+    }
+
+    /**
+     * Resolves a single message code using {@link OBMessageUtils#messageBD(String)}.
+     * If the database is not accessible, returns the code itself as fallback.
+     * @param messageCode the message code to resolve
+     * @return the translated message, or the original code if translation is not available
+     */
+    private String resolveMessageCode(String messageCode) {
+        try {
+            String translated = OBMessageUtils.messageBD(messageCode);
+            if (!messageCode.equals(translated)) {
+                return translated;
+            }
+        } catch (Exception ex) {
+            log.warn("Could not resolve message code '{}' via DB.", messageCode);
+        }
+        return messageCode;
     }
 }
