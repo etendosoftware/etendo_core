@@ -99,6 +99,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * Initializes mocks for DAL, OBContext, criteria and entity objects.
+   *
+   * @throws Exception if an error occurs during setup
    */
   @SuppressWarnings("unchecked")
   @Before
@@ -139,7 +141,7 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * Closes static mocks to avoid leaks between tests.
-   */
+   * */
   @After
   public void tearDown() {
     if (mockedOBDalStatic != null) {
@@ -156,6 +158,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * GET with base language and valid module returns a JSON object with message entries.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void getBaseLanguageReturnsMessages() throws Exception {
@@ -174,6 +178,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * GET with a non-base language uses the AD_Message_Trl translation branch.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void getWithTranslationBranch() throws Exception {
@@ -191,6 +197,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * GET without moduleId parameter returns HTTP 400.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void getMissingModuleIdReturns400() throws Exception {
@@ -204,6 +212,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * GET with a language code that does not exist in the database returns HTTP 404.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void getUnknownLanguageReturns404() throws Exception {
@@ -218,6 +228,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * GET with a module ID that does not exist in the database returns HTTP 404.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void getUnknownModuleReturns404() throws Exception {
@@ -237,6 +249,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * POST falls back to AD_Message base text when a translation record is missing.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void postFallsBackToBaseTextForMissingTranslations() throws Exception {
@@ -258,6 +272,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * POST with an empty request body returns HTTP 400.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void postEmptyBodyReturns400() throws Exception {
@@ -270,6 +286,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * POST without the searchKeys field returns HTTP 400.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void postMissingSearchKeysReturns400() throws Exception {
@@ -288,6 +306,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * PUT requests are not supported and must return HTTP 405.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void putReturns405() throws Exception {
@@ -297,6 +317,8 @@ public class MessagesTrlWebServiceTest {
 
   /**
    * DELETE requests are not supported and must return HTTP 405.
+   *
+   * @throws Exception if an error occurs during execution
    */
   @Test
   public void deleteReturns405() throws Exception {
