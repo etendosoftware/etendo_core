@@ -211,10 +211,10 @@ class UpdatePricesAndAmounts extends CreateLinesFromProcessHook {
     //@formatter:off
     String hql =
             " select " +
-            "   TO_NUMBER(M_BOM_PriceStd(:productID, plv.id)), " +
-            "   TO_NUMBER(M_BOM_PriceList(:productID, plv.id)), " +
-            "   TO_NUMBER(M_BOM_PriceLimit(:productID, plv.id)), " +
-            "   TO_NUMBER(ROUND(TO_NUMBER(M_BOM_PriceStd(:productID, plv.id)), :pricePrecision)) " +
+            "   cast(M_BOM_PriceStd(:productID, plv.id) as big_decimal), " +
+            "   cast(M_BOM_PriceList(:productID, plv.id) as big_decimal), " +
+            "   cast(M_BOM_PriceLimit(:productID, plv.id) as big_decimal), " +
+            "   cast(ROUND(cast(M_BOM_PriceStd(:productID, plv.id) as big_decimal), :pricePrecision) as big_decimal) " +
             " from PricingProductPrice pp " +
             "   join pp.priceListVersion plv " +
             " where pp.product.id = :productID" +

@@ -58,10 +58,10 @@ public class TestUtils {
   static Product cloneProduct(final String productId, final String name) {
     final Product oldProduct = OBDal.getInstance().get(Product.class, productId);
     final Product newProduct = (Product) DalUtil.copy(oldProduct, false);
-    int numberOfProductsWithSameName = getNumberOfProducts(name) + 1;
+    final String uniqueSuffix = getUniqueSuffix();
 
-    newProduct.setSearchKey(name + "-" + numberOfProductsWithSameName);
-    newProduct.setName(name + "-" + numberOfProductsWithSameName);
+    newProduct.setSearchKey(name + "-" + uniqueSuffix);
+    newProduct.setName(name + "-" + uniqueSuffix);
     newProduct.setId(SequenceIdData.getUUID());
     newProduct.setNewOBObject(true);
 
@@ -106,10 +106,10 @@ public class TestUtils {
   public static Order cloneOrder(final String orderId, final String docNo) {
     final Order oldOrder = OBDal.getInstance().get(Order.class, orderId);
     final Order newOrder = (Order) DalUtil.copy((Order) Hibernate.unproxy(oldOrder), false);
-    int numberOfOrdersWithSameDocNo = getNumberOfOrders(docNo) + 1;
+    final String uniqueSuffix = getUniqueSuffix();
 
     newOrder.setId(SequenceIdData.getUUID());
-    newOrder.setDocumentNo(docNo + "-" + numberOfOrdersWithSameDocNo);
+    newOrder.setDocumentNo(docNo + "-" + uniqueSuffix);
     newOrder.setProcessed(false);
     newOrder.setDocumentStatus(DRAFT_STATUS);
     newOrder.setDocumentAction(COMPLETE_ACTION);
@@ -117,6 +117,7 @@ public class TestUtils {
     newOrder.setOrderDate(Calendar.getInstance().getTime());
     newOrder.setScheduledDeliveryDate(Calendar.getInstance().getTime());
     newOrder.setNewOBObject(true);
+    newOrder.setOrderLineList(new ArrayList<>());
 
     OBDal.getInstance().save(newOrder);
 
@@ -125,8 +126,8 @@ public class TestUtils {
     }
 
     OBDal.getInstance().flush();
-
-    return newOrder;
+    OBDal.getInstance().getSession().clear();
+    return OBDal.getInstance().get(Order.class, newOrder.getId());
   }
 
   /**
@@ -154,11 +155,6 @@ public class TestUtils {
    */
   public static OrderLine cloneOrderLine(final OrderLine oldLine, final Order newOrder) {
 
-    // Skip discount lines
-    if (oldLine.getOrderDiscount() != null) {
-      return null;
-    }
-
     final OrderLine newLine = (OrderLine) DalUtil.copy(oldLine, false);
 
     newLine.setId(SequenceIdData.getUUID());
@@ -169,7 +165,6 @@ public class TestUtils {
     newLine.setNewOBObject(true);
 
     OBDal.getInstance().save(newLine);
-    newOrder.getOrderLineList().add(newLine);
 
     return newLine;
   }
@@ -182,11 +177,17 @@ public class TestUtils {
    * @throws OBException
    */
   static void processOrder(final Order order) throws OBException {
+    OBDal.getInstance().flush();
     final List<Object> parameters = new ArrayList<Object>();
     parameters.add(null);
     parameters.add(order.getId());
     final String procedureName = "c_order_post1";
     CallStoredProcedure.getInstance().call(procedureName, parameters, null, true, false);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().refresh(order);
+    if (!order.isProcessed()) {
+      throw new OBException("Order was not processed: " + order.getId());
+    }
   }
 
   /**
@@ -202,10 +203,10 @@ public class TestUtils {
   static ShipmentInOut cloneReceiptShipment(final String mInoutId, final String docNo) {
     final ShipmentInOut oldInOut = OBDal.getInstance().get(ShipmentInOut.class, mInoutId);
     final ShipmentInOut newInOut = (ShipmentInOut) DalUtil.copy(oldInOut, false);
-    int numberOfShipmentsWithSameDocNo = getNumberOfShipments(docNo) + 1;
+    final String uniqueSuffix = getUniqueSuffix();
 
     newInOut.setId(SequenceIdData.getUUID());
-    newInOut.setDocumentNo(docNo + "-" + numberOfShipmentsWithSameDocNo);
+    newInOut.setDocumentNo(docNo + "-" + uniqueSuffix);
     newInOut.setDocumentStatus(DRAFT_STATUS);
     newInOut.setDocumentAction(COMPLETE_ACTION);
     newInOut.setProcessed(false);
@@ -213,6 +214,7 @@ public class TestUtils {
     newInOut.setOrderDate(new Date());
     newInOut.setNewOBObject(true);
     newInOut.setSalesOrder(null);
+    newInOut.setMaterialMgmtShipmentInOutLineList(new ArrayList<>());
 
     OBDal.getInstance().save(newInOut);
 
@@ -221,7 +223,8 @@ public class TestUtils {
     }
 
     OBDal.getInstance().flush();
-    return newInOut;
+    OBDal.getInstance().getSession().clear();
+    return OBDal.getInstance().get(ShipmentInOut.class, newInOut.getId());
   }
 
   /**
@@ -258,7 +261,6 @@ public class TestUtils {
     newLine.setSalesOrderLine(null);
 
     OBDal.getInstance().save(newLine);
-    newInOut.getMaterialMgmtShipmentInOutLineList().add(newLine);
 
     return newLine;
   }
@@ -271,11 +273,17 @@ public class TestUtils {
    * @throws OBException
    */
   static void processShipmentReceipt(final ShipmentInOut shipmentReceipt) throws OBException {
+    OBDal.getInstance().flush();
     final List<Object> parameters = new ArrayList<Object>();
     parameters.add(null);
     parameters.add(shipmentReceipt.getId());
     final String procedureName = "m_inout_post";
     CallStoredProcedure.getInstance().call(procedureName, parameters, null, true, false);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().refresh(shipmentReceipt);
+    if (!shipmentReceipt.isProcessed()) {
+      throw new OBException("Shipment/Receipt was not processed: " + shipmentReceipt.getId());
+    }
   }
 
   /**
@@ -292,5 +300,9 @@ public class TestUtils {
       parameters.add(invoice.getId());
       CallStoredProcedure.getInstance().call("C_INVOICE_POST", parameters, null, true, false);
     }
+  }
+
+  private static String getUniqueSuffix() {
+    return SequenceIdData.getUUID().substring(0, 4);
   }
 }
