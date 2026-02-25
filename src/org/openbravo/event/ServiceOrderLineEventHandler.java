@@ -19,9 +19,17 @@
 package org.openbravo.event;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Observes;
 
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.openbravo.base.exception.OBException;
@@ -37,10 +45,12 @@ import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.materialmgmt.ServicePriceUtils;
+import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.order.OrderlineServiceRelation;
 
-class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
+@Dependent
+public class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
   private static Entity[] entities = {
       ModelProvider.getInstance().getEntity(OrderLine.ENTITY_NAME) };
 
@@ -57,13 +67,17 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
     final Entity orderLineEntity = ModelProvider.getInstance().getEntity(OrderLine.ENTITY_NAME);
     final OrderLine thisLine = (OrderLine) event.getTargetInstance();
 
-    if (hasRelatedServices(thisLine)) {
+    final boolean relatedServices = hasRelatedServices(thisLine);
+    if (relatedServices) {
       final Property lineNetAmountProperty = orderLineEntity
           .getProperty(OrderLine.PROPERTY_LINENETAMOUNT);
       final Property lineGrossAmountProperty = orderLineEntity
           .getProperty(OrderLine.PROPERTY_LINEGROSSAMOUNT);
       final Property orderedQtyProperty = orderLineEntity
           .getProperty(OrderLine.PROPERTY_ORDEREDQUANTITY);
+      final Property unitPriceProperty = orderLineEntity.getProperty(OrderLine.PROPERTY_UNITPRICE);
+      final Property grossUnitPriceProperty = orderLineEntity
+          .getProperty(OrderLine.PROPERTY_GROSSUNITPRICE);
 
       BigDecimal currentLineNetAmount = (BigDecimal) event.getCurrentState(lineNetAmountProperty);
       BigDecimal oldLineNetAmount = (BigDecimal) event.getPreviousState(lineNetAmountProperty);
@@ -72,6 +86,10 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
       BigDecimal oldLineGrossAmount = (BigDecimal) event.getPreviousState(lineGrossAmountProperty);
       BigDecimal currentOrderedQty = (BigDecimal) event.getCurrentState(orderedQtyProperty);
       BigDecimal oldOrderedQty = (BigDecimal) event.getPreviousState(orderedQtyProperty);
+      BigDecimal currentUnitPrice = (BigDecimal) event.getCurrentState(unitPriceProperty);
+      BigDecimal oldUnitPrice = (BigDecimal) event.getPreviousState(unitPriceProperty);
+      BigDecimal currentGrossUnitPrice = (BigDecimal) event.getCurrentState(grossUnitPriceProperty);
+      BigDecimal oldGrossUnitPrice = (BigDecimal) event.getPreviousState(grossUnitPriceProperty);
 
       BigDecimal currentAmount = null;
       BigDecimal oldAmount = null;
@@ -83,10 +101,21 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
         currentAmount = currentLineNetAmount;
         oldAmount = oldLineNetAmount;
       }
+      if (currentOrderedQty.compareTo(oldOrderedQty) != 0
+          && currentAmount.compareTo(oldAmount) == 0) {
+        if (thisLine.getSalesOrder().isPriceIncludesTax()) {
+          currentAmount = currentGrossUnitPrice.multiply(currentOrderedQty);
+          oldAmount = oldGrossUnitPrice.multiply(oldOrderedQty);
+        } else {
+          currentAmount = currentUnitPrice.multiply(currentOrderedQty);
+          oldAmount = oldUnitPrice.multiply(oldOrderedQty);
+        }
+      }
 
       if (currentOrderedQty.compareTo(oldOrderedQty) != 0
           || currentAmount.compareTo(oldAmount) != 0) {
         Long lineNo = null;
+        final Set<String> affectedServiceLineIds = new HashSet<>();
         OBQuery<OrderlineServiceRelation> rol = relatedServices(thisLine);
         rol.setMaxResult(1000);
         final ScrollableResults scroller = rol.scroll(ScrollMode.FORWARD_ONLY);
@@ -122,6 +151,7 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
               olsr.setAmount(currentAmount);
               olsr.setQuantity(currentOrderedQty);
               OBDal.getInstance().save(olsr);
+              affectedServiceLineIds.add(secondOrderline.getId());
             } else {
               if (or.getQuantity().compareTo(currentOrderedQty) != 0) {
                 or.setQuantity(currentOrderedQty);
@@ -134,7 +164,11 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
               if (changed) {
                 OBDal.getInstance().save(or);
               }
+              affectedServiceLineIds.add(or.getSalesOrderLine().getId());
             }
+          }
+          for (String serviceLineId : affectedServiceLineIds) {
+            recomputeServiceLine(OBDal.getInstance().get(OrderLine.class, serviceLineId));
           }
         } catch (Exception e) {
           throw new OBException("Error in SalesOrderLineEventHandler" + e.getMessage(), true);
@@ -202,5 +236,75 @@ class ServiceOrderLineEventHandler extends EntityPersistenceEventObserver {
     //@formatter:on
     return OBDal.getInstance().createQuery(OrderlineServiceRelation.class, hql)
         .setNamedParameter("orderLineId", thisLine.getId());
+  }
+
+  private void recomputeServiceLine(OrderLine serviceOrderLine) {
+    BigDecimal relatedAmount = BigDecimal.ZERO;
+    BigDecimal relatedQty = BigDecimal.ZERO;
+    BigDecimal relatedPrice = BigDecimal.ZERO;
+    final Currency currency = serviceOrderLine.getCurrency();
+    final List<OrderlineServiceRelation> relations = OBDal.getInstance()
+        .createQuery(OrderlineServiceRelation.class, " as e where e.salesOrderLine.id = :serviceLineId")
+        .setNamedParameter("serviceLineId", serviceOrderLine.getId())
+        .list();
+    final JSONObject relatedInfo = new JSONObject();
+    final JSONArray relatedLines = new JSONArray();
+    final JSONArray relatedAmounts = new JSONArray();
+    final JSONArray relatedDiscounts = new JSONArray();
+    final JSONArray relatedPrices = new JSONArray();
+    final JSONArray relatedQuantities = new JSONArray();
+    final JSONArray relatedUnitDiscounts = new JSONArray();
+
+    try {
+      for (OrderlineServiceRelation relation : relations) {
+        relatedAmount = relatedAmount.add(relation.getAmount());
+        relatedQty = relatedQty.add(relation.getQuantity());
+        final BigDecimal linePrice = relation.getQuantity().compareTo(BigDecimal.ZERO) == 0
+            ? BigDecimal.ZERO
+            : relation.getAmount().divide(relation.getQuantity(), currency.getPricePrecision().intValue(),
+                RoundingMode.HALF_UP);
+        relatedPrice = relatedPrice.add(linePrice);
+
+        relatedLines.put(relation.getOrderlineRelated().getId());
+        relatedAmounts.put(relation.getAmount());
+        relatedDiscounts.put(JSONObject.NULL);
+        relatedPrices.put(linePrice);
+        relatedQuantities.put(relation.getQuantity());
+        relatedUnitDiscounts.put(JSONObject.NULL);
+      }
+      relatedInfo.put("relatedLines", relatedLines);
+      relatedInfo.put("lineAmount", relatedAmounts);
+      relatedInfo.put("lineDiscounts", relatedDiscounts);
+      relatedInfo.put("linePriceamount", relatedPrices);
+      relatedInfo.put("lineRelatedqty", relatedQuantities);
+      relatedInfo.put("lineUnitdiscountsamt", relatedUnitDiscounts);
+    } catch (JSONException e) {
+      throw new OBException("Error in SalesOrderLineEventHandler" + e.getMessage(), true);
+    }
+    BigDecimal serviceQty = relatedQty.compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : relatedQty;
+    if (ServicePriceUtils.UNIQUE_QUANTITY.equals(serviceOrderLine.getProduct().getQuantityRule())) {
+      serviceQty = relatedQty.compareTo(BigDecimal.ZERO) < 0 ? new BigDecimal("-1") : BigDecimal.ONE;
+    }
+
+    final BigDecimal basePrice = ServicePriceUtils.getProductPrice(serviceOrderLine.getOrderDate(),
+        serviceOrderLine.getSalesOrder().getPriceList(), serviceOrderLine.getProduct());
+    final BigDecimal variableAmount = ServicePriceUtils.getServiceAmount(serviceOrderLine, relatedAmount,
+        null, relatedPrice, relatedQty, null, relatedInfo);
+    final BigDecimal servicePrice = basePrice.add(variableAmount.divide(serviceQty,
+        currency.getPricePrecision().intValue(), RoundingMode.HALF_UP));
+    final BigDecimal serviceAmount = variableAmount.add(basePrice.multiply(serviceQty))
+        .setScale(currency.getPricePrecision().intValue(), RoundingMode.HALF_UP);
+
+    serviceOrderLine.setOrderedQuantity(serviceQty);
+    if (serviceOrderLine.getSalesOrder().isPriceIncludesTax()) {
+      serviceOrderLine.setGrossUnitPrice(servicePrice);
+      serviceOrderLine.setLineGrossAmount(serviceAmount);
+      serviceOrderLine.setTaxableAmount(serviceAmount);
+    } else {
+      serviceOrderLine.setUnitPrice(servicePrice);
+      serviceOrderLine.setLineNetAmount(serviceAmount);
+      serviceOrderLine.setTaxableAmount(serviceAmount);
+    }
+    OBDal.getInstance().save(serviceOrderLine);
   }
 }
