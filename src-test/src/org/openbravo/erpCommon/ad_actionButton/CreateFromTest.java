@@ -39,6 +39,9 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
  */
 @ExtendWith(MockitoExtension.class)
 public class CreateFromTest {
+  private static final String SEQUENCE_ID = "sequence-id";
+  private static final String SHIPMENT_ID = "shipment-id";
+  private static final String INVOICE_LINE_ID = "invoice-line-id";
 
   @Mock
   private Connection conn;
@@ -56,9 +59,9 @@ public class CreateFromTest {
   @Test
   void updateInvoiceAndBOMStructureShouldUpdateInvoiceWhenInOutLineIdIsNull() throws Exception {
     CreateFrom createFrom = new CreateFrom();
-    String sequence = "sequence-id";
-    String key = "shipment-id";
-    String invoiceLineId = "invoice-line-id";
+    String sequence = SEQUENCE_ID;
+    String key = SHIPMENT_ID;
+    String invoiceLineId = INVOICE_LINE_ID;
 
     try (MockedStatic<CreateFromShipmentData> shipmentData = org.mockito.Mockito.mockStatic(
         CreateFromShipmentData.class)) {
@@ -87,9 +90,9 @@ public class CreateFromTest {
   @Test
   void updateInvoiceAndBOMStructureShouldUpdateInvoiceWhenInOutLineIdIsEmpty() throws Exception {
     CreateFrom createFrom = new CreateFrom();
-    String sequence = "sequence-id";
-    String key = "shipment-id";
-    String invoiceLineId = "invoice-line-id";
+    String sequence = SEQUENCE_ID;
+    String key = SHIPMENT_ID;
+    String invoiceLineId = INVOICE_LINE_ID;
 
     try (MockedStatic<CreateFromShipmentData> shipmentData = org.mockito.Mockito.mockStatic(
         CreateFromShipmentData.class)) {
@@ -118,9 +121,9 @@ public class CreateFromTest {
   @Test
   void updateInvoiceAndBOMStructureShouldInsertMatchSIWhenInOutLineIdExists() throws Exception {
     CreateFrom createFrom = new CreateFrom();
-    String sequence = "sequence-id";
-    String key = "shipment-id";
-    String invoiceLineId = "invoice-line-id";
+    String sequence = SEQUENCE_ID;
+    String key = SHIPMENT_ID;
+    String invoiceLineId = INVOICE_LINE_ID;
     String inOutLineId = "inout-line-id";
     String userId = "user-id";
     when(vars.getUser()).thenReturn(userId);
