@@ -224,9 +224,15 @@ public class ProcessGoods extends HttpSecureAppServlet {
 
       if (invoiceIfPossible && GOODS_SHIPMENT_WINDOW.equals(strWindowId)
           && !"Error".equalsIgnoreCase(myMessage.getType())) {
-        myMessage = createInvoice(vars, goodsShipmentInOut);
-        log4j.debug(myMessage.getMessage());
-        vars.setMessage(strTabId, myMessage);
+        try {
+          myMessage = createInvoice(vars, goodsShipmentInOut);
+          log4j.debug(myMessage.getMessage());
+          vars.setMessage(strTabId, myMessage);
+        } catch (Exception invoiceEx) {
+          log4j.warn("Invoice creation failed for shipment " + strM_Inout_ID + ": "
+              + invoiceEx.getMessage());
+          vars.setMessage(strTabId, myMessage);
+        }
       }
 
       String strWindowPath = Utility.getTabURL(strTabId, "R", true);
@@ -235,7 +241,8 @@ public class ProcessGoods extends HttpSecureAppServlet {
       }
       printPageClosePopUp(response, vars, strWindowPath);
 
-    } catch (ServletException | ParseException ex) {
+    } catch (Exception ex) {
+      OBDal.getInstance().rollbackAndClose();
       generateErrorProcessReceipt(response, vars, strTabId, ex);
     }
   }
@@ -274,13 +281,15 @@ public class ProcessGoods extends HttpSecureAppServlet {
   }
 
   private void generateErrorProcessReceipt(final HttpServletResponse response,
-      final VariablesSecureApp vars, final String strTabId, Exception ex) throws IOException {
+      final VariablesSecureApp vars, final String strTabId, Exception ex)
+      throws IOException, ServletException {
     final OBError myMessage;
     myMessage = Utility.translateError(this, vars, vars.getLanguage(), ex.getMessage());
     if (!myMessage.isConnectionAvailable()) {
       bdErrorConnection(response);
     } else {
       vars.setMessage(strTabId, myMessage);
+      printPageClosePopUp(response, vars);
     }
   }
 
