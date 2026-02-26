@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import javax.enterprise.inject.Vetoed;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -22,6 +24,7 @@ public class AccessTypeInjectorTest {
   /**
    * Concrete subclass for testing the non-abstract methods of AccessTypeInjector.
    */
+  @Vetoed
   private static class TestableAccessTypeInjector extends AccessTypeInjector {
     /** Get class name. */
 

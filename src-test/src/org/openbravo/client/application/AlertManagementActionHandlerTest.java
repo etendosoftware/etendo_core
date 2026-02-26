@@ -5,13 +5,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import java.lang.reflect.InvocationTargetException;
 
 import java.lang.reflect.Method;
@@ -133,6 +131,7 @@ public class AlertManagementActionHandlerTest {
     obDaoStatic.when(() -> OBDao.getOBObjectListFromString(eq(Alert.class), eq(alertIds)))
         .thenReturn(alertList);
 
+    invokeExecute(new HashMap<>(), input.toString());
 
     verify(mockAlert1).setAlertStatus("SOLVED");
     verify(mockAlert2).setAlertStatus("SOLVED");

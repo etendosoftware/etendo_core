@@ -126,6 +126,7 @@ public class FilterTest {
         (String) null, null, null, null, null))
         .thenReturn("2000");
 
+    new Filter("ADUser", "name==test");
 
     Field batchField = Filter.class.getDeclaredField(DEFAULT_BATCH_SIZE);
     batchField.setAccessible(true);

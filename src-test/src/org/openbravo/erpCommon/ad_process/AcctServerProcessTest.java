@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -121,8 +120,8 @@ public class AcctServerProcessTest {
     acctServerProcess = spy(objenesis.newInstance(AcctServerProcess.class));
 
     // Initialize fields via reflection
-    setPrivateField(acctServerProcess, "lastLog", new StringBuilder());
-    setPrivateField(acctServerProcess, "message", new StringBuilder());
+    setPrivateField(acctServerProcess, "lastLog", new StringBuffer());
+    setPrivateField(acctServerProcess, "message", new StringBuffer());
 
     obDalStatic = mockStatic(OBDal.class);
     acctServerProcessDataStatic = mockStatic(AcctServerProcessData.class);
@@ -474,7 +473,7 @@ public class AcctServerProcessTest {
     // Assert
     verify(mockLogger).log("Test message\n");
 
-    StringBuilder message = (StringBuilder) getPrivateField(acctServerProcess, "message");
+    StringBuffer message = (StringBuffer) getPrivateField(acctServerProcess, "message");
     assertNotNull(message);
   }
 
@@ -497,7 +496,7 @@ public class AcctServerProcessTest {
     // Assert
     verify(mockLogger).log("Test message\n");
 
-    StringBuilder lastLog = (StringBuilder) getPrivateField(acctServerProcess, "lastLog");
+    StringBuffer lastLog = (StringBuffer) getPrivateField(acctServerProcess, "lastLog");
     assertNotNull(lastLog);
     String logContent = lastLog.toString();
     assertNotNull(logContent);
