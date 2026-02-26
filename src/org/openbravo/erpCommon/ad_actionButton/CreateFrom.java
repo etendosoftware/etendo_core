@@ -1125,16 +1125,7 @@ public class CreateFrom extends HttpSecureAppServlet {
                 }
 
                 if (!strInvoice.equals("")) {
-                  String strInOutLineId = CreateFromShipmentData.selectInvoiceInOut(conn, this, data[i].cInvoicelineId);
-
-                  if (strInOutLineId == null || strInOutLineId.isEmpty()) {
-                    CreateFromShipmentData.updateInvoice(conn, this, strSequence, data[i].cInvoicelineId);
-                    CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
-                  } else {
-                    CreateFromShipmentData.insertMatchSI(conn, this, vars.getUser(), data[i].cInvoicelineId,
-                        strSequence);
-                    CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
-                  }
+                  updateInvoiceAndBOMStructure(conn, vars, strSequence, strKey, data[i].cInvoicelineId);
                 } else {
                   CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence, data[i].cOrderlineId);
                 }
@@ -1191,6 +1182,38 @@ public class CreateFrom extends HttpSecureAppServlet {
       myMessage = Utility.translateError(this, vars, vars.getLanguage(), "ProcessRunError");
     }
     return myMessage;
+  }
+
+  /**
+   * Updates the invoice and its related BOM structure based on the associated shipment line.
+   * <p>
+   * If no shipment line is linked to the given invoice line, the invoice and BOM structure
+   * are updated directly. Otherwise, a match record is inserted before updating the BOM structure.
+   *
+   * @param conn
+   *     the database connection used to perform the updates
+   * @param vars
+   *     the application context containing user information
+   * @param strSequence
+   *     the sequence identifier used for invoice updates
+   * @param strKey
+   *     the key identifying the BOM structure to update
+   * @param invoiceLineId
+   *     the identifier of the invoice line to process
+   * @throws ServletException
+   *     if an error occurs during the update process
+   */
+  protected void updateInvoiceAndBOMStructure(Connection conn, VariablesSecureApp vars, String strSequence,
+      String strKey, String invoiceLineId) throws ServletException {
+    String strInOutLineId = CreateFromShipmentData.selectInvoiceInOut(conn, this, invoiceLineId);
+
+    if (strInOutLineId == null || strInOutLineId.isEmpty()) {
+      CreateFromShipmentData.updateInvoice(conn, this, strSequence, invoiceLineId);
+      CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
+    } else {
+      CreateFromShipmentData.insertMatchSI(conn, this, vars.getUser(), invoiceLineId, strSequence);
+      CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
+    }
   }
 
   private String[] restrictParameter(String strIds) {
