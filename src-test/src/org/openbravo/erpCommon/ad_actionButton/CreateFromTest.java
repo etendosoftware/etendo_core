@@ -39,6 +39,7 @@ public class CreateFromTest {
   private static final String SEQUENCE_ID = "sequence-id";
   private static final String SHIPMENT_ID = "shipment-id";
   private static final String INVOICE_ID = "invoice-id";
+  private static final String USER_ID = "user-id";
   private static final String INVOICE_LINE_ID = "invoice-line-id";
   private static final String ORDER_LINE_ID = "order-line-id";
 
@@ -62,7 +63,7 @@ public class CreateFromTest {
     String key = SHIPMENT_ID;
     String invoiceLineId = INVOICE_LINE_ID;
     String inOutLineId = "inout-line-id";
-    String userId = "user-id";
+    String userId = USER_ID;
     when(vars.getUser()).thenReturn(userId);
 
     try (MockedStatic<CreateFromShipmentData> shipmentData = mockStatic(CreateFromShipmentData.class)) {
@@ -117,7 +118,7 @@ public class CreateFromTest {
     String sequence = SEQUENCE_ID;
     String key = SHIPMENT_ID;
     String invoiceLineId = INVOICE_LINE_ID;
-    String userId = "user-id";
+    String userId = USER_ID;
     when(vars.getUser()).thenReturn(userId);
 
     try (MockedStatic<CreateFromShipmentData> shipmentData = mockStatic(CreateFromShipmentData.class)) {
@@ -150,7 +151,7 @@ public class CreateFromTest {
     String sequence = SEQUENCE_ID;
     String key = SHIPMENT_ID;
     String invoiceLineId = INVOICE_LINE_ID;
-    String userId = "user-id";
+    String userId = USER_ID;
     when(vars.getUser()).thenReturn(userId);
 
     try (MockedStatic<CreateFromShipmentData> shipmentData = mockStatic(CreateFromShipmentData.class)) {
