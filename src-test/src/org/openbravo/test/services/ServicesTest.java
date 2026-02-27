@@ -65,8 +65,6 @@ import org.openbravo.base.exception.OBException;
 
 /**
  * Tests cases to check service Price computation
- * 
- * 
  */
 public class ServicesTest extends WeldBaseTest {
   final static private Logger log = LogManager.getLogger();

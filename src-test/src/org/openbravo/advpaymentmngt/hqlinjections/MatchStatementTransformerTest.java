@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.hqlinjections;
 
 import static org.junit.Assert.assertTrue;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
@@ -59,7 +60,7 @@ public class MatchStatementTransformerTest extends OBBaseTest {
     transformer = new MatchStatementTransformer();
 
     // Setup static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
 
     mockedTransactionsDao = mockStatic(TransactionsDao.class);

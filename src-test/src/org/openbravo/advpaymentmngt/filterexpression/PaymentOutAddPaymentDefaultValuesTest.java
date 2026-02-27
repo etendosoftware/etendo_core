@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -71,7 +72,7 @@ public class PaymentOutAddPaymentDefaultValuesTest {
 
     // Setup static mocks
     OBDal mockOBDal = mock(OBDal.class);
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
 
     mockedOBDateUtils = mockStatic(OBDateUtils.class);
