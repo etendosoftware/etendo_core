@@ -17,15 +17,12 @@
 package org.openbravo.erpCommon.ad_actionButton;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.Connection;
-
-import javax.servlet.ServletException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,75 +38,15 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 public class CreateFromTest {
   private static final String SEQUENCE_ID = "sequence-id";
   private static final String SHIPMENT_ID = "shipment-id";
+  private static final String INVOICE_ID = "invoice-id";
   private static final String INVOICE_LINE_ID = "invoice-line-id";
+  private static final String ORDER_LINE_ID = "order-line-id";
 
   @Mock
   private Connection conn;
 
   @Mock
   private VariablesSecureApp vars;
-
-  /**
-   * Verifies that {@code updateInvoiceAndBOMStructure(...)} updates the invoice and BOM structure
-   * when the related shipment line identifier is {@code null}.
-   *
-   * @throws Exception
-   *     if an error occurs during test execution
-   */
-  @Test
-  void updateInvoiceAndBOMStructureShouldUpdateInvoiceWhenInOutLineIdIsNull() throws Exception {
-    CreateFrom createFrom = new CreateFrom();
-    String sequence = SEQUENCE_ID;
-    String key = SHIPMENT_ID;
-    String invoiceLineId = INVOICE_LINE_ID;
-
-    try (MockedStatic<CreateFromShipmentData> shipmentData = org.mockito.Mockito.mockStatic(
-        CreateFromShipmentData.class)) {
-      shipmentData.when(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId)).thenReturn(
-          null);
-
-      invokeUpdateInvoiceAndBOMStructure(createFrom, conn, vars, sequence, key, invoiceLineId);
-
-      shipmentData.verify(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId), times(1));
-      shipmentData.verify(() -> CreateFromShipmentData.updateInvoice(conn, createFrom, sequence, invoiceLineId),
-          times(1));
-      shipmentData.verify(() -> CreateFromShipmentData.updateBOMStructure(conn, createFrom, key, sequence), times(1));
-      shipmentData.verify(() -> CreateFromShipmentData.insertMatchSI(any(), any(), any(), any(), any()), times(0));
-      shipmentData.verifyNoMoreInteractions();
-      verify(vars, times(0)).getUser();
-    }
-  }
-
-  /**
-   * Verifies that {@code updateInvoiceAndBOMStructure(...)} updates the invoice and BOM structure
-   * when the related shipment line identifier is empty.
-   *
-   * @throws Exception
-   *     if an error occurs during test execution
-   */
-  @Test
-  void updateInvoiceAndBOMStructureShouldUpdateInvoiceWhenInOutLineIdIsEmpty() throws Exception {
-    CreateFrom createFrom = new CreateFrom();
-    String sequence = SEQUENCE_ID;
-    String key = SHIPMENT_ID;
-    String invoiceLineId = INVOICE_LINE_ID;
-
-    try (MockedStatic<CreateFromShipmentData> shipmentData = org.mockito.Mockito.mockStatic(
-        CreateFromShipmentData.class)) {
-      shipmentData.when(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId)).thenReturn(
-          "");
-
-      invokeUpdateInvoiceAndBOMStructure(createFrom, conn, vars, sequence, key, invoiceLineId);
-
-      shipmentData.verify(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId), times(1));
-      shipmentData.verify(() -> CreateFromShipmentData.updateInvoice(conn, createFrom, sequence, invoiceLineId),
-          times(1));
-      shipmentData.verify(() -> CreateFromShipmentData.updateBOMStructure(conn, createFrom, key, sequence), times(1));
-      shipmentData.verify(() -> CreateFromShipmentData.insertMatchSI(any(), any(), any(), any(), any()), times(0));
-      shipmentData.verifyNoMoreInteractions();
-      verify(vars, times(0)).getUser();
-    }
-  }
 
   /**
    * Verifies that {@code updateInvoiceAndBOMStructure(...)} inserts a match record and updates the BOM structure
@@ -128,12 +65,11 @@ public class CreateFromTest {
     String userId = "user-id";
     when(vars.getUser()).thenReturn(userId);
 
-    try (MockedStatic<CreateFromShipmentData> shipmentData = org.mockito.Mockito.mockStatic(
-        CreateFromShipmentData.class)) {
+    try (MockedStatic<CreateFromShipmentData> shipmentData = mockStatic(CreateFromShipmentData.class)) {
       shipmentData.when(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId)).thenReturn(
           inOutLineId);
 
-      invokeUpdateInvoiceAndBOMStructure(createFrom, conn, vars, sequence, key, invoiceLineId);
+      createFrom.updateInvoiceAndBOMStructure(conn, vars, sequence, key, INVOICE_ID, invoiceLineId, ORDER_LINE_ID);
 
       shipmentData.verify(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId), times(1));
       shipmentData.verify(() -> CreateFromShipmentData.insertMatchSI(conn, createFrom, userId, invoiceLineId, sequence),
@@ -146,39 +82,91 @@ public class CreateFromTest {
   }
 
   /**
-   * Invokes {@code updateInvoiceAndBOMStructure(...)} via reflection using the expected method signature.
-   * <p>
-   * If the invoked method throws a {@link ServletException}, it is propagated to the caller.
+   * Verifies that {@code updateInvoiceAndBOMStructure(...)} updates the order when the source
+   * invoice identifier is empty.
    *
-   * @param createFrom
-   *     the {@link CreateFrom} instance that contains the method to invoke
-   * @param conn
-   *     the database connection passed to the invoked method
-   * @param vars
-   *     the application context passed to the invoked method
-   * @param sequence
-   *     the sequence identifier passed to the invoked method
-   * @param key
-   *     the key passed to the invoked method
-   * @param invoiceLineId
-   *     the invoice line identifier passed to the invoked method
    * @throws Exception
    *     if an error occurs during test execution
-   * @throws ServletException
-   *     if an error occurs while invoking the target method
    */
-  private void invokeUpdateInvoiceAndBOMStructure(CreateFrom createFrom, Connection conn, VariablesSecureApp vars,
-      String sequence, String key, String invoiceLineId) throws Exception {
-    Method method = CreateFrom.class.getDeclaredMethod("updateInvoiceAndBOMStructure", Connection.class,
-        VariablesSecureApp.class, String.class, String.class, String.class);
-    method.setAccessible(true);
-    try {
-      method.invoke(createFrom, conn, vars, sequence, key, invoiceLineId);
-    } catch (InvocationTargetException e) {
-      if (e.getCause() instanceof ServletException) {
-        throw (ServletException) e.getCause();
-      }
-      throw e;
+  @Test
+  void updateInvoiceAndBOMStructureShouldUpdateInvoiceOrderWhenInvoiceIsEmpty() throws Exception {
+    CreateFrom createFrom = new CreateFrom();
+    String sequence = SEQUENCE_ID;
+    String orderLineId = ORDER_LINE_ID;
+
+    try (MockedStatic<CreateFromShipmentData> shipmentData = mockStatic(CreateFromShipmentData.class)) {
+      createFrom.updateInvoiceAndBOMStructure(conn, vars, sequence, SHIPMENT_ID, "", INVOICE_LINE_ID, orderLineId);
+
+      shipmentData.verify(() -> CreateFromShipmentData.updateInvoiceOrder(conn, createFrom, sequence, orderLineId),
+          times(1));
+      shipmentData.verifyNoMoreInteractions();
+      verify(vars, times(0)).getUser();
+    }
+  }
+
+  /**
+   * Verifies that {@code updateInvoiceAndBOMStructure(...)} updates the invoice line
+   * when no related shipment line identifier is found (null).
+   *
+   * @throws Exception
+   *     if an error occurs during test execution
+   */
+  @Test
+  void updateInvoiceAndBOMStructureShouldUpdateInvoiceWhenInOutLineIdIsNull() throws Exception {
+    CreateFrom createFrom = new CreateFrom();
+    String sequence = SEQUENCE_ID;
+    String key = SHIPMENT_ID;
+    String invoiceLineId = INVOICE_LINE_ID;
+    String userId = "user-id";
+    when(vars.getUser()).thenReturn(userId);
+
+    try (MockedStatic<CreateFromShipmentData> shipmentData = mockStatic(CreateFromShipmentData.class)) {
+      shipmentData.when(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId)).thenReturn(
+          null);
+
+      createFrom.updateInvoiceAndBOMStructure(conn, vars, sequence, key, INVOICE_ID, invoiceLineId, ORDER_LINE_ID);
+
+      shipmentData.verify(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId), times(1));
+      shipmentData.verify(() -> CreateFromShipmentData.updateInvoice(conn, createFrom, sequence, invoiceLineId),
+          times(1));
+      shipmentData.verify(() -> CreateFromShipmentData.insertMatchSI(conn, createFrom, userId, invoiceLineId, sequence),
+          times(1));
+      shipmentData.verify(() -> CreateFromShipmentData.updateBOMStructure(conn, createFrom, key, sequence), times(1));
+      shipmentData.verifyNoMoreInteractions();
+      verify(vars, times(1)).getUser();
+    }
+  }
+
+  /**
+   * Verifies that {@code updateInvoiceAndBOMStructure(...)} updates the invoice line
+   * when the related shipment line identifier is empty.
+   *
+   * @throws Exception
+   *     if an error occurs during test execution
+   */
+  @Test
+  void updateInvoiceAndBOMStructureShouldUpdateInvoiceWhenInOutLineIdIsEmpty() throws Exception {
+    CreateFrom createFrom = new CreateFrom();
+    String sequence = SEQUENCE_ID;
+    String key = SHIPMENT_ID;
+    String invoiceLineId = INVOICE_LINE_ID;
+    String userId = "user-id";
+    when(vars.getUser()).thenReturn(userId);
+
+    try (MockedStatic<CreateFromShipmentData> shipmentData = mockStatic(CreateFromShipmentData.class)) {
+      shipmentData.when(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId)).thenReturn(
+          "");
+
+      createFrom.updateInvoiceAndBOMStructure(conn, vars, sequence, key, INVOICE_ID, invoiceLineId, ORDER_LINE_ID);
+
+      shipmentData.verify(() -> CreateFromShipmentData.selectInvoiceInOut(conn, createFrom, invoiceLineId), times(1));
+      shipmentData.verify(() -> CreateFromShipmentData.updateInvoice(conn, createFrom, sequence, invoiceLineId),
+          times(1));
+      shipmentData.verify(() -> CreateFromShipmentData.insertMatchSI(conn, createFrom, userId, invoiceLineId, sequence),
+          times(1));
+      shipmentData.verify(() -> CreateFromShipmentData.updateBOMStructure(conn, createFrom, key, sequence), times(1));
+      shipmentData.verifyNoMoreInteractions();
+      verify(vars, times(1)).getUser();
     }
   }
 }

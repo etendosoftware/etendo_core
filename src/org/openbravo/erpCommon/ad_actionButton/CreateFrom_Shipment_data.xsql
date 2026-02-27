@@ -369,35 +369,71 @@
     <Parameter name="adOrgClient" type="replace" optional="true" after="i.AD_Org_ID IN (" text="'1'"/>
     <Parameter name="cInvoiceId"/>
   </SqlMethod>
-<SqlMethod name="selectFromInvoiceTrx" type="preparedStatement" return="multiple">
+  <SqlMethod name="selectFromInvoiceTrx" type="preparedStatement" return="multiple">
     <SqlMethodComment></SqlMethodComment>
     <Sql>
       <![CDATA[
         SELECT i.C_Invoice_ID, Ad_Column_Identifier(TO_CHAR('C_Invoice'), TO_CHAR(i.C_Invoice_ID), TO_CHAR(?)) AS NAME, 
-        l.QtyInvoiced-SUM(COALESCE(mi.MOVEMENTQTY,0)) AS QTY, l.C_UOM_ID,uom.UOMSymbol,
+        l.QtyInvoiced-(
+          SELECT COALESCE(SUM(iol2.MOVEMENTQTY),0)
+          FROM M_INOUTLINE iol2
+          WHERE iol2.M_INOUTLINE_ID IN (
+            SELECT msi.M_INOUTLINE_ID
+            FROM M_MATCHSI msi
+            WHERE msi.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+            UNION
+            SELECT l2.M_INOUTLINE_ID
+            FROM C_INVOICELINE l2
+            WHERE l2.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+              AND l2.M_INOUTLINE_ID IS NOT NULL
+          )
+        ) AS QTY, l.C_UOM_ID,uom.UOMSymbol,
         l.M_Product_ID,Ad_Column_Identifier(TO_CHAR('M_Product'), TO_CHAR(l.m_product_id), TO_CHAR(?)) AS RELATION_NAME, 
 	    l.C_InvoiceLine_ID,l.Line, l.C_OrderLine_ID, l.C_InvoiceLine_ID AS ID, 
         l.DESCRIPTION AS DESCRIPTION,
         coalesce(l.a_asset_id,i.a_asset_id) as a_asset_id, coalesce(l.c_project_id,i.c_project_id) as c_project_id,coalesce(l.c_costcenter_id,i.c_costcenter_id)
         as c_costcenter_id, coalesce(l.user1_id,i.user1_id) as user1_id , coalesce(l.user2_id,i.user2_id) as user2_id , l.c_bpartner_id, l.explode, l.Bom_parent_id,
         CASE  WHEN l.Bom_parent_id is null then 'Y' else 'N' END as isparent,
-        l.AUMQTY - SUM(COALESCE(M_GET_CONVERTED_AUMQTY(l.m_product_id, mi.MOVEMENTQTY, l.c_aum), 0)) AS AUMQTY, l.C_AUM AS C_AUM, 
+        l.AUMQTY - COALESCE(M_GET_CONVERTED_AUMQTY(l.m_product_id,
+          (
+            SELECT COALESCE(SUM(iol2.MOVEMENTQTY),0)
+            FROM M_INOUTLINE iol2
+            WHERE iol2.M_INOUTLINE_ID IN (
+              SELECT msi.M_INOUTLINE_ID
+              FROM M_MATCHSI msi
+              WHERE msi.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+              UNION
+              SELECT l2.M_INOUTLINE_ID
+              FROM C_INVOICELINE l2
+              WHERE l2.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+                AND l2.M_INOUTLINE_ID IS NOT NULL
+            )
+          ), l.c_aum), 0) AS AUMQTY, l.C_AUM AS C_AUM, 
         (SELECT UOMSYMBOL FROM C_UOM WHERE C_UOM_ID = l.C_AUM) AS AUMNAME, '' AS UOMPREFERENCE
-        FROM C_INVOICELINE l left join M_INOUTLINE mi on l.M_INOUTLINE_ID = mi.M_INOUTLINE_ID,
+        FROM C_INVOICELINE l,
         C_INVOICE i, C_UOM uom,  M_PRODUCT p
         WHERE i.C_INVOICE_ID = l.C_INVOICE_ID 
+        AND i.IsSOTrx='Y'
         AND i.DocStatus IN ('CL','CO')
         AND i.AD_Client_ID IN ('1') 
         AND i.AD_Org_ID IN ('1') 
         AND l.C_UOM_ID=uom.C_UOM_ID 
         AND l.M_Product_ID=p.M_Product_ID 
         AND l.C_Invoice_ID = ?
-        GROUP BY i.C_Invoice_ID, i.DocumentNo, DateInvoiced, GrandTotal, l.QtyInvoiced, 
-        l.C_UOM_ID,uom.UOMSymbol,l.M_Product_ID,p.NAME, l.C_InvoiceLine_ID,l.Line,l.C_OrderLine_ID, l.DESCRIPTION,
-        l.AUMQTY, l.C_AUM,
-        coalesce(l.a_asset_id,i.a_asset_id), coalesce(l.c_project_id,i.c_project_id),coalesce(l.c_costcenter_id,i.c_costcenter_id), 
-		coalesce(l.user1_id,i.user1_id), coalesce(l.user2_id,i.user2_id) , l.c_bpartner_id, l.explode, l.Bom_parent_id
-        HAVING ((l.explode='Y')  OR ((l.QtyInvoiced-SUM(COALESCE(mi.MOVEMENTQTY,0))) <> 0))  
+        AND ((l.explode='Y')  OR ((l.QtyInvoiced-(
+          SELECT COALESCE(SUM(iol2.MOVEMENTQTY),0)
+          FROM M_INOUTLINE iol2
+          WHERE iol2.M_INOUTLINE_ID IN (
+            SELECT msi.M_INOUTLINE_ID
+            FROM M_MATCHSI msi
+            WHERE msi.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+            UNION
+            SELECT l2.M_INOUTLINE_ID
+            FROM C_INVOICELINE l2
+            WHERE l2.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+              AND l2.M_INOUTLINE_ID IS NOT NULL
+          )
+        )) <> 0))
         ORDER BY NAME, l.Line
       ]]>
     </Sql>
@@ -433,7 +469,7 @@
     <Parameter name="adOrgClient" type="replace" optional="true" after="i.AD_Org_ID IN (" text="'1'"/>
     <Parameter name="cBpartnerId"/>
   </SqlMethod>
-<SqlMethod name="selectFromInvoiceTrxCombo" type="preparedStatement" return="multiple">
+  <SqlMethod name="selectFromInvoiceTrxCombo" type="preparedStatement" return="multiple">
     <SqlMethodComment></SqlMethodComment>
     <Sql>
       <![CDATA[
@@ -447,18 +483,23 @@
         AND i.IsSOTrx='Y'
         AND i.C_BPartner_ID = ?
         AND dt.isreturn = 'N'
-        AND EXISTS (
-          SELECT 1
-          FROM C_INVOICELINE il
-          WHERE il.C_INVOICE_ID = i.C_INVOICE_ID
-          AND ((il.M_INOUTLINE_ID IS NULL AND il.QtyInvoiced <> 0)
-          OR (il.M_INOUTLINE_ID IS NOT NULL AND EXISTS (
-            SELECT 1
-            FROM M_INOUTLINE iol
-            WHERE iol.M_INOUTLINE_ID = il.M_INOUTLINE_ID
-            AND (il.QtyInvoiced - iol.MOVEMENTQTY) <> 0
-          )))
-        )
+        AND EXISTS (SELECT 1
+                     FROM C_INVOICELINE l
+                    WHERE l.C_INVOICE_ID = i.C_INVOICE_ID
+                      AND (l.QtyInvoiced-(
+                        SELECT COALESCE(SUM(iol2.MOVEMENTQTY),0)
+                        FROM M_INOUTLINE iol2
+                        WHERE iol2.M_INOUTLINE_ID IN (
+                          SELECT msi.M_INOUTLINE_ID
+                          FROM M_MATCHSI msi
+                          WHERE msi.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+                          UNION
+                          SELECT l2.M_INOUTLINE_ID
+                          FROM C_INVOICELINE l2
+                          WHERE l2.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+                            AND l2.M_INOUTLINE_ID IS NOT NULL
+                        )
+                      )) <> 0 )
         ORDER BY NAME
       ]]>
     </Sql>
@@ -557,31 +598,65 @@
     <SqlMethodComment></SqlMethodComment>
     <Sql>
       <![CDATA[
-      SELECT l.QtyInvoiced-SUM(COALESCE(mi.MOVEMENTQTY,0)) AS ID, l.C_UOM_ID,uom.UOMSymbol,
+      SELECT l.QtyInvoiced-(
+        SELECT COALESCE(SUM(iol2.MOVEMENTQTY),0)
+        FROM M_INOUTLINE iol2
+        WHERE iol2.M_INOUTLINE_ID IN (
+          SELECT msi.M_INOUTLINE_ID
+          FROM M_MATCHSI msi
+          WHERE msi.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+          UNION
+          SELECT l2.M_INOUTLINE_ID
+          FROM C_INVOICELINE l2
+          WHERE l2.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+            AND l2.M_INOUTLINE_ID IS NOT NULL
+        )
+      ) AS ID, l.C_UOM_ID,uom.UOMSymbol,
       l.M_Product_ID,Ad_Column_Identifier(to_char('M_Product'), to_char(l.m_product_id), to_char(?)) AS NAME, l.C_InvoiceLine_ID,l.Line, l.C_OrderLine_ID, COALESCE(uom1.BREAKDOWN, 'N') AS BREAKDOWN, 
-      MAX(mu.C_UOM_ID) AS C_UOM_ID_Conversion, MAX(uom1.STDPRECISION) AS STDPRECISION, l.QUANTITYORDER, l.M_Product_UOM_ID,
+      mu.C_UOM_ID AS C_UOM_ID_Conversion, uom1.STDPRECISION AS STDPRECISION, l.QUANTITYORDER, l.M_Product_UOM_ID,
       l.M_ATTRIBUTESETINSTANCE_ID, l.ad_org_id, l.DESCRIPTION AS DESCRIPTION,
       coalesce(l.a_asset_id,i.a_asset_id) as a_asset_id , coalesce(l.c_project_id,i.c_project_id) as c_project_id, 
       coalesce(l.c_costcenter_id,i.c_costcenter_id) as c_costcenter_id,
       coalesce( l.user1_id,i.user1_id) as user1_id , coalesce(l.user2_id ,i.user2_id) as  user2_id ,  l.c_bpartner_id, l.explode,
       'N' as isorder,
-      l.AUMQTY - SUM(COALESCE(M_GET_CONVERTED_AUMQTY(l.m_product_id, mi.MOVEMENTQTY, l.c_aum), 0)) AS AUMQTY, l.C_AUM AS C_AUM, 
+      l.AUMQTY - COALESCE(M_GET_CONVERTED_AUMQTY(l.m_product_id,
+        (
+          SELECT COALESCE(SUM(iol2.MOVEMENTQTY),0)
+          FROM M_INOUTLINE iol2
+          WHERE iol2.M_INOUTLINE_ID IN (
+            SELECT msi.M_INOUTLINE_ID
+            FROM M_MATCHSI msi
+            WHERE msi.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+            UNION
+            SELECT l2.M_INOUTLINE_ID
+            FROM C_INVOICELINE l2
+            WHERE l2.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+              AND l2.M_INOUTLINE_ID IS NOT NULL
+          )
+        ), l.c_aum), 0) AS AUMQTY, l.C_AUM AS C_AUM, 
       (SELECT UOMSYMBOL FROM C_UOM WHERE C_UOM_ID = l.C_AUM) AS AUMNAME, '' AS UOMPREFERENCE
       FROM C_INVOICELINE l left join  M_Product_UOM mu on l.M_Product_UOM_ID = mu.M_Product_UOM_ID 
                            left join C_UOM uom1 on mu.C_UOM_ID = uom1.C_UOM_ID 
-                           left join M_INOUTLINE mi on l.M_INOUTLINE_ID=mi.M_INOUTLINE_ID,
+                           ,
       C_UOM uom,  M_PRODUCT p, C_INVOICE i
       WHERE l.C_UOM_ID=uom.C_UOM_ID
       AND i.c_invoice_id = l.c_invoice_id
       AND i.IsSOTrx='Y'
       AND l.M_Product_ID=p.M_Product_ID 
-      GROUP BY l.QtyInvoiced,
-      l.C_UOM_ID,uom.UOMSymbol,l.M_Product_ID,p.NAME, l.C_InvoiceLine_ID,l.Line,l.C_OrderLine_ID, 
-      l.AUMQTY, l.C_AUM,
-      uom1.BREAKDOWN, l.QUANTITYORDER, l.M_Product_UOM_ID, l.M_ATTRIBUTESETINSTANCE_ID, l.ad_org_id, l.DESCRIPTION,
-      coalesce(l.a_asset_id,i.a_asset_id), coalesce(l.c_project_id,i.c_project_id), coalesce(l.c_costcenter_id,i.c_costcenter_id),
-      coalesce( l.user1_id,i.user1_id), coalesce(l.user2_id ,i.user2_id) ,  l.c_bpartner_id, l.explode
-      HAVING ((l.explode='Y')  OR (l.QtyInvoiced-SUM(COALESCE(mi.MOVEMENTQTY,0))<>0))  
+      AND ((l.explode='Y')  OR (l.QtyInvoiced-(
+        SELECT COALESCE(SUM(iol2.MOVEMENTQTY),0)
+        FROM M_INOUTLINE iol2
+        WHERE iol2.M_INOUTLINE_ID IN (
+          SELECT msi.M_INOUTLINE_ID
+          FROM M_MATCHSI msi
+          WHERE msi.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+          UNION
+          SELECT l2.M_INOUTLINE_ID
+          FROM C_INVOICELINE l2
+          WHERE l2.C_INVOICELINE_ID = l.C_INVOICELINE_ID
+            AND l2.M_INOUTLINE_ID IS NOT NULL
+        )
+      )<>0))
       ORDER BY l.Line
       ]]>
     </Sql>
@@ -772,6 +847,10 @@
         JOIN C_INVOICELINE il ON il.C_INVOICELINE_ID = ?
         JOIN C_INVOICE i ON i.C_INVOICE_ID = il.C_INVOICE_ID
       WHERE iol.M_INOUTLINE_ID = ?
+      AND NOT EXISTS (SELECT 1
+                        FROM M_MATCHSI msi
+                       WHERE msi.M_INOUTLINE_ID = iol.M_INOUTLINE_ID
+                         AND msi.C_INVOICELINE_ID = il.C_INVOICELINE_ID)
     </Sql>
     <Parameter name="adUserId"/>
     <Parameter name="adUserId"/>
