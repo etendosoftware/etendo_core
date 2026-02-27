@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mockStatic;
@@ -68,7 +69,7 @@ public class SalesOrderAddPaymentReadOnlyLogicsTest {
     requestMap = new HashMap<>();
 
     // Setup static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
 
     mockedOBContext = mockStatic(OBContext.class);

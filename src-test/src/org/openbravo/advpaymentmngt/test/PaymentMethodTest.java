@@ -21,6 +21,7 @@
 package org.openbravo.advpaymentmngt.test;
 
 import static org.mockito.Mockito.mock;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -54,7 +55,7 @@ public class PaymentMethodTest {
   @BeforeEach
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     // Mock OBDal.getInstance() to return a mock OBDal
     OBDal mockOBDal = mock(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);

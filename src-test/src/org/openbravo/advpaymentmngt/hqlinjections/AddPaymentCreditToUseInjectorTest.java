@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.hqlinjections;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +46,7 @@ public class AddPaymentCreditToUseInjectorTest {
   @Before
   public void setUp() {
     // Initialize static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
 
     // Setup business partner mock

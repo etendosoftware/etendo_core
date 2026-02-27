@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -86,7 +87,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultDocumentWithdrawalAmount() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -112,7 +113,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultDocumentDepositAmount() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -138,7 +139,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultCurrency() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_FinancialAccount.class), anyString()))
@@ -165,7 +166,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetOrganization() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_FinancialAccount.class), anyString()))
@@ -204,7 +205,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultDescriptionOnlyDescription() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -233,7 +234,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultBusinessPartnerNoBusinessPartner() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -261,7 +262,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultGLItemNoGLItem() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -289,7 +290,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultTransactionDate() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class);
          MockedStatic<OBDateUtils> dateUtilsMock = mockStatic(OBDateUtils.class)) {
       // Given
       Date testDate = new Date();
@@ -320,7 +321,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultDepositAmountWithDramount() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -347,7 +348,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultDepositAmountWithCramount() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -375,7 +376,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultWithdrawalAmountWithDramount() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -402,7 +403,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetDefaultWithdrawalAmountWithZeroDramount() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       obDalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
       when(mockOBDal.get(eq(FIN_BankStatementLine.class), anyString()))
@@ -429,7 +430,7 @@ public class AddTransactionFilterExpressionTest {
    */
   @Test
   public void testGetExpressionValidParameter() throws JSONException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalMock = mockStaticSafely(OBDal.class)) {
       // Given
       Map<String, String> testMap = new HashMap<>();
       JSONObject context = new JSONObject();
