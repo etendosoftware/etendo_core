@@ -360,9 +360,10 @@ public abstract class CostingAlgorithmAdjustmentImp {
         .createCriteria(ProductionLine.class)
         .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCTIONPLAN, pl.getProductionPlan()))
         .add(Restrictions.gt(ProductionLine.PROPERTY_MOVEMENTQUANTITY, BigDecimal.ZERO))
-        .add(Restrictions.eq("pr." + Product.PROPERTY_STOCKED, true))
-        .add(Restrictions.eq("pr." + Product.PROPERTY_PRODUCTTYPE, "I"));
-    critBOM.createAlias(ProductionLine.PROPERTY_PRODUCT, "pr");
+        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCT + "." + Product.PROPERTY_STOCKED,
+            true))
+        .add(Restrictions.eq(ProductionLine.PROPERTY_PRODUCT + "." + Product.PROPERTY_PRODUCTTYPE,
+            "I"));
     for (ProductionLine pline : critBOM.list()) {
       if (pline.getMaterialMgmtMaterialTransactionList().isEmpty()) {
         log4j.error("BOM Produced with id {} has no related transaction (M_Transaction).",

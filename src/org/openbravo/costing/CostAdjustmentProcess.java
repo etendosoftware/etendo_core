@@ -29,6 +29,7 @@ package org.openbravo.costing;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -139,8 +140,10 @@ public class CostAdjustmentProcess {
     checkPermanentelyAdjustedTrx(strCostAdjId);
 
     // Execute checks added implementing costAdjustmentProcess interface.
-    for (CostAdjusmentProcessCheck checksInstance : costAdjustmentProcessChecks) {
-      checksInstance.doCheck(costAdjustment, message);
+    if (costAdjustmentProcessChecks != null) {
+      for (CostAdjusmentProcessCheck checksInstance : costAdjustmentProcessChecks) {
+        checksInstance.doCheck(costAdjustment, message);
+      }
     }
   }
 
@@ -150,8 +153,10 @@ public class CostAdjustmentProcess {
 
     // Execute checks added implementing costAdjustmentProcess interface.
     CostAdjustment costAdjustment = OBDal.getInstance().get(CostAdjustment.class, strCostAdjId);
-    for (CostAdjusmentProcessCheck checksInstance : costAdjustmentProcessChecks) {
-      checksInstance.doPostProcessCheck(costAdjustment, message);
+    if (costAdjustmentProcessChecks != null) {
+      for (CostAdjusmentProcessCheck checksInstance : costAdjustmentProcessChecks) {
+        checksInstance.doPostProcessCheck(costAdjustment, message);
+      }
     }
   }
 
@@ -258,15 +263,19 @@ public class CostAdjustmentProcess {
   private CostAdjustmentLine getNextLine(String strCostAdjustmentId) {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    critLines.createAlias(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, "trx");
-    critLines.createAlias(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, "ca");
-    critLines.add(Restrictions.eq("ca.id", strCostAdjustmentId));
+    critLines.add(
+        Restrictions.eq(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT + ".id", strCostAdjustmentId));
     critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_ISRELATEDTRANSACTIONADJUSTED, false));
-    critLines.addOrderBy("trx." + MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE, true);
-    critLines.addOrderBy("ca." + CostAdjustment.PROPERTY_DOCUMENTNO, true);
+    critLines.addOrderBy(
+        CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION + "."
+            + MaterialTransaction.PROPERTY_TRANSACTIONPROCESSDATE,
+        true);
+    critLines.addOrderBy(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT + "."
+        + CostAdjustment.PROPERTY_DOCUMENTNO, true);
     critLines.addOrderBy(CostAdjustmentLine.PROPERTY_LINENO, true);
     critLines.addOrderBy(CostAdjustmentLine.PROPERTY_ADJUSTMENTAMOUNT, true);
-    critLines.addOrderBy("trx." + MaterialTransaction.PROPERTY_MOVEMENTDATE, true);
+    critLines.addOrderBy(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION + "."
+        + MaterialTransaction.PROPERTY_MOVEMENTDATE, true);
     critLines.setMaxResults(1);
     return (CostAdjustmentLine) critLines.uniqueResult();
   }
@@ -325,20 +334,36 @@ public class CostAdjustmentProcess {
 
   private CostingAlgorithmAdjustmentImp getAlgorithmAdjustmentImp(String strJavaClass) {
     CostingAlgorithmAdjustmentImp implementor = null;
-    for (CostingAlgorithmAdjustmentImp nextImplementor : costAdjustmentAlgorithms
-        .select(new ComponentProvider.Selector(strJavaClass))) {
-      if (implementor == null) {
-        implementor = nextImplementor;
-      } else {
-        log.warn(
-            "More than one class found implementing cost adjustment for algorithm with java class {}",
-            strJavaClass);
+    if (costAdjustmentAlgorithms != null) {
+      for (CostingAlgorithmAdjustmentImp nextImplementor : costAdjustmentAlgorithms
+          .select(new ComponentProvider.Selector(strJavaClass))) {
+        if (implementor == null) {
+          implementor = nextImplementor;
+        } else {
+          log.warn(
+              "More than one class found implementing cost adjustment for algorithm with java class {}",
+              strJavaClass);
+        }
       }
     }
     if (implementor == null) {
-      throw new OBException(OBMessageUtils.messageBD("CostAlgorithmWithoutAdjustment"));
+      implementor = getAlgorithmAdjustmentImpWithoutCDI(strJavaClass);
     }
     return implementor;
+  }
+
+  private CostingAlgorithmAdjustmentImp getAlgorithmAdjustmentImpWithoutCDI(String strJavaClass) {
+    // Fallback used in non-CDI execution contexts (for example, some Vintage/JUnit4 tests).
+    final List<Class<? extends CostingAlgorithmAdjustmentImp>> knownImplementors = List.of(
+        AverageCostAdjustment.class, StandardCostAdjustment.class);
+    for (Class<? extends CostingAlgorithmAdjustmentImp> implementorClass : knownImplementors) {
+      final ComponentProvider.Qualifier qualifier = implementorClass
+          .getAnnotation(ComponentProvider.Qualifier.class);
+      if (qualifier != null && strJavaClass.equals(qualifier.value())) {
+        return OBProvider.getInstance().get(implementorClass);
+      }
+    }
+    throw new OBException(OBMessageUtils.messageBD("CostAlgorithmWithoutAdjustment"));
   }
 
   public static JSONObject doProcessCostAdjustment(CostAdjustment costAdjustment)
@@ -346,8 +371,7 @@ public class CostAdjustmentProcess {
     log.debug("Starting doProcessCostAdjustment() for cost adjustment: {}",
         costAdjustment.getDocumentNo());
     long t1 = System.currentTimeMillis();
-    CostAdjustmentProcess cap = WeldUtils
-        .getInstanceFromStaticBeanManager(CostAdjustmentProcess.class);
+    CostAdjustmentProcess cap = getProcessInstance();
     JSONObject message = cap.processCostAdjustment(costAdjustment);
     long t2 = System.currentTimeMillis();
     log.debug("Ending doProcessCostAdjustment() took: {} ms.", (t2 - t1));
@@ -355,8 +379,16 @@ public class CostAdjustmentProcess {
   }
 
   public static CostingAlgorithmAdjustmentImp doGetAlgorithmAdjustmentImp(String strJavaClass) {
-    CostAdjustmentProcess cap = WeldUtils
-        .getInstanceFromStaticBeanManager(CostAdjustmentProcess.class);
+    CostAdjustmentProcess cap = getProcessInstance();
     return cap.getAlgorithmAdjustmentImp(strJavaClass);
+  }
+
+  private static CostAdjustmentProcess getProcessInstance() {
+    try {
+      return WeldUtils.getInstanceFromStaticBeanManager(CostAdjustmentProcess.class);
+    } catch (Exception e) {
+      log.debug("Falling back to OBProvider instance for CostAdjustmentProcess: {}", e.getMessage());
+      return OBProvider.getInstance().get(CostAdjustmentProcess.class);
+    }
   }
 }

@@ -66,6 +66,7 @@ public class TestIssue37033 extends TestCostingBase {
       OBDal.getInstance().refresh(firstInvoice);
       TestCostingUtils.completeDocument(firstInvoice);
 
+      TestCostingUtils.markProductTransactionsForPriceDifference(costingProduct);
       TestCostingUtils.enableAutomaticPriceDifferenceCorrectionPreference();
       TestCostingUtils.runCostingBackground();
       TestCostingUtils.disableAutomaticPriceDifferenceCorrectionPreference();
@@ -133,6 +134,7 @@ public class TestIssue37033 extends TestCostingBase {
       OBDal.getInstance().refresh(firstInvoice);
       TestCostingUtils.completeDocument(firstInvoice);
 
+      TestCostingUtils.markProductTransactionsForPriceDifference(costingProduct);
       TestCostingUtils.enableAutomaticPriceDifferenceCorrectionPreference();
       TestCostingUtils.runCostingBackground();
       TestCostingUtils.disableAutomaticPriceDifferenceCorrectionPreference();
@@ -200,6 +202,7 @@ public class TestIssue37033 extends TestCostingBase {
       OBDal.getInstance().refresh(firstInvoice);
       TestCostingUtils.completeDocument(firstInvoice);
 
+      TestCostingUtils.markProductTransactionsForPriceDifference(costingProduct);
       TestCostingUtils.enableAutomaticPriceDifferenceCorrectionPreference();
       TestCostingUtils.runCostingBackground();
       TestCostingUtils.disableAutomaticPriceDifferenceCorrectionPreference();
@@ -259,6 +262,7 @@ public class TestIssue37033 extends TestCostingBase {
       OBDal.getInstance().flush();
       TestCostingUtils.completeDocument(purchaseInvoice);
 
+      TestCostingUtils.markProductTransactionsForPriceDifference(costingProduct);
       TestCostingUtils.enableAutomaticPriceDifferenceCorrectionPreference();
       TestCostingUtils.runCostingBackground();
       TestCostingUtils.disableAutomaticPriceDifferenceCorrectionPreference();
@@ -319,6 +323,7 @@ public class TestIssue37033 extends TestCostingBase {
       OBDal.getInstance().flush();
       TestCostingUtils.completeDocument(purchaseInvoice);
 
+      TestCostingUtils.markProductTransactionsForPriceDifference(costingProduct);
       TestCostingUtils.enableAutomaticPriceDifferenceCorrectionPreference();
       TestCostingUtils.runCostingBackground();
       TestCostingUtils.disableAutomaticPriceDifferenceCorrectionPreference();
