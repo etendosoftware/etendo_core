@@ -208,9 +208,9 @@ public class CostingRuleProcess implements Process {
                   "   and p.stocked = true" +
                   "   and p.organization.id in (:porgs)" +
                   "   and exists (" +
-                  "     select 1 from MaterialMgmtMaterialTransaction" +
-                  "      where product = p" +
-                  "        and organization.id in (:childOrgs)" +
+                  "     select 1 from MaterialMgmtMaterialTransaction as trx" +
+                  "      where trx.product = p" +
+                  "        and trx.organization.id in (:childOrgs)" +
                   "     )";
     //@formatter:on
 

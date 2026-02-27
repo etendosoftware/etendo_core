@@ -46,12 +46,14 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
+import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.structure.BaseOBObject;
@@ -105,7 +107,24 @@ public class FIN_Utility {
   Instance<FIN_SequenceActionInterface> sequenceAction;
 
   public static FIN_Utility getInstance() {
-    return WeldUtils.getInstanceFromStaticBeanManager(FIN_Utility.class);
+    try {
+      return WeldUtils.getInstanceFromStaticBeanManager(FIN_Utility.class);
+    } catch (Exception e) {
+      log4j.debug("Falling back to OBProvider instance for FIN_Utility: {}", e.getMessage());
+      return OBProvider.getInstance().get(FIN_Utility.class);
+    }
+  }
+
+  private static FIN_SequenceActionInterface getSequenceAction() {
+    try {
+      FIN_Utility utility = getInstance();
+      if (utility.sequenceAction != null && !utility.sequenceAction.isUnsatisfied()) {
+        return utility.sequenceAction.get();
+      }
+    } catch (Exception e) {
+      log4j.debug("Sequence action not available through CDI: {}", e.getMessage());
+    }
+    return null;
   }
 
   /**
@@ -348,45 +367,88 @@ public class FIN_Utility {
    *     category. Null if no sequence is found.
    */
   public static String getDocumentNo(DocumentType docType, String tableName, boolean updateNext) {
-    if (getInstance().sequenceAction.get() != null) {
-      return getInstance().sequenceAction.get().getDocumentNo(docType, tableName, updateNext);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      return sequenceAction.getDocumentNo(docType, tableName, updateNext);
+    }
+    if (docType != null) {
+      Sequence seq = docType.getDocumentSequence();
+      if (seq == null && tableName != null) {
+        OBCriteria<Sequence> obcSeq = OBDal.getInstance().createCriteria(Sequence.class);
+        obcSeq.add(Restrictions.eq(Sequence.PROPERTY_NAME, tableName));
+        obcSeq.setMaxResults(1);
+        seq = (Sequence) obcSeq.uniqueResult();
+      }
+      return getDocumentNo(updateNext, seq);
     }
     return null;
   }
 
   public static String getDocumentNo(boolean updateNext, Sequence seqParam) {
-    if (getInstance().sequenceAction.get() != null) {
-      return getInstance().sequenceAction.get().getDocumentNo(updateNext, seqParam);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      return sequenceAction.getDocumentNo(updateNext, seqParam);
     }
-    return null;
+    if (seqParam == null) {
+      return null;
+    }
+    final Sequence seq = getSequenceAndLockIfUpdateNext(updateNext, seqParam);
+    return getNextDocNumberAndIncrementSeqIfUpdateNext(updateNext, seq);
   }
 
   private static Sequence getSequenceAndLockIfUpdateNext(final boolean updateNext,
       final Sequence seqParam) {
-    if (getInstance().sequenceAction.get() != null) {
-      return getInstance().sequenceAction.get().getSequenceAndLockIfUpdateNext(updateNext, seqParam);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      return sequenceAction.getSequenceAndLockIfUpdateNext(updateNext, seqParam);
     }
-    return null;
+    if (updateNext) {
+      return lockSequence(seqParam.getId());
+    }
+    return seqParam;
   }
 
   private static Sequence lockSequence(String sequenceId) {
-    if (getInstance().sequenceAction.get() != null) {
-      return getInstance().sequenceAction.get().lockSequence(sequenceId);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      return sequenceAction.lockSequence(sequenceId);
     }
-    return null;
+    final String where = "select s from ADSequence s where id = :id";
+    final Session session = OBDal.getInstance().getSession();
+    final Query<Sequence> query = session.createQuery(where, Sequence.class);
+    query.setParameter("id", sequenceId);
+    query.setMaxResults(1);
+    query.setLockOptions(LockOptions.UPGRADE);
+    return query.uniqueResult();
   }
 
   private static String getNextDocNumberAndIncrementSeqIfUpdateNext(final boolean updateNext,
       final Sequence seq) {
-    if (getInstance().sequenceAction.get() != null) {
-      return getInstance().sequenceAction.get().getNextDocNumberAndIncrementSeqIfUpdateNext(updateNext, seq);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      return sequenceAction.getNextDocNumberAndIncrementSeqIfUpdateNext(updateNext, seq);
     }
-    return null;
+    final StringBuilder nextDocNumber = new StringBuilder();
+    if (seq.getPrefix() != null) {
+      nextDocNumber.append(seq.getPrefix());
+    }
+    nextDocNumber.append(seq.getNextAssignedNumber().toString());
+    if (seq.getSuffix() != null) {
+      nextDocNumber.append(seq.getSuffix());
+    }
+    incrementSeqIfUpdateNext(updateNext, seq);
+    return nextDocNumber.toString();
   }
 
   private static void incrementSeqIfUpdateNext(final boolean updateNext, final Sequence seq) {
-    if (getInstance().sequenceAction.get() != null) {
-      getInstance().sequenceAction.get().incrementSeqIfUpdateNext(updateNext, seq);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      sequenceAction.incrementSeqIfUpdateNext(updateNext, seq);
+      return;
+    }
+    if (updateNext) {
+      seq.setNextAssignedNumber(seq.getNextAssignedNumber() + seq.getIncrementBy());
+      OBDal.getInstance().save(seq);
     }
   }
 
@@ -406,10 +468,12 @@ public class FIN_Utility {
    *     category. Null if no sequence is found.
    */
   public static String getDocumentNo(Organization org, String docCategory, String tableName) {
-    if (getInstance().sequenceAction.get() != null) {
-      return getInstance().sequenceAction.get().getDocumentNo(org, docCategory, tableName);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      return sequenceAction.getDocumentNo(org, docCategory, tableName);
     }
-    return null;
+    DocumentType outDocType = FIN_Utility.getDocumentType(org, docCategory);
+    return getDocumentNo(outDocType, tableName, true);
   }
 
   /**
@@ -429,10 +493,12 @@ public class FIN_Utility {
    */
   public static String getDocumentNo(Organization org, String docCategory, String tableName,
       boolean updateNext) {
-    if (getInstance().sequenceAction.get() != null) {
-      return getInstance().sequenceAction.get().getDocumentNo(org, docCategory, tableName, updateNext);
+    FIN_SequenceActionInterface sequenceAction = getSequenceAction();
+    if (sequenceAction != null) {
+      return sequenceAction.getDocumentNo(org, docCategory, tableName, updateNext);
     }
-    return null;
+    DocumentType outDocType = FIN_Utility.getDocumentType(org, docCategory);
+    return getDocumentNo(outDocType, tableName, updateNext);
   }
 
   /**
