@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -64,7 +65,7 @@ public class FundsTransferGLItemDefaultValueExpressionTest {
 
         // Setup static mocks
         mockedOBContext = mockStatic(OBContext.class);
-        mockedOBDal = mockStatic(OBDal.class);
+        mockedOBDal = mockStaticSafely(OBDal.class);
         mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
 
         // Setup common mock behavior

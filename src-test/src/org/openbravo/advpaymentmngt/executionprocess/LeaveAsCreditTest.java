@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.executionprocess;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mockStatic;
@@ -70,7 +71,7 @@ public class LeaveAsCreditTest {
   @Before
   public void setUp() throws Exception {
     // Initialize static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
 
     // Configure static mocks

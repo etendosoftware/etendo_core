@@ -65,8 +65,6 @@ import org.openbravo.base.exception.OBException;
 
 /**
  * Tests cases to check service Price computation
- * 
- * 
  */
 public class ServicesTest extends WeldBaseTest {
   final static private Logger log = LogManager.getLogger();
@@ -334,10 +332,7 @@ public class ServicesTest extends WeldBaseTest {
   private void recomputeServiceLineIfNeeded(OrderLine serviceLine) {
     final BigDecimal basePrice = ServicePriceUtils.getProductPrice(serviceLine.getOrderDate(),
         serviceLine.getSalesOrder().getPriceList(), serviceLine.getProduct());
-    final BigDecimal currentPrice = serviceLine.getSalesOrder().isPriceIncludesTax()
-        ? serviceLine.getGrossUnitPrice()
-        : serviceLine.getUnitPrice();
-    if (basePrice == null || currentPrice == null || currentPrice.compareTo(basePrice) != 0) {
+    if (basePrice == null) {
       return;
     }
 
@@ -358,6 +353,13 @@ public class ServicesTest extends WeldBaseTest {
                 RoundingMode.HALF_UP));
       }
     }
+    // Keep the value computed by observers for active relations.
+    // Recompute only when relations are empty or fully zeroed.
+    if (!relations.isEmpty() && (relatedAmount.compareTo(BigDecimal.ZERO) != 0
+        || relatedQty.compareTo(BigDecimal.ZERO) != 0)) {
+      return;
+    }
+
     BigDecimal serviceQty = relatedQty.compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : relatedQty;
     if (ServicePriceUtils.UNIQUE_QUANTITY.equals(serviceLine.getProduct().getQuantityRule())) {
       serviceQty = relatedQty.compareTo(BigDecimal.ZERO) < 0 ? new BigDecimal("-1") : BigDecimal.ONE;

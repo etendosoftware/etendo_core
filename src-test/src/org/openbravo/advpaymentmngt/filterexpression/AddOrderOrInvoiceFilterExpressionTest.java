@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -66,7 +67,7 @@ public class AddOrderOrInvoiceFilterExpressionTest {
   public void setUp() throws Exception {
     requestMap = new HashMap<>();
 
-    obdalMock = initializeObDalStaticMock();
+    obdalMock = mockStaticSafely(OBDal.class);
     obdalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
     when(mockOBDal.get(eq(FIN_PaymentMethod.class), anyString())).thenReturn(paymentMethod);
 

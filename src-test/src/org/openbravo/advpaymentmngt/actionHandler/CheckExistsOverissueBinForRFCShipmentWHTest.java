@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -59,7 +60,7 @@ public class CheckExistsOverissueBinForRFCShipmentWHTest {
     handler = new CheckExistsOverissueBinForRFCShipmentWH();
 
     // Initialize static mock for OBDal
-    mockedOBDal = Mockito.mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockDal);
 
     // Setup default query mock behavior

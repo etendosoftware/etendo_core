@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.process;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -133,7 +134,7 @@ public class RecordID2FillingTest {
    */
   @Before
   public void setUp() throws Exception {
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
 
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);

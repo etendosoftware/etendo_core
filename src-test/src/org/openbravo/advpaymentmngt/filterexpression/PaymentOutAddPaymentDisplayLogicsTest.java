@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -110,7 +111,7 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
    */
   @Test
   public void testCreditToUseDisplayLogicNoBpartner() throws JSONException {
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalStatic = mockStaticSafely(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
       when(payment.getGeneratedCredit()).thenReturn(BigDecimal.ZERO);
@@ -129,7 +130,7 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
    */
   @Test
   public void testCreditToUseDisplayLogicWithGeneratedCredit() throws JSONException {
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalStatic = mockStaticSafely(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
       when(payment.getGeneratedCredit()).thenReturn(BigDecimal.TEN);
@@ -147,7 +148,7 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
    */
   @Test
   public void testGetPayment() throws Exception {
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalStatic = mockStaticSafely(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
 
@@ -184,7 +185,7 @@ public class PaymentOutAddPaymentDisplayLogicsTest {
   @Test
   public void testGetGeneratedCredit() throws Exception {
     BigDecimal creditAmount = BigDecimal.valueOf(123.45);
-    try (MockedStatic<OBDal> obDalStatic = mockStatic(OBDal.class)) {
+    try (MockedStatic<OBDal> obDalStatic = mockStaticSafely(OBDal.class)) {
       obDalStatic.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(eq(FIN_Payment.class), eq(TestConstants.PAYMENT_ID))).thenReturn(payment);
       when(payment.getGeneratedCredit()).thenReturn(creditAmount);

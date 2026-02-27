@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -93,7 +94,7 @@ public class PaymentProposalPickEditLinesTest {
     mocks = MockitoAnnotations.openMocks(this);
 
     // Setup static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBDao = mockStatic(OBDao.class);
     mockedOBProvider = mockStatic(OBProvider.class);

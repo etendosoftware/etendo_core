@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -57,7 +58,7 @@ public class AddTransactionOnChangePaymentActionHandlerTest {
     actionHandler = new AddTransactionOnChangePaymentActionHandler();
 
     // Setup static mocks
-    obDalMock = mockStatic(OBDal.class);
+    obDalMock = mockStaticSafely(OBDal.class);
     obContextMock = mockStatic(OBContext.class);
     finUtilityMock = mockStatic(FIN_Utility.class);
 

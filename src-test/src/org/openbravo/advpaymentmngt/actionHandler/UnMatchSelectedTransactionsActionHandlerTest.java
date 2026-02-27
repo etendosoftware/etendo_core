@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -84,7 +85,7 @@ public class UnMatchSelectedTransactionsActionHandlerTest {
     mocks = MockitoAnnotations.openMocks(this);
 
     // Initialize static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedMatchingUtility = mockStatic(APRM_MatchingUtility.class);
     mockedOBMessageUtils = mockStatic(OBMessageUtils.class);
