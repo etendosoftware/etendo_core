@@ -55,9 +55,10 @@ import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.application.report.ReportingUtils.ExportType;
 import org.openbravo.common.hooks.PrintControllerHookManager;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.email.EmailUtils;
+import org.openbravo.email.ResolvedSmtpConfig;
+import org.openbravo.email.SmtpCascadeResolver;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.BasicUtility;
 import org.openbravo.erpCommon.utility.OBError;
@@ -325,7 +326,8 @@ public class PrintController extends HttpSecureAppServlet {
 
               if (request.getServletPath().toLowerCase().indexOf(PRINT_PATH) == -1
                   && request.getServletPath().toLowerCase().indexOf(PRINT_OPTIONS_PATH) == -1) {
-                if ("".equals(senderAddress) || senderAddress == null) {
+                boolean hasSender = StringUtils.isNotEmpty(senderAddress) || SmtpCascadeResolver.resolve() != null;
+                if (!hasSender) {
                   final OBError on = new OBError();
                   on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
                   on.setTitle(Utility.messageBD(this, "EmailConfigError", vars.getLanguage()));
@@ -1072,30 +1074,25 @@ public class PrintController extends HttpSecureAppServlet {
 
     String fromEmail = null;
     String fromEmailId = null;
-
-    OBContext.setAdminMode(true);
-    try {
-      OBCriteria<EmailServerConfiguration> mailConfigCriteria = OBDal.getInstance()
-          .createCriteria(EmailServerConfiguration.class);
-      mailConfigCriteria.addOrderBy("client.id", false);
-      final List<EmailServerConfiguration> mailConfigList = mailConfigCriteria.list();
-
-      if (mailConfigList.size() == 0) {
-        throw new ServletException("No Poc configuration found for this client.");
+    
+    ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
+    if (resolvedConfig != null) {
+      fromEmail = resolvedConfig.getFromAddress();
+      fromEmailId = resolvedConfig.getConfigId();
+    } else {
+      OBContext.setAdminMode(true);
+      try {
+        EmailServerConfiguration mailConfig = EmailUtils
+            .getEmailConfiguration(OBDal.getInstance().get(Organization.class, vars.getOrg()));
+        if (mailConfig == null) {
+          throw new ServletException(
+              "No sender defined: Please go to client configuration to complete the email configuration.");
+        }
+        fromEmail = mailConfig.getSmtpServerSenderAddress();
+        fromEmailId = mailConfig.getId();
+      } finally {
+        OBContext.restorePreviousMode();
       }
-
-      EmailServerConfiguration mailConfig = EmailUtils
-          .getEmailConfiguration(OBDal.getInstance().get(Organization.class, vars.getOrg()));
-
-      if (mailConfig == null) {
-        throw new ServletException(
-            "No sender defined: Please go to client configuration to complete the email configuration.");
-      }
-
-      fromEmail = mailConfig.getSmtpServerSenderAddress();
-      fromEmailId = mailConfig.getId();
-    } finally {
-      OBContext.restorePreviousMode();
     }
 
     // Get additional document information

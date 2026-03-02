@@ -16,6 +16,7 @@
 package org.openbravo.erpCommon.utility.poc;
 
 import java.io.File;
+import java.security.GeneralSecurityException;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -39,11 +40,13 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.email.EmailUtils;
+import org.openbravo.email.ResolvedSmtpConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.utils.FormatUtilities;
 
@@ -68,10 +71,49 @@ public class EmailManager {
 
     sendEmail(conf.getSmtpServer(), conf.isSMTPAuthentification(), conf.getSmtpServerAccount(),
         decryptedPassword, conf.getSmtpConnectionSecurity(), conf.getSmtpPort().intValue(),
-        conf.getSmtpServerSenderAddress(), email.getRecipientTO(), email.getRecipientCC(),
-        email.getRecipientBCC(), email.getReplyTo(), email.getSubject(), email.getContent(),
-        email.getContentType(), email.getAttachments(), email.getSentDate(),
+        conf.getSmtpServerSenderAddress(), conf.getFromName(), email.getRecipientTO(),
+        email.getRecipientCC(), email.getRecipientBCC(), email.getReplyTo(), email.getSubject(),
+        email.getContent(), email.getContentType(), email.getAttachments(), email.getSentDate(),
         email.getHeaderExtras(), timeoutMillis.intValue());
+  }
+
+  /**
+   * Sends an email using a {@link ResolvedSmtpConfig} obtained from the cascade resolver.
+   * This is the preferred method when the cascade resolution (User → Organization → Client)
+   * has already been performed by {@link org.openbravo.email.SmtpCascadeResolver}.
+   * @param conf The resolved SMTP configuration
+   * @param email The data of the email being sent
+   * @throws Exception if password decryption or email sending fails
+   */
+  public static void sendEmail(ResolvedSmtpConfig conf, EmailInfo email) throws Exception {
+    String decryptedPassword = safeDecrypt(conf.getPassword());
+    long timeoutMillis = conf.getTimeoutSeconds() != null
+        ? TimeUnit.SECONDS.toMillis(conf.getTimeoutSeconds())
+        : DEFAULT_SMTP_TIMEOUT;
+    sendEmail(conf.getHost(), conf.isAuth(), conf.getAccount(), decryptedPassword,
+        conf.getConnectionSecurity(), conf.getPort(), conf.getFromAddress(), conf.getFromName(),
+        email.getRecipientTO(), email.getRecipientCC(), email.getRecipientBCC(),
+        email.getReplyTo() != null ? email.getReplyTo() : conf.getReplyTo(),
+        email.getSubject(), email.getContent(), email.getContentType(), email.getAttachments(),
+        email.getSentDate(), email.getHeaderExtras(), (int) timeoutMillis);
+  }
+
+  /**
+   * Attempts to decrypt the given password using {@link FormatUtilities#encryptDecrypt}.
+   * @param password the password string to decrypt, may be blank or {@code null}
+   * @return the decrypted password, or the original value if decryption is not applicable or fails
+   * @throws ServletException if an unexpected servlet-level error occurs
+   */
+  protected static String safeDecrypt(String password) throws ServletException {
+    if (StringUtils.isBlank(password)) {
+      return password;
+    }
+    try {
+      return FormatUtilities.encryptDecrypt(password, false);
+    } catch (Exception e) {
+      log4j.warn("Password decryption failed (stored as plain text?), using value as-is.", e);
+      return password;
+    }
   }
 
   /**
@@ -87,22 +129,22 @@ public class EmailManager {
         .getEmailConfiguration(OBContext.getOBContext().getCurrentOrganization());
     Long timeoutMillis = getSmtpConnectionTimeout(configuration);
 
-    sendEmail(host, auth, username, password, connSecurity, port, senderAddress, recipientTO,
+    sendEmail(host, auth, username, password, connSecurity, port, senderAddress, null, recipientTO,
         recipientCC, recipientBCC, replyTo, subject, content, contentType, attachments, sentDate,
         headerExtras, timeoutMillis.intValue());
   }
 
-  private static Long getSmtpConnectionTimeout(EmailServerConfiguration configuration) {
+  protected static Long getSmtpConnectionTimeout(EmailServerConfiguration configuration) {
     return (configuration != null && configuration.getSmtpConnectionTimeout() != null)
         ? TimeUnit.SECONDS.toMillis(configuration.getSmtpConnectionTimeout())
         : DEFAULT_SMTP_TIMEOUT;
   }
 
-  private static void sendEmail(String host, boolean auth, String username, String password,
-      String connSecurity, int port, String senderAddress, String recipientTO, String recipientCC,
-      String recipientBCC, String replyTo, String subject, String content, String contentType,
-      List<File> attachments, Date sentDate, List<String> headerExtras, int smtpServerTimeout)
-      throws Exception {
+  protected static void sendEmail(String host, boolean auth, String username, String password,
+      String connSecurity, int port, String senderAddress, String senderName, String recipientTO,
+      String recipientCC, String recipientBCC, String replyTo, String subject, String content,
+      String contentType, List<File> attachments, Date sentDate, List<String> headerExtras,
+      int smtpServerTimeout) throws Exception {
     String localReplyTo = replyTo;
     String localRecipientTO = recipientTO;
     String localRecipientCC = recipientCC;
@@ -152,7 +194,11 @@ public class EmailManager {
 
       MimeMessage message = new MimeMessage(mailSession);
 
-      message.setFrom(new InternetAddress(senderAddress));
+      if (StringUtils.isNotEmpty(senderName)) {
+        message.setFrom(new InternetAddress(senderAddress, senderName, "UTF-8"));
+      } else {
+        message.setFrom(new InternetAddress(senderAddress));
+      }
 
       if (localRecipientTO != null) {
         localRecipientTO = localRecipientTO.replaceAll(";", ",");
@@ -238,7 +284,7 @@ public class EmailManager {
     }
   }
 
-  private static class SMTPAuthenticator extends javax.mail.Authenticator {
+  protected static class SMTPAuthenticator extends javax.mail.Authenticator {
     private String _username;
     private String _password;
 
@@ -370,7 +416,7 @@ public class EmailManager {
    * is used for the full email sending cycle
    */
   @Deprecated
-  private InternetAddress[] getAddressesFrom(String[] textualAddresses) {
+  protected InternetAddress[] getAddressesFrom(String[] textualAddresses) {
     InternetAddress internetAddresses[] = new InternetAddress[textualAddresses.length];
     for (int index = 0; index < textualAddresses.length; index++) {
       try {
