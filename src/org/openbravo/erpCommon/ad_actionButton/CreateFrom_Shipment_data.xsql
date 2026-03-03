@@ -830,6 +830,33 @@
     <Parameter name="mInoutlineId"/>
     <Parameter name="cInvoiceId"/>
   </SqlMethod>
+  <SqlMethod name="insertMatchInvByInvoiceLine" type="preparedStatement" connection="true" return="rowCount">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      INSERT INTO M_MATCHINV
+        (
+        M_MATCHINV_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE, CREATED, CREATEDBY,
+        UPDATED, UPDATEDBY, M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID,
+        DATETRX, QTY, PROCESSING, PROCESSED, POSTED
+        )
+      SELECT
+        GET_UUID(), iol.AD_CLIENT_ID, iol.AD_ORG_ID, 'Y', NOW(), ?,
+        NOW(), ?, iol.M_INOUTLINE_ID, il.C_INVOICELINE_ID, iol.M_PRODUCT_ID,
+        i.DATEACCT, iol.MOVEMENTQTY, 'N', 'Y', 'N'
+      FROM M_INOUTLINE iol
+      JOIN C_INVOICELINE il ON il.C_INVOICELINE_ID = ?
+      JOIN C_INVOICE i ON i.C_INVOICE_ID = il.C_INVOICE_ID
+      WHERE iol.M_INOUTLINE_ID = ?
+      AND NOT EXISTS (SELECT 1
+                        FROM M_MATCHINV mi
+                       WHERE mi.M_INOUTLINE_ID = iol.M_INOUTLINE_ID
+                         AND mi.C_INVOICELINE_ID = il.C_INVOICELINE_ID)
+    </Sql>
+    <Parameter name="adUserId"/>
+    <Parameter name="adUserId"/>
+    <Parameter name="cInvoiceLineId"/>
+    <Parameter name="mInoutlineId"/>
+  </SqlMethod>
   <SqlMethod name="insertMatchSI" type="preparedStatement" connection="true" return="rowCount">
     <SqlMethodComment></SqlMethodComment>
     <Sql>
@@ -865,6 +892,62 @@
       WHERE C_InvoiceLine_ID= ?
     </Sql>
     <Parameter name="cInvoicelineId"/>
+  </SqlMethod>
+  <SqlMethod name="selectInvoiceLineFromOrderLine" type="preparedStatement" connection="true" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT MIN(il.C_InvoiceLine_ID)
+      FROM C_INVOICELINE il
+      JOIN C_INVOICE i ON i.C_INVOICE_ID = il.C_INVOICE_ID
+      WHERE il.C_OrderLine_ID = ?
+      AND i.IsSOTrx = 'Y'
+      AND i.DocStatus IN ('CO', 'CL')
+      AND (il.QtyInvoiced - (
+        SELECT COALESCE(SUM(iol2.MOVEMENTQTY), 0)
+        FROM M_INOUTLINE iol2
+        WHERE iol2.M_INOUTLINE_ID IN (
+          SELECT msi.M_INOUTLINE_ID
+          FROM M_MATCHSI msi
+          WHERE msi.C_INVOICELINE_ID = il.C_INVOICELINE_ID
+          UNION
+          SELECT il2.M_INOUTLINE_ID
+          FROM C_INVOICELINE il2
+          WHERE il2.C_INVOICELINE_ID = il.C_INVOICELINE_ID
+            AND il2.M_INOUTLINE_ID IS NOT NULL
+        )
+      )) <> 0
+      ]]>
+    </Sql>
+    <Parameter name="cOrderlineId"/>
+  </SqlMethod>
+  <SqlMethod name="selectInvoiceLineFromOrderLinePO" type="preparedStatement" connection="true" return="string">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql>
+      <![CDATA[
+      SELECT MIN(il.C_InvoiceLine_ID)
+      FROM C_INVOICELINE il
+      JOIN C_INVOICE i ON i.C_INVOICE_ID = il.C_INVOICE_ID
+      WHERE il.C_OrderLine_ID = ?
+      AND i.IsSOTrx = 'N'
+      AND i.DocStatus IN ('CO', 'CL')
+      AND (il.QtyInvoiced - (
+        SELECT COALESCE(SUM(iol2.MOVEMENTQTY), 0)
+        FROM M_INOUTLINE iol2
+        WHERE iol2.M_INOUTLINE_ID IN (
+          SELECT mi.M_INOUTLINE_ID
+          FROM M_MATCHINV mi
+          WHERE mi.C_INVOICELINE_ID = il.C_INVOICELINE_ID
+          UNION
+          SELECT il2.M_INOUTLINE_ID
+          FROM C_INVOICELINE il2
+          WHERE il2.C_INVOICELINE_ID = il.C_INVOICELINE_ID
+            AND il2.M_INOUTLINE_ID IS NOT NULL
+        )
+      )) <> 0
+      ]]>
+    </Sql>
+    <Parameter name="cOrderlineId"/>
   </SqlMethod>
   <SqlMethod name="updateInvoice" type="preparedStatement" connection="true" return="rowCount">
     <SqlMethodComment></SqlMethodComment>

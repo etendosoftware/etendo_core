@@ -850,8 +850,11 @@ public class CreateFrom extends HttpSecureAppServlet {
                     CreateFromShipmentData.updateInvoice(conn, this, strSequence,
                         data[i].cInvoicelineId);
                   } else {
-                    CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence,
+                    int updatedRows = CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence,
                         data[i].cOrderlineId);
+                    if (shouldInsertMatchInvByInvoiceLine(updatedRows, data[i].cOrderlineId)) {
+                      insertMatchInvByOrderLine(conn, vars, data[i].cOrderlineId, strSequence);
+                    }
                   }
                 } catch (final ServletException ex) {
                   myMessage = Utility.translateError(this, vars, vars.getLanguage(),
@@ -891,8 +894,11 @@ public class CreateFrom extends HttpSecureAppServlet {
                         data[i].cInvoicelineId, strSequence, data[i].cInvoiceId);
                   }
                 } else {
-                  CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence,
+                  int updatedRows = CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence,
                       data[i].cOrderlineId);
+                  if (shouldInsertMatchInvByInvoiceLine(updatedRows, data[i].cOrderlineId)) {
+                    insertMatchInvByOrderLine(conn, vars, data[i].cOrderlineId, strSequence);
+                  }
                 }
               } catch (final ServletException ex) {
                 myMessage = Utility.translateError(this, vars, vars.getLanguage(), ex.getMessage());
@@ -1182,6 +1188,41 @@ public class CreateFrom extends HttpSecureAppServlet {
   }
 
   /**
+   * Determines whether fallback logic should create a MatchInv record from an order line.
+   *
+   * @param updatedRows
+   *     number of updated rows after trying to link invoice and shipment by order line
+   * @param orderLineId
+   *     order line identifier associated to the shipment line
+   * @return {@code true} when fallback matching must be attempted, {@code false} otherwise
+   */
+  protected boolean shouldInsertMatchInvByInvoiceLine(int updatedRows, String orderLineId) {
+    return updatedRows == 0 && StringUtils.isNotEmpty(orderLineId);
+  }
+
+  /**
+   * Creates a MatchInv relationship for a shipment line by resolving the pending invoice line from an order line.
+   *
+   * @param conn
+   *     transactional connection used to execute SQL operations
+   * @param vars
+   *     application context with current user information
+   * @param orderLineId
+   *     order line identifier used to resolve the invoice line
+   * @param inOutLineId
+   *     target shipment/receipt line identifier
+   * @throws ServletException
+   *     if a database error occurs
+   */
+  protected void insertMatchInvByOrderLine(Connection conn, VariablesSecureApp vars, String orderLineId,
+      String inOutLineId) throws ServletException {
+    String matchedInvoiceLineId = CreateFromShipmentData.selectInvoiceLineFromOrderLinePO(conn, this, orderLineId);
+    if (StringUtils.isNotEmpty(matchedInvoiceLineId)) {
+      CreateFromShipmentData.insertMatchInvByInvoiceLine(conn, this, vars.getUser(), matchedInvoiceLineId, inOutLineId);
+    }
+  }
+
+  /**
    * Updates invoice-related data and BOM structure depending on the source context.
    *
    * @param conn
@@ -1211,7 +1252,13 @@ public class CreateFrom extends HttpSecureAppServlet {
       CreateFromShipmentData.insertMatchSI(conn, this, vars.getUser(), invoiceLineId, strSequence);
       CreateFromShipmentData.updateBOMStructure(conn, this, strKey, strSequence);
     } else {
-      CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence, orderLineId);
+      int updatedRows = CreateFromShipmentData.updateInvoiceOrder(conn, this, strSequence, orderLineId);
+      if (updatedRows == 0 && !orderLineId.isEmpty()) {
+        String matchedInvoiceLineId = CreateFromShipmentData.selectInvoiceLineFromOrderLine(conn, this, orderLineId);
+        if (matchedInvoiceLineId != null && !matchedInvoiceLineId.isEmpty()) {
+          CreateFromShipmentData.insertMatchSI(conn, this, vars.getUser(), matchedInvoiceLineId, strSequence);
+        }
+      }
     }
   }
 
