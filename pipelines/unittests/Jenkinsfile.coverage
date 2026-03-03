@@ -1,0 +1,137 @@
+pipeline {
+
+  environment {
+    CONTEXT_NAME        = 'etendo'
+    BBDD_SID            = 'etendo'
+    BBDD_PORT           = '5432'
+    BBDD_SYSTEMUSER     = 'postgres'
+    BBDD_SYSTEMPASS     = 'syspass'
+    BBDD_USER           = 'tad'
+    BBDD_PASSWORD       = 'tad'
+    NEXUS_USER          = credentials('nexus-admin-user')
+    NEXUS_PASSWORD      = credentials('nexus-admin-passwd')
+    GITHUB_USER         = 'etendobot'
+    GITHUB_TOKEN        = credentials('github-read-package-token')
+    LANG                = 'en_US.UTF-8'
+
+    REPO_NAME           = 'etendo_core'
+    URL_REPO_GIT        = 'git@github.com:etendosoftware/etendo_core.git'
+
+    SUCCESS             = 'SUCCESS'
+    FAILED              = 'FAILED'
+
+    CONTEXT_BUILD       = 'Coverage Tests'
+  }
+
+  agent {
+    kubernetes {
+      inheritFrom 'jenkins-node-core-unittests'
+      defaultContainer 'jnlp'
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jenkins-node-coverage-tests
+  namespace: jenkins2025
+spec:
+  containers:
+    - name: compiler
+      image: etendo/compiler_jenkins:1.0.7-jdk.17.0.13
+      resources:
+        requests:
+          cpu: 2048m
+          memory: 3000Mi
+        limits:
+          cpu: 3072m
+          memory: 5000Mi
+"""
+    }
+  }
+
+  stages {
+    stage ('Compile Tests') {
+      steps {
+        container('compiler') {
+          script {
+            try {
+              echo "--------------- Compiling Test Classes ---------------"
+              sh """
+                echo "\n
+                context.name=${CONTEXT_NAME}
+                bbdd.sid=${BBDD_SID}
+                bbdd.port=${BBDD_PORT}
+                bbdd.systemUser=${BBDD_SYSTEMUSER}
+                bbdd.systemPassword=${BBDD_SYSTEMPASS}
+                bbdd.user=${BBDD_USER}
+                bbdd.password=${BBDD_PASSWORD}
+                nexusUser=${NEXUS_USER}
+                nexusPassword=${NEXUS_PASSWORD}
+                githubUser=${GITHUB_USER}
+                githubToken=${GITHUB_TOKEN}
+                allow.root=true
+                org.gradle.jvmargs=-Dfile.encoding=UTF-8
+                org.gradle.daemon=false
+                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g
+                java.version=11" > gradle.properties
+              """
+              sh "./gradlew testClasses --info"
+              echo "--------------- Compilation Successful ---------------"
+              currentBuild.result = SUCCESS
+            } catch (Exception e) {
+              echo "--------------- Compilation Failed ---------------"
+              echo "Exception: " + e.toString()
+              currentBuild.result = FAILED
+              error("Compilation failed")
+            }
+          }
+        }
+      }
+    }
+
+    stage ('Coverage Test Suite') {
+      when {
+        expression { currentBuild.result == SUCCESS }
+      }
+      steps {
+        container('compiler') {
+          script {
+            def suiteName = "org.openbravo.test.CoverageTestSuite"
+            try {
+              echo "--------------- Running ${suiteName} ---------------"
+              sh "./gradlew test --tests ${suiteName} --info"
+              echo "--------------- ${suiteName} Successful ---------------"
+              currentBuild.result = SUCCESS
+            } catch (Exception e) {
+              echo "--------------- ${suiteName} Failed ---------------"
+              echo 'Exception: ' + e.toString()
+              currentBuild.result = FAILED
+              error("${suiteName} failed")
+            } finally {
+              if (fileExists("build/reports/tests/test/")) {
+                publishHTML([
+                  allowMissing: true,
+                  alwaysLinkToLastBuild: false,
+                  keepAll: true,
+                  reportDir: 'build/reports/tests/test',
+                  reportFiles: '*.html',
+                  reportName: 'COVERAGE TESTS REPORT',
+                  reportTitles: ''
+                ])
+              }
+              sh "./gradlew --stop"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "--------------- Coverage Tests PASSED ---------------"
+    }
+    failure {
+      echo "--------------- Coverage Tests FAILED ---------------"
+    }
+  }
+}

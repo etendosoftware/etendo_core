@@ -552,6 +552,57 @@ spec:
       }
     }
 // __________________________________________________________________________________________
+// ------------------------------ COVERAGE TESTS -------------------------------------------
+    stage ('Coverage Test Suite') { // MARK: Coverage Test Suite
+      when {
+        expression {
+          env.STATUS_BUILD == SUCCESS
+        }
+      }
+      steps {
+        container('compiler') {
+          script {
+            dir(REPO_NAME) {
+              def suiteName = "org.openbravo.test.CoverageTestSuite"
+              try {
+                echo "--------------- Running ${suiteName} ---------------"
+                sh "./gradlew test --tests ${suiteName} --info"
+                sh "mv build/jacoco/test.exec build/jacoco/test4.exec"
+                echo "--------------- ${suiteName} Successful ---------------"
+                currentBuild.result = SUCCESS
+              } catch (Exception e) {
+                env.ERROR_MESSAGE = "${suiteName} Failed"
+                echo "--------------- ${env.ERROR_MESSAGE} ---------------"
+                echo 'Exception occurred: ' + e.toString()
+                currentBuild.result = UNSTABLE
+                unstable(env.ERROR_MESSAGE)
+                env.STATUS_TEST = FAILED
+
+                def currentFailed = env.FAILED_SUITES ?: ""
+                env.FAILED_SUITES = currentFailed.isEmpty() ? "${suiteName}" : "${currentFailed}, ${suiteName}"
+              } finally {
+                if (fileExists("build/reports/tests/test/")) {
+                  publishHTML([
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                    reportDir: 'build/reports/tests/test',
+                    reportFiles: '*.html',
+                    reportName: 'COVERAGE TESTS REPORT',
+                    reportTitles: ''
+                  ])
+                  sh "rm -rf build/reports/tests/test"
+                } else {
+                  echo "Report directory of Coverage tests does not exist. Skipping HTML report publishing."
+                }
+                sh "./gradlew --stop"
+              }
+            }
+          }
+        }
+      }
+    }
+// __________________________________________________________________________________________
 // ----------------------------------- JACOCO REPORT ----------------------------------------
     stage('Generate Coverage Report') { // MARK: Generate Coverage Report
       when {

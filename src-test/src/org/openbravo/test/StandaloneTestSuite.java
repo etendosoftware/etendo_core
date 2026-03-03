@@ -19,6 +19,7 @@
 
 package org.openbravo.test;
 
+import org.junit.platform.suite.api.ExcludeClassNamePatterns;
 import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.SelectPackages;
 import org.junit.platform.suite.api.Suite;
@@ -481,6 +482,35 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     "org.openbravo.role.inheritance",
     "org.openbravo.base.secureApp",
 
+})
+@ExcludeClassNamePatterns({
+    // Coverage unit tests (mockito-based) excluded to avoid interference with integration tests
+    "org.openbravo.costing.AverageAlgorithmTest",
+    "org.openbravo.costing.AverageCostAdjustmentTest",
+    "org.openbravo.costing.CostingRuleProcessActionHandlerTest",
+    "org.openbravo.costing.CostingRuleProcessOnProcessHandlerTest",
+    "org.openbravo.service.db.ClientImportEntityResolverTest",
+    "org.openbravo.erpCommon.ad_process.AcctServerProcessTest",
+    "org.openbravo.erpCommon.ad_process.AlertProcessTest",
+    "org.openbravo.erpCommon.ad_process.ApplyModulesTest",
+    "org.openbravo.erpCommon.ad_process.CalculatePromotionsTest",
+    "org.openbravo.erpCommon.ad_process.CashBankOperationsTest",
+    "org.openbravo.erpCommon.ad_process.CreateCashFlowStatementTest",
+    "org.openbravo.erpCommon.ad_process.CreateCustomModuleTest",
+    "org.openbravo.erpCommon.ad_process.assets.AssetLinearDepreciationMethodProcessTest",
+    "org.openbravo.common.actionhandler.ChangeInventoryStatusActionHandlerTest",
+    "org.openbravo.common.actionhandler.CheckAvailableCreditActionHandlerTest",
+    "org.openbravo.common.actionhandler.copyfromorderprocess.CopyFromOrdersProcessFilterExpressionTest",
+    "org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromInOutLinesTest",
+    "org.openbravo.common.actionhandler.createlinesfromprocess.CreateInvoiceLinesFromOrderLinesTest",
+    "org.openbravo.common.filterexpression.AgingGeneralLedgerFilterExpressionTest",
+    "org.openbravo.common.datasource.CostingTransactionsHQLTransformerTest",
+    "org.openbravo.portal.AccountCancelledEmailBodyTest",
+    "org.openbravo.portal.AccountCancelledEmailGeneratorTest",
+    "org.openbravo.role.inheritance.access.AccessTypeInjectorTest",
+    "org.openbravo.role.inheritance.access.AlertRecipientAccessInjectorTest",
+    "org.openbravo.base.secureApp.DefaultValidationExceptionTest",
+    "org.openbravo.base.secureApp.DefaultValuesDataTest",
 })
 public class StandaloneTestSuite {
 }
