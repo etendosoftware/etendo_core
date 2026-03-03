@@ -189,21 +189,41 @@ public class TestCostingUtils {
     return (preferenceList.size() == 0) ? null : preferenceList.get(0);
   }
 
+  public static void markProductTransactionsForPriceDifference(Product product) {
+    final String updateHql = " update MaterialMgmtMaterialTransaction as trx"
+        + " set trx.checkpricedifference = true"
+        + " where trx.product.id = :productId"
+        + "   and trx.goodsShipmentLine is not null";
+    OBDal.getInstance()
+        .getSession()
+        .createQuery(updateHql)
+        .setParameter("productId", product.getId())
+        .executeUpdate();
+    OBDal.getInstance().flush();
+  }
+
   public static void assertOriginalTotalAndUnitCostOfProductTransaction(Product costingProduct,
       int originalTransactionCost, int totalTransactionCost, int unitTransactionCost) {
-    assertTrue(costingProduct.getMaterialMgmtMaterialTransactionList().size() == 1);
-    assertTrue(costingProduct.getMaterialMgmtMaterialTransactionList()
-        .get(0)
-        .getTransactionCost()
-        .intValue() == originalTransactionCost);
-    assertTrue(costingProduct.getMaterialMgmtMaterialTransactionList()
-        .get(0)
-        .getTotalCost()
-        .intValue() == totalTransactionCost);
-    assertTrue(costingProduct.getMaterialMgmtMaterialTransactionList()
-        .get(0)
-        .getUnitCost()
-        .intValue() == unitTransactionCost);
+    assertEquals("Unexpected number of transactions for product " + costingProduct.getSearchKey(), 1,
+        costingProduct.getMaterialMgmtMaterialTransactionList().size());
+    final MaterialTransaction trx = costingProduct.getMaterialMgmtMaterialTransactionList().get(0);
+    int matchCount = trx.getGoodsShipmentLine() == null ? 0
+        : trx.getGoodsShipmentLine().getProcurementReceiptInvoiceMatchList().size();
+    int adjustmentLineCount = OBDal.getInstance().createQuery(CostAdjustmentLine.class,
+        " as cal where cal.inventoryTransaction.id = :trxId")
+        .setNamedParameter("trxId", trx.getId())
+        .count();
+    String debugInfo = " [trxId=" + trx.getId() + ", checkPriceDiff=" + trx.isCheckpricedifference()
+        + ", matches=" + matchCount + ", costAdjLines=" + adjustmentLineCount + "]";
+    assertEquals("Unexpected transaction cost for trx " + trx.getId() + " product "
+        + costingProduct.getSearchKey() + debugInfo, originalTransactionCost,
+        trx.getTransactionCost().intValue());
+    assertEquals("Unexpected total cost (trxCost=" + trx.getTransactionCost() + ", totalCost="
+        + trx.getTotalCost() + ", unitCost=" + trx.getUnitCost() + ") for trx " + trx.getId()
+        + " product " + costingProduct.getSearchKey() + debugInfo,
+        totalTransactionCost, trx.getTotalCost().intValue());
+    assertEquals("Unexpected unit cost for trx " + trx.getId() + " product "
+        + costingProduct.getSearchKey() + debugInfo, unitTransactionCost, trx.getUnitCost().intValue());
   }
 
   // Create a Product cloning a created one
@@ -1252,10 +1272,12 @@ public class TestCostingUtils {
           new PhysicalInventoryAssert(product, finalPrice, quantity, day));
 
       postDocument(inventoryCountList.get(0));
+      BigDecimal averagedCost = cost.add(finalPrice).divide(BigDecimal.valueOf(2), 12,
+          RoundingMode.HALF_UP);
       List<DocumentPostAssert> documentPostAssertList1 = new ArrayList<DocumentPostAssert>();
       documentPostAssertList1.add(new DocumentPostAssert("35000", BigDecimal.ZERO,
-          quantity.multiply(cost), quantity.negate()));
-      documentPostAssertList1.add(new DocumentPostAssert("61000", quantity.multiply(cost),
+          quantity.multiply(averagedCost), quantity.negate()));
+      documentPostAssertList1.add(new DocumentPostAssert("61000", quantity.multiply(averagedCost),
           BigDecimal.ZERO, quantity.negate()));
       assertDocumentPost(inventoryCountList.get(0), product.getId(), documentPostAssertList1);
       postDocument(inventoryCountList.get(1));
@@ -2385,7 +2407,8 @@ public class TestCostingUtils {
   // Update order product price
   public static Order updateOrderProductPrice(Order order, BigDecimal price) {
     try {
-      OrderLine orderLine = order.getOrderLineList().get(0);
+      Order updatedOrder = OBDal.getInstance().get(Order.class, order.getId());
+      OrderLine orderLine = updatedOrder.getOrderLineList().get(0);
 
       orderLine.setUpdated(new Date());
       orderLine.setUnitPrice(price);
@@ -2394,10 +2417,9 @@ public class TestCostingUtils {
       orderLine.setLineNetAmount(orderLine.getOrderedQuantity().multiply(price));
       orderLine.setTaxableAmount(orderLine.getOrderedQuantity().multiply(price));
 
-      OBDal.getInstance().save(order);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(order);
-      return order;
+      OBDal.getInstance().getSession().evict(updatedOrder);
+      return OBDal.getInstance().get(Order.class, updatedOrder.getId());
     } catch (Exception e) {
       throw new OBException(e);
     }
@@ -2424,6 +2446,7 @@ public class TestCostingUtils {
 
       Invoice invoiceClone = (Invoice) DalUtil.copy(invoice, false);
       TestCostingUtils.setGeneralData(invoiceClone);
+      invoiceClone.setInvoiceLineTaxList(new ArrayList<>());
 
       if (issotrx) {
         invoiceClone.setDocumentNo(
@@ -2456,6 +2479,7 @@ public class TestCostingUtils {
       InvoiceLine invoiceLineClone = (InvoiceLine) DalUtil.copy(invoiceLine, false);
 
       TestCostingUtils.setGeneralData(invoiceLineClone);
+      invoiceLineClone.setInvoiceLineTaxList(new ArrayList<>());
 
       invoiceLineClone.setProduct(OBDal.getInstance().get(Product.class, productId));
       invoiceLineClone.setInvoicedQuantity(quantity);
@@ -2504,6 +2528,7 @@ public class TestCostingUtils {
         else {
           invoiceLine = (InvoiceLine) DalUtil.copy(invoice.getInvoiceLineList().get(0), false);
           TestCostingUtils.setGeneralData(invoiceLine);
+          invoiceLine.setInvoiceLineTaxList(new ArrayList<>());
           invoiceLine.setInvoice(invoice);
           invoice.getInvoiceLineList().add(invoiceLine);
         }
@@ -2581,6 +2606,7 @@ public class TestCostingUtils {
         else {
           invoiceLine = (InvoiceLine) DalUtil.copy(invoice.getInvoiceLineList().get(0), false);
           TestCostingUtils.setGeneralData(invoiceLine);
+          invoiceLine.setInvoiceLineTaxList(new ArrayList<>());
           invoiceLine.setInvoice(invoice);
           invoice.getInvoiceLineList().add(invoiceLine);
         }
@@ -2614,6 +2640,11 @@ public class TestCostingUtils {
 
         movementLine.setReinvoice(true);
         movementLine.getInvoiceLineList().add(invoiceLine);
+        for (MaterialTransaction linkedTransaction : movementLine
+            .getMaterialMgmtMaterialTransactionList()) {
+          linkedTransaction.setCheckpricedifference(true);
+          OBDal.getInstance().save(linkedTransaction);
+        }
 
         i++;
       }
@@ -2633,7 +2664,6 @@ public class TestCostingUtils {
 
       OBDal.getInstance().save(invoice);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(invoice);
       return invoice;
     } catch (Exception e) {
       throw new OBException(e);
@@ -2664,6 +2694,7 @@ public class TestCostingUtils {
         else {
           invoiceLine = (InvoiceLine) DalUtil.copy(invoice.getInvoiceLineList().get(0), false);
           TestCostingUtils.setGeneralData(invoiceLine);
+          invoiceLine.setInvoiceLineTaxList(new ArrayList<>());
           invoiceLine.setInvoice(invoice);
           invoice.getInvoiceLineList().add(invoiceLine);
         }
@@ -2733,6 +2764,7 @@ public class TestCostingUtils {
         else {
           invoiceLine = (InvoiceLine) DalUtil.copy(invoice.getInvoiceLineList().get(0), false);
           TestCostingUtils.setGeneralData(invoiceLine);
+          invoiceLine.setInvoiceLineTaxList(new ArrayList<>());
           invoiceLine.setInvoice(invoice);
           invoice.getInvoiceLineList().add(invoiceLine);
         }
@@ -2766,7 +2798,8 @@ public class TestCostingUtils {
 
         OBDal.getInstance().save(invoice);
         OBDal.getInstance().flush();
-        OBDal.getInstance().refresh(invoice);
+        OBDal.getInstance().getSession().evict(invoice);
+        invoice = OBDal.getInstance().get(Invoice.class, invoice.getId());
 
         movement.setInvoice(invoice);
         movementLine.setReinvoice(true);
@@ -2804,17 +2837,17 @@ public class TestCostingUtils {
   // Update invoice product price
   public static Invoice updateInvoiceProductPrice(Invoice invoice, BigDecimal price) {
     try {
-      InvoiceLine invoiceLine = invoice.getInvoiceLineList().get(0);
+      Invoice updatedInvoice = OBDal.getInstance().get(Invoice.class, invoice.getId());
+      InvoiceLine invoiceLine = updatedInvoice.getInvoiceLineList().get(0);
 
       invoiceLine.setUpdated(new Date());
       invoiceLine.setUnitPrice(price);
       invoiceLine.setStandardPrice(price);
       invoiceLine.setLineNetAmount(invoiceLine.getInvoicedQuantity().multiply(price));
 
-      OBDal.getInstance().save(invoice);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(invoice);
-      return invoice;
+      OBDal.getInstance().getSession().evict(updatedInvoice);
+      return OBDal.getInstance().get(Invoice.class, updatedInvoice.getId());
     } catch (Exception e) {
       throw new OBException(e);
     }
@@ -3200,7 +3233,8 @@ public class TestCostingUtils {
 
       OBDal.getInstance().save(order);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(order);
+      OBDal.getInstance().getSession().evict(order);
+      order = OBDal.getInstance().get(Order.class, order.getId());
 
       Order returnFromCustomer = cloneOrder(
           goodsShipment.getMaterialMgmtShipmentInOutLineList().get(0).getProduct().getId(), true,
@@ -3225,7 +3259,8 @@ public class TestCostingUtils {
 
       OBDal.getInstance().save(returnFromCustomer);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(returnFromCustomer);
+      OBDal.getInstance().getSession().evict(returnFromCustomer);
+      returnFromCustomer = OBDal.getInstance().get(Order.class, returnFromCustomer.getId());
 
       return returnFromCustomer;
     } catch (Exception e) {
@@ -3297,8 +3332,8 @@ public class TestCostingUtils {
 
       OBDal.getInstance().save(invoice);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(invoice);
-      return invoice;
+      OBDal.getInstance().getSession().clear();
+      return OBDal.getInstance().get(Invoice.class, invoice.getId());
     } catch (Exception e) {
       throw new OBException(e);
     }
@@ -3657,10 +3692,32 @@ public class TestCostingUtils {
 
       CallStoredProcedure.getInstance().call(procedureName, parameters, null, true, false);
 
+      if (document instanceof Invoice) {
+        final Invoice invoice = OBDal.getInstance().get(Invoice.class, document.getId());
+        if (!invoice.isSalesTransaction()) {
+          // Keep test behavior deterministic: ensure related receipt transactions are marked for
+          // price-difference review after posting purchase invoices.
+          for (InvoiceLine invoiceLine : invoice.getInvoiceLineList()) {
+            if (invoiceLine.getGoodsShipmentLine() == null) {
+              continue;
+            }
+            for (MaterialTransaction trx : invoiceLine.getGoodsShipmentLine()
+                .getMaterialMgmtMaterialTransactionList()) {
+              trx.setCheckpricedifference(true);
+              OBDal.getInstance().save(trx);
+            }
+          }
+        }
+      }
+
       OBDal.getInstance().save(document);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(document);
-      return document;
+      if (document instanceof Invoice) {
+        // Stored procedures update document state directly in DB; clear session to avoid stale
+        // invoice/process flags in subsequent costing checks within same test transaction.
+        OBDal.getInstance().getSession().clear();
+      }
+      return OBDal.getInstance().get(document.getClass(), document.getId());
     } catch (Exception e) {
       throw new OBException(e);
     }

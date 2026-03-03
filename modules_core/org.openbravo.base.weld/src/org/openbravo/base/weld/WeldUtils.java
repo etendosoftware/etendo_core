@@ -36,6 +36,7 @@ import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Inject;
+import jakarta.servlet.ServletContext;
 
 /**
  * Provides weld utilities.
@@ -52,8 +53,12 @@ public class WeldUtils {
 
   public static BeanManager getStaticInstanceBeanManager() {
     if (staticBeanManager == null) {
-      staticBeanManager = (BeanManager) DalContextListener.getServletContext()
-          .getAttribute(BEAN_MANAGER_ATTRIBUTE_NAME);
+      final ServletContext servletContext = DalContextListener.getServletContext();
+      if (servletContext != null) {
+        staticBeanManager = (BeanManager) servletContext.getAttribute(BEAN_MANAGER_ATTRIBUTE_NAME);
+      } else {
+        log.debug("ServletContext not available, skipping BeanManager lookup from ServletContext");
+      }
 
       if (staticBeanManager == null) {
         log.debug("BeanManager not present in ServletContext, trying to get it with a jndi lookup");
@@ -82,8 +87,8 @@ public class WeldUtils {
             staticBeanManager = cdi.getBeanManager();
             log.debug("BeanManager obtained via CDI.current() fallback.");
           } catch (IllegalStateException ise) {
-            log.error("Could not obtain BeanManager via ServletContext, JNDI, or CDI.current(): {}", ise.getMessage());
-            throw new OBException("BeanManager not available, aborting CDI initialization", ise);
+            log.error("Could not obtain BeanManager via ServletContext, JNDI, or CDI.current(): {}",
+                ise.getMessage());
           }
         }
       }
@@ -107,14 +112,20 @@ public class WeldUtils {
   @SuppressWarnings("unchecked")
   public static <T> T getInstanceFromStaticBeanManager(Class<T> type) {
     final BeanManager theBeanManager = getStaticInstanceBeanManager();
-    final Set<Bean<?>> beans = theBeanManager.getBeans(type, ANY_LITERAL);
-    for (Bean<?> bean : beans) {
-      if (bean.getBeanClass() == type) {
-        return (T) theBeanManager.getReference(bean, type,
-            theBeanManager.createCreationalContext(bean));
+    if (theBeanManager != null) {
+      final Set<Bean<?>> beans = theBeanManager.getBeans(type, ANY_LITERAL);
+      for (Bean<?> bean : beans) {
+        if (bean.getBeanClass() == type) {
+          return (T) theBeanManager.getReference(bean, type,
+              theBeanManager.createCreationalContext(bean));
+        }
       }
     }
-    throw new IllegalArgumentException("No bean found for type " + type);
+    try {
+      return type.getDeclaredConstructor().newInstance();
+    } catch (Exception e) {
+      throw new IllegalArgumentException("No bean found for type " + type, e);
+    }
   }
 
   @Inject
@@ -147,6 +158,9 @@ public class WeldUtils {
   @SuppressWarnings("unchecked")
   public static <T> List<T> getInstances(Class<T> type) {
     final BeanManager beanManager = WeldUtils.getStaticInstanceBeanManager();
+    if (beanManager == null) {
+      return new ArrayList<>();
+    }
     final Set<Bean<?>> beans = beanManager.getBeans(type, ANY_LITERAL);
 
     final List<T> instances = new ArrayList<>();

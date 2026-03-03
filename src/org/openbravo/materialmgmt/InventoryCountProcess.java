@@ -21,7 +21,6 @@ package org.openbravo.materialmgmt;
 
 import java.math.BigDecimal;
 import java.sql.CallableStatement;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -229,7 +228,7 @@ public class InventoryCountProcess implements Process {
             "   , e.orderQuantity - COALESCE(" + "e.quantityOrderBook, 0)" +
             "   , e.orderUOM" +
             "   , e" +
-            "   , to_timestamp(to_char(:currentDate), to_char('DD-MM-YYYY HH24:MI:SS'))" +
+            "   , current_timestamp" +
             "   from MaterialMgmtInventoryCountLine as e" +
             "     , ADUser as u" +
             "     , AttributeSetInstance as asi" +
@@ -249,13 +248,11 @@ public class InventoryCountProcess implements Process {
     //@formatter:on
 
     try {
-      final SimpleDateFormat dateFormatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
       OBDal.getInstance()
           .getSession()
           .createQuery(hqlInsert)
           .setParameter("invId", inventory.getId())
           .setParameter("userId", OBContext.getOBContext().getUser().getId())
-          .setParameter("currentDate", dateFormatter.format(new Date()))
           .executeUpdate();
 
       if (!"C".equals(inventory.getInventoryType()) && !"O".equals(inventory.getInventoryType())) {
@@ -317,7 +314,7 @@ public class InventoryCountProcess implements Process {
                   " where icl.physInventory.id = :inventoryId" +
                   "   and aset.requireAtLeastOneValue = true" +
                   "   and coalesce(p.useAttributeSetValueAs, '-') <> 'F'" +
-                  "   and coalesce(icl.attributeSetValue, '0') = '0' " +
+                  "   and (icl.attributeSetValue is null or icl.attributeSetValue.id = '0') " +
                   // Allow to regularize to 0 any existing Stock without attribute for this Product
                   // (this situation can happen when there is a bug in a different part of the code,
                   // but the user should be able always to zero this stock)
@@ -333,7 +330,7 @@ public class InventoryCountProcess implements Process {
                   "             from MaterialMgmtStorageDetail sd" +
                   "            where sd.storageBin.id = sb.id" +
                   "              and sd.product.id = p.id" +
-                  "              and sd.attributeSetValue = '0'" +
+                  "              and sd.attributeSetValue.id = '0'" +
                   "              and sd.uOM.id = icl.uOM.id" +
                   "              and sd.quantityOnHand <> 0" +
                   "              and sd.quantityInDraftTransactions <> 0" +
@@ -373,9 +370,9 @@ public class InventoryCountProcess implements Process {
                   "         from MaterialMgmtInventoryCountLine as icl2" +
                   "        where icl.physInventory = icl2.physInventory" +
                   "          and icl.product = icl2.product" +
-                  "          and coalesce(icl.attributeSetValue, '0') = coalesce(icl2.attributeSetValue, '0')" +
-                  "          and coalesce(icl.orderUOM, '0') = coalesce(icl2.orderUOM, '0')" +
-                  "          and coalesce(icl.uOM, '0') = coalesce(icl2.uOM, '0')" +
+                  "          and coalesce(icl.attributeSetValue.id, '0') = coalesce(icl2.attributeSetValue.id, '0')" +
+                  "          and coalesce(icl.orderUOM.id, '0') = coalesce(icl2.orderUOM.id, '0')" +
+                  "          and coalesce(icl.uOM.id, '0') = coalesce(icl2.uOM.id, '0')" +
                   "          and icl.storageBin = icl2.storageBin" +
                   "          and icl.lineNo <> icl2.lineNo" +
                   "     )" +

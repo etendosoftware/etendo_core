@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 
@@ -84,6 +85,8 @@ public class CancelCostAdjustment extends BaseActionHandler {
 
   public static JSONObject doCancelCostAdjustment(CostAdjustment costAdjustmentOrig)
       throws OBException, JSONException {
+    // Ensure entity is materialized to avoid copying a Hibernate proxy class.
+    costAdjustmentOrig = (CostAdjustment) Hibernate.unproxy(costAdjustmentOrig);
     CostAdjustment costAdjustmentCancel = (CostAdjustment) DalUtil.copy(costAdjustmentOrig, false);
 
     final DocumentType docType = FIN_Utility.getDocumentType(costAdjustmentOrig.getOrganization(),

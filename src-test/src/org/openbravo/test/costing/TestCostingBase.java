@@ -20,6 +20,8 @@
 package org.openbravo.test.costing;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.AfterClass;
@@ -50,6 +52,18 @@ public class TestCostingBase extends WeldBaseTest {
 
   @Before
   public void setInitialConfiguration() {
+    // Ensure test isolation: some tests can leave this preference enabled if they fail before
+    // cleanup, altering costing behavior in subsequent tests.
+    try {
+      OBContext.setOBContext(TestCostingConstants.ADMIN_USER_ID,
+          TestCostingConstants.QATESTING_ROLE_ID, TestCostingConstants.QATESTING_CLIENT_ID,
+          TestCostingConstants.SPAIN_ORGANIZATION_ID);
+      OBContext.setAdminMode(true);
+      TestCostingUtils.disableAutomaticPriceDifferenceCorrectionPreference();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+
     // FIXME: Change setInitialConfiguration to @BeforeClass and remove runBefore flag
     // once https://issues.openbravo.com/view.php?id=36326 is fixed
     if (TestCostingConstants.runBefore) {
@@ -142,14 +156,17 @@ public class TestCostingBase extends WeldBaseTest {
             .get(CostingAlgorithm.class, TestCostingConstants.AVERAGE_COSTINGALGORITHM_ID));
         costingRule.setWarehouseDimension(true);
         costingRule.setBackdatedTransactionsFixed(true);
-        costingRule.setValidated(false);
-        costingRule.setStartingDate(null);
+        costingRule.setValidated(true);
+        // Use start of day to include today's test transactions but avoid time-based exclusion.
+        Calendar ruleStart = Calendar.getInstance();
+        ruleStart.set(Calendar.HOUR_OF_DAY, 0);
+        ruleStart.set(Calendar.MINUTE, 0);
+        ruleStart.set(Calendar.SECOND, 0);
+        ruleStart.set(Calendar.MILLISECOND, 0);
+        costingRule.setStartingDate(ruleStart.getTime());
         costingRule.setEndingDate(null);
         OBDal.getInstance().save(costingRule);
         OBDal.getInstance().flush();
-        OBDal.getInstance().refresh(costingRule);
-        TestCostingUtils.runCostingBackground();
-        TestCostingUtils.validateCostingRule(costingRule.getId());
 
         OBDal.getInstance().commitAndClose();
       } catch (Exception e) {

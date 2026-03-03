@@ -186,8 +186,10 @@ public class LandedCostProcess {
     }
 
     // Execute checks added implementing LandedCostProcessCheck interface.
-    for (LandedCostProcessCheck checksInstance : landedCostProcessChecks) {
-      checksInstance.doCheck(landedCost, message);
+    if (landedCostProcessChecks != null) {
+      for (LandedCostProcessCheck checksInstance : landedCostProcessChecks) {
+        checksInstance.doCheck(landedCost, message);
+      }
     }
   }
 
@@ -234,10 +236,6 @@ public class LandedCostProcess {
                   " select sum(rla.amount) as amt" +
                   "   , rla.landedCostCost.currency.id as lcCostCurrency" +
                   "   , gsl.id as receipt" +
-                  "   , (select transactionProcessDate " +
-                  "      from MaterialMgmtMaterialTransaction as transaction " +
-                  "      where goodsShipmentLine.id = gsl.id" +
-                  "     ) as trxprocessdate" +
                   "  from LandedCostReceiptLineAmt as rla" +
                   "    join rla.landedCostReceipt as rl" +
                   "    join rl.goodsShipment as gs" +
@@ -248,8 +246,7 @@ public class LandedCostProcess {
                   "   , gsl.id" +
                   "   , gs.documentNo" +
                   "   , gsl.lineNo" +
-                  " order by trxprocessdate" +
-                  "   , gs.documentNo" +
+                  " order by gs.documentNo" +
                   "   , gsl.lineNo" +
                   "   , amt";
     //@formatter:on

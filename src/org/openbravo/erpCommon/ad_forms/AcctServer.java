@@ -1468,10 +1468,9 @@ public abstract class AcctServer {
             OBCriteria<Currency> currencyCrit = OBDal.getInstance().createCriteria(Currency.class);
             currencyCrit.add(Restrictions.eq(Currency.PROPERTY_ID, acctSchema.m_C_Currency_ID));
             currencyCrit.setProjection(Projections.max(Currency.PROPERTY_STANDARDPRECISION));
-            Long precision = 0L;
-            if (currencyCrit.count() > 0) {
-              List<Long> toCurrency = currencyCrit.list(Long.class);
-              precision = toCurrency.get(0);
+            Long precision = currencyCrit.uniqueResult(Long.class);
+            if (precision == null) {
+              precision = 0L;
             }
             BigDecimal convertedAmount = new BigDecimal("1")
                 .multiply(conversionRate.get(0).getRate());

@@ -380,6 +380,7 @@ public class OBBaseTest {
    * @see TestLogAppender
    */
   @BeforeAll
+  @org.junit.BeforeClass
   public static void classSetUp() throws Exception {
     initializeTestLogAppender();
     ensureDalInitialized();
@@ -398,6 +399,7 @@ public class OBBaseTest {
    * context through the {@link DalContextListener} if the test case is configured to do so.
    */
   @BeforeEach
+  @org.junit.Before
   public void setUp() throws Exception {
     // clear the session otherwise it keeps the old model
     ensureDalInitialized();
@@ -424,6 +426,48 @@ public class OBBaseTest {
   @AfterEach
   public void testDone(TestInfo testInfo) {
     // THIS LOGIC IS NOW IN DalCleanupExtension.afterEach()
+  }
+
+  /**
+   * JUnit 4/Vintage cleanup hook.
+   * <p>
+   * For JUnit 5, cleanup is done by {@link DalCleanupExtension}. Vintage tests do not execute that
+   * extension, so they require this explicit cleanup to avoid leaking DAL session/context between
+   * tests.
+   */
+  @org.junit.After
+  public void vintageTestDone() {
+    try {
+      if (SessionHandler.isSessionHandlerPresent()) {
+        if (SessionHandler.getInstance().getDoRollback()
+            || SessionHandler.getInstance().getSession().getTransaction().isActive()) {
+          SessionHandler.getInstance().rollback();
+        } else {
+          SessionHandler.getInstance().getSession().close();
+        }
+      }
+    } catch (final Exception e) {
+      reportException(e);
+      throw new OBException(e);
+    } finally {
+      try {
+        if (SessionHandler.isSessionHandlerPresent(ExternalConnectionPool.READONLY_POOL)) {
+          SessionHandler.getInstance().commitAndClose(ExternalConnectionPool.READONLY_POOL);
+        }
+      } catch (Exception ex) {
+        log.error("Error cleaning up read-only session", ex);
+      }
+      SessionHandler.deleteSessionHandler();
+      OBContext.setOBContext((OBContext) null);
+      if (testLogAppender != null) {
+        testLogAppender.reset();
+        setTestLogAppenderLevel(Level.OFF);
+      }
+      if (shouldMockServletContext()) {
+        cleanMockServletContext();
+      }
+      Mockito.framework().clearInlineMocks();
+    }
   }
 
   /**

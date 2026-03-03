@@ -138,9 +138,11 @@ public class LCMatchingProcess {
       throw new OBException(OBMessageUtils.messageBD("LCCostNoMatchings"));
     }
 
-    // Execute checks added implementing LandedCostProcessCheck interface.
-    for (LCMatchingProcessCheck checksInstance : LCMatchingProcessChecks) {
-      checksInstance.doCheck(lcCost, message);
+    // Execute checks added implementing LCMatchingProcessCheck interface.
+    if (LCMatchingProcessChecks != null) {
+      for (LCMatchingProcessCheck checksInstance : LCMatchingProcessChecks) {
+        checksInstance.doCheck(lcCost, message);
+      }
     }
   }
 

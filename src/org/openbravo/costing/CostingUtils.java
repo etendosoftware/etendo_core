@@ -909,12 +909,12 @@ public class CostingUtils {
 
     OBCriteria<MaterialTransaction> criteria = OBDal.getInstance()
         .createCriteria(MaterialTransaction.class);
-    criteria.createAlias(MaterialTransaction.PROPERTY_STORAGEBIN, "sb")
-        .add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCT, product))
+    criteria.add(Restrictions.eq(MaterialTransaction.PROPERTY_PRODUCT, product))
         .add(Restrictions.eq(MaterialTransaction.PROPERTY_ISPROCESSED, true))
         .add(Restrictions.in(MaterialTransaction.PROPERTY_ORGANIZATION + ".id", orgs));
     if (costDimensions.get(CostDimension.Warehouse) != null) {
-      criteria.add(Restrictions.eq("sb." + Locator.PROPERTY_WAREHOUSE + ".id",
+      criteria.add(Restrictions.eq(
+          MaterialTransaction.PROPERTY_STORAGEBIN + "." + Locator.PROPERTY_WAREHOUSE + ".id",
           costDimensions.get(CostDimension.Warehouse).getId()));
     }
 

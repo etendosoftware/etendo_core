@@ -822,11 +822,13 @@ public class AverageCostAdjustment extends CostingAlgorithmAdjustmentImp {
   private List<CostAdjustmentLine> getTrxAdjustmentLines(MaterialTransaction trx) {
     OBCriteria<CostAdjustmentLine> critLines = OBDal.getInstance()
         .createCriteria(CostAdjustmentLine.class);
-    critLines.createAlias(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT, "ca");
     critLines.add(Restrictions.eq(CostAdjustmentLine.PROPERTY_INVENTORYTRANSACTION, trx));
     critLines.add(Restrictions.or(//
-        Restrictions.eq("ca.id", getCostAdj().getId()), //
-        Restrictions.not(Restrictions.eq("ca." + CostAdjustment.PROPERTY_DOCUMENTSTATUS, "DR"))));
+        Restrictions.eq(CostAdjustmentLine.PROPERTY_COSTADJUSTMENT + ".id", getCostAdj().getId()), //
+        Restrictions.not(Restrictions.eq(
+            CostAdjustmentLine.PROPERTY_COSTADJUSTMENT + "."
+                + CostAdjustment.PROPERTY_DOCUMENTSTATUS,
+            "DR"))));
 
     return critLines.list();
   }
