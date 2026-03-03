@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -68,7 +69,7 @@ public class SalesOrderAddPaymentDefaultValuesTest {
   @Before
   public void setUp() throws Exception {
     mocks = MockitoAnnotations.openMocks(this);
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
 
     OBDal mockOBDal = mock(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);

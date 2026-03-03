@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
 
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Observes;
 
 import org.openbravo.base.model.Entity;
@@ -38,7 +39,8 @@ import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.order.OrderlineServiceRelation;
 import org.openbravo.model.common.plm.Product;
 
-class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
+@Dependent
+public class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
   private static Entity[] entities = {
       ModelProvider.getInstance().getEntity(OrderlineServiceRelation.ENTITY_NAME) };
 
@@ -63,7 +65,7 @@ class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
     BigDecimal quantity = (BigDecimal) event.getCurrentState(quantityProperty);
     OrderLine orderLine = (OrderLine) event.getCurrentState(solProperty);
     if (orderLine.getSalesOrder().getCancelledorder() == null) {
-      updateOrderLine(orderLine, amount, quantity, BigDecimal.ZERO, BigDecimal.ZERO);
+      updateOrderLine(orderLine, amount, quantity, BigDecimal.ZERO, BigDecimal.ZERO, true);
     }
   }
 
@@ -85,7 +87,8 @@ class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
     BigDecimal oldQuantity = (BigDecimal) event.getPreviousState(quantityProperty);
     OrderLine currentOrderLine = (OrderLine) event.getCurrentState(solProperty);
     if (currentOrderLine.getSalesOrder().getCancelledorder() == null) {
-      updateOrderLine(currentOrderLine, currentAmount, currentQuantity, oldAmount, oldQuantity);
+      updateOrderLine(currentOrderLine, currentAmount, currentQuantity, oldAmount, oldQuantity,
+          true);
     }
   }
 
@@ -105,12 +108,13 @@ class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
     BigDecimal oldQuantity = (BigDecimal) event.getCurrentState(quantityProperty);
     OrderLine orderLine = (OrderLine) event.getCurrentState(solProperty);
     if (orderLine.getSalesOrder().getCancelledorder() == null) {
-      updateOrderLine(orderLine, BigDecimal.ZERO, BigDecimal.ZERO, oldAmount, oldQuantity);
+      updateOrderLine(orderLine, BigDecimal.ZERO, BigDecimal.ZERO, oldAmount, oldQuantity, true);
     }
   }
 
   private void updateOrderLine(OrderLine currentOrderLine, BigDecimal currentAmount,
-      BigDecimal currentqty, BigDecimal oldAmount, BigDecimal oldQuantity) {
+      BigDecimal currentqty, BigDecimal oldAmount, BigDecimal oldQuantity,
+      boolean applyCurrentDelta) {
     BigDecimal serviceQty = currentOrderLine.getOrderedQuantity();
     BigDecimal listPrice = BigDecimal.ZERO;
     Currency currency = currentOrderLine.getCurrency();
@@ -128,13 +132,24 @@ class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
     BigDecimal baseProductPrice = ServicePriceUtils.getProductPrice(
         currentOrderLine.getSalesOrder().getOrderDate(),
         currentOrderLine.getSalesOrder().getPriceList(), currentOrderLine.getProduct());
-    BigDecimal serviceAmount = ServicePriceUtils.getServiceAmount(currentOrderLine,
-        dbAmount.add(currentAmount.subtract(oldAmount))
-            .setScale(currency.getPricePrecision().intValue(), RoundingMode.HALF_UP),
-        null,
-        dbPrice.add(currentPrice.subtract(oldPrice))
-            .setScale(currency.getPricePrecision().intValue(), RoundingMode.HALF_UP),
-        dbQuantity.add(currentqty.subtract(oldQuantity)), null);
+    final BigDecimal serviceLineAmount;
+    final BigDecimal serviceLinePrice;
+    final BigDecimal serviceRelatedQty;
+    if (applyCurrentDelta) {
+      serviceLineAmount = dbAmount.add(currentAmount.subtract(oldAmount))
+          .setScale(currency.getPricePrecision().intValue(), RoundingMode.HALF_UP);
+      serviceLinePrice = dbPrice.add(currentPrice.subtract(oldPrice))
+          .setScale(currency.getPricePrecision().intValue(), RoundingMode.HALF_UP);
+      serviceRelatedQty = dbQuantity.add(currentqty.subtract(oldQuantity));
+    } else {
+      serviceLineAmount = dbAmount.setScale(currency.getPricePrecision().intValue(),
+          RoundingMode.HALF_UP);
+      serviceLinePrice = dbPrice.setScale(currency.getPricePrecision().intValue(),
+          RoundingMode.HALF_UP);
+      serviceRelatedQty = dbQuantity;
+    }
+    BigDecimal serviceAmount = ServicePriceUtils.getServiceAmount(currentOrderLine, serviceLineAmount,
+        null, serviceLinePrice, serviceRelatedQty, null);
     Product service = currentOrderLine.getProduct();
 
     if (ServicePriceUtils.UNIQUE_QUANTITY.equals(service.getQuantityRule())) {
@@ -153,7 +168,7 @@ class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
       // TODO
       // Fix the issue of calling this event handler twice when modifying
       // OrderlineServiceRelation from ServiceOrderLineEventHandler. Investigate why it happens
-      serviceQty = dbQuantity.add(currentqty).subtract(oldQuantity);
+      serviceQty = serviceRelatedQty;
       serviceQty = serviceQty.compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : serviceQty;
     }
     currentOrderLine.setOrderedQuantity(serviceQty);

@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -130,7 +131,7 @@ public class TransactionsDaoTest {
     // Initialize mocks
     mocks = MockitoAnnotations.openMocks(this);
 
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBProvider = mockStatic(OBProvider.class);
     mockedFINUtility = mockStatic(FIN_Utility.class);
     mockedAccDefUtility = mockStatic(AccDefUtility.class);

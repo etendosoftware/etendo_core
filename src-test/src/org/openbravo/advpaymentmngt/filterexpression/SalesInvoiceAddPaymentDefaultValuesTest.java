@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -67,7 +68,7 @@ public class SalesInvoiceAddPaymentDefaultValuesTest extends OBBaseTest {
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockOBContext);
 
     // Set up static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     OBDal mockOBDal = mock(OBDal.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockOBDal);
 

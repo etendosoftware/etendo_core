@@ -25,18 +25,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.core.TriggerHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBDateUtils;
 import org.openbravo.erpCommon.utility.SequenceIdData;
@@ -80,6 +83,12 @@ public class ServicesTest3 extends WeldBaseTest {
   public ServicesTest3() {
   }
 
+  @Override
+  @BeforeEach
+  public void setUp() throws Exception {
+    super.setUp();
+  }
+
   public static final List<ServiceTestData> PARAMS = Arrays.asList(new ServiceTestData9(),
       new ServiceTestData10(), new ServiceTestData11());
 
@@ -99,6 +108,7 @@ public class ServicesTest3 extends WeldBaseTest {
   @MethodSource("serviceParameters")
   public void serviceTest(ServiceTestData parameter) {
     this.parameter = parameter;
+    TriggerHandler.getInstance().clear();
     // Set QA context
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
     String testOrderId = null;
@@ -111,6 +121,8 @@ public class ServicesTest3 extends WeldBaseTest {
       Order order;
       order = OBDal.getInstance().get(Order.class, SALESORDER_ID);
       Order testOrder = (Order) DalUtil.copy(order, false);
+      testOrder.getOrderLineTaxList().clear();
+      testOrder.setOrderLineList(new ArrayList<>());
       testOrderId = testOrder.getId();
       testOrder.setDocumentNo("Service Test " + parameter.getTestNumber());
       testOrder.setBusinessPartner(
@@ -151,8 +163,8 @@ public class ServicesTest3 extends WeldBaseTest {
                           RoundingMode.HALF_UP),
               null, null, null, null);
         } catch (OBException e) {
-          assertEquals("ServicePriceUtils.getServiceAmount not properly handled error",
-              e.getMessage(), parameter.getErrorMessage());
+          assertEquals(parameter.getErrorMessage(), e.getMessage(),
+              "ServicePriceUtils.getServiceAmount not properly handled error");
           error = true;
         }
       }
@@ -162,6 +174,7 @@ public class ServicesTest3 extends WeldBaseTest {
       log.error("Error when executing: " + parameter.getTestDescription(), e);
       assertFalse(true);
     } finally {
+      TriggerHandler.getInstance().clear();
       if (testOrderId != null) {
         System.out.println(testOrderId);
         if (parameter.getTestNumber().equals("BACK-501")) {
@@ -181,6 +194,9 @@ public class ServicesTest3 extends WeldBaseTest {
       BigDecimal _quantity, BigDecimal _price) {
     OrderLine orderLine = sampleOrder.getOrderLineList().get(0);
     OrderLine testOrderLine = (OrderLine) DalUtil.copy(orderLine, false);
+    testOrderLine.getOrderLineTaxList().clear();
+    testOrderLine.getOrderlineServiceRelationList().clear();
+    testOrderLine.getOrderlineServiceRelationCOrderlineRelatedIDList().clear();
     Product product = OBDal.getInstance().get(Product.class, productId);
     testOrderLine.setProduct(product);
     testOrderLine.setUOM(product.getUOM());

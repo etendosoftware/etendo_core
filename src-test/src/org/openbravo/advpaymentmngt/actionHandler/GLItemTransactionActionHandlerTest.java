@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -72,7 +73,7 @@ public class GLItemTransactionActionHandlerTest {
 
     // Setup static mocks - Order is important to avoid conflicts
     mockedOBContext = mockStatic(OBContext.class);
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedMatchingUtility = mockStatic(APRM_MatchingUtility.class);
     mockedFinUtility = mockStatic(FIN_Utility.class);
     mockedOBMessageUtils = mockStatic(OBMessageUtils.class);

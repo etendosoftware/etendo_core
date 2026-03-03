@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.filterexpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,6 +24,8 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.exceptions.base.MockitoException;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.openbravo.advpaymentmngt.TestConstants;
 import org.openbravo.client.application.OBBindingsConstants;
@@ -64,7 +67,7 @@ public class AddOrderOrInvoiceFilterExpressionTest {
   public void setUp() throws Exception {
     requestMap = new HashMap<>();
 
-    obdalMock = mockStatic(OBDal.class);
+    obdalMock = mockStaticSafely(OBDal.class);
     obdalMock.when(OBDal::getInstance).thenReturn(mockOBDal);
     when(mockOBDal.get(eq(FIN_PaymentMethod.class), anyString())).thenReturn(paymentMethod);
 
@@ -86,6 +89,19 @@ public class AddOrderOrInvoiceFilterExpressionTest {
   public void tearDown() {
     if (obdalMock != null) {
       obdalMock.close();
+      obdalMock = null;
+    }
+  }
+
+  private MockedStatic<OBDal> initializeObDalStaticMock() {
+    try {
+      return mockStatic(OBDal.class);
+    } catch (MockitoException e) {
+      if (e.getMessage() != null && e.getMessage().contains("already registered")) {
+        Mockito.framework().clearInlineMocks();
+        return mockStatic(OBDal.class);
+      }
+      throw e;
     }
   }
 

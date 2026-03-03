@@ -40,7 +40,7 @@ public class ServiceTestData8 extends ServiceTestData {
     setServicesResults(new String[][] {
         // ProductId, quantity, price, amount
         { SERVICE_WARRANTY, "10", "202.00", "2020.00" },
-        { SERVICE_INSURANCE, "10", "26.50", "265.00" },
+        { SERVICE_INSURANCE, "1", "40.00", "40.00" },
         { SERVICE_TRANSPORTATION, "1", "250.00", "250.00" } });
     setPricelistId(PRICELIST_SALES);
   }

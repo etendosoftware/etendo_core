@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertEquals;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -67,7 +68,7 @@ public class AddPaymentDisplayLogicActionHandlerTest {
     MockitoAnnotations.openMocks(this);
     actionHandler = new AddPaymentDisplayLogicActionHandler();
 
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBMessageUtils = mockStatic(OBMessageUtils.class);
     mockedDbUtility = mockStatic(DbUtility.class);

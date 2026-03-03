@@ -19,6 +19,8 @@
 package org.openbravo.userinterface.selectors.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -30,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.base.expression.OBScriptEngine;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.OBBindings;
@@ -44,7 +47,6 @@ import org.openbravo.test.base.mock.HttpServletRequestMock;
 public class ExpressionsTest extends WeldBaseTest {
 
   private OBScriptEngine engine;
-  private Object result = null;
   private Logger log = LogManager.getLogger();
 
   private HashMap<String, String> expr = new HashMap<>();
@@ -54,8 +56,28 @@ public class ExpressionsTest extends WeldBaseTest {
    * This before method is named setUpEt() to avoid overwriting the super setUp method that is
    * invoke automatically before this one.
    */
+  @Override
   @BeforeEach
-  public void setUpEt() throws Exception {
+  public void setUp() throws Exception {
+    super.setUp();
+
+    initializeTestData();
+  }
+
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
+    try {
+      initializeTestData();
+    } catch (Exception e) {
+      throw new RuntimeException("Error initializing test data", e);
+    }
+  }
+
+  private void initializeTestData() {
+    expr.clear();
+    bindings.clear();
+
     // Everything runs as System Admin user
     setSystemAdministratorContext();
 
@@ -88,93 +110,69 @@ public class ExpressionsTest extends WeldBaseTest {
 
   }
 
+  private Object evaluateExpression(String expressionKey) {
+    final String expression = expr.get(expressionKey);
+    assertNotNull(expression, "Expression not found for key: " + expressionKey);
+    try {
+      return engine.eval(expression, bindings);
+    } catch (Exception e) {
+      log.error("Error evaluating expression: " + expression, e);
+      fail("Error evaluating expression: " + expression + " -> " + e.getMessage());
+      return null;
+    }
+  }
+
   @Test
   public void testUserName() {
-    final String s = expr.get("Get current user's name");
-    try {
-      result = engine.eval(s, bindings);
-    } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
-    }
-    assertEquals(result.toString(), OBContext.getOBContext().getUser().getName());
+    final Object result = evaluateExpression("Get current user's name");
+    assertEquals(OBContext.getOBContext().getUser().getName(), result.toString());
   }
 
   @Test
   public void testLanguage() {
-    final String s = expr.get("Get current language");
-    try {
-      result = engine.eval(s, bindings);
-    } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
-    }
-    assertEquals(result.toString(), OBContext.getOBContext().getLanguage().getLanguage());
+    final Object result = evaluateExpression("Get current language");
+    assertEquals(OBContext.getOBContext().getLanguage().getLanguage(), result.toString());
   }
 
   @Test
   public void testFormatDate() {
-    final String s = expr.get("Format today's date");
     final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-    try {
-      result = engine.eval(s, bindings);
-    } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
-    }
+    final Object result = evaluateExpression("Format today's date");
     assertEquals(df.format(Calendar.getInstance().getTime()), result);
   }
 
   @Test
   public void testCurrentClientId() {
-    final String s = expr.get("Get current client id");
-    try {
-      result = engine.eval(s, bindings);
-    } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
-    }
+    final Object result = evaluateExpression("Get current client id");
     assertEquals(OBContext.getOBContext().getCurrentClient().getId(), result);
   }
 
   @Test
   public void testParseDate() {
-    final String s = expr.get("Parse date with fixed format");
     final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    final Object result = evaluateExpression("Parse date with fixed format");
     try {
-      result = engine.eval(s, bindings);
       assertEquals(df.parse("1979-04-24"), result);
     } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
+      fail("Error parsing expected date: " + e.getMessage());
     }
   }
 
   @Test
   public void testFormatParsedDate() {
-    final String s = expr.get("Format a parsed date");
-    try {
-      result = engine.eval(s, bindings);
-      assertEquals("04-24-1979", result);
-    } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
-    }
+    final Object result = evaluateExpression("Format a parsed date");
+    assertEquals("04-24-1979", result);
   }
 
   @Test
   public void testCustomerVendorFilter() {
-    final String s = expr.get("Filter by vendor/customer");
-    try {
-      result = engine.eval(s, bindings);
-    } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
-    }
+    final Object result = evaluateExpression("Filter by vendor/customer");
     assertEquals("", result);
   }
 
   @Test
   public void testGetFilterExpression() {
-    final String s = expr.get("Complex expression from Java");
-    try {
-      result = engine.eval(s, bindings);
-    } catch (Exception e) {
-      log.error("Error evaluating expression: " + s, e);
-    }
+    final Object result = evaluateExpression("Complex expression from Java");
     assertEquals("This is a complex expression", result);
   }
 }

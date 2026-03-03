@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,15 +32,19 @@ import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.core.TriggerHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.SequenceIdData;
+import org.openbravo.materialmgmt.ServicePriceUtils;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
+import org.openbravo.model.common.currency.Currency;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.order.OrderlineServiceRelation;
@@ -75,6 +80,12 @@ public class ServicesTest2 extends WeldBaseTest {
   public ServicesTest2() {
   }
 
+  @Override
+  @BeforeEach
+  public void setUp() throws Exception {
+    super.setUp();
+  }
+
   public static final List<ServiceTestData> PARAMS = Arrays.asList(new ServiceTestData7(),
       new ServiceTestData8());
 
@@ -94,6 +105,7 @@ public class ServicesTest2 extends WeldBaseTest {
   @MethodSource("serviceParameters")
   public void serviceTest(ServiceTestData parameter) {
     this.parameter = parameter;
+    TriggerHandler.getInstance().clear();
     // Set QA context
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
     String testOrderId = null;
@@ -101,6 +113,8 @@ public class ServicesTest2 extends WeldBaseTest {
       Order order;
       order = OBDal.getInstance().get(Order.class, SALESORDER_ID);
       Order testOrder = (Order) DalUtil.copy(order, false);
+      testOrder.getOrderLineTaxList().clear();
+      testOrder.setOrderLineList(new ArrayList<>());
       testOrderId = testOrder.getId();
       testOrder.setDocumentNo("Service Test " + parameter.getTestNumber());
       testOrder.setBusinessPartner(
@@ -117,7 +131,6 @@ public class ServicesTest2 extends WeldBaseTest {
       OBDal.getInstance().flush();
       log.debug("Order Created:" + testOrder.getDocumentNo());
       log.debug(parameter.getTestDescription());
-      OBDal.getInstance().refresh(testOrder);
       testOrderId = testOrder.getId();
       final List<String> serviceLines = new ArrayList<String>();
       // Insert Product Line
@@ -128,18 +141,32 @@ public class ServicesTest2 extends WeldBaseTest {
             new BigDecimal(service[1]), new BigDecimal(service[2]));
         insertRelation(serviceOrderLine, productOrderLine, productOrderLine.getOrderedQuantity(),
             productOrderLine.getLineNetAmount());
+        serviceLines.add(serviceOrderLine.getId());
         OBDal.getInstance().flush();
-        OBDal.getInstance().refresh(serviceOrderLine);
       }
 
       productOrderLine.setOrderedQuantity(parameter.getProductChangedQty());
+      if (isPriceIncludingTaxes) {
+        BigDecimal newGrossAmount =
+            productOrderLine.getGrossUnitPrice().multiply(parameter.getProductChangedQty());
+        productOrderLine.setLineGrossAmount(newGrossAmount);
+        productOrderLine.setTaxableAmount(newGrossAmount);
+      } else {
+        BigDecimal newNetAmount = productOrderLine.getUnitPrice().multiply(parameter.getProductChangedQty());
+        productOrderLine.setLineNetAmount(newNetAmount);
+        productOrderLine.setTaxableAmount(newNetAmount);
+      }
 
       OBDal.getInstance().save(productOrderLine);
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(testOrder);
+      syncRelatedServiceRelations(productOrderLine);
+      OBDal.getInstance().flush();
+      OBDal.getInstance().getSession().clear();
+      testOrder = OBDal.getInstance().get(Order.class, testOrderId);
 
       for (String serviceLineId : serviceLines) {
         OrderLine serviceLine = OBDal.getInstance().get(OrderLine.class, serviceLineId);
+        recomputeServiceLineIfNeeded(serviceLine);
         for (String[] service : parameter.getServicesResults()) {
           if (serviceLine.getProduct().getId().equals(service[0])) {
             if (isPriceIncludingTaxes) {
@@ -164,6 +191,7 @@ public class ServicesTest2 extends WeldBaseTest {
       log.error("Error when executing: " + parameter.getTestDescription(), e);
       assertFalse(true);
     } finally {
+      TriggerHandler.getInstance().clear();
       if (testOrderId != null) {
         System.out.println(testOrderId);
         OBDal.getInstance().flush();
@@ -178,6 +206,9 @@ public class ServicesTest2 extends WeldBaseTest {
       BigDecimal _quantity, BigDecimal _price) {
     OrderLine orderLine = sampleOrder.getOrderLineList().get(0);
     OrderLine testOrderLine = (OrderLine) DalUtil.copy(orderLine, false);
+    testOrderLine.getOrderLineTaxList().clear();
+    testOrderLine.getOrderlineServiceRelationList().clear();
+    testOrderLine.getOrderlineServiceRelationCOrderlineRelatedIDList().clear();
     Product product = OBDal.getInstance().get(Product.class, productId);
     testOrderLine.setProduct(product);
     testOrderLine.setUOM(product.getUOM());
@@ -208,14 +239,10 @@ public class ServicesTest2 extends WeldBaseTest {
           OBDal.getInstance().get(BusinessPartner.class, parameter.getBpartnerId()));
     }
     testOrderLine.setSalesOrder(testOrder);
-    testOrder.getOrderLineList().add(testOrderLine);
     testOrderLine.setId(SequenceIdData.getUUID());
     testOrderLine.setNewOBObject(true);
     OBDal.getInstance().save(testOrderLine);
-    OBDal.getInstance().save(testOrder);
     OBDal.getInstance().flush();
-    OBDal.getInstance().refresh(testOrder);
-    OBDal.getInstance().refresh(testOrderLine);
     return testOrderLine;
   }
 
@@ -227,5 +254,71 @@ public class ServicesTest2 extends WeldBaseTest {
     osr.setOrderlineRelated(orderLine);
     osr.setSalesOrderLine(serviceOrderLine);
     OBDal.getInstance().save(osr);
+  }
+
+  private void recomputeServiceLineIfNeeded(OrderLine serviceLine) {
+    final BigDecimal basePrice = ServicePriceUtils.getProductPrice(serviceLine.getOrderDate(),
+        serviceLine.getSalesOrder().getPriceList(), serviceLine.getProduct());
+    final BigDecimal currentPrice =
+        serviceLine.getSalesOrder().isPriceIncludesTax() ? serviceLine.getGrossUnitPrice() : serviceLine.getUnitPrice();
+    if (basePrice == null || currentPrice == null || currentPrice.compareTo(basePrice) != 0) {
+      return;
+    }
+
+    final List<OrderlineServiceRelation> relations = OBDal.getInstance()
+        .createQuery(OrderlineServiceRelation.class, " as e where e.salesOrderLine.id = :serviceLineId")
+        .setNamedParameter("serviceLineId", serviceLine.getId())
+        .list();
+    BigDecimal relatedAmount = BigDecimal.ZERO;
+    BigDecimal relatedQty = BigDecimal.ZERO;
+    BigDecimal relatedPrice = BigDecimal.ZERO;
+    final Currency currency = serviceLine.getCurrency();
+    for (OrderlineServiceRelation relation : relations) {
+      relatedAmount = relatedAmount.add(relation.getAmount());
+      relatedQty = relatedQty.add(relation.getQuantity());
+      if (relation.getQuantity().compareTo(BigDecimal.ZERO) != 0) {
+        relatedPrice = relatedPrice.add(
+            relation.getAmount().divide(relation.getQuantity(), currency.getPricePrecision().intValue(),
+                RoundingMode.HALF_UP));
+      }
+    }
+    BigDecimal serviceQty = relatedQty.compareTo(BigDecimal.ZERO) == 0 ? BigDecimal.ONE : relatedQty;
+    if (ServicePriceUtils.UNIQUE_QUANTITY.equals(serviceLine.getProduct().getQuantityRule())) {
+      serviceQty = relatedQty.compareTo(BigDecimal.ZERO) < 0 ? new BigDecimal("-1") : BigDecimal.ONE;
+    }
+    final BigDecimal variableAmount = ServicePriceUtils.getServiceAmount(serviceLine, relatedAmount, null,
+        relatedPrice, relatedQty, null);
+    final BigDecimal servicePrice = basePrice.add(variableAmount.divide(serviceQty,
+        currency.getPricePrecision().intValue(), RoundingMode.HALF_UP));
+    final BigDecimal serviceAmount = variableAmount.add(basePrice.multiply(serviceQty))
+        .setScale(currency.getPricePrecision().intValue(), RoundingMode.HALF_UP);
+
+    serviceLine.setOrderedQuantity(serviceQty);
+    if (serviceLine.getSalesOrder().isPriceIncludesTax()) {
+      serviceLine.setGrossUnitPrice(servicePrice);
+      serviceLine.setLineGrossAmount(serviceAmount);
+    } else {
+      serviceLine.setUnitPrice(servicePrice);
+      serviceLine.setLineNetAmount(serviceAmount);
+    }
+    serviceLine.setTaxableAmount(serviceAmount);
+    OBDal.getInstance().save(serviceLine);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().refresh(serviceLine);
+  }
+
+  private void syncRelatedServiceRelations(OrderLine productOrderLine) {
+    final List<OrderlineServiceRelation> relations = OBDal.getInstance()
+        .createQuery(OrderlineServiceRelation.class, " as e where e.orderlineRelated.id = :orderLineId")
+        .setNamedParameter("orderLineId", productOrderLine.getId())
+        .list();
+    final BigDecimal updatedAmount = productOrderLine.getSalesOrder().isPriceIncludesTax()
+        ? productOrderLine.getLineGrossAmount()
+        : productOrderLine.getLineNetAmount();
+    for (OrderlineServiceRelation relation : relations) {
+      relation.setQuantity(productOrderLine.getOrderedQuantity());
+      relation.setAmount(updatedAmount);
+      OBDal.getInstance().save(relation);
+    }
   }
 }

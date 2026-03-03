@@ -1,6 +1,7 @@
 package org.openbravo.advpaymentmngt.actionHandler;
 
 import static org.junit.Assert.assertNotNull;
+import static org.openbravo.test.base.mock.MockitoStaticMockUtils.mockStaticSafely;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -68,7 +69,7 @@ public class MatchStatementOnLoadPreferenceActionHandlerTest {
     handler = new MatchStatementOnLoadPreferenceActionHandler();
 
     // Setup static mocks
-    mockedOBDal = mockStatic(OBDal.class);
+    mockedOBDal = mockStaticSafely(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBProvider = mockStatic(OBProvider.class);
 
