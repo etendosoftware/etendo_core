@@ -51,8 +51,7 @@ public class OpenbravoPostgreJDBCDelegateTest {
    */
   @BeforeEach
   public void setUp() throws SQLException {
-    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+    // no-op
   }
 
   /**
@@ -125,6 +124,7 @@ public class OpenbravoPostgreJDBCDelegateTest {
     String instanceId = "instance1";
     long checkInTime = System.currentTimeMillis();
     String status = "STARTED";
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
     when(mockPreparedStatement.executeUpdate()).thenReturn(1);
 
     // WHEN
@@ -149,6 +149,8 @@ public class OpenbravoPostgreJDBCDelegateTest {
   @Test
   public void testSchedulersStartedWithStartedSchedulers() throws SQLException {
     // GIVEN
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
     when(mockResultSet.next()).thenReturn(true);
     when(mockResultSet.getInt(1)).thenReturn(2);
 
@@ -174,6 +176,8 @@ public class OpenbravoPostgreJDBCDelegateTest {
   @Test
   public void testSchedulersStartedWithNoStartedSchedulers() throws SQLException {
     // GIVEN
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
     when(mockResultSet.next()).thenReturn(true);
     when(mockResultSet.getInt(1)).thenReturn(0);
 
@@ -199,6 +203,8 @@ public class OpenbravoPostgreJDBCDelegateTest {
   @Test
   public void testSchedulersStartedNoResults() throws SQLException {
     // GIVEN
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
     when(mockResultSet.next()).thenReturn(false);
 
     // WHEN
