@@ -83,11 +83,12 @@ public class AccessPropagation extends WeldBaseTest {
     Role template = null;
     try {
       OBContext.setAdminMode(true);
-      // Create roles
-      role = RoleInheritanceTestUtils.createRole("role", RoleInheritanceTestUtils.CLIENT_ID,
+      // Create roles with unique names to avoid constraint violations between parameterized runs
+      String suffix = "_" + parameter + "_" + System.nanoTime();
+      role = RoleInheritanceTestUtils.createRole("role" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleId = role.getId();
-      template = RoleInheritanceTestUtils.createRole("template", RoleInheritanceTestUtils.CLIENT_ID,
+      template = RoleInheritanceTestUtils.createRole("template" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String templateId = template.getId();
 

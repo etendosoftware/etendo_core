@@ -151,8 +151,8 @@ public class ServicesTest3 extends WeldBaseTest {
                           RoundingMode.HALF_UP),
               null, null, null, null);
         } catch (OBException e) {
-          assertEquals("ServicePriceUtils.getServiceAmount not properly handled error",
-              e.getMessage(), parameter.getErrorMessage());
+          assertEquals(parameter.getErrorMessage(), e.getMessage(),
+              "ServicePriceUtils.getServiceAmount not properly handled error");
           error = true;
         }
       }
@@ -213,13 +213,13 @@ public class ServicesTest3 extends WeldBaseTest {
     testOrderLine.setSalesOrder(testOrder);
     testOrderLine.setOrderDate(testOrder.getOrderDate());
     testOrder.getOrderLineList().add(testOrderLine);
+    testOrderLine.getOrderLineTaxList().clear();
     testOrderLine.setId(SequenceIdData.getUUID());
     testOrderLine.setNewOBObject(true);
     OBDal.getInstance().save(testOrderLine);
     OBDal.getInstance().save(testOrder);
     OBDal.getInstance().flush();
     OBDal.getInstance().refresh(testOrder);
-    OBDal.getInstance().refresh(testOrderLine);
     return testOrderLine;
   }
 }

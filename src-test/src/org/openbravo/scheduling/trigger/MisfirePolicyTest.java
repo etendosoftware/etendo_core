@@ -210,6 +210,7 @@ public class MisfirePolicyTest extends OBBaseTest {
    */
   @Test
   public void everyNDaysNotExecutedOnMisfire() throws SchedulerException, InterruptedException {
+    startScheduler("non-clustered");
     TriggerData data = new TriggerData();
     data.timingOption = TimingOption.SCHEDULED.getLabel();
     data.frequency = Frequency.DAILY.getLabel();

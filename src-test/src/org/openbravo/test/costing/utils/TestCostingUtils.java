@@ -872,6 +872,7 @@ public class TestCostingUtils {
       BigDecimal price, BigDecimal quantity) {
     try {
       completeDocument(goodsReceipt);
+      OBDal.getInstance().commitAndClose();
       runCostingBackground();
       ShipmentInOut receipt = OBDal.getInstance().get(ShipmentInOut.class, goodsReceipt.getId());
       postDocument(receipt);
@@ -2357,10 +2358,8 @@ public class TestCostingUtils {
       parameters.add(order.getId());
       parameters.add("N");
       final String procedureName = "c_order_post1";
-      CallStoredProcedure.getInstance().call(procedureName, parameters, null, true, false);
+      CallStoredProcedure.getInstance().call(procedureName, parameters, null, false, false);
 
-      OBDal.getInstance().save(order);
-      OBDal.getInstance().flush();
       OBDal.getInstance().refresh(order);
     } catch (Exception e) {
       throw new OBException(e);
@@ -5972,6 +5971,34 @@ public class TestCostingUtils {
       return conn;
     } catch (PoolNotFoundException e) {
       throw new IllegalStateException(e);
+    }
+  }
+
+  /**
+   * Marks all pre-existing unprocessed material transactions as processed and cost-calculated
+   * using a separate connection. This prevents orphaned transactions (e.g. opening inventory
+   * entries for products without cost data) from interfering with CostingBackground during tests.
+   */
+  public static void markPreExistingTransactionsAsProcessed() {
+    ConnectionProvider conn = getConnectionProvider();
+    Connection con = null;
+    try {
+      con = conn.getTransactionConnection();
+      java.sql.PreparedStatement ps = con.prepareStatement(
+          "UPDATE m_transaction SET iscostcalculated = 'Y', isprocessed = 'Y'"
+              + " WHERE iscostcalculated = 'N' OR isprocessed = 'N'");
+      ps.executeUpdate();
+      ps.close();
+      conn.releaseCommitConnection(con);
+    } catch (Exception e) {
+      try {
+        if (con != null) {
+          conn.releaseRollbackConnection(con);
+        }
+      } catch (Exception e2) {
+        // ignore
+      }
+      throw new OBException(e);
     }
   }
 }

@@ -4,32 +4,33 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2015-2018 Openbravo SLU
- * All Rights Reserved. 
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 package org.openbravo.test.role.inheritance;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -37,54 +38,45 @@ import org.openbravo.model.ad.access.Role;
 
 /**
  * Test case for horizontal inheritance
- * 
+ *
  * Role A inherits from T1 (sequence 10), T2 (sequence 20) and T3 (sequence 30)
- * 
+ *
  * T1 Accesses {A3, A4} , T2 Accesses {A1, A2}, T3 Accesses {A0, A2, A3}
- * 
+ *
  * With this settings, Role A Accesses must be {A0(T3), A1(T2), A2(T3), A3(T3), A4(T1)}
- * 
+ *
  * After removing the inheritance of T3, access for Role A must be {A1(T2), A2(T2), A3(T1), A4(T1)}
  */
 public class HorizontalInheritance extends WeldBaseTest {
-  private final List<String> ORGANIZATIONS = Arrays.asList("F&B España - Región Norte",
+  private static final List<String> ORGANIZATIONS = Arrays.asList("F&B España - Región Norte",
       "F&B España - Región Sur", "F&B España, S.A", "F&B International Group", "F&B US East Coast");
-  private final List<String> WINDOWS = Arrays.asList("Business Partner", "Purchase Invoice",
+  private static final List<String> WINDOWS = Arrays.asList("Business Partner", "Purchase Invoice",
       "Purchase Order", "Sales Invoice", "Sales Order");
-  private final List<String> TABS = Arrays.asList("Bank Account", "Basic Discount", "Contact",
+  private static final List<String> TABS = Arrays.asList("Bank Account", "Basic Discount", "Contact",
       "Customer", "Employee");
-  private final List<String> FIELDS = Arrays.asList("Business Partner Category", "Commercial Name",
+  private static final List<String> FIELDS = Arrays.asList("Business Partner Category", "Commercial Name",
       "Credit Line Limit", "Description", "URL");
-  private final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants",
+  private static final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants",
       "Journal Entries Report", "Print orders process", "Set as Ready");
-  private final List<String> FORMS = Arrays.asList("About", "Heartbeat", "Instance Activation", "Logout",
+  private static final List<String> FORMS = Arrays.asList("About", "Heartbeat", "Instance Activation", "Logout",
       "Menu");
-  private final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect",
+  private static final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect",
       "Motion Chart", "Planet", "Twitter");
-  private final List<String> VIEWS = Arrays.asList("OBUIAPP_AlertManagement",
+  private static final List<String> VIEWS = Arrays.asList("OBUIAPP_AlertManagement",
       RoleInheritanceTestUtils.DUMMY_VIEW_IMPL_NAME);
-  private final List<String> PROCESSES = Arrays.asList("Create Purchase Order Lines",
+  private static final List<String> PROCESSES = Arrays.asList("Create Purchase Order Lines",
       "Grant Portal Access", "Manage Variants", "Modify Payment In Plan",
       "Process Cost Adjustment");
-  private final List<String> TABLES = Arrays.asList("AD_User", "C_Order", "FIN_Payment",
+  private static final List<String> TABLES = Arrays.asList("AD_User", "C_Order", "FIN_Payment",
       "M_Warehouse", "OBUIAPP_Note");
-  private final List<String> ALERTS = Arrays.asList("Alert Taxes: Inversión del Sujeto Pasivo",
+  private static final List<String> ALERTS = Arrays.asList("Alert Taxes: Inversión del Sujeto Pasivo",
       "CUSTOMER WITHOUT ACCOUNTING", "Process Execution Failed", "Updates Available",
       "Wrong Purchase Order Payment Plan");
-  private final List<String> PREFERENCES = Arrays.asList("AllowAttachment", "AllowDelete",
+  private static final List<String> PREFERENCES = Arrays.asList("AllowAttachment", "AllowDelete",
       "AllowMultiTab", "OBSERDS_CSVTextEncoding", "StartPage");
 
-  private final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS, FIELDS,
+  private static final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS, FIELDS,
       REPORTS, FORMS, WIDGETS, VIEWS, PROCESSES, TABLES, ALERTS, PREFERENCES);
-  private static int testCounter = 0;
-
-  /** defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<String> parameterValuesRule = new ParameterCdiTestRule<String>(
-      RoleInheritanceTestUtils.ACCESS_NAMES);
-
-  /** this field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest String parameter;
 
   @BeforeEach
   public void createDummyView() {
@@ -99,33 +91,34 @@ public class HorizontalInheritance extends WeldBaseTest {
   /**
    * Test case for horizontal inheritance
    */
-  @Test
-  public void createBasicHorizontalInheritance() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("accessParameters")
+  public void createBasicHorizontalInheritance(String parameter, List<String> accesses) {
     Role template1 = null;
     Role template2 = null;
     Role template3 = null;
     Role inheritedRole = null;
     try {
       OBContext.setAdminMode(true);
-      // Create roles
-      template1 = RoleInheritanceTestUtils.createRole("template1",
+      // Create roles with unique names to avoid constraint violations between parameterized runs
+      String suffix = "_" + parameter + "_" + System.nanoTime();
+      template1 = RoleInheritanceTestUtils.createRole("template1" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template1Id = template1.getId();
-      template2 = RoleInheritanceTestUtils.createRole("template2",
+      template2 = RoleInheritanceTestUtils.createRole("template2" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template2Id = template2.getId();
-      template3 = RoleInheritanceTestUtils.createRole("template3",
+      template3 = RoleInheritanceTestUtils.createRole("template3" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template3Id = template3.getId();
-      inheritedRole = RoleInheritanceTestUtils.createRole("inheritedRole",
+      inheritedRole = RoleInheritanceTestUtils.createRole("inheritedRole" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           false);
       String inheritedRoleId = inheritedRole.getId();
 
-      List<String> accesses = ACCESSES.get(testCounter);
       if (!parameter.equals("VIEW")) {
         RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(3));
         RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(4));
@@ -199,8 +192,6 @@ public class HorizontalInheritance extends WeldBaseTest {
       RoleInheritanceTestUtils.removeAccesses(parameter, inheritedRole);
       OBDal.getInstance().flush();
 
-      testCounter++;
-
     } finally {
       // Delete roles
       RoleInheritanceTestUtils.deleteRole(inheritedRole);
@@ -212,5 +203,11 @@ public class HorizontalInheritance extends WeldBaseTest {
 
       OBContext.restorePreviousMode();
     }
+  }
+
+  private static Stream<Arguments> accessParameters() {
+    return IntStream.range(0, RoleInheritanceTestUtils.ACCESS_NAMES.size())
+        .mapToObj(index -> Arguments.of(RoleInheritanceTestUtils.ACCESS_NAMES.get(index),
+            ACCESSES.get(index)));
   }
 }

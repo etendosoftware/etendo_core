@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
@@ -207,7 +207,7 @@ public class DalComplexQueryRequisitionTest extends OBBaseTest {
     }
   }
 
-  @Ignore("This test has been temporarily disabled.")
+  @Disabled("This test has been temporarily disabled.")
   @Test
   public void _testComplexQueryOne() {
     setTestAdminContext();

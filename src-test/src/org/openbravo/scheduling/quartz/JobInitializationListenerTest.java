@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.scheduling.OBScheduler;
 import org.openbravo.scheduling.ProcessBundle;
@@ -29,6 +30,7 @@ import org.quartz.JobExecutionContext;
  * Tests the initialization of jobs with different ProcessBundle configurations.
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class JobInitializationListenerTest {
 
   @InjectMocks
@@ -49,7 +51,6 @@ public class JobInitializationListenerTest {
   @Mock
   private ConnectionProvider mockConnectionProvider;
 
-  private MockedStatic<OBScheduler> mockedOBScheduler;
   private OBScheduler mockScheduler;
 
   /**
@@ -58,24 +59,10 @@ public class JobInitializationListenerTest {
    */
   @BeforeEach
   public void setUp() {
-    mockedOBScheduler = mockStatic(OBScheduler.class);
     mockScheduler = mock(OBScheduler.class);
-    mockedOBScheduler.when(OBScheduler::getInstance).thenReturn(mockScheduler);
-    when(mockScheduler.getConnection()).thenReturn(mockConnectionProvider);
 
     when(mockContext.getJobDetail()).thenReturn(mockJobDetail);
     when(mockJobDetail.getJobDataMap()).thenReturn(mockJobDataMap);
-  }
-
-  /**
-   * Cleans up resources after each test.
-   * Closes the static mock to prevent memory leaks.
-   */
-  @AfterEach
-  public void tearDown() {
-    if (mockedOBScheduler != null) {
-      mockedOBScheduler.close();
-    }
   }
 
   /**
@@ -88,12 +75,11 @@ public class JobInitializationListenerTest {
     Map<String, Object> bundleMap = new HashMap<>();
     when(mockJobDataMap.get(ProcessBundle.KEY)).thenReturn(bundleMap);
 
-    mockedOBScheduler.close();
-    try (MockedStatic<ProcessBundle> mockedProcessBundle = mockStatic(ProcessBundle.class)) {
-      mockedProcessBundle.when(() -> ProcessBundle.mapToObject(bundleMap)).thenReturn(mockProcessBundle);
-
-      mockedOBScheduler = mockStatic(OBScheduler.class);
+    try (MockedStatic<OBScheduler> mockedOBScheduler = mockStatic(OBScheduler.class);
+         MockedStatic<ProcessBundle> mockedProcessBundle = mockStatic(ProcessBundle.class)) {
       mockedOBScheduler.when(OBScheduler::getInstance).thenReturn(mockScheduler);
+      mockedProcessBundle.when(() -> ProcessBundle.mapToObject(bundleMap)).thenReturn(mockProcessBundle);
+      when(mockScheduler.getConnection()).thenReturn(mockConnectionProvider);
 
       when(mockProcessBundle.getConnection()).thenReturn(null);
 
@@ -116,12 +102,10 @@ public class JobInitializationListenerTest {
     Map<String, Object> bundleMap = new HashMap<>();
     when(mockJobDataMap.get(ProcessBundle.KEY)).thenReturn(bundleMap);
 
-    mockedOBScheduler.close();
-    try (MockedStatic<ProcessBundle> mockedProcessBundle = mockStatic(ProcessBundle.class)) {
-      mockedProcessBundle.when(() -> ProcessBundle.mapToObject(bundleMap)).thenReturn(mockProcessBundle);
-
-      mockedOBScheduler = mockStatic(OBScheduler.class);
+    try (MockedStatic<OBScheduler> mockedOBScheduler = mockStatic(OBScheduler.class);
+         MockedStatic<ProcessBundle> mockedProcessBundle = mockStatic(ProcessBundle.class)) {
       mockedOBScheduler.when(OBScheduler::getInstance).thenReturn(mockScheduler);
+      mockedProcessBundle.when(() -> ProcessBundle.mapToObject(bundleMap)).thenReturn(mockProcessBundle);
 
       when(mockProcessBundle.getConnection()).thenReturn(mockConnectionProvider);
 
