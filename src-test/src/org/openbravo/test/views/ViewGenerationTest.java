@@ -24,7 +24,7 @@ import java.util.Map;
 
 import jakarta.inject.Inject;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.ViewComponent;
 import org.openbravo.test.base.mock.HttpServletRequestMock;
@@ -37,8 +37,9 @@ public abstract class ViewGenerationTest extends WeldBaseTest {
   @Inject
   private ViewComponent vc;
 
-  @BeforeEach
-  public void setRequestContext() {
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
     HttpServletRequestMock.setRequestMockInRequestContext();
   }
 

@@ -791,7 +791,7 @@ public class TaxesTest extends OBBaseTest {
 
   private void testOrder(Order testOrder, boolean isCompleted, boolean isUpdated) {
 
-    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel;
+    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel && !isCompleted;
     int stdPrecision = testOrder.getCurrency().getStandardPrecision().intValue();
 
     // Assert line taxes and amounts
@@ -967,7 +967,7 @@ public class TaxesTest extends OBBaseTest {
 
   private void testInvoice(Invoice testInvoice, boolean isCompleted, boolean isUpdated) {
 
-    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel;
+    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel && !isCompleted;
     int stdPrecision = testInvoice.getCurrency().getStandardPrecision().intValue();
 
     // Assert line taxes and amounts

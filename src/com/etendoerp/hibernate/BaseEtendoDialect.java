@@ -267,9 +267,9 @@ public abstract class BaseEtendoDialect {
         functionContributions.getFunctionRegistry(),
         "to_timestamp",
         FunctionKind.NORMAL,
-        "to_timestamp()"
+        "to_timestamp(?1, ?2)"
     );
-    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.NO_ARGS);
+    patternFunctionDescriptorBuilder.setArgumentsValidator(StandardArgumentsValidators.exactly(2));
     patternFunctionDescriptorBuilder.setReturnTypeResolver(FunctionReturnType.TIMESTAMP_RETURN_TYPE).register();
   }
 
