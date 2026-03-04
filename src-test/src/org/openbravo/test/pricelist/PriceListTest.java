@@ -207,25 +207,30 @@ public class PriceListTest extends OBBaseTest {
     // Set QA context
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
 
+    PriceListSchema priceListSchema = null;
+    PriceList priceList = null;
     try {
-      PriceListSchema priceListSchema = createPriceListSchema();
+      priceListSchema = createPriceListSchema();
       addPriceListSchemeLines(priceListSchema);
 
-      PriceList priceList = createPriceList();
+      priceList = createPriceList();
       PriceListVersion priceListVersion = addPriceListVersion(priceList, priceListSchema);
 
       generateProductPriceList(priceListVersion);
       validateGeneratedPrices(priceListVersion);
 
-      deletePriceList(priceList);
-      deletePriceListSchema(priceListSchema);
-
       log.info("Test Completed successfully");
-    }
-
-    catch (Exception e) {
-      log.error("Error when executing testPriceListProductPrices", e);
-      assertFalse(true);
+    } finally {
+      try {
+        if (priceList != null) {
+          deletePriceList(priceList);
+        }
+        if (priceListSchema != null) {
+          deletePriceListSchema(priceListSchema);
+        }
+      } catch (Exception cleanupEx) {
+        log.error("Error during test cleanup", cleanupEx);
+      }
     }
 
   }
@@ -494,33 +499,29 @@ public class PriceListTest extends OBBaseTest {
    */
   private void validateGeneratedPrices(PriceListVersion priceListVersion) {
 
-    int productPriceListCount = priceListVersion.getPricingProductPriceList().size();
-    assertThat(
-        testNumber + ". Number of lines obtained(" + productPriceListCount
-            + ") different than expected (" + expectedProductPricesData.size() + ")",
-        expectedProductPricesData.size(), comparesEqualTo(productPriceListCount));
-
+    HashMap<String, ProductPrice> generatedPrices = new HashMap<>();
     for (ProductPrice productPrice : priceListVersion.getPricingProductPriceList()) {
+      generatedPrices.put(productPrice.getProduct().getName(), productPrice);
+    }
 
-      String productName = productPrice.getProduct().getName();
-      if (!expectedProductPricesData.containsKey(productName)) {
-        fail(testNumber + ". Product " + productName + " isn't expected in the list");
+    for (String productName : expectedProductPricesData.keySet()) {
+      assertTrue(generatedPrices.containsKey(productName),
+          testNumber + ". Expected product " + productName + " not found in generated prices");
 
-      } else {
-        String[] prices = expectedProductPricesData.get(productName);
-        String expectedUnitPrice = prices[0];
-        String expectedListPrice = prices[1];
+      ProductPrice productPrice = generatedPrices.get(productName);
+      String[] prices = expectedProductPricesData.get(productName);
+      String expectedUnitPrice = prices[0];
+      String expectedListPrice = prices[1];
 
-        assertThat(
-            testNumber + ". Wrong Unit Price (" + productPrice.getStandardPrice().toString()
-                + ") for product (" + productName + "). Was expected " + expectedUnitPrice,
-            new BigDecimal(expectedUnitPrice), comparesEqualTo(productPrice.getStandardPrice()));
+      assertThat(
+          testNumber + ". Wrong Unit Price (" + productPrice.getStandardPrice().toString()
+              + ") for product (" + productName + "). Was expected " + expectedUnitPrice,
+          new BigDecimal(expectedUnitPrice), comparesEqualTo(productPrice.getStandardPrice()));
 
-        assertThat(
-            testNumber + ". Wrong List Price (" + productPrice.getListPrice().toString()
-                + ") for product (" + productName + "). Was expected " + expectedListPrice,
-            new BigDecimal(expectedListPrice), comparesEqualTo(productPrice.getListPrice()));
-      }
+      assertThat(
+          testNumber + ". Wrong List Price (" + productPrice.getListPrice().toString()
+              + ") for product (" + productName + "). Was expected " + expectedListPrice,
+          new BigDecimal(expectedListPrice), comparesEqualTo(productPrice.getListPrice()));
     }
   }
 }

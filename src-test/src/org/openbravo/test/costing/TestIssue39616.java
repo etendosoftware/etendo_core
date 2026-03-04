@@ -22,9 +22,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -37,7 +37,7 @@ import org.openbravo.test.costing.assertclass.CostAdjustmentAssert;
 import org.openbravo.test.costing.utils.TestCostingConstants;
 import org.openbravo.test.costing.utils.TestCostingUtils;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestIssue39616 extends TestCostingBase {
 
   /**

@@ -19,11 +19,11 @@
 
 package org.openbravo.test.costing.utils;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -68,6 +68,7 @@ import org.openbravo.dal.service.OBQuery;
 import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.database.ConnectionProviderImpl;
+import org.openbravo.erpCommon.utility.OBError;
 import org.openbravo.erpCommon.ad_forms.AcctServer;
 import org.openbravo.erpCommon.ad_process.VerifyBOM;
 import org.openbravo.erpCommon.businessUtility.Preferences;
@@ -102,6 +103,7 @@ import org.openbravo.model.financialmgmt.accounting.coa.ElementValue;
 import org.openbravo.model.financialmgmt.calendar.Period;
 import org.openbravo.model.financialmgmt.gl.GLItem;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
+import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.model.materialmgmt.cost.CostAdjustment;
 import org.openbravo.model.materialmgmt.cost.CostAdjustmentLine;
 import org.openbravo.model.materialmgmt.cost.Costing;
@@ -3859,6 +3861,18 @@ public class TestCostingUtils {
   public static void validateCostingRule(String costingRuleId) {
     try {
       OBDal.getInstance().commitAndClose();
+
+      // Re-establish OBContext to ensure a clean session state before validation.
+      // After commitAndClose(), the previous session is gone. Re-setting the context
+      // ensures that readable clients/orgs are properly initialized for the new session
+      // that CostingRuleProcess will open.
+      OBContext currentCtx = OBContext.getOBContext();
+      OBContext.setOBContext(currentCtx.getUser().getId(),
+          currentCtx.getRole().getId(),
+          currentCtx.getCurrentClient().getId(),
+          currentCtx.getCurrentOrganization().getId(),
+          currentCtx.getLanguage().getLanguage());
+
       VariablesSecureApp vars = null;
       vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
           OBContext.getOBContext().getCurrentClient().getId(),
@@ -3872,6 +3886,19 @@ public class TestCostingUtils {
       parameters.put("M_Costing_Rule_ID", costingRuleId);
       pb.setParams(parameters);
       new CostingRuleProcess().execute(pb);
+
+      // Verify the costing rule was actually validated. CostingRuleProcess catches
+      // exceptions internally and does not re-throw, so we must check explicitly.
+      OBDal.getInstance().commitAndClose();
+      CostingRule rule = OBDal.getInstance().get(CostingRule.class, costingRuleId);
+      if (!rule.isValidated()) {
+        OBError result = (OBError) pb.getResult();
+        String errorMsg = result != null ? result.getMessage() : "unknown error";
+        throw new OBException(
+            "CostingRuleProcess failed to validate costing rule. Error: " + errorMsg);
+      }
+    } catch (OBException e) {
+      throw e;
     } catch (Exception e) {
       throw new OBException(e);
     }
@@ -5971,6 +5998,61 @@ public class TestCostingUtils {
       return conn;
     } catch (PoolNotFoundException e) {
       throw new IllegalStateException(e);
+    }
+  }
+
+  /**
+   * Un-validates all existing validated costing rules via JDBC. This ensures that when a new
+   * costing rule is validated, CostingRuleProcess does not find a previous rule and therefore
+   * skips the transition logic (closing/opening inventories) that can fail for products
+   * without average cost data.
+   */
+  public static void unvalidateExistingCostingRules() {
+    ConnectionProvider conn = getConnectionProvider();
+    Connection con = null;
+    try {
+      con = conn.getTransactionConnection();
+      java.sql.PreparedStatement ps = con.prepareStatement(
+          "UPDATE m_costing_rule SET isvalidated = 'N' WHERE isvalidated = 'Y'");
+      ps.executeUpdate();
+      ps.close();
+      conn.releaseCommitConnection(con);
+    } catch (Exception e) {
+      try {
+        if (con != null) {
+          conn.releaseRollbackConnection(con);
+        }
+      } catch (Exception e2) {
+        // ignore
+      }
+      throw new OBException(e);
+    }
+  }
+
+  /**
+   * Resets isCostCalculated to 'N' for all transactions via JDBC. This is needed so that
+   * CostingRuleProcess's checkNoTrxWithCostCalculated() check passes when validating a new
+   * costing rule without a previous rule.
+   */
+  public static void resetTransactionsCostCalculated() {
+    ConnectionProvider conn = getConnectionProvider();
+    Connection con = null;
+    try {
+      con = conn.getTransactionConnection();
+      java.sql.PreparedStatement ps = con.prepareStatement(
+          "UPDATE m_transaction SET iscostcalculated = 'N'");
+      ps.executeUpdate();
+      ps.close();
+      conn.releaseCommitConnection(con);
+    } catch (Exception e) {
+      try {
+        if (con != null) {
+          conn.releaseRollbackConnection(con);
+        }
+      } catch (Exception e2) {
+        // ignore
+      }
+      throw new OBException(e);
     }
   }
 

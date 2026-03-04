@@ -63,6 +63,8 @@ public class ProductStatusTest extends OBBaseTest {
   public static void executeAfterTests() {
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORGANIZATION_ID);
     setProductStatus(COSTING_PRODUCT_1, null);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().commitAndClose();
   }
 
   private Order createOrder(int testNum) {
@@ -124,6 +126,7 @@ public class ProductStatusTest extends OBBaseTest {
     } catch (Exception e) {
       success = e.getMessage().contains(LOCKED_ERROR);
     } finally {
+      OBDal.getInstance().rollbackAndClose();
       assertThat("The product costing Product 1 cannot be sold (locked)", success, equalTo(true));
       OBContext.restorePreviousMode();
     }
@@ -150,6 +153,7 @@ public class ProductStatusTest extends OBBaseTest {
     } catch (Exception e) {
       success = e.getMessage().contains(DISCONTINUED_ERROR);
     } finally {
+      OBDal.getInstance().rollbackAndClose();
       assertThat("The product costing Product 1 cannot be sold (not stock)", success,
           equalTo(true));
       OBContext.restorePreviousMode();
@@ -182,6 +186,7 @@ public class ProductStatusTest extends OBBaseTest {
     } catch (Exception e) {
       success = false;
     } finally {
+      OBDal.getInstance().rollbackAndClose();
       assertThat("The product costing Product 1 can be sold (with stock)", success, equalTo(true));
       OBContext.restorePreviousMode();
     }
@@ -199,6 +204,7 @@ public class ProductStatusTest extends OBBaseTest {
     } catch (Exception e) {
       success = false;
     } finally {
+      OBDal.getInstance().rollbackAndClose();
       assertThat(
           "The product costing Product 1 can be sold without a locked or discontinued status",
           success, equalTo(true));
@@ -217,6 +223,7 @@ public class ProductStatusTest extends OBBaseTest {
     } catch (Exception e) {
       success = false;
     } finally {
+      OBDal.getInstance().rollbackAndClose();
       assertThat("The product costing Product 1 can be sold without any status", success,
           equalTo(true));
       OBContext.restorePreviousMode();
