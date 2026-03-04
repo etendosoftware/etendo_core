@@ -25,6 +25,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import jakarta.inject.Inject;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -32,6 +35,7 @@ import org.openbravo.client.application.CachedPreference;
 import org.openbravo.client.application.DynamicExpressionParser;
 import org.openbravo.client.application.window.OBViewFieldHandler;
 import org.openbravo.client.application.window.OBViewFieldHandler.OBViewField;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.ui.Tab;
 
@@ -42,7 +46,9 @@ import org.openbravo.model.ad.ui.Tab;
  *
  */
 public class DisplayLogicAtServerLevelTest extends WeldBaseTest {
+  @Inject
   private CachedPreference cachedPreference;
+
   private Tab tab;
   private OBViewField field;
 
@@ -52,14 +58,22 @@ public class DisplayLogicAtServerLevelTest extends WeldBaseTest {
   @BeforeEach
   public void initializeTest() {
     setSystemAdministratorContext();
+    OBContext.setAdminMode(true);
+  }
 
-    cachedPreference = org.openbravo.base.weld.WeldUtils
-        .getInstanceFromStaticBeanManager(CachedPreference.class);
-    tab = OBDal.getInstance().get(Tab.class, "270");
+  @AfterEach
+  public void cleanUpTest() {
+    OBContext.restorePreviousMode();
+  }
 
-    OBViewFieldHandler handler = new OBViewFieldHandler();
-    handler.setTab(tab);
-    field = handler.new OBViewField();
+  private OBViewField getField() {
+    if (field == null) {
+      tab = OBDal.getInstance().get(Tab.class, "270");
+      OBViewFieldHandler handler = new OBViewFieldHandler();
+      handler.setTab(tab);
+      field = handler.new OBViewField();
+    }
+    return field;
   }
 
   /**
@@ -142,14 +156,14 @@ public class DisplayLogicAtServerLevelTest extends WeldBaseTest {
 
   private void testEvaluationOfDisplayLogic(String displayLogicEvaluatedInServerExpression,
       boolean expectedEvaluatedDisplayLogic) {
-    Class<?> clazz = field.getClass();
+    Class<?> clazz = getField().getClass();
     Method evaluateDisplayLogicAtServerLevel;
     try {
       evaluateDisplayLogicAtServerLevel = clazz
           .getDeclaredMethod("evaluateDisplayLogicAtServerLevel", String.class, String.class);
-      boolean originallyAccessible = evaluateDisplayLogicAtServerLevel.canAccess(field);
+      boolean originallyAccessible = evaluateDisplayLogicAtServerLevel.canAccess(getField());
       evaluateDisplayLogicAtServerLevel.setAccessible(true);
-      boolean evaluatedDisplayLogic = (boolean) evaluateDisplayLogicAtServerLevel.invoke(field,
+      boolean evaluatedDisplayLogic = (boolean) evaluateDisplayLogicAtServerLevel.invoke(getField(),
           displayLogicEvaluatedInServerExpression, "0");
       evaluateDisplayLogicAtServerLevel.setAccessible(originallyAccessible);
       assertThat(

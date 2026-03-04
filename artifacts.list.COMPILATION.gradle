@@ -115,6 +115,8 @@ List<String> _dependenciesListCOMPILATION = [
 
   // Template and Scripting Engines
   'org.freemarker:freemarker:2.3.34',
+  'org.mozilla:rhino:1.7.14',
+  'org.mozilla:rhino-engine:1.7.14',
 
   // Scheduling and Distributed Systems
   'org.quartz-scheduler:quartz:2.3.2',

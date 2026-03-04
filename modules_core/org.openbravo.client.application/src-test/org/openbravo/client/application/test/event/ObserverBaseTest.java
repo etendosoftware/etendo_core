@@ -27,8 +27,7 @@ package org.openbravo.client.application.test.event;
  */
 
 
-import org.junit.AfterClass;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.Note;
@@ -48,17 +47,14 @@ public class ObserverBaseTest extends WeldBaseTest {
 
   protected static ObserverExecutionType observerExecutionType = ObserverExecutionType.OFF;
 
-  @AfterClass
+  @AfterAll
   public static void reset() {
     observerExecutionType = ObserverExecutionType.OFF;
   }
 
-  @Before
-  @Override
-  public void setUp() throws Exception {
+  protected void resetObservers() {
     OrderTestObserver.resetExecutionCount();
     OrderLineTestObserver.resetExecutionCount();
-    super.setUp();
     OrderTestObserver.refreshObservedEntities();
     OrderLineTestObserver.refreshObservedEntities();
   }

@@ -6,7 +6,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -18,14 +18,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
-import org.openbravo.dal.service.Restrictions;
 import org.openbravo.database.ConnectionProvider;
-import org.openbravo.model.ad.ui.Process;
 import org.openbravo.model.ad.ui.ProcessGroupList;
 import org.openbravo.model.ad.ui.ProcessRequest;
 import org.openbravo.model.ad.ui.ProcessRun;
@@ -91,7 +91,7 @@ public class ProcessGroupTest {
 
       when(mockOBDal.createCriteria(ProcessGroupList.class)).thenReturn(mockCriteria);
 
-      when(mockCriteria.add(Restrictions.eq(any(), any()))).thenReturn(mockCriteria);
+      when(mockCriteria.add(any())).thenReturn(mockCriteria);
       when(mockCriteria.addOrderBy(any(), anyBoolean())).thenReturn(mockCriteria);
     } catch (Exception e) {
       closeStaticMocks();
@@ -157,18 +157,14 @@ public class ProcessGroupTest {
     // GIVEN
     List<ProcessGroupList> mockProcessList = new ArrayList<>();
     ProcessGroupList mockProcessGroupList = mock(ProcessGroupList.class);
-    Process mockProcess = mock(Process.class);
     mockProcessList.add(mockProcessGroupList);
 
+    when(mockCriteria.list()).thenReturn(mockProcessList);
 
-    GroupInfo mockGroupInfo = mock(GroupInfo.class);
-
-    try (MockedStatic<GroupInfo> mockedGroupInfo = mockStatic(GroupInfo.class)) {
-      mockedGroupInfo.when(
-          () -> new GroupInfo(any(org.openbravo.model.ad.ui.ProcessGroup.class), any(ProcessRequest.class),
-              any(ProcessRun.class), anyList(), anyBoolean(), any(VariablesSecureApp.class),
-              any(ConnectionProvider.class))).thenReturn(mockGroupInfo);
-
+    try (MockedConstruction<GroupInfo> ignored = Mockito.mockConstruction(GroupInfo.class,
+        (mock, context) -> {
+          doThrow(new RuntimeException("Group execution error")).when(mock).executeNextProcess();
+        })) {
       // WHEN
       assertThrows(RuntimeException.class, () -> processGroup.doExecute(mockBundle));
     }

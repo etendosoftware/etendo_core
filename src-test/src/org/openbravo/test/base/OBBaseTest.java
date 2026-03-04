@@ -124,11 +124,15 @@ public class OBBaseTest {
     if (!disabledTestCase) {
       log.info("*** Starting test case: " + getTestName(context));
     }
-    
-    // Ensure OBContext is set if setUp() wasn't called (shouldn't happen in normal flow)
+
+    // Ensure setUp() logic runs even if @BeforeEach wasn't called
+    // (e.g., Arquillian JUnit 5 may skip @BeforeEach methods)
+    ensureDalInitialized();
     if (OBContext.getOBContext() == null) {
-      log.warn("OBContext was null before test execution, initializing it now");
       setTestUserContext();
+    }
+    if (shouldMockServletContext() && DalContextListener.getServletContext() == null) {
+      setMockServletContext();
     }
   }
 

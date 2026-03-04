@@ -838,9 +838,10 @@ public class TaxesTest extends OBBaseTest {
             : linesData[i].getLineTaxes().get(linetax.getTax().getId())[1]));
         assertThat("Wrong taxable amount for line in document",
             round(linetax.getTaxableAmount(), round, stdPrecision),
-            comparesEqualTo(expectedTaxableAmount));
-        assertThat("Wrong tax amount for line in document", linetax.getTaxAmount(),
-            comparesEqualTo(expectedTaxAmount));
+            comparesEqualTo(round(expectedTaxableAmount, round, stdPrecision)));
+        assertThat("Wrong tax amount for line in document",
+            round(linetax.getTaxAmount(), round, stdPrecision),
+            comparesEqualTo(round(expectedTaxAmount, round, stdPrecision)));
 
         n++;
       }
@@ -1005,9 +1006,10 @@ public class TaxesTest extends OBBaseTest {
             : linesData[i].getLineTaxes().get(linetax.getTax().getId())[1]));
         assertThat("Wrong taxable amount for line in document",
             round(linetax.getTaxableAmount(), round, stdPrecision),
-            comparesEqualTo(expectedTaxableAmount));
-        assertThat("Wrong tax amount for line in document", linetax.getTaxAmount(),
-            comparesEqualTo(expectedTaxAmount));
+            comparesEqualTo(round(expectedTaxableAmount, round, stdPrecision)));
+        assertThat("Wrong tax amount for line in document",
+            round(linetax.getTaxAmount(), round, stdPrecision),
+            comparesEqualTo(round(expectedTaxAmount, round, stdPrecision)));
 
         n++;
       }

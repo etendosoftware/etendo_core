@@ -18,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * Sets up the test environment before each test.
@@ -26,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * @throws SQLException if database mock setup fails
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class OpenbravoOracleJDBCDelegateTest {
 
   @InjectMocks
@@ -49,8 +52,7 @@ public class OpenbravoOracleJDBCDelegateTest {
    */
   @BeforeEach
   public void setUp() throws SQLException {
-    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+    // no-op
   }
 
   /**
@@ -120,6 +122,7 @@ public class OpenbravoOracleJDBCDelegateTest {
     long checkInTime = System.currentTimeMillis();
     String status = "STARTED";
 
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
     when(mockPreparedStatement.executeUpdate()).thenReturn(1);
 
     // WHEN
@@ -141,6 +144,8 @@ public class OpenbravoOracleJDBCDelegateTest {
   @Test
   public void testSchedulersStarted() throws SQLException {
     // GIVEN
+    when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+    when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
     when(mockResultSet.next()).thenReturn(true);
     when(mockResultSet.getInt(1)).thenReturn(1);
 

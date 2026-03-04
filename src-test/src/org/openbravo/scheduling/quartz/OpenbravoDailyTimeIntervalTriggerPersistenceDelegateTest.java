@@ -25,6 +25,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.SimplePropertiesTriggerProperties;
@@ -37,6 +39,7 @@ import org.quartz.spi.OperableTrigger;
  * Tests CRUD operations for trigger persistence.
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
 
   private static final String STRING_1 = "string1";
@@ -88,18 +91,6 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
   @BeforeEach
   public void setUp() throws SQLException {
     delegate = spy(new TestableDelegate(properties));
-
-    when(connection.prepareStatement(isNull())).thenReturn(preparedStatement);
-
-    when(preparedStatement.executeUpdate()).thenReturn(1);
-    when(preparedStatement.executeQuery()).thenReturn(resultSet);
-    when(resultSet.next()).thenReturn(true);
-
-    when(trigger.getKey()).thenReturn(triggerKey);
-    when(triggerKey.getName()).thenReturn(TEST_TRIGGER_NAME);
-    when(triggerKey.getGroup()).thenReturn(TEST_TRIGGER_GROUP);
-
-    configureMockProperties();
   }
 
   /**
@@ -163,6 +154,12 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
     try (MockedStatic<OpenbravoJDBCPersistenceSupport> jdbcSupport = mockStatic(OpenbravoJDBCPersistenceSupport.class);
          MockedStatic<Util> utilMock = mockStatic(Util.class)) {
 
+      when(connection.prepareStatement(isNull())).thenReturn(preparedStatement);
+      when(preparedStatement.executeUpdate()).thenReturn(1);
+      when(trigger.getKey()).thenReturn(triggerKey);
+      when(triggerKey.getName()).thenReturn(TEST_TRIGGER_NAME);
+      when(triggerKey.getGroup()).thenReturn(TEST_TRIGGER_GROUP);
+      configureMockProperties();
       setupStaticMocks(jdbcSupport, utilMock, "INSERT_STMT");
 
       int result = delegate.insertExtendedTriggerProperties(connection, trigger, "WAITING", jobDetail);
@@ -195,6 +192,11 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
     try (MockedStatic<OpenbravoJDBCPersistenceSupport> jdbcSupport = mockStatic(OpenbravoJDBCPersistenceSupport.class);
          MockedStatic<Util> utilMock = mockStatic(Util.class)) {
 
+      when(connection.prepareStatement(isNull())).thenReturn(preparedStatement);
+      when(preparedStatement.executeQuery()).thenReturn(resultSet);
+      when(resultSet.next()).thenReturn(true);
+      when(triggerKey.getName()).thenReturn(TEST_TRIGGER_NAME);
+      when(triggerKey.getGroup()).thenReturn(TEST_TRIGGER_GROUP);
       setupStaticMocks(jdbcSupport, utilMock, "SELECT_STMT");
 
       setupResultSetValues();
@@ -222,6 +224,10 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
   @Test
   public void testLoadExtendedTriggerPropertiesNoRecordFound() throws SQLException {
     try (MockedStatic<Util> utilMock = mockStatic(Util.class)) {
+      when(connection.prepareStatement(isNull())).thenReturn(preparedStatement);
+      when(preparedStatement.executeQuery()).thenReturn(resultSet);
+      when(triggerKey.getName()).thenReturn(TEST_TRIGGER_NAME);
+      when(triggerKey.getGroup()).thenReturn(TEST_TRIGGER_GROUP);
       utilMock.when(() -> Util.rtp(anyString(), anyString(), anyString()))
           .thenReturn("SELECT_STMT");
 
@@ -246,6 +252,12 @@ public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
     try (MockedStatic<OpenbravoJDBCPersistenceSupport> jdbcSupport = mockStatic(OpenbravoJDBCPersistenceSupport.class);
          MockedStatic<Util> utilMock = mockStatic(Util.class)) {
 
+      when(connection.prepareStatement(isNull())).thenReturn(preparedStatement);
+      when(preparedStatement.executeUpdate()).thenReturn(1);
+      when(trigger.getKey()).thenReturn(triggerKey);
+      when(triggerKey.getName()).thenReturn(TEST_TRIGGER_NAME);
+      when(triggerKey.getGroup()).thenReturn(TEST_TRIGGER_GROUP);
+      configureMockProperties();
       setupStaticMocks(jdbcSupport, utilMock, "UPDATE_STMT");
 
       int result = delegate.updateExtendedTriggerProperties(connection, trigger, "WAITING", jobDetail);

@@ -17,7 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
-import org.openbravo.client.kernel.RequestContext;
+import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.core.TriggerHandler;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -150,8 +151,12 @@ public class PurchaseOrderStatus extends WeldBaseTest {
   private void processOrder(Order order, String docAction) {
     var processor = weldUtils.getInstance(ProcessOrderUtil.class);
 
-    processor.process(order.getId(), docAction, RequestContext.get().getVariablesSecureApp(),
-        new DalConnectionProvider(false));
+    VariablesSecureApp vsa = new VariablesSecureApp(
+        OBContext.getOBContext().getUser().getId(),
+        OBContext.getOBContext().getCurrentClient().getId(),
+        OBContext.getOBContext().getCurrentOrganization().getId(),
+        OBContext.getOBContext().getRole().getId());
+    processor.process(order.getId(), docAction, vsa, new DalConnectionProvider(false));
   }
 
   /**
@@ -282,9 +287,15 @@ public class PurchaseOrderStatus extends WeldBaseTest {
 
       processOrder(purchaseOrder, PurchaseOrderUtils.REACTIVATE);
 
-      OBDal.getInstance().remove(purchaseOrder);
-      OBDal.getInstance().flush();
+      // Commit and re-read to get fresh state after stored procedure execution
       OBDal.getInstance().commitAndClose();
+      purchaseOrder = OBDal.getInstance().get(Order.class, purchaseOrder.getId());
+
+      if (purchaseOrder != null) {
+        OBDal.getInstance().remove(purchaseOrder);
+        OBDal.getInstance().flush();
+        OBDal.getInstance().commitAndClose();
+      }
 
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();

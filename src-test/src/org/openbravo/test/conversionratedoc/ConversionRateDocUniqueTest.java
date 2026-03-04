@@ -19,14 +19,16 @@
 
 package org.openbravo.test.conversionratedoc;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.math.BigDecimal;
 
 import jakarta.persistence.PersistenceException;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.currency.ConversionRateDoc;
@@ -36,7 +38,7 @@ import org.openbravo.test.base.OBBaseTest;
 /**
  * It centralizes the logic for C_CONVERSION_RATE_DOCUMENT.C_CONVERSIONRATEDOC_UN unique index
  * constraint.
- * 
+ *
  * It tries to create two similar conversion rates with the same currencies, and verifies it fails.
  * It also creates two conversion rates with different currencies and verifies it allows it.
  */
@@ -48,13 +50,13 @@ public abstract class ConversionRateDocUniqueTest extends OBBaseTest {
 
   protected abstract String getDocumentId();
 
-  @Before
+  @BeforeEach
   public void unpostDocuments() {
     setPosted("N");
     OBDal.getInstance().flush();
   }
 
-  @After
+  @AfterEach
   public void postDocuments() {
     OBDal.getInstance().rollbackAndClose();
   }
@@ -83,13 +85,15 @@ public abstract class ConversionRateDocUniqueTest extends OBBaseTest {
     OBDal.getInstance().flush();
   }
 
-  @Test(expected = PersistenceException.class)
+  @Test
   @Order(2)
   public void testTwoConversionsForTheSameCurrenciesAndDocIsNotAllowed() {
-    createDummyConversionRate(getPropertyName(), getDocumentId(), "100", "102",
-        new BigDecimal("1.25"));
-    createDummyConversionRate(getPropertyName(), getDocumentId(), "100", "102",
-        new BigDecimal("1.50"));
-    OBDal.getInstance().flush();
+    assertThrows(PersistenceException.class, () -> {
+      createDummyConversionRate(getPropertyName(), getDocumentId(), "100", "102",
+          new BigDecimal("1.25"));
+      createDummyConversionRate(getPropertyName(), getDocumentId(), "100", "102",
+          new BigDecimal("1.50"));
+      OBDal.getInstance().flush();
+    });
   }
 }
