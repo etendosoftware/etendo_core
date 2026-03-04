@@ -30,6 +30,7 @@ import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.weld.WeldUtils;
 import org.openbravo.base.weld.test.WeldBaseTest;
+import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.application.window.ApplicationDictionaryCachedStructures;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.common.hooks.PrintControllerHook;
@@ -112,6 +113,7 @@ public class PrintControllerHookTest extends WeldBaseTest {
    * are executed correctly.
    */
   MockedStatic<WeldUtils> weldUtilsMock;
+  MockedStatic<ReportingUtils> reportingUtilsMock;
   @Spy
   private Instance<PrintControllerHook> hooksInstancesMock;
   @Mock
@@ -144,6 +146,11 @@ public class PrintControllerHookTest extends WeldBaseTest {
     super.setUp();
     MockitoAnnotations.openMocks(this);
     weldUtilsMock = Mockito.mockStatic(WeldUtils.class);
+    // WeldUtils mock must return ADCS before ReportingUtils can be initialized
+    // (ReportingUtils static init -> CompiledReportManager -> WeldUtils.getInstanceFromStaticBeanManager)
+    weldUtilsMock.when(() -> WeldUtils.getInstanceFromStaticBeanManager(ApplicationDictionaryCachedStructures.class))
+        .thenReturn(applicationDictionaryCachedStructuresMock);
+    reportingUtilsMock = Mockito.mockStatic(ReportingUtils.class);
     setupContextAndVars();
 
     // Set up servlet context and configurations
@@ -268,6 +275,11 @@ public class PrintControllerHookTest extends WeldBaseTest {
 
   @AfterEach
   public void tearDown() {
-    weldUtilsMock.close();
+    if (reportingUtilsMock != null) {
+      reportingUtilsMock.close();
+    }
+    if (weldUtilsMock != null) {
+      weldUtilsMock.close();
+    }
   }
 }

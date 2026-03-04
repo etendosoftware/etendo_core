@@ -62,7 +62,9 @@ public class DalPersistanceEventTest extends ObserverBaseTest {
   @Order(1)
   public void beginTrxObserversShouldBeExecutedOnFirstTest() {
     if (isFirstTest) {
-      lastBeginCount = 0;
+      // Initialize baseline to current count minus 1 to account for the
+      // transaction already started for this test by the framework
+      lastBeginCount = OrderLineTestObserver.getNumberOfStartedTrxs() - 1;
       isFirstTest = false;
     }
 

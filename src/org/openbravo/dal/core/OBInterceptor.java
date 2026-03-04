@@ -67,6 +67,7 @@ public class OBInterceptor extends EmptyInterceptor {
 
   private static final long serialVersionUID = 1L;
 
+
   private static ThreadLocal<Boolean> preventUpdateInfoChange = new ThreadLocal<Boolean>();
 
   private static ThreadLocal<Boolean> disableCheckReferencedOrganizations = new ThreadLocal<Boolean>();

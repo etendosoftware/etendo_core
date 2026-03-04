@@ -1469,8 +1469,8 @@ public abstract class AcctServer {
             currencyCrit.add(Restrictions.eq(Currency.PROPERTY_ID, acctSchema.m_C_Currency_ID));
             currencyCrit.setProjection(Projections.max(Currency.PROPERTY_STANDARDPRECISION));
             Long precision = 0L;
-            if (currencyCrit.count() > 0) {
-              List<Long> toCurrency = currencyCrit.list(Long.class);
+            List<Long> toCurrency = currencyCrit.list(Long.class);
+            if (!toCurrency.isEmpty() && toCurrency.get(0) != null) {
               precision = toCurrency.get(0);
             }
             BigDecimal convertedAmount = new BigDecimal("1")

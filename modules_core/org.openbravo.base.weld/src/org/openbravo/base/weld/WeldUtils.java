@@ -52,8 +52,10 @@ public class WeldUtils {
 
   public static BeanManager getStaticInstanceBeanManager() {
     if (staticBeanManager == null) {
-      staticBeanManager = (BeanManager) DalContextListener.getServletContext()
-          .getAttribute(BEAN_MANAGER_ATTRIBUTE_NAME);
+      jakarta.servlet.ServletContext servletContext = DalContextListener.getServletContext();
+      if (servletContext != null) {
+        staticBeanManager = (BeanManager) servletContext.getAttribute(BEAN_MANAGER_ATTRIBUTE_NAME);
+      }
 
       if (staticBeanManager == null) {
         log.debug("BeanManager not present in ServletContext, trying to get it with a jndi lookup");
