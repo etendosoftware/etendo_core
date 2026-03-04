@@ -159,7 +159,22 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       Table materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
       activeOrDeactiveMaterialManagementConsumptionTable(true);
       docTypeId = createDocumentType(materialManagementConsumptionTable).getId();
+
+      String internalConsumptionId = internalConsumption.getId();
+      OBDal.getInstance().flush();
+      OBDal.getInstance().commitAndClose();
+
+      OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
+          TestConstants.Clients.FB_GRP, TestConstants.Orgs.FB_GROUP);
       TestCostingUtils.runCostingBackground();
+      OBDal.getInstance().flush();
+      OBDal.getInstance().commitAndClose();
+
+      OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
+          TestConstants.Clients.FB_GRP, ORGANIZATION_SPAIN);
+
+      internalConsumption = OBDal.getInstance().get(InternalConsumption.class, internalConsumptionId);
+      materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
 
       postDocument(internalConsumption, materialManagementConsumptionTable);
       OBDal.getInstance().refresh(internalConsumption);

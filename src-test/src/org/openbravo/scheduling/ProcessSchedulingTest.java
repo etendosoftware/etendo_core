@@ -128,6 +128,7 @@ public class ProcessSchedulingTest extends WeldBaseTest {
   }
 
   /** Fake process */
+  @Dependent
   public static class MyProcess extends DalBaseProcess {
     @Override
     protected void doExecute(ProcessBundle bundle) throws Exception {

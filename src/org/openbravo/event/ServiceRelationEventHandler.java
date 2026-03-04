@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 
 import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.context.Dependent;
 
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -38,6 +39,7 @@ import org.openbravo.model.common.order.OrderLine;
 import org.openbravo.model.common.order.OrderlineServiceRelation;
 import org.openbravo.model.common.plm.Product;
 
+@Dependent
 class ServiceRelationEventHandler extends EntityPersistenceEventObserver {
   private static Entity[] entities = {
       ModelProvider.getInstance().getEntity(OrderlineServiceRelation.ENTITY_NAME) };

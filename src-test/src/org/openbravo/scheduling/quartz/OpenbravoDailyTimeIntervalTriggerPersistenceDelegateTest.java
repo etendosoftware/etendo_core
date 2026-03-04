@@ -25,6 +25,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import org.quartz.impl.jdbcjobstore.SimplePropertiesTriggerProperties;
@@ -37,6 +39,7 @@ import org.quartz.spi.OperableTrigger;
  * Tests CRUD operations for trigger persistence.
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class OpenbravoDailyTimeIntervalTriggerPersistenceDelegateTest {
 
   private static final String STRING_1 = "string1";

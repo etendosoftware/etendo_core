@@ -11,7 +11,9 @@ import org.openbravo.model.common.order.Order;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.kernel.RequestContext;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.common.enterprise.DocumentType;
@@ -57,14 +59,28 @@ public class DocumentNoHandlerLegacy implements DocumentNoHandlerSequenceActionI
           // use empty strings instead of null
           final String docTypeTargetId = docTypeTarget != null ? docTypeTarget.getId() : "";
           final String docTypeId = docType != null ? docType.getId() : "";
-          String windowId = RequestContext.get().getRequestParameter("windowId");
-          if (windowId == null) {
-            windowId = "";
+          String windowId = "";
+          VariablesSecureApp vars;
+          try {
+            windowId = RequestContext.get().getRequestParameter("windowId");
+            if (windowId == null) {
+              windowId = "";
+            }
+            vars = RequestContext.get().getVariablesSecureApp();
+          } catch (Exception e) {
+            // No HTTP request available (e.g. running in test or background context),
+            // build VariablesSecureApp from OBContext
+            OBContext ctx = OBContext.getOBContext();
+            vars = new VariablesSecureApp(
+                ctx.getUser().getId(),
+                ctx.getCurrentClient().getId(),
+                ctx.getCurrentOrganization().getId(),
+                ctx.getRole().getId());
           }
 
           // recompute it
           documentNo = Utility.getDocumentNo(OBDal.getInstance().getConnection(false),
-              new DalConnectionProvider(false), RequestContext.get().getVariablesSecureApp(), windowId,
+              new DalConnectionProvider(false), vars, windowId,
               entity.getTableName(), docTypeTargetId, docTypeId, false, true);
           event.setCurrentState(documentNoProperty, documentNo);
         }

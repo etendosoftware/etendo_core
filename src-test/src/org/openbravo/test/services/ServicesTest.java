@@ -122,7 +122,6 @@ public class ServicesTest extends WeldBaseTest {
       OBDal.getInstance().flush();
       log.debug("Order Created:" + testOrder.getDocumentNo());
       log.debug(parameter.getTestDescription());
-      OBDal.getInstance().refresh(testOrder);
       testOrderId = testOrder.getId();
       // Insert Service Line
       OrderLine serviceOrderLine = insertLine(order, testOrder, parameter.getServiceId(),
@@ -134,8 +133,7 @@ public class ServicesTest extends WeldBaseTest {
             new BigDecimal(product[3]));
       }
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(testOrder);
-      OBDal.getInstance().refresh(serviceOrderLine);
+      serviceOrderLine = OBDal.getInstance().get(OrderLine.class, serviceOrderLine.getId());
 
       if (isPriceIncludingTaxes) {
         assertThat("Wrong Service Gross Price", serviceOrderLine.getGrossUnitPrice(),
@@ -165,8 +163,7 @@ public class ServicesTest extends WeldBaseTest {
       assertThat("Wrong Quantity for Service", serviceOrderLine.getOrderedQuantity(),
           closeTo(parameter.getQuantity(), BigDecimal.ZERO));
       OBDal.getInstance().flush();
-      OBDal.getInstance().refresh(testOrder);
-      OBDal.getInstance().refresh(serviceOrderLine);
+      serviceOrderLine = OBDal.getInstance().get(OrderLine.class, serviceOrderLine.getId());
       updateServiceRelationAmounts(serviceOrderLine, BigDecimal.ONE, BigDecimal.ONE);
       removeServiceRelations(serviceOrderLine);
       serviceOrderLine = OBDal.getInstance().get(OrderLine.class, serviceOrderLine.getId());
@@ -277,13 +274,12 @@ public class ServicesTest extends WeldBaseTest {
     }
     testOrderLine.setSalesOrder(testOrder);
     testOrder.getOrderLineList().add(testOrderLine);
+    testOrderLine.getOrderLineTaxList().clear();
     testOrderLine.setId(SequenceIdData.getUUID());
     testOrderLine.setNewOBObject(true);
     OBDal.getInstance().save(testOrderLine);
     OBDal.getInstance().save(testOrder);
     OBDal.getInstance().flush();
-    OBDal.getInstance().refresh(testOrder);
-    OBDal.getInstance().refresh(testOrderLine);
     return testOrderLine;
   }
 
