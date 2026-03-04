@@ -25,7 +25,7 @@ import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openbravo.base.exception.OBException;
@@ -51,7 +51,7 @@ import org.openbravo.test.costing.utils.TestCostingUtils;
 public class TestCostingBase extends WeldBaseTest {
 
   @RegisterExtension
-  final BeforeEachCallback costingSetup = (ExtensionContext context) -> {
+  final BeforeTestExecutionCallback costingSetup = (ExtensionContext context) -> {
     setInitialConfiguration();
   };
 
@@ -138,6 +138,20 @@ public class TestCostingBase extends WeldBaseTest {
         }
 
         OBDal.getInstance().flush();
+        OBDal.getInstance().commitAndClose();
+
+        // Un-validate existing costing rules so CostingRuleProcess does not enter the
+        // transition path (which creates closing/opening inventories and fails for
+        // products without average cost data like Laptop, Soccer Ball, etc.)
+        TestCostingUtils.unvalidateExistingCostingRules();
+
+        // Reset isCostCalculated for all transactions so checkNoTrxWithCostCalculated passes
+        TestCostingUtils.resetTransactionsCostCalculated();
+
+        // Re-establish OBContext after JDBC operations
+        OBContext.setOBContext(TestCostingConstants.ADMIN_USER_ID,
+            TestCostingConstants.QATESTING_ROLE_ID, TestCostingConstants.QATESTING_CLIENT_ID,
+            TestCostingConstants.SPAIN_ORGANIZATION_ID);
 
         // Create costing rule
         CostingRule costingRule = OBProvider.getInstance().get(CostingRule.class);
@@ -153,22 +167,18 @@ public class TestCostingBase extends WeldBaseTest {
         OBDal.getInstance().flush();
         OBDal.getInstance().refresh(costingRule);
 
-        // Commit costing rule before running CostingBackground. CostingBackground may
-        // rollback its own transaction if it encounters products without cost data (e.g.
-        // Tennis ball). Without this commit, the rollback would undo the costing rule.
         String costingRuleId = costingRule.getId();
         OBDal.getInstance().commitAndClose();
 
-        TestCostingUtils.runCostingBackground();
+        // Validate the costing rule. Since there is no previous validated rule,
+        // CostingRuleProcess skips transition logic (no closing/opening inventories).
         TestCostingUtils.validateCostingRule(costingRuleId);
 
         OBDal.getInstance().commitAndClose();
 
-        // Mark all pre-existing unprocessed material transactions as processed.
-        // validateCostingRule creates opening inventory entries for all products.
-        // Some products (e.g. Tennis ball) may lack cost data, causing
-        // CostingBackground to fail. Marking them as processed ensures only
-        // the test's own transactions are processed by CostingBackground.
+        // After validation, mark all pre-existing transactions as processed and
+        // cost-calculated so CostingBackground in individual tests won't try to
+        // recalculate them (which would fail for products without cost data).
         TestCostingUtils.markPreExistingTransactionsAsProcessed();
       } catch (Exception e) {
         throw new OBException(e);

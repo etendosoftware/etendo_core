@@ -33,7 +33,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.Test;
@@ -121,16 +120,54 @@ public class InventoryStatusTest extends WeldBaseTest {
   private static String binIS004ID;
   private static String productIS004ID;
 
-    @BeforeEach
-  public void initialize() {
+  @Override
+  protected void beforeTestExecution(org.junit.jupiter.api.extension.ExtensionContext context) {
+    super.beforeTestExecution(context);
     log.info("Initializing Inventory Status Test ...");
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID, LANGUAGE_CODE);
     initializeReservationsPreference();
   }
 
   private void initializeReservationsPreference() {
-    if (!existsReservationsPreference()) {
-      createReservationsPreference();
+    if (!existsReservationsPreferenceInDB()) {
+      createReservationsPreferenceInDB();
+    }
+  }
+
+  private boolean existsReservationsPreferenceInDB() {
+    try {
+      org.openbravo.service.db.DalConnectionProvider connProv =
+          new org.openbravo.service.db.DalConnectionProvider(false);
+      java.sql.Connection con = connProv.getTransactionConnection();
+      java.sql.PreparedStatement ps = con.prepareStatement(
+          "SELECT count(*) FROM ad_preference WHERE property = 'StockReservations'");
+      java.sql.ResultSet rs = ps.executeQuery();
+      rs.next();
+      int count = rs.getInt(1);
+      rs.close();
+      ps.close();
+      connProv.releaseCommitConnection(con);
+      return count > 0;
+    } catch (Exception e) {
+      throw new OBException(e);
+    }
+  }
+
+  private void createReservationsPreferenceInDB() {
+    try {
+      org.openbravo.service.db.DalConnectionProvider connProv =
+          new org.openbravo.service.db.DalConnectionProvider(false);
+      java.sql.Connection con = connProv.getTransactionConnection();
+      java.sql.PreparedStatement ps = con.prepareStatement(
+          "INSERT INTO ad_preference (ad_preference_id, ad_client_id, ad_org_id, isactive, "
+              + "created, createdby, updated, updatedby, property, value, ispropertylist) "
+              + "VALUES (get_uuid(), ?, '0', 'Y', now(), '0', now(), '0', 'StockReservations', 'Y', 'Y')");
+      ps.setString(1, CLIENT_ID);
+      ps.executeUpdate();
+      ps.close();
+      connProv.releaseCommitConnection(con);
+    } catch (Exception e) {
+      throw new OBException(e);
     }
   }
 
@@ -162,8 +199,7 @@ public class InventoryStatusTest extends WeldBaseTest {
 
     OBCriteria<Preference> criteria = OBDal.getInstance().createCriteria(Preference.class);
     criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE));
-    // TODO: Check if there is a better way to add this restriction
-    criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, "Y"));
+    criteria.add(Restrictions.eq(Preference.PROPERTY_SEARCHKEY, "Y"));
     criteria.add(Restrictions.eq(Preference.PROPERTY_CLIENT, client));
     criteria.add(Restrictions.eq(Preference.PROPERTY_ORGANIZATION, organization));
     return !criteria.list().isEmpty();
@@ -517,16 +553,15 @@ public class InventoryStatusTest extends WeldBaseTest {
       changeBinToAvailableStatus(storageBin);
       assertThatBinHasAvailableStatus(storageBin);
 
-      try {
-        changeBinToBlockedStatus(storageBin);
-      } catch (Exception e) {
-        assertThatNotPossibleToChangeStatusDueToExistingReservation(e, product);
-      }
+      Exception exception = assertThrows(Exception.class,
+          () -> changeBinToBlockedStatus(storageBin));
+      assertThatNotPossibleToChangeStatusDueToExistingReservation(exception, product);
 
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       throw new OBException(e);
     } finally {
+      OBDal.getInstance().rollbackAndClose();
       OBContext.restorePreviousMode();
     }
   }
@@ -846,8 +881,8 @@ public class InventoryStatusTest extends WeldBaseTest {
 
     setReservationParameters(newReservation);
     for (ReservationStock reservationStock : oldReservation.getMaterialMgmtReservationStockList()) {
-      cloneReservationStock(reservationStock, newReservation);
-      newReservation.getMaterialMgmtReservationStockList().add(reservationStock);
+      ReservationStock newStock = cloneReservationStock(reservationStock, newReservation);
+      newReservation.getMaterialMgmtReservationStockList().add(newStock);
     }
 
     OBDal.getInstance().save(newReservation);

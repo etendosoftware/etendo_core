@@ -28,8 +28,8 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.base.expression.OBScriptEngine;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.application.OBBindings;
@@ -38,7 +38,7 @@ import org.openbravo.test.base.mock.HttpServletRequestMock;
 
 /**
  * Tests the current API exposed to JavaScript expression through OBBindings class
- * 
+ *
  * @author iperdomo
  */
 public class ExpressionsTest extends WeldBaseTest {
@@ -50,12 +50,13 @@ public class ExpressionsTest extends WeldBaseTest {
   private HashMap<String, String> expr = new HashMap<>();
   private Map<String, Object> bindings = new HashMap<>();
 
-  /**
-   * This before method is named setUpEt() to avoid overwriting the super setUp method that is
-   * invoke automatically before this one.
-   */
-  @BeforeEach
-  public void setUpEt() throws Exception {
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
+    initializeTestData();
+  }
+
+  private void initializeTestData() {
     // Everything runs as System Admin user
     setSystemAdministratorContext();
 

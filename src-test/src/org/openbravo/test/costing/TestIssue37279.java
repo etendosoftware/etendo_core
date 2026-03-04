@@ -21,9 +21,9 @@ package org.openbravo.test.costing;
 
 import java.math.BigDecimal;
 
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -36,7 +36,7 @@ import org.openbravo.test.costing.assertclass.OrderToReceiptResult;
 import org.openbravo.test.costing.utils.TestCostingConstants;
 import org.openbravo.test.costing.utils.TestCostingUtils;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestIssue37279 extends TestCostingBase {
 
   private static final String INVENTORY_OPENING = "O";
