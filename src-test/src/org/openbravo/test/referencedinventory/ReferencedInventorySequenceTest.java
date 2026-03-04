@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.openbravo.dal.core.DalUtil;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.utility.Sequence;
 import org.openbravo.model.materialmgmt.onhandquantity.ReferencedInventory;
@@ -40,8 +41,10 @@ public class ReferencedInventorySequenceTest extends ReferencedInventoryTest {
   @Test
   public void testReferencedInventorySequenceIsUsed() {
     final Sequence sequence = (Sequence) DalUtil
-        .copy(OBDal.getInstance().getProxy(Sequence.class, ANY_EXISTING_SEQUENCE_ID));
+        .copy(OBDal.getInstance().get(Sequence.class, ANY_EXISTING_SEQUENCE_ID));
     sequence.setName(UUID.randomUUID().toString());
+    final long baseSequenceNumber = findAvailableSequenceValue();
+    sequence.setNextAssignedNumber(baseSequenceNumber);
     OBDal.getInstance().save(sequence);
     OBDal.getInstance().flush(); // Required to lock sequence at db level later on
 
@@ -53,12 +56,38 @@ public class ReferencedInventorySequenceTest extends ReferencedInventoryTest {
 
     final ReferencedInventory refInv = ReferencedInventoryTestUtils
         .createReferencedInventory(ReferencedInventoryTestUtils.QA_SPAIN_ORG_ID, refInvType);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().refresh(refInv);
     assertThat("Referenced Inventory Search Key is taken from sequence", refInv.getSearchKey(),
         equalTo(Long.toString(currentSequenceNumber)));
 
     final ReferencedInventory refInv2 = ReferencedInventoryTestUtils
         .createReferencedInventory(ReferencedInventoryTestUtils.QA_SPAIN_ORG_ID, refInvType);
+    OBDal.getInstance().flush();
+    OBDal.getInstance().refresh(refInv2);
     assertThat("Referenced Inventory Search Key is updated from sequence", refInv2.getSearchKey(),
         equalTo(Long.toString(currentSequenceNumber + 1)));
+  }
+
+  private long findAvailableSequenceValue() {
+    long candidate = (System.currentTimeMillis() / 1000) % 9_000_000_000L;
+    if (candidate < 1_000_000L) {
+      candidate += 1_000_000L;
+    }
+    final String clientId = OBContext.getOBContext().getCurrentClient().getId();
+    while (existsReferencedInventoryValue(candidate, clientId)) {
+      candidate++;
+    }
+    return candidate;
+  }
+
+  private boolean existsReferencedInventoryValue(long value, String clientId) {
+    final String hql = "where searchKey = :value and client.id = :clientId";
+    return !OBDal.getInstance()
+        .createQuery(ReferencedInventory.class, hql)
+        .setNamedParameter("value", Long.toString(value))
+        .setNamedParameter("clientId", clientId)
+        .list()
+        .isEmpty();
   }
 }

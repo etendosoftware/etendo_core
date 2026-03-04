@@ -19,12 +19,7 @@
 
 package org.openbravo.test.referencedinventory;
 
-import java.util.Arrays;
-
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
 import org.openbravo.dal.service.OBDal;
 
 /**
@@ -34,19 +29,15 @@ import org.openbravo.dal.service.OBDal;
 public class ReferencedInventoryBoxPartialReservation1MovementLineTest
     extends ReferencedInventoryBoxTest {
 
-  @Rule
-  public ParameterCdiTestRule<ParamsBoxReservationTest> parameterValuesRule = new ParameterCdiTestRule<ParamsBoxReservationTest>(
-      Arrays.asList(new ParamsBoxReservationTest[] { new ParamsBoxReservationTest(
-          "Box 4 units where 3 were previously reserved", "4", "3") }));
-
-  private @ParameterCdiTest ParamsBoxReservationTest params;
+  private static final ParamsBoxReservationTest PARAMS = new ParamsBoxReservationTest(
+      "Box 4 units where 3 were previously reserved", "4", "3");
 
   @Test
   public void allTests() throws Exception {
     for (boolean isAllocated : ISALLOCATED) {
       for (String[] product : PRODUCTS) {
         for (String toBinId : BINS) {
-          testBox(toBinId, product[0], product[1], params.qtyToBox, params.reservationQty,
+          testBox(toBinId, product[0], product[1], PARAMS.qtyToBox, PARAMS.reservationQty,
               isAllocated);
           OBDal.getInstance().getSession().clear();
         }
