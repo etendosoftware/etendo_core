@@ -19579,6 +19579,8 @@ AND (e.storageBin is null OR ad_org_isinnaturaltree(@MaterialMgmtShipmentInOut.o
 <!--9F5F8C2271F248FB856833C1D257CD03-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--9F5F8C2271F248FB856833C1D257CD03-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--9F5F8C2271F248FB856833C1D257CD03-->  <NAME><![CDATA[Email Config]]></NAME>
+<!--9F5F8C2271F248FB856833C1D257CD03-->  <DESCRIPTION><![CDATA[SMTP configuration for sending emails from this user's mailbox. When active, emails sent by this user will use these settings instead of the organization or client-level defaults.]]></DESCRIPTION>
+<!--9F5F8C2271F248FB856833C1D257CD03-->  <HELP><![CDATA[Define the SMTP server settings for this specific user. If an active configuration exists here, it will take priority over organization and client-level settings (cascade resolution: User > Organization > Client). Fields include SMTP host, port, connection security, authentication credentials, sender address, and display name. Use the "Test SMTP Connection" process to validate the configuration before sending real emails. The SMTP password is stored encrypted.]]></HELP>
 <!--9F5F8C2271F248FB856833C1D257CD03-->  <AD_TABLE_ID><![CDATA[09CAF8D6CF83449AA63DD882198B107B]]></AD_TABLE_ID>
 <!--9F5F8C2271F248FB856833C1D257CD03-->  <AD_WINDOW_ID><![CDATA[108]]></AD_WINDOW_ID>
 <!--9F5F8C2271F248FB856833C1D257CD03-->  <SEQNO><![CDATA[40]]></SEQNO>
@@ -19746,6 +19748,8 @@ AND (e.storageBin is null OR ad_org_isinnaturaltree(@MaterialMgmtShipmentInOut.o
 <!--A40755889D614B358959BBA14D9B669A-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--A40755889D614B358959BBA14D9B669A-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--A40755889D614B358959BBA14D9B669A-->  <NAME><![CDATA[Email Config]]></NAME>
+<!--A40755889D614B358959BBA14D9B669A-->  <DESCRIPTION><![CDATA[SMTP configuration for sending emails on behalf of this organization. Used when the current user does not have an active user-level SMTP configuration.]]></DESCRIPTION>
+<!--A40755889D614B358959BBA14D9B669A-->  <HELP><![CDATA[Define the SMTP server settings for this organization. This configuration is used as a fallback when the sending user does not have their own active SMTP settings (cascade resolution: User > Organization > Client). Fields include SMTP host, port, connection security, authentication credentials, sender address, and display name. Use the "Test SMTP Connection" process to validate the configuration before sending real emails. The SMTP password is stored encrypted.]]></HELP>
 <!--A40755889D614B358959BBA14D9B669A-->  <AD_TABLE_ID><![CDATA[1000500000]]></AD_TABLE_ID>
 <!--A40755889D614B358959BBA14D9B669A-->  <AD_WINDOW_ID><![CDATA[110]]></AD_WINDOW_ID>
 <!--A40755889D614B358959BBA14D9B669A-->  <SEQNO><![CDATA[80]]></SEQNO>
