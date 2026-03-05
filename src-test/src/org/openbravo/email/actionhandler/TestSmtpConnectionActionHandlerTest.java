@@ -70,8 +70,8 @@ public class TestSmtpConnectionActionHandlerTest {
   private static final String POC_CONFIG_ID = "POC_CFG_001";
   private static final String SMTP_HOST = "smtp.example.com";
   private static final String SMTP_USERNAME = "user@example.com";
-  private static final String SMTP_PASSWORD_ENCRYPTED = "encryptedPass123";
-  private static final String SMTP_PASSWORD_DECRYPTED = "plainPass123";
+  private static final String SMTP_ENCRYPTED_CREDENTIAL = "encryptedPass123";
+  private static final String SMTP_DECRYPTED_CREDENTIAL = "plainPass123";
   private static final int PORT_587 = 587;
   private static final int PORT_465 = 465;
   private static final int PORT_25 = 25;
@@ -231,9 +231,9 @@ public class TestSmtpConnectionActionHandlerTest {
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(UserEmailConfig.class, USER_CONFIG_ID)).thenReturn(userEmailConfig);
       setupUserEmailConfigMock(SMTP_HOST, (long) PORT_587, SECURITY_STARTTLS, true,
-          SMTP_USERNAME, SMTP_PASSWORD_ENCRYPTED);
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_PASSWORD_ENCRYPTED, false))
-          .thenReturn(SMTP_PASSWORD_DECRYPTED);
+          SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL);
+      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
+          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
       doReturn(null).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
       JSONObject successResponse = new JSONObject();
       doReturn(successResponse).when(handler).buildSuccessResponse(SMTP_HOST, PORT_587, true);
@@ -257,9 +257,9 @@ public class TestSmtpConnectionActionHandlerTest {
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(UserEmailConfig.class, USER_CONFIG_ID)).thenReturn(userEmailConfig);
       setupUserEmailConfigMock(SMTP_HOST, (long) PORT_587, SECURITY_STARTTLS, true,
-          SMTP_USERNAME, SMTP_PASSWORD_ENCRYPTED);
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_PASSWORD_ENCRYPTED, false))
-          .thenReturn(SMTP_PASSWORD_DECRYPTED);
+          SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL);
+      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
+          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
       MessagingException connectionError = new MessagingException(MSG_CONNECTION_REFUSED);
       doReturn(connectionError).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
       JSONObject errorResponse = new JSONObject();
@@ -322,9 +322,9 @@ public class TestSmtpConnectionActionHandlerTest {
       obDalMock.when(OBDal::getInstance).thenReturn(obDal);
       when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(pocConfig);
       setupPocConfigMock(SMTP_HOST, (long) PORT_465, SECURITY_SSL, true,
-          SMTP_USERNAME, SMTP_PASSWORD_ENCRYPTED, CUSTOM_TIMEOUT_SECONDS);
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_PASSWORD_ENCRYPTED, false))
-          .thenReturn(SMTP_PASSWORD_DECRYPTED);
+          SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL, CUSTOM_TIMEOUT_SECONDS);
+      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
+          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
       doReturn(null).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
       JSONObject successResponse = new JSONObject();
       doReturn(successResponse).when(handler).buildSuccessResponse(SMTP_HOST, PORT_465, true);
@@ -462,9 +462,9 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testDecryptPasswordWithValidValue() throws ServletException {
     try (MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_PASSWORD_ENCRYPTED, false))
-          .thenReturn(SMTP_PASSWORD_DECRYPTED);
-      assertEquals(SMTP_PASSWORD_DECRYPTED, handler.decryptPassword(SMTP_PASSWORD_ENCRYPTED));
+      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
+          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
+      assertEquals(SMTP_DECRYPTED_CREDENTIAL, handler.decryptPassword(SMTP_ENCRYPTED_CREDENTIAL));
     }
   }
 
@@ -475,7 +475,7 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testBuildSmtpPropertiesWithAuth() {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     Properties props = handler.buildSmtpProperties(params);
     assertEquals("smtp", props.get(PROP_PROTOCOL));
     assertEquals(SMTP_HOST, props.get(PROP_HOST));
@@ -508,7 +508,7 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testBuildSmtpPropertiesWithSsl() {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_465, SECURITY_SSL, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     Properties props = handler.buildSmtpProperties(params);
     assertEquals(SSL_SOCKET_FACTORY_CLASS, props.get(PROP_SSL_FACTORY_CLASS));
     assertEquals(FALSE_STRING, props.get(PROP_SSL_FACTORY_FALLBACK));
@@ -605,7 +605,7 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testCreateMailSessionWithAuth() {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     Session session = handler.createMailSession(params);
     assertNotNull(session);
     assertEquals(TRUE_STRING, session.getProperty(PROP_AUTH));
@@ -632,9 +632,9 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testConnectTransportWithAuth() throws MessagingException {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     handler.connectTransport(transport, params);
-    verify(transport).connect(SMTP_HOST, PORT_587, SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED);
+    verify(transport).connect(SMTP_HOST, PORT_587, SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL);
   }
 
   /**
@@ -700,7 +700,7 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testAttemptSmtpConnectionSuccess() throws MessagingException {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     doReturn(mailSession).when(handler).createMailSession(params);
     when(mailSession.getTransport("smtp")).thenReturn(transport);
     Exception result = handler.attemptSmtpConnection(params);
@@ -717,7 +717,7 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testAttemptSmtpConnectionAuthFailure() throws MessagingException {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     doReturn(mailSession).when(handler).createMailSession(params);
     when(mailSession.getTransport("smtp")).thenReturn(transport);
     doThrow(new AuthenticationFailedException(MSG_AUTH_FAILED))
@@ -736,7 +736,7 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testAttemptSmtpConnectionMessagingException() throws MessagingException {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     doReturn(mailSession).when(handler).createMailSession(params);
     when(mailSession.getTransport("smtp")).thenReturn(transport);
     doThrow(new MessagingException(MSG_CONNECTION_REFUSED))
@@ -756,7 +756,7 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testAttemptSmtpConnectionUnexpectedException() throws MessagingException {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, DEFAULT_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
     doReturn(mailSession).when(handler).createMailSession(params);
     when(mailSession.getTransport("smtp")).thenReturn(transport);
     doThrow(new RuntimeException(MSG_UNEXPECTED_ERROR))
@@ -790,13 +790,13 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testSmtpTestParamsStoresValues() {
     SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_PASSWORD_DECRYPTED, CUSTOM_TIMEOUT_MS);
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, CUSTOM_TIMEOUT_MS);
     assertEquals(SMTP_HOST, params.host);
     assertEquals(PORT_587, params.port);
     assertEquals(SECURITY_STARTTLS, params.connectionSecurity);
     assertTrue(params.auth);
     assertEquals(SMTP_USERNAME, params.username);
-    assertEquals(SMTP_PASSWORD_DECRYPTED, params.password);
+    assertEquals(SMTP_DECRYPTED_CREDENTIAL, params.password);
     assertEquals(CUSTOM_TIMEOUT_MS, params.timeoutMs);
   }
 
