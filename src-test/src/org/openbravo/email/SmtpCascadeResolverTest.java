@@ -40,7 +40,6 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.User;
-import org.openbravo.model.ad.access.UserEmailConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.enterprise.Organization;
 
@@ -53,7 +52,7 @@ import org.openbravo.model.common.enterprise.Organization;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class SmtpCascadeResolverTest {
-  
+
   private static final String USER_CONFIG_ID = "USER-CONFIG-001";
   private static final String ORG_CONFIG_ID = "ORG-CONFIG-001";
   private static final String CLIENT_CONFIG_ID = "CLIENT-CONFIG-001";
@@ -76,7 +75,7 @@ public class SmtpCascadeResolverTest {
   private static final String SECURITY_NONE = "N";
   private static final String ENCRYPTED_PASSWORD = "encryptedPwd";
   private static final long TIMEOUT_SECONDS = 600L;
-  
+
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<EmailUtils> mockedEmailUtils;
@@ -86,8 +85,7 @@ public class SmtpCascadeResolverTest {
   @Mock private User mockUser;
   @Mock private Organization mockOrg;
 
-  @SuppressWarnings("unchecked")
-  @Mock private OBCriteria<UserEmailConfig> mockUserCriteria;
+  @Mock private OBCriteria<EmailServerConfiguration> mockUserCriteria;
 
   /**
    * Opens static mocks and configures default behavior for OBContext, OBDal, and
@@ -106,7 +104,7 @@ public class SmtpCascadeResolverTest {
     when(mockContext.getCurrentOrganization()).thenReturn(mockOrg);
     when(mockUser.getId()).thenReturn(USER_ID);
     when(mockOrg.getId()).thenReturn(ORG_ID);
-    when(mockDal.createCriteria(UserEmailConfig.class)).thenReturn(mockUserCriteria);
+    when(mockDal.createCriteria(EmailServerConfiguration.class)).thenReturn(mockUserCriteria);
     when(mockUserCriteria.add(any())).thenReturn(mockUserCriteria);
   }
 
@@ -126,10 +124,10 @@ public class SmtpCascadeResolverTest {
    */
   @Test
   void testResolveReturnsUserLevelConfig() {
-    UserEmailConfig userConfig = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
+    EmailServerConfiguration userConfig = buildEmailServerConfig(
+        USER_CONFIG_ID, ORG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
         true, USER_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, null);
+        USER_FROM_ADDRESS, USER_FROM_NAME, null, TIMEOUT_SECONDS);
     when(mockUserCriteria.list()).thenReturn(List.of(userConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolve();
     assertNotNull(result);
@@ -226,10 +224,10 @@ public class SmtpCascadeResolverTest {
    */
   @Test
   void testResolveUserLevelWithActiveConfig() {
-    UserEmailConfig userConfig = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
+    EmailServerConfiguration userConfig = buildEmailServerConfig(
+        USER_CONFIG_ID, ORG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
         true, USER_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, null);
+        USER_FROM_ADDRESS, USER_FROM_NAME, null, TIMEOUT_SECONDS);
     when(mockUserCriteria.list()).thenReturn(List.of(userConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolveUserLevel(mockUser);
     assertNotNull(result);
@@ -265,12 +263,12 @@ public class SmtpCascadeResolverTest {
    */
   @Test
   void testFindActiveUserEmailConfigFound() {
-    UserEmailConfig userConfig = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
+    EmailServerConfiguration userConfig = buildEmailServerConfig(
+        USER_CONFIG_ID, ORG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
         true, USER_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, null);
+        USER_FROM_ADDRESS, USER_FROM_NAME, null, TIMEOUT_SECONDS);
     when(mockUserCriteria.list()).thenReturn(List.of(userConfig));
-    UserEmailConfig result = SmtpCascadeResolver.findActiveUserEmailConfig(mockUser);
+    EmailServerConfiguration result = SmtpCascadeResolver.findActiveUserEmailConfig(mockUser);
     assertNotNull(result);
     assertEquals(USER_CONFIG_ID, result.getId());
   }
@@ -282,7 +280,7 @@ public class SmtpCascadeResolverTest {
   @Test
   void testFindActiveUserEmailConfigNotFound() {
     when(mockUserCriteria.list()).thenReturn(Collections.emptyList());
-    UserEmailConfig result = SmtpCascadeResolver.findActiveUserEmailConfig(mockUser);
+    EmailServerConfiguration result = SmtpCascadeResolver.findActiveUserEmailConfig(mockUser);
     assertNull(result);
   }
 
@@ -360,37 +358,6 @@ public class SmtpCascadeResolverTest {
         ORG_FROM_ADDRESS, ORG_FROM_NAME, null, TIMEOUT_SECONDS);
     ResolvedSmtpConfig.Level level = SmtpCascadeResolver.determineLevel(config);
     assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, level);
-  }
-
-  /**
-   * Builds a mocked {@link UserEmailConfig} with the given SMTP settings.
-   * @param id the configuration record ID
-   * @param host the SMTP host
-   * @param port the SMTP port
-   * @param security the connection security mode
-   * @param auth whether authentication is required
-   * @param account the SMTP account username
-   * @param password the encrypted SMTP password
-   * @param fromAddress the sender email address
-   * @param fromName the sender display name
-   * @param replyTo the reply-to address
-   * @return a mocked {@link UserEmailConfig}
-   */
-  private UserEmailConfig buildUserEmailConfig(String id, String host, Long port,
-      String security, boolean auth, String account, String password,
-      String fromAddress, String fromName, String replyTo) {
-    UserEmailConfig config = mock(UserEmailConfig.class);
-    when(config.getId()).thenReturn(id);
-    when(config.getMailHost()).thenReturn(host);
-    when(config.getSmtpPort()).thenReturn(port);
-    when(config.getSmtpConnectionSecurity()).thenReturn(security);
-    when(config.isSMTPAuthentification()).thenReturn(auth);
-    when(config.getSmtpServerAccount()).thenReturn(account);
-    when(config.getSmtpServerPassword()).thenReturn(password);
-    when(config.getSmtpserverfromaddress()).thenReturn(fromAddress);
-    when(config.getSmtpserverfromname()).thenReturn(fromName);
-    when(config.getSmtpreplytoaddress()).thenReturn(replyTo);
-    return config;
   }
 
   /**

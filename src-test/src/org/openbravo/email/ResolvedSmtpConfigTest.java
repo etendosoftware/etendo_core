@@ -26,14 +26,13 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openbravo.model.ad.access.UserEmailConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 
 /**
  * Unit tests for {@link ResolvedSmtpConfig}.
- * Validates field mapping from both {@link UserEmailConfig} and
- * {@link EmailServerConfiguration} constructors, default port resolution,
- * level assignment, and handling of {@code null} optional fields.
+ * Validates field mapping from {@link EmailServerConfiguration} at all cascade levels
+ * (User, Organization, Client), default port resolution, level assignment, and handling
+ * of {@code null} optional fields.
  */
 @ExtendWith(MockitoExtension.class)
 public class ResolvedSmtpConfigTest {
@@ -42,10 +41,8 @@ public class ResolvedSmtpConfigTest {
   private static final String CLIENT_CONFIG_ID = "CLIENT-CFG-001";
   private static final String USER_HOST = "smtp.user.example.com";
   private static final String ORG_HOST = "smtp.org.example.com";
-  private static final long PORT_587 = 587L;
   private static final long PORT_465 = 465L;
   private static final long PORT_2525 = 2525L;
-  private static final int DEFAULT_USER_PORT = 587;
   private static final int DEFAULT_POC_PORT = 25;
   private static final String SECURITY_STARTTLS = "STARTTLS";
   private static final String SECURITY_SSL = "SSL";
@@ -62,17 +59,17 @@ public class ResolvedSmtpConfigTest {
 
   /**
    * Verifies that all fields are correctly mapped from a fully populated
-   * {@link UserEmailConfig}.
+   * {@link EmailServerConfiguration} at USER level.
    */
   @Test
-  void testUserConfigConstructorMapsAllFields() {
-    UserEmailConfig config = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_587, SECURITY_STARTTLS,
+  void testUserLevelConfigMapsAllFields() {
+    EmailServerConfiguration config = buildEmailServerConfig(
+        USER_CONFIG_ID, USER_HOST, PORT_465, SECURITY_STARTTLS,
         true, USER_ACCOUNT, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, USER_REPLY_TO);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config);
+        USER_FROM_ADDRESS, USER_FROM_NAME, USER_REPLY_TO, TIMEOUT_SECONDS);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
     assertEquals(USER_HOST, result.getHost());
-    assertEquals(587, result.getPort());
+    assertEquals(465, result.getPort());
     assertEquals(SECURITY_STARTTLS, result.getConnectionSecurity());
     assertTrue(result.isAuth());
     assertEquals(USER_ACCOUNT, result.getAccount());
@@ -80,59 +77,34 @@ public class ResolvedSmtpConfigTest {
     assertEquals(USER_FROM_ADDRESS, result.getFromAddress());
     assertEquals(USER_FROM_NAME, result.getFromName());
     assertEquals(USER_REPLY_TO, result.getReplyTo());
+    assertEquals(TIMEOUT_SECONDS, result.getTimeoutSeconds());
     assertEquals(ResolvedSmtpConfig.Level.USER, result.getLevel());
     assertEquals(USER_CONFIG_ID, result.getConfigId());
   }
 
   /**
-   * Verifies that the user-level constructor always sets the level to {@code USER}.
+   * Verifies that the user-level constructor correctly sets the level to {@code USER}.
    */
   @Test
-  void testUserConfigConstructorSetsUserLevel() {
-    UserEmailConfig config = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_587, null,
-        false, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config);
+  void testUserLevelConfigSetsUserLevel() {
+    EmailServerConfiguration config = buildEmailServerConfig(
+        USER_CONFIG_ID, USER_HOST, PORT_465, null,
+        false, null, null, null, null, null, null);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
     assertEquals(ResolvedSmtpConfig.Level.USER, result.getLevel());
   }
 
   /**
-   * Verifies that the user-level constructor always sets timeout to {@code null},
-   * since timeout is not configurable at user level.
-   */
-  @Test
-  void testUserConfigConstructorSetsNullTimeout() {
-    UserEmailConfig config = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_587, SECURITY_STARTTLS,
-        true, USER_ACCOUNT, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config);
-    assertNull(result.getTimeoutSeconds());
-  }
-
-  /**
-   * Verifies that the default port ({@code 587}) is used when the user config has
+   * Verifies that the default port ({@code 25}) is used when the user config has
    * a {@code null} port.
    */
   @Test
-  void testUserConfigConstructorDefaultPortWhenNull() {
-    UserEmailConfig config = buildUserEmailConfig(
+  void testUserLevelConfigDefaultPortWhenNull() {
+    EmailServerConfiguration config = buildEmailServerConfig(
         USER_CONFIG_ID, USER_HOST, null, null,
-        false, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config);
-    assertEquals(DEFAULT_USER_PORT, result.getPort());
-  }
-
-  /**
-   * Verifies that a custom port is preserved when explicitly set on the user config.
-   */
-  @Test
-  void testUserConfigConstructorCustomPort() {
-    UserEmailConfig config = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_2525, null,
-        false, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config);
-    assertEquals(2525, result.getPort());
+        false, null, null, null, null, null, null);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
+    assertEquals(DEFAULT_POC_PORT, result.getPort());
   }
 
   /**
@@ -140,11 +112,11 @@ public class ResolvedSmtpConfigTest {
    * as {@code null} in the resolved config.
    */
   @Test
-  void testUserConfigConstructorNullOptionalFields() {
-    UserEmailConfig config = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_587, null,
-        false, null, null, USER_FROM_ADDRESS, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config);
+  void testUserLevelConfigNullOptionalFields() {
+    EmailServerConfiguration config = buildEmailServerConfig(
+        USER_CONFIG_ID, USER_HOST, PORT_465, null,
+        false, null, null, USER_FROM_ADDRESS, null, null, null);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
     assertNull(result.getFromName());
     assertNull(result.getReplyTo());
     assertNull(result.getConnectionSecurity());
@@ -156,11 +128,11 @@ public class ResolvedSmtpConfigTest {
    * Verifies that {@code auth = false} is correctly mapped from the user config.
    */
   @Test
-  void testUserConfigConstructorAuthFalse() {
-    UserEmailConfig config = buildUserEmailConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_587, null,
-        false, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config);
+  void testUserLevelConfigAuthFalse() {
+    EmailServerConfiguration config = buildEmailServerConfig(
+        USER_CONFIG_ID, USER_HOST, PORT_465, null,
+        false, null, null, null, null, null, null);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
     assertFalse(result.isAuth());
   }
 
@@ -281,37 +253,6 @@ public class ResolvedSmtpConfigTest {
     assertEquals(ResolvedSmtpConfig.Level.USER, values[0]);
     assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, values[1]);
     assertEquals(ResolvedSmtpConfig.Level.CLIENT, values[2]);
-  }
-
-  /**
-   * Builds a mocked {@link UserEmailConfig} with the given SMTP settings.
-   * @param id the configuration record ID
-   * @param host the SMTP host
-   * @param port the SMTP port, may be {@code null}
-   * @param security the connection security mode
-   * @param auth whether authentication is required
-   * @param account the SMTP account username
-   * @param password the encrypted SMTP password
-   * @param fromAddress the sender email address
-   * @param fromName the sender display name
-   * @param replyTo the reply-to address
-   * @return a mocked {@link UserEmailConfig}
-   */
-  private UserEmailConfig buildUserEmailConfig(String id, String host, Long port,
-      String security, boolean auth, String account, String password,
-      String fromAddress, String fromName, String replyTo) {
-    UserEmailConfig config = mock(UserEmailConfig.class);
-    when(config.getId()).thenReturn(id);
-    when(config.getMailHost()).thenReturn(host);
-    when(config.getSmtpPort()).thenReturn(port);
-    when(config.getSmtpConnectionSecurity()).thenReturn(security);
-    when(config.isSMTPAuthentification()).thenReturn(auth);
-    when(config.getSmtpServerAccount()).thenReturn(account);
-    when(config.getSmtpServerPassword()).thenReturn(password);
-    when(config.getSmtpserverfromaddress()).thenReturn(fromAddress);
-    when(config.getSmtpserverfromname()).thenReturn(fromName);
-    when(config.getSmtpreplytoaddress()).thenReturn(replyTo);
-    return config;
   }
 
   /**

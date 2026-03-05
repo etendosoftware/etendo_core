@@ -52,7 +52,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.email.actionhandler.TestSmtpConnectionActionHandler.SmtpTestParams;
-import org.openbravo.model.ad.access.UserEmailConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.utils.FormatUtilities;
 
@@ -66,7 +65,6 @@ import org.openbravo.utils.FormatUtilities;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class TestSmtpConnectionActionHandlerTest {
 
-  private static final String USER_CONFIG_ID = "USER_CFG_001";
   private static final String POC_CONFIG_ID = "POC_CFG_001";
   private static final String SMTP_HOST = "smtp.example.com";
   private static final String SMTP_USERNAME = "user@example.com";
@@ -105,7 +103,6 @@ public class TestSmtpConnectionActionHandlerTest {
   private static final String FALSE_STRING = "false";
 
   @Mock private OBDal obDal;
-  @Mock private UserEmailConfig userEmailConfig;
   @Mock private EmailServerConfiguration pocConfig;
   @Mock private Transport transport;
   @Mock private Session mailSession;
@@ -118,23 +115,6 @@ public class TestSmtpConnectionActionHandlerTest {
   @BeforeEach
   void setup() {
     handler = spy(new TestSmtpConnectionActionHandler());
-  }
-
-  /**
-   * Verifies that routing dispatches to {@code testUserEmailConfig} when the request
-   * contains an {@code AD_User_Email_Config_ID} key.
-   * @throws Exception if JSON parsing or test execution fails
-   */
-  @Test
-  void testRouteTestByConfigTypeWithUserConfigId() throws Exception {
-    JSONObject request = new JSONObject();
-    request.put(TestSmtpConnectionActionHandler.KEY_USER_CONFIG_ID, USER_CONFIG_ID);
-    JSONObject mockResponse = new JSONObject();
-    doReturn(mockResponse).when(handler).testUserEmailConfig(USER_CONFIG_ID);
-    JSONObject result = handler.routeTestByConfigType(request);
-    assertEquals(mockResponse, result);
-    verify(handler).testUserEmailConfig(USER_CONFIG_ID);
-    verify(handler, never()).testPocConfiguration(anyString());
   }
 
   /**
@@ -151,30 +131,10 @@ public class TestSmtpConnectionActionHandlerTest {
     JSONObject result = handler.routeTestByConfigType(request);
     assertEquals(mockResponse, result);
     verify(handler).testPocConfiguration(POC_CONFIG_ID);
-    verify(handler, never()).testUserEmailConfig(anyString());
   }
 
   /**
-   * Verifies that routing prioritizes the user config key when both keys are present
-   * in the request.
-   * @throws Exception if JSON parsing or test execution fails
-   */
-  @Test
-  void testRouteTestByConfigTypePrioritizesUserOverPoc() throws Exception {
-    JSONObject request = new JSONObject();
-    request.put(TestSmtpConnectionActionHandler.KEY_USER_CONFIG_ID, USER_CONFIG_ID);
-    request.put(TestSmtpConnectionActionHandler.KEY_POC_CONFIG_ID, POC_CONFIG_ID);
-    JSONObject mockResponse = new JSONObject();
-    doReturn(mockResponse).when(handler).testUserEmailConfig(USER_CONFIG_ID);
-    JSONObject result = handler.routeTestByConfigType(request);
-    assertEquals(mockResponse, result);
-    verify(handler).testUserEmailConfig(USER_CONFIG_ID);
-    verify(handler, never()).testPocConfiguration(anyString());
-  }
-
-  /**
-   * Verifies that routing returns an error response when neither configuration key
-   * is present in the request.
+   * Verifies that routing returns an error response when the config ID key is absent.
    * @throws Exception if JSON parsing fails
    */
   @Test
@@ -194,102 +154,12 @@ public class TestSmtpConnectionActionHandlerTest {
   @Test
   void testRouteTestByConfigTypeWithBlankConfigId() throws Exception {
     JSONObject request = new JSONObject();
-    request.put(TestSmtpConnectionActionHandler.KEY_USER_CONFIG_ID, "  ");
+    request.put(TestSmtpConnectionActionHandler.KEY_POC_CONFIG_ID, "  ");
     JSONObject errorResponse = new JSONObject();
     doReturn(errorResponse).when(handler).buildErrorResponse(MSG_NO_CONFIG_IDENTIFIED);
     JSONObject result = handler.routeTestByConfigType(request);
     assertEquals(errorResponse, result);
-  }
-
-  /**
-   * Verifies that testing a user email config returns an error when the record
-   * is not found in the database.
-   * @throws ServletException if password decryption fails
-   */
-  @Test
-  void testUserEmailConfigNotFound() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(UserEmailConfig.class, USER_CONFIG_ID)).thenReturn(null);
-      JSONObject errorResponse = new JSONObject();
-      doReturn(errorResponse).when(handler)
-          .buildErrorResponse(MSG_CONFIG_NOT_FOUND_PREFIX + USER_CONFIG_ID);
-      JSONObject result = handler.testUserEmailConfig(USER_CONFIG_ID);
-      assertEquals(errorResponse, result);
-    }
-  }
-
-  /**
-   * Verifies that testing a user email config with a successful SMTP connection
-   * persists the success flag and returns a success response.
-   * @throws ServletException if password decryption fails
-   */
-  @Test
-  void testUserEmailConfigSuccess() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(UserEmailConfig.class, USER_CONFIG_ID)).thenReturn(userEmailConfig);
-      setupUserEmailConfigMock(SMTP_HOST, (long) PORT_587, SECURITY_STARTTLS, true,
-          SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL);
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
-          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
-      doReturn(null).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
-      JSONObject successResponse = new JSONObject();
-      doReturn(successResponse).when(handler).buildSuccessResponse(SMTP_HOST, PORT_587, true);
-      JSONObject result = handler.testUserEmailConfig(USER_CONFIG_ID);
-      assertEquals(successResponse, result);
-      verify(userEmailConfig).setTestsuccessful(true);
-      verify(obDal).save(userEmailConfig);
-      verify(obDal).flush();
-    }
-  }
-
-  /**
-   * Verifies that testing a user email config with a failed SMTP connection
-   * persists the failure flag and returns an error response.
-   * @throws ServletException if password decryption fails
-   */
-  @Test
-  void testUserEmailConfigFailure() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(UserEmailConfig.class, USER_CONFIG_ID)).thenReturn(userEmailConfig);
-      setupUserEmailConfigMock(SMTP_HOST, (long) PORT_587, SECURITY_STARTTLS, true,
-          SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL);
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
-          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
-      MessagingException connectionError = new MessagingException(MSG_CONNECTION_REFUSED);
-      doReturn(connectionError).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
-      JSONObject errorResponse = new JSONObject();
-      doReturn(errorResponse).when(handler).buildErrorResponse(MSG_CONNECTION_REFUSED);
-      JSONObject result = handler.testUserEmailConfig(USER_CONFIG_ID);
-      assertEquals(errorResponse, result);
-      verify(userEmailConfig).setTestsuccessful(false);
-      verify(obDal).save(userEmailConfig);
-      verify(obDal).flush();
-    }
-  }
-
-  /**
-   * Verifies that the default user SMTP port (587) is used when the configured
-   * port is {@code null}.
-   * @throws ServletException if password decryption fails
-   */
-  @Test
-  void testUserEmailConfigDefaultPort() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(UserEmailConfig.class, USER_CONFIG_ID)).thenReturn(userEmailConfig);
-      setupUserEmailConfigMock(SMTP_HOST, null, SECURITY_STARTTLS, false, null, null);
-      doReturn(null).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
-      JSONObject successResponse = new JSONObject();
-      doReturn(successResponse).when(handler).buildSuccessResponse(SMTP_HOST, PORT_587, false);
-      handler.testUserEmailConfig(USER_CONFIG_ID);
-      verify(handler).buildSuccessResponse(SMTP_HOST, PORT_587, false);
-    }
+    verify(handler, never()).testPocConfiguration(anyString());
   }
 
   /**
@@ -331,6 +201,33 @@ public class TestSmtpConnectionActionHandlerTest {
       JSONObject result = handler.testPocConfiguration(POC_CONFIG_ID);
       assertEquals(successResponse, result);
       verify(pocConfig).setTestSuccessful(true);
+      verify(obDal).save(pocConfig);
+      verify(obDal).flush();
+    }
+  }
+
+  /**
+   * Verifies that testing a POC configuration with a failed SMTP connection
+   * persists the failure flag and returns an error response.
+   * @throws ServletException if password decryption fails
+   */
+  @Test
+  void testPocConfigurationFailure() throws ServletException {
+    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
+         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
+      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
+      when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(pocConfig);
+      setupPocConfigMock(SMTP_HOST, (long) PORT_465, SECURITY_SSL, true,
+          SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL, CUSTOM_TIMEOUT_SECONDS);
+      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
+          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
+      MessagingException connectionError = new MessagingException(MSG_CONNECTION_REFUSED);
+      doReturn(connectionError).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
+      JSONObject errorResponse = new JSONObject();
+      doReturn(errorResponse).when(handler).buildErrorResponse(MSG_CONNECTION_REFUSED);
+      JSONObject result = handler.testPocConfiguration(POC_CONFIG_ID);
+      assertEquals(errorResponse, result);
+      verify(pocConfig).setTestSuccessful(false);
       verify(obDal).save(pocConfig);
       verify(obDal).flush();
     }
@@ -610,7 +507,7 @@ public class TestSmtpConnectionActionHandlerTest {
     assertNotNull(session);
     assertEquals(TRUE_STRING, session.getProperty(PROP_AUTH));
   }
-  
+
   /**
    * Verifies that {@code createMailSession} creates a session without an authenticator
    * when authentication is disabled.
@@ -623,7 +520,7 @@ public class TestSmtpConnectionActionHandlerTest {
     assertNotNull(session);
     assertNull(session.getProperty(PROP_AUTH));
   }
-  
+
   /**
    * Verifies that {@code connectTransport} passes credentials when authentication
    * is enabled.
@@ -831,25 +728,6 @@ public class TestSmtpConnectionActionHandlerTest {
   private SmtpTestParams createParams(String host, int port, String connectionSecurity,
       boolean auth, String username, String password, long timeoutMs) {
     return new SmtpTestParams(host, port, connectionSecurity, auth, username, password, timeoutMs);
-  }
-
-  /**
-   * Configures the {@link UserEmailConfig} mock with the given SMTP settings.
-   * @param host the SMTP host
-   * @param port the SMTP port, may be {@code null}
-   * @param connectionSecurity the connection security mode
-   * @param auth whether authentication is required
-   * @param username the SMTP username
-   * @param encryptedPassword the encrypted SMTP password
-   */
-  private void setupUserEmailConfigMock(String host, Long port, String connectionSecurity,
-      boolean auth, String username, String encryptedPassword) {
-    when(userEmailConfig.getMailHost()).thenReturn(host);
-    when(userEmailConfig.getSmtpPort()).thenReturn(port);
-    when(userEmailConfig.getSmtpConnectionSecurity()).thenReturn(connectionSecurity);
-    when(userEmailConfig.isSMTPAuthentification()).thenReturn(auth);
-    when(userEmailConfig.getSmtpServerAccount()).thenReturn(username);
-    when(userEmailConfig.getSmtpServerPassword()).thenReturn(encryptedPassword);
   }
 
   /**

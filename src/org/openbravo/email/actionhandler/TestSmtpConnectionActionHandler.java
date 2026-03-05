@@ -37,25 +37,22 @@ import org.openbravo.client.application.process.ResponseActionsBuilder.MessageTy
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
-import org.openbravo.model.ad.access.UserEmailConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.utils.FormatUtilities;
 
 /**
  * Action handler for the "Test SMTP Connection" button. Validates SMTP connectivity and
- * authentication for both user-level ({@link UserEmailConfig}) and organization/client-level
- * ({@link EmailServerConfiguration}) email configurations.
+ * authentication for {@link EmailServerConfiguration} records at any cascade level
+ * (User, Organization, or Client).
  */
 public class TestSmtpConnectionActionHandler extends BaseProcessActionHandler {
 
   private static final Logger log = LogManager.getLogger();
 
   private static final long DEFAULT_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
-  private static final int DEFAULT_USER_SMTP_PORT = 587;
   private static final int DEFAULT_POC_SMTP_PORT = 25;
   private static final String SMTP_PROTOCOL = "smtp";
 
-  static final String KEY_USER_CONFIG_ID = "AD_User_Email_Config_ID";
   static final String KEY_POC_CONFIG_ID = "C_Poc_Configuration_ID";
   private static final String MSG_KEY_SUCCESS = "SmtpTestSuccess";
   private static final String MSG_KEY_ERROR = "Error";
@@ -81,19 +78,15 @@ public class TestSmtpConnectionActionHandler extends BaseProcessActionHandler {
   }
 
   /**
-   * Routes the test execution to the appropriate handler based on the configuration type
-   * present in the request JSON.
+   * Routes the test execution to the appropriate handler based on the configuration record
+   * identifier present in the request JSON.
    *
    * @param request the incoming JSON object containing the configuration record identifier
    * @return a JSON response with the test result message
    * @throws Exception if any processing error occurs
    */
   protected JSONObject routeTestByConfigType(JSONObject request) throws Exception {
-    String userConfigId = request.optString(KEY_USER_CONFIG_ID, null);
     String pocConfigId = request.optString(KEY_POC_CONFIG_ID, null);
-    if (StringUtils.isNotBlank(userConfigId)) {
-      return testUserEmailConfig(userConfigId);
-    }
     if (StringUtils.isNotBlank(pocConfigId)) {
       return testPocConfiguration(pocConfigId);
     }
@@ -102,33 +95,8 @@ public class TestSmtpConnectionActionHandler extends BaseProcessActionHandler {
   }
 
   /**
-   * Tests SMTP connectivity for a user-level email configuration.
-   * @param configId the {@code AD_User_Email_Config_ID} to test
-   * @return a JSON response indicating success or failure
-   * @throws ServletException if password decryption fails
-   */
-  protected JSONObject testUserEmailConfig(String configId) throws ServletException {
-    UserEmailConfig config = OBDal.getInstance().get(UserEmailConfig.class, configId);
-    if (config == null) {
-      return buildErrorResponse("SMTP configuration record not found: " + configId);
-    }
-    int port = resolvePort(config.getSmtpPort(), DEFAULT_USER_SMTP_PORT);
-    SmtpTestParams params = new SmtpTestParams(
-        config.getMailHost(),
-        port,
-        config.getSmtpConnectionSecurity(),
-        config.isSMTPAuthentification(),
-        config.getSmtpServerAccount(),
-        decryptPassword(config.getSmtpServerPassword()),
-        DEFAULT_TIMEOUT_MS
-    );
-    Exception testError = attemptSmtpConnection(params);
-    persistTestResult(config, testError == null);
-    return buildTestResponse(testError, config.getMailHost(), port, params.auth);
-  }
-
-  /**
-   * Tests SMTP connectivity for an organization or client-level email configuration.
+   * Tests SMTP connectivity for an email configuration record ({@link EmailServerConfiguration}).
+   * Applies to all cascade levels: User, Organization, and Client.
    * @param configId the {@code C_Poc_Configuration_ID} to test
    * @return a JSON response indicating success or failure
    * @throws ServletException if password decryption fails
@@ -324,18 +292,6 @@ public class TestSmtpConnectionActionHandler extends BaseProcessActionHandler {
       return DEFAULT_TIMEOUT_MS;
     }
     return TimeUnit.SECONDS.toMillis(configuredTimeoutSeconds);
-  }
-
-  /**
-   * Persists the SMTP connection test result on a {@link UserEmailConfig} record.
-   * @param config  the user email configuration to update
-   * @param success whether the test was successful
-   */
-  private void persistTestResult(UserEmailConfig config, boolean success) {
-    config.setTestsuccessful(success);
-    config.setLasttestdate(new Date());
-    OBDal.getInstance().save(config);
-    OBDal.getInstance().flush();
   }
 
   /**

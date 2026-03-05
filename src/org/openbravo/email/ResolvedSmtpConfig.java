@@ -16,14 +16,12 @@
  */
 package org.openbravo.email;
 
-import org.openbravo.model.ad.access.UserEmailConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 
 /**
  * Immutable data transfer object representing a fully resolved SMTP configuration.
- * Built from either a user-level {@link UserEmailConfig} or an organization/client-level
- * {@link EmailServerConfiguration}, normalizing the different field names into a single
- * uniform structure.
+ * Built from a {@link EmailServerConfiguration} record at any cascade level (User,
+ * Organization, or Client), normalizing the field names into a single uniform structure.
  */
 public class ResolvedSmtpConfig {
 
@@ -31,16 +29,13 @@ public class ResolvedSmtpConfig {
    * Indicates the cascade level at which the SMTP configuration was resolved.
    */
   public enum Level {
-    /** User-level configuration from {@code AD_USER_EMAIL_CONFIG}. */
+    /** User-level configuration from {@code C_POC_CONFIGURATION} with {@code AD_USER_ID} set. */
     USER,
     /** Organization-level configuration from {@code C_POC_CONFIGURATION}. */
     ORGANIZATION,
     /** Client/system-level (legacy) configuration from {@code C_POC_CONFIGURATION} with org '0'. */
     CLIENT
   }
-
-  /** Default SMTP port for user-level configurations (submission port). */
-  static final int DEFAULT_USER_SMTP_PORT = 587;
 
   /** Default SMTP port for organization/client-level configurations. */
   static final int DEFAULT_POC_SMTP_PORT = 25;
@@ -59,33 +54,11 @@ public class ResolvedSmtpConfig {
   private final String configId;
 
   /**
-   * Constructs a resolved configuration from a user-level email config record.
-   * The level is always set to {@link Level#USER}. The default port is {@value #DEFAULT_USER_SMTP_PORT}
-   * when the configured port is {@code null}. Timeout is not applicable at user level
-   * and is set to {@code null}.
-   * @param config the user email configuration record
-   */
-  ResolvedSmtpConfig(UserEmailConfig config) {
-    this.host = config.getMailHost();
-    this.port = resolvePort(config.getSmtpPort(), DEFAULT_USER_SMTP_PORT);
-    this.connectionSecurity = config.getSmtpConnectionSecurity();
-    this.auth = config.isSMTPAuthentification();
-    this.account = config.getSmtpServerAccount();
-    this.password = config.getSmtpServerPassword();
-    this.fromAddress = config.getSmtpserverfromaddress();
-    this.fromName = config.getSmtpserverfromname();
-    this.replyTo = config.getSmtpreplytoaddress();
-    this.timeoutSeconds = null;
-    this.level = Level.USER;
-    this.configId = config.getId();
-  }
-
-  /**
-   * Constructs a resolved configuration from an organization or client-level email
-   * server configuration record. The default port is {@value #DEFAULT_POC_SMTP_PORT}
-   * when the configured port is {@code null}.
+   * Constructs a resolved configuration from an email server configuration record.
+   * The default port is {@value #DEFAULT_POC_SMTP_PORT} when the configured port is {@code null}.
    * @param config the email server configuration record
-   * @param level  the cascade level ({@link Level#ORGANIZATION} or {@link Level#CLIENT})
+   * @param level  the cascade level ({@link Level#USER}, {@link Level#ORGANIZATION}, or
+   *   {@link Level#CLIENT})
    */
   ResolvedSmtpConfig(EmailServerConfiguration config, Level level) {
     this.host = config.getSmtpServer();

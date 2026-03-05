@@ -26,7 +26,6 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.User;
-import org.openbravo.model.ad.access.UserEmailConfig;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.enterprise.Organization;
 
@@ -67,15 +66,16 @@ public class SmtpCascadeResolver {
 
   /**
    * Attempts to resolve the SMTP configuration from the user's personal email settings.
-   * Queries for an active {@link UserEmailConfig} record linked to the given user.
+   * Queries for an active {@link EmailServerConfiguration} record linked to the given user
+   * via {@code AD_USER_ID}.
    * @param user the current user
    * @return a {@link ResolvedSmtpConfig} at {@code USER} level, or {@code null} if none found
    */
   protected static ResolvedSmtpConfig resolveUserLevel(User user) {
     try {
-      UserEmailConfig config = findActiveUserEmailConfig(user);
+      EmailServerConfiguration config = findActiveUserEmailConfig(user);
       if (config != null) {
-        return new ResolvedSmtpConfig(config);
+        return new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
       }
     } catch (Exception e) {
       log.error("Error resolving SMTP config at USER level for userId={}",
@@ -85,18 +85,18 @@ public class SmtpCascadeResolver {
   }
 
   /**
-   * Queries the database for an active {@link UserEmailConfig} record belonging to the
-   * given user. Returns at most one result.
+   * Queries the database for an active {@link EmailServerConfiguration} record belonging to the
+   * given user (where {@code AD_USER_ID} matches). Returns at most one result.
    * @param user the user to search for
    * @return the active user email configuration, or {@code null} if none exists
    */
-  protected static UserEmailConfig findActiveUserEmailConfig(User user) {
-    OBCriteria<UserEmailConfig> criteria = OBDal.getInstance()
-        .createCriteria(UserEmailConfig.class);
-    criteria.add(Restrictions.eq(UserEmailConfig.PROPERTY_USERCONTACT, user));
-    criteria.add(Restrictions.eq(UserEmailConfig.PROPERTY_ACTIVE, true));
+  protected static EmailServerConfiguration findActiveUserEmailConfig(User user) {
+    OBCriteria<EmailServerConfiguration> criteria = OBDal.getInstance()
+        .createCriteria(EmailServerConfiguration.class);
+    criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_USERCONTACT, user));
+    criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ACTIVE, true));
     criteria.setMaxResults(1);
-    List<UserEmailConfig> results = criteria.list();
+    List<EmailServerConfiguration> results = criteria.list();
     return results.isEmpty() ? null : results.get(0);
   }
 
