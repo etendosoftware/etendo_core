@@ -414,6 +414,7 @@ public class EmailManager {
    * Since Openbravo 3.0MP9 only
    * {@link #sendEmail(String, boolean, String, String, String, int, String, String, String, String, String, String, String, String, List, Date, List)}
    * is used for the full email sending cycle
+   * @deprecated Use {@link #sendEmail(EmailServerConfiguration, EmailInfo)} instead.
    */
   @Deprecated
   protected InternetAddress[] getAddressesFrom(String[] textualAddresses) {

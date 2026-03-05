@@ -60,6 +60,8 @@ public class TestSmtpConnectionActionHandler extends BaseProcessActionHandler {
   private static final String MSG_KEY_SUCCESS = "SmtpTestSuccess";
   private static final String MSG_KEY_ERROR = "Error";
   private static final String MSG_KEY_SUCCESS_TITLE = "Success";
+  private static final String KEY_CHECKSERVERIDENTITY = "mail.smtp.ssl.checkserveridentity";
+  private static final String MSG_TRUE = "true";
 
   private static final String SECURITY_STARTTLS = "STARTTLS";
   private static final String SECURITY_SSL = "SSL";
@@ -250,7 +252,7 @@ public class TestSmtpConnectionActionHandler extends BaseProcessActionHandler {
     props.put("mail.smtp.connectiontimeout", timeout);
     props.put("mail.smtp.writetimeout", timeout);
     if (params.auth) {
-      props.put("mail.smtp.auth", "true");
+      props.put("mail.smtp.auth", MSG_TRUE);
     }
     applyConnectionSecurity(props, params.connectionSecurity, params.port);
     return props;
@@ -270,11 +272,13 @@ public class TestSmtpConnectionActionHandler extends BaseProcessActionHandler {
     String normalized = StringUtils.deleteWhitespace(connectionSecurity);
     for (String mode : StringUtils.split(normalized, ',')) {
       if (SECURITY_STARTTLS.equals(mode)) {
-        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.enable", MSG_TRUE);
+        props.put(KEY_CHECKSERVERIDENTITY, MSG_TRUE);
       } else if (SECURITY_SSL.equals(mode)) {
         props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         props.put("mail.smtp.socketFactory.fallback", "false");
         props.put("mail.smtp.socketFactory.port", String.valueOf(port));
+        props.put(KEY_CHECKSERVERIDENTITY, MSG_TRUE);
       }
     }
   }
