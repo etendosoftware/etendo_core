@@ -57,6 +57,7 @@ public class EmailUtils {
             .add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ORGANIZATION, organization));
         mailConfigCriteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
             OBContext.getOBContext().getCurrentClient()));
+        mailConfigCriteria.add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_USERCONTACT));
 
         List<EmailServerConfiguration> mailConfigList = null;
         mailConfigList = mailConfigCriteria.list();
