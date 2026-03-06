@@ -38,4 +38,10 @@
         <singleton>true</singleton>
     </bean>
 
+    <bean>
+        <name>messages_trl</name>
+        <class>com.etendoerp.common.rest.MessagesTrlWebService</class>
+        <singleton>true</singleton>
+    </bean>
+
 </provider>
