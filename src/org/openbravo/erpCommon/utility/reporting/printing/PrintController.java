@@ -1074,25 +1074,29 @@ public class PrintController extends HttpSecureAppServlet {
 
     String fromEmail = null;
     String fromEmailId = null;
-    
-    ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
-    if (resolvedConfig != null) {
-      fromEmail = resolvedConfig.getFromAddress();
-      fromEmailId = resolvedConfig.getConfigId();
-    } else {
-      OBContext.setAdminMode(true);
-      try {
+
+    OBContext.setAdminMode(true);
+    try {
+      ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
+      if (resolvedConfig != null) {
+        fromEmail = resolvedConfig.getFromAddress() != null
+            ? resolvedConfig.getFromAddress()
+            : resolvedConfig.getAccount();
+        fromEmailId = resolvedConfig.getConfigId();
+      } else {
         EmailServerConfiguration mailConfig = EmailUtils
             .getEmailConfiguration(OBDal.getInstance().get(Organization.class, vars.getOrg()));
         if (mailConfig == null) {
           throw new ServletException(
               "No sender defined: Please go to client configuration to complete the email configuration.");
         }
-        fromEmail = mailConfig.getSmtpServerSenderAddress();
+        fromEmail = mailConfig.getSmtpServerSenderAddress() != null
+            ? mailConfig.getSmtpServerSenderAddress()
+            : mailConfig.getSmtpServerAccount();
         fromEmailId = mailConfig.getId();
-      } finally {
-        OBContext.restorePreviousMode();
       }
+    } finally {
+      OBContext.restorePreviousMode();
     }
 
     // Get additional document information
