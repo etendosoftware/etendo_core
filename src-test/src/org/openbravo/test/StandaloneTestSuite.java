@@ -37,6 +37,7 @@ import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
+import org.openbravo.erpCommon.ad_actionButton.CreateFromTest;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
@@ -468,6 +469,9 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // RptMA_ProcessPlan
     RptMA_ProcessPlanTest.class,
+
+    // Create From
+    CreateFromTest.class,
 })
 @SelectPackages({"org.openbravo.service.centralrepository",
     "org.openbravo.service.db",
