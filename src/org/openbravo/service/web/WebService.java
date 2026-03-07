@@ -87,4 +87,13 @@ public interface WebService extends OBModulePrefixRequired {
    */
   public void doPut(String path, HttpServletRequest request, HttpServletResponse response)
       throws Exception;
+
+  /**
+   * Is called for the Http PATCH method. Default implementation throws
+   * UnsupportedOperationException for backward compatibility.
+   */
+  default void doPatch(String path, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
+    throw new UnsupportedOperationException("PATCH method not supported by this web service.");
+  }
 }
