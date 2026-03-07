@@ -198,6 +198,11 @@ public class BaseWebServiceServlet extends HttpServlet {
               "Web Services are not granted to " + OBContext.getOBContext().getRole() + " role");
         }
       }
+      // PATCH support: Servlet API 3.1 does not route PATCH, intercept here
+      if ("PATCH".equalsIgnoreCase(request.getMethod())) {
+        doPatch(request, response);
+        return;
+      }
       super.service(request, response);
       response.setStatus(200);
     } catch (final InvalidRequestException e) {
@@ -232,5 +237,10 @@ public class BaseWebServiceServlet extends HttpServlet {
       w.write(WebServiceUtil.getInstance().createErrorXML(t));
       w.close();
     }
+  }
+
+  protected void doPatch(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "PATCH not supported");
   }
 }
