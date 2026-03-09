@@ -1,6 +1,6 @@
 /*
  *************************************************************************
- * The contents of this file are subject to the Etendo Public License
+ * The contents of this file are subject to the Etendo License
  * Version 1.0 ("License"). You may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
  * https://etendo.software/licenses/etendo-public-license
