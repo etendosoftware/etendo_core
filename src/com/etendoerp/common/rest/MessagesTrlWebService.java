@@ -1,12 +1,29 @@
+/*
+ *************************************************************************
+ * The contents of this file are subject to the Etendo Public License
+ * Version 1.0 ("License"). You may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * https://etendo.software/licenses/etendo-public-license
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ * The Original Code is Etendo ERP.
+ * All portions are Copyright (C) 2026 Etendo Software SL
+ * All Rights Reserved.
+ ************************************************************************
+ */
 package com.etendoerp.common.rest;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -23,19 +40,22 @@ import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Message;
 import org.openbravo.model.ad.ui.MessageTrl;
 import org.openbravo.service.json.JsonConstants;
-import org.openbravo.service.web.WebService;
+
+import com.smf.securewebservices.service.BaseSecureWebServiceServlet;
 
 /**
- * REST web service that returns {@code AD_Message} translations as a JSON object keyed by
- * search key.
+ * Servlet that returns {@code AD_Message} translations as a JSON object keyed by search key.
+ * Extends {@link BaseSecureWebServiceServlet} to support Bearer token (JWT) authentication
+ * via Secure Web Services (SWS).
  *
  * <ul>
- *   <li>{@code GET /etendo/ws/messages_trl?language=&moduleId=} — all messages for a module.</li>
- *   <li>{@code POST /etendo/ws/messages_trl} body: {@code {"language":"es_ES","searchKeys":[…]}}
+ *   <li>{@code GET /etendo/rest/MessagesTrl?language=&moduleId=} — all messages for a module.</li>
+ *   <li>{@code POST /etendo/rest/MessagesTrl} body: {@code {"language":"es_ES","searchKeys":[…]}}
  *       — specific messages by key; falls back to base-language text for missing translations.</li>
  * </ul>
  */
-public class MessagesTrlWebService implements WebService {
+public class MessagesTrlWebService extends BaseSecureWebServiceServlet {
+  private static final long serialVersionUID = 1L;
 
   /** Query parameter (GET) / JSON field (POST): language ID (mandatory). */
   public static final String PARAM_LANGUAGE = "language";
@@ -44,13 +64,9 @@ public class MessagesTrlWebService implements WebService {
   /** JSON field (POST): array of AD_Message search keys (mandatory for POST). */
   public static final String PARAM_SEARCH_KEYS = "searchKeys";
 
-  // -------------------------------------------------------------------------
-  // GET — all messages for a module: ?language=&moduleId=
-  // -------------------------------------------------------------------------
-
   @Override
-  public void doGet(String path, HttpServletRequest request, HttpServletResponse response)
-      throws Exception {
+  public void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
 
     final String languageId = StringUtils.defaultIfBlank(
         request.getParameter(PARAM_LANGUAGE),
@@ -58,7 +74,7 @@ public class MessagesTrlWebService implements WebService {
     final String moduleId = request.getParameter(PARAM_MODULE_ID);
 
     if (StringUtils.isBlank(moduleId)) {
-      sendError(response, HttpServletResponse.SC_BAD_REQUEST,
+      sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST,
           "Parameter '" + PARAM_MODULE_ID + "' is required for GET requests.");
       return;
     }
@@ -66,13 +82,9 @@ public class MessagesTrlWebService implements WebService {
     handleRequest(languageId, moduleId, null, response);
   }
 
-  // -------------------------------------------------------------------------
-  // POST — specific messages by search key list, JSON body
-  // -------------------------------------------------------------------------
-
   @Override
-  public void doPost(String path, HttpServletRequest request, HttpServletResponse response)
-      throws Exception {
+  public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws IOException, ServletException {
 
     JSONObject body;
     try {
@@ -85,7 +97,7 @@ public class MessagesTrlWebService implements WebService {
       }
       body = new JSONObject(sb.toString());
     } catch (JSONException e) {
-      sendError(response, HttpServletResponse.SC_BAD_REQUEST,
+      sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST,
           "Invalid JSON body: " + e.getMessage());
       return;
     }
@@ -95,7 +107,7 @@ public class MessagesTrlWebService implements WebService {
         OBContext.getOBContext().getLanguage().getLanguage());
 
     if (!body.has(PARAM_SEARCH_KEYS)) {
-      sendError(response, HttpServletResponse.SC_BAD_REQUEST,
+      sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST,
           "Field '" + PARAM_SEARCH_KEYS + "' is required for POST requests.");
       return;
     }
@@ -111,13 +123,13 @@ public class MessagesTrlWebService implements WebService {
         }
       }
     } catch (JSONException e) {
-      sendError(response, HttpServletResponse.SC_BAD_REQUEST,
+      sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST,
           "'" + PARAM_SEARCH_KEYS + "' must be a JSON array of strings.");
       return;
     }
 
     if (searchKeyList.isEmpty()) {
-      sendError(response, HttpServletResponse.SC_BAD_REQUEST,
+      sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST,
           "'" + PARAM_SEARCH_KEYS + "' must contain at least one search key.");
       return;
     }
@@ -125,18 +137,14 @@ public class MessagesTrlWebService implements WebService {
     handleRequest(languageId, null, searchKeyList, response);
   }
 
-  // -------------------------------------------------------------------------
-  // Shared logic
-  // -------------------------------------------------------------------------
-
   /**
    * Validates parameters, resolves entities, builds and writes the JSON response.
    */
   private void handleRequest(String languageId, String moduleId, List<String> searchKeyList,
-      HttpServletResponse response) throws Exception {
+      HttpServletResponse response) throws IOException {
 
     if (StringUtils.isBlank(languageId)) {
-      sendError(response, HttpServletResponse.SC_BAD_REQUEST,
+      sendJsonError(response, HttpServletResponse.SC_BAD_REQUEST,
           "Parameter '" + PARAM_LANGUAGE + "' is required.");
       return;
     }
@@ -146,23 +154,21 @@ public class MessagesTrlWebService implements WebService {
     try {
       OBContext.setAdminMode(false);
 
-      // Resolve Language entity
       OBCriteria<Language> langCrit = OBDal.getInstance().createCriteria(Language.class);
       langCrit.add(Restrictions.eq(Language.PROPERTY_LANGUAGE, languageId));
       langCrit.setMaxResults(1);
       Language lang = (Language) langCrit.uniqueResult();
       if (lang == null) {
-        sendError(response, HttpServletResponse.SC_NOT_FOUND,
+        sendJsonError(response, HttpServletResponse.SC_NOT_FOUND,
             "Language '" + languageId + "' not found.");
         return;
       }
 
-      // Optionally resolve Module entity
       Module module = null;
       if (hasModuleId) {
         module = OBDal.getInstance().get(Module.class, moduleId);
         if (module == null) {
-          sendError(response, HttpServletResponse.SC_NOT_FOUND,
+          sendJsonError(response, HttpServletResponse.SC_NOT_FOUND,
               "Module with id '" + moduleId + "' not found.");
           return;
         }
@@ -176,32 +182,17 @@ public class MessagesTrlWebService implements WebService {
       w.close();
 
     } catch (JSONException e) {
-      sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+      sendJsonError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
           "Error building JSON response: " + e.getMessage());
     } finally {
       OBContext.restorePreviousMode();
     }
   }
 
-  /**
-   * Builds the JSON labels response.
-   *
-   * <p>With a {@code module}: reads from {@code AD_Message} when the requested language matches
-   * the module's own language; otherwise reads from {@code AD_Message_Trl}.</p>
-   * <p>Without a {@code module}: queries {@code AD_Message_Trl} first, then falls back to
-   * {@code AD_Message} for any key whose translation is absent.</p>
-   *
-   * @param lang          resolved {@link Language} entity
-   * @param module        optional module filter; {@code null} for the search-key-list path
-   * @param searchKeyList optional key filter; {@code null} returns all module messages
-   */
   private JSONObject buildJsonLabels(Language lang, Module module, List<String> searchKeyList)
       throws JSONException {
 
     if (module != null) {
-      // Module-scoped: use the same branch logic as Copilot's getJSONLabels.
-      // If the requested language IS the module's own base language, AD_Message already
-      // contains the native text — no translation record exists for it.
       boolean useBaseLanguage = lang.getId().equals(module.getLanguage().getId());
       if (useBaseLanguage) {
         return buildFromBaseLanguage(module, searchKeyList);
@@ -209,12 +200,9 @@ public class MessagesTrlWebService implements WebService {
       return buildFromTranslations(lang, module, searchKeyList);
     }
 
-    // No module: search-key list path.
-    // Try translations first, then fill any missing keys from AD_Message.
     return buildFromTranslationsWithFallback(lang, searchKeyList);
   }
 
-  /** Reads messages directly from {@code AD_Message} (base language or no-translation path). */
   private JSONObject buildFromBaseLanguage(Module module, List<String> searchKeyList)
       throws JSONException {
 
@@ -233,7 +221,6 @@ public class MessagesTrlWebService implements WebService {
     return result;
   }
 
-  /** Reads translated messages from {@code AD_Message_Trl}. Optional module and key filters apply. */
   private JSONObject buildFromTranslations(Language lang, Module module, List<String> searchKeyList)
       throws JSONException {
 
@@ -254,17 +241,11 @@ public class MessagesTrlWebService implements WebService {
     return result;
   }
 
-  /**
-   * Reads translations from {@code AD_Message_Trl} for the given keys, then falls back to
-   * {@code AD_Message} for any key with no translation record.
-   */
   private JSONObject buildFromTranslationsWithFallback(Language lang, List<String> searchKeyList)
       throws JSONException {
 
     JSONObject result = buildFromTranslations(lang, null, searchKeyList);
 
-    // Determine which requested keys had no translation record.
-    // JSONObject.names() returns null when the object is empty, so guard against it.
     Set<String> found = new HashSet<>();
     JSONArray foundNames = result.names();
     if (foundNames != null) {
@@ -281,7 +262,6 @@ public class MessagesTrlWebService implements WebService {
     }
 
     if (!missing.isEmpty()) {
-      // Fill missing keys from AD_Message (base language text)
       JSONObject fallback = buildFromBaseLanguage(null, missing);
       JSONArray fallbackNames = fallback.names();
       if (fallbackNames != null) {
@@ -295,25 +275,12 @@ public class MessagesTrlWebService implements WebService {
     return result;
   }
 
-  /** Writes a plain-text error response. */
-  private void sendError(HttpServletResponse response, int status, String message)
-      throws Exception {
+  private void sendJsonError(HttpServletResponse response, int status, String message)
+      throws IOException {
     response.setStatus(status);
     response.setContentType("text/plain;charset=UTF-8");
     final Writer w = response.getWriter();
     w.write(message);
     w.close();
-  }
-
-  @Override
-  public void doPut(String path, HttpServletRequest request, HttpServletResponse response)
-      throws Exception {
-    sendError(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "PUT not supported.");
-  }
-
-  @Override
-  public void doDelete(String path, HttpServletRequest request, HttpServletResponse response)
-      throws Exception {
-    sendError(response, HttpServletResponse.SC_METHOD_NOT_ALLOWED, "DELETE not supported.");
   }
 }

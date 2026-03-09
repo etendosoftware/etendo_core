@@ -17,7 +17,6 @@
 package com.etendoerp.common.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -169,7 +168,7 @@ public class MessagesTrlWebServiceTest {
     when(mockOBDal.get(Module.class, MODULE_ID)).thenReturn(mockModule);
     when(mockMsgCriteria.list()).thenReturn(List.of(mockMessage1, mockMessage2));
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     JSONObject json = new JSONObject(responseStringWriter.toString());
     assertEquals(MSG_TEXT_SUCCESS, json.optString(MSG_KEY_SUCCESS));
@@ -189,7 +188,7 @@ public class MessagesTrlWebServiceTest {
     when(mockOBDal.get(Module.class, MODULE_ID)).thenReturn(mockModule);
     when(mockTrlCriteria.list()).thenReturn(List.of(mockMessageTrl1));
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     JSONObject json = new JSONObject(responseStringWriter.toString());
     assertEquals(MSG_TEXT_EXITO, json.optString(MSG_KEY_SUCCESS));
@@ -205,7 +204,7 @@ public class MessagesTrlWebServiceTest {
     when(mockRequest.getParameter(PARAM_LANGUAGE)).thenReturn(LANG_EN_US);
     when(mockRequest.getParameter(PARAM_MODULE_ID)).thenReturn(null);
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
   }
@@ -221,7 +220,7 @@ public class MessagesTrlWebServiceTest {
     when(mockRequest.getParameter(PARAM_MODULE_ID)).thenReturn(MODULE_ID);
     when(mockLangCriteria.uniqueResult()).thenReturn(null);
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_NOT_FOUND);
   }
@@ -238,7 +237,7 @@ public class MessagesTrlWebServiceTest {
     when(mockLangCriteria.uniqueResult()).thenReturn(mockLanguage);
     when(mockOBDal.get(Module.class, "DOES_NOT_EXIST")).thenReturn(null);
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_NOT_FOUND);
   }
@@ -263,7 +262,7 @@ public class MessagesTrlWebServiceTest {
     when(mockTrlCriteria.list()).thenReturn(List.of(mockMessageTrl1));
     when(mockMsgCriteria.list()).thenReturn(List.of(mockMessage2));
 
-    service.doPost("", mockRequest, mockResponse);
+    service.doPost(mockRequest, mockResponse);
 
     JSONObject json = new JSONObject(responseStringWriter.toString());
     assertEquals(MSG_TEXT_EXITO, json.optString(MSG_KEY_SUCCESS));
@@ -279,7 +278,7 @@ public class MessagesTrlWebServiceTest {
   public void postEmptyBodyReturns400() throws Exception {
     mockPostBody("");
 
-    service.doPost("", mockRequest, mockResponse);
+    service.doPost(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
   }
@@ -295,35 +294,9 @@ public class MessagesTrlWebServiceTest {
     body.put(PARAM_LANGUAGE, LANG_EN_US);
     mockPostBody(body.toString());
 
-    service.doPost("", mockRequest, mockResponse);
+    service.doPost(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-  }
-
-  // ---------------------------------------------------------------------------
-  // PUT / DELETE
-  // ---------------------------------------------------------------------------
-
-  /**
-   * PUT requests are not supported and must return HTTP 405.
-   *
-   * @throws Exception if an error occurs during execution
-   */
-  @Test
-  public void putReturns405() throws Exception {
-    service.doPut("", mockRequest, mockResponse);
-    verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-  }
-
-  /**
-   * DELETE requests are not supported and must return HTTP 405.
-   *
-   * @throws Exception if an error occurs during execution
-   */
-  @Test
-  public void deleteReturns405() throws Exception {
-    service.doDelete("", mockRequest, mockResponse);
-    verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
 
   // ---------------------------------------------------------------------------
