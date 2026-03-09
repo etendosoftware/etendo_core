@@ -64,12 +64,12 @@ import org.openbravo.utils.FormatUtilities;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class TestSmtpConnectionActionHandlerTest {
-
   private static final String POC_CONFIG_ID = "POC_CFG_001";
   private static final String SMTP_HOST = "smtp.example.com";
   private static final String SMTP_USERNAME = "user@example.com";
   private static final String SMTP_ENCRYPTED_CREDENTIAL = "encryptedPass123";
   private static final String SMTP_DECRYPTED_CREDENTIAL = "plainPass123";
+  private static final String SMTP_TRANSPORT_PROTOCOL = "smtp";
   private static final int PORT_587 = 587;
   private static final int PORT_465 = 465;
   private static final int PORT_25 = 25;
@@ -94,32 +94,43 @@ public class TestSmtpConnectionActionHandlerTest {
   private static final String PROP_SSL_FACTORY_FALLBACK = "mail.smtp.socketFactory.fallback";
   private static final String PROP_SSL_FACTORY_PORT = "mail.smtp.socketFactory.port";
   private static final String SSL_SOCKET_FACTORY_CLASS = "javax.net.ssl.SSLSocketFactory";
-  private static final String MSG_NO_CONFIG_IDENTIFIED = "No SMTP configuration record identified in the request.";
-  private static final String MSG_CONFIG_NOT_FOUND_PREFIX = "SMTP configuration record not found: ";
+  private static final String MSG_NO_CONFIG_IDENTIFIED =
+      "No SMTP configuration record identified in the request.";
+  private static final String MSG_CONFIG_NOT_FOUND_PREFIX =
+      "SMTP configuration record not found: ";
   private static final String MSG_AUTH_FAILED = "Authentication failed";
   private static final String MSG_CONNECTION_REFUSED = "Connection refused";
   private static final String MSG_UNEXPECTED_ERROR = "Unexpected runtime error";
+  private static final String MSG_CLOSE_FAILED = "Close failed";
   private static final String TRUE_STRING = "true";
   private static final String FALSE_STRING = "false";
-
   @Mock private OBDal obDal;
   @Mock private EmailServerConfiguration pocConfig;
   @Mock private Transport transport;
   @Mock private Session mailSession;
-
   private TestSmtpConnectionActionHandler handler;
+  private SmtpTestParams authStarttlsParams;
+  private SmtpTestParams noAuthParams;
 
   /**
-   * Initializes the handler spy and configures default mock behavior for each test.
+   * Initializes the handler spy, pre-builds the most commonly used
+   * {@link SmtpTestParams} instances, and configures default mock behaviour
+   * for each test.
    */
   @BeforeEach
   void setup() {
     handler = spy(new TestSmtpConnectionActionHandler());
+    authStarttlsParams = createParams(
+        SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
+        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
+    noAuthParams = createParams(
+        SMTP_HOST, PORT_25, null, false,
+        null, null, DEFAULT_TIMEOUT_MS);
   }
 
   /**
-   * Verifies that routing dispatches to {@code testPocConfiguration} when the request
-   * contains a {@code C_Poc_Configuration_ID} key.
+   * Verifies that routing dispatches to {@code testPocConfiguration} when the
+   * request contains a {@code C_Poc_Configuration_ID} key.
    * @throws Exception if JSON parsing or test execution fails
    */
   @Test
@@ -134,7 +145,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that routing returns an error response when the config ID key is absent.
+   * Verifies that routing returns an error response when the config ID key is
+   * absent from the request.
    * @throws Exception if JSON parsing fails
    */
   @Test
@@ -148,7 +160,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that routing returns an error response when the config ID value is blank.
+   * Verifies that routing returns an error response when the config ID value
+   * is blank.
    * @throws Exception if JSON parsing fails
    */
   @Test
@@ -169,8 +182,7 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testPocConfigurationNotFound() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
+    try (MockedStatic<OBDal> obDalMock = mockStaticOBDal()) {
       when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(null);
       JSONObject errorResponse = new JSONObject();
       doReturn(errorResponse).when(handler)
@@ -187,14 +199,10 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testPocConfigurationSuccess() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(pocConfig);
-      setupPocConfigMock(SMTP_HOST, (long) PORT_465, SECURITY_SSL, true,
+    try (MockedStatic<OBDal> obDalMock = mockStaticOBDal();
+         MockedStatic<FormatUtilities> formatMock = mockStaticFormatUtilities()) {
+      setupFoundPocConfig(SMTP_HOST, (long) PORT_465, SECURITY_SSL, true,
           SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL, CUSTOM_TIMEOUT_SECONDS);
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
-          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
       doReturn(null).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
       JSONObject successResponse = new JSONObject();
       doReturn(successResponse).when(handler).buildSuccessResponse(SMTP_HOST, PORT_465, true);
@@ -213,14 +221,10 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testPocConfigurationFailure() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(pocConfig);
-      setupPocConfigMock(SMTP_HOST, (long) PORT_465, SECURITY_SSL, true,
+    try (MockedStatic<OBDal> obDalMock = mockStaticOBDal();
+         MockedStatic<FormatUtilities> formatMock = mockStaticFormatUtilities()) {
+      setupFoundPocConfig(SMTP_HOST, (long) PORT_465, SECURITY_SSL, true,
           SMTP_USERNAME, SMTP_ENCRYPTED_CREDENTIAL, CUSTOM_TIMEOUT_SECONDS);
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
-          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
       MessagingException connectionError = new MessagingException(MSG_CONNECTION_REFUSED);
       doReturn(connectionError).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
       JSONObject errorResponse = new JSONObject();
@@ -234,17 +238,15 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that the default POC SMTP port (25) is used when the configured
-   * port is {@code null}.
+   * Verifies that the default POC SMTP port ({@value #PORT_25}) is used when the
+   * configured port is {@code null}.
    * @throws ServletException if password decryption fails
    */
   @Test
   void testPocConfigurationDefaultPort() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(pocConfig);
-      setupPocConfigMock(SMTP_HOST, null, null, false, null, null, null);
+    try (MockedStatic<OBDal> obDalMock = mockStaticOBDal();
+         MockedStatic<FormatUtilities> formatMock = mockStaticFormatUtilities()) {
+      setupFoundPocConfig(SMTP_HOST, null, null, false, null, null, null);
       doReturn(null).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
       JSONObject successResponse = new JSONObject();
       doReturn(successResponse).when(handler).buildSuccessResponse(SMTP_HOST, PORT_25, false);
@@ -260,11 +262,9 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testPocConfigurationDefaultTimeout() throws ServletException {
-    try (MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
-         MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      obDalMock.when(OBDal::getInstance).thenReturn(obDal);
-      when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(pocConfig);
-      setupPocConfigMock(SMTP_HOST, (long) PORT_25, null, false, null, null, null);
+    try (MockedStatic<OBDal> obDalMock = mockStaticOBDal();
+         MockedStatic<FormatUtilities> formatMock = mockStaticFormatUtilities()) {
+      setupFoundPocConfig(SMTP_HOST, (long) PORT_25, null, false, null, null, null);
       doReturn(null).when(handler).attemptSmtpConnection(any(SmtpTestParams.class));
       JSONObject successResponse = new JSONObject();
       doReturn(successResponse).when(handler).buildSuccessResponse(SMTP_HOST, PORT_25, false);
@@ -274,7 +274,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code resolvePort} returns the configured port when it is not {@code null}.
+   * Verifies that {@code resolvePort} returns the configured port when it is
+   * not {@code null}.
    */
   @Test
   void testResolvePortWithConfiguredValue() {
@@ -282,8 +283,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code resolvePort} returns the default port when the configured
-   * value is {@code null}.
+   * Verifies that {@code resolvePort} returns the default port when the
+   * configured value is {@code null}.
    */
   @Test
   void testResolvePortWithNullValue() {
@@ -291,7 +292,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code resolvePort} correctly handles a non-standard port value.
+   * Verifies that {@code resolvePort} correctly handles a non-standard port
+   * value.
    */
   @Test
   void testResolvePortWithNonStandardValue() {
@@ -299,8 +301,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code resolveTimeout} converts seconds to milliseconds when a
-   * value is provided.
+   * Verifies that {@code resolveTimeout} converts seconds to milliseconds
+   * when a value is provided.
    */
   @Test
   void testResolveTimeoutWithConfiguredValue() {
@@ -317,7 +319,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code resolveTimeout} correctly handles a zero-second timeout.
+   * Verifies that {@code resolveTimeout} correctly handles a zero-second
+   * timeout.
    */
   @Test
   void testResolveTimeoutWithZeroValue() {
@@ -325,7 +328,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code decryptPassword} returns {@code null} for a {@code null} input.
+   * Verifies that {@code decryptPassword} returns {@code null} for a
+   * {@code null} input.
    * @throws ServletException if decryption fails
    */
   @Test
@@ -334,7 +338,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code decryptPassword} returns {@code null} for an empty string.
+   * Verifies that {@code decryptPassword} returns {@code null} for an empty
+   * string.
    * @throws ServletException if decryption fails
    */
   @Test
@@ -343,7 +348,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code decryptPassword} returns {@code null} for a blank string.
+   * Verifies that {@code decryptPassword} returns {@code null} for a blank
+   * string.
    * @throws ServletException if decryption fails
    */
   @Test
@@ -352,29 +358,27 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code decryptPassword} delegates to {@link FormatUtilities} and
-   * returns the decrypted value.
+   * Verifies that {@code decryptPassword} delegates to
+   * {@link FormatUtilities#encryptDecrypt(String, boolean)} and returns the
+   * decrypted value.
    * @throws ServletException if decryption fails
    */
   @Test
   void testDecryptPasswordWithValidValue() throws ServletException {
-    try (MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class)) {
-      formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
-          .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
-      assertEquals(SMTP_DECRYPTED_CREDENTIAL, handler.decryptPassword(SMTP_ENCRYPTED_CREDENTIAL));
+    try (MockedStatic<FormatUtilities> formatMock = mockStaticFormatUtilities()) {
+      assertEquals(SMTP_DECRYPTED_CREDENTIAL,
+          handler.decryptPassword(SMTP_ENCRYPTED_CREDENTIAL));
     }
   }
 
   /**
-   * Verifies that {@code buildSmtpProperties} sets all base SMTP properties correctly
-   * for an authenticated connection with STARTTLS.
+   * Verifies that {@code buildSmtpProperties} sets all base SMTP properties
+   * correctly for an authenticated connection with STARTTLS.
    */
   @Test
   void testBuildSmtpPropertiesWithAuth() {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    Properties props = handler.buildSmtpProperties(params);
-    assertEquals("smtp", props.get(PROP_PROTOCOL));
+    Properties props = handler.buildSmtpProperties(authStarttlsParams);
+    assertEquals(SMTP_TRANSPORT_PROTOCOL, props.get(PROP_PROTOCOL));
     assertEquals(SMTP_HOST, props.get(PROP_HOST));
     assertEquals(String.valueOf(PORT_587), props.get(PROP_PORT));
     assertEquals(TRUE_STRING, props.get(PROP_AUTH));
@@ -390,31 +394,30 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testBuildSmtpPropertiesWithoutAuth() {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_25, null, false,
-        null, null, DEFAULT_TIMEOUT_MS);
-    Properties props = handler.buildSmtpProperties(params);
+    Properties props = handler.buildSmtpProperties(noAuthParams);
     assertNull(props.get(PROP_AUTH));
     assertNull(props.get(PROP_STARTTLS_ENABLE));
     assertNull(props.get(PROP_SSL_FACTORY_CLASS));
   }
 
   /**
-   * Verifies that {@code buildSmtpProperties} applies SSL socket factory properties
-   * when the security mode is SSL.
+   * Verifies that {@code buildSmtpProperties} applies SSL socket factory
+   * properties when the security mode is SSL.
    */
   @Test
   void testBuildSmtpPropertiesWithSsl() {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_465, SECURITY_SSL, true,
+    SmtpTestParams sslParams = createParams(
+        SMTP_HOST, PORT_465, SECURITY_SSL, true,
         SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    Properties props = handler.buildSmtpProperties(params);
+    Properties props = handler.buildSmtpProperties(sslParams);
     assertEquals(SSL_SOCKET_FACTORY_CLASS, props.get(PROP_SSL_FACTORY_CLASS));
     assertEquals(FALSE_STRING, props.get(PROP_SSL_FACTORY_FALLBACK));
     assertEquals(String.valueOf(PORT_465), props.get(PROP_SSL_FACTORY_PORT));
   }
 
   /**
-   * Verifies that {@code applyConnectionSecurity} enables STARTTLS when the security
-   * mode is "STARTTLS".
+   * Verifies that {@code applyConnectionSecurity} enables STARTTLS when the
+   * security mode is {@value #SECURITY_STARTTLS}.
    */
   @Test
   void testApplyConnectionSecurityStarttls() {
@@ -425,8 +428,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code applyConnectionSecurity} configures the SSL socket factory
-   * when the security mode is "SSL".
+   * Verifies that {@code applyConnectionSecurity} configures the SSL socket
+   * factory when the security mode is {@value #SECURITY_SSL}.
    */
   @Test
   void testApplyConnectionSecuritySsl() {
@@ -439,8 +442,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code applyConnectionSecurity} applies both STARTTLS and SSL
-   * properties when both modes are specified as a comma-separated value.
+   * Verifies that {@code applyConnectionSecurity} applies both STARTTLS and
+   * SSL properties when both modes are specified as a comma-separated value.
    */
   @Test
   void testApplyConnectionSecurityCombined() {
@@ -451,8 +454,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code applyConnectionSecurity} handles whitespace in comma-separated
-   * security values correctly.
+   * Verifies that {@code applyConnectionSecurity} handles whitespace in
+   * comma-separated security values correctly.
    */
   @Test
   void testApplyConnectionSecurityWithSpaces() {
@@ -463,8 +466,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code applyConnectionSecurity} does nothing when the security
-   * string is {@code null}.
+   * Verifies that {@code applyConnectionSecurity} does nothing when the
+   * security string is {@code null}.
    */
   @Test
   void testApplyConnectionSecurityWithNull() {
@@ -474,8 +477,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code applyConnectionSecurity} does nothing when the security
-   * string is blank.
+   * Verifies that {@code applyConnectionSecurity} does nothing when the
+   * security string is blank.
    */
   @Test
   void testApplyConnectionSecurityWithBlank() {
@@ -485,7 +488,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code applyConnectionSecurity} ignores unrecognized security mode values.
+   * Verifies that {@code applyConnectionSecurity} ignores unrecognized
+   * security mode values.
    */
   @Test
   void testApplyConnectionSecurityUnknownMode() {
@@ -496,60 +500,53 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code createMailSession} creates a session with an authenticator
-   * when authentication is enabled.
+   * Verifies that {@code createMailSession} creates a session with an
+   * authenticator when authentication is enabled.
    */
   @Test
   void testCreateMailSessionWithAuth() {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    Session session = handler.createMailSession(params);
+    Session session = handler.createMailSession(authStarttlsParams);
     assertNotNull(session);
     assertEquals(TRUE_STRING, session.getProperty(PROP_AUTH));
   }
 
   /**
-   * Verifies that {@code createMailSession} creates a session without an authenticator
-   * when authentication is disabled.
+   * Verifies that {@code createMailSession} creates a session without an
+   * authenticator when authentication is disabled.
    */
   @Test
   void testCreateMailSessionWithoutAuth() {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_25, null, false,
-        null, null, DEFAULT_TIMEOUT_MS);
-    Session session = handler.createMailSession(params);
+    Session session = handler.createMailSession(noAuthParams);
     assertNotNull(session);
     assertNull(session.getProperty(PROP_AUTH));
   }
-
+  
   /**
-   * Verifies that {@code connectTransport} passes credentials when authentication
-   * is enabled.
+   * Verifies that {@code connectTransport} passes credentials when
+   * authentication is enabled.
+   *
    * @throws MessagingException if transport connection fails
    */
   @Test
   void testConnectTransportWithAuth() throws MessagingException {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    handler.connectTransport(transport, params);
+    handler.connectTransport(transport, authStarttlsParams);
     verify(transport).connect(SMTP_HOST, PORT_587, SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL);
   }
 
   /**
-   * Verifies that {@code connectTransport} passes {@code null} credentials when
-   * authentication is disabled.
+   * Verifies that {@code connectTransport} passes {@code null} credentials
+   * when authentication is disabled.
    * @throws MessagingException if transport connection fails
    */
   @Test
   void testConnectTransportWithoutAuth() throws MessagingException {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_25, null, false,
-        null, null, DEFAULT_TIMEOUT_MS);
-    handler.connectTransport(transport, params);
+    handler.connectTransport(transport, noAuthParams);
     verify(transport).connect(SMTP_HOST, PORT_25, null, null);
   }
 
   /**
-   * Verifies that {@code closeTransportQuietly} does not throw when given a {@code null}
-   * transport.
+   * Verifies that {@code closeTransportQuietly} does not throw when given a
+   * {@code null} transport.
    */
   @Test
   void testCloseTransportQuietlyWithNull() {
@@ -568,7 +565,8 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code closeTransportQuietly} skips closing a disconnected transport.
+   * Verifies that {@code closeTransportQuietly} skips closing a disconnected
+   * transport.
    * @throws MessagingException if transport close fails
    */
   @Test
@@ -579,30 +577,28 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code closeTransportQuietly} suppresses exceptions thrown during close.
+   * Verifies that {@code closeTransportQuietly} suppresses exceptions thrown
+   * during close.
    * @throws MessagingException if transport close fails
    */
   @Test
   void testCloseTransportQuietlySuppressesException() throws MessagingException {
     when(transport.isConnected()).thenReturn(true);
-    doThrow(new MessagingException("Close failed")).when(transport).close();
+    doThrow(new MessagingException(MSG_CLOSE_FAILED)).when(transport).close();
     assertDoesNotThrow(() -> handler.closeTransportQuietly(transport));
   }
 
   /**
-   * Verifies that {@code attemptSmtpConnection} returns {@code null} on a successful
-   * connection.
+   * Verifies that {@code attemptSmtpConnection} returns {@code null} on a
+   * successful connection.
    * @throws MessagingException if session or transport operations fail
    */
   @Test
   void testAttemptSmtpConnectionSuccess() throws MessagingException {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    doReturn(mailSession).when(handler).createMailSession(params);
-    when(mailSession.getTransport("smtp")).thenReturn(transport);
-    Exception result = handler.attemptSmtpConnection(params);
+    stubSessionAndTransport(authStarttlsParams);
+    Exception result = handler.attemptSmtpConnection(authStarttlsParams);
     assertNull(result);
-    verify(handler).connectTransport(transport, params);
+    verify(handler).connectTransport(transport, authStarttlsParams);
     verify(handler).closeTransportQuietly(transport);
   }
 
@@ -613,32 +609,26 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testAttemptSmtpConnectionAuthFailure() throws MessagingException {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    doReturn(mailSession).when(handler).createMailSession(params);
-    when(mailSession.getTransport("smtp")).thenReturn(transport);
+    stubSessionAndTransport(authStarttlsParams);
     doThrow(new AuthenticationFailedException(MSG_AUTH_FAILED))
-        .when(handler).connectTransport(transport, params);
-    Exception result = handler.attemptSmtpConnection(params);
+        .when(handler).connectTransport(transport, authStarttlsParams);
+    Exception result = handler.attemptSmtpConnection(authStarttlsParams);
     assertNotNull(result);
     assertTrue(result instanceof AuthenticationFailedException);
     assertEquals(MSG_AUTH_FAILED, result.getMessage());
   }
 
   /**
-   * Verifies that {@code attemptSmtpConnection} returns the {@link MessagingException}
-   * on a general messaging error.
+   * Verifies that {@code attemptSmtpConnection} returns the
+   * {@link MessagingException} on a general messaging error.
    * @throws MessagingException if session or transport operations fail
    */
   @Test
   void testAttemptSmtpConnectionMessagingException() throws MessagingException {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    doReturn(mailSession).when(handler).createMailSession(params);
-    when(mailSession.getTransport("smtp")).thenReturn(transport);
+    stubSessionAndTransport(authStarttlsParams);
     doThrow(new MessagingException(MSG_CONNECTION_REFUSED))
-        .when(handler).connectTransport(transport, params);
-    Exception result = handler.attemptSmtpConnection(params);
+        .when(handler).connectTransport(transport, authStarttlsParams);
+    Exception result = handler.attemptSmtpConnection(authStarttlsParams);
     assertNotNull(result);
     assertTrue(result instanceof MessagingException);
     assertFalse(result instanceof AuthenticationFailedException);
@@ -646,19 +636,16 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@code attemptSmtpConnection} returns the exception on an unexpected
-   * runtime error.
+   * Verifies that {@code attemptSmtpConnection} returns the exception on an
+   * unexpected runtime error.
    * @throws MessagingException if session or transport operations fail
    */
   @Test
   void testAttemptSmtpConnectionUnexpectedException() throws MessagingException {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
-        SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, DEFAULT_TIMEOUT_MS);
-    doReturn(mailSession).when(handler).createMailSession(params);
-    when(mailSession.getTransport("smtp")).thenReturn(transport);
+    stubSessionAndTransport(authStarttlsParams);
     doThrow(new RuntimeException(MSG_UNEXPECTED_ERROR))
-        .when(handler).connectTransport(transport, params);
-    Exception result = handler.attemptSmtpConnection(params);
+        .when(handler).connectTransport(transport, authStarttlsParams);
+    Exception result = handler.attemptSmtpConnection(authStarttlsParams);
     assertNotNull(result);
     assertTrue(result instanceof RuntimeException);
     assertEquals(MSG_UNEXPECTED_ERROR, result.getMessage());
@@ -671,13 +658,10 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testAttemptSmtpConnectionClosesTransportOnFailure() throws MessagingException {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, null, false,
-        null, null, DEFAULT_TIMEOUT_MS);
-    doReturn(mailSession).when(handler).createMailSession(params);
-    when(mailSession.getTransport("smtp")).thenReturn(transport);
+    stubSessionAndTransport(noAuthParams);
     doThrow(new MessagingException(MSG_CONNECTION_REFUSED))
-        .when(handler).connectTransport(transport, params);
-    handler.attemptSmtpConnection(params);
+        .when(handler).connectTransport(transport, noAuthParams);
+    handler.attemptSmtpConnection(noAuthParams);
     verify(handler).closeTransportQuietly(transport);
   }
 
@@ -686,7 +670,8 @@ public class TestSmtpConnectionActionHandlerTest {
    */
   @Test
   void testSmtpTestParamsStoresValues() {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
+    SmtpTestParams params = createParams(
+        SMTP_HOST, PORT_587, SECURITY_STARTTLS, true,
         SMTP_USERNAME, SMTP_DECRYPTED_CREDENTIAL, CUSTOM_TIMEOUT_MS);
     assertEquals(SMTP_HOST, params.host);
     assertEquals(PORT_587, params.port);
@@ -698,20 +683,18 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Verifies that {@link SmtpTestParams} correctly stores {@code null} values for
-   * optional fields.
+   * Verifies that {@link SmtpTestParams} correctly stores {@code null} values
+   * for optional fields.
    */
   @Test
   void testSmtpTestParamsWithNulls() {
-    SmtpTestParams params = createParams(SMTP_HOST, PORT_25, null, false,
-        null, null, DEFAULT_TIMEOUT_MS);
-    assertEquals(SMTP_HOST, params.host);
-    assertEquals(PORT_25, params.port);
-    assertNull(params.connectionSecurity);
-    assertFalse(params.auth);
-    assertNull(params.username);
-    assertNull(params.password);
-    assertEquals(DEFAULT_TIMEOUT_MS, params.timeoutMs);
+    assertEquals(SMTP_HOST, noAuthParams.host);
+    assertEquals(PORT_25, noAuthParams.port);
+    assertNull(noAuthParams.connectionSecurity);
+    assertFalse(noAuthParams.auth);
+    assertNull(noAuthParams.username);
+    assertNull(noAuthParams.password);
+    assertEquals(DEFAULT_TIMEOUT_MS, noAuthParams.timeoutMs);
   }
 
   /**
@@ -731,7 +714,31 @@ public class TestSmtpConnectionActionHandlerTest {
   }
 
   /**
-   * Configures the {@link EmailServerConfiguration} mock with the given SMTP settings.
+   * Opens a {@link MockedStatic} scope for {@link OBDal} and wires
+   * {@link OBDal#getInstance()} to the local {@code obDal} mock.
+   * @return the opened {@link MockedStatic} handle (caller must close)
+   */
+  private MockedStatic<OBDal> mockStaticOBDal() {
+    MockedStatic<OBDal> obDalMock = mockStatic(OBDal.class);
+    obDalMock.when(OBDal::getInstance).thenReturn(obDal);
+    return obDalMock;
+  }
+
+  /**
+   * Opens a {@link MockedStatic} scope for {@link FormatUtilities} and
+   * configures the standard encrypted-to-decrypted password mapping.
+   * @return the opened {@link MockedStatic} handle (caller must close)
+   */
+  private MockedStatic<FormatUtilities> mockStaticFormatUtilities() {
+    MockedStatic<FormatUtilities> formatMock = mockStatic(FormatUtilities.class);
+    formatMock.when(() -> FormatUtilities.encryptDecrypt(SMTP_ENCRYPTED_CREDENTIAL, false))
+        .thenReturn(SMTP_DECRYPTED_CREDENTIAL);
+    return formatMock;
+  }
+
+  /**
+   * Configures the {@link EmailServerConfiguration} mock with the given SMTP
+   * settings and ensures {@link OBDal#get(Class, Object)} returns it.
    * @param host the SMTP server host
    * @param port the SMTP port, may be {@code null}
    * @param connectionSecurity the connection security mode
@@ -740,8 +747,9 @@ public class TestSmtpConnectionActionHandlerTest {
    * @param encryptedPassword the encrypted SMTP password
    * @param timeoutSeconds the connection timeout in seconds, may be {@code null}
    */
-  private void setupPocConfigMock(String host, Long port, String connectionSecurity,
+  private void setupFoundPocConfig(String host, Long port, String connectionSecurity,
       boolean auth, String username, String encryptedPassword, Long timeoutSeconds) {
+    when(obDal.get(EmailServerConfiguration.class, POC_CONFIG_ID)).thenReturn(pocConfig);
     when(pocConfig.getSmtpServer()).thenReturn(host);
     when(pocConfig.getSmtpPort()).thenReturn(port);
     when(pocConfig.getSmtpConnectionSecurity()).thenReturn(connectionSecurity);
@@ -749,5 +757,16 @@ public class TestSmtpConnectionActionHandlerTest {
     when(pocConfig.getSmtpServerAccount()).thenReturn(username);
     when(pocConfig.getSmtpServerPassword()).thenReturn(encryptedPassword);
     when(pocConfig.getSmtpConnectionTimeout()).thenReturn(timeoutSeconds);
+  }
+
+  /**
+   * Stubs {@code createMailSession} and the session's transport retrieval so
+   * that {@code attemptSmtpConnection} can proceed without real I/O.
+   * @param params the {@link SmtpTestParams} the handler will be called with
+   * @throws MessagingException if transport retrieval stubbing fails
+   */
+  private void stubSessionAndTransport(SmtpTestParams params) throws MessagingException {
+    doReturn(mailSession).when(handler).createMailSession(params);
+    when(mailSession.getTransport(SMTP_TRANSPORT_PROTOCOL)).thenReturn(transport);
   }
 }

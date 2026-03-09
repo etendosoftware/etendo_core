@@ -59,6 +59,87 @@
     {
             submitThisPage('EMAIL');
     }
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    function isValidEmail(addr) {
+      addr = addr.trim();
+      return addr.length > 0 && EMAIL_RE.test(addr);
+    }
+
+    function findInvalidAddress(value) {
+      if (!value || value.trim() === '') {
+        return null;
+      }
+      var parts = value.split(/[;,]/);
+      for (var i = 0; i < parts.length; i++) {
+        var addr = parts[i].trim();
+        if (addr.length > 0 && !EMAIL_RE.test(addr)) {
+          return addr;
+        }
+      }
+      return null;
+    }
+
+    function setEmailError(fieldId, errorMsg) {
+      var errEl = document.getElementById(fieldId + '_error');
+      if (!errEl) {
+        return;
+      }
+      if (errorMsg) {
+        errEl.textContent = errorMsg;
+        errEl.style.display = '';
+        document.getElementById(fieldId).style.borderColor = '#c00';
+      } else {
+        errEl.textContent = '';
+        errEl.style.display = 'none';
+        document.getElementById(fieldId).style.borderColor = '';
+      }
+    }
+
+    function validateAndSendEmail() {
+      var hasError = false;
+      var toVal = document.getElementById('toEmail').value.trim();
+      if (!toVal) {
+        setEmailError('toEmail', 'Recipient email is required.');
+        hasError = true;
+      } else {
+        var invalidTo = findInvalidAddress(toVal);
+        if (invalidTo !== null) {
+          setEmailError('toEmail', '"' + invalidTo + '" is not a valid email address.');
+          hasError = true;
+        } else {
+          setEmailError('toEmail', null);
+        }
+      }
+      var ccEl = document.getElementById('ccEmail');
+      if (ccEl && ccEl.value.trim()) {
+        var invalidCC = findInvalidAddress(ccEl.value);
+        if (invalidCC !== null) {
+          setEmailError('ccEmail', '"' + invalidCC + '" is not a valid email address.');
+          hasError = true;
+        } else {
+          setEmailError('ccEmail', null);
+        }
+      } else if (ccEl) {
+        setEmailError('ccEmail', null);
+      }
+      var bccEl = document.getElementById('bccEmail');
+      if (bccEl && bccEl.value.trim()) {
+        var invalidBCC = findInvalidAddress(bccEl.value);
+        if (invalidBCC !== null) {
+          setEmailError('bccEmail', '"' + invalidBCC + '" is not a valid email address.');
+          hasError = true;
+        } else {
+          setEmailError('bccEmail', null);
+        }
+      } else if (bccEl) {
+        setEmailError('bccEmail', null);
+      }
+
+      if (!hasError) {
+        submitThisPage('EMAIL');
+      }
+    }
 
     function closePopUp()
     {
@@ -135,6 +216,25 @@
         } 
         setWindowElementFocus('firstElement');
         resizeWindow();
+
+        if (document.getElementById('toEmail').value === '') {
+          var warnCallback = function(paramXMLParticular, XMLHttpRequestObj) {
+            if (getReadyStateHandler(XMLHttpRequestObj)) {
+              try {
+                var data = JSON.parse(XMLHttpRequestObj.responseText);
+                if (!data.error) {
+                  bpContactsCache = data.contacts;
+                  if (data.contacts.length === 0) {
+                    document.getElementById('noBPEmailWarning').style.display = '';
+                  }
+                }
+              } catch(e) {}
+            }
+            return true;
+          };
+          submitXmlHttpRequest(warnCallback, document.frmMain, 'GET_BP_CONTACTS',
+              'PrintOptions.html', false);
+        }
         if(document.getElementById('multiDocType').value=='Y'){
           document.getElementById('emailConfigSelector').style.display = 'none';
           document.getElementById('emailConfigToUse').style.display = 'none';
@@ -171,6 +271,228 @@
                 document.getElementById(fieldName).style.display = '';
             }
         }
+    }
+
+    var bpContactsCache = null;
+    function openContactSelector() {
+      var panel = document.getElementById('contactSelectorPanel');
+      if (panel.style.display === 'none' || panel.style.display === '') {
+        if (bpContactsCache === null) {
+          loadBPContacts();
+        } else {
+          renderContactList(bpContactsCache, '');
+        }
+        panel.style.display = 'table-row';
+      } else {
+        panel.style.display = 'none';
+      }
+    }
+
+    function loadBPContacts() {
+      var callback = function(paramXMLParticular, XMLHttpRequestObj) {
+        if (getReadyStateHandler(XMLHttpRequestObj)) {
+          try {
+            var data = JSON.parse(XMLHttpRequestObj.responseText);
+            if (!data.error) {
+              bpContactsCache = data.contacts;
+              renderContactList(bpContactsCache, '');
+              if (data.contacts.length === 0) {
+                document.getElementById('noBPEmailWarning').style.display = '';
+              }
+            }
+          } catch(e) {}
+        }
+        return true;
+      };
+      submitXmlHttpRequest(callback, document.frmMain, 'GET_BP_CONTACTS', 'PrintOptions.html', false);
+    }
+
+    function renderContactList(contacts, filter) {
+      var tbody = document.getElementById('contactSelectorBody');
+      tbody.innerHTML = '';
+      var lowerFilter = filter.toLowerCase();
+      for (var i = 0; i < contacts.length; i++) {
+        var c = contacts[i];
+        if (filter && c.name.toLowerCase().indexOf(lowerFilter) === -1
+            && c.email.toLowerCase().indexOf(lowerFilter) === -1) {
+          continue;
+        }
+        var tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.setAttribute('data-email', c.email);
+        tr.setAttribute('data-contactid', c.contactId);
+        tr.onmouseover = function() { this.style.backgroundColor = '#d0e4f7'; };
+        tr.onmouseout  = function() { this.style.backgroundColor = ''; };
+        tr.onclick = function() { selectContact(this.getAttribute('data-contactid'), this.getAttribute('data-email')); };
+        var badge = c.isDefault ? ' &#9733;' : (c.isActive ? '' : ' (inactive)');
+        tr.innerHTML = '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.name) + badge + '</td>'
+                     + '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.email) + '</td>';
+        tbody.appendChild(tr);
+      }
+      if (tbody.children.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="DataGrid_Body_Cell" style="padding:4px;font-style:italic;">No contacts found</td></tr>';
+      }
+      var scrollArea = document.getElementById('contactScrollArea');
+      var visibleRows = tbody.children.length;
+      if (visibleRows > 3) {
+        scrollArea.style.maxHeight = '115px';
+      } else {
+        scrollArea.style.maxHeight = '';
+      }
+    }
+
+    function selectContact(contactId, email) {
+      var toField = document.getElementById('toEmail');
+      var current = toField.value.trim();
+      if (current.length > 0) {
+        var addresses = current.split(/[;,]/).map(function(a) { return a.trim(); });
+        if (addresses.indexOf(email.trim()) === -1) {
+          toField.value = current.replace(/[;,\s]+$/, '') + '; ' + email;
+        }
+      } else {
+        toField.value = email;
+      }
+      document.getElementById('toContactId').value = contactId;
+      manageFieldValueChange('toEmail');
+      document.getElementById('contactSelectorPanel').style.display = 'none';
+    }
+
+    function filterContacts() {
+      if (bpContactsCache) {
+        renderContactList(bpContactsCache, document.getElementById('contactSelectorFilter').value);
+      }
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    var suggestionsVisible = false;
+    var activeSuggestionIndex = -1;
+
+    function getActiveSegment(fullValue) {
+      var parts = fullValue.split(/[;,]/);
+      return parts[parts.length - 1].trim();
+    }
+
+    function replaceActiveSegment(fullValue, newSegment) {
+      var idx = Math.max(fullValue.lastIndexOf(';'), fullValue.lastIndexOf(','));
+      if (idx < 0) { return newSegment; }
+      return fullValue.substring(0, idx + 1) + ' ' + newSegment;
+    }
+
+    function onToEmailKeyup(event) {
+      manageFieldValueChange('toEmail');
+      var key = event.key || event.keyCode;
+      if (key === 'Escape' || key === 27) { hideSuggestions(); return; }
+      if (key === 'ArrowDown' || key === 40) { moveSuggestion(1); return; }
+      if (key === 'ArrowUp' || key === 38) { moveSuggestion(-1); return; }
+      if (key === 'Enter' || key === 13) { selectActiveSuggestion(); return; }
+      var segment = getActiveSegment(document.getElementById('toEmail').value);
+      if (segment.length < 1) { hideSuggestions(); return; }
+      if (bpContactsCache !== null) {
+        showSuggestions(segment);
+      } else {
+        var cb = function(paramXMLParticular, XMLHttpRequestObj) {
+          if (getReadyStateHandler(XMLHttpRequestObj)) {
+            try {
+              var data = JSON.parse(XMLHttpRequestObj.responseText);
+              if (!data.error) {
+                bpContactsCache = data.contacts;
+                if (data.contacts.length === 0) {
+                  document.getElementById('noBPEmailWarning').style.display = '';
+                }
+                showSuggestions(getActiveSegment(document.getElementById('toEmail').value));
+              }
+            } catch(e) {}
+          }
+          return true;
+        };
+        submitXmlHttpRequest(cb, document.frmMain, 'GET_BP_CONTACTS', 'PrintOptions.html', false);
+      }
+    }
+
+    function showSuggestions(filter) {
+      if (!bpContactsCache || bpContactsCache.length === 0) {
+        return;
+      }
+      var lower = filter.toLowerCase();
+      var matches = [];
+      for (var i = 0; i < bpContactsCache.length; i++) {
+        var c = bpContactsCache[i];
+        if (c.name.toLowerCase().indexOf(lower) !== -1 ||
+            c.email.toLowerCase().indexOf(lower) !== -1) {
+          matches.push(c);
+        }
+      }
+      var box = document.getElementById('toEmailSuggestions');
+      box.innerHTML = '';
+      if (matches.length === 0) { hideSuggestions(); return; }
+      for (var j = 0; j < matches.length; j++) {
+        var m = matches[j];
+        var div = document.createElement('div');
+        div.setAttribute('data-email', m.email);
+        div.setAttribute('data-contactid', m.contactId);
+        div.style.cssText = 'padding:5px 8px; cursor:pointer; font-size:12px; white-space:nowrap;';
+        var badge = m.isDefault ? ' \u2605' : (m.isActive ? '' : ' (inactive)');
+        div.innerHTML = '<strong>' + escapeHtml(m.name) + badge + '</strong>'
+                      + '&nbsp;&lt;' + escapeHtml(m.email) + '&gt;';
+        div.onmousedown = function() {
+          applySuggestion(this.getAttribute('data-contactid'), this.getAttribute('data-email'));
+        };
+        div.onmouseover = function() { this.style.backgroundColor = '#d0e4f7'; };
+        div.onmouseout  = function() {
+          if (this !== document.getElementById('toEmailSuggestions').children[activeSuggestionIndex]) {
+            this.style.backgroundColor = '';
+          }
+        };
+        box.appendChild(div);
+      }
+      box.style.display = '';
+      activeSuggestionIndex = -1;
+      suggestionsVisible = true;
+    }
+
+    function hideSuggestions() {
+      document.getElementById('toEmailSuggestions').style.display = 'none';
+      suggestionsVisible = false;
+      activeSuggestionIndex = -1;
+    }
+
+    function moveSuggestion(direction) {
+      if (!suggestionsVisible) {
+        return;
+      }
+      var items = document.getElementById('toEmailSuggestions').children;
+      if (items.length === 0) {
+        return;
+      }
+      if (activeSuggestionIndex >= 0) {
+        items[activeSuggestionIndex].style.backgroundColor = '';
+      }
+      activeSuggestionIndex = (activeSuggestionIndex + direction + items.length) % items.length;
+      items[activeSuggestionIndex].style.backgroundColor = '#d0e4f7';
+      items[activeSuggestionIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function selectActiveSuggestion() {
+      if (!suggestionsVisible || activeSuggestionIndex < 0) {
+        return;
+      }
+      var items = document.getElementById('toEmailSuggestions').children;
+      if (activeSuggestionIndex < items.length) {
+        var item = items[activeSuggestionIndex];
+        applySuggestion(item.getAttribute('data-contactid'), item.getAttribute('data-email'));
+      }
+    }
+
+    function applySuggestion(contactId, email) {
+      var field = document.getElementById('toEmail');
+      field.value = replaceActiveSegment(field.value, email);
+      document.getElementById('toContactId').value = contactId;
+      manageFieldValueChange('toEmail');
+      setEmailError('toEmail', null);
+      hideSuggestions();
     }
 
     function storeDoc(){
@@ -286,6 +608,8 @@
     <input type="hidden" name="bccEmailOrig" id="bccEmailOrig" value=""></input>
     <input type="hidden" name="replyToEmailOrig" id="replyToEmailOrig" value=""></input>
     <input type="hidden" name="useDefaultEmailConfigValue" id="useDefaultEmailConfigValue" value=""></input>
+    <input type="hidden" name="bpartnerId" id="bpartnerId" value=""></input>
+    <input type="hidden" name="toContactId" id="toContactId" value=""></input>
     
     
 
@@ -361,17 +685,73 @@
                         <td style="width: 1%; text-align: right;">
                             <span style="white-space: nowrap; padding-right: 10px;" class="LabelText">To</span>
                         </td>
-                        <td id="toEmailArea"colspan="3">
-                            <input style="width: 55%;" type="text" dojoType="openbravo:ValidationTextBox"
+                        <td id="toEmailArea" colspan="3" style="position:relative;">
+                            <input style="width: 50%;" type="text" dojoType="openbravo:ValidationTextBox"
                                     class="dojoValidateValid required TextBox_btn_TwoCells_width"
                                     maxlength="200" name="toEmail" id="toEmail" value=""
-                                    onkeyup="manageFieldValueChange(this.id);" onchange="manageFieldValueChange(this.id);"
-                                    required="true"><span class="LabelText" name="toName" id="toName" value="" style="padding-left: 10px"></span>
-                                    
+                                    onkeyup="onToEmailKeyup(event);"
+                                    onchange="manageFieldValueChange(this.id);"
+                                    onblur="setTimeout(hideSuggestions, 200);"
+                                    autocomplete="off"
+                                    required="true">
+                            <div id="toEmailSuggestions"
+                                 style="display:none; position:absolute; top:100%; left:0;
+                                        background:#fff; border:1px solid #aaa; border-top:0;
+                                        width:50%; max-height:180px; overflow-y:auto;
+                                        z-index:9999; box-shadow:0 2px 4px rgba(0,0,0,0.15);">
+                            </div>
+                            <button type="button" class="ButtonLink" style="margin-left:4px; vertical-align:middle;"
+                                    onclick="openContactSelector(); return false;"
+                                    title="Select recipient">
+                              <table class="Button">
+                                <tr>
+                                  <td class="Button_left"><img border="0" src="../../../../../web/images/blank.gif" class="Button_Icon Button_Icon_search" title="Select recipient" alt="Select recipient"></td>
+                                  <td class="Button_text">Select recipient</td>
+                                  <td class="Button_right"></td>
+                                </tr>
+                              </table>
+                            </button>
+                            <span class="LabelText" name="toName" id="toName" value="" style="padding-left: 10px"></span>
+                            <span id="toEmail_error" style="display:none; color:#c00; font-size:11px; padding-left:6px;"></span>
                         </td>
                     </tr>
-                    <tr id="to_bottomMargin"style="height: 8px">
+                    <tr id="to_bottomMargin" style="height: 4px">
                     </tr>
+                    <tr id="noBPEmailWarning" style="display:none;">
+                        <td></td>
+                        <td colspan="3">
+                          <div style="background:#fff8e1; border:1px solid #f9a825; border-radius:3px;
+                                      padding:6px 10px; color:#5d4037; font-size:12px; width:60%;">
+                            <strong>No email address found.</strong>
+                            This Business Partner has no contacts with an email address configured.
+                            Please add an email to at least one contact in the Business Partner window
+                            before sending documents by email.
+                          </div>
+                        </td>
+                    </tr>
+                    <tr id="contactSelectorPanel" style="display:none;">
+                        <td></td>
+                        <td colspan="3">
+                          <div style="border:1px solid #aaa; background:#f9f9f9; padding:6px; width:60%;">
+                            <input type="text" id="contactSelectorFilter" placeholder="Filter by name or email..."
+                                   style="width:98%; margin-bottom:4px;"
+                                   onkeyup="filterContacts();" />
+                            <div id="contactScrollArea" style="overflow-y:auto;">
+                              <table cellspacing="0" cellpadding="0" width="100%">
+                                <thead>
+                                  <tr>
+                                    <th class="DataGrid_Header_Cell" style="padding:3px 6px;">Contact</th>
+                                    <th class="DataGrid_Header_Cell" style="padding:3px 6px;">Email</th>
+                                  </tr>
+                                </thead>
+                                <tbody id="contactSelectorBody">
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </td>
+                    </tr>
+                    <tr style="height: 4px"></tr>
 
                     <tr id="multipleCustomer">
                         <td>
@@ -391,7 +771,7 @@
                                     maxlength="200" name="ccEmail" id="ccEmail" value=""
                                     onkeyup="manageFieldValueChange(this.id);" onchange="manageFieldValueChange(this.id);"
                                     ><span class="LabelText" name="ccName" id="ccName" value="" style="padding-left: 10px"></span>
-                                    
+                                    <span id="ccEmail_error" style="display:none; color:#c00; font-size:11px; padding-left:6px;"></span>
                         </td>
                     </tr>
                     <tr id="cc_bottomMargin" style="display: none; height: 8px;">
@@ -407,7 +787,7 @@
                                     maxlength="200" name="bccEmail" id="bccEmail" value=""
                                     onkeyup="manageFieldValueChange(this.id);" onchange="manageFieldValueChange(this.id);"
                                     ><span class="LabelText" name="bccName" id="bccName" value="" style="padding-left: 10px"></span>
-                                    
+                                    <span id="bccEmail_error" style="display:none; color:#c00; font-size:11px; padding-left:6px;"></span>
                         </td>
                     </tr>
                     <tr id="bcc_bottomMargin" style="display: none; height: 8px;">
@@ -569,7 +949,7 @@
                             <div>
                 <button type="button" 
                   class="ButtonLink" 
-                  onclick="actionSendEmail();return false;" 
+                  onclick="validateAndSendEmail();return false;"
                   onfocus="buttonEvent('onfocus', this); window.status='Send'; return true;" 
                   onblur="buttonEvent('onblur', this);" 
                   onkeyup="buttonEvent('onkeyup', this);" 

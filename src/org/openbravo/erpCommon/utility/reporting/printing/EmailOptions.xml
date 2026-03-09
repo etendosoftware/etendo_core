@@ -45,6 +45,8 @@
     <PARAMETER id="discardSelect" name="discardSelect" default=""/>
     <PARAMETER id="to" name="to" default=""/>
     <PARAMETER id="replyTo" name="replyTo" default=""/>
+    <PARAMETER id="bpartnerId" name="bpartnerId" attribute="value" default=""/>
+    <PARAMETER id="toContactId" name="toContactId" attribute="value" default=""/>
     <PARAMETER id="closed" name="closed" attribute="value" default=""/>
     <PARAMETER id="paramArchive" name="inpArchive" attribute="value" default=""/>
     <PARAMETER id="idToDelete" name="idToDelete" attribute="value" default=""/>

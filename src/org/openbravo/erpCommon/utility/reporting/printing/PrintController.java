@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -45,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -73,6 +75,7 @@ import org.openbravo.erpCommon.utility.reporting.ReportingException;
 import org.openbravo.erpCommon.utility.reporting.TemplateData;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo.EmailDefinition;
+import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -386,6 +389,11 @@ public class PrintController extends HttpSecureAppServlet {
               getComaSeparatedString(documentIds), reports, checks, fullDocumentIdentifier);
 
         } else if (vars.commandIn("EMAIL")) {
+          final String toEmailParam = vars.getStringParameter("toEmail");
+          if (StringUtils.isBlank(toEmailParam)) {
+            throw new ServletException(
+                Utility.messageBD(this, "NoCustomerEmail", vars.getLanguage()));
+          }
           PocData[] pocData = (PocData[]) vars.getSessionObject("pocData" + fullDocumentIdentifier);
           int nrOfEmailsSend = 0;
           for (final PocData documentData : pocData) {
@@ -457,6 +465,9 @@ public class PrintController extends HttpSecureAppServlet {
             }
           }
           request.getSession().removeAttribute("files");
+          if (nrOfEmailsSend > 0 && pocData.length > 0) {
+            persistLastUsedContact(vars, pocData[0].bpartnerId);
+          }
           vars.removeSessionValue("pocData" + fullDocumentIdentifier);
           createPrintStatusPage(response, vars, nrOfEmailsSend);
         } else if (vars.commandIn("UPDATE_TEMPLATE")) {
@@ -492,6 +503,10 @@ public class PrintController extends HttpSecureAppServlet {
           final PrintWriter out = response.getWriter();
           out.println(o.toString());
           out.close();
+        } else if (vars.commandIn("GET_BP_CONTACTS")) {
+          JSONObject result = buildBPContactsJson(vars);
+          writeJsonResponse(response, result);
+
         } else if (vars.commandIn("UPDATE_EMAILCONFIG")) {
           JSONObject o = new JSONObject();
           try {
@@ -531,6 +546,93 @@ public class PrintController extends HttpSecureAppServlet {
     }
   }
 
+  /**
+   * Resolves the contact that was used as email recipient and persists it for future preselection.
+   * If the user picked a contact from the selector, its ID is used directly. Otherwise, the
+   * email address typed manually is matched against the BP's contacts.
+   * @param vars the current request variables
+   * @param bpartnerId the ID of the Business Partner
+   * @throws ServletException if an error occurs during persistence
+   *
+   */
+  protected void persistLastUsedContact(VariablesSecureApp vars, String bpartnerId) throws ServletException {
+    String toContactId = vars.getStringParameter("toContactId");
+    if (StringUtils.isBlank(toContactId)) {
+      String toEmail = vars.getStringParameter("toEmail");
+      toContactId = BPContactEmailSelector.findContactIdByEmail(bpartnerId, toEmail);
+    }
+    if (StringUtils.isNotBlank(toContactId)) {
+      BPContactEmailSelector.saveLastUsedContact(vars.getUser(), bpartnerId, toContactId);
+    }
+  }
+
+  /**
+   * Builds a JSON object containing the list of email-enabled contacts for the Business Partner
+   * identified by the {@code bpartnerId} request parameter.
+   * @param vars the current request variables containing the {@code bpartnerId} parameter
+   * @return a {@link JSONObject} with a {@code contacts} array, or an {@code error} flag on failure
+   */
+  protected JSONObject buildBPContactsJson(VariablesSecureApp vars) {
+    JSONObject result = new JSONObject();
+    try {
+      String bpartnerId = vars.getStringParameter("bpartnerId");
+      List<User> contacts = BPContactEmailSelector.getBPContactsWithEmail(bpartnerId);
+      JSONArray contactsArray = new JSONArray();
+      for (User contact : contacts) {
+        contactsArray.put(buildContactJson(contact));
+      }
+      result.put("contacts", contactsArray);
+    } catch (Exception e) {
+      log4j.error("Error retrieving BP contacts for email selector", e);
+      result = buildErrorJson();
+    }
+    return result;
+  }
+
+  /**
+   * Builds a JSON representation of a single BP contact for the email selector.
+   * @param contact the {@link User} contact to serialize
+   * @return a {@link JSONObject} with contactId, name, email, isDefault, and isActive fields
+   * @throws JSONException if a JSON serialization error occurs
+   */
+  protected static JSONObject buildContactJson(User contact) throws JSONException {
+    JSONObject json = new JSONObject();
+    json.put("contactId", contact.getId());
+    json.put("name", contact.getName());
+    json.put("email", contact.getEmail());
+    json.put("isDefault",
+    Boolean.TRUE.equals(contact.get(User.PROPERTY_ISDEFAULTFORDOCS)));
+    json.put("isActive", Boolean.TRUE.equals(contact.isActive()));
+    return json;
+  }
+
+  /**
+   * Builds a JSON object with an error flag. Used as fallback when contact retrieval fails.
+   * @return a {@link JSONObject} containing {@code {"error": true}}
+   */
+  protected JSONObject buildErrorJson() {
+    JSONObject error = new JSONObject();
+    try {
+      error.put("error", true);
+    } catch (JSONException e) {
+      log4j.error("Failed to build error JSON", e);
+    }
+    return error;
+  }
+
+  /**
+   * Writes a JSON object to the HTTP response with UTF-8 encoding.
+   * @param response the HTTP response
+   * @param json the JSON object to write
+   * @throws IOException if a write error occurs
+   */
+  protected static void writeJsonResponse(HttpServletResponse response, JSONObject json) throws IOException {
+    response.setContentType("application/json; charset=UTF-8");
+    final PrintWriter out = response.getWriter();
+    out.println(json.toString());
+    out.close();
+  }
+  
   /**
    * Sets the parameters for postProcess hooks in the given JSON parameters.
    *
@@ -1246,12 +1348,14 @@ public class PrintController extends HttpSecureAppServlet {
       bccEmail = userEmail;
       bccName = userName;
     }
+    User selectedContact = resolvePreselectedContact(vars, pocData);
 
     if (vars.commandIn("ADD") || vars.commandIn("DEL")) {
       xmlDocument.setParameter("fromEmailId", vars.getStringParameter("fromEmailId"));
       xmlDocument.setParameter("fromEmail", vars.getStringParameter("fromEmail"));
       xmlDocument.setParameter("toEmail", vars.getStringParameter("toEmail"));
       xmlDocument.setParameter("toEmailOrig", vars.getStringParameter("toEmailOrig"));
+      xmlDocument.setParameter("toContactId", vars.getStringParameter("toContactId"));
       xmlDocument.setParameter("ccEmail", vars.getStringParameter("ccEmail"));
       xmlDocument.setParameter("ccEmailOrig", vars.getStringParameter("ccEmailOrig"));
       xmlDocument.setParameter("bccEmail", vars.getStringParameter("bccEmail"));
@@ -1261,10 +1365,13 @@ public class PrintController extends HttpSecureAppServlet {
       xmlDocument.setParameter("emailSubject", vars.getStringParameter("emailSubject"));
       xmlDocument.setParameter("emailBody", vars.getStringParameter("emailBody"));
     } else {
+      String toEmail = getContactField(selectedContact, User::getEmail);
+      String toContactId = getContactField(selectedContact, User::getId);
       xmlDocument.setParameter("fromEmailId", fromEmailId);
       xmlDocument.setParameter("fromEmail", fromEmail);
-      xmlDocument.setParameter("toEmail", pocData[0].contactEmail);
-      xmlDocument.setParameter("toEmailOrig", pocData[0].contactEmail);
+      xmlDocument.setParameter("toEmail", toEmail);
+      xmlDocument.setParameter("toEmailOrig", toEmail);
+      xmlDocument.setParameter("toContactId", toContactId);
       xmlDocument.setParameter("ccEmail", "");
       xmlDocument.setParameter("ccEmailOrig", "");
       xmlDocument.setParameter("bccEmail", bccEmail);
@@ -1274,9 +1381,13 @@ public class PrintController extends HttpSecureAppServlet {
       xmlDocument.setParameter("emailSubject", emailDefinition.getSubject());
       xmlDocument.setParameter("emailBody", emailDefinition.getBody());
     }
+    xmlDocument.setParameter("bpartnerId", pocData.length > 0 ? pocData[0].bpartnerId : StringUtils.EMPTY);
     xmlDocument.setParameter("inpArchive", vars.getStringParameter("inpArchive"));
     xmlDocument.setParameter("fromName", "");
-    xmlDocument.setParameter("toName", pocData[0].contactName);
+    String toName = selectedContact != null
+        ? getContactField(selectedContact, User::getName)
+        : (pocData.length > 0 ? pocData[0].contactName : StringUtils.EMPTY);
+    xmlDocument.setParameter("toName", toName);
     xmlDocument.setParameter("ccName", "");
     xmlDocument.setParameter("bccName", bccName);
     xmlDocument.setParameter("replyToName", pocData[0].salesrepName);
@@ -1297,6 +1408,41 @@ public class PrintController extends HttpSecureAppServlet {
     out.close();
   }
 
+  /**
+   * Determines the best contact to preselect in the email popup. Only runs on the initial page
+   * load (not on ADD or DEL commands). Returns {@code null} if no suitable contact is found
+   * or if an error occurs during resolution.
+   * @param vars  the current request variables
+   * @param pocData the array of document contact data
+   * @return the preselected {@link User} contact, or {@code null}
+   */
+  protected User resolvePreselectedContact(VariablesSecureApp vars, PocData[] pocData) {
+    if (vars.commandIn("ADD", "DEL") || pocData.length == 0) {
+      return null;
+    }
+    try {
+      return BPContactEmailSelector.selectBestContact(pocData[0].bpartnerId, vars.getUser());
+    } catch (Exception e) {
+      log4j.warn("Could not determine best email contact, falling back to default. Reason: {}",
+          e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Safely extracts a string field from a {@link User} contact, returning an empty string
+   * if the contact is {@code null} or the field value is {@code null}.
+   * @param contact the contact to extract the field from, may be {@code null}
+   * @param getter the getter method reference for the desired field
+   * @return the field value or an empty string
+   */
+  protected static String getContactField(User contact, Function<User, String> getter) {
+    if (contact == null) {
+      return StringUtils.EMPTY;
+    }
+      return StringUtils.defaultString(getter.apply(contact));
+  }
+  
   private String getOptionsList(List<EmailDefinition> emailDef, String selectedValue,
       boolean isMandatory) {
     StringBuilder strOptions = new StringBuilder();

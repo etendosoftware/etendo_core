@@ -177,6 +177,10 @@
         <default><![CDATA[N]]></default>
         <onCreateDefault><![CDATA['N']]></onCreateDefault>
       </column>
+      <column name="ISDEFAULTFORDOCS" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
+        <default><![CDATA[N]]></default>
+        <onCreateDefault/>
+      </column>
       <foreign-key foreignTable="AD_ORG" name="AD_USER_AD_ORGTRX">
         <reference local="AD_ORGTRX_ID" foreign="AD_ORG_ID"/>
       </foreign-key>
@@ -237,6 +241,7 @@
       <check name="AD_USER_COMMERCIALAUTH_CHK"><![CDATA[COMMERCIALAUTH IN ('Y', 'N')]]></check>
       <check name="AD_USER_EXPIREDPASSWORD_CHECK"><![CDATA[ISEXPIREDPASSWORD IN ('Y', 'N')]]></check>
       <check name="AD_USER_ISACTIVE_CHECK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
+      <check name="AD_USER_ISDEFAULTFORDOCS_CHK"><![CDATA[ISDEFAULTFORDOCS IN ('Y', 'N')]]></check>
       <check name="AD_USER_ISLOCKED_CHECK"><![CDATA[ISLOCKED IN ('Y', 'N')]]></check>
       <check name="AD_USER_VIAEMAIL_CHK"><![CDATA[VIAEMAIL IN ('Y', 'N')]]></check>
       <check name="AD_USER_VIAESMS_CHK"><![CDATA[VIASMS IN ('Y', 'N')]]></check>

@@ -30,9 +30,11 @@ import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 
 /**
  * Unit tests for {@link ResolvedSmtpConfig}.
- * Validates field mapping from {@link EmailServerConfiguration} at all cascade levels
- * (User, Organization, Client), default port resolution, level assignment, and handling
- * of {@code null} optional fields.
+ * <p>
+ * Validates field mapping from {@link EmailServerConfiguration} at all cascade
+ * levels ({@code USER}, {@code ORGANIZATION}, {@code CLIENT}), default port
+ * resolution, level assignment, and handling of {@code null} optional fields.
+ * </p>
  */
 @ExtendWith(MockitoExtension.class)
 public class ResolvedSmtpConfigTest {
@@ -41,9 +43,11 @@ public class ResolvedSmtpConfigTest {
   private static final String CLIENT_CONFIG_ID = "CLIENT-CFG-001";
   private static final String USER_HOST = "smtp.user.example.com";
   private static final String ORG_HOST = "smtp.org.example.com";
-  private static final long PORT_465 = 465L;
-  private static final long PORT_2525 = 2525L;
-  private static final int DEFAULT_POC_PORT = 25;
+  private static final Long PORT_465 = 465L;
+  private static final int PORT_465_INT = 465;
+  private static final Long PORT_2525 = 2525L;
+  private static final int PORT_2525_INT = 2525;
+  private static final int DEFAULT_SMTP_PORT = 25;
   private static final String SECURITY_STARTTLS = "STARTTLS";
   private static final String SECURITY_SSL = "SSL";
   private static final String USER_ACCOUNT = "user@example.com";
@@ -56,20 +60,22 @@ public class ResolvedSmtpConfigTest {
   private static final String ORG_REPLY_TO = "reply@org.example.com";
   private static final String ENCRYPTED_PASSWORD = "encryptedPwd";
   private static final Long TIMEOUT_SECONDS = 600L;
+  private static final ResolvedSmtpConfig.Level LEVEL_USER = ResolvedSmtpConfig.Level.USER;
+  private static final ResolvedSmtpConfig.Level LEVEL_ORG = ResolvedSmtpConfig.Level.ORGANIZATION;
+  private static final ResolvedSmtpConfig.Level LEVEL_CLIENT = ResolvedSmtpConfig.Level.CLIENT;
+
+  private static final int EXPECTED_LEVEL_COUNT = 3;
 
   /**
    * Verifies that all fields are correctly mapped from a fully populated
-   * {@link EmailServerConfiguration} at USER level.
+   * {@link EmailServerConfiguration} at {@code USER} level.
    */
   @Test
   void testUserLevelConfigMapsAllFields() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_465, SECURITY_STARTTLS,
-        true, USER_ACCOUNT, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, USER_REPLY_TO, TIMEOUT_SECONDS);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
+    EmailServerConfiguration config = buildFullUserConfig();
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_USER);
     assertEquals(USER_HOST, result.getHost());
-    assertEquals(465, result.getPort());
+    assertEquals(PORT_465_INT, result.getPort());
     assertEquals(SECURITY_STARTTLS, result.getConnectionSecurity());
     assertTrue(result.isAuth());
     assertEquals(USER_ACCOUNT, result.getAccount());
@@ -78,45 +84,42 @@ public class ResolvedSmtpConfigTest {
     assertEquals(USER_FROM_NAME, result.getFromName());
     assertEquals(USER_REPLY_TO, result.getReplyTo());
     assertEquals(TIMEOUT_SECONDS, result.getTimeoutSeconds());
-    assertEquals(ResolvedSmtpConfig.Level.USER, result.getLevel());
+    assertEquals(LEVEL_USER, result.getLevel());
     assertEquals(USER_CONFIG_ID, result.getConfigId());
   }
 
   /**
-   * Verifies that the user-level constructor correctly sets the level to {@code USER}.
+   * Verifies that the user-level constructor correctly sets the level to
+   * {@code USER}.
    */
   @Test
   void testUserLevelConfigSetsUserLevel() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_465, null,
-        false, null, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
-    assertEquals(ResolvedSmtpConfig.Level.USER, result.getLevel());
+    EmailServerConfiguration config = buildMinimalConfig(USER_CONFIG_ID, USER_HOST, PORT_465);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_USER);
+    assertEquals(LEVEL_USER, result.getLevel());
   }
 
   /**
-   * Verifies that the default port ({@code 25}) is used when the user config has
-   * a {@code null} port.
+   * Verifies that the default port ({@value #DEFAULT_SMTP_PORT}) is used when
+   * the user config has a {@code null} port.
    */
   @Test
   void testUserLevelConfigDefaultPortWhenNull() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        USER_CONFIG_ID, USER_HOST, null, null,
-        false, null, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
-    assertEquals(DEFAULT_POC_PORT, result.getPort());
+    EmailServerConfiguration config = buildMinimalConfig(USER_CONFIG_ID, USER_HOST, null);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_USER);
+    assertEquals(DEFAULT_SMTP_PORT, result.getPort());
   }
 
   /**
-   * Verifies that {@code null} optional fields (fromName, replyTo) are preserved
+   * Verifies that {@code null} optional fields ({@code fromName}, {@code replyTo},
+   * {@code connectionSecurity}, {@code account}, {@code password}) are preserved
    * as {@code null} in the resolved config.
    */
   @Test
   void testUserLevelConfigNullOptionalFields() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_465, null,
-        false, null, null, USER_FROM_ADDRESS, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
+    EmailServerConfiguration config = buildMinimalConfig(USER_CONFIG_ID, USER_HOST, PORT_465);
+    when(config.getSmtpServerSenderAddress()).thenReturn(USER_FROM_ADDRESS);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_USER);
     assertNull(result.getFromName());
     assertNull(result.getReplyTo());
     assertNull(result.getConnectionSecurity());
@@ -129,26 +132,21 @@ public class ResolvedSmtpConfigTest {
    */
   @Test
   void testUserLevelConfigAuthFalse() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        USER_CONFIG_ID, USER_HOST, PORT_465, null,
-        false, null, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
+    EmailServerConfiguration config = buildMinimalConfig(USER_CONFIG_ID, USER_HOST, PORT_465);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_USER);
     assertFalse(result.isAuth());
   }
-
+  
   /**
    * Verifies that all fields are correctly mapped from a fully populated
-   * {@link EmailServerConfiguration} at ORGANIZATION level.
+   * {@link EmailServerConfiguration} at {@code ORGANIZATION} level.
    */
   @Test
   void testOrgConfigConstructorMapsAllFields() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_HOST, PORT_465, SECURITY_SSL,
-        true, ORG_ACCOUNT, ENCRYPTED_PASSWORD,
-        ORG_SENDER_ADDRESS, ORG_FROM_NAME, ORG_REPLY_TO, TIMEOUT_SECONDS);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.ORGANIZATION);
+    EmailServerConfiguration config = buildFullOrgConfig();
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_ORG);
     assertEquals(ORG_HOST, result.getHost());
-    assertEquals(465, result.getPort());
+    assertEquals(PORT_465_INT, result.getPort());
     assertEquals(SECURITY_SSL, result.getConnectionSecurity());
     assertTrue(result.isAuth());
     assertEquals(ORG_ACCOUNT, result.getAccount());
@@ -157,84 +155,76 @@ public class ResolvedSmtpConfigTest {
     assertEquals(ORG_FROM_NAME, result.getFromName());
     assertEquals(ORG_REPLY_TO, result.getReplyTo());
     assertEquals(TIMEOUT_SECONDS, result.getTimeoutSeconds());
-    assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, result.getLevel());
+    assertEquals(LEVEL_ORG, result.getLevel());
     assertEquals(ORG_CONFIG_ID, result.getConfigId());
   }
 
   /**
-   * Verifies that the level is correctly set to {@code CLIENT} when passed explicitly.
+   * Verifies that the level is correctly set to {@code CLIENT} when passed
+   * explicitly to the constructor.
    */
   @Test
   void testOrgConfigConstructorWithClientLevel() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        CLIENT_CONFIG_ID, ORG_HOST, PORT_465, null,
-        false, null, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.CLIENT);
-    assertEquals(ResolvedSmtpConfig.Level.CLIENT, result.getLevel());
+    EmailServerConfiguration config = buildMinimalConfig(CLIENT_CONFIG_ID, ORG_HOST, PORT_465);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_CLIENT);
+    assertEquals(LEVEL_CLIENT, result.getLevel());
     assertEquals(CLIENT_CONFIG_ID, result.getConfigId());
   }
 
   /**
-   * Verifies that the default port ({@code 25}) is used when the POC config has
-   * a {@code null} port.
+   * Verifies that the default port ({@value #DEFAULT_SMTP_PORT}) is used when
+   * the organization config has a {@code null} port.
    */
   @Test
   void testOrgConfigConstructorDefaultPortWhenNull() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_HOST, null, null,
-        false, null, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.ORGANIZATION);
-    assertEquals(DEFAULT_POC_PORT, result.getPort());
+    EmailServerConfiguration config = buildMinimalConfig(ORG_CONFIG_ID, ORG_HOST, null);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_ORG);
+    assertEquals(DEFAULT_SMTP_PORT, result.getPort());
   }
 
   /**
-   * Verifies that a custom port is preserved when explicitly set on the POC config.
+   * Verifies that a custom port is preserved when explicitly set on the
+   * organization config.
    */
   @Test
   void testOrgConfigConstructorCustomPort() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_HOST, PORT_2525, null,
-        false, null, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.ORGANIZATION);
-    assertEquals(2525, result.getPort());
+    EmailServerConfiguration config = buildMinimalConfig(ORG_CONFIG_ID, ORG_HOST, PORT_2525);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_ORG);
+    assertEquals(PORT_2525_INT, result.getPort());
   }
 
   /**
-   * Verifies that timeout is correctly mapped from the POC config.
+   * Verifies that the timeout value is correctly mapped from the organization
+   * config.
    */
   @Test
   void testOrgConfigConstructorMapsTimeout() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_HOST, PORT_465, SECURITY_SSL,
-        true, ORG_ACCOUNT, ENCRYPTED_PASSWORD,
-        ORG_SENDER_ADDRESS, ORG_FROM_NAME, null, TIMEOUT_SECONDS);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.ORGANIZATION);
+    EmailServerConfiguration config = buildFullOrgConfig();
+    when(config.getReplyToAddress()).thenReturn(null);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_ORG);
     assertEquals(TIMEOUT_SECONDS, result.getTimeoutSeconds());
   }
 
   /**
-   * Verifies that a {@code null} timeout is preserved when the POC config has no
-   * timeout configured.
+   * Verifies that a {@code null} timeout is preserved when the organization
+   * config has no timeout configured.
    */
   @Test
   void testOrgConfigConstructorNullTimeout() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_HOST, PORT_465, null,
-        false, null, null, null, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.ORGANIZATION);
+    EmailServerConfiguration config = buildMinimalConfig(ORG_CONFIG_ID, ORG_HOST, PORT_465);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_ORG);
     assertNull(result.getTimeoutSeconds());
   }
 
   /**
-   * Verifies that {@code null} optional fields are preserved as {@code null} in the
-   * resolved config built from a POC configuration.
+   * Verifies that {@code null} optional fields are preserved as {@code null} in
+   * the resolved config built from an organization configuration.
    */
   @Test
   void testOrgConfigConstructorNullOptionalFields() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_HOST, PORT_465, null,
-        false, null, null, ORG_SENDER_ADDRESS, null, null, null);
-    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.ORGANIZATION);
+    EmailServerConfiguration config = buildMinimalConfig(ORG_CONFIG_ID, ORG_HOST, PORT_465);
+    when(config.getSmtpServerSenderAddress()).thenReturn(ORG_SENDER_ADDRESS);
+    ResolvedSmtpConfig result = new ResolvedSmtpConfig(config, LEVEL_ORG);
     assertNull(result.getFromName());
     assertNull(result.getReplyTo());
     assertNull(result.getConnectionSecurity());
@@ -243,30 +233,74 @@ public class ResolvedSmtpConfigTest {
   }
 
   /**
-   * Verifies that the {@link ResolvedSmtpConfig.Level} enum contains exactly the
-   * expected three values.
+   * Verifies that the {@link ResolvedSmtpConfig.Level} enum contains exactly
+   * the expected three values in the correct ordinal order.
    */
   @Test
   void testLevelEnumValues() {
     ResolvedSmtpConfig.Level[] values = ResolvedSmtpConfig.Level.values();
-    assertEquals(3, values.length);
-    assertEquals(ResolvedSmtpConfig.Level.USER, values[0]);
-    assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, values[1]);
-    assertEquals(ResolvedSmtpConfig.Level.CLIENT, values[2]);
+    assertEquals(EXPECTED_LEVEL_COUNT, values.length);
+    assertEquals(LEVEL_USER, values[0]);
+    assertEquals(LEVEL_ORG, values[1]);
+    assertEquals(LEVEL_CLIENT, values[2]);
   }
 
   /**
-   * Builds a mocked {@link EmailServerConfiguration} with the given SMTP settings.
+   * Builds a fully populated user-level {@link EmailServerConfiguration} mock
+   * with all fields set to their {@code USER_*} constant values.
+   * @return a mocked {@link EmailServerConfiguration} with user-level data
+   */
+  private EmailServerConfiguration buildFullUserConfig() {
+    return buildEmailServerConfig(
+        USER_CONFIG_ID, USER_HOST, PORT_465, SECURITY_STARTTLS,
+        true, USER_ACCOUNT, ENCRYPTED_PASSWORD,
+        USER_FROM_ADDRESS, USER_FROM_NAME, USER_REPLY_TO, TIMEOUT_SECONDS);
+  }
+
+  /**
+   * Builds a fully populated organization-level {@link EmailServerConfiguration}
+   * mock with all fields set to their {@code ORG_*} constant values.
+   * @return a mocked {@link EmailServerConfiguration} with org-level data
+   */
+  private EmailServerConfiguration buildFullOrgConfig() {
+    return buildEmailServerConfig(
+        ORG_CONFIG_ID, ORG_HOST, PORT_465, SECURITY_SSL,
+        true, ORG_ACCOUNT, ENCRYPTED_PASSWORD,
+        ORG_SENDER_ADDRESS, ORG_FROM_NAME, ORG_REPLY_TO, TIMEOUT_SECONDS);
+  }
+
+  /**
+   * Builds a minimal {@link EmailServerConfiguration} mock with only the
+   * required identification and connection fields. All optional fields
+   * ({@code security}, {@code account}, {@code password}, {@code senderAddress},
+   * {@code fromName}, {@code replyTo}, {@code timeout}) default to {@code null},
+   * and {@code auth} defaults to {@code false}.
+   * @param id   the configuration record ID
+   * @param host the SMTP server host
+   * @param port the SMTP port, may be {@code null} to test default resolution
+   * @return a mocked {@link EmailServerConfiguration} with minimal data
+   */
+  private EmailServerConfiguration buildMinimalConfig(String id, String host, Long port) {
+    return buildEmailServerConfig(
+        id, host, port, null,
+        false, null, null,
+        null, null, null, null);
+  }
+
+  /**
+   * Builds a mocked {@link EmailServerConfiguration} with the given SMTP
+   * settings.
    * @param id the configuration record ID
    * @param host the SMTP server host
    * @param port the SMTP port, may be {@code null}
-   * @param security the connection security mode
-   * @param auth whether authentication is required
-   * @param account the SMTP account username
-   * @param password the encrypted SMTP password
-   * @param senderAddress the sender email address
-   * @param fromName the sender display name
-   * @param replyTo the reply-to address
+   * @param security the connection security mode (e.g. {@code STARTTLS},
+   *   {@code SSL}), may be {@code null}
+   * @param auth SMTP authentication is required
+   * @param account the SMTP account username, may be {@code null}
+   * @param password the encrypted SMTP password, may be {@code null}
+   * @param senderAddress the sender email address, may be {@code null}
+   * @param fromName the sender display name, may be {@code null}
+   * @param replyTo the reply-to address, may be {@code null}
    * @param timeout the connection timeout in seconds, may be {@code null}
    * @return a mocked {@link EmailServerConfiguration}
    */

@@ -45,14 +45,16 @@ import org.openbravo.model.common.enterprise.Organization;
 
 /**
  * Unit tests for {@link SmtpCascadeResolver}.
+ * <p>
  * Validates the cascade resolution logic (User → Organization → Client) and
- * the individual helper methods: {@code resolveUserLevel}, {@code resolveOrgOrClientLevel},
- * {@code findActiveUserEmailConfig}, and {@code determineLevel}.
+ * the individual helper methods: {@code resolveUserLevel},
+ * {@code resolveOrgOrClientLevel}, {@code findActiveUserEmailConfig}, and
+ * {@code determineLevel}.
+ * </p>
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class SmtpCascadeResolverTest {
-
   private static final String USER_CONFIG_ID = "USER-CONFIG-001";
   private static final String ORG_CONFIG_ID = "ORG-CONFIG-001";
   private static final String CLIENT_CONFIG_ID = "CLIENT-CONFIG-001";
@@ -62,9 +64,12 @@ public class SmtpCascadeResolverTest {
   private static final String USER_SMTP_HOST = "smtp.user.example.com";
   private static final String ORG_SMTP_HOST = "smtp.org.example.com";
   private static final String CLIENT_SMTP_HOST = "smtp.client.example.com";
-  private static final long PORT_587 = 587L;
-  private static final long PORT_465 = 465L;
-  private static final long PORT_25 = 25L;
+  private static final Long PORT_587 = 587L;
+  private static final int PORT_587_INT = 587;
+  private static final Long PORT_465 = 465L;
+  private static final int PORT_465_INT = 465;
+  private static final Long PORT_25 = 25L;
+  private static final int PORT_25_INT = 25;
   private static final String USER_FROM_ADDRESS = "user@example.com";
   private static final String ORG_FROM_ADDRESS = "noreply@org.example.com";
   private static final String CLIENT_FROM_ADDRESS = "erp@client.example.com";
@@ -74,7 +79,12 @@ public class SmtpCascadeResolverTest {
   private static final String SECURITY_SSL = "SSL";
   private static final String SECURITY_NONE = "N";
   private static final String ENCRYPTED_PASSWORD = "encryptedPwd";
-  private static final long TIMEOUT_SECONDS = 600L;
+  private static final Long TIMEOUT_SECONDS = 600L;
+  private static final String DB_ERROR_MESSAGE = "Database error";
+  
+  private static final ResolvedSmtpConfig.Level LEVEL_USER = ResolvedSmtpConfig.Level.USER;
+  private static final ResolvedSmtpConfig.Level LEVEL_ORG = ResolvedSmtpConfig.Level.ORGANIZATION;
+  private static final ResolvedSmtpConfig.Level LEVEL_CLIENT = ResolvedSmtpConfig.Level.CLIENT;
 
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<OBDal> mockedOBDal;
@@ -84,23 +94,20 @@ public class SmtpCascadeResolverTest {
   @Mock private OBDal mockDal;
   @Mock private User mockUser;
   @Mock private Organization mockOrg;
-
   @Mock private OBCriteria<EmailServerConfiguration> mockUserCriteria;
   @Mock private OBCriteria<EmailServerConfiguration> mockOrgCriteria;
 
   /**
-   * Opens static mocks and configures default behavior for OBContext, OBDal, and
-   * the user criteria before each test.
+   * Opens static mocks and configures default behaviour for {@link OBContext},
+   * {@link OBDal}, and the user criteria before each test.
    */
   @BeforeEach
   void setUp() {
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBDal = mockStatic(OBDal.class);
     mockedEmailUtils = mockStatic(EmailUtils.class);
-
     mockedOBContext.when(OBContext::getOBContext).thenReturn(mockContext);
     mockedOBDal.when(OBDal::getInstance).thenReturn(mockDal);
-
     when(mockContext.getUser()).thenReturn(mockUser);
     when(mockContext.getCurrentOrganization()).thenReturn(mockOrg);
     when(mockUser.getId()).thenReturn(USER_ID);
@@ -119,137 +126,109 @@ public class SmtpCascadeResolverTest {
     mockedOBDal.close();
     mockedEmailUtils.close();
   }
-
+  
   /**
-   * Verifies that {@code resolve()} returns a USER-level config when the current
-   * user has an active SMTP configuration.
+   * Verifies that {@code resolve()} returns a {@code USER}-level config when
+   * the current user has an active SMTP configuration.
    */
   @Test
   void testResolveReturnsUserLevelConfig() {
-    EmailServerConfiguration userConfig = buildEmailServerConfig(
-        USER_CONFIG_ID, ORG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
-        true, USER_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration userConfig = buildFullUserConfig();
     when(mockUserCriteria.list()).thenReturn(List.of(userConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolve();
     assertNotNull(result);
-    assertEquals(ResolvedSmtpConfig.Level.USER, result.getLevel());
+    assertEquals(LEVEL_USER, result.getLevel());
     assertEquals(USER_CONFIG_ID, result.getConfigId());
     assertEquals(USER_SMTP_HOST, result.getHost());
-    assertEquals(587, result.getPort());
+    assertEquals(PORT_587_INT, result.getPort());
     assertEquals(USER_FROM_ADDRESS, result.getFromAddress());
     assertEquals(USER_FROM_NAME, result.getFromName());
     assertEquals(SECURITY_STARTTLS, result.getConnectionSecurity());
   }
 
   /**
-   * Verifies that {@code resolve()} falls through to ORGANIZATION level when the
-   * user has no config but the organization does.
+   * Verifies that {@code resolve()} falls through to {@code ORGANIZATION}
+   * level when the user has no config but the organization does.
    */
   @Test
   void testResolveReturnsOrgLevelConfig() {
-    EmailServerConfiguration orgConfig = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_ID, ORG_SMTP_HOST, PORT_465, SECURITY_SSL,
-        true, ORG_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        ORG_FROM_ADDRESS, ORG_FROM_NAME, null, TIMEOUT_SECONDS);
-    when(mockDal.createCriteria(EmailServerConfiguration.class))
-        .thenReturn(mockUserCriteria, mockOrgCriteria);
-    when(mockUserCriteria.list()).thenReturn(Collections.emptyList());
-    when(mockOrgCriteria.list()).thenReturn(List.of(orgConfig));
+    EmailServerConfiguration orgConfig = buildFullOrgConfig();
+    stubCriteriaChain(Collections.emptyList(), List.of(orgConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolve();
     assertNotNull(result);
-    assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, result.getLevel());
+    assertEquals(LEVEL_ORG, result.getLevel());
     assertEquals(ORG_CONFIG_ID, result.getConfigId());
     assertEquals(ORG_SMTP_HOST, result.getHost());
-    assertEquals(465, result.getPort());
+    assertEquals(PORT_465_INT, result.getPort());
     assertEquals(SECURITY_SSL, result.getConnectionSecurity());
     assertEquals(ORG_FROM_ADDRESS, result.getFromAddress());
     assertEquals(ORG_FROM_NAME, result.getFromName());
   }
 
   /**
-   * Verifies that {@code resolve()} falls through to CLIENT level when neither user
-   * nor organization configs exist.
+   * Verifies that {@code resolve()} falls through to {@code CLIENT} level when
+   * neither user nor organization configs exist.
    */
   @Test
   void testResolveReturnsClientLevelConfig() {
-    Organization rootOrg = mock(Organization.class);
-    when(rootOrg.getId()).thenReturn(ROOT_ORG_ID);
-    when(mockContext.getCurrentOrganization()).thenReturn(rootOrg);
-    EmailServerConfiguration clientConfig = buildEmailServerConfig(
-        CLIENT_CONFIG_ID, ROOT_ORG_ID, CLIENT_SMTP_HOST, PORT_25, SECURITY_NONE,
-        false, null, null,
-        CLIENT_FROM_ADDRESS, null, null, TIMEOUT_SECONDS);
-    when(mockDal.createCriteria(EmailServerConfiguration.class))
-        .thenReturn(mockUserCriteria, mockOrgCriteria);
-    when(mockUserCriteria.list()).thenReturn(Collections.emptyList());
-    when(mockOrgCriteria.list()).thenReturn(List.of(clientConfig));
+    switchToRootOrg();
+    EmailServerConfiguration clientConfig = buildFullClientConfig();
+    stubCriteriaChain(Collections.emptyList(), List.of(clientConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolve();
     assertNotNull(result);
-    assertEquals(ResolvedSmtpConfig.Level.CLIENT, result.getLevel());
+    assertEquals(LEVEL_CLIENT, result.getLevel());
     assertEquals(CLIENT_CONFIG_ID, result.getConfigId());
     assertEquals(CLIENT_SMTP_HOST, result.getHost());
-    assertEquals(25, result.getPort());
+    assertEquals(PORT_25_INT, result.getPort());
     assertEquals(CLIENT_FROM_ADDRESS, result.getFromAddress());
     assertNull(result.getFromName());
   }
 
   /**
-   * Verifies that {@code resolve()} returns {@code null} when no configuration exists
-   * at any level.
+   * Verifies that {@code resolve()} returns {@code null} when no configuration
+   * exists at any level.
    */
   @Test
   void testResolveReturnsNullWhenNoConfig() {
-    Organization rootOrg = mock(Organization.class);
-    when(rootOrg.getId()).thenReturn(ROOT_ORG_ID);
-    when(mockContext.getCurrentOrganization()).thenReturn(rootOrg);
-    when(mockDal.createCriteria(EmailServerConfiguration.class))
-        .thenReturn(mockUserCriteria, mockOrgCriteria);
-    when(mockUserCriteria.list()).thenReturn(Collections.emptyList());
-    when(mockOrgCriteria.list()).thenReturn(Collections.emptyList());
+    switchToRootOrg();
+    stubCriteriaChain(Collections.emptyList(), Collections.emptyList());
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolve();
     assertNull(result);
   }
 
   /**
-   * Verifies that {@code resolve()} skips the user level and proceeds to org/client
-   * when the user-level query throws an exception.
+   * Verifies that {@code resolve()} skips the user level and proceeds to
+   * org/client when the user-level query throws an exception.
    */
   @Test
   void testResolveSkipsUserLevelOnException() {
-    EmailServerConfiguration orgConfig = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_ID, ORG_SMTP_HOST, PORT_465, SECURITY_SSL,
-        true, ORG_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        ORG_FROM_ADDRESS, ORG_FROM_NAME, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration orgConfig = buildFullOrgConfig();
     when(mockDal.createCriteria(EmailServerConfiguration.class))
         .thenReturn(mockUserCriteria, mockOrgCriteria);
-    when(mockUserCriteria.list()).thenThrow(new RuntimeException("Database error"));
+    when(mockUserCriteria.list()).thenThrow(new RuntimeException(DB_ERROR_MESSAGE));
     when(mockOrgCriteria.list()).thenReturn(List.of(orgConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolve();
     assertNotNull(result);
-    assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, result.getLevel());
+    assertEquals(LEVEL_ORG, result.getLevel());
   }
-
+  
   /**
-   * Verifies that {@code resolveUserLevel} returns a USER-level config when an active
-   * record exists for the given user.
+   * Verifies that {@code resolveUserLevel} returns a {@code USER}-level config
+   * when an active record exists for the given user.
    */
   @Test
   void testResolveUserLevelWithActiveConfig() {
-    EmailServerConfiguration userConfig = buildEmailServerConfig(
-        USER_CONFIG_ID, ORG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
-        true, USER_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration userConfig = buildFullUserConfig();
     when(mockUserCriteria.list()).thenReturn(List.of(userConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolveUserLevel(mockUser);
     assertNotNull(result);
-    assertEquals(ResolvedSmtpConfig.Level.USER, result.getLevel());
+    assertEquals(LEVEL_USER, result.getLevel());
     assertEquals(USER_CONFIG_ID, result.getConfigId());
   }
 
   /**
-   * Verifies that {@code resolveUserLevel} returns {@code null} when no active config
-   * exists for the given user.
+   * Verifies that {@code resolveUserLevel} returns {@code null} when no active
+   * config exists for the given user.
    */
   @Test
   void testResolveUserLevelWithNoConfig() {
@@ -259,26 +238,23 @@ public class SmtpCascadeResolverTest {
   }
 
   /**
-   * Verifies that {@code resolveUserLevel} returns {@code null} and does not propagate
-   * the exception when the criteria query fails.
+   * Verifies that {@code resolveUserLevel} returns {@code null} and does not
+   * propagate the exception when the criteria query fails.
    */
   @Test
   void testResolveUserLevelReturnsNullOnException() {
-    when(mockUserCriteria.list()).thenThrow(new RuntimeException("Database error"));
+    when(mockUserCriteria.list()).thenThrow(new RuntimeException(DB_ERROR_MESSAGE));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolveUserLevel(mockUser);
     assertNull(result);
   }
 
   /**
-   * Verifies that {@code findActiveUserEmailConfig} returns the first matching active
-   * config for the given user.
+   * Verifies that {@code findActiveUserEmailConfig} returns the first matching
+   * active config for the given user.
    */
   @Test
   void testFindActiveUserEmailConfigFound() {
-    EmailServerConfiguration userConfig = buildEmailServerConfig(
-        USER_CONFIG_ID, ORG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
-        true, USER_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        USER_FROM_ADDRESS, USER_FROM_NAME, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration userConfig = buildFullUserConfig();
     when(mockUserCriteria.list()).thenReturn(List.of(userConfig));
     EmailServerConfiguration result = SmtpCascadeResolver.findActiveUserEmailConfig(mockUser);
     assertNotNull(result);
@@ -286,8 +262,8 @@ public class SmtpCascadeResolverTest {
   }
 
   /**
-   * Verifies that {@code findActiveUserEmailConfig} returns {@code null} when no active
-   * config exists.
+   * Verifies that {@code findActiveUserEmailConfig} returns {@code null} when
+   * no active config exists.
    */
   @Test
   void testFindActiveUserEmailConfigNotFound() {
@@ -297,43 +273,39 @@ public class SmtpCascadeResolverTest {
   }
 
   /**
-   * Verifies that {@code resolveOrgOrClientLevel} returns an ORGANIZATION-level config
-   * when the resolved configuration belongs to a non-root organization.
+   * Verifies that {@code resolveOrgOrClientLevel} returns an
+   * {@code ORGANIZATION}-level config when the resolved configuration belongs
+   * to a non-root organization.
    */
   @Test
   void testResolveOrgOrClientLevelReturnsOrgLevel() {
-    EmailServerConfiguration orgConfig = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_ID, ORG_SMTP_HOST, PORT_465, SECURITY_SSL,
-        true, ORG_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        ORG_FROM_ADDRESS, ORG_FROM_NAME, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration orgConfig = buildFullOrgConfig();
     when(mockUserCriteria.list()).thenReturn(List.of(orgConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolveOrgOrClientLevel(mockOrg);
     assertNotNull(result);
-    assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, result.getLevel());
+    assertEquals(LEVEL_ORG, result.getLevel());
     assertEquals(ORG_CONFIG_ID, result.getConfigId());
   }
 
   /**
-   * Verifies that {@code resolveOrgOrClientLevel} returns a CLIENT-level config
-   * when the resolved configuration belongs to the root organization ({@code '0'}).
+   * Verifies that {@code resolveOrgOrClientLevel} returns a {@code CLIENT}-level
+   * config when the resolved configuration belongs to the root organization
+   * ({@value #ROOT_ORG_ID}).
    */
   @Test
   void testResolveOrgOrClientLevelReturnsClientLevel() {
     when(mockOrg.getId()).thenReturn(ROOT_ORG_ID);
-    EmailServerConfiguration clientConfig = buildEmailServerConfig(
-        CLIENT_CONFIG_ID, ROOT_ORG_ID, CLIENT_SMTP_HOST, PORT_25, SECURITY_NONE,
-        false, null, null,
-        CLIENT_FROM_ADDRESS, null, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration clientConfig = buildFullClientConfig();
     when(mockUserCriteria.list()).thenReturn(List.of(clientConfig));
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolveOrgOrClientLevel(mockOrg);
     assertNotNull(result);
-    assertEquals(ResolvedSmtpConfig.Level.CLIENT, result.getLevel());
+    assertEquals(LEVEL_CLIENT, result.getLevel());
     assertEquals(CLIENT_CONFIG_ID, result.getConfigId());
   }
 
   /**
-   * Verifies that {@code resolveOrgOrClientLevel} returns {@code null} when
-   * no configuration exists at any level.
+   * Verifies that {@code resolveOrgOrClientLevel} returns {@code null} when no
+   * configuration exists at any level.
    */
   @Test
   void testResolveOrgOrClientLevelReturnsNullWhenNoConfig() {
@@ -344,17 +316,14 @@ public class SmtpCascadeResolverTest {
   }
 
   /**
-   * Verifies that {@code determineLevel} returns {@code CLIENT} when the configuration's
-   * organization ID is the root ({@code '0'}).
+   * Verifies that {@code determineLevel} returns {@code CLIENT} when the
+   * configuration's organization ID is the root ({@value #ROOT_ORG_ID}).
    */
   @Test
   void testDetermineLevelReturnsClientForRootOrg() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        CLIENT_CONFIG_ID, ROOT_ORG_ID, CLIENT_SMTP_HOST, PORT_25, SECURITY_NONE,
-        false, null, null,
-        CLIENT_FROM_ADDRESS, null, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration config = buildFullClientConfig();
     ResolvedSmtpConfig.Level level = SmtpCascadeResolver.determineLevel(config);
-    assertEquals(ResolvedSmtpConfig.Level.CLIENT, level);
+    assertEquals(LEVEL_CLIENT, level);
   }
 
   /**
@@ -363,27 +332,90 @@ public class SmtpCascadeResolverTest {
    */
   @Test
   void testDetermineLevelReturnsOrganizationForNonRootOrg() {
-    EmailServerConfiguration config = buildEmailServerConfig(
-        ORG_CONFIG_ID, ORG_ID, ORG_SMTP_HOST, PORT_465, SECURITY_SSL,
-        true, ORG_FROM_ADDRESS, ENCRYPTED_PASSWORD,
-        ORG_FROM_ADDRESS, ORG_FROM_NAME, null, TIMEOUT_SECONDS);
+    EmailServerConfiguration config = buildFullOrgConfig();
     ResolvedSmtpConfig.Level level = SmtpCascadeResolver.determineLevel(config);
-    assertEquals(ResolvedSmtpConfig.Level.ORGANIZATION, level);
+    assertEquals(LEVEL_ORG, level);
+  }
+  
+  /**
+   * Builds a fully populated user-level {@link EmailServerConfiguration} mock
+   * with STARTTLS security, authentication enabled, and all sender fields set.
+   *
+   * @return a mocked {@link EmailServerConfiguration} for user-level tests
+   */
+  private EmailServerConfiguration buildFullUserConfig() {
+    return buildEmailServerConfig(
+        USER_CONFIG_ID, ORG_ID, USER_SMTP_HOST, PORT_587, SECURITY_STARTTLS,
+        true, USER_FROM_ADDRESS, ENCRYPTED_PASSWORD,
+        USER_FROM_ADDRESS, USER_FROM_NAME, null, TIMEOUT_SECONDS);
   }
 
   /**
-   * Builds a mocked {@link EmailServerConfiguration} with the given SMTP settings.
+   * Builds a fully populated organization-level {@link EmailServerConfiguration}
+   * mock with SSL security, authentication enabled, and all sender fields set.
+   * @return a mocked {@link EmailServerConfiguration} for org-level tests
+   */
+  private EmailServerConfiguration buildFullOrgConfig() {
+    return buildEmailServerConfig(
+        ORG_CONFIG_ID, ORG_ID, ORG_SMTP_HOST, PORT_465, SECURITY_SSL,
+        true, ORG_FROM_ADDRESS, ENCRYPTED_PASSWORD,
+        ORG_FROM_ADDRESS, ORG_FROM_NAME, null, TIMEOUT_SECONDS);
+  }
+
+  /**
+   * Builds a client-level {@link EmailServerConfiguration} mock with no
+   * security, no authentication, and minimal sender fields.
+   * @return a mocked {@link EmailServerConfiguration} for client-level tests
+   */
+  private EmailServerConfiguration buildFullClientConfig() {
+    return buildEmailServerConfig(
+        CLIENT_CONFIG_ID, ROOT_ORG_ID, CLIENT_SMTP_HOST, PORT_25, SECURITY_NONE,
+        false, null, null,
+        CLIENT_FROM_ADDRESS, null, null, TIMEOUT_SECONDS);
+  }
+
+  /**
+   * Replaces the current organization in {@link OBContext} with a root
+   * organization mock (ID = {@value #ROOT_ORG_ID}).
+   */
+  private void switchToRootOrg() {
+    Organization rootOrg = mock(Organization.class);
+    when(rootOrg.getId()).thenReturn(ROOT_ORG_ID);
+    when(mockContext.getCurrentOrganization()).thenReturn(rootOrg);
+  }
+
+  /**
+   * Stubs the {@link OBDal#createCriteria(Class)} call chain to return
+   * {@code userResults} on the first invocation and {@code orgResults} on the
+   * second, simulating the cascade lookup from user to org/client level.
+   * @param userResults the list returned by the user-level criteria query
+   * @param orgResults  the list returned by the org/client-level criteria query
+   */
+  private void stubCriteriaChain(
+      List<EmailServerConfiguration> userResults,
+      List<EmailServerConfiguration> orgResults) {
+    when(mockDal.createCriteria(EmailServerConfiguration.class))
+        .thenReturn(mockUserCriteria, mockOrgCriteria);
+    when(mockUserCriteria.list()).thenReturn(userResults);
+    when(mockOrgCriteria.list()).thenReturn(orgResults);
+  }
+
+  /**
+   * Builds a mocked {@link EmailServerConfiguration} with the given SMTP
+   * settings. When the {@code orgId} matches {@value #ROOT_ORG_ID},
+   * {@code getEmailConfigOrganization()} returns {@code null} to signal
+   * client-level resolution; otherwise it returns the organization mock.
    * @param id the configuration record ID
-   * @param orgId the organization ID ({@code '0'} for client level)
+   * @param orgId the organization ID ({@value #ROOT_ORG_ID} for client level)
    * @param host the SMTP server host
    * @param port the SMTP port
    * @param security the connection security mode
    * @param auth whether authentication is required
-   * @param account the SMTP account username
-   * @param password the encrypted SMTP password
-   * @param senderAddress the sender email address
-   * @param fromName the sender display name
-   * @param replyTo the reply-to address
+   * @param account the SMTP account username, may be {@code null}
+   * @param password the encrypted SMTP password, may be {@code null}
+   * @param senderAddress the sender email address, may be {@code null}
+   * @param fromName the sender display name, may be {@code null}
+   * @param replyTo the reply-to address, may be {@code null}
    * @param timeout the connection timeout in seconds
    * @return a mocked {@link EmailServerConfiguration}
    */
@@ -396,7 +428,6 @@ public class SmtpCascadeResolverTest {
     EmailServerConfiguration config = mock(EmailServerConfiguration.class);
     when(config.getId()).thenReturn(id);
     when(config.getOrganization()).thenReturn(org);
-    // emailConfigOrganization drives determineLevel: null → CLIENT, non-null → ORGANIZATION
     if (ROOT_ORG_ID.equals(orgId)) {
       when(config.getEmailConfigOrganization()).thenReturn(null);
     } else {
