@@ -1,23 +1,22 @@
 /*
  *************************************************************************
- * The contents of this file are subject to the Etendo Public License
- * Version 1.0 ("License"). You may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * https://etendo.software/licenses/etendo-public-license
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
- * the License for the specific language governing rights and limitations
- * under the License.
- * The Original Code is Etendo ERP.
- * All portions are Copyright (C) 2026 Etendo Software SL
+ * The contents of this file are subject to the Etendo License
+ * (the "License"), you may not use this file except in compliance with
+ * the License.
+ * You may obtain a copy of the License at
+ * https://github.com/etendosoftware/etendo_core/blob/main/legal/Etendo_license.txt
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing rights
+ * and limitations under the License.
+ * All portions are Copyright © 2021–2026 FUTIT SERVICES, S.L
  * All Rights Reserved.
- ************************************************************************
+ * Contributor(s): Futit Services S.L.
+ *************************************************************************
  */
-
 package com.etendoerp.common.rest;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -169,7 +168,7 @@ public class MessagesTrlWebServiceTest {
     when(mockOBDal.get(Module.class, MODULE_ID)).thenReturn(mockModule);
     when(mockMsgCriteria.list()).thenReturn(List.of(mockMessage1, mockMessage2));
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     JSONObject json = new JSONObject(responseStringWriter.toString());
     assertEquals(MSG_TEXT_SUCCESS, json.optString(MSG_KEY_SUCCESS));
@@ -189,7 +188,7 @@ public class MessagesTrlWebServiceTest {
     when(mockOBDal.get(Module.class, MODULE_ID)).thenReturn(mockModule);
     when(mockTrlCriteria.list()).thenReturn(List.of(mockMessageTrl1));
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     JSONObject json = new JSONObject(responseStringWriter.toString());
     assertEquals(MSG_TEXT_EXITO, json.optString(MSG_KEY_SUCCESS));
@@ -205,7 +204,7 @@ public class MessagesTrlWebServiceTest {
     when(mockRequest.getParameter(PARAM_LANGUAGE)).thenReturn(LANG_EN_US);
     when(mockRequest.getParameter(PARAM_MODULE_ID)).thenReturn(null);
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
   }
@@ -221,7 +220,7 @@ public class MessagesTrlWebServiceTest {
     when(mockRequest.getParameter(PARAM_MODULE_ID)).thenReturn(MODULE_ID);
     when(mockLangCriteria.uniqueResult()).thenReturn(null);
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_NOT_FOUND);
   }
@@ -238,7 +237,7 @@ public class MessagesTrlWebServiceTest {
     when(mockLangCriteria.uniqueResult()).thenReturn(mockLanguage);
     when(mockOBDal.get(Module.class, "DOES_NOT_EXIST")).thenReturn(null);
 
-    service.doGet("", mockRequest, mockResponse);
+    service.doGet(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_NOT_FOUND);
   }
@@ -263,7 +262,7 @@ public class MessagesTrlWebServiceTest {
     when(mockTrlCriteria.list()).thenReturn(List.of(mockMessageTrl1));
     when(mockMsgCriteria.list()).thenReturn(List.of(mockMessage2));
 
-    service.doPost("", mockRequest, mockResponse);
+    service.doPost(mockRequest, mockResponse);
 
     JSONObject json = new JSONObject(responseStringWriter.toString());
     assertEquals(MSG_TEXT_EXITO, json.optString(MSG_KEY_SUCCESS));
@@ -279,7 +278,7 @@ public class MessagesTrlWebServiceTest {
   public void postEmptyBodyReturns400() throws Exception {
     mockPostBody("");
 
-    service.doPost("", mockRequest, mockResponse);
+    service.doPost(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
   }
@@ -295,35 +294,9 @@ public class MessagesTrlWebServiceTest {
     body.put(PARAM_LANGUAGE, LANG_EN_US);
     mockPostBody(body.toString());
 
-    service.doPost("", mockRequest, mockResponse);
+    service.doPost(mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-  }
-
-  // ---------------------------------------------------------------------------
-  // PUT / DELETE
-  // ---------------------------------------------------------------------------
-
-  /**
-   * PUT requests are not supported and must return HTTP 405.
-   *
-   * @throws Exception if an error occurs during execution
-   */
-  @Test
-  public void putReturns405() throws Exception {
-    service.doPut("", mockRequest, mockResponse);
-    verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-  }
-
-  /**
-   * DELETE requests are not supported and must return HTTP 405.
-   *
-   * @throws Exception if an error occurs during execution
-   */
-  @Test
-  public void deleteReturns405() throws Exception {
-    service.doDelete("", mockRequest, mockResponse);
-    verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
 
   // ---------------------------------------------------------------------------
