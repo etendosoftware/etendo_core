@@ -106,6 +106,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       OBDal.getInstance().refresh(internalConsumption);
 
       activeOrDeactiveMaterialManagementConsumptionTable(true);
+      TestCostingUtils.markPreExistingTransactionsAsProcessed();
       TestCostingUtils.runCostingBackground();
 
       Table materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
@@ -153,6 +154,8 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
     String docTypeId = null;
     InternalConsumption internalConsumption = null;
     try {
+      TestCostingUtils.markPreExistingTransactionsAsProcessed();
+
       internalConsumption = createHeaderAndMaterialManagementConsumptionLines();
       processInternalConsumption(internalConsumption, "CO");
 
@@ -165,7 +168,7 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       OBDal.getInstance().commitAndClose();
 
       OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
-          TestConstants.Clients.FB_GRP, TestConstants.Orgs.FB_GROUP);
+          TestConstants.Clients.FB_GRP, ORGANIZATION_SPAIN);
       TestCostingUtils.runCostingBackground();
       OBDal.getInstance().flush();
       OBDal.getInstance().commitAndClose();
@@ -176,8 +179,9 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       internalConsumption = OBDal.getInstance().get(InternalConsumption.class, internalConsumptionId);
       materialManagementConsumptionTable = getMaterialManagementConsumptionTable(internalConsumption);
 
-      postDocument(internalConsumption, materialManagementConsumptionTable);
+      String postResult = postDocument(internalConsumption, materialManagementConsumptionTable);
       OBDal.getInstance().refresh(internalConsumption);
+      assertEquals(null, postResult, "Posting should succeed without errors");
       assertEquals("Y", internalConsumption.getPosted());
 
       removeDocType(docTypeId);
