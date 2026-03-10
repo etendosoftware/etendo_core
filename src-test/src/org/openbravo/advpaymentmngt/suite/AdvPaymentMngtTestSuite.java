@@ -60,6 +60,8 @@ import org.openbravo.advpaymentmngt.filterexpression.TransactionAddPaymentDispla
 import org.openbravo.advpaymentmngt.filterexpression.TransactionAddPaymentReadOnlyLogicsTest;
 import org.openbravo.advpaymentmngt.hook.PaymentProcessOrderHookTest;
 import org.openbravo.advpaymentmngt.hqlinjections.AddPaymentCreditToUseInjectorTest;
+import org.openbravo.advpaymentmngt.hqlinjections.AddPaymentGLItemInjectorTest;
+import org.openbravo.advpaymentmngt.hqlinjections.AddPaymentOrderInvoicesTransformerTest;
 import org.openbravo.advpaymentmngt.hqlinjections.CreditToUseTransformerTest;
 import org.openbravo.advpaymentmngt.hqlinjections.MatchStatementTransformerTest;
 import org.openbravo.advpaymentmngt.hqlinjections.TransactionsToMatchTransformerTest;
@@ -116,6 +118,8 @@ import org.openbravo.advpaymentmngt.utility.ValueTest;
 
     // tests hqlinjections
     AddPaymentCreditToUseInjectorTest.class,
+    AddPaymentGLItemInjectorTest.class,
+    AddPaymentOrderInvoicesTransformerTest.class,
     CreditToUseTransformerTest.class,
     MatchStatementTransformerTest.class,
     TransactionsToMatchTransformerTest.class,
