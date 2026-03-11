@@ -19,6 +19,8 @@
 
 package org.openbravo.erpCommon.instancemanagement;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import javax.enterprise.context.Dependent;
@@ -117,6 +119,24 @@ public class InstanceManagementAction extends Action {
   }
 
   /**
+   * URL-decodes a parameter value if it contains percent-encoded characters.
+   * The classic Openbravo UI encodes form field values with encodeURIComponent() before
+   * serializing them into the paramValues JSON, resulting in values like %2F instead of /.
+   * A valid RSA public key in Base64 format never contains %, so it is safe to always
+   * decode when % is present without risking corruption of values coming from the new UI.
+   */
+  private String urlDecodeIfNeeded(String value) {
+    if (value != null && value.contains("%")) {
+      try {
+        return URLDecoder.decode(value, StandardCharsets.UTF_8.name());
+      } catch (Exception e) {
+        log.warn("Failed to URL-decode parameter value, using as-is: {}", e.getMessage());
+      }
+    }
+    return value;
+  }
+
+  /**
    * Handles the activation of an instance
    */
   private ActionResult handleActivate(JSONObject parameters) {
@@ -124,9 +144,11 @@ public class InstanceManagementAction extends Action {
     ResponseActionsBuilder responseActions = getResponseBuilder();
 
     try {
-      // Get parameters from the request (coming from the UI form)
-      // If publicKey is not in parameters, get it from ActivationKey
-      String publicKey = parameters.optString(PUBLIC_KEY, "");
+      // Get parameters from the request (coming from the UI form).
+      // The classic UI sends paramValues with encodeURIComponent()-encoded values, so
+      // we must URL-decode the publicKey before passing it to the activation process.
+      // If publicKey is not in parameters, get it from ActivationKey.
+      String publicKey = urlDecodeIfNeeded(parameters.optString(PUBLIC_KEY, ""));
       if (publicKey.isEmpty()) {
         ActivationKey ak = ActivationKey.getInstance();
         if (ak.hasActivationKey()) {
@@ -318,16 +340,18 @@ public class InstanceManagementAction extends Action {
     ResponseActionsBuilder responseActions = getResponseBuilder();
 
     try {
-      // Get publicKey from request parameters (coming from the UI form)
-      // If not provided, get it from ActivationKey
-      String publicKey = parameters.optString(PUBLIC_KEY, "");
+      // Get publicKey from request parameters (coming from the UI form).
+      // URL-decode in case the classic UI sent percent-encoded values.
+      // If not provided, get it from ActivationKey.
+      String publicKey = urlDecodeIfNeeded(parameters.optString(PUBLIC_KEY, ""));
       if (publicKey.isEmpty()) {
         ActivationKey ak = ActivationKey.getInstance();
         if (ak.hasActivationKey()) {
           publicKey = ak.getPublicKey();
         }
       }
-      String fileContent = parameters.optString(FILE_CONTENT);
+      // File content may also be percent-encoded when uploaded through the classic UI.
+      String fileContent = urlDecodeIfNeeded(parameters.optString(FILE_CONTENT));
 
       if (fileContent == null || fileContent.isEmpty()) {
         result.setType(Result.Type.ERROR);
