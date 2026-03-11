@@ -22,6 +22,7 @@ package org.openbravo.test;
 import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.SelectPackages;
 import org.junit.platform.suite.api.Suite;
+import org.openbravo.advpaymentmngt.process.FINPaymentMonitorProcessQueryTest;
 import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.authentication.hashing.PasswordHashing;
 import org.openbravo.base.weld.test.testinfrastructure.CdiInfrastructure;
@@ -36,6 +37,7 @@ import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
+import org.openbravo.erpCommon.ad_actionButton.CreateFromTest;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
@@ -433,6 +435,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // AdvPayment
     AdvPaymentMngtTestSuite.class, //
+    FINPaymentMonitorProcessQueryTest.class, //
 
     // scheduling
     OpenbravoPostgreJDBCDelegateTest.class, //
@@ -466,6 +469,9 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // RptMA_ProcessPlan
     RptMA_ProcessPlanTest.class,
+
+    // Create From
+    CreateFromTest.class,
 })
 @SelectPackages({"org.openbravo.service.centralrepository",
     "org.openbravo.service.db",
