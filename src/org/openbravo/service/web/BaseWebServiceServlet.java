@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openbravo.authentication.AuthenticationException;
@@ -199,7 +200,7 @@ public class BaseWebServiceServlet extends HttpServlet {
         }
       }
       // PATCH support: Servlet API 3.1 does not route PATCH, intercept here
-      if ("PATCH".equalsIgnoreCase(request.getMethod())) {
+      if (StringUtils.equals("PATCH", request.getMethod())) {
         doPatch(request, response);
         return;
       }
@@ -239,6 +240,19 @@ public class BaseWebServiceServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Handles the HTTP PATCH method.
+   *
+   * @param request
+   *          the HttpServletRequest object that contains the request the client made of the servlet
+   * @param response
+   *          the HttpServletResponse object that contains the response the servlet returns to the
+   *          client
+   * @throws ServletException
+   *           if an input or output error occurs while the servlet is handling the PATCH request
+   * @throws IOException
+   *           if the request for the PATCH could not be handled
+   */
   protected void doPatch(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
     response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "PATCH not supported");
