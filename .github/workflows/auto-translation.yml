@@ -1,0 +1,136 @@
+name: Translation Workflow
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  translation-workflow:
+    name: Translation Workflow
+    if: github.head_ref != 'develop'
+    runs-on: ubuntu-latest
+    env:
+      TRANSLATION_WORKFLOW_WEBHOOK: ${{ secrets.N8N_TRANSLATION_WEBHOOK_URL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Get commit author
+        run: |
+          COMMIT_API_URL="https://api.github.com/repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}"
+          COMMIT_HTTP_CODE=$(curl -L -s -o commit_response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "$COMMIT_API_URL")
+
+          if [ "$COMMIT_HTTP_CODE" -ne 200 ]; then
+            echo "Failed to fetch commit metadata from GitHub API"
+            cat commit_response.json
+            exit 1
+          fi
+
+          AUTHOR_EMAIL=$(jq -r '.commit.author.email // .commit.committer.email // ""' commit_response.json)
+          AUTHOR_NAME_COMMIT=$(jq -r '.commit.author.name // .author.login // .commit.committer.name // "Unknown author"' commit_response.json)
+
+          if [ -z "$AUTHOR_EMAIL" ]; then
+            echo "Could not resolve commit author email from GitHub API"
+            cat commit_response.json
+            exit 1
+          fi
+
+          if [ -z "$AUTHOR_NAME_COMMIT" ]; then AUTHOR_NAME_COMMIT="Unknown author"; fi
+
+          echo "AUTHOR_EMAIL=$AUTHOR_EMAIL" >> $GITHUB_ENV
+          echo "AUTHOR_NAME_COMMIT=$AUTHOR_NAME_COMMIT" >> $GITHUB_ENV
+
+      - name: Build payload for translation workflow
+        run: |
+          DIFF_URL="${{ github.event.pull_request.diff_url }}"
+          DIFF_RAW=$(curl -L -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.diff" \
+            "$DIFF_URL")
+          if [ -z "$DIFF_RAW" ]; then echo "Diff response is empty"; exit 1; fi
+          if ! printf '%s' "$DIFF_RAW" | grep -q "^diff --git "; then echo "GitHub diff response is not a valid git diff"; echo "$DIFF_RAW"; exit 1; fi
+          DIFF_B64=$(printf "%s" "$DIFF_RAW" | base64 -w 0)
+
+          PR_ID="${{ github.event.pull_request.number }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          AUTHOR_NAME="${AUTHOR_NAME_COMMIT}"
+          if [ -z "$AUTHOR_NAME" ] || [ "$AUTHOR_NAME" = "Unknown author" ]; then AUTHOR_NAME="${{ github.event.pull_request.user.login }}"; fi
+          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+          DEST_BRANCH="${{ github.event.pull_request.base.ref }}"
+          SOURCE_COMMIT="${{ github.event.pull_request.head.sha }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name }}"
+          REPOSITORY_FULL="${{ github.repository }}"
+          if [ -z "$SOURCE_BRANCH" ]; then echo "Missing source branch in GitHub event payload"; exit 1; fi
+          if [ -z "$DEST_BRANCH" ]; then echo "Missing destination branch in GitHub event payload"; exit 1; fi
+          if [ -z "$SOURCE_COMMIT" ]; then echo "Missing source commit hash in GitHub event payload"; exit 1; fi
+
+          cat > payload.json <<EOF
+          {
+            "pr": {
+              "id": "${PR_ID}",
+              "url": "${PR_URL}",
+              "author": {
+                "name": "${AUTHOR_NAME}",
+                "email": "${AUTHOR_EMAIL}"
+              },
+              "repo": {
+                "workspace": "${REPO_OWNER}",
+                "slug": "${REPO_NAME}"
+              },
+              "branches": {
+                "source": "${SOURCE_BRANCH}",
+                "destination": "${DEST_BRANCH}"
+              },
+              "commit": "${SOURCE_COMMIT}"
+            },
+            "scm": "github",
+            "repository": "${REPOSITORY_FULL}",
+            "diff": {
+              "encoding": "base64",
+              "patch": "${DIFF_B64}"
+            }
+          }
+          EOF
+          echo "Translation workflow payload preview:"
+          cat payload.json
+
+      - name: Call translation workflow
+        run: |
+          RESPONSE_CODE=$(curl -s -o response.txt -w "%{http_code}" \
+            -X POST "${TRANSLATION_WORKFLOW_WEBHOOK}" \
+            -H "Content-Type: application/json" \
+            --data @payload.json)
+
+          if [ "$RESPONSE_CODE" -ne 200 ]; then
+            echo "Translation workflow failed with status code $RESPONSE_CODE"
+            cat response.txt
+            exit 1
+          fi
+
+          if [ ! -s response.txt ]; then
+            echo "Translation workflow returned an empty response"
+            exit 1
+          fi
+
+          WORKFLOW_STATUS=$(jq -r '.status // ""' response.txt 2>/dev/null || true)
+          if [ -z "$WORKFLOW_STATUS" ]; then
+            echo "Translation workflow response is not valid JSON"
+            cat response.txt
+            exit 1
+          fi
+
+          if [ "$WORKFLOW_STATUS" = "error" ]; then
+            echo "Translation workflow reported an error"
+            cat response.txt
+            exit 1
+          fi
+
+          echo "Translation workflow response:"
+          cat response.txt
