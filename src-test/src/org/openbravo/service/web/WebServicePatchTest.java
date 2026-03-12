@@ -11,6 +11,8 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -62,7 +64,7 @@ public class WebServicePatchTest {
   /** Sets up the WebServiceUtil static mock before each test. */
   @Before
   public void setUp() {
-    pathInfo = "/" + TEST_SERVICE + "/resource/123";
+    pathInfo = File.separator + TEST_SERVICE + File.separator + "resource" + File.separator + "123";
     mockedWebServiceUtil = mockStatic(WebServiceUtil.class);
     mockedWebServiceUtil.when(WebServiceUtil::getInstance).thenReturn(mockWebServiceUtilInstance);
   }
@@ -92,19 +94,27 @@ public class WebServicePatchTest {
 
   // -- 1. WebService interface: default doPatch() returns 405 --
 
-  /** Verifies that the default doPatch() implementation sets 405 status. */
+  /**
+   * Verifies that the default doPatch() implementation sets 405 status.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testDefaultDoPatchReturns405() throws Exception {
     WebService defaultImpl = createStubWebService();
 
-    defaultImpl.doPatch("/test", mockRequest, mockResponse);
+    defaultImpl.doPatch(File.separator + "test", mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
 
   // -- 2. BaseWebServiceServlet: doPatch sends 405 --
 
-  /** Verifies that BaseWebServiceServlet.doPatch sends a 405 error. */
+  /**
+   * Verifies that BaseWebServiceServlet.doPatch sends a 405 error.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testBaseServletDoPatchSends405() throws Exception {
     BaseWebServiceServlet baseServlet = new BaseWebServiceServlet();
@@ -119,7 +129,11 @@ public class WebServicePatchTest {
 
   // -- 3. WebServiceServlet: doPatch routing --
 
-  /** Verifies that WebServiceServlet.doPatch delegates to the resolved WebService. */
+  /**
+   * Verifies that WebServiceServlet.doPatch delegates to the resolved WebService.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testDoPatchRoutesToWebService() throws Exception {
     setUpServletRouting();
@@ -129,7 +143,11 @@ public class WebServicePatchTest {
     verify(mockWebService).doPatch(anyString(), eq(mockRequest), eq(mockResponse));
   }
 
-  /** Verifies that exceptions thrown by WebService.doPatch are wrapped in OBException. */
+  /**
+   * Verifies that exceptions thrown by WebService.doPatch are wrapped in OBException.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testDoPatchWrapsExceptionInOBException() throws Exception {
     setUpServletRouting();
@@ -146,7 +164,11 @@ public class WebServicePatchTest {
     }
   }
 
-  /** Verifies that a WebService with custom doPatch does not return 405. */
+  /**
+   * Verifies that a WebService with custom doPatch does not return 405.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testWebServiceWithPatchSupportDoesNotReturn405() throws Exception {
     WebService patchCapable = new StubWebService() {
@@ -156,13 +178,16 @@ public class WebServicePatchTest {
       }
     };
 
-    patchCapable.doPatch("/test", mockRequest, mockResponse);
-    // No exception and no 405 status set — test passes by completing normally
+    patchCapable.doPatch(File.separator + "test", mockRequest, mockResponse);
   }
 
   // -- 4. Non-PATCH methods are NOT affected --
 
-  /** Verifies that doGet still routes correctly to the WebService. */
+  /**
+   * Verifies that doGet still routes correctly to the WebService.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testDoGetStillWorksCorrectly() throws Exception {
     setUpServletRouting();
@@ -170,7 +195,11 @@ public class WebServicePatchTest {
     verify(mockWebService).doGet(anyString(), eq(mockRequest), eq(mockResponse));
   }
 
-  /** Verifies that doPost still routes correctly to the WebService. */
+  /**
+   * Verifies that doPost still routes correctly to the WebService.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testDoPostStillWorksCorrectly() throws Exception {
     setUpServletRouting();
@@ -178,7 +207,11 @@ public class WebServicePatchTest {
     verify(mockWebService).doPost(anyString(), eq(mockRequest), eq(mockResponse));
   }
 
-  /** Verifies that doPut still routes correctly to the WebService. */
+  /**
+   * Verifies that doPut still routes correctly to the WebService.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testDoPutStillWorksCorrectly() throws Exception {
     setUpServletRouting();
@@ -186,7 +219,11 @@ public class WebServicePatchTest {
     verify(mockWebService).doPut(anyString(), eq(mockRequest), eq(mockResponse));
   }
 
-  /** Verifies that doDelete still routes correctly to the WebService. */
+  /**
+   * Verifies that doDelete still routes correctly to the WebService.
+   *
+   * @throws Exception if an error occurs during test execution
+   */
   @Test
   public void testDoDeleteStillWorksCorrectly() throws Exception {
     setUpServletRouting();
