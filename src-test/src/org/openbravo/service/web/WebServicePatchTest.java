@@ -2,7 +2,6 @@ package org.openbravo.service.web;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -31,7 +30,7 @@ import org.openbravo.base.exception.OBException;
  * Unit tests for PATCH HTTP method support in the WebService layer.
  *
  * Covers:
- * - Default doPatch() in WebService interface throws UnsupportedOperationException
+ * - Default doPatch() in WebService interface returns 405 Method Not Allowed
  * - BaseWebServiceServlet intercepts PATCH requests in doService()
  * - WebServiceServlet routes PATCH to the correct WebService implementation
  * - Non-PATCH methods are not affected by the PATCH changes
@@ -74,11 +73,11 @@ public class WebServicePatchTest {
   }
 
   // ---------------------------------------------------------------
-  // 1. WebService interface: default doPatch() throws UnsupportedOperationException
+  // 1. WebService interface: default doPatch() returns 405 Method Not Allowed
   // ---------------------------------------------------------------
 
   @Test
-  public void testDefaultDoPatchThrowsUnsupportedOperationException() {
+  public void testDefaultDoPatchReturns405() throws Exception {
     // GIVEN - a WebService that does not override doPatch (uses the default)
     WebService defaultImpl = new WebService() {
       @Override
@@ -103,12 +102,11 @@ public class WebServicePatchTest {
       }
     };
 
-    // WHEN & THEN
-    UnsupportedOperationException exception = assertThrows(
-        UnsupportedOperationException.class,
-        () -> defaultImpl.doPatch("/test", mockRequest, mockResponse)
-    );
-    assertEquals("PATCH method not supported by this web service.", exception.getMessage());
+    // WHEN
+    defaultImpl.doPatch("/test", mockRequest, mockResponse);
+
+    // THEN
+    verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
 
   // ---------------------------------------------------------------
@@ -160,12 +158,13 @@ public class WebServicePatchTest {
         .doPatch(anyString(), eq(mockRequest), eq(mockResponse));
 
     // WHEN & THEN
-    OBException exception = assertThrows(
-        OBException.class,
-        () -> servletUnderTest.doPatch(mockRequest, mockResponse)
-    );
-    assertTrue(exception.getCause() instanceof RuntimeException);
-    assertEquals("Patch failed", exception.getCause().getMessage());
+    try {
+      servletUnderTest.doPatch(mockRequest, mockResponse);
+      assertTrue("Expected OBException to be thrown", false);
+    } catch (OBException exception) {
+      assertTrue(exception.getCause() instanceof RuntimeException);
+      assertEquals("Patch failed", exception.getCause().getMessage());
+    }
   }
 
   @Test

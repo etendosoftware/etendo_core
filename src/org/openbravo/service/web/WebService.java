@@ -89,11 +89,18 @@ public interface WebService extends OBModulePrefixRequired {
       throws Exception;
 
   /**
-   * Is called for the Http PATCH method. Default implementation throws
-   * UnsupportedOperationException for backward compatibility.
+   * Is called for the Http PATCH method. Default implementation returns
+   * 405 Method Not Allowed for backward compatibility.
+   *
+   * @param path
+   *          the HttpRequest.getPathInfo(), the part of the url after the context path
+   * @param request
+   *          the HttpServletRequest
+   * @param response
+   *          the HttpServletResponse
    */
   default void doPatch(String path, HttpServletRequest request, HttpServletResponse response)
       throws Exception {
-    throw new UnsupportedOperationException("PATCH method not supported by this web service.");
+    response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
 }
