@@ -37,6 +37,7 @@ import org.openbravo.base.exception.OBException;
 @RunWith(MockitoJUnitRunner.class)
 public class WebServicePatchTest {
 
+  private static final String PATH_SEPARATOR = "/";
   private static final String TEST_SERVICE = "testService";
 
   @Spy
@@ -62,7 +63,7 @@ public class WebServicePatchTest {
   /** Sets up the WebServiceUtil static mock before each test. */
   @Before
   public void setUp() {
-    pathInfo = "/" + TEST_SERVICE + "/resource/123";
+    pathInfo = PATH_SEPARATOR + TEST_SERVICE + PATH_SEPARATOR + "resource" + PATH_SEPARATOR + "123";
     mockedWebServiceUtil = mockStatic(WebServiceUtil.class);
     mockedWebServiceUtil.when(WebServiceUtil::getInstance).thenReturn(mockWebServiceUtilInstance);
   }
@@ -101,7 +102,7 @@ public class WebServicePatchTest {
   public void testDefaultDoPatchReturns405() throws Exception {
     WebService defaultImpl = createStubWebService();
 
-    defaultImpl.doPatch("/test", mockRequest, mockResponse);
+    defaultImpl.doPatch(PATH_SEPARATOR + "test", mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
@@ -176,7 +177,7 @@ public class WebServicePatchTest {
       }
     };
 
-    patchCapable.doPatch("/test", mockRequest, mockResponse);
+    patchCapable.doPatch(PATH_SEPARATOR + "test", mockRequest, mockResponse);
   }
 
   // -- 4. Non-PATCH methods are NOT affected --
