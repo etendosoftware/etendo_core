@@ -87,4 +87,20 @@ public interface WebService extends OBModulePrefixRequired {
    */
   public void doPut(String path, HttpServletRequest request, HttpServletResponse response)
       throws Exception;
+
+  /**
+   * Is called for the Http PATCH method. Default implementation returns
+   * 405 Method Not Allowed for backward compatibility.
+   *
+   * @param path
+   *          the HttpRequest.getPathInfo(), the part of the url after the context path
+   * @param request
+   *          the HttpServletRequest
+   * @param response
+   *          the HttpServletResponse
+   */
+  default void doPatch(String path, HttpServletRequest request, HttpServletResponse response)
+      throws Exception {
+    response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+  }
 }
