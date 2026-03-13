@@ -32,12 +32,9 @@ import javax.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openbravo.dal.core.OBContext;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.poc.EmailInfo;
 import org.openbravo.erpCommon.utility.poc.EmailManager;
-import org.openbravo.model.common.enterprise.EmailServerConfiguration;
-import org.openbravo.model.common.enterprise.Organization;
 
 /**
  * This singleton class, is in charge of generating events to send emails.
@@ -75,12 +72,10 @@ public class EmailEventManager {
    */
   public boolean sendEmail(String event, final String recipient, Object data)
       throws EmailEventException {
-    // Retrieves the Email Server configuration
-    Organization currenctOrg = OBContext.getOBContext().getCurrentOrganization();
-    final EmailServerConfiguration mailConfig = EmailUtils.getEmailConfiguration(currenctOrg);
+    final ResolvedSmtpConfig mailConfig = SmtpCascadeResolver.resolve();
 
     if (mailConfig == null) {
-      log.warn("Couldn't find email configuarion");
+      log.warn("Couldn't find email configuration at any level (User/Organization/Client)");
       throw new EmailEventException(
           OBMessageUtils.getI18NMessage("EmailConfigurationNotFound", null));
     }
@@ -89,7 +84,8 @@ public class EmailEventManager {
       boolean sent = false;
       for (EmailEventContentGenerator gen : getValidEmailGenerators(event, data)) {
         sent = true;
-        log.debug("sending email for event " + event + " with generator " + gen);
+        log.debug("sending email for event {} with generator {} using {} SMTP config (id={})",
+            event, gen, mailConfig.getLevel(), mailConfig.getConfigId());
 
         final EmailInfo email = new EmailInfo.Builder() //
             .setSubject(gen.getSubject(data, event)) //

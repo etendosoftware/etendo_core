@@ -18,6 +18,8 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
 import org.openbravo.email.EmailUtils;
+import org.openbravo.email.ResolvedSmtpConfig;
+import org.openbravo.email.SmtpCascadeResolver;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.erpCommon.utility.Utility;
@@ -111,15 +113,21 @@ public class EmailUtilities {
         emailBody = emailBody.replace("@doc_desc@",
                 Matcher.quoteReplacement(report.getDocDescription()));
 
-        OBContext.setAdminMode(true);
-        EmailServerConfiguration mailConfig;
-        try {
-            mailConfig = OBDal.getInstance()
-                    .get(EmailServerConfiguration.class, vars.getStringParameter("fromEmailId"));
-        } finally {
-            OBContext.restorePreviousMode();
+        // Cascade resolution: User → Organization → Client
+        ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
+        EmailServerConfiguration mailConfig = null;
+        if (resolvedConfig == null) {
+            OBContext.setAdminMode(true);
+            try {
+                mailConfig = OBDal.getInstance()
+                        .get(EmailServerConfiguration.class, vars.getStringParameter("fromEmailId"));
+            } finally {
+                OBContext.restorePreviousMode();
+            }
         }
-
+        if (resolvedConfig == null && mailConfig == null) {
+            throw new ServletException("No SMTP configuration found at any level and no legacy configuration available.");
+        }
         List<File> attachments = new ArrayList<>();
         attachments.add(new File(attachmentFileLocation));
 
@@ -145,13 +153,20 @@ public class EmailUtilities {
                 .setSentDate(new Date())
                 .build();
 
-        log4j.debug("From: {}", senderAddress);
+        log4j.debug("From: {}", resolvedConfig != null ? resolvedConfig.getFromAddress() : senderAddress);
         log4j.debug("Recipient TO (contact email): {}", email.getRecipientTO());
         log4j.debug("Recipient CC: {}", email.getRecipientCC());
         log4j.debug("Recipient BCC (user email): {}", email.getRecipientBCC());
         log4j.debug("Reply-to (sales rep email): {}", email.getReplyTo());
 
-        sendEmail(mailConfig, email, attachments);
+        if (resolvedConfig != null) {
+            log4j.info("Sending email using {} SMTP config (id={})", resolvedConfig.getLevel(), resolvedConfig.getConfigId());
+            sendEmail(resolvedConfig, email, attachments);
+        } else {
+            log4j.debug("Sending email using legacy EmailServerConfiguration (id={})",
+                mailConfig != null ? mailConfig.getId() : "null");
+            sendEmail(mailConfig, email, attachments);
+        }
 
         // Store the email in the database
         saveEmail(connectionProvider, vars.getClient(), vars.getUser(),  email,report, documentData.documentId);
@@ -220,8 +235,44 @@ public class EmailUtilities {
             }
         }
     }
+    /**
+     * Sends an email using a resolved SMTP configuration from the cascade resolver
+     * and deletes the temporary attachment files after sending (whether successful or not).
+     * @param mailConfig the resolved SMTP configuration obtained from
+     *   {@link SmtpCascadeResolver#resolve()}
+     * @param email the email data to send
+     * @param attachments the list of temporary attachment files to clean up after sending
+     * @throws ServletException if the email sending fails
+     * @throws IOException if a temporary attachment file cannot be deleted
+     */
+    public static void sendEmail(ResolvedSmtpConfig mailConfig, EmailInfo email,
+        List<File> attachments) throws ServletException, IOException {
+        try {
+            EmailManager.sendEmail(mailConfig, email);
+        } catch (Exception exception) {
+            log4j.error("Error sending mail via {} SMTP config (id={})",
+                mailConfig.getLevel(), mailConfig.getConfigId(), exception);
+            throw new ServletException("Problems while sending the email: "
+                + exception.getMessage(), exception);
+        } finally {
+            deleteTemporaryAttachments(attachments);
+        }
+    }
 
-
+    /**
+     * Deletes temporary attachment files created for email sending.
+     * Skips directories and non-existent files.
+     * @param attachments the list of files to delete
+     * @throws IOException if a file cannot be deleted
+     */
+    protected static void deleteTemporaryAttachments(List<File> attachments) throws IOException {
+        for (File attachment : attachments) {
+            if (attachment.exists() && !attachment.isDirectory()) {
+                Files.delete(attachment.toPath());
+            }
+        }
+    }
+    
     public static void saveEmail(ConnectionProvider connectionProvider, String clientId, String userId, EmailInfo email, Report report, String documentId) throws ServletException {
         Connection conn = null;
         try {
