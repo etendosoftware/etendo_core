@@ -97,7 +97,7 @@ public class SmtpCascadeResolver {
     criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_USERCONTACT, user));
     criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ACTIVE, true));
     // Default configuration first; if tied, most recently created wins
-    criteria.addOrder(Order.desc("defaultConfig"));
+    criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_DEFAULTCONFIGURATION));
     criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
     criteria.setMaxResults(1);
     List<EmailServerConfiguration> results = criteria.list();

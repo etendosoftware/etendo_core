@@ -40,6 +40,7 @@ import org.openbravo.client.kernel.CSSMinifier;
 import org.openbravo.email.ResolvedSmtpConfigTest;
 import org.openbravo.email.SmtpCascadeResolverTest;
 import org.openbravo.email.actionhandler.TestSmtpConnectionActionHandlerTest;
+import org.openbravo.email.event.DefaultSmtpConfigEventHandlerTest;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
 import org.openbravo.erpCommon.utility.poc.EmailManagerTest;
@@ -478,6 +479,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     SmtpCascadeResolverTest.class,
     TestSmtpConnectionActionHandlerTest.class,
     EmailManagerTest.class,
+    DefaultSmtpConfigEventHandlerTest.class,
 })
 @SelectPackages({"org.openbravo.service.centralrepository",
     "org.openbravo.service.db",

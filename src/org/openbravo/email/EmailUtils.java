@@ -60,7 +60,7 @@ public class EmailUtils {
             OBContext.getOBContext().getCurrentClient()));
         mailConfigCriteria.add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_USERCONTACT));
         // Default configuration first; if tied, most recently created wins
-        mailConfigCriteria.addOrder(Order.desc("defaultConfig"));
+        mailConfigCriteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_DEFAULTCONFIGURATION));
         mailConfigCriteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
         mailConfigCriteria.setMaxResults(1);
 

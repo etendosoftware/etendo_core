@@ -54,7 +54,7 @@ import org.openbravo.model.common.enterprise.Organization;
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class DefaultSmtpConfigEventHandlerTest {
+public class DefaultSmtpConfigEventHandlerTest {
 
   private static final String SAVED_ID = "SAVED-CONFIG-ID";
   private static final String OTHER_ID = "OTHER-CONFIG-ID";
