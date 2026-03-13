@@ -21,6 +21,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
@@ -95,6 +96,9 @@ public class SmtpCascadeResolver {
         .createCriteria(EmailServerConfiguration.class);
     criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_USERCONTACT, user));
     criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ACTIVE, true));
+    // Default configuration first; if tied, most recently created wins
+    criteria.addOrder(Order.desc("defaultConfig"));
+    criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
     criteria.setMaxResults(1);
     List<EmailServerConfiguration> results = criteria.list();
     return results.isEmpty() ? null : results.get(0);

@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.security.OrganizationStructureProvider;
@@ -58,11 +59,15 @@ public class EmailUtils {
         mailConfigCriteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
             OBContext.getOBContext().getCurrentClient()));
         mailConfigCriteria.add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_USERCONTACT));
+        // Default configuration first; if tied, most recently created wins
+        mailConfigCriteria.addOrder(Order.desc("defaultConfig"));
+        mailConfigCriteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
+        mailConfigCriteria.setMaxResults(1);
 
         List<EmailServerConfiguration> mailConfigList = null;
         mailConfigList = mailConfigCriteria.list();
-        // A client can define several organization, so uniqueRequlst can not be used
-        if (mailConfigList.size() != 0) {
+        // A client can define several organization, so uniqueResult can not be used
+        if (!mailConfigList.isEmpty()) {
           emailConfiguration = mailConfigList.get(0);
         }
 
