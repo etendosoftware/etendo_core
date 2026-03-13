@@ -11,8 +11,6 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -64,7 +62,7 @@ public class WebServicePatchTest {
   /** Sets up the WebServiceUtil static mock before each test. */
   @Before
   public void setUp() {
-    pathInfo = File.separator + TEST_SERVICE + File.separator + "resource" + File.separator + "123";
+    pathInfo = "/" + TEST_SERVICE + "/resource/123";
     mockedWebServiceUtil = mockStatic(WebServiceUtil.class);
     mockedWebServiceUtil.when(WebServiceUtil::getInstance).thenReturn(mockWebServiceUtilInstance);
   }
@@ -103,7 +101,7 @@ public class WebServicePatchTest {
   public void testDefaultDoPatchReturns405() throws Exception {
     WebService defaultImpl = createStubWebService();
 
-    defaultImpl.doPatch(File.separator + "test", mockRequest, mockResponse);
+    defaultImpl.doPatch("/test", mockRequest, mockResponse);
 
     verify(mockResponse).setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
   }
@@ -178,7 +176,7 @@ public class WebServicePatchTest {
       }
     };
 
-    patchCapable.doPatch(File.separator + "test", mockRequest, mockResponse);
+    patchCapable.doPatch("/test", mockRequest, mockResponse);
   }
 
   // -- 4. Non-PATCH methods are NOT affected --
@@ -257,7 +255,6 @@ public class WebServicePatchTest {
       // No-op stub for testing
     }
 
-    @Override
     public String getModulePrefix() {
       return "test";
     }
