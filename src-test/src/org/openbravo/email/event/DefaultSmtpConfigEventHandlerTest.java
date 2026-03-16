@@ -46,6 +46,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.access.User;
+import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.EmailServerConfiguration;
 import org.openbravo.model.common.enterprise.Organization;
 
@@ -63,6 +64,7 @@ public class DefaultSmtpConfigEventHandlerTest {
   @Mock private OBCriteria<EmailServerConfiguration> criteria;
   @Mock private User user;
   @Mock private Organization org;
+  @Mock private Client client;
 
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBMessageUtils> mockedOBMessageUtils;
@@ -96,7 +98,7 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testIsMarkedAsDefaultReturnsTrueWhenFlagIsTrue() {
-    EmailServerConfiguration config = mockConfig(SAVED_ID, true, null, null);
+    EmailServerConfiguration config = mockConfig(SAVED_ID, true, null, null, null);
     assertTrue(DefaultSmtpConfigEventHandler.isMarkedAsDefault(config));
   }
 
@@ -105,7 +107,7 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testIsMarkedAsDefaultReturnsFalseWhenFlagIsFalse() {
-    EmailServerConfiguration config = mockConfig(SAVED_ID, false, null, null);
+    EmailServerConfiguration config = mockConfig(SAVED_ID, false, null, null, null);
     assertFalse(DefaultSmtpConfigEventHandler.isMarkedAsDefault(config));
   }
 
@@ -114,17 +116,35 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testIsUserLevelConfigReturnsTrueWhenUserContactPresent() {
-    EmailServerConfiguration config = mockConfig(SAVED_ID, true, user, null);
+    EmailServerConfiguration config = mockConfig(SAVED_ID, true, user, null, null);
     assertTrue(DefaultSmtpConfigEventHandler.isUserLevelConfig(config));
   }
 
   /**
-   * A config with a null {@code userContact} must be identified as org/client-level.
+   * A config with a null {@code userContact} must not be identified as user-level.
    */
   @Test
   void testIsUserLevelConfigReturnsFalseWhenUserContactAbsent() {
-    EmailServerConfiguration config = mockConfig(SAVED_ID, true, null, null);
+    EmailServerConfiguration config = mockConfig(SAVED_ID, true, null, null, null);
     assertFalse(DefaultSmtpConfigEventHandler.isUserLevelConfig(config));
+  }
+
+  /**
+   * A config with a non-null {@code emailConfigOrganization} must be identified as org-level.
+   */
+  @Test
+  void testIsOrgLevelConfigReturnsTrueWhenEmailConfigOrgPresent() {
+    EmailServerConfiguration config = mockConfig(SAVED_ID, true, null, org, null);
+    assertTrue(DefaultSmtpConfigEventHandler.isOrgLevelConfig(config));
+  }
+
+  /**
+   * A config with a null {@code emailConfigOrganization} must not be identified as org-level.
+   */
+  @Test
+  void testIsOrgLevelConfigReturnsFalseWhenEmailConfigOrgAbsent() {
+    EmailServerConfiguration config = mockConfig(SAVED_ID, true, null, null, null);
+    assertFalse(DefaultSmtpConfigEventHandler.isOrgLevelConfig(config));
   }
 
   /**
@@ -132,7 +152,7 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testHandleDefaultConfigChangeDoesNotThrowWhenNoConflict() {
-    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, null, null);
+    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, null, null, client);
     assertDoesNotThrow(() -> DefaultSmtpConfigEventHandler.handleDefaultConfigChange(saved));
   }
 
@@ -142,11 +162,12 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testHandleDefaultConfigChangeThrowsWhenConflictExists() {
-    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, null, null);
-    EmailServerConfiguration conflict = mockConfig(OTHER_ID, true, null, null);
+    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, null, null, client);
+    EmailServerConfiguration conflict = mockConfig(OTHER_ID, true, null, null, client);
     when(criteria.list()).thenReturn(Collections.singletonList(conflict));
 
-    assertThrows(OBException.class, () -> DefaultSmtpConfigEventHandler.handleDefaultConfigChange(saved));
+    assertThrows(OBException.class,
+        () -> DefaultSmtpConfigEventHandler.handleDefaultConfigChange(saved));
   }
 
   /**
@@ -154,30 +175,43 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testHandleDefaultConfigChangeDoesNothingWhenNotMarkedAsDefault() {
-    EmailServerConfiguration saved = mockConfig(SAVED_ID, false, null, null);
+    EmailServerConfiguration saved = mockConfig(SAVED_ID, false, null, null, client);
     DefaultSmtpConfigEventHandler.handleDefaultConfigChange(saved);
     verify(obDal, never()).createCriteria(EmailServerConfiguration.class);
   }
 
   /**
-   * For a user-level config, {@code findOtherDefaultsInScope} must query by user scope and return
-   * the criteria results.
+   * For a user-level config, {@code findOtherDefaultsInScope} must delegate to user scope.
    */
   @Test
   void testFindOtherDefaultsInScopeUsesUserLevelWhenUserPresent() {
-    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, user, null);
-    List<EmailServerConfiguration> result = DefaultSmtpConfigEventHandler.findOtherDefaultsInScope(saved);
+    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, user, null, null);
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherDefaultsInScope(saved);
     assertTrue(result.isEmpty());
   }
 
   /**
-   * For an org-level config (no user), {@code findOtherDefaultsInScope} must query by org scope
-   * and return the criteria results.
+   * For an org-level config (no user, emailConfigOrganization set), {@code findOtherDefaultsInScope}
+   * must delegate to org scope.
    */
   @Test
-  void testFindOtherDefaultsInScopeUsesOrgLevelWhenUserAbsent() {
-    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, null, org);
-    List<EmailServerConfiguration> result = DefaultSmtpConfigEventHandler.findOtherDefaultsInScope(saved);
+  void testFindOtherDefaultsInScopeUsesOrgLevelWhenEmailConfigOrgPresent() {
+    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, null, org, null);
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherDefaultsInScope(saved);
+    assertTrue(result.isEmpty());
+  }
+
+  /**
+   * For a client-level config (no user, no emailConfigOrganization), {@code findOtherDefaultsInScope}
+   * must delegate to client scope.
+   */
+  @Test
+  void testFindOtherDefaultsInScopeUsesClientLevelWhenUserAndOrgAbsent() {
+    EmailServerConfiguration saved = mockConfig(SAVED_ID, true, null, null, client);
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherDefaultsInScope(saved);
     assertTrue(result.isEmpty());
   }
 
@@ -186,9 +220,10 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testFindOtherUserDefaultsReturnsQueryResults() {
-    EmailServerConfiguration conflict = mockConfig(OTHER_ID, true, user, null);
+    EmailServerConfiguration conflict = mockConfig(OTHER_ID, true, user, null, null);
     when(criteria.list()).thenReturn(Collections.singletonList(conflict));
-    List<EmailServerConfiguration> result = DefaultSmtpConfigEventHandler.findOtherUserDefaults(user, SAVED_ID);
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherUserDefaults(user, SAVED_ID);
     assertEquals(1, result.size());
     assertEquals(conflict, result.get(0));
   }
@@ -198,7 +233,8 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testFindOtherUserDefaultsReturnsEmptyListWhenNoConflicts() {
-    List<EmailServerConfiguration> result = DefaultSmtpConfigEventHandler.findOtherUserDefaults(user, SAVED_ID);
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherUserDefaults(user, SAVED_ID);
     assertTrue(result.isEmpty());
   }
 
@@ -207,9 +243,10 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testFindOtherOrgDefaultsReturnsQueryResults() {
-    EmailServerConfiguration conflict = mockConfig(OTHER_ID, true, null, org);
+    EmailServerConfiguration conflict = mockConfig(OTHER_ID, true, null, org, null);
     when(criteria.list()).thenReturn(Collections.singletonList(conflict));
-    List<EmailServerConfiguration> result = DefaultSmtpConfigEventHandler.findOtherOrgDefaults(org, SAVED_ID);
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherOrgDefaults(org, SAVED_ID);
     assertEquals(1, result.size());
     assertEquals(conflict, result.get(0));
   }
@@ -219,7 +256,31 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testFindOtherOrgDefaultsReturnsEmptyListWhenNoConflicts() {
-    List<EmailServerConfiguration> result = DefaultSmtpConfigEventHandler.findOtherOrgDefaults(org, SAVED_ID);
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherOrgDefaults(org, SAVED_ID);
+    assertTrue(result.isEmpty());
+  }
+
+  /**
+   * {@code findOtherClientDefaults} must return results from the criteria query.
+   */
+  @Test
+  void testFindOtherClientDefaultsReturnsQueryResults() {
+    EmailServerConfiguration conflict = mockConfig(OTHER_ID, true, null, null, client);
+    when(criteria.list()).thenReturn(Collections.singletonList(conflict));
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherClientDefaults(client, SAVED_ID);
+    assertEquals(1, result.size());
+    assertEquals(conflict, result.get(0));
+  }
+
+  /**
+   * {@code findOtherClientDefaults} must return an empty list when no conflicts exist.
+   */
+  @Test
+  void testFindOtherClientDefaultsReturnsEmptyListWhenNoConflicts() {
+    List<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.findOtherClientDefaults(client, SAVED_ID);
     assertTrue(result.isEmpty());
   }
 
@@ -228,7 +289,8 @@ public class DefaultSmtpConfigEventHandlerTest {
    */
   @Test
   void testBuildDefaultConfigCriteriaReturnsNonNullCriteria() {
-    OBCriteria<EmailServerConfiguration> result = DefaultSmtpConfigEventHandler.buildDefaultConfigCriteria(SAVED_ID);
+    OBCriteria<EmailServerConfiguration> result =
+        DefaultSmtpConfigEventHandler.buildDefaultConfigCriteria(SAVED_ID);
     assertNotNull(result);
   }
 
@@ -236,19 +298,19 @@ public class DefaultSmtpConfigEventHandlerTest {
    * Creates a mocked {@link EmailServerConfiguration} with the given field values.
    * @param id the record ID
    * @param isDefault the value to return for {@code isDefaultConfiguration()}
-   * @param user the user contact (may be {@code null} for org-level configs)
-   * @param org the organization (may be {@code null} when not needed)
+   * @param user the user contact ({@code null} for org/client-level configs)
+   * @param emailConfigOrg the email config organization ({@code null} for user/client-level configs)
+   * @param emailConfigClient the email config client ({@code null} for user/org-level configs)
    * @return a configured mock
    */
   private EmailServerConfiguration mockConfig(String id, boolean isDefault, User user,
-      Organization org) {
+      Organization emailConfigOrg, Client emailConfigClient) {
     EmailServerConfiguration config = mock(EmailServerConfiguration.class);
     when(config.getId()).thenReturn(id);
     when(config.isDefaultConfiguration()).thenReturn(isDefault);
     when(config.getUserContact()).thenReturn(user);
-    if (org != null) {
-      when(config.getOrganization()).thenReturn(org);
-    }
+    when(config.getEmailConfigOrganization()).thenReturn(emailConfigOrg);
+    when(config.getEmailConfigClient()).thenReturn(emailConfigClient);
     return config;
   }
 }

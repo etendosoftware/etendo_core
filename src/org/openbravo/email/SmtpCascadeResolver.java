@@ -18,7 +18,6 @@ package org.openbravo.email;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Order;
@@ -39,7 +38,6 @@ import org.openbravo.model.common.enterprise.Organization;
 public class SmtpCascadeResolver {
 
   private static final Logger log = LogManager.getLogger();
-  static final String ROOT_ORG_ID = "0";
 
   private SmtpCascadeResolver() {
   }
@@ -123,14 +121,13 @@ public class SmtpCascadeResolver {
 
   /**
    * Determines whether the given {@link EmailServerConfiguration} belongs to the Client
-   * level (org ID {@code '0'}) or to a specific Organization.
+   * level or to a specific Organization, based on {@code EMAIL_CONF_AD_ORG_ID}.
    * @param config the email server configuration to inspect
-   * @return {@link ResolvedSmtpConfig.Level#CLIENT} if the org ID is {@code '0'},
-   *   otherwise {@link ResolvedSmtpConfig.Level#ORGANIZATION}
+   * @return {@link ResolvedSmtpConfig.Level#CLIENT} if {@code emailConfOrg} is {@code null}
+   *   (no explicit org link), otherwise {@link ResolvedSmtpConfig.Level#ORGANIZATION}
    */
   protected static ResolvedSmtpConfig.Level determineLevel(EmailServerConfiguration config) {
-    String orgId = config.getOrganization().getId();
-    if (StringUtils.equals(orgId, ROOT_ORG_ID)) {
+    if (config.getEmailConfigOrganization() == null) {
       return ResolvedSmtpConfig.Level.CLIENT;
     }
     return ResolvedSmtpConfig.Level.ORGANIZATION;

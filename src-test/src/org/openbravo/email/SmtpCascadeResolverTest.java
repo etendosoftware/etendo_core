@@ -385,6 +385,12 @@ public class SmtpCascadeResolverTest {
     EmailServerConfiguration config = mock(EmailServerConfiguration.class);
     when(config.getId()).thenReturn(id);
     when(config.getOrganization()).thenReturn(org);
+    // emailConfigOrganization drives determineLevel: null → CLIENT, non-null → ORGANIZATION
+    if (ROOT_ORG_ID.equals(orgId)) {
+      when(config.getEmailConfigOrganization()).thenReturn(null);
+    } else {
+      when(config.getEmailConfigOrganization()).thenReturn(org);
+    }
     when(config.getSmtpServer()).thenReturn(host);
     when(config.getSmtpPort()).thenReturn(port);
     when(config.getSmtpConnectionSecurity()).thenReturn(security);

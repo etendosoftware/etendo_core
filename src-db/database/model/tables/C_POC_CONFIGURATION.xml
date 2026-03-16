@@ -85,14 +85,28 @@
         <default><![CDATA[N]]></default>
         <onCreateDefault/>
       </column>
-      <column name="AD_USER_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
       <column name="ISDEFAULTCONFIG" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
         <default><![CDATA[N]]></default>
         <onCreateDefault><![CDATA['N']]></onCreateDefault>
       </column>
+      <column name="EMAIL_CONF_AD_ORG_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EMAIL_CONF_AD_CLIENT_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="EMAIL_CONF_AD_USER_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <foreign-key foreignTable="AD_ORG" name="C_POC_CONFIGURA_EMAIL_CONF_ORG">
+        <reference local="EMAIL_CONF_AD_ORG_ID" foreign="AD_ORG_ID"/>
+      </foreign-key>
+      <foreign-key foreignTable="AD_CLIENT" name="C_POC_CONFIGURA_IL_CONF_CLIENT">
+        <reference local="EMAIL_CONF_AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
+      </foreign-key>
       <foreign-key foreignTable="AD_CLIENT" name="C_POC_CONFIGURATION_AD_CLIENT">
         <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
       </foreign-key>
@@ -100,7 +114,7 @@
         <reference local="AD_ORG_ID" foreign="AD_ORG_ID"/>
       </foreign-key>
       <foreign-key foreignTable="AD_USER" name="C_POC_CONFIGURATION_AD_USER">
-        <reference local="AD_USER_ID" foreign="AD_USER_ID"/>
+        <reference local="EMAIL_CONF_AD_USER_ID" foreign="AD_USER_ID"/>
       </foreign-key>
       <index name="C_POC_CONFIGURATION_CLIENT_IDX" unique="false">
         <index-column name="AD_CLIENT_ID"/>

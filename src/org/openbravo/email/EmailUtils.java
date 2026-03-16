@@ -54,8 +54,17 @@ public class EmailUtils {
       if (organization != null) {
         OBCriteria<EmailServerConfiguration> mailConfigCriteria = OBDal.getInstance()
             .createCriteria(EmailServerConfiguration.class);
-        mailConfigCriteria
-            .add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ORGANIZATION, organization));
+        if (organization.getId().equals("0")) {
+          // Root org reached: look for client-level config (explicit client FK, no org FK)
+          mailConfigCriteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_EMAILCONFIGCLIENT,
+              OBContext.getOBContext().getCurrentClient()));
+          mailConfigCriteria
+              .add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_EMAILCONFIGORGANIZATION));
+        } else {
+          // Org-level: look for config explicitly linked to this organization
+          mailConfigCriteria
+              .add(Restrictions.eq(EmailServerConfiguration.PROPERTY_EMAILCONFIGORGANIZATION, organization));
+        }
         mailConfigCriteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
             OBContext.getOBContext().getCurrentClient()));
         mailConfigCriteria.add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_USERCONTACT));
@@ -64,9 +73,8 @@ public class EmailUtils {
         mailConfigCriteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
         mailConfigCriteria.setMaxResults(1);
 
-        List<EmailServerConfiguration> mailConfigList = null;
-        mailConfigList = mailConfigCriteria.list();
-        // A client can define several organization, so uniqueResult can not be used
+        List<EmailServerConfiguration> mailConfigList = mailConfigCriteria.list();
+        // A client can define several organizations, so uniqueResult cannot be used
         if (!mailConfigList.isEmpty()) {
           emailConfiguration = mailConfigList.get(0);
         }
