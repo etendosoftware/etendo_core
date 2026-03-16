@@ -152,8 +152,6 @@
     }
 
     function showMoreFields() {
-        document.getElementById('from').style.display = '';
-        document.getElementById('from_bottomMargin').style.display = '';
         document.getElementById('cc').style.display = '';
         document.getElementById('cc_bottomMargin').style.display = '';
         document.getElementById('bcc').style.display = '';
@@ -343,7 +341,7 @@
                         </select>
                         </td>
                     </tr>
-                    <tr id="from" style="display: none;">
+                    <tr id="from">
                         <td style="width: 1%; text-align: right;">
                             <span style="white-space: nowrap; padding-right: 10px;" class="LabelText">From</span>
                         </td>
@@ -353,10 +351,10 @@
                                     class="dojoValidateValid readonly TextBox_btn_TwoCells_width"
                                     maxlength="200" name="fromEmail" id="fromEmail" value=""
                                     readonly="true"><span class="LabelText" name="fromName" id="fromName" value="" style="padding-left: 10px"></span>
-                                    
+
                         </td>
                     </tr>
-                    <tr id="from_bottomMargin" style="display: none; height: 8px;">
+                    <tr id="from_bottomMargin" style="height: 8px;">
                     </tr>
 
                     <tr id="to">
