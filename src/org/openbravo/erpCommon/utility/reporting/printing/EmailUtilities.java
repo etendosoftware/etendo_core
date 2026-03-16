@@ -115,18 +115,9 @@ public class EmailUtilities {
 
         // Cascade resolution: User → Organization → Client
         ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
-        EmailServerConfiguration mailConfig = null;
         if (resolvedConfig == null) {
-            OBContext.setAdminMode(true);
-            try {
-                mailConfig = OBDal.getInstance()
-                        .get(EmailServerConfiguration.class, vars.getStringParameter("fromEmailId"));
-            } finally {
-                OBContext.restorePreviousMode();
-            }
-        }
-        if (resolvedConfig == null && mailConfig == null) {
-            throw new ServletException("No SMTP configuration found at any level and no legacy configuration available.");
+            throw new ServletException(
+                "No sender defined: Please configure SMTP at User, Organization or Client level to complete the email configuration.");
         }
         List<File> attachments = new ArrayList<>();
         attachments.add(new File(attachmentFileLocation));
@@ -153,20 +144,14 @@ public class EmailUtilities {
                 .setSentDate(new Date())
                 .build();
 
-        log4j.debug("From: {}", resolvedConfig != null ? resolvedConfig.getFromAddress() : senderAddress);
+        log4j.debug("From: {}", resolvedConfig.getFromAddress());
         log4j.debug("Recipient TO (contact email): {}", email.getRecipientTO());
         log4j.debug("Recipient CC: {}", email.getRecipientCC());
         log4j.debug("Recipient BCC (user email): {}", email.getRecipientBCC());
         log4j.debug("Reply-to (sales rep email): {}", email.getReplyTo());
 
-        if (resolvedConfig != null) {
-            log4j.info("Sending email using {} SMTP config (id={})", resolvedConfig.getLevel(), resolvedConfig.getConfigId());
-            sendEmail(resolvedConfig, email, attachments);
-        } else {
-            log4j.debug("Sending email using legacy EmailServerConfiguration (id={})",
-                mailConfig != null ? mailConfig.getId() : "null");
-            sendEmail(mailConfig, email, attachments);
-        }
+        log4j.info("Sending email using {} SMTP config (id={})", resolvedConfig.getLevel(), resolvedConfig.getConfigId());
+        sendEmail(resolvedConfig, email, attachments);
 
         // Store the email in the database
         saveEmail(connectionProvider, vars.getClient(), vars.getUser(),  email,report, documentData.documentId);
@@ -385,7 +370,7 @@ public class EmailUtilities {
 
             if (mailConfig == null) {
                 throw new ServletException(
-                        "No sender defined: Please go to client configuration to complete the email configuration.");
+                        "No sender defined: Please configure SMTP at User, Organization or Client level to complete the email configuration.");
             }
 
             return mailConfig;

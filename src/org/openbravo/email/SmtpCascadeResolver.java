@@ -18,11 +18,13 @@ package org.openbravo.email;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.security.OrganizationStructureProvider;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.User;
@@ -45,36 +47,55 @@ public class SmtpCascadeResolver {
   /**
    * Determines the SMTP configuration to use for the current user and organization context.
    * Applies the cascade: User → Organization → Client.
-   * @return the resolved SMTP configuration, or {@code null} if no configuration exists at
-   *   any level
+   * A configuration is only used if it has both SMTP host and From Address set.
+   * Incomplete configurations are skipped with a warning and the next level is tried.
+   * @return the resolved SMTP configuration, or {@code null} if no usable configuration
+   *   exists at any level
    */
   public static ResolvedSmtpConfig resolve() {
     OBContext context = OBContext.getOBContext();
     User currentUser = context.getUser();
     Organization currentOrg = context.getCurrentOrganization();
     ResolvedSmtpConfig config = resolveUserLevel(currentUser);
-    if (config != null) {
+    if (isUsableConfig(config)) {
       return config;
     }
     config = resolveOrgOrClientLevel(currentOrg);
-    if (config != null) {
+    if (isUsableConfig(config)) {
       return config;
     }
     return null;
   }
 
   /**
+   * Returns {@code true} if the given configuration is non-null and has both SMTP host
+   * and From Address set. Configurations missing either field are considered incomplete
+   * and are skipped during cascade resolution.
+   * @param config the resolved configuration to check
+   * @return {@code true} if usable, {@code false} otherwise
+   */
+  static boolean isUsableConfig(ResolvedSmtpConfig config) {
+    return config != null
+        && StringUtils.isNotBlank(config.getHost())
+        && StringUtils.isNotBlank(config.getFromAddress());
+  }
+
+  /**
    * Attempts to resolve the SMTP configuration from the user's personal email settings.
-   * Queries for an active {@link EmailServerConfiguration} record linked to the given user
-   * via {@code AD_USER_ID}.
+   * Iterates all active configs for the user (default first, then most recent) and returns
+   * the first usable one (host + fromAddress both set).
    * @param user the current user
    * @return a {@link ResolvedSmtpConfig} at {@code USER} level, or {@code null} if none found
    */
   protected static ResolvedSmtpConfig resolveUserLevel(User user) {
     try {
-      EmailServerConfiguration config = findActiveUserEmailConfig(user);
-      if (config != null) {
-        return new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
+      for (EmailServerConfiguration config : findActiveUserEmailConfigs(user)) {
+        ResolvedSmtpConfig resolved = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.USER);
+        if (isUsableConfig(resolved)) {
+          return resolved;
+        }
+        log.warn("USER SMTP config (id={}) is incomplete (missing host or fromAddress) — trying next",
+            config.getId());
       }
     } catch (Exception e) {
       log.error("Error resolving SMTP config at USER level for userId={}",
@@ -84,39 +105,97 @@ public class SmtpCascadeResolver {
   }
 
   /**
-   * Queries the database for an active {@link EmailServerConfiguration} record belonging to the
-   * given user (where {@code AD_USER_ID} matches). Returns at most one result.
+   * Queries all active {@link EmailServerConfiguration} records for the given user,
+   * ordered by default flag descending then creation date descending.
    * @param user the user to search for
-   * @return the active user email configuration, or {@code null} if none exists
+   * @return list of matching configs, may be empty
    */
-  protected static EmailServerConfiguration findActiveUserEmailConfig(User user) {
+  protected static List<EmailServerConfiguration> findActiveUserEmailConfigs(User user) {
     OBCriteria<EmailServerConfiguration> criteria = OBDal.getInstance()
         .createCriteria(EmailServerConfiguration.class);
     criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_USERCONTACT, user));
     criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_ACTIVE, true));
-    // Default configuration first; if tied, most recently created wins
     criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_DEFAULTCONFIGURATION));
     criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
-    criteria.setMaxResults(1);
-    List<EmailServerConfiguration> results = criteria.list();
+    return criteria.list();
+  }
+
+  /**
+   * @deprecated Use {@link #findActiveUserEmailConfigs(User)} instead.
+   */
+  @Deprecated
+  protected static EmailServerConfiguration findActiveUserEmailConfig(User user) {
+    List<EmailServerConfiguration> results = findActiveUserEmailConfigs(user);
     return results.isEmpty() ? null : results.get(0);
   }
 
   /**
-   * Attempts to resolve the SMTP configuration at the Organization or Client level.
-   * Delegates to {@link EmailUtils#getEmailConfiguration(Organization)} which walks up the
-   * organization tree and may return a Client-level (org {@code '0'}) configuration.
+   * Walks up the organization tree looking for the first usable SMTP configuration,
+   * skipping incomplete configs (missing host or fromAddress) at each level.
+   * If no org-level config is usable, falls through to the client-level config.
    * @param org the context organization
    * @return a {@link ResolvedSmtpConfig} at {@code ORGANIZATION} or {@code CLIENT} level,
-   *   or {@code null} if no configuration is found
+   *   or {@code null} if no usable configuration is found at any level
    */
   protected static ResolvedSmtpConfig resolveOrgOrClientLevel(Organization org) {
-    EmailServerConfiguration config = EmailUtils.getEmailConfiguration(org);
-    if (config == null) {
+    if (org == null) {
       return null;
     }
-    ResolvedSmtpConfig.Level level = determineLevel(config);
-    return new ResolvedSmtpConfig(config, level);
+    boolean isRootOrg = "0".equals(org.getId());
+    List<EmailServerConfiguration> configs = isRootOrg
+        ? findClientLevelConfigs()
+        : findOrgLevelConfigs(org);
+
+    ResolvedSmtpConfig.Level level = isRootOrg
+        ? ResolvedSmtpConfig.Level.CLIENT
+        : ResolvedSmtpConfig.Level.ORGANIZATION;
+
+    for (EmailServerConfiguration config : configs) {
+      ResolvedSmtpConfig resolved = new ResolvedSmtpConfig(config, level);
+      if (isUsableConfig(resolved)) {
+        return resolved;
+      }
+      log.warn("{} SMTP config (id={}) is incomplete (missing host or fromAddress) — trying next",
+          level, config.getId());
+    }
+
+    if (isRootOrg) {
+      return null;
+    }
+    OrganizationStructureProvider orgStructure = new OrganizationStructureProvider();
+    return resolveOrgOrClientLevel(orgStructure.getParentOrg(org));
+  }
+
+  /**
+   * Queries all configs explicitly linked to the given organization (not client-level),
+   * ordered by default flag descending then creation date descending.
+   */
+  private static List<EmailServerConfiguration> findOrgLevelConfigs(Organization org) {
+    OBCriteria<EmailServerConfiguration> criteria = OBDal.getInstance()
+        .createCriteria(EmailServerConfiguration.class);
+    criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_EMAILCONFIGORGANIZATION, org));
+    criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
+        OBContext.getOBContext().getCurrentClient()));
+    criteria.add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_USERCONTACT));
+    criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_DEFAULTCONFIGURATION));
+    criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
+    return criteria.list();
+  }
+
+  /**
+   * Queries all client-level configs (no org link, no user link),
+   * ordered by default flag descending then creation date descending.
+   */
+  private static List<EmailServerConfiguration> findClientLevelConfigs() {
+    OBCriteria<EmailServerConfiguration> criteria = OBDal.getInstance()
+        .createCriteria(EmailServerConfiguration.class);
+    criteria.add(Restrictions.eq(EmailServerConfiguration.PROPERTY_CLIENT,
+        OBContext.getOBContext().getCurrentClient()));
+    criteria.add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_EMAILCONFIGORGANIZATION));
+    criteria.add(Restrictions.isNull(EmailServerConfiguration.PROPERTY_USERCONTACT));
+    criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_DEFAULTCONFIGURATION));
+    criteria.addOrder(Order.desc(EmailServerConfiguration.PROPERTY_CREATIONDATE));
+    return criteria.list();
   }
 
   /**

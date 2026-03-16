@@ -86,6 +86,16 @@ public class EmailManager {
    * @throws Exception if password decryption or email sending fails
    */
   public static void sendEmail(ResolvedSmtpConfig conf, EmailInfo email) throws Exception {
+    if (StringUtils.isBlank(conf.getHost())) {
+      throw new ServletException("SMTP Host is not configured in the "
+          + conf.getLevel() + " email configuration (id=" + conf.getConfigId()
+          + "). Please complete the SMTP setup.");
+    }
+    if (StringUtils.isBlank(conf.getFromAddress())) {
+      throw new ServletException("SMTP From Address (sender) is not configured in the "
+          + conf.getLevel() + " email configuration (id=" + conf.getConfigId()
+          + "). Please complete the SMTP setup.");
+    }
     String decryptedPassword = safeDecrypt(conf.getPassword());
     long timeoutMillis = conf.getTimeoutSeconds() != null
         ? TimeUnit.SECONDS.toMillis(conf.getTimeoutSeconds())

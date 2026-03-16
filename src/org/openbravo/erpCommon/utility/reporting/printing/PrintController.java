@@ -326,7 +326,9 @@ public class PrintController extends HttpSecureAppServlet {
 
               if (request.getServletPath().toLowerCase().indexOf(PRINT_PATH) == -1
                   && request.getServletPath().toLowerCase().indexOf(PRINT_OPTIONS_PATH) == -1) {
-                boolean hasSender = StringUtils.isNotEmpty(senderAddress) || SmtpCascadeResolver.resolve() != null;
+                ResolvedSmtpConfig resolvedForCheck = SmtpCascadeResolver.resolve();
+                boolean hasSender = resolvedForCheck != null
+                    || StringUtils.isNotEmpty(senderAddress);
                 if (!hasSender) {
                   final OBError on = new OBError();
                   on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
@@ -1079,21 +1081,11 @@ public class PrintController extends HttpSecureAppServlet {
     try {
       ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
       if (resolvedConfig != null) {
-        fromEmail = resolvedConfig.getFromAddress() != null
-            ? resolvedConfig.getFromAddress()
-            : resolvedConfig.getAccount();
+        fromEmail = resolvedConfig.getFromAddress();
         fromEmailId = resolvedConfig.getConfigId();
       } else {
-        EmailServerConfiguration mailConfig = EmailUtils
-            .getEmailConfiguration(OBDal.getInstance().get(Organization.class, vars.getOrg()));
-        if (mailConfig == null) {
-          throw new ServletException(
-              "No sender defined: Please go to client configuration to complete the email configuration.");
-        }
-        fromEmail = mailConfig.getSmtpServerSenderAddress() != null
-            ? mailConfig.getSmtpServerSenderAddress()
-            : mailConfig.getSmtpServerAccount();
-        fromEmailId = mailConfig.getId();
+        throw new ServletException(
+            "No sender defined: Please configure SMTP at User, Organization or Client level to complete the email configuration.");
       }
     } finally {
       OBContext.restorePreviousMode();
