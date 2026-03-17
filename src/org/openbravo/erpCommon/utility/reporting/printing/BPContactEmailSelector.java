@@ -198,7 +198,7 @@ public class BPContactEmailSelector {
 
   /**
    * Updates an existing last-used record with the new contact.
-   * @param record the existing record to update
+   * @param emailBpContact the existing record to update
    * @param contactUser the new contact to store
    */
   public static void updateLastUsedRecord(EmailBpContact emailBpContact, User contactUser) {

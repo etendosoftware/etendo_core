@@ -101,6 +101,7 @@ public class PrintController extends HttpSecureAppServlet {
   private static final String PARAM_TO_EMAIL_ORIG = "toEmailOrig";
   private static final String PARAM_TO_CONTACT_ID = "toContactId";
   private static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
+  private static final String JSON_KEY_ERROR = "error";
   public static final String LIST_ITEM_TAG = "<li>";
   public static final String CLOSE_LIST_ITEM_TAG = "</li>";
   private final Map<String, TemplateData[]> differentDocTypes = new HashMap<String, TemplateData[]>();
@@ -497,7 +498,7 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error("Error in change template ajax", e);
             o = new JSONObject();
             try {
-              o.put("error", true);
+              o.put(JSON_KEY_ERROR, true);
             } catch (JSONException e1) {
               log4j.error("Error in change template ajax", e1);
             }
@@ -524,7 +525,7 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error("Error in change template ajax", e);
             o = new JSONObject();
             try {
-              o.put("error", true);
+              o.put(JSON_KEY_ERROR, true);
             } catch (JSONException e1) {
               log4j.error("Error in change template ajax", e1);
             }
@@ -617,7 +618,7 @@ public class PrintController extends HttpSecureAppServlet {
   protected JSONObject buildErrorJson() {
     JSONObject error = new JSONObject();
     try {
-      error.put("error", true);
+      error.put(JSON_KEY_ERROR, true);
     } catch (JSONException e) {
       log4j.error("Failed to build error JSON", e);
     }
