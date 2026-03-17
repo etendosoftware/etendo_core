@@ -29,6 +29,7 @@ import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.access.EmailBpContact;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -39,6 +40,7 @@ import org.openbravo.model.common.businesspartner.BusinessPartner;
 public class BPContactEmailSelector {
 
   private static final Logger log = LogManager.getLogger();
+  private static final String ERROR_SAVING_EMAIL_CONTACT = "ErrorSavingLastUsedEmailContact";
 
 
   /**
@@ -158,8 +160,7 @@ public class BPContactEmailSelector {
     criteria.add(Restrictions.eq(EmailBpContact.PROPERTY_USERCONTACT + ".id", sendingUserId));
     criteria.add(Restrictions.eq(EmailBpContact.PROPERTY_BUSINESSPARTNER + ".id", bpartnerId));
     criteria.setMaxResults(1);
-    List<EmailBpContact> results = criteria.list();
-    return results.isEmpty() ? null : results.get(0);
+    return (EmailBpContact) criteria.uniqueResult();
   }
 
   /**
@@ -176,8 +177,8 @@ public class BPContactEmailSelector {
     if (StringUtils.isBlank(contactAdUserId)) {
       return;
     }
-    OBContext.setAdminMode(true);
     try {
+      OBContext.setAdminMode(true);
       EmailBpContact emailBpContact = findLastUsedRecord(sendingUserId, bpartnerId);
       User contactUser = OBDal.getInstance().get(User.class, contactAdUserId);
       if (emailBpContact != null) {
@@ -189,8 +190,8 @@ public class BPContactEmailSelector {
       log.debug("Saved last-used contact {} for user {} / BP {}",
           contactAdUserId, sendingUserId, bpartnerId);
     } catch (Exception e) {
-      log.error("Error saving last-used email contact", e);
-      throw new ServletException("Error saving last-used email contact", e);
+      log.error(OBMessageUtils.messageBD(ERROR_SAVING_EMAIL_CONTACT), e);
+      throw new ServletException(OBMessageUtils.messageBD(ERROR_SAVING_EMAIL_CONTACT), e);
     } finally {
       OBContext.restorePreviousMode();
     }

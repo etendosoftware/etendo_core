@@ -35383,7 +35383,7 @@ If this flag is checked the creation and deletion of tree nodes will be handled 
 <!--CEA705AD9146455F8F05A484188AFEA2-->  <NAME><![CDATA[Default]]></NAME>
 <!--CEA705AD9146455F8F05A484188AFEA2-->  <PRINTNAME><![CDATA[Default]]></PRINTNAME>
 <!--CEA705AD9146455F8F05A484188AFEA2-->  <DESCRIPTION><![CDATA[Default contact for document emailing.]]></DESCRIPTION>
-<!--CEA705AD9146455F8F05A484188AFEA2-->  <HELP><![CDATA[When checked, this contact will be automatically preselected as the email recipient when sending documents (invoices, orders, shipments, payments) related to their Business Partner. Only one contact per Business Partner should be marked as default. ]]></HELP>
+<!--CEA705AD9146455F8F05A484188AFEA2-->  <HELP><![CDATA[When checked, this contact will be automatically preselected as the email recipient when sending documents (invoices, orders, shipments, payments) related to their Business Partner. Only one contact per Business Partner should be marked as default.]]></HELP>
 <!--CEA705AD9146455F8F05A484188AFEA2-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--CEA705AD9146455F8F05A484188AFEA2-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--CEA705AD9146455F8F05A484188AFEA2--></AD_ELEMENT>
@@ -36900,7 +36900,7 @@ For details - http://wiki.openbravo.com/wiki/Role#Permissions_Inheritance]]></HE
 <!--E49D65F2CF5047398F8649954CF18803-->  <NAME><![CDATA[Contact_Ad_User_ID]]></NAME>
 <!--E49D65F2CF5047398F8649954CF18803-->  <PRINTNAME><![CDATA[Contact_Ad_User_ID]]></PRINTNAME>
 <!--E49D65F2CF5047398F8649954CF18803-->  <DESCRIPTION><![CDATA[Last Used Contact.]]></DESCRIPTION>
-<!--E49D65F2CF5047398F8649954CF18803-->  <HELP><![CDATA[The Business Partner contact (ad_user linked to the BP) that was last selected as the email recipient by the sending user for this Business Partner. This value is automatically updated each time a document email is sent.  ]]></HELP>
+<!--E49D65F2CF5047398F8649954CF18803-->  <HELP><![CDATA[The Business Partner contact (ad_user linked to the BP) that was last selected as the email recipient by the sending user for this Business Partner. This value is automatically updated each time a document email is sent.]]></HELP>
 <!--E49D65F2CF5047398F8649954CF18803-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--E49D65F2CF5047398F8649954CF18803-->  <ISGLOSSARY><![CDATA[N]]></ISGLOSSARY>
 <!--E49D65F2CF5047398F8649954CF18803--></AD_ELEMENT>

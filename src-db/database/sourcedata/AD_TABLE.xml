@@ -11877,7 +11877,7 @@ GROUP BY
 <!--8C3933823F7440E58F0ABC6C90C65A9B-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--8C3933823F7440E58F0ABC6C90C65A9B-->  <NAME><![CDATA[EmailBpContactLastUsed]]></NAME>
 <!--8C3933823F7440E58F0ABC6C90C65A9B-->  <DESCRIPTION><![CDATA[Stores the last contact used as email recipient per sending user and Business Partner.]]></DESCRIPTION>
-<!--8C3933823F7440E58F0ABC6C90C65A9B-->  <HELP><![CDATA[This table records the last Business Partner contact selected as email recipient when sending documents (invoices, orders, shipments, payments). One record is kept per combination of sending user and Business Partner, and it is automatically updated on each email sent. This information is used to preselect the recipient the next time a document is emailed to the same Business Partner. ]]></HELP>
+<!--8C3933823F7440E58F0ABC6C90C65A9B-->  <HELP><![CDATA[This table records the last Business Partner contact selected as email recipient when sending documents (invoices, orders, shipments, payments). One record is kept per combination of sending user and Business Partner, and it is automatically updated on each email sent. This information is used to preselect the recipient the next time a document is emailed to the same Business Partner.]]></HELP>
 <!--8C3933823F7440E58F0ABC6C90C65A9B-->  <TABLENAME><![CDATA[c_email_bpcontact_lastused]]></TABLENAME>
 <!--8C3933823F7440E58F0ABC6C90C65A9B-->  <CLASSNAME><![CDATA[EmailBpContact]]></CLASSNAME>
 <!--8C3933823F7440E58F0ABC6C90C65A9B-->  <ISVIEW><![CDATA[N]]></ISVIEW>
