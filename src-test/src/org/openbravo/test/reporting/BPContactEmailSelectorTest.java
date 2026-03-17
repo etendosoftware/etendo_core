@@ -57,26 +57,60 @@ import org.openbravo.model.common.enterprise.Organization;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class BPContactEmailSelectorTest {
-
-  private static final String MSG_DEFAULT_PRESELECTED = "Default-for-docs contact must be preselected";
-  private static final String MSG_LAST_USED_PRESELECTED = "Last-used contact must be preselected when no default exists";
-  private static final String MSG_FIRST_ACTIVE_PRESELECTED = "First active contact (A-Z) must be preselected when no default or last-used";
-  private static final String MSG_NULL_FOR_EMPTY = "Must return null when BP has no contacts with email";
-  private static final String MSG_FALLBACK_INACTIVE = "Must fall back to first contact even if inactive";
-  private static final String MSG_SINGLE_CONTACT = "Single available contact must always be returned";
-
+  private static final String MSG_DEFAULT_PRESELECTED =
+      "Default-for-docs contact must be preselected";
+  private static final String MSG_LAST_USED_PRESELECTED =
+      "Last-used contact must be preselected when no default exists";
+  private static final String MSG_FIRST_ACTIVE_PRESELECTED =
+      "First active contact (A-Z) must be preselected when no default or last-used";
+  private static final String MSG_NULL_FOR_EMPTY =
+      "Must return null when BP has no contacts with email";
+  private static final String MSG_FALLBACK_INACTIVE =
+      "Must fall back to first contact even if inactive";
+  private static final String MSG_SINGLE_CONTACT =
+      "Single available contact must always be returned";
+  private static final String MSG_RETURN_CONTACTS_FROM_CRITERIA =
+      "Must return contacts from criteria";
+  private static final String MSG_NEVER_RETURN_NULL = "Must never return null";
+  private static final String MSG_RETURN_EMPTY_LIST = "Must return empty list";
+  private static final String MSG_NULL_WHEN_NO_LAST_USED =
+      "Must return null when no last-used record exists";
+  private static final String MSG_RETURN_VALID_LAST_USED =
+      "Must return the valid last-used contact";
+  private static final String MSG_NULL_WHEN_CONTACT_INACTIVE =
+      "Must return null when last-used contact is inactive";
+  private static final String MSG_NULL_WHEN_BLANK_EMAIL =
+      "Must return null when last-used contact has blank email";
+  private static final String MSG_NULL_WHEN_CONTACT_REF_NULL =
+      "Must return null when contact reference is null";
+  private static final String MSG_RETURN_ONLY_ACTIVE_CONTACT =
+      "Must return the only active contact";
+  private static final String MSG_EMPTY_FOR_BLANK_EMAIL =
+      "Must return empty string for blank email";
+  private static final String MSG_EMPTY_FOR_NULL_EMAIL =
+      "Must return empty string for null email";
+  private static final String MSG_FIND_CASE_INSENSITIVE =
+      "Must find contact by case-insensitive email match";
+  private static final String MSG_EMPTY_WHEN_NO_MATCH =
+      "Must return empty string when no email matches";
+  private static final String MSG_RETURN_EXISTING_RECORD = "Must return the existing record";
+  private static final String MSG_NULL_WHEN_NO_RECORD = "Must return null when no record exists";
+  private static final String MSG_SAVE_ERROR = "Error saving last-used email contact";
   private static final String BP_ID = "TEST_BP_ID";
   private static final String SENDING_USER_ID = "TEST_SENDING_USER_ID";
   private static final String CONTACT_USER_ID = "TEST_CONTACT_USER_ID";
   private static final String CONTACT_EMAIL = "contact@example.com";
-
+  private static final String CONTACT_EMAIL_UPPERCASE_PADDED = " CONTACT@EXAMPLE.COM ";
+  private static final String OTHER_EMAIL = "other@example.com";
+  private static final String BLANK_STRING = "  ";
+  private static final String EMPTY_STRING = "";
+  
   @Mock private User defaultContact;
   @Mock private User lastUsedContact;
   @Mock private User activeContactA;
   @Mock private User activeContactB;
   @Mock private User inactiveContact;
   @Mock private User contactUser;
-
   @Mock private OBDal obDal;
   @Mock private OBContext obContext;
   @Mock private OBProvider obProvider;
@@ -117,39 +151,39 @@ public class BPContactEmailSelectorTest {
   }
 
   /**
-   * Verifies that a contact marked with {@code isdefaultfordocs = true} is always returned,
-   * regardless of other flags or a last-used contact being present.
+   * Verifies that a contact marked with {@code isdefaultfordocs = true} is always
+   * returned, regardless of other flags or a last-used contact being present.
    */
   @Test
-  public void testSelectFromCandidates_defaultContactTakesPriority() {
-    when(defaultContact.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.TRUE);
-    when(activeContactA.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
+  public void testSelectFromCandidatesDefaultContactTakesPriority() {
+    stubIsDefaultForDocs(defaultContact, true);
+    stubIsDefaultForDocs(activeContactA, false);
     List<User> contacts = Arrays.asList(activeContactA, defaultContact);
     User result = BPContactEmailSelector.selectFromCandidates(contacts, lastUsedContact);
     assertEquals(MSG_DEFAULT_PRESELECTED, defaultContact, result);
   }
 
   /**
-   * Verifies that when no contact is marked as default, the last-used contact takes priority
-   * over alphabetical ordering.
+   * Verifies that when no contact is marked as default, the last-used contact takes
+   * priority over alphabetical ordering.
    */
   @Test
-  public void testSelectFromCandidates_lastUsedTakesPriorityOverAlphabetical() {
-    when(activeContactA.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
-    when(activeContactB.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
+  public void testSelectFromCandidatesLastUsedTakesPriorityOverAlphabetical() {
+    stubIsDefaultForDocs(activeContactA, false);
+    stubIsDefaultForDocs(activeContactB, false);
     List<User> contacts = Arrays.asList(activeContactA, activeContactB);
     User result = BPContactEmailSelector.selectFromCandidates(contacts, lastUsedContact);
     assertEquals(MSG_LAST_USED_PRESELECTED, lastUsedContact, result);
   }
 
   /**
-   * Verifies that when there is no default contact and no last-used contact, the first active
-   * contact in the already-sorted list is returned.
+   * Verifies that when there is no default contact and no last-used contact, the first
+   * active contact in the already-sorted list is returned.
    */
   @Test
-  public void testSelectFromCandidates_firstActiveWhenNoDefaultOrLastUsed() {
-    when(activeContactA.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
-    when(activeContactB.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
+  public void testSelectFromCandidatesFirstActiveWhenNoDefaultOrLastUsed() {
+    stubIsDefaultForDocs(activeContactA, false);
+    stubIsDefaultForDocs(activeContactB, false);
     when(activeContactA.isActive()).thenReturn(Boolean.TRUE);
     List<User> contacts = Arrays.asList(activeContactA, activeContactB);
     User result = BPContactEmailSelector.selectFromCandidates(contacts, null);
@@ -160,7 +194,7 @@ public class BPContactEmailSelectorTest {
    * Verifies that {@code null} is returned when the contact list is empty.
    */
   @Test
-  public void testSelectFromCandidates_returnsNullForEmptyList() {
+  public void testSelectFromCandidatesReturnsNullForEmptyList() {
     User result = BPContactEmailSelector.selectFromCandidates(Collections.emptyList(), null);
     assertNull(MSG_NULL_FOR_EMPTY, result);
   }
@@ -169,18 +203,18 @@ public class BPContactEmailSelectorTest {
    * Verifies that {@code null} is returned when the contact list is {@code null}.
    */
   @Test
-  public void testSelectFromCandidates_returnsNullForNullList() {
+  public void testSelectFromCandidatesReturnsNullForNullList() {
     User result = BPContactEmailSelector.selectFromCandidates(null, lastUsedContact);
     assertNull(MSG_NULL_FOR_EMPTY, result);
   }
 
   /**
-   * Verifies that when all contacts are inactive and there is no default or last-used contact,
-   * the first contact in the list is returned as a fallback.
+   * Verifies that when all contacts are inactive and there is no default or last-used
+   * contact, the first contact in the list is returned as a fallback.
    */
   @Test
-  public void testSelectFromCandidates_fallbackToFirstWhenAllInactive() {
-    when(inactiveContact.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
+  public void testSelectFromCandidatesFallbackToFirstWhenAllInactive() {
+    stubIsDefaultForDocs(inactiveContact, false);
     when(inactiveContact.isActive()).thenReturn(Boolean.FALSE);
     List<User> contacts = Collections.singletonList(inactiveContact);
     User result = BPContactEmailSelector.selectFromCandidates(contacts, null);
@@ -191,8 +225,8 @@ public class BPContactEmailSelectorTest {
    * Verifies that a single active contact with no default flag is correctly returned.
    */
   @Test
-  public void testSelectFromCandidates_singleContactAlwaysReturned() {
-    when(activeContactA.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
+  public void testSelectFromCandidatesSingleContactAlwaysReturned() {
+    stubIsDefaultForDocs(activeContactA, false);
     when(activeContactA.isActive()).thenReturn(Boolean.TRUE);
     List<User> contacts = Collections.singletonList(activeContactA);
     User result = BPContactEmailSelector.selectFromCandidates(contacts, null);
@@ -203,78 +237,75 @@ public class BPContactEmailSelectorTest {
    * Verifies that the criteria is built and returns the list from DAL.
    */
   @Test
-  public void testGetBPContactsWithEmail_returnsCriteriaResults() {
-    when(obDal.createCriteria(User.class)).thenReturn(userCriteria);
+  public void testGetBPContactsWithEmailReturnsCriteriaResults() {
+    stubUserCriteria();
     List<User> expectedContacts = Arrays.asList(activeContactA, activeContactB);
     when(userCriteria.list()).thenReturn(expectedContacts);
     List<User> result = BPContactEmailSelector.getBPContactsWithEmail(BP_ID);
-    assertEquals("Must return contacts from criteria", expectedContacts, result);
+    assertEquals(MSG_RETURN_CONTACTS_FROM_CRITERIA, expectedContacts, result);
   }
 
   /**
    * Verifies that an empty list is returned when no contacts match.
    */
   @Test
-  public void testGetBPContactsWithEmail_returnsEmptyWhenNoContacts() {
-    when(obDal.createCriteria(User.class)).thenReturn(userCriteria);
+  public void testGetBPContactsWithEmailReturnsEmptyWhenNoContacts() {
+    stubUserCriteria();
     when(userCriteria.list()).thenReturn(Collections.emptyList());
     List<User> result = BPContactEmailSelector.getBPContactsWithEmail(BP_ID);
-    assertNotNull("Must never return null", result);
-    assertEquals("Must return empty list", 0, result.size());
+    assertNotNull(MSG_NEVER_RETURN_NULL, result);
+    assertEquals(MSG_RETURN_EMPTY_LIST, 0, result.size());
   }
 
   /**
    * Verifies that {@code null} is returned when no last-used record exists.
    */
   @Test
-  public void testGetLastUsedContact_returnsNullWhenNoRecord() {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.emptyList());
+  public void testGetLastUsedContactReturnsNullWhenNoRecord() {
+    stubEmailBpContactCriteriaEmpty();
     User result = BPContactEmailSelector.getLastUsedContact(SENDING_USER_ID, BP_ID);
-    assertNull("Must return null when no last-used record exists", result);
+    assertNull(MSG_NULL_WHEN_NO_LAST_USED, result);
   }
 
   /**
-   * Verifies that the contact is returned when the last-used record exists
-   * and the contact is active with a valid email.
+   * Verifies that the contact is returned when the last-used record exists and
+   * the contact is active with a valid email.
    */
   @Test
-  public void testGetLastUsedContact_returnsValidContact() {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.singletonList(mockEmailBpContact));
+  public void testGetLastUsedContactReturnsValidContact() {
+    stubEmailBpContactCriteriaWithRecord();
     when(mockEmailBpContact.getContactAdUser()).thenReturn(activeContactA);
     when(activeContactA.isActive()).thenReturn(Boolean.TRUE);
     when(activeContactA.getEmail()).thenReturn(CONTACT_EMAIL);
     User result = BPContactEmailSelector.getLastUsedContact(SENDING_USER_ID, BP_ID);
-    assertEquals("Must return the valid last-used contact", activeContactA, result);
+    assertEquals(MSG_RETURN_VALID_LAST_USED, activeContactA, result);
   }
 
   /**
    * Verifies that {@code null} is returned when the last-used contact is inactive.
    */
   @Test
-  public void testGetLastUsedContact_returnsNullWhenContactInactive() {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.singletonList(mockEmailBpContact));
+  public void testGetLastUsedContactReturnsNullWhenContactInactive() {
+    stubEmailBpContactCriteriaWithRecord();
     when(mockEmailBpContact.getContactAdUser()).thenReturn(inactiveContact);
     when(inactiveContact.isActive()).thenReturn(Boolean.FALSE);
     User result = BPContactEmailSelector.getLastUsedContact(SENDING_USER_ID, BP_ID);
-    assertNull("Must return null when last-used contact is inactive", result);
+    assertNull(MSG_NULL_WHEN_CONTACT_INACTIVE, result);
   }
 
   /**
-   * Verifies that {@code null} is returned when the last-used contact has a blank email.
+   * Verifies that {@code null} is returned when the last-used contact has a blank
+   * email.
    */
   @Test
-  public void testGetLastUsedContact_returnsNullWhenContactHasNoEmail() {
+  public void testGetLastUsedContactReturnsNullWhenContactHasNoEmail() {
     User contactWithBlankEmail = mock(User.class);
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.singletonList(mockEmailBpContact));
+    stubEmailBpContactCriteriaWithRecord();
     when(mockEmailBpContact.getContactAdUser()).thenReturn(contactWithBlankEmail);
     when(contactWithBlankEmail.isActive()).thenReturn(Boolean.TRUE);
-    when(contactWithBlankEmail.getEmail()).thenReturn("  ");
+    when(contactWithBlankEmail.getEmail()).thenReturn(BLANK_STRING);
     User result = BPContactEmailSelector.getLastUsedContact(SENDING_USER_ID, BP_ID);
-    assertNull("Must return null when last-used contact has blank email", result);
+    assertNull(MSG_NULL_WHEN_BLANK_EMAIL, result);
   }
 
   /**
@@ -282,55 +313,55 @@ public class BPContactEmailSelectorTest {
    * reference is {@code null} (orphaned record).
    */
   @Test
-  public void testGetLastUsedContact_returnsNullWhenContactAdUserIsNull() {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.singletonList(mockEmailBpContact));
+  public void testGetLastUsedContactReturnsNullWhenContactAdUserIsNull() {
+    stubEmailBpContactCriteriaWithRecord();
     when(mockEmailBpContact.getContactAdUser()).thenReturn(null);
     User result = BPContactEmailSelector.getLastUsedContact(SENDING_USER_ID, BP_ID);
-    assertNull("Must return null when contact reference is null", result);
+    assertNull(MSG_NULL_WHEN_CONTACT_REF_NULL, result);
   }
-
+  
   /**
-   * Verifies the full flow: contacts are fetched, last-used is resolved,
-   * and the best candidate is returned.
+   * Verifies the full flow: contacts are fetched, last-used is resolved, and
+   * the best candidate is returned.
    */
   @Test
-  public void testSelectBestContact_fullFlow() {
-    when(obDal.createCriteria(User.class)).thenReturn(userCriteria);
-    when(activeContactA.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(Boolean.FALSE);
+  public void testSelectBestContactFullFlow() {
+    stubUserCriteria();
+    stubIsDefaultForDocs(activeContactA, false);
     when(activeContactA.isActive()).thenReturn(Boolean.TRUE);
     when(userCriteria.list()).thenReturn(Collections.singletonList(activeContactA));
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.emptyList());
+    stubEmailBpContactCriteriaEmpty();
     User result = BPContactEmailSelector.selectBestContact(BP_ID, SENDING_USER_ID);
-    assertEquals("Must return the only active contact", activeContactA, result);
+    assertEquals(MSG_RETURN_ONLY_ACTIVE_CONTACT, activeContactA, result);
   }
 
   /**
    * Verifies that saving is skipped when the contact ID is blank.
+   * @throws ServletException if an unexpected persistence error occurs
    */
   @Test
-  public void testSaveLastUsedContact_skipsWhenContactIdBlank() throws ServletException {
-    BPContactEmailSelector.saveLastUsedContact(SENDING_USER_ID, BP_ID, "  ");
+  public void testSaveLastUsedContactSkipsWhenContactIdBlank() throws ServletException {
+    BPContactEmailSelector.saveLastUsedContact(SENDING_USER_ID, BP_ID, BLANK_STRING);
     verify(obDal, never()).flush();
   }
 
   /**
    * Verifies that saving is skipped when the contact ID is {@code null}.
+   * @throws ServletException if an unexpected persistence error occurs
    */
   @Test
-  public void testSaveLastUsedContact_skipsWhenContactIdNull() throws ServletException {
+  public void testSaveLastUsedContactSkipsWhenContactIdNull() throws ServletException {
     BPContactEmailSelector.saveLastUsedContact(SENDING_USER_ID, BP_ID, null);
     verify(obDal, never()).flush();
   }
 
   /**
    * Verifies that an existing record is updated with the new contact.
+   * @throws ServletException if an unexpected persistence error occurs
    */
   @Test
-  public void testSaveLastUsedContact_updatesExistingRecord() throws ServletException {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.singletonList(mockEmailBpContact));
+  public void testSaveLastUsedContactUpdatesExistingRecord() throws ServletException {
+    stubEmailBpContactCriteriaWithRecord();
     when(obDal.get(User.class, CONTACT_USER_ID)).thenReturn(contactUser);
     BPContactEmailSelector.saveLastUsedContact(SENDING_USER_ID, BP_ID, CONTACT_USER_ID);
     verify(mockEmailBpContact).setContactAdUser(contactUser);
@@ -339,12 +370,12 @@ public class BPContactEmailSelectorTest {
 
   /**
    * Verifies that a new record is inserted when no existing record is found.
+   * @throws ServletException if an unexpected persistence error occurs
    */
   @Test
-  public void testSaveLastUsedContact_insertsNewRecord() throws ServletException {
+  public void testSaveLastUsedContactInsertsNewRecord() throws ServletException {
     User sendingUser = mock(User.class);
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.emptyList());
+    stubEmailBpContactCriteriaEmpty();
     when(obDal.get(User.class, CONTACT_USER_ID)).thenReturn(contactUser);
     when(obDal.get(User.class, SENDING_USER_ID)).thenReturn(sendingUser);
     when(obDal.get(BusinessPartner.class, BP_ID)).thenReturn(mockBusinessPartner);
@@ -360,18 +391,18 @@ public class BPContactEmailSelectorTest {
   }
 
   /**
-   * Verifies that a {@link ServletException} is thrown when an unexpected error occurs
-   * during persistence.
+   * Verifies that a {@link ServletException} is thrown when an unexpected error
+   * occurs during persistence.
    */
   @Test
-  public void testSaveLastUsedContact_throwsServletExceptionOnError() {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
+  public void testSaveLastUsedContactThrowsServletExceptionOnError() {
+    stubEmailBpContactCriteria();
     when(emailBpContactCriteria.list()).thenThrow(new RuntimeException("DB error"));
     try {
       BPContactEmailSelector.saveLastUsedContact(SENDING_USER_ID, BP_ID, CONTACT_USER_ID);
       fail("Expected ServletException to be thrown");
     } catch (ServletException e) {
-      assertEquals("Error saving last-used email contact", e.getMessage());
+      assertEquals(MSG_SAVE_ERROR, e.getMessage());
     }
   }
 
@@ -379,76 +410,122 @@ public class BPContactEmailSelectorTest {
    * Verifies that an empty string is returned when the email parameter is blank.
    */
   @Test
-  public void testFindContactIdByEmail_returnsEmptyForBlankEmail() {
-    String result = BPContactEmailSelector.findContactIdByEmail(BP_ID, "  ");
-    assertEquals("Must return empty string for blank email", "", result);
+  public void testFindContactIdByEmailReturnsEmptyForBlankEmail() {
+    String result = BPContactEmailSelector.findContactIdByEmail(BP_ID, BLANK_STRING);
+    assertEquals(MSG_EMPTY_FOR_BLANK_EMAIL, EMPTY_STRING, result);
   }
 
   /**
-   * Verifies that an empty string is returned when the email parameter is {@code null}.
+   * Verifies that an empty string is returned when the email parameter is
+   * {@code null}.
    */
   @Test
-  public void testFindContactIdByEmail_returnsEmptyForNullEmail() {
+  public void testFindContactIdByEmailReturnsEmptyForNullEmail() {
     String result = BPContactEmailSelector.findContactIdByEmail(BP_ID, null);
-    assertEquals("Must return empty string for null email", "", result);
+    assertEquals(MSG_EMPTY_FOR_NULL_EMAIL, EMPTY_STRING, result);
   }
 
   /**
-   * Verifies that the correct contact ID is returned when a matching email is found
-   * (case-insensitive, with whitespace trimming).
+   * Verifies that the correct contact ID is returned when a matching email is
+   * found (case-insensitive, with whitespace trimming).
    */
   @Test
-  public void testFindContactIdByEmail_findsMatchingContact() {
+  public void testFindContactIdByEmailFindsMatchingContact() {
     User matchingContact = mock(User.class);
     when(matchingContact.getEmail()).thenReturn(CONTACT_EMAIL);
     when(matchingContact.getId()).thenReturn(CONTACT_USER_ID);
-    when(obDal.createCriteria(User.class)).thenReturn(userCriteria);
+    stubUserCriteria();
     when(userCriteria.list()).thenReturn(Collections.singletonList(matchingContact));
-    String result = BPContactEmailSelector.findContactIdByEmail(BP_ID, " CONTACT@EXAMPLE.COM ");
-    assertEquals("Must find contact by case-insensitive email match", CONTACT_USER_ID, result);
+    String result = BPContactEmailSelector.findContactIdByEmail(
+        BP_ID, CONTACT_EMAIL_UPPERCASE_PADDED);
+    assertEquals(MSG_FIND_CASE_INSENSITIVE, CONTACT_USER_ID, result);
   }
 
   /**
-   * Verifies that an empty string is returned when no contact matches the given email.
+   * Verifies that an empty string is returned when no contact matches the given
+   * email.
    */
   @Test
-  public void testFindContactIdByEmail_returnsEmptyWhenNoMatch() {
+  public void testFindContactIdByEmailReturnsEmptyWhenNoMatch() {
     User nonMatchingContact = mock(User.class);
-    when(nonMatchingContact.getEmail()).thenReturn("other@example.com");
-    when(obDal.createCriteria(User.class)).thenReturn(userCriteria);
+    when(nonMatchingContact.getEmail()).thenReturn(OTHER_EMAIL);
+    stubUserCriteria();
     when(userCriteria.list()).thenReturn(Collections.singletonList(nonMatchingContact));
     String result = BPContactEmailSelector.findContactIdByEmail(BP_ID, CONTACT_EMAIL);
-    assertEquals("Must return empty string when no email matches", "", result);
+    assertEquals(MSG_EMPTY_WHEN_NO_MATCH, EMPTY_STRING, result);
   }
-
+  
   /**
    * Verifies that the record is returned when it exists.
    */
   @Test
-  public void testFindLastUsedRecord_returnsRecordWhenExists() {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.singletonList(mockEmailBpContact));
+  public void testFindLastUsedRecordReturnsRecordWhenExists() {
+    stubEmailBpContactCriteriaWithRecord();
     EmailBpContact result = BPContactEmailSelector.findLastUsedRecord(SENDING_USER_ID, BP_ID);
-    assertEquals("Must return the existing record", mockEmailBpContact, result);
+    assertEquals(MSG_RETURN_EXISTING_RECORD, mockEmailBpContact, result);
   }
 
   /**
    * Verifies that {@code null} is returned when no record exists.
    */
   @Test
-  public void testFindLastUsedRecord_returnsNullWhenEmpty() {
-    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
-    when(emailBpContactCriteria.list()).thenReturn(Collections.emptyList());
+  public void testFindLastUsedRecordReturnsNullWhenEmpty() {
+    stubEmailBpContactCriteriaEmpty();
     EmailBpContact result = BPContactEmailSelector.findLastUsedRecord(SENDING_USER_ID, BP_ID);
-    assertNull("Must return null when no record exists", result);
+    assertNull(MSG_NULL_WHEN_NO_RECORD, result);
   }
 
   /**
    * Verifies that the contact is set on the existing record.
    */
   @Test
-  public void testUpdateLastUsedRecord_setsContactOnRecord() {
+  public void testUpdateLastUsedRecordSetsContactOnRecord() {
     BPContactEmailSelector.updateLastUsedRecord(mockEmailBpContact, contactUser);
     verify(mockEmailBpContact).setContactAdUser(contactUser);
+  }
+
+  /**
+   * Stubs the {@code isDefaultForDocs} property on the given user mock.
+   * @param user the user mock to configure
+   * @param isDefaultForDocs whether the contact is the default for documents
+   */
+  private void stubIsDefaultForDocs(User user, boolean isDefaultForDocs) {
+    when(user.get(User.PROPERTY_ISDEFAULTFORDOCS)).thenReturn(isDefaultForDocs);
+  }
+
+  /**
+   * Stubs {@link OBDal#createCriteria(Class)} for {@link User} to return the
+   * shared {@code userCriteria} mock.
+   */
+  private void stubUserCriteria() {
+    when(obDal.createCriteria(User.class)).thenReturn(userCriteria);
+  }
+
+  /**
+   * Stubs {@link OBDal#createCriteria(Class)} for {@link EmailBpContact} to
+   * return the shared {@code emailBpContactCriteria} mock.
+   */
+  private void stubEmailBpContactCriteria() {
+    when(obDal.createCriteria(EmailBpContact.class)).thenReturn(emailBpContactCriteria);
+  }
+
+  /**
+   * Stubs the {@link EmailBpContact} criteria to return an empty list,
+   * simulating no existing last-used record.
+   */
+  private void stubEmailBpContactCriteriaEmpty() {
+    stubEmailBpContactCriteria();
+    when(emailBpContactCriteria.list()).thenReturn(Collections.emptyList());
+  }
+
+  /**
+   * Stubs the {@link EmailBpContact} criteria to return a singleton list
+   * containing {@code mockEmailBpContact}, simulating an existing last-used
+   * record.
+   */
+  private void stubEmailBpContactCriteriaWithRecord() {
+    stubEmailBpContactCriteria();
+    when(emailBpContactCriteria.list())
+        .thenReturn(Collections.singletonList(mockEmailBpContact));
   }
 }

@@ -179,7 +179,7 @@
       </column>
       <column name="ISDEFAULTFORDOCS" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
         <default><![CDATA[N]]></default>
-        <onCreateDefault/>
+        <onCreateDefault><![CDATA['N']]></onCreateDefault>
       </column>
       <foreign-key foreignTable="AD_ORG" name="AD_USER_AD_ORGTRX">
         <reference local="AD_ORGTRX_ID" foreign="AD_ORG_ID"/>

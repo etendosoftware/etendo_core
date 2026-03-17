@@ -130,11 +130,11 @@ public class BPContactEmailSelector {
   public static User getLastUsedContact(String sendingUserId, String bpartnerId) {
     OBContext.setAdminMode(true);
     try {
-      EmailBpContact record = findLastUsedRecord(sendingUserId, bpartnerId);
-      if (record == null) {
+      EmailBpContact emailBpContact = findLastUsedRecord(sendingUserId, bpartnerId);
+      if (emailBpContact == null) {
         return null;
       }
-      User contact = record.getContactAdUser();
+      User contact = emailBpContact.getContactAdUser();
       if (contact == null) {
         return null;
       }
@@ -178,10 +178,10 @@ public class BPContactEmailSelector {
     }
     OBContext.setAdminMode(true);
     try {
-      EmailBpContact record = findLastUsedRecord(sendingUserId, bpartnerId);
+      EmailBpContact emailBpContact = findLastUsedRecord(sendingUserId, bpartnerId);
       User contactUser = OBDal.getInstance().get(User.class, contactAdUserId);
-      if (record != null) {
-        updateLastUsedRecord(record, contactUser);
+      if (emailBpContact != null) {
+        updateLastUsedRecord(emailBpContact, contactUser);
       } else {
         insertLastUsedRecord(sendingUserId, bpartnerId, contactUser);
       }
@@ -201,8 +201,8 @@ public class BPContactEmailSelector {
    * @param record the existing record to update
    * @param contactUser the new contact to store
    */
-  public static void updateLastUsedRecord(EmailBpContact record, User contactUser) {
-    record.setContactAdUser(contactUser);
+  public static void updateLastUsedRecord(EmailBpContact emailBpContact, User contactUser) {
+    emailBpContact.setContactAdUser(contactUser);
   }
 
   /**
@@ -216,13 +216,13 @@ public class BPContactEmailSelector {
     User sendingUser = OBDal.getInstance().get(User.class, sendingUserId);
     BusinessPartner bp = OBDal.getInstance().get(BusinessPartner.class, bpartnerId);
 
-    EmailBpContact record = OBProvider.getInstance().get(EmailBpContact.class);
-    record.setClient(OBContext.getOBContext().getCurrentClient());
-    record.setOrganization(OBContext.getOBContext().getCurrentOrganization());
-    record.setUserContact(sendingUser);
-    record.setBusinessPartner(bp);
-    record.setContactAdUser(contactUser);
-    OBDal.getInstance().save(record);
+    EmailBpContact emailBpContact = OBProvider.getInstance().get(EmailBpContact.class);
+    emailBpContact.setClient(OBContext.getOBContext().getCurrentClient());
+    emailBpContact.setOrganization(OBContext.getOBContext().getCurrentOrganization());
+    emailBpContact.setUserContact(sendingUser);
+    emailBpContact.setBusinessPartner(bp);
+    emailBpContact.setContactAdUser(contactUser);
+    OBDal.getInstance().save(emailBpContact);
   }
 
   /**

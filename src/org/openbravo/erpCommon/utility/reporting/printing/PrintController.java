@@ -97,6 +97,10 @@ public class PrintController extends HttpSecureAppServlet {
   private static final String REPORT_INPUT_STREAM = "reportInputStream";
   private static final String REPORT_OUTPUT_STREAM = "reportOutputStream";
   public static final String ERROR_PRINTING_DOCUMENT_KEY = "Error_Printing_Document";
+  private static final String PARAM_TO_EMAIL = "toEmail";
+  private static final String PARAM_TO_EMAIL_ORIG = "toEmailOrig";
+  private static final String PARAM_TO_CONTACT_ID = "toContactId";
+  private static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
   public static final String LIST_ITEM_TAG = "<li>";
   public static final String CLOSE_LIST_ITEM_TAG = "</li>";
   private final Map<String, TemplateData[]> differentDocTypes = new HashMap<String, TemplateData[]>();
@@ -389,7 +393,7 @@ public class PrintController extends HttpSecureAppServlet {
               getComaSeparatedString(documentIds), reports, checks, fullDocumentIdentifier);
 
         } else if (vars.commandIn("EMAIL")) {
-          final String toEmailParam = vars.getStringParameter("toEmail");
+          final String toEmailParam = vars.getStringParameter(PARAM_TO_EMAIL);
           if (StringUtils.isBlank(toEmailParam)) {
             throw new ServletException(
                 Utility.messageBD(this, "NoCustomerEmail", vars.getLanguage()));
@@ -499,7 +503,7 @@ public class PrintController extends HttpSecureAppServlet {
             }
           }
 
-          response.setContentType("application/json; charset=UTF-8");
+          response.setContentType(CONTENT_TYPE_JSON);
           final PrintWriter out = response.getWriter();
           out.println(o.toString());
           out.close();
@@ -526,7 +530,7 @@ public class PrintController extends HttpSecureAppServlet {
             }
           }
 
-          response.setContentType("application/json; charset=UTF-8");
+          response.setContentType(CONTENT_TYPE_JSON);
           final PrintWriter out = response.getWriter();
           out.println(o.toString());
           out.close();
@@ -556,9 +560,9 @@ public class PrintController extends HttpSecureAppServlet {
    *
    */
   protected void persistLastUsedContact(VariablesSecureApp vars, String bpartnerId) throws ServletException {
-    String toContactId = vars.getStringParameter("toContactId");
+    String toContactId = vars.getStringParameter(PARAM_TO_CONTACT_ID);
     if (StringUtils.isBlank(toContactId)) {
-      String toEmail = vars.getStringParameter("toEmail");
+      String toEmail = vars.getStringParameter(PARAM_TO_EMAIL);
       toContactId = BPContactEmailSelector.findContactIdByEmail(bpartnerId, toEmail);
     }
     if (StringUtils.isNotBlank(toContactId)) {
@@ -627,7 +631,7 @@ public class PrintController extends HttpSecureAppServlet {
    * @throws IOException if a write error occurs
    */
   protected static void writeJsonResponse(HttpServletResponse response, JSONObject json) throws IOException {
-    response.setContentType("application/json; charset=UTF-8");
+    response.setContentType(CONTENT_TYPE_JSON);
     final PrintWriter out = response.getWriter();
     out.println(json.toString());
     out.close();
@@ -1353,9 +1357,9 @@ public class PrintController extends HttpSecureAppServlet {
     if (vars.commandIn("ADD") || vars.commandIn("DEL")) {
       xmlDocument.setParameter("fromEmailId", vars.getStringParameter("fromEmailId"));
       xmlDocument.setParameter("fromEmail", vars.getStringParameter("fromEmail"));
-      xmlDocument.setParameter("toEmail", vars.getStringParameter("toEmail"));
-      xmlDocument.setParameter("toEmailOrig", vars.getStringParameter("toEmailOrig"));
-      xmlDocument.setParameter("toContactId", vars.getStringParameter("toContactId"));
+      xmlDocument.setParameter(PARAM_TO_EMAIL, vars.getStringParameter(PARAM_TO_EMAIL));
+      xmlDocument.setParameter(PARAM_TO_EMAIL_ORIG, vars.getStringParameter(PARAM_TO_EMAIL_ORIG));
+      xmlDocument.setParameter(PARAM_TO_CONTACT_ID, vars.getStringParameter(PARAM_TO_CONTACT_ID));
       xmlDocument.setParameter("ccEmail", vars.getStringParameter("ccEmail"));
       xmlDocument.setParameter("ccEmailOrig", vars.getStringParameter("ccEmailOrig"));
       xmlDocument.setParameter("bccEmail", vars.getStringParameter("bccEmail"));
@@ -1369,9 +1373,9 @@ public class PrintController extends HttpSecureAppServlet {
       String toContactId = getContactField(selectedContact, User::getId);
       xmlDocument.setParameter("fromEmailId", fromEmailId);
       xmlDocument.setParameter("fromEmail", fromEmail);
-      xmlDocument.setParameter("toEmail", toEmail);
-      xmlDocument.setParameter("toEmailOrig", toEmail);
-      xmlDocument.setParameter("toContactId", toContactId);
+      xmlDocument.setParameter(PARAM_TO_EMAIL, toEmail);
+      xmlDocument.setParameter(PARAM_TO_EMAIL_ORIG, toEmail);
+      xmlDocument.setParameter(PARAM_TO_CONTACT_ID, toContactId);
       xmlDocument.setParameter("ccEmail", "");
       xmlDocument.setParameter("ccEmailOrig", "");
       xmlDocument.setParameter("bccEmail", bccEmail);
@@ -1384,9 +1388,14 @@ public class PrintController extends HttpSecureAppServlet {
     xmlDocument.setParameter("bpartnerId", pocData.length > 0 ? pocData[0].bpartnerId : StringUtils.EMPTY);
     xmlDocument.setParameter("inpArchive", vars.getStringParameter("inpArchive"));
     xmlDocument.setParameter("fromName", "");
-    String toName = selectedContact != null
-        ? getContactField(selectedContact, User::getName)
-        : (pocData.length > 0 ? pocData[0].contactName : StringUtils.EMPTY);
+    String toName;
+    if (selectedContact != null) {
+      toName = getContactField(selectedContact, User::getName);
+    } else if (pocData.length > 0) {
+      toName = pocData[0].contactName;
+    } else {
+      toName = StringUtils.EMPTY;
+    }
     xmlDocument.setParameter("toName", toName);
     xmlDocument.setParameter("ccName", "");
     xmlDocument.setParameter("bccName", bccName);

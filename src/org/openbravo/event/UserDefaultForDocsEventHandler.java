@@ -84,7 +84,7 @@ public class UserDefaultForDocsEventHandler extends EntityPersistenceEventObserv
    * @throws OBException if another user in the same Business Partner is already the default
    */
   protected void validate(User user) {
-    if (!user.isDefaultfordocs()) {
+    if (!Boolean.TRUE.equals(user.isDefaultfordocs())) {
       return;
     }
     BusinessPartner bp = user.getBusinessPartner();

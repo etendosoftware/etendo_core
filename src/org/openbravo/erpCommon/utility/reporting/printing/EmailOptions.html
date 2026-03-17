@@ -71,8 +71,8 @@
         return null;
       }
       var parts = value.split(/[;,]/);
-      for (var i = 0; i < parts.length; i++) {
-        var addr = parts[i].trim();
+      for (var part of parts) {
+        var addr = part.trim();
         if (addr.length > 0 && !EMAIL_RE.test(addr)) {
           return addr;
         }
@@ -311,8 +311,7 @@
       var tbody = document.getElementById('contactSelectorBody');
       tbody.innerHTML = '';
       var lowerFilter = filter.toLowerCase();
-      for (var i = 0; i < contacts.length; i++) {
-        var c = contacts[i];
+      for (var c of contacts) {
         if (filter && c.name.toLowerCase().indexOf(lowerFilter) === -1
             && c.email.toLowerCase().indexOf(lowerFilter) === -1) {
           continue;
@@ -324,7 +323,14 @@
         tr.onmouseover = function() { this.style.backgroundColor = '#d0e4f7'; };
         tr.onmouseout  = function() { this.style.backgroundColor = ''; };
         tr.onclick = function() { selectContact(this.getAttribute('data-contactid'), this.getAttribute('data-email')); };
-        var badge = c.isDefault ? ' &#9733;' : (c.isActive ? '' : ' (inactive)');
+        var badge;
+        if (c.isDefault) {
+          badge = ' &#9733;';
+        } else if (c.isActive) {
+          badge = '';
+        } else {
+          badge = ' (inactive)';
+        }
         tr.innerHTML = '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.name) + badge + '</td>'
                      + '<td class="DataGrid_Body_Cell" style="padding:3px 6px;">' + escapeHtml(c.email) + '</td>';
         tbody.appendChild(tr);
@@ -418,8 +424,7 @@
       }
       var lower = filter.toLowerCase();
       var matches = [];
-      for (var i = 0; i < bpContactsCache.length; i++) {
-        var c = bpContactsCache[i];
+      for (var c of bpContactsCache) {
         if (c.name.toLowerCase().indexOf(lower) !== -1 ||
             c.email.toLowerCase().indexOf(lower) !== -1) {
           matches.push(c);
@@ -428,13 +433,19 @@
       var box = document.getElementById('toEmailSuggestions');
       box.innerHTML = '';
       if (matches.length === 0) { hideSuggestions(); return; }
-      for (var j = 0; j < matches.length; j++) {
-        var m = matches[j];
+      for (var m of matches) {
         var div = document.createElement('div');
         div.setAttribute('data-email', m.email);
         div.setAttribute('data-contactid', m.contactId);
         div.style.cssText = 'padding:5px 8px; cursor:pointer; font-size:12px; white-space:nowrap;';
-        var badge = m.isDefault ? ' \u2605' : (m.isActive ? '' : ' (inactive)');
+        var badge;
+        if (m.isDefault) {
+          badge = ' \u2605';
+        } else if (m.isActive) {
+          badge = '';
+        } else {
+          badge = ' (inactive)';
+        }
         div.innerHTML = '<strong>' + escapeHtml(m.name) + badge + '</strong>'
                       + '&nbsp;&lt;' + escapeHtml(m.email) + '&gt;';
         div.onmousedown = function() {
