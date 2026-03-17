@@ -477,7 +477,7 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error("Error in change template ajax", e);
             o = new JSONObject();
             try {
-              o.put(ERROR, true);
+              o.put("error", true);
             } catch (JSONException e1) {
               log4j.error("Error in change template ajax", e1);
             }
@@ -1364,7 +1364,7 @@ public class PrintController extends HttpSecureAppServlet {
     vars.setMessage(tabId, on);
     vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
     printPageClosePopUpAndRefreshParent(response, vars);
-    throw new ServletException("Configuration Error no sender defined");
+    throw new ServletException(Utility.messageBD(this, "EmailNoSenderDefined", vars.getLanguage()));
   }
 
   private void getEnvironentInformation(PocData[] pocData, HashMap<String, Boolean> checks) {
