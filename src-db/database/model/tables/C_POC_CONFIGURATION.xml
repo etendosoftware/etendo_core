@@ -119,8 +119,8 @@
       <index name="C_POC_CONFIGURATION_CLIENT_IDX" unique="false">
         <index-column name="AD_CLIENT_ID"/>
       </index>
-      <check name="ISDEFAULTCONFIG_CHK"><![CDATA[ISDEFAULTCONFIG IN ('Y', 'N')]]></check>
-      <check name="ISTESTSUCCESSFUL_CHK"><![CDATA[ISTESTSUCCESSFUL IN ('Y', 'N')]]></check>
-      <check name="SMTPCONNECTIONTEST_CHK"><![CDATA[SMTPCONNECTIONTEST IN ('Y', 'N')]]></check>
+      <check name="C_POC_ISDEFAULTCONFIG_CHK"><![CDATA[ISDEFAULTCONFIG IN ('Y', 'N')]]></check>
+      <check name="C_POC_ISTESTSUCCESSFUL_CHK"><![CDATA[ISTESTSUCCESSFUL IN ('Y', 'N')]]></check>
+      <check name="C_POC_SMTPCONNECTION_CHK"><![CDATA[SMTPCONNECTIONTEST IN ('Y', 'N')]]></check>
     </table>
   </database>

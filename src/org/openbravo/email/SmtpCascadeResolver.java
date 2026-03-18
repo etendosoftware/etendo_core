@@ -132,38 +132,47 @@ public class SmtpCascadeResolver {
   /**
    * Walks up the organization tree looking for the first usable SMTP configuration,
    * skipping incomplete configs (missing host or fromAddress) at each level.
-   * If no org-level config is usable, falls through to the client-level config.
-   * @param org the context organization
+   * Passing {@code null} is treated as "top of tree reached without finding '0'" (some
+   * installations store top-level org tree nodes with a {@code null} parent_id in
+   * {@code AD_TREENODE} instead of pointing to {@code '0'}). Falls directly to client-level.
+   * @param org the context organization, or {@code null} when the tree root has been passed
    * @return a {@link ResolvedSmtpConfig} at {@code ORGANIZATION} or {@code CLIENT} level,
    *   or {@code null} if no usable configuration is found at any level
    */
   protected static ResolvedSmtpConfig resolveOrgOrClientLevel(Organization org) {
     if (org == null) {
-      return null;
+      return resolveClientLevel();
     }
-    boolean isRootOrg = "0".equals(org.getId());
-    List<EmailServerConfiguration> configs = isRootOrg
-        ? findClientLevelConfigs()
-        : findOrgLevelConfigs(org);
-
-    ResolvedSmtpConfig.Level level = isRootOrg
-        ? ResolvedSmtpConfig.Level.CLIENT
-        : ResolvedSmtpConfig.Level.ORGANIZATION;
-
-    for (EmailServerConfiguration config : configs) {
-      ResolvedSmtpConfig resolved = new ResolvedSmtpConfig(config, level);
+    for (EmailServerConfiguration config : findOrgLevelConfigs(org)) {
+      ResolvedSmtpConfig resolved = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.ORGANIZATION);
       if (isUsableConfig(resolved)) {
         return resolved;
       }
-      log.warn("{} SMTP config (id={}) is incomplete (missing host or fromAddress) — trying next",
-          level, config.getId());
+      log.warn("ORGANIZATION SMTP config (id={}) is incomplete (missing host or fromAddress) — trying next",
+          config.getId());
     }
-
-    if (isRootOrg) {
-      return null;
+    if ("0".equals(org.getId())) {
+      return resolveClientLevel();
     }
     OrganizationStructureProvider orgStructure = new OrganizationStructureProvider();
     return resolveOrgOrClientLevel(orgStructure.getParentOrg(org));
+  }
+
+  /**
+   * Searches for client-level (legacy) SMTP configurations that have no explicit org or
+   * user link ({@code Email_Conf_AD_Org_ID IS NULL} and {@code Email_Conf_AD_User_ID IS NULL}).
+   * Returns the first usable one, or {@code null} if none found.
+   */
+  private static ResolvedSmtpConfig resolveClientLevel() {
+    for (EmailServerConfiguration config : findClientLevelConfigs()) {
+      ResolvedSmtpConfig resolved = new ResolvedSmtpConfig(config, ResolvedSmtpConfig.Level.CLIENT);
+      if (isUsableConfig(resolved)) {
+        return resolved;
+      }
+      log.warn("CLIENT SMTP config (id={}) is incomplete (missing host or fromAddress) — trying next",
+          config.getId());
+    }
+    return null;
   }
 
   /**
