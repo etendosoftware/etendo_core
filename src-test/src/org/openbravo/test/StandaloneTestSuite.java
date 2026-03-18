@@ -134,6 +134,7 @@ import org.openbravo.test.productStatus.ProductStatusTest;
 import org.openbravo.test.purchaseOrder.PurchaseOrderStatus;
 import org.openbravo.test.referencedinventory.ReferencedInventoryTestSuite;
 import org.openbravo.test.reporting.AllJrxmlCompilation;
+import org.openbravo.test.reporting.BPContactEmailSelectorTest;
 import org.openbravo.test.reporting.CompiledReportsCacheTest;
 import org.openbravo.test.reporting.ReportingUtilsTest;
 import org.openbravo.test.role.RoleTestSuite;
@@ -475,6 +476,7 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     RptMA_ProcessPlanTest.class,
     
     // Email
+    BPContactEmailSelectorTest.class,
     ResolvedSmtpConfigTest.class,
     SmtpCascadeResolverTest.class,
     TestSmtpConnectionActionHandlerTest.class,
