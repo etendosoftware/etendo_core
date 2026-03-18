@@ -39,10 +39,12 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.ArgumentMatchers;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.reporting.printing.BPContactEmailSelector;
 import org.openbravo.model.ad.access.EmailBpContact;
 import org.openbravo.model.ad.access.User;
@@ -124,6 +126,7 @@ public class BPContactEmailSelectorTest {
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBContext> mockedOBContext;
   private MockedStatic<OBProvider> mockedOBProvider;
+  private MockedStatic<OBMessageUtils> mockedOBMessageUtils;
 
   /**
    * Sets up static mocks for the DAL layer before each test.
@@ -133,9 +136,12 @@ public class BPContactEmailSelectorTest {
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBContext = mockStatic(OBContext.class);
     mockedOBProvider = mockStatic(OBProvider.class);
+    mockedOBMessageUtils = mockStatic(OBMessageUtils.class);
     mockedOBDal.when(OBDal::getInstance).thenReturn(obDal);
     mockedOBContext.when(OBContext::getOBContext).thenReturn(obContext);
     mockedOBProvider.when(OBProvider::getInstance).thenReturn(obProvider);
+    mockedOBMessageUtils.when(() -> OBMessageUtils.messageBD(ArgumentMatchers.anyString()))
+        .thenReturn(MSG_SAVE_ERROR);
     when(obContext.getCurrentClient()).thenReturn(mockClient);
     when(obContext.getCurrentOrganization()).thenReturn(mockOrganization);
   }
@@ -148,6 +154,7 @@ public class BPContactEmailSelectorTest {
     mockedOBDal.close();
     mockedOBContext.close();
     mockedOBProvider.close();
+    mockedOBMessageUtils.close();
   }
 
   /**
@@ -397,7 +404,7 @@ public class BPContactEmailSelectorTest {
   @Test
   public void testSaveLastUsedContactThrowsServletExceptionOnError() {
     stubEmailBpContactCriteria();
-    when(emailBpContactCriteria.list()).thenThrow(new RuntimeException("DB error"));
+    when(emailBpContactCriteria.uniqueResult()).thenThrow(new RuntimeException("DB error"));
     try {
       BPContactEmailSelector.saveLastUsedContact(SENDING_USER_ID, BP_ID, CONTACT_USER_ID);
       fail("Expected ServletException to be thrown");
@@ -515,17 +522,15 @@ public class BPContactEmailSelectorTest {
    */
   private void stubEmailBpContactCriteriaEmpty() {
     stubEmailBpContactCriteria();
-    when(emailBpContactCriteria.list()).thenReturn(Collections.emptyList());
+    when(emailBpContactCriteria.uniqueResult()).thenReturn(null);
   }
 
   /**
-   * Stubs the {@link EmailBpContact} criteria to return a singleton list
-   * containing {@code mockEmailBpContact}, simulating an existing last-used
-   * record.
+   * Stubs the {@link EmailBpContact} criteria to return {@code mockEmailBpContact}
+   * via {@code uniqueResult()}, simulating an existing last-used record.
    */
   private void stubEmailBpContactCriteriaWithRecord() {
     stubEmailBpContactCriteria();
-    when(emailBpContactCriteria.list())
-        .thenReturn(Collections.singletonList(mockEmailBpContact));
+    when(emailBpContactCriteria.uniqueResult()).thenReturn(mockEmailBpContact);
   }
 }
