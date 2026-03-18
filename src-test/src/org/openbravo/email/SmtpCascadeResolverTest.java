@@ -96,7 +96,8 @@ public class SmtpCascadeResolverTest {
   @Mock private Organization mockOrg;
   @Mock private OBCriteria<EmailServerConfiguration> mockUserCriteria;
   @Mock private OBCriteria<EmailServerConfiguration> mockOrgCriteria;
-
+  @Mock private OBCriteria<EmailServerConfiguration> mockClientCriteria;
+  
   /**
    * Opens static mocks and configures default behaviour for {@link OBContext},
    * {@link OBDal}, and the user criteria before each test.
@@ -310,7 +311,10 @@ public class SmtpCascadeResolverTest {
   @Test
   void testResolveOrgOrClientLevelReturnsNullWhenNoConfig() {
     when(mockOrg.getId()).thenReturn(ROOT_ORG_ID);
+    when(mockDal.createCriteria(EmailServerConfiguration.class))
+        .thenReturn(mockUserCriteria, mockOrgCriteria);
     when(mockUserCriteria.list()).thenReturn(Collections.emptyList());
+    when(mockOrgCriteria.list()).thenReturn(Collections.emptyList());
     ResolvedSmtpConfig result = SmtpCascadeResolver.resolveOrgOrClientLevel(mockOrg);
     assertNull(result);
   }

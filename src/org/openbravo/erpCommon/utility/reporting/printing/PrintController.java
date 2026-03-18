@@ -111,6 +111,10 @@ public class PrintController extends HttpSecureAppServlet {
   private static final String PRINT_PATH = "print.html";
   private static final String PRINT_OPTIONS_PATH = "printoptions.html";
   private static final String SEND_PATH = "send.html";
+  private static final String ERROR = "Error";
+  private static final String TAB = "tab";
+  private static final String INP_TAB_ID = "inpTabId";
+  private static final String ATTRIBUTESETINSTANCE_TABID = "AttributeSetInstance.tabId";
   private static JSONObject hookParams;
   private static PrintControllerHookManager hookManager;
   private final MutableBoolean hooking = new MutableBoolean(false);
@@ -338,16 +342,7 @@ public class PrintController extends HttpSecureAppServlet {
                 boolean hasSender = resolvedForCheck != null
                     || StringUtils.isNotEmpty(senderAddress);
                 if (!hasSender) {
-                  final OBError on = new OBError();
-                  on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
-                  on.setTitle(Utility.messageBD(this, "EmailConfigError", vars.getLanguage()));
-                  on.setType("Error");
-                  final String tabId = vars.getSessionValue("inpTabId");
-                  vars.getStringParameter("tab");
-                  vars.setMessage(tabId, on);
-                  vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
-                  printPageClosePopUpAndRefreshParent(response, vars);
-                  throw new ServletException("Configuration Error no sender defined");
+                  reportNoSenderError(response, vars);
                 }
               }
 
@@ -543,7 +538,7 @@ public class PrintController extends HttpSecureAppServlet {
       // Catching the exception here instead of throwing it to HSAS because this is used in multi
       // part request making the mechanism to detect popup not to work.
       log4j.error("Error captured: ", e);
-      bdErrorGeneralPopUp(request, response, "Error",
+      bdErrorGeneralPopUp(request, response, ERROR,
           Utility.translateError(this, vars, vars.getLanguage(), e.getMessage()).getMessage());
     } finally {
       hooking.setValue(false);
@@ -1172,10 +1167,10 @@ public class PrintController extends HttpSecureAppServlet {
       on.setMessage(Utility.messageBD(this, "EmailConfiguration", vars.getLanguage()));
       on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
       on.setType("info");
-      final String tabId = vars.getSessionValue("inpTabId");
-      vars.getStringParameter("tab");
+      final String tabId = vars.getSessionValue(INP_TAB_ID);
+      vars.getStringParameter(TAB);
       vars.setMessage(tabId, on);
-      vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+      vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
       printPageClosePopUpAndRefreshParent(response, vars);
     } catch (ReportingException e) {
       log4j.error(e);
@@ -1191,8 +1186,7 @@ public class PrintController extends HttpSecureAppServlet {
         fromEmail = resolvedConfig.getFromAddress();
         fromEmailId = resolvedConfig.getConfigId();
       } else {
-        throw new ServletException(
-            "No sender defined: Please configure SMTP at User, Organization or Client level to complete the email configuration.");
+        reportNoSenderError(response, vars);
       }
     } finally {
       OBContext.restorePreviousMode();
@@ -1219,10 +1213,10 @@ public class PrintController extends HttpSecureAppServlet {
 
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         } else if (documentData.contactEmail == null || documentData.contactEmail.equals("")) {
           final OBError on = new OBError();
@@ -1230,10 +1224,10 @@ public class PrintController extends HttpSecureAppServlet {
               .replace("@customer@", documentData.contactName));
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         }
       }
@@ -1250,10 +1244,10 @@ public class PrintController extends HttpSecureAppServlet {
           on.setMessage(Utility.messageBD(this, "NoSenderDocument", vars.getLanguage()));
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         } else if (documentData.salesrepEmail == null || documentData.salesrepEmail.equals("")) {
           final OBError on = new OBError();
@@ -1261,10 +1255,10 @@ public class PrintController extends HttpSecureAppServlet {
               .replace("@salesRep@", documentData.salesrepName));
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         }
       }
@@ -1302,11 +1296,11 @@ public class PrintController extends HttpSecureAppServlet {
       final OBError on = new OBError();
       on.setMessage(Utility.messageBD(this, "ErrorIncompleteDocuments", vars.getLanguage()));
       on.setTitle(Utility.messageBD(this, "ErrorSendingEmail", vars.getLanguage()));
-      on.setType("Error");
-      final String tabId = vars.getSessionValue("inpTabId");
-      vars.getStringParameter("tab");
+      on.setType(ERROR);
+      final String tabId = vars.getSessionValue(INP_TAB_ID);
+      vars.getStringParameter(TAB);
       vars.setMessage(tabId, on);
-      vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+      vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
       printPageClosePopUpAndRefreshParent(response, vars);
     }
 
@@ -1506,6 +1500,29 @@ public class PrintController extends HttpSecureAppServlet {
     return hasMoreThanOneLanguage;
   }
 
+  /**
+   * Reports a "no sender configured" error by setting an {@link OBError} message on the current
+   * tab and closing the popup while refreshing the parent record. This ensures the error is
+   * displayed inline on the record (in red) rather than as a generic popup dialog.
+   * @param response the HTTP response used to render the close-popup page
+   * @param vars the session variables, used to resolve the active tab and language
+   * @throws IOException if writing the response fails
+   * @throws ServletException always thrown after the error is reported, to stop processing
+   */
+  private void reportNoSenderError(HttpServletResponse response, VariablesSecureApp vars)
+      throws IOException, ServletException {
+    final OBError on = new OBError();
+    on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
+    on.setTitle(Utility.messageBD(this, "EmailConfigError", vars.getLanguage()));
+    on.setType(ERROR);
+    final String tabId = vars.getSessionValue(INP_TAB_ID);
+    vars.getStringParameter(TAB);
+    vars.setMessage(tabId, on);
+    vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
+    printPageClosePopUpAndRefreshParent(response, vars);
+    throw new ServletException(Utility.messageBD(this, "EmailNoSenderDefined", vars.getLanguage()));
+  }
+
   private void getEnvironentInformation(PocData[] pocData, HashMap<String, Boolean> checks) {
     final Map<String, PocData> customerMap = new HashMap<String, PocData>();
     final Map<String, PocData> salesRepMap = new HashMap<String, PocData>();
@@ -1693,7 +1710,7 @@ public class PrintController extends HttpSecureAppServlet {
     String preferenceValue = "";
     try {
       OBContext.setAdminMode(true);
-      String tabId = vars.getSessionValue("inpTabId");
+      String tabId = vars.getSessionValue(INP_TAB_ID);
       Tab tab = OBDal.getInstance().get(Tab.class, tabId);
       try {
         preferenceValue = Preferences.getPreferenceValue("DirectPrint", true,
