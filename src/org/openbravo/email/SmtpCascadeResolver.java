@@ -140,7 +140,7 @@ public class SmtpCascadeResolver {
    *   or {@code null} if no usable configuration is found at any level
    */
   protected static ResolvedSmtpConfig resolveOrgOrClientLevel(Organization org) {
-    if (org == null) {
+    if (org == null || "0".equals(org.getId())) {
       return resolveClientLevel();
     }
     for (EmailServerConfiguration config : findOrgLevelConfigs(org)) {
@@ -150,9 +150,6 @@ public class SmtpCascadeResolver {
       }
       log.warn("ORGANIZATION SMTP config (id={}) is incomplete (missing host or fromAddress) — trying next",
           config.getId());
-    }
-    if ("0".equals(org.getId())) {
-      return resolveClientLevel();
     }
     OrganizationStructureProvider orgStructure = new OrganizationStructureProvider();
     return resolveOrgOrClientLevel(orgStructure.getParentOrg(org));
