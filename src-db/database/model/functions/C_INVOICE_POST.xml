@@ -1578,6 +1578,64 @@ IF (NOT FINISH_PROCESS) THEN
                AND C_INVOICELINE_ID = Cur_SILines.C_InvoiceLine_ID;
           END IF;
         END LOOP;
+
+        v_ResultStr := 'MatchSI-FromInvoice-OrderFallback';
+        FOR Cur_SILines IN
+          (SELECT il.AD_Client_ID,
+                  il.AD_Org_ID,
+                  il.C_InvoiceLine_ID,
+                  (SELECT MIN(ms.M_InOutLine_ID)
+                     FROM M_MATCHSO ms
+                    WHERE ms.C_OrderLine_ID = il.C_OrderLine_ID
+                      AND ms.M_InOutLine_ID IS NOT NULL) AS M_InOutLine_ID,
+                  il.M_Product_ID,
+                  il.QtyInvoiced,
+                  i.DateAcct
+             FROM C_INVOICELINE il
+             JOIN C_INVOICE i ON (i.C_INVOICE_ID = il.C_INVOICE_ID)
+            WHERE il.C_INVOICE_ID = v_Record_ID
+              AND il.M_InOutLine_ID IS NULL
+              AND il.C_OrderLine_ID IS NOT NULL
+              AND EXISTS (SELECT 1
+                            FROM M_MATCHSO ms
+                           WHERE ms.C_OrderLine_ID = il.C_OrderLine_ID
+                             AND ms.M_InOutLine_ID IS NOT NULL))
+        LOOP
+          IF (Cur_SILines.M_InOutLine_ID IS NOT NULL) THEN
+            v_Qty := Cur_SILines.QtyInvoiced;
+
+            SELECT COALESCE(COUNT(*), 0)
+              INTO v_Count
+              FROM M_MATCHSI
+             WHERE M_INOUTLINE_ID = Cur_SILines.M_InOutLine_ID
+               AND C_INVOICELINE_ID = Cur_SILines.C_InvoiceLine_ID;
+
+            IF (v_Count = 0) THEN
+              v_MatchSI_ID := get_uuid();
+              v_ResultStr := 'InsertMatchSI ' || v_MatchSI_ID;
+
+              INSERT INTO M_MATCHSI
+                (M_MATCHSI_ID, AD_CLIENT_ID, AD_ORG_ID, ISACTIVE,
+                CREATED, CREATEDBY, UPDATED, UPDATEDBY,
+                M_INOUTLINE_ID, C_INVOICELINE_ID, M_PRODUCT_ID, DATETRX,
+                QTY, PROCESSING, PROCESSED, POSTED)
+              VALUES
+                (v_MatchSI_ID, Cur_SILines.AD_Client_ID, Cur_SILines.AD_Org_ID, 'Y',
+                now(), v_UpdatedBy, now(), v_UpdatedBy,
+                Cur_SILines.M_InOutLine_ID, Cur_SILines.C_InvoiceLine_ID,
+                Cur_SILines.M_Product_ID, Cur_SILines.DateAcct,
+                v_Qty, 'N', 'Y', 'N');
+            ELSE
+              UPDATE M_MATCHSI
+                 SET QTY = v_Qty,
+                     DATETRX = Cur_SILines.DateAcct,
+                     UPDATED = now(),
+                     UPDATEDBY = v_UpdatedBy
+               WHERE M_INOUTLINE_ID = Cur_SILines.M_InOutLine_ID
+                 AND C_INVOICELINE_ID = Cur_SILines.C_InvoiceLine_ID;
+            END IF;
+          END IF;
+        END LOOP;
         v_ResultStr := 'MatchSO-FromInvoice';
         FOR Cur_SOLines IN
           (SELECT il.AD_Client_ID,
