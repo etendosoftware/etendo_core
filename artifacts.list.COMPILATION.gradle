@@ -139,7 +139,10 @@ List<String> _dependenciesListCOMPILATION = [
 
   // Testing Libraries
   'org.hamcrest:hamcrest-all:1.3',
-  'junit:junit:4.12'
+  'junit:junit:4.12',
+
+  // Analytcs
+  'com.etendoerp:analytics.exporter:3.2.0'
 ]
 
 ext {
