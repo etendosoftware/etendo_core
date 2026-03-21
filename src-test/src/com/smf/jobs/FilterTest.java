@@ -21,6 +21,7 @@ import org.openbravo.erpCommon.utility.PropertyException;
 public class FilterTest {
 
   private static final String DEFAULT_BATCH_SIZE = "DEFAULT_BATCH_SIZE";
+  private static final String AD_USER = "ADUser";
 
   private Filter instance;
   private MockedStatic<Preferences> prefStatic;
@@ -104,11 +105,11 @@ public class FilterTest {
         (String) null, null, null, null, null))
         .thenThrow(new PropertyException("Not found"));
 
-    Filter filter = new Filter("ADUser", "name==John");
+    Filter filter = new Filter(AD_USER, "name==John");
 
     Field entityField = Filter.class.getDeclaredField("entityName");
     entityField.setAccessible(true);
-    assertEquals("ADUser", entityField.get(filter));
+    assertEquals(AD_USER, entityField.get(filter));
 
     Field rsqlField = Filter.class.getDeclaredField("rsql");
     rsqlField.setAccessible(true);
@@ -126,7 +127,7 @@ public class FilterTest {
         (String) null, null, null, null, null))
         .thenReturn("2000");
 
-    new Filter("ADUser", "name==test");
+    new Filter(AD_USER, "name==test");
 
     Field batchField = Filter.class.getDeclaredField(DEFAULT_BATCH_SIZE);
     batchField.setAccessible(true);

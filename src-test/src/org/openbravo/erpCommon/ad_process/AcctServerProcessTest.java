@@ -473,7 +473,7 @@ public class AcctServerProcessTest {
     // Assert
     verify(mockLogger).log("Test message\n");
 
-    StringBuffer message = (StringBuffer) getPrivateField(acctServerProcess, "message");
+    CharSequence message = (CharSequence) getPrivateField(acctServerProcess, "message");
     assertNotNull(message);
   }
 
@@ -496,7 +496,7 @@ public class AcctServerProcessTest {
     // Assert
     verify(mockLogger).log("Test message\n");
 
-    StringBuffer lastLog = (StringBuffer) getPrivateField(acctServerProcess, "lastLog");
+    CharSequence lastLog = (CharSequence) getPrivateField(acctServerProcess, "lastLog");
     assertNotNull(lastLog);
     String logContent = lastLog.toString();
     assertNotNull(logContent);
