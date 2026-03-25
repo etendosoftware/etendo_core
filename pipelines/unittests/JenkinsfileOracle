@@ -342,7 +342,6 @@ pipeline {
                                 bbdd.user=${BBDD_USER}\n
                                 bbdd.password=${BBDD_PASSWORD}\n
                                 bbdd.sessionConfig=ALTER SESSION SET NLS_DATE_FORMAT='DD-MM-YYYY' NLS_NUMERIC_CHARACTERS='.,'\n
-                                java.version=11\n
 
                                 nexusUser=${NEXUS_USER}\n
                                 nexusPassword=${NEXUS_PASSWORD}\n

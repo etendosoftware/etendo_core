@@ -317,8 +317,7 @@ pipeline {
                 allow.root=true
                 org.gradle.jvmargs=-Dfile.encoding=UTF-8
                 org.gradle.daemon=false
-                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g
-                java.version=11" > gradle.properties
+                org.gradle.jvmargs=-XX:MaxHeapSize=1g -Xmx5g" > gradle.properties
                 """
 
                 sh """
