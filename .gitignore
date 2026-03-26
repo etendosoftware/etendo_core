@@ -5,6 +5,7 @@ gradle.properties
 \${env.CATALINA_HOME}
 
 .backup
+.template-backups
 .classpath
 .settings
 !.settings/org.eclipse.core.resources.prefs
