@@ -1,6 +1,6 @@
 ## ETENDO LICENSE OVERVIEW
 
-### Copyright © 2025 FUTIT SERVICES, S.L.
+### Copyright © 2026 FUTIT SERVICES, S.L.
 
 ---
 

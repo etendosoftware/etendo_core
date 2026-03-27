@@ -4,48 +4,56 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2008-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2008-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 
 package org.openbravo.erpCommon.ad_process;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.secureApp.VariablesSecureApp;
+import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
@@ -66,9 +74,9 @@ import org.openbravo.scheduling.ProcessLogger;
 
 public class HeartbeatProcess implements Process {
 
-  private static Logger log = LogManager.getLogger();
+  private static final Logger log = LogManager.getLogger();
 
-  private static final String HEARTBEAT_URL = "https://activation.futit.cloud:443/license-server/heartbeat";
+  private static final String HEARTBEAT_URL = "https://subscription.etendo.cloud/license-instance/heartbeat";
 
   private static final String ENABLING_BEAT = "E";
   private static final String SCHEDULED_BEAT = "S";
@@ -76,104 +84,174 @@ public class HeartbeatProcess implements Process {
   private static final String DECLINING_BEAT = "DEC";
   private static final String DEFERRING_BEAT = "DEF";
 
-  private static final String UNKNOWN_BEAT = "U";
   public static final String HB_PROCESS_ID = "1005800000";
-  public static final String STATUS_SCHEDULED = "SCH";
-  public static final String STATUS_UNSCHEDULED = "UNS";
 
   private ProcessContext ctx;
 
   private ConnectionProvider connection;
   private ProcessLogger logger;
   private Channel channel;
-  private HeartbeatLog hbLog;
+  private String logHeartbeatID;
 
   @Override
   public void execute(ProcessBundle bundle) throws Exception {
-
-    connection = bundle.getConnection();
-    logger = bundle.getLogger();
-    channel = bundle.getChannel();
-
-    this.ctx = bundle.getContext();
-
-    SystemInfo.loadId(connection);
-
-    String msg = null;
-    if (this.channel == Channel.SCHEDULED && !isHeartbeatActive()) {
-      msg = Utility.messageBD(connection, "HB_INACTIVE", ctx.getLanguage());
-      logger.logln(msg);
-      OBDal.getInstance().commitAndClose();
+    initializeResources(bundle);
+    if (!checkHeartbeatAndInternetAvailability()) {
       return;
     }
 
-    if (!HttpsUtils.isInternetAvailable()) {
-      msg = Utility.messageBD(connection, "HB_INTERNET_UNAVAILABLE", ctx.getLanguage());
-      logger.logln(msg);
-      OBDal.getInstance().commitAndClose();
-      throw new Exception(msg);
-    }
+    logger.logln("Heartbeat process starting...");
+    String beatType = determineBeatType(channel, bundle, connection);
 
-    logger.logln("Hearbeat process starting...");
-    String beatType = UNKNOWN_BEAT;
     try {
-
-      if (this.channel == Channel.SCHEDULED) {
-        beatType = SCHEDULED_BEAT;
-      } else {
-        final String active = SystemInfoData.isHeartbeatActive(connection);
-        if (active.equals("") || active.equals("N")) {
-          String action = bundle.getParams().get("action") == null ? ""
-              : ((String) bundle.getParams().get("action"));
-          if ("DECLINE".equals(action)) {
-            beatType = DECLINING_BEAT;
-          } else if ("DEFER".equals(action)) {
-            beatType = DEFERRING_BEAT;
-          } else {
-            beatType = ENABLING_BEAT;
-          }
-        } else {
-          beatType = DISABLING_BEAT;
-        }
-      }
-
-      String queryStr = createQueryStr(beatType);
-      String response = sendInfo(queryStr);
-      logSystemInfo(beatType);
-      updateHeartbeatStatus(beatType);
-
-      if (!(DEFERRING_BEAT.equals(beatType) || DECLINING_BEAT.equals(beatType))) {
-        // Parse response for all standard beats, but not for non-skippable ones
-        parseResponse(response);
-      }
-
+      processHeartbeat(beatType);
+      updateHeartbeatLogStatus("S");
     } catch (Exception e) {
+      updateHeartbeatLogStatus("E");
       handleException(e);
     } finally {
-      if ("S".equals(beatType)) {
-        // Background scheduled beats require explicit commit
-        try {
-          OBContext.setAdminMode();
-          OBDal.getInstance().commitAndClose();
-        } catch (Exception e) {
-          handleException(e);
-        } finally {
-          OBContext.restorePreviousMode();
+      finalizeProcess(beatType);
+    }
+  }
+
+  /**
+   * Initializes necessary resources from the provided bundle, including database connection,
+   * logger, and execution context.
+   *
+   * @param bundle
+   *     The process bundle containing all necessary context and parameters.
+   */
+  private void initializeResources(ProcessBundle bundle) throws ServletException {
+    connection = bundle.getConnection();
+    logger = bundle.getLogger();
+    channel = bundle.getChannel();
+    this.ctx = bundle.getContext();
+    SystemInfo.loadId(connection);
+  }
+
+  /**
+   * Checks the heartbeat activity status and internet availability before proceeding with the heartbeat process.
+   * If the heartbeat is inactive or the internet is not available, logs the appropriate message and terminates execution.
+   *
+   * @return true if the heartbeat is active and the internet is available, false otherwise.
+   * @throws Exception
+   *     if internet is not available.
+   */
+  private boolean checkHeartbeatAndInternetAvailability() {
+    if (this.channel == Channel.SCHEDULED && !isHeartbeatActive()) {
+      String msg = Utility.messageBD(connection, "HB_INACTIVE", ctx.getLanguage());
+      logger.logln(msg);
+      OBDal.getInstance().commitAndClose();
+      return false;
+    }
+
+    if (!HttpsUtils.isInternetAvailable()) {
+      String msg = Utility.messageBD(connection, "HB_INTERNET_UNAVAILABLE", ctx.getLanguage());
+      logger.logln(msg);
+      OBDal.getInstance().commitAndClose();
+      throw new OBException(msg);
+    }
+    return true;
+  }
+
+  /**
+   * Determines the type of heartbeat to process based on the execution channel,
+   * the process bundle parameters, and the current heartbeat status stored in the database.
+   * <p>
+   * This can return types such as scheduled, enabling, disabling, deferring, or declining beats.
+   *
+   * @param channel
+   *     The execution channel that triggered the heartbeat (e.g., scheduled or manual).
+   * @param bundle
+   *     The process bundle containing context and parameters, including user-driven actions.
+   * @param connection
+   *     The database connection provider used to query the current heartbeat status.
+   * @return A string representing the determined heartbeat type.
+   * @throws ServletException
+   *     If an error occurs while retrieving heartbeat information or processing parameters.
+   */
+  public String determineBeatType(Channel channel, ProcessBundle bundle,
+      ConnectionProvider connection) throws ServletException {
+
+    String beatType;
+    if (channel == Channel.SCHEDULED) {
+      beatType = SCHEDULED_BEAT;
+    } else {
+      final String active = SystemInfoData.isHeartbeatActive(connection);
+      if (StringUtils.isEmpty(active) || StringUtils.equals("N", active)) {
+        String action = Optional.ofNullable(bundle.getParams().get("action")).orElse("").toString();
+        switch (action) {
+          case "DECLINE":
+            beatType = DECLINING_BEAT;
+            break;
+          case "DEFER":
+            beatType = DEFERRING_BEAT;
+            break;
+          default:
+            beatType = ENABLING_BEAT;
         }
+      } else {
+        beatType = DISABLING_BEAT;
+      }
+    }
+    return beatType;
+  }
+
+  /**
+   * Processes the heartbeat by loading system information, sending it to the appropriate service,
+   * and handling the response based on the beat type.
+   *
+   * @param beatType
+   *     The type of heartbeat being processed.
+   * @throws Exception
+   *     if an error occurs during heartbeat processing.
+   */
+  private void processHeartbeat(String beatType) throws ServletException, IOException, JSONException {
+    SystemInfo.load(connection);
+    logSystemInfo(beatType);
+    String jsonInputString = setInfo(logHeartbeatID).toString();
+    String response = sendInfo(jsonInputString);
+    updateHeartbeatStatus(beatType);
+    if (!(StringUtils.equals(DEFERRING_BEAT, beatType) || StringUtils.equals(DECLINING_BEAT, beatType))) {
+      parseResponse(response);
+    }
+  }
+
+  /**
+   * Finalizes the process by committing any pending transactions and closing resources,
+   * if necessary, based on the type of beat.
+   *
+   * @param beatType
+   *     The type of heartbeat that was processed.
+   */
+  private void finalizeProcess(String beatType) {
+    if (StringUtils.equals(SCHEDULED_BEAT, beatType) || Channel.DIRECT == channel) {
+      try {
+        OBContext.setAdminMode();
+        OBDal.getInstance().commitAndClose();
+      } catch (Exception e) {
+        handleException(e);
+      } finally {
+        OBContext.restorePreviousMode();
       }
     }
   }
 
-  private void handleException(Exception e) throws Exception {
+  /**
+   * Handles exceptions that occur during the heartbeat process.
+   * This method logs and processes exceptions to ensure proper error handling.
+   *
+   * @param e
+   *     The exception that occurred.
+   */
+  private void handleException(Exception e) {
     logger.logln(e.getMessage());
     log.error(e.getMessage(), e);
-    throw new Exception(e.getMessage());
+    throw new OBException(e.getMessage());
   }
 
-  private void updateHeartbeatStatus(String beatType) throws Exception {
-
+  private void updateHeartbeatStatus(String beatType) throws ServletException {
     if (this.channel == Channel.SCHEDULED || DEFERRING_BEAT.equals(beatType)) {
-      // Don't update status when is a scheduled beat or deferring beat
       return;
     }
 
@@ -184,7 +262,6 @@ public class HeartbeatProcess implements Process {
     } else {
       active = "N";
     }
-
     SystemInfoData.updateHeartbeatActive(connection, active);
   }
 
@@ -193,82 +270,39 @@ public class HeartbeatProcess implements Process {
    */
   private boolean isHeartbeatActive() {
     String isheartbeatactive = SystemInfo.get(SystemInfo.Item.ISHEARTBEATACTIVE);
-    return (isheartbeatactive != null && !isheartbeatactive.equals("")
-        && !isheartbeatactive.equals("N"));
+    return (StringUtils.isNotBlank(isheartbeatactive) && !StringUtils.equals(isheartbeatactive, "N"));
   }
 
   /**
-   * @return the system info as properties
-   */
-  private Properties getSystemInfo() {
-    logger.logln(logger.messageDb("HB_GATHER", ctx.getLanguage()));
-    return SystemInfo.getSystemInfo();
-  }
-
-  /**
-   * Converts properties into a UTF-8 encoded query string.
-   * 
-   * @return the UTF-8 encoded query string
-   */
-  private String createQueryStr(String beatType) {
-    logger.logln(logger.messageDb("HB_QUERY", ctx.getLanguage()));
-
-    if (!(DECLINING_BEAT.equals(beatType) || DEFERRING_BEAT.equals(beatType))) {
-      // Complete beat with all available instance info
-      try {
-        SystemInfo.load(connection);
-      } catch (ServletException e1) {
-        log.error("Error reading system info", e1);
-      }
-    }
-
-    Properties props = null;
-    props = getSystemInfo();
-    if (props == null) {
-      return null;
-    }
-
-    Enumeration<?> e = props.propertyNames();
-    String sb = "";
-    while (e.hasMoreElements()) {
-      String elem = (String) e.nextElement();
-      String value = props.getProperty(elem);
-      try {
-        if (value != null) {
-          value = URLEncoder.encode(value, "UTF-8");
-        } else {
-          value = "";
-        }
-        sb += elem + "=" + value + "&";
-      } catch (UnsupportedEncodingException e1) {
-        log.error("Error encoding", e1);
-      }
-    }
-    sb += "beatType=" + beatType;
-
-    return sb;
-  }
-
-  /**
-   * Sends a query string to the heartbeat server. Returns the https response as a string.
-   * 
-   * @param queryStr
+   * Sends a request to the butler. Returns the https response as a string.
+   *
+   * @param request
    * @return the result of sending the info
    * @throws IOException
    * @throws GeneralSecurityException
    */
-  private String sendInfo(String queryStr) throws GeneralSecurityException, IOException {
+  private String sendInfo(String request) throws IOException {
     logger.logln(logger.messageDb("HB_SEND", ctx.getLanguage()));
     URL url = null;
+    HttpsURLConnection httpsConnection = null;
+
     try {
       url = new URL(HEARTBEAT_URL);
-    } catch (MalformedURLException e) { // Won't happen
-      log.error(e.getMessage(), e);
+      httpsConnection = (HttpsURLConnection) url.openConnection();
+    } catch (MalformedURLException e) {
+      log.error("Malformed URL: " + HEARTBEAT_URL, e);
+      throw new IOException("Malformed URL: " + HEARTBEAT_URL, e);
     }
-    log.info("Heartbeat sending: '" + queryStr + "'");
-    logger.logln(queryStr);
-    return HttpsUtils.sendSecure(url, queryStr);
+
+    if (httpsConnection != null) {
+      log.debug("Heartbeat sending: ");
+      return sendSecure(httpsConnection, request);
+    } else {
+      log.error("Failed to open HTTPS connection.");
+      throw new IOException("Failed to open HTTPS connection.");
+    }
   }
+
 
   private void logSystemInfo(String beatType) {
     logger.logln(logger.messageDb("HB_LOG", ctx.getLanguage()));
@@ -276,7 +310,7 @@ public class HeartbeatProcess implements Process {
     try {
       Properties systemInfo = SystemInfo.getSystemInfo();
       OBContext.setAdminMode();
-      hbLog = OBProvider.getInstance().get(HeartbeatLog.class);
+      HeartbeatLog hbLog = OBProvider.getInstance().get(HeartbeatLog.class);
       hbLog.setSystemIdentifier(systemInfo.getProperty("systemIdentifier"));
       hbLog.setDatabaseIdentifier(systemInfo.getProperty(SystemInfo.Item.DB_IDENTIFIER.getLabel()));
       hbLog.setMacIdentifier(systemInfo.getProperty(SystemInfo.Item.MAC_IDENTIFIER.getLabel()));
@@ -285,8 +319,7 @@ public class HeartbeatProcess implements Process {
       if (!(DECLINING_BEAT.equals(beatType) || DEFERRING_BEAT.equals(beatType))) {
         hbLog.setServletContainer(systemInfo.getProperty("servletContainer"));
         hbLog.setServletContainerVersion(systemInfo.getProperty("servletContainerVersion"));
-        hbLog.setAntVersion(systemInfo.getProperty("antVersion"));
-        hbLog.setOpenbravoVersion(systemInfo.getProperty("obVersion"));
+        hbLog.setOpenbravoVersion(systemInfo.getProperty("etendoVersion"));
         hbLog.setOpenbravoInstallMode(systemInfo.getProperty("obInstallMode"));
         hbLog.setWebServer(systemInfo.getProperty("webserver"));
         hbLog.setWebServerVersion(systemInfo.getProperty("webserverVersion"));
@@ -298,161 +331,54 @@ public class HeartbeatProcess implements Process {
         hbLog.setProxyRequired("Y".equals(systemInfo.getProperty("isproxyrequired")));
         hbLog.setProxyServer(systemInfo.getProperty("proxyServer"));
         hbLog.setUsageAuditEnabled(
-            "true".equals(systemInfo.getProperty(SystemInfo.Item.USAGE_AUDIT.getLabel())));
+            StringUtils.equals("true", systemInfo.getProperty(SystemInfo.Item.USAGE_AUDIT.getLabel())));
         hbLog.setInstancePurpose(systemInfo.getProperty("instancePurpose"));
-        if (systemInfo.getProperty("proxyPort") != null
-            && !systemInfo.getProperty("proxyPort").isEmpty()) {
-          try {
-            hbLog.setProxyPort(Long.parseLong(systemInfo.getProperty("proxyPort")));
-          } catch (NumberFormatException e) {
-            log.warn("Incorrect port: " + systemInfo.getProperty("proxyPort"));
-          }
+        if (StringUtils.isNotBlank(systemInfo.getProperty("proxyPort"))) {
+          hbLog.setProxyPort(parseLongSafely(systemInfo, SystemInfo.Item.PROXY_PORT));
         }
-        try {
-          hbLog.setNumberOfRegisteredUsers(
-              Long.parseLong(systemInfo.getProperty("numRegisteredUsers")));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect number of registered users: "
-              + systemInfo.getProperty("numRegisteredUsers"));
-        }
+        hbLog.setNumberOfRegisteredUsers(parseLongSafely(systemInfo, SystemInfo.Item.NUM_REGISTERED_USERS));
         hbLog.setInstalledModules(systemInfo.getProperty(SystemInfo.Item.MODULES.getLabel()));
-        hbLog.setActivationKeyIdentifier(
-            systemInfo.getProperty(SystemInfo.Item.OBPS_INSTANCE.getLabel()));
+        hbLog.setActivationKeyIdentifier(systemInfo.getProperty(SystemInfo.Item.OBPS_INSTANCE.getLabel()));
         if (ActivationKey.getInstance().isOPSInstance()) {
-          try {
-            hbLog.setInstanceNumber(
-                Long.parseLong(systemInfo.getProperty(SystemInfo.Item.INSTANCE_NUMBER.getLabel())));
-          } catch (NumberFormatException e) {
-            log.warn("Incorrect instance number: "
-                + systemInfo.getProperty(SystemInfo.Item.INSTANCE_NUMBER.getLabel()));
-          }
+          hbLog.setInstanceNumber(parseLongSafely(systemInfo, SystemInfo.Item.INSTANCE_NUMBER));
         }
-
-        try {
-          hbLog.setFirstLogin(
-              SystemInfo.parseDate(systemInfo.getProperty(SystemInfo.Item.FIRST_LOGIN.getLabel())));
-        } catch (ParseException e) {
-          log.warn("Incorrect date of first login: "
-              + systemInfo.getProperty(SystemInfo.Item.FIRST_LOGIN.getLabel()));
-        }
-        try {
-          hbLog.setLastLogin(
-              SystemInfo.parseDate(systemInfo.getProperty(SystemInfo.Item.LAST_LOGIN.getLabel())));
-        } catch (ParseException e) {
-          log.warn("Incorrect date of last login: "
-              + systemInfo.getProperty(SystemInfo.Item.LAST_LOGIN.getLabel()));
-        }
-        try {
-          hbLog.setTotalLogins(
-              Long.parseLong(systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect number of total logins: "
-              + systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS.getLabel()));
-        }
-        try {
-          hbLog.setTotalLoginsLastMonth(Long.parseLong(
-              systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MOTH.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect number of total logins of last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MOTH.getLabel()));
-        }
-        try {
-          hbLog.setConcurrentUsersAverage(new BigDecimal(
-              systemInfo.getProperty(SystemInfo.Item.AVG_CONCURRENT_USERS.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect avg users last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.AVG_CONCURRENT_USERS.getLabel()));
-        }
-        try {
-          hbLog.setUsagePercentage(
-              new BigDecimal(systemInfo.getProperty(SystemInfo.Item.PERC_TIME_USAGE.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect usage percentage last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.PERC_TIME_USAGE.getLabel()));
-        }
-        try {
-          hbLog.setMaximumConcurrentUsers(Long
-              .parseLong(systemInfo.getProperty(SystemInfo.Item.MAX_CONCURRENT_USERS.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect maximum number of concurrent users during last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.MAX_CONCURRENT_USERS.getLabel()));
-        }
-
-        try {
-          hbLog.setWSCallsMaximum(
-              Long.parseLong(systemInfo.getProperty(SystemInfo.Item.WS_CALLS_MAX.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect max number of ws calls during last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.WS_CALLS_MAX.getLabel()));
-        }
-        try {
-          hbLog.setWSCallsAverage(
-              new BigDecimal(systemInfo.getProperty(SystemInfo.Item.WS_CALLS_AVG.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect avg number of ws calls during last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.WS_CALLS_AVG.getLabel()));
-        }
-
-        try {
-          hbLog.setConnectorCallsMax(
-              Long.parseLong(systemInfo.getProperty(SystemInfo.Item.WSC_CALLS_MAX.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect max number of wsc calls during last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.WSC_CALLS_MAX.getLabel()));
-        }
-        try {
-          hbLog.setConnectorCallsAverage(
-              new BigDecimal(systemInfo.getProperty(SystemInfo.Item.WSC_CALLS_AVG.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect avg number of wsc calls during last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.WSC_CALLS_AVG.getLabel()));
-        }
-
-        try {
-          hbLog.setWSRejectedMaximum(
-              Long.parseLong(systemInfo.getProperty(SystemInfo.Item.WSR_CALLS_MAX.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect max number of ws rejected calls during last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.WSR_CALLS_MAX.getLabel()));
-        }
-        try {
-          hbLog.setWSRejectedAverage(
-              new BigDecimal(systemInfo.getProperty(SystemInfo.Item.WSR_CALLS_AVG.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect avg number of ws rejected calls during last 30 days: "
-              + systemInfo.getProperty(SystemInfo.Item.WSR_CALLS_AVG.getLabel()));
-        }
-
-        try {
-          hbLog.setNumberOfClients(
-              Long.parseLong(systemInfo.getProperty(SystemInfo.Item.NUMBER_OF_CLIENTS.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect number of clients: "
-              + systemInfo.getProperty(SystemInfo.Item.NUMBER_OF_CLIENTS.getLabel()));
-        }
-        try {
-          hbLog.setNumberOfOrganizations(
-              Long.parseLong(systemInfo.getProperty(SystemInfo.Item.NUMBER_OF_ORGS.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect number of orgs: "
-              + systemInfo.getProperty(SystemInfo.Item.NUMBER_OF_ORGS.getLabel()));
-        }
-        try {
-          hbLog.setRejectedLoginsDueConcUsers(Long.parseLong(
-              systemInfo.getProperty(SystemInfo.Item.REJECTED_LOGINS_DUE_CONC_USERS.getLabel())));
-        } catch (NumberFormatException e) {
-          log.warn("Incorrect number of rejected logins: "
-              + SystemInfo.Item.REJECTED_LOGINS_DUE_CONC_USERS.getLabel());
-        }
+        hbLog.setFirstLogin(parseDateSafely(systemInfo, SystemInfo.Item.FIRST_LOGIN));
+        hbLog.setLastLogin(parseDateSafely(systemInfo, SystemInfo.Item.LAST_LOGIN));
+        hbLog.setTotalLogins(parseLongSafely(systemInfo, SystemInfo.Item.TOTAL_LOGINS));
+        hbLog.setTotalLoginsLastMonth(parseLongSafely(systemInfo, SystemInfo.Item.TOTAL_LOGINS_LAST_MONTH));
+        hbLog.setConcurrentUsersAverage(parseBigDecimalSafely(systemInfo, SystemInfo.Item.AVG_CONCURRENT_USERS));
+        hbLog.setUsagePercentage(parseBigDecimalSafely(systemInfo, SystemInfo.Item.PERC_TIME_USAGE));
+        hbLog.setMaximumConcurrentUsers(parseLongSafely(systemInfo, SystemInfo.Item.MAX_CONCURRENT_USERS));
+        hbLog.setWSCallsMaximum(parseLongSafely(systemInfo, SystemInfo.Item.WS_CALLS_MAX));
+        hbLog.setWSCallsAverage(parseBigDecimalSafely(systemInfo, SystemInfo.Item.WS_CALLS_AVG));
+        hbLog.setConnectorCallsMax(parseLongSafely(systemInfo, SystemInfo.Item.WSC_CALLS_MAX));
+        hbLog.setConnectorCallsAverage(parseBigDecimalSafely(systemInfo, SystemInfo.Item.WSC_CALLS_AVG));
+        hbLog.setWSRejectedMaximum(parseLongSafely(systemInfo, SystemInfo.Item.WSR_CALLS_MAX));
+        hbLog.setWSRejectedAverage(parseBigDecimalSafely(systemInfo, SystemInfo.Item.WSR_CALLS_AVG));
+        hbLog.setNumberOfClients(parseLongSafely(systemInfo, SystemInfo.Item.NUMBER_OF_CLIENTS));
+        hbLog.setNumberOfOrganizations(parseLongSafely(systemInfo, SystemInfo.Item.NUMBER_OF_ORGS));
+        hbLog.setRejectedLoginsDueConcUsers(
+            parseLongSafely(systemInfo, SystemInfo.Item.REJECTED_LOGINS_DUE_CONC_USERS));
       }
       OBDal.getInstance().save(hbLog);
+      logHeartbeatID = hbLog.getId();
     } finally {
       OBContext.restorePreviousMode();
     }
   }
 
   /**
+   * Parses the given JSON response to extract alert information.
+   * The response can be a JSON object or a JSON array. If it is an array,
+   * it iterates through each JSON object in the array and processes them individually.
+   * This method sets the administrative mode to allow database operations without restrictions.
+   *
    * @param response
+   *     The JSON response string to be parsed. It is expected to be either a JSON object
+   *     or a JSON array. The JSON should contain an "alerts" key if it is an object.
+   *     If it is an array, each object in the array should have an "alerts" key.
+   * @throws JSONException
+   *     if there is an error parsing the JSON response.
    */
   private void parseResponse(String response) {
     logger.logln(logger.messageDb("HB_UPDATES", ctx.getLanguage()));
@@ -462,13 +388,27 @@ public class HeartbeatProcess implements Process {
 
     OBContext.setAdminMode();
     try {
-      JSONObject json = new JSONObject(response);
-      String alertsResponse = (String) json.get("alerts");
-      parseAlerts(alertsResponse);
+      if (StringUtils.startsWith(response, "[")) {
+        JSONArray jsonArray = new JSONArray(response);
+        for (int i = 0; i < jsonArray.length(); i++) {
+          JSONObject jsonObject = jsonArray.getJSONObject(i);
+          processAlerts(jsonObject);
+        }
+      } else {
+        JSONObject jsonObject = new JSONObject(response);
+        processAlerts(jsonObject);
+      }
     } catch (JSONException e) {
       log.error(e.getMessage(), e);
     } finally {
       OBContext.restorePreviousMode();
+    }
+  }
+
+  private void processAlerts(JSONObject jsonObject) {
+    String alertsResponse = jsonObject.optString("alerts");
+    if (!StringUtils.isBlank(alertsResponse)) {
+      parseAlerts(alertsResponse);
     }
   }
 
@@ -520,7 +460,7 @@ public class HeartbeatProcess implements Process {
 
   /**
    * Check if a popup is needed to be shown when a user logins.
-   * 
+   *
    * @return the type of popup that is needed.
    */
   public static HeartBeatOrRegistration isLoginPopupRequired(String roleId, String javaDateFormat,
@@ -566,15 +506,11 @@ public class HeartbeatProcess implements Process {
     OBContext.setAdminMode();
     try {
       HeartbeatLog lastBeat = getLastHBLog();
-      if ((lastBeat != null && lastBeat.getDatabaseIdentifier() != null
+      return (lastBeat != null && lastBeat.getDatabaseIdentifier() != null
           && lastBeat.getMacIdentifier() != null)
           && (!lastBeat.getSystemIdentifier().equals(SystemInfo.getSystemIdentifier())
-              || !lastBeat.getDatabaseIdentifier().equals(SystemInfo.getDBIdentifier())
-              || !lastBeat.getMacIdentifier().equals(SystemInfo.getMacAddress()))) {
-        return true;
-      } else {
-        return false;
-      }
+          || !lastBeat.getDatabaseIdentifier().equals(SystemInfo.getDBIdentifier())
+          || !lastBeat.getMacIdentifier().equals(SystemInfo.getMacAddress()));
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -588,7 +524,6 @@ public class HeartbeatProcess implements Process {
     if (hbLogs.isEmpty()) {
       return null;
     }
-
     return hbLogs.get(0);
   }
 
@@ -600,34 +535,33 @@ public class HeartbeatProcess implements Process {
     return isShowHeartbeatRequired(vars.getJavaDateFormat(), connectionProvider);
   }
 
-  /**
-   * Check if the Heartbeat popup must be displayed.
-   * 
-   * @return {@code true} if the Heartbeat popup must be displayed, {@code false} otherwise.
-   */
   public static boolean isShowHeartbeatRequired(String javaDateFormat,
       ConnectionProvider connectionProvider) throws ServletException {
     final SystemInfoData[] hbData = SystemInfoData.selectSystemProperties(connectionProvider);
-    if (hbData.length > 0) {
-      final String isheartbeatactive = hbData[0].isheartbeatactive;
-      final String postponeDate = hbData[0].postponeDate;
-      if (isheartbeatactive == null || isheartbeatactive.equals("")) {
-        if (postponeDate == null || postponeDate.equals("")) {
-          return true;
-        } else {
-          Date date = null;
-          try {
-            date = new SimpleDateFormat(javaDateFormat).parse(postponeDate);
-            if (date.before(new Date())) {
-              return true;
-            }
-          } catch (final ParseException e) {
-            log.error(e.getMessage(), e);
-          }
-        }
-      }
+    if (hbData.length == 0) {
+      return false;
+    }
+    if (isHeartbeatInactive(hbData[0])) {
+      return isPostponeDatePast(javaDateFormat, hbData[0].postponeDate);
     }
     return false;
+  }
+
+  private static boolean isHeartbeatInactive(SystemInfoData data) {
+    return StringUtils.isBlank(data.isheartbeatactive);
+  }
+
+  private static boolean isPostponeDatePast(String javaDateFormat, String postponeDate) {
+    if (StringUtils.isBlank(postponeDate)) {
+      return true;
+    }
+    try {
+      Date date = new SimpleDateFormat(javaDateFormat).parse(postponeDate);
+      return date.before(new Date());
+    } catch (ParseException e) {
+      log.error(e.getMessage(), e);
+      return false;
+    }
   }
 
   public static boolean isHeartbeatEnabled() {
@@ -639,21 +573,167 @@ public class HeartbeatProcess implements Process {
     final OBCriteria<ProcessRequest> prCriteria = OBDal.getInstance()
         .createCriteria(ProcessRequest.class);
     prCriteria.add(Restrictions.and(Restrictions.eq(ProcessRequest.PROPERTY_PROCESS, HBProcess),
-        Restrictions.or(
-            Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
-                org.openbravo.scheduling.Process.SCHEDULED),
-            Restrictions.eq(ProcessRequest.PROPERTY_STATUS,
-                org.openbravo.scheduling.Process.MISFIRED))));
+        Restrictions.or(Restrictions.eq(ProcessRequest.PROPERTY_STATUS, Process.SCHEDULED),
+            Restrictions.eq(ProcessRequest.PROPERTY_STATUS, Process.MISFIRED))));
     final List<ProcessRequest> prRequestList = prCriteria.list();
 
-    if (prRequestList.size() == 0) { // Resetting state to disabled
+    if (prRequestList.isEmpty()) { // Resetting state to disabled
       sys.setEnableHeartbeat(false);
       OBDal.getInstance().save(sys);
       OBDal.getInstance().flush();
     }
 
     // Must exist a scheduled process request for HB and must be enable at SystemInfo level
-    return prRequestList.size() > 0 && sys.isEnableHeartbeat() != null && sys.isEnableHeartbeat();
+    return !prRequestList.isEmpty() && sys.isEnableHeartbeat() != null && sys.isEnableHeartbeat();
   }
 
+  private static String sendSecure(HttpsURLConnection conn, String jsonData) throws IOException {
+    StringBuilder response = new StringBuilder();
+
+    conn.setRequestMethod("POST");
+    conn.setDoOutput(true);
+    conn.setRequestProperty("Content-Type", "application/json");
+
+    try (OutputStream os = conn.getOutputStream()) {
+      byte[] input = jsonData.getBytes(StandardCharsets.UTF_8);
+      os.write(input, 0, input.length);
+    }
+
+    int responseCode = conn.getResponseCode();
+
+    if (responseCode >= 400) {
+      InputStream errorStream = conn.getErrorStream();
+      if (errorStream != null) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(errorStream, StandardCharsets.UTF_8))) {
+          String responseLine;
+          while ((responseLine = br.readLine()) != null) {
+            response.append(StringUtils.trim(responseLine));
+          }
+        }
+      }
+      log.error("HTTP error code: " + responseCode + " Response: " + conn.getResponseMessage());
+      throw new OBException(response.toString());
+    }
+
+    try (InputStream stream = conn.getInputStream();
+         BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+      String responseLine;
+      while ((responseLine = br.readLine()) != null) {
+        response.append(StringUtils.trim(responseLine));
+      }
+    }
+    return response.toString();
+  }
+
+
+  /**
+   * Compiles system and application information into a JSONArray containing a JSONObject.
+   * This object includes details such as system and database identifiers, network information,
+   * operating system version, server configurations, Java version, user statistics, among others,
+   * gathered through {@code SystemInfo.getSystemInfo()}.
+   * <p>
+   * Dates and long numbers are processed safely to prevent format errors.
+   * Any exceptions caught during the process are logged, and the generated JSONArray is returned,
+   * which may be empty or contain partial data if an error occurs.
+   *
+   * @return JSONArray with system and application information.
+   * @throws JSONException
+   *     if there is an error creating the JSON objects.
+   */
+  private static JSONArray setInfo(String logHeartbeatID) throws JSONException {
+    JSONArray heartbeatArray = new JSONArray();
+    JSONObject heartbeatObj = new JSONObject();
+    Properties systemInfo = SystemInfo.getSystemInfo();
+    String dateFormatStr = OBPropertiesProvider.getInstance().getOpenbravoProperties().getProperty("dateFormat.java");
+    SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatStr);
+    try {
+      heartbeatObj.put("active", true);
+      heartbeatObj.put("systemID", systemInfo.getProperty(SystemInfo.Item.SYSTEM_IDENTIFIER.getLabel()));
+      heartbeatObj.put("databaseID", systemInfo.getProperty(SystemInfo.Item.DB_IDENTIFIER.getLabel()));
+      heartbeatObj.put("mACID", systemInfo.getProperty(SystemInfo.Item.MAC_IDENTIFIER.getLabel()));
+      heartbeatObj.put("purpose", systemInfo.getProperty(SystemInfo.Item.INSTANCE_PURPOSE.getLabel()));
+      heartbeatObj.put("operationSystem", systemInfo.getProperty(SystemInfo.Item.OPERATING_SYSTEM.getLabel()));
+      heartbeatObj.put("operationSystemVersion",
+          systemInfo.getProperty(SystemInfo.Item.OPERATING_SYSTEM_VERSION.getLabel()));
+      heartbeatObj.put("dbName", systemInfo.getProperty(SystemInfo.Item.DATABASE.getLabel()));
+      heartbeatObj.put("dbVersion", systemInfo.getProperty(SystemInfo.Item.DATABASE_VERSION.getLabel()));
+      heartbeatObj.put("servletContainer", systemInfo.getProperty(SystemInfo.Item.SERVLET_CONTAINER.getLabel()));
+      heartbeatObj.put("servletContainerVersion",
+          systemInfo.getProperty(SystemInfo.Item.SERVLET_CONTAINER_VERSION.getLabel()));
+      heartbeatObj.put("webServer", systemInfo.getProperty(SystemInfo.Item.WEBSERVER.getLabel()));
+      heartbeatObj.put("webServerVersion", systemInfo.getProperty(SystemInfo.Item.WEBSERVER_VERSION.getLabel()));
+      heartbeatObj.put("javaVersion", systemInfo.getProperty(SystemInfo.Item.JAVA_VERSION.getLabel()));
+      heartbeatObj.put("etendoVersion", systemInfo.getProperty(SystemInfo.Item.ETENDO_VERSION.getLabel()));
+      heartbeatObj.put("rejectedLoginsDueConcUsers",
+          systemInfo.getProperty(SystemInfo.Item.REJECTED_LOGINS_DUE_CONC_USERS.getLabel()));
+      heartbeatObj.put("modules", systemInfo.getProperty(SystemInfo.Item.MODULES.getLabel()));
+      heartbeatObj.put("numRegisteredUsers", systemInfo.getProperty(SystemInfo.Item.NUM_REGISTERED_USERS.getLabel()));
+      Date firstLogin = parseDateSafely(systemInfo, SystemInfo.Item.FIRST_LOGIN);
+      heartbeatObj.put("firstLogin", firstLogin != null ? dateFormat.format(firstLogin) : JSONObject.NULL);
+      Date lastLogin = parseDateSafely(systemInfo, SystemInfo.Item.LAST_LOGIN);
+      heartbeatObj.put("lastLogin", lastLogin != null ? dateFormat.format(lastLogin) : JSONObject.NULL);
+      heartbeatObj.put("totalLogins", parseLongSafely(systemInfo, SystemInfo.Item.TOTAL_LOGINS));
+      heartbeatObj.put("maxUsers", parseLongSafely(systemInfo, SystemInfo.Item.MAX_CONCURRENT_USERS));
+      heartbeatObj.put("avgUsers", systemInfo.getProperty(SystemInfo.Item.AVG_CONCURRENT_USERS.getLabel()));
+      heartbeatObj.put("obpsId", systemInfo.getProperty(SystemInfo.Item.OBPS_INSTANCE.getLabel()));
+      heartbeatObj.put("totalLoginsLastMonth",
+          systemInfo.getProperty(SystemInfo.Item.TOTAL_LOGINS_LAST_MONTH.getLabel()));
+      heartbeatObj.put("status", ActivationKey.getInstance().getSubscriptionStatus().getStatusCode());
+      heartbeatObj.put("hbLogId", logHeartbeatID);
+      heartbeatArray.put(heartbeatObj);
+    } catch (Exception e) {
+      log.error(e.getMessage());
+    }
+    return heartbeatArray;
+  }
+
+  private static Date parseDateSafely(Properties systemInfo, SystemInfo.Item item) {
+    try {
+      return SystemInfo.parseDate(systemInfo.getProperty(item.getLabel()));
+    } catch (ParseException e) {
+      logFormatError(item.getLabel(), systemInfo.getProperty(item.getLabel()));
+      return null;
+    }
+  }
+
+  private static Long parseLongSafely(Properties systemInfo, SystemInfo.Item item) {
+    try {
+      return Long.parseLong(systemInfo.getProperty(item.getLabel()));
+    } catch (NumberFormatException e) {
+      logFormatError(item.getLabel(), systemInfo.getProperty(item.getLabel()));
+      return null;
+    }
+  }
+
+  private static BigDecimal parseBigDecimalSafely(Properties systemInfo, SystemInfo.Item item) {
+    try {
+      return new BigDecimal(systemInfo.getProperty(item.getLabel()));
+    } catch (NumberFormatException e) {
+      logFormatError(item.getLabel(), systemInfo.getProperty(item.getLabel()));
+      return null;
+    }
+  }
+
+  private static void logFormatError(String itemLabel, String systemItemLabel) {
+    log.warn("Incorrect format for {} : {}", itemLabel, systemItemLabel);
+  }
+
+  /**
+   * Updates the status of the HeartbeatLog entry identified by `logHeartbeatID`.
+   *
+   * @param status
+   *     the new status to set
+   */
+  private void updateHeartbeatLogStatus(String status) {
+    OBContext.setAdminMode();
+    try {
+      HeartbeatLog hbLog = OBDal.getInstance().get(HeartbeatLog.class, logHeartbeatID);
+      if (hbLog != null) {
+        hbLog.setStatus(status);
+        OBDal.getInstance().save(hbLog);
+      }
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
 }

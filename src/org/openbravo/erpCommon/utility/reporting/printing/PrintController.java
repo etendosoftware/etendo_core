@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -45,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.openbravo.base.exception.OBException;
@@ -55,9 +57,10 @@ import org.openbravo.client.application.report.ReportingUtils;
 import org.openbravo.client.application.report.ReportingUtils.ExportType;
 import org.openbravo.common.hooks.PrintControllerHookManager;
 import org.openbravo.dal.core.OBContext;
-import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.email.EmailUtils;
+import org.openbravo.email.ResolvedSmtpConfig;
+import org.openbravo.email.SmtpCascadeResolver;
 import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.erpCommon.utility.BasicUtility;
 import org.openbravo.erpCommon.utility.OBError;
@@ -72,6 +75,7 @@ import org.openbravo.erpCommon.utility.reporting.ReportingException;
 import org.openbravo.erpCommon.utility.reporting.TemplateData;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo;
 import org.openbravo.erpCommon.utility.reporting.TemplateInfo.EmailDefinition;
+import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.system.Language;
 import org.openbravo.model.ad.ui.Tab;
 import org.openbravo.model.common.businesspartner.BusinessPartner;
@@ -93,6 +97,11 @@ public class PrintController extends HttpSecureAppServlet {
   private static final String REPORT_INPUT_STREAM = "reportInputStream";
   private static final String REPORT_OUTPUT_STREAM = "reportOutputStream";
   public static final String ERROR_PRINTING_DOCUMENT_KEY = "Error_Printing_Document";
+  private static final String PARAM_TO_EMAIL = "toEmail";
+  private static final String PARAM_TO_EMAIL_ORIG = "toEmailOrig";
+  private static final String PARAM_TO_CONTACT_ID = "toContactId";
+  private static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
+  private static final String JSON_KEY_ERROR = "error";
   public static final String LIST_ITEM_TAG = "<li>";
   public static final String CLOSE_LIST_ITEM_TAG = "</li>";
   private final Map<String, TemplateData[]> differentDocTypes = new HashMap<String, TemplateData[]>();
@@ -102,6 +111,10 @@ public class PrintController extends HttpSecureAppServlet {
   private static final String PRINT_PATH = "print.html";
   private static final String PRINT_OPTIONS_PATH = "printoptions.html";
   private static final String SEND_PATH = "send.html";
+  private static final String ERROR = "Error";
+  private static final String TAB = "tab";
+  private static final String INP_TAB_ID = "inpTabId";
+  private static final String ATTRIBUTESETINSTANCE_TABID = "AttributeSetInstance.tabId";
   private static JSONObject hookParams;
   private static PrintControllerHookManager hookManager;
   private final MutableBoolean hooking = new MutableBoolean(false);
@@ -325,17 +338,11 @@ public class PrintController extends HttpSecureAppServlet {
 
               if (request.getServletPath().toLowerCase().indexOf(PRINT_PATH) == -1
                   && request.getServletPath().toLowerCase().indexOf(PRINT_OPTIONS_PATH) == -1) {
-                if ("".equals(senderAddress) || senderAddress == null) {
-                  final OBError on = new OBError();
-                  on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
-                  on.setTitle(Utility.messageBD(this, "EmailConfigError", vars.getLanguage()));
-                  on.setType("Error");
-                  final String tabId = vars.getSessionValue("inpTabId");
-                  vars.getStringParameter("tab");
-                  vars.setMessage(tabId, on);
-                  vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
-                  printPageClosePopUpAndRefreshParent(response, vars);
-                  throw new ServletException("Configuration Error no sender defined");
+                ResolvedSmtpConfig resolvedForCheck = SmtpCascadeResolver.resolve();
+                boolean hasSender = resolvedForCheck != null
+                    || StringUtils.isNotEmpty(senderAddress);
+                if (!hasSender) {
+                  reportNoSenderError(response, vars);
                 }
               }
 
@@ -382,6 +389,11 @@ public class PrintController extends HttpSecureAppServlet {
               getComaSeparatedString(documentIds), reports, checks, fullDocumentIdentifier);
 
         } else if (vars.commandIn("EMAIL")) {
+          final String toEmailParam = vars.getStringParameter(PARAM_TO_EMAIL);
+          if (StringUtils.isBlank(toEmailParam)) {
+            throw new ServletException(
+                Utility.messageBD(this, "NoCustomerEmail", vars.getLanguage()));
+          }
           PocData[] pocData = (PocData[]) vars.getSessionObject("pocData" + fullDocumentIdentifier);
           int nrOfEmailsSend = 0;
           for (final PocData documentData : pocData) {
@@ -453,6 +465,9 @@ public class PrintController extends HttpSecureAppServlet {
             }
           }
           request.getSession().removeAttribute("files");
+          if (nrOfEmailsSend > 0 && pocData.length > 0) {
+            persistLastUsedContact(vars, pocData[0].bpartnerId);
+          }
           vars.removeSessionValue("pocData" + fullDocumentIdentifier);
           createPrintStatusPage(response, vars, nrOfEmailsSend);
         } else if (vars.commandIn("UPDATE_TEMPLATE")) {
@@ -478,16 +493,20 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error("Error in change template ajax", e);
             o = new JSONObject();
             try {
-              o.put("error", true);
+              o.put(JSON_KEY_ERROR, true);
             } catch (JSONException e1) {
               log4j.error("Error in change template ajax", e1);
             }
           }
 
-          response.setContentType("application/json; charset=UTF-8");
+          response.setContentType(CONTENT_TYPE_JSON);
           final PrintWriter out = response.getWriter();
           out.println(o.toString());
           out.close();
+        } else if (vars.commandIn("GET_BP_CONTACTS")) {
+          JSONObject result = buildBPContactsJson(vars);
+          writeJsonResponse(response, result);
+
         } else if (vars.commandIn("UPDATE_EMAILCONFIG")) {
           JSONObject o = new JSONObject();
           try {
@@ -501,13 +520,13 @@ public class PrintController extends HttpSecureAppServlet {
             log4j.error("Error in change template ajax", e);
             o = new JSONObject();
             try {
-              o.put("error", true);
+              o.put(JSON_KEY_ERROR, true);
             } catch (JSONException e1) {
               log4j.error("Error in change template ajax", e1);
             }
           }
 
-          response.setContentType("application/json; charset=UTF-8");
+          response.setContentType(CONTENT_TYPE_JSON);
           final PrintWriter out = response.getWriter();
           out.println(o.toString());
           out.close();
@@ -519,7 +538,7 @@ public class PrintController extends HttpSecureAppServlet {
       // Catching the exception here instead of throwing it to HSAS because this is used in multi
       // part request making the mechanism to detect popup not to work.
       log4j.error("Error captured: ", e);
-      bdErrorGeneralPopUp(request, response, "Error",
+      bdErrorGeneralPopUp(request, response, ERROR,
           Utility.translateError(this, vars, vars.getLanguage(), e.getMessage()).getMessage());
     } finally {
       hooking.setValue(false);
@@ -527,6 +546,93 @@ public class PrintController extends HttpSecureAppServlet {
     }
   }
 
+  /**
+   * Resolves the contact that was used as email recipient and persists it for future preselection.
+   * If the user picked a contact from the selector, its ID is used directly. Otherwise, the
+   * email address typed manually is matched against the BP's contacts.
+   * @param vars the current request variables
+   * @param bpartnerId the ID of the Business Partner
+   * @throws ServletException if an error occurs during persistence
+   *
+   */
+  protected void persistLastUsedContact(VariablesSecureApp vars, String bpartnerId) throws ServletException {
+    String toContactId = vars.getStringParameter(PARAM_TO_CONTACT_ID);
+    if (StringUtils.isBlank(toContactId)) {
+      String toEmail = vars.getStringParameter(PARAM_TO_EMAIL);
+      toContactId = BPContactEmailSelector.findContactIdByEmail(bpartnerId, toEmail);
+    }
+    if (StringUtils.isNotBlank(toContactId)) {
+      BPContactEmailSelector.saveLastUsedContact(vars.getUser(), bpartnerId, toContactId);
+    }
+  }
+
+  /**
+   * Builds a JSON object containing the list of email-enabled contacts for the Business Partner
+   * identified by the {@code bpartnerId} request parameter.
+   * @param vars the current request variables containing the {@code bpartnerId} parameter
+   * @return a {@link JSONObject} with a {@code contacts} array, or an {@code error} flag on failure
+   */
+  protected JSONObject buildBPContactsJson(VariablesSecureApp vars) {
+    JSONObject result = new JSONObject();
+    try {
+      String bpartnerId = vars.getStringParameter("bpartnerId");
+      List<User> contacts = BPContactEmailSelector.getBPContactsWithEmail(bpartnerId);
+      JSONArray contactsArray = new JSONArray();
+      for (User contact : contacts) {
+        contactsArray.put(buildContactJson(contact));
+      }
+      result.put("contacts", contactsArray);
+    } catch (Exception e) {
+      log4j.error("Error retrieving BP contacts for email selector", e);
+      result = buildErrorJson();
+    }
+    return result;
+  }
+
+  /**
+   * Builds a JSON representation of a single BP contact for the email selector.
+   * @param contact the {@link User} contact to serialize
+   * @return a {@link JSONObject} with contactId, name, email, isDefault, and isActive fields
+   * @throws JSONException if a JSON serialization error occurs
+   */
+  protected static JSONObject buildContactJson(User contact) throws JSONException {
+    JSONObject json = new JSONObject();
+    json.put("contactId", contact.getId());
+    json.put("name", contact.getName());
+    json.put("email", contact.getEmail());
+    json.put("isDefault",
+    Boolean.TRUE.equals(contact.get(User.PROPERTY_ISDEFAULTFORDOCS)));
+    json.put("isActive", Boolean.TRUE.equals(contact.isActive()));
+    return json;
+  }
+
+  /**
+   * Builds a JSON object with an error flag. Used as fallback when contact retrieval fails.
+   * @return a {@link JSONObject} containing {@code {"error": true}}
+   */
+  protected JSONObject buildErrorJson() {
+    JSONObject error = new JSONObject();
+    try {
+      error.put(JSON_KEY_ERROR, true);
+    } catch (JSONException e) {
+      log4j.error("Failed to build error JSON", e);
+    }
+    return error;
+  }
+
+  /**
+   * Writes a JSON object to the HTTP response with UTF-8 encoding.
+   * @param response the HTTP response
+   * @param json the JSON object to write
+   * @throws IOException if a write error occurs
+   */
+  protected static void writeJsonResponse(HttpServletResponse response, JSONObject json) throws IOException {
+    response.setContentType(CONTENT_TYPE_JSON);
+    final PrintWriter out = response.getWriter();
+    out.println(json.toString());
+    out.close();
+  }
+  
   /**
    * Sets the parameters for postProcess hooks in the given JSON parameters.
    *
@@ -1061,10 +1167,10 @@ public class PrintController extends HttpSecureAppServlet {
       on.setMessage(Utility.messageBD(this, "EmailConfiguration", vars.getLanguage()));
       on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
       on.setType("info");
-      final String tabId = vars.getSessionValue("inpTabId");
-      vars.getStringParameter("tab");
+      final String tabId = vars.getSessionValue(INP_TAB_ID);
+      vars.getStringParameter(TAB);
       vars.setMessage(tabId, on);
-      vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+      vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
       printPageClosePopUpAndRefreshParent(response, vars);
     } catch (ReportingException e) {
       log4j.error(e);
@@ -1075,25 +1181,13 @@ public class PrintController extends HttpSecureAppServlet {
 
     OBContext.setAdminMode(true);
     try {
-      OBCriteria<EmailServerConfiguration> mailConfigCriteria = OBDal.getInstance()
-          .createCriteria(EmailServerConfiguration.class);
-      mailConfigCriteria.addOrderBy("client.id", false);
-      final List<EmailServerConfiguration> mailConfigList = mailConfigCriteria.list();
-
-      if (mailConfigList.size() == 0) {
-        throw new ServletException("No Poc configuration found for this client.");
+      ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
+      if (resolvedConfig != null) {
+        fromEmail = resolvedConfig.getFromAddress();
+        fromEmailId = resolvedConfig.getConfigId();
+      } else {
+        reportNoSenderError(response, vars);
       }
-
-      EmailServerConfiguration mailConfig = EmailUtils
-          .getEmailConfiguration(OBDal.getInstance().get(Organization.class, vars.getOrg()));
-
-      if (mailConfig == null) {
-        throw new ServletException(
-            "No sender defined: Please go to client configuration to complete the email configuration.");
-      }
-
-      fromEmail = mailConfig.getSmtpServerSenderAddress();
-      fromEmailId = mailConfig.getId();
     } finally {
       OBContext.restorePreviousMode();
     }
@@ -1119,10 +1213,10 @@ public class PrintController extends HttpSecureAppServlet {
 
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         } else if (documentData.contactEmail == null || documentData.contactEmail.equals("")) {
           final OBError on = new OBError();
@@ -1130,10 +1224,10 @@ public class PrintController extends HttpSecureAppServlet {
               .replace("@customer@", documentData.contactName));
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         }
       }
@@ -1150,10 +1244,10 @@ public class PrintController extends HttpSecureAppServlet {
           on.setMessage(Utility.messageBD(this, "NoSenderDocument", vars.getLanguage()));
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         } else if (documentData.salesrepEmail == null || documentData.salesrepEmail.equals("")) {
           final OBError on = new OBError();
@@ -1161,10 +1255,10 @@ public class PrintController extends HttpSecureAppServlet {
               .replace("@salesRep@", documentData.salesrepName));
           on.setTitle(Utility.messageBD(this, "Info", vars.getLanguage()));
           on.setType("info");
-          final String tabId = vars.getSessionValue("inpTabId");
-          vars.getStringParameter("tab");
+          final String tabId = vars.getSessionValue(INP_TAB_ID);
+          vars.getStringParameter(TAB);
           vars.setMessage(tabId, on);
-          vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+          vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
           printPageClosePopUpAndRefreshParent(response, vars);
         }
       }
@@ -1202,11 +1296,11 @@ public class PrintController extends HttpSecureAppServlet {
       final OBError on = new OBError();
       on.setMessage(Utility.messageBD(this, "ErrorIncompleteDocuments", vars.getLanguage()));
       on.setTitle(Utility.messageBD(this, "ErrorSendingEmail", vars.getLanguage()));
-      on.setType("Error");
-      final String tabId = vars.getSessionValue("inpTabId");
-      vars.getStringParameter("tab");
+      on.setType(ERROR);
+      final String tabId = vars.getSessionValue(INP_TAB_ID);
+      vars.getStringParameter(TAB);
       vars.setMessage(tabId, on);
-      vars.getRequestGlobalVariable("inpTabId", "AttributeSetInstance.tabId");
+      vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
       printPageClosePopUpAndRefreshParent(response, vars);
     }
 
@@ -1253,12 +1347,14 @@ public class PrintController extends HttpSecureAppServlet {
       bccEmail = userEmail;
       bccName = userName;
     }
+    User selectedContact = resolvePreselectedContact(vars, pocData);
 
     if (vars.commandIn("ADD") || vars.commandIn("DEL")) {
       xmlDocument.setParameter("fromEmailId", vars.getStringParameter("fromEmailId"));
       xmlDocument.setParameter("fromEmail", vars.getStringParameter("fromEmail"));
-      xmlDocument.setParameter("toEmail", vars.getStringParameter("toEmail"));
-      xmlDocument.setParameter("toEmailOrig", vars.getStringParameter("toEmailOrig"));
+      xmlDocument.setParameter(PARAM_TO_EMAIL, vars.getStringParameter(PARAM_TO_EMAIL));
+      xmlDocument.setParameter(PARAM_TO_EMAIL_ORIG, vars.getStringParameter(PARAM_TO_EMAIL_ORIG));
+      xmlDocument.setParameter(PARAM_TO_CONTACT_ID, vars.getStringParameter(PARAM_TO_CONTACT_ID));
       xmlDocument.setParameter("ccEmail", vars.getStringParameter("ccEmail"));
       xmlDocument.setParameter("ccEmailOrig", vars.getStringParameter("ccEmailOrig"));
       xmlDocument.setParameter("bccEmail", vars.getStringParameter("bccEmail"));
@@ -1268,10 +1364,13 @@ public class PrintController extends HttpSecureAppServlet {
       xmlDocument.setParameter("emailSubject", vars.getStringParameter("emailSubject"));
       xmlDocument.setParameter("emailBody", vars.getStringParameter("emailBody"));
     } else {
+      String toEmail = getContactField(selectedContact, User::getEmail);
+      String toContactId = getContactField(selectedContact, User::getId);
       xmlDocument.setParameter("fromEmailId", fromEmailId);
       xmlDocument.setParameter("fromEmail", fromEmail);
-      xmlDocument.setParameter("toEmail", pocData[0].contactEmail);
-      xmlDocument.setParameter("toEmailOrig", pocData[0].contactEmail);
+      xmlDocument.setParameter(PARAM_TO_EMAIL, toEmail);
+      xmlDocument.setParameter(PARAM_TO_EMAIL_ORIG, toEmail);
+      xmlDocument.setParameter(PARAM_TO_CONTACT_ID, toContactId);
       xmlDocument.setParameter("ccEmail", "");
       xmlDocument.setParameter("ccEmailOrig", "");
       xmlDocument.setParameter("bccEmail", bccEmail);
@@ -1281,9 +1380,18 @@ public class PrintController extends HttpSecureAppServlet {
       xmlDocument.setParameter("emailSubject", emailDefinition.getSubject());
       xmlDocument.setParameter("emailBody", emailDefinition.getBody());
     }
+    xmlDocument.setParameter("bpartnerId", pocData.length > 0 ? pocData[0].bpartnerId : StringUtils.EMPTY);
     xmlDocument.setParameter("inpArchive", vars.getStringParameter("inpArchive"));
     xmlDocument.setParameter("fromName", "");
-    xmlDocument.setParameter("toName", pocData[0].contactName);
+    String toName;
+    if (selectedContact != null) {
+      toName = getContactField(selectedContact, User::getName);
+    } else if (pocData.length > 0) {
+      toName = pocData[0].contactName;
+    } else {
+      toName = StringUtils.EMPTY;
+    }
+    xmlDocument.setParameter("toName", toName);
     xmlDocument.setParameter("ccName", "");
     xmlDocument.setParameter("bccName", bccName);
     xmlDocument.setParameter("replyToName", pocData[0].salesrepName);
@@ -1304,6 +1412,41 @@ public class PrintController extends HttpSecureAppServlet {
     out.close();
   }
 
+  /**
+   * Determines the best contact to preselect in the email popup. Only runs on the initial page
+   * load (not on ADD or DEL commands). Returns {@code null} if no suitable contact is found
+   * or if an error occurs during resolution.
+   * @param vars  the current request variables
+   * @param pocData the array of document contact data
+   * @return the preselected {@link User} contact, or {@code null}
+   */
+  protected User resolvePreselectedContact(VariablesSecureApp vars, PocData[] pocData) {
+    if (vars.commandIn("ADD", "DEL") || pocData.length == 0) {
+      return null;
+    }
+    try {
+      return BPContactEmailSelector.selectBestContact(pocData[0].bpartnerId, vars.getUser());
+    } catch (Exception e) {
+      log4j.warn("Could not determine best email contact, falling back to default. Reason: {}",
+          e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * Safely extracts a string field from a {@link User} contact, returning an empty string
+   * if the contact is {@code null} or the field value is {@code null}.
+   * @param contact the contact to extract the field from, may be {@code null}
+   * @param getter the getter method reference for the desired field
+   * @return the field value or an empty string
+   */
+  protected static String getContactField(User contact, Function<User, String> getter) {
+    if (contact == null) {
+      return StringUtils.EMPTY;
+    }
+      return StringUtils.defaultString(getter.apply(contact));
+  }
+  
   private String getOptionsList(List<EmailDefinition> emailDef, String selectedValue,
       boolean isMandatory) {
     StringBuilder strOptions = new StringBuilder();
@@ -1355,6 +1498,29 @@ public class PrintController extends HttpSecureAppServlet {
       }
     }
     return hasMoreThanOneLanguage;
+  }
+
+  /**
+   * Reports a "no sender configured" error by setting an {@link OBError} message on the current
+   * tab and closing the popup while refreshing the parent record. This ensures the error is
+   * displayed inline on the record (in red) rather than as a generic popup dialog.
+   * @param response the HTTP response used to render the close-popup page
+   * @param vars the session variables, used to resolve the active tab and language
+   * @throws IOException if writing the response fails
+   * @throws ServletException always thrown after the error is reported, to stop processing
+   */
+  private void reportNoSenderError(HttpServletResponse response, VariablesSecureApp vars)
+      throws IOException, ServletException {
+    final OBError on = new OBError();
+    on.setMessage(Utility.messageBD(this, "NoSender", vars.getLanguage()));
+    on.setTitle(Utility.messageBD(this, "EmailConfigError", vars.getLanguage()));
+    on.setType(ERROR);
+    final String tabId = vars.getSessionValue(INP_TAB_ID);
+    vars.getStringParameter(TAB);
+    vars.setMessage(tabId, on);
+    vars.getRequestGlobalVariable(INP_TAB_ID, ATTRIBUTESETINSTANCE_TABID);
+    printPageClosePopUpAndRefreshParent(response, vars);
+    throw new ServletException(Utility.messageBD(this, "EmailNoSenderDefined", vars.getLanguage()));
   }
 
   private void getEnvironentInformation(PocData[] pocData, HashMap<String, Boolean> checks) {
@@ -1544,7 +1710,7 @@ public class PrintController extends HttpSecureAppServlet {
     String preferenceValue = "";
     try {
       OBContext.setAdminMode(true);
-      String tabId = vars.getSessionValue("inpTabId");
+      String tabId = vars.getSessionValue(INP_TAB_ID);
       Tab tab = OBDal.getInstance().get(Tab.class, tabId);
       try {
         preferenceValue = Preferences.getPreferenceValue("DirectPrint", true,
