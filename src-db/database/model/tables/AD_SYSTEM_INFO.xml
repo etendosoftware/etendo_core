@@ -169,6 +169,38 @@
         <default/>
         <onCreateDefault/>
       </column>
+      <column name="CUSTOMER_NAME" primaryKey="false" required="false" type="VARCHAR" size="255" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="LICENSE_EDITION" primaryKey="false" required="false" type="VARCHAR" size="100" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SUBSCRIPTION_TYPE" primaryKey="false" required="false" type="VARCHAR" size="100" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SUBSCRIPTION_START_DATE" primaryKey="false" required="false" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="SUBSCRIPTION_END_DATE" primaryKey="false" required="false" type="TIMESTAMP" size="7" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="CONCURRENT_GLOBAL_SYSTEM_USERS" primaryKey="false" required="false" type="DECIMAL" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="INSTANCE_NUMBER" primaryKey="false" required="false" type="VARCHAR" size="100" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
+      <column name="WEB_SERVICE_ACCESS" primaryKey="false" required="false" type="VARCHAR" size="100" autoIncrement="false">
+        <default/>
+        <onCreateDefault/>
+      </column>
       <foreign-key foreignTable="AD_CLIENT" name="AD_SYSTEM_INFO_AD_CLIENT">
         <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
       </foreign-key>
