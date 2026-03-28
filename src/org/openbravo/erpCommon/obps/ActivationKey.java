@@ -4,15 +4,15 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
+ * under the License.
  * The Original Code is Openbravo ERP.
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2009-2020 Openbravo SLU 
- * All Rights Reserved. 
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2009-2020 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
@@ -91,16 +91,20 @@ import org.openbravo.xmlEngine.XmlEngine;
 public class ActivationKey {
   private final static String OB_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3KuCsRC3ZxmTTryRAX99SJfwtjfTahW+dtXXpI0CQ87A8XxcL4xhhsH4WhyE+sSxji+vSlZLm7kpcJivbrzX2qy1nmM6OpFX4teo65jk3ccxMVx74ZeT/2aHcFNXUVD8jXxSv2U/5PVH//Q3KJyyay73YbkIKIwQWznWrgj2O3Gy2v1VRoUaeaWlEdS8pKEnfW4DkCJtqM3p6ZbRg6pdNUnGDjo1Ck6V9GuNubxkSvAu5vQQbeJurNFBk4Smwm6tJj6XSyefaOrXjcHFqwe4kU3VRu3nnkOl3aR8PUgHS7IS16LtB6C2AR9sIURS7FnoWp5aiCpNPescfFJQn3+VUQIDAQAB";
   private final static String OB_PUBLIC_KEY_OLD = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApaBElaRrI7V0sztIxI44" +
-          "Zvf5YJQRNAetqADkO/q819/RgOfpbjlm72jU8GodAEsiFN5l0k37PPgX3IIuOUxm" +
-          "Lu5vW59X+HU7quCtOF0A0EclbKaWdch4aSBCFYrXOVAMofOCFkP9Yqb5r9NbRuiG" +
-          "ybgE9Hcu8MsZoRWAxlCDp5UGa0ie52CUTH+7D74voz9bTsT590tSb43R9KPqGGgs" +
-          "aBgD1FkIQHnZ+PMZlQneDZCP9KMbIkjbGQC5F0fpcNaIwt09YHwHmMEi/7dLGeuA" +
-          "uwlB7XhpnJbbDw/L739xFTiGqdRQGAxiYKD9NYKXDaImsgulMqftawAbzd7HPFPY" +
-          "gQIDAQAB";
+      "Zvf5YJQRNAetqADkO/q819/RgOfpbjlm72jU8GodAEsiFN5l0k37PPgX3IIuOUxm" +
+      "Lu5vW59X+HU7quCtOF0A0EclbKaWdch4aSBCFYrXOVAMofOCFkP9Yqb5r9NbRuiG" +
+      "ybgE9Hcu8MsZoRWAxlCDp5UGa0ie52CUTH+7D74voz9bTsT590tSb43R9KPqGGgs" +
+      "aBgD1FkIQHnZ+PMZlQneDZCP9KMbIkjbGQC5F0fpcNaIwt09YHwHmMEi/7dLGeuA" +
+      "uwlB7XhpnJbbDw/L739xFTiGqdRQGAxiYKD9NYKXDaImsgulMqftawAbzd7HPFPY" +
+      "gQIDAQAB";
 
 
   private static final String HEARTBEAT_URL = "https://activation.futit.cloud:443/license-server/heartbeat";
   private static final String STATELESS_REQUEST = "statelessRequest";
+  public static final String WS_PACKS = "wsPacks";
+  public static final String WS_UNITS_PER_UNIT = "wsUnitsPerUnit";
+  public static final String INSTANCENO = "instanceno";
+  public static final String LINCENSETYPE = "lincensetype";
 
   private boolean isActive = false;
   private boolean hasActivationKey = false;
@@ -234,6 +238,15 @@ public class ActivationKey {
       return Utility.getListValueName("OBPSLicenseStatus", code, language);
     }
 
+    /**
+     * Returns the status code associated with this subscription status.
+     *
+     * @return the status code as a String
+     */
+    public String getStatusCode() {
+      return code;
+    }
+
   }
 
   private static final int ONE_DAY = 24 * 60;
@@ -268,7 +281,6 @@ public class ActivationKey {
 
   /**
    * @see ActivationKey#getInstance(boolean)
-   * 
    */
   public static ActivationKey getInstance() {
     return getInstance(false);
@@ -277,12 +289,11 @@ public class ActivationKey {
   /**
    * Obtains the ActivationKey instance. Instances should be get in this way, rather than creating a
    * new one.
-   * 
+   * <p>
    * If refreshIfNeeded parameter is true, license is tried to be refreshed if it is needed to.
-   * 
+   *
    * @param refreshIfNeeded
-   *          refresh license if needed to
-   * 
+   *     refresh license if needed to
    */
   public static ActivationKey getInstance(boolean refreshIfNeeded) {
     if (refreshIfNeeded) {
@@ -405,7 +416,7 @@ public class ActivationKey {
       return;
     }
 
-    String pLicenseType = getProperty("lincensetype");
+    String pLicenseType = getProperty(LINCENSETYPE);
     if ("USR".equals(pLicenseType)) {
       licenseType = LicenseType.CONCURRENT_USERS;
     } else if ("DMD".equals(pLicenseType)) {
@@ -448,8 +459,8 @@ public class ActivationKey {
       if (trial || golden) {
         limitedWsAccess = true;
         maxWsCalls = 500L;
-        instanceProperties.put("wsPacks", "1");
-        instanceProperties.put("wsUnitsPerUnit", "500");
+        instanceProperties.put(WS_PACKS, "1");
+        instanceProperties.put(WS_UNITS_PER_UNIT, "500");
         initializeWsCounter();
       } else {
         limitedWsAccess = false;
@@ -457,8 +468,8 @@ public class ActivationKey {
     } else {
       limitedWsAccess = "false".equals(getProperty("unlimitedWsAccess"));
       if (limitedWsAccess) {
-        String packs = getProperty("wsPacks");
-        String unitsPack = getProperty("wsUnitsPerUnit");
+        String packs = getProperty(WS_PACKS);
+        String unitsPack = getProperty(WS_UNITS_PER_UNIT);
 
         if (StringUtils.isEmpty(packs) || StringUtils.isEmpty(unitsPack)) {
           log.warn("Couldn't determine ws call limitation, setting unlimited.");
@@ -518,8 +529,93 @@ public class ActivationKey {
 
     checkDates();
 
+    // Persist activation key information to database
+    persistActivationInfoToDB();
+
     // this occurs on Tomcat start, don't want to try to refresh on next login, let's wait for 24hr
     resetRefreshTime();
+  }
+
+  /**
+   * Persists the calculated activation key information to the database
+   * in the new columns of AD_SYSTEM_INFO table
+   */
+  private void persistActivationInfoToDB() {
+    if (!isActive && !hasActivationKey) {
+      // No activation key, don't persist anything
+      return;
+    }
+
+    OBContext.setAdminMode(true);
+    try {
+      SystemInformation sysInfo = OBDal.getInstance().get(SystemInformation.class, "0");
+      if (sysInfo == null) {
+        log.warn("SystemInformation record not found, cannot persist activation info");
+        return;
+      }
+
+      // Persist customer name
+      if (instanceProperties != null && getProperty("customer") != null) {
+        sysInfo.setCustomerName(getProperty("customer"));
+      }
+
+      // Persist license edition
+      if (licenseClass != null) {
+        sysInfo.setLicenseEdition(licenseClass.getCode());
+      }
+
+      // Persist subscription type (license type)
+      if (licenseType != null) {
+        sysInfo.setSubscriptionType(licenseType.getCode());
+      } else if (instanceProperties != null && getProperty(LINCENSETYPE) != null) {
+        sysInfo.setSubscriptionType(getProperty(LINCENSETYPE));
+      }
+
+      // Persist subscription start date
+      if (startDate != null) {
+        sysInfo.setSubscriptionStartDate(startDate);
+      }
+
+      // Persist subscription end date
+      if (endDate != null) {
+        sysInfo.setSubscriptionEndDate(endDate);
+      }
+
+      // Persist concurrent users limit
+      if (maxUsers != null) {
+        sysInfo.setConcurrentGlobalSystemUsers(maxUsers);
+      }
+
+      // Persist instance number
+      if (instanceProperties != null && getProperty(INSTANCENO) != null) {
+        sysInfo.setInstanceNumber(getProperty(INSTANCENO));
+      }
+
+      // Persist web service access information
+      String wsAccess = null;
+      if (limitedWsAccess) {
+        String packs = getProperty(WS_PACKS);
+        String unitsPack = getProperty(WS_UNITS_PER_UNIT);
+        if (packs != null && unitsPack != null) {
+          wsAccess = "Limited: " + packs + " packs x " + unitsPack + " calls";
+        } else {
+          wsAccess = "Limited";
+        }
+      } else {
+        wsAccess = "Unlimited";
+      }
+      sysInfo.setWEBServiceAccess(wsAccess);
+
+      OBDal.getInstance().save(sysInfo);
+      OBDal.getInstance().flush();
+
+      log.info("Activation key information persisted to database successfully");
+    } catch (Exception e) {
+      log.error("Error persisting activation key information to database", e);
+      // Don't throw exception to not break the activation process
+    } finally {
+      OBContext.restorePreviousMode();
+    }
   }
 
   private void reset() {
@@ -621,7 +717,9 @@ public class ActivationKey {
     return licenseClass == null ? LicenseClass.COMMUNITY : licenseClass;
   }
 
-  /** Returns a CRC hash of the public key */
+  /**
+   * Returns a CRC hash of the public key
+   */
   public String getOpsLogId() {
     CRC32 crc = new CRC32();
     crc.update(getPublicKey().getBytes());
@@ -686,7 +784,9 @@ public class ActivationKey {
     return messageType;
   }
 
-  /** activation message to be displayed in Instance Activation window */
+  /**
+   * activation message to be displayed in Instance Activation window
+   */
   public ActivationMsg getActivationMessage() {
     if (StringUtils.isNotEmpty(errorMessage)) {
       // there is a core message (expiration, etc.), return it
@@ -731,28 +831,28 @@ public class ActivationKey {
 
   /**
    * Deprecated, use instead {@link ActivationKey#checkOPSLimitations(String)}
-   * 
    */
   @Deprecated
   public LicenseRestriction checkOPSLimitations() {
     return checkOPSLimitations("");
   }
 
-  /** @see ActivationKey#checkOPSLimitations(String, String) */
+  /**
+   * @see ActivationKey#checkOPSLimitations(String, String)
+   */
   public LicenseRestriction checkOPSLimitations(String currentSession) {
     return checkOPSLimitations(currentSession, null);
   }
 
   /**
    * Checks the current activation key
-   * 
+   *
    * @param currentSession
-   *          Current session, used for checking the concurrent users limitation.
+   *     Current session, used for checking the concurrent users limitation.
    * @param sessionType
-   *          Successful session type: if the session is finally successful this is the type that
-   *          will be marked with in {@code AD_Session}, it is used to determine whether it should
-   *          or not count for CU limitation. In case it is {@code null} it will be counted.
-   * 
+   *     Successful session type: if the session is finally successful this is the type that
+   *     will be marked with in {@code AD_Session}, it is used to determine whether it should
+   *     or not count for CU limitation. In case it is {@code null} it will be counted.
    * @return {@link LicenseRestriction} with the status of the restrictions
    */
   public LicenseRestriction checkOPSLimitations(String currentSession, String sessionType) {
@@ -832,7 +932,9 @@ public class ActivationKey {
     return result;
   }
 
-  /** Returns whether a session type is counted for concurrent users */
+  /**
+   * Returns whether a session type is counted for concurrent users
+   */
   public static boolean consumesConcurrentUser(String sessionType) {
     return sessionType == null || !NO_CU_SESSION_TYPES.contains(sessionType);
   }
@@ -966,24 +1068,28 @@ public class ActivationKey {
           : userLimit;
       return userMsg + " " + Utility.messageBD(conn, "OPSConcurrentUsers", lang);
     } else {
-      return Utility.getListValueName("OPSLicenseType", getProperty("lincensetype"), lang);
+      return Utility.getListValueName("OPSLicenseType", getProperty(LINCENSETYPE), lang);
     }
   }
 
-  /** Returns a message explaining WS call limitations */
+  /**
+   * Returns a message explaining WS call limitations
+   */
   public String getWSExplanation(ConnectionProvider conn, String lang) {
     if (!limitedWsAccess) {
       return Utility.messageBD(conn, "OPSWSUnlimited", lang);
     } else {
-      String packs = getProperty("wsPacks");
-      String unitsPack = getProperty("wsUnitsPerUnit");
+      String packs = getProperty(WS_PACKS);
+      String unitsPack = getProperty(WS_UNITS_PER_UNIT);
       return Utility.messageBD(conn, "OPWSLimited", lang)
           .replace("@packs@", packs)
           .replace("@unitsPerPack@", unitsPack);
     }
   }
 
-  /** Returns a message for POS Terminals limitations */
+  /**
+   * Returns a message for POS Terminals limitations
+   */
   public String getPOSTerminalsExplanation() {
     if (posTerminals == null || posTerminals.equals(0L)) {
       return OBMessageUtils.messageBD("OPSNone");
@@ -1024,7 +1130,7 @@ public class ActivationKey {
 
   /**
    * Obtains a List of all the modules that are installed in the instance which license has expired.
-   * 
+   *
    * @return List of the expired modules
    */
   public ArrayList<Module> getExpiredInstalledModules() {
@@ -1050,7 +1156,7 @@ public class ActivationKey {
 
   /**
    * Obtains a list for modules ID the instance is subscribed to and their statuses
-   * 
+   *
    * @return HashMap&lt;String, CommercialModuleStatus&gt; containing the subscribed modules
    */
   public HashMap<String, CommercialModuleStatus> getSubscribedModules() {
@@ -1138,7 +1244,7 @@ public class ActivationKey {
   /**
    * Checks whether a disabled module can be enabled again. A commercial module cannot be enabled in
    * case its license has expired or the instance is not commercial.
-   * 
+   *
    * @param module
    * @return true in case the module can be enabled
    */
@@ -1164,7 +1270,7 @@ public class ActivationKey {
   /**
    * Returns the status for the commercial module passed as parameter. Note that module tier is not
    * checked here, this should be correctly handled in the license itself.
-   * 
+   *
    * @param moduleId
    * @return the status for the commercial module passed as parameter
    */
@@ -1245,7 +1351,7 @@ public class ActivationKey {
       if (instanceProperties != null) {
         // this could happen ie. with old basic licenses signed with a now invalid key
         params.put("purpose", getProperty("purpose"));
-        params.put("instanceNo", getProperty("instanceno"));
+        params.put("instanceNo", getProperty(INSTANCENO));
         params.put("updated", getProperty("updated"));
       } else {
         params.put("purpose",
@@ -1287,11 +1393,11 @@ public class ActivationKey {
   /**
    * Checks whether there is access to an artifact because of license restrictions (checking core
    * advance and premium features).
-   * 
+   *
    * @param type
-   *          Type of artifact (Window, Report, Process...)
+   *     Type of artifact (Window, Report, Process...)
    * @param id
-   *          Id of the Artifact
+   *     Id of the Artifact
    * @return true in case it has access, false if not
    */
   public FeatureRestriction hasLicenseAccess(String type, String id) {
@@ -1348,7 +1454,7 @@ public class ActivationKey {
 
   /**
    * Verifies all the commercial installed modules are allowed to the instance.
-   * 
+   *
    * @return List of non allowed modules
    */
   public String verifyInstalledModules() {
@@ -1408,7 +1514,6 @@ public class ActivationKey {
   /**
    * Returns a JSONObject with a message warning about near expiration or already expired instance
    * to be displayed in Login page.
-   * 
    */
   public JSONObject getExpirationMessage(String lang) {
     JSONObject result = new JSONObject();
@@ -1492,9 +1597,9 @@ public class ActivationKey {
   /**
    * This method checks web service can be called. If <code>updateCounter</code> parameter is
    * <code>true</code> number of daily calls is increased by one.
-   * 
+   *
    * @param updateCounter
-   *          daily calls should be updated
+   *     daily calls should be updated
    */
   public WSRestriction checkNewWSCall(boolean updateCounter) {
     if (hasExpired) {
@@ -1730,22 +1835,30 @@ public class ActivationKey {
     return result;
   }
 
-  /** @return all license's properties */
+  /**
+   * @return all license's properties
+   */
   public Properties getInstanceProperties() {
     return instanceProperties;
   }
 
-  /** @return starting valid date for license */
+  /**
+   * @return starting valid date for license
+   */
   public Date getStartDate() {
     return startDate;
   }
 
-  /** @return license's expiration date */
+  /**
+   * @return license's expiration date
+   */
   public Date getEndDate() {
     return endDate;
   }
 
-  /** @return maximum allowed concurrent users */
+  /**
+   * @return maximum allowed concurrent users
+   */
   public Long getMaxUsers() {
     return maxUsers;
   }

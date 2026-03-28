@@ -37,9 +37,13 @@ import org.openbravo.client.application.test.db.model.triggers.ProcessTest;
 import org.openbravo.client.application.test.event.DatasourceEventObserver;
 import org.openbravo.client.application.test.event.PersistanceObserver;
 import org.openbravo.client.kernel.CSSMinifier;
-import org.openbravo.erpCommon.ad_actionButton.CreateFromTest;
+import org.openbravo.email.ResolvedSmtpConfigTest;
+import org.openbravo.email.SmtpCascadeResolverTest;
+import org.openbravo.email.actionhandler.TestSmtpConnectionActionHandlerTest;
+import org.openbravo.email.event.DefaultSmtpConfigEventHandlerTest;
 import org.openbravo.erpCommon.ad_callouts.LandedCostTypeTest;
 import org.openbravo.erpCommon.info.ClassicSelectorTest;
+import org.openbravo.erpCommon.utility.poc.EmailManagerTest;
 import org.openbravo.erpReports.PrintControllerHookTest;
 import org.openbravo.erpReports.ReportTaxPaymentJRTest;
 import org.openbravo.erpReports.RptC_InvoiceTest;
@@ -130,6 +134,7 @@ import org.openbravo.test.productStatus.ProductStatusTest;
 import org.openbravo.test.purchaseOrder.PurchaseOrderStatus;
 import org.openbravo.test.referencedinventory.ReferencedInventoryTestSuite;
 import org.openbravo.test.reporting.AllJrxmlCompilation;
+import org.openbravo.test.reporting.BPContactEmailSelectorTest;
 import org.openbravo.test.reporting.CompiledReportsCacheTest;
 import org.openbravo.test.reporting.ReportingUtilsTest;
 import org.openbravo.test.role.RoleTestSuite;
@@ -469,9 +474,14 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // RptMA_ProcessPlan
     RptMA_ProcessPlanTest.class,
-
-    // Create From
-    CreateFromTest.class,
+    
+    // Email
+    BPContactEmailSelectorTest.class,
+    ResolvedSmtpConfigTest.class,
+    SmtpCascadeResolverTest.class,
+    TestSmtpConnectionActionHandlerTest.class,
+    EmailManagerTest.class,
+    DefaultSmtpConfigEventHandlerTest.class,
 })
 @SelectPackages({"org.openbravo.service.centralrepository",
     "org.openbravo.service.db",

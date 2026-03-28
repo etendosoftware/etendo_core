@@ -21,6 +21,8 @@ import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.ConnectionProvider;
+import org.openbravo.email.ResolvedSmtpConfig;
+import org.openbravo.email.SmtpCascadeResolver;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.erpCommon.utility.StringCollectionUtils;
 import org.openbravo.erpCommon.utility.reporting.*;
@@ -61,6 +63,9 @@ public class SendMail extends Action {
             final String emailConfigurationId = parameters.getString("from");
             final boolean shouldAttachReport = parameters.getBoolean("archiveReport");
 
+            // Cascade resolution: User → Organization → Client
+            final ResolvedSmtpConfig resolvedConfig = SmtpCascadeResolver.resolve();
+
             // Check that the document(s) are properly configured before continuing.
             doDocumentValidations(input, connectionProvider, checks);
 
@@ -83,8 +88,15 @@ public class SendMail extends Action {
             int emailsSent = 0;
 
             for (BaseOBObject record : input) {
-                final EmailServerConfiguration emailConfiguration = OBDal.getInstance().get(EmailServerConfiguration.class, emailConfigurationId);
-                final String senderAddress = emailConfiguration.getSmtpServerSenderAddress();
+                final String senderAddress;
+                if (resolvedConfig != null) {
+                    log.info("SendMail using {} SMTP config (id={})", resolvedConfig.getLevel(), resolvedConfig.getConfigId());
+                    senderAddress = resolvedConfig.getFromAddress();
+                } else {
+                    final EmailServerConfiguration emailConfiguration = OBDal.getInstance()
+                            .get(EmailServerConfiguration.class, emailConfigurationId);
+                    senderAddress = emailConfiguration.getSmtpServerSenderAddress();
+                }
 
                 DocumentType documentType = getDocumentType(record);
 
