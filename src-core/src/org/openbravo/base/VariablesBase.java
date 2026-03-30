@@ -89,13 +89,16 @@ public class VariablesBase {
       this.httpRequest = request;
       this.isMultipart = ServletFileUpload.isMultipartContent(new ServletRequestContext(request));
       if (isMultipart) {
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-        ServletFileUpload upload = new ServletFileUpload(factory);
-        try {
-          items = upload.parseRequest(request);
-          request.setAttribute(MULTIPART_ITEMS_REQUEST_ATTR, items);
-        } catch (Exception ex) {
-          log4j.error("Error parsing multipart request", ex);
+        items = (List<FileItem>) request.getAttribute(MULTIPART_ITEMS_REQUEST_ATTR);
+        if (items == null) {
+          DiskFileItemFactory factory = new DiskFileItemFactory();
+          ServletFileUpload upload = new ServletFileUpload(factory);
+          try {
+            items = upload.parseRequest(request);
+            request.setAttribute(MULTIPART_ITEMS_REQUEST_ATTR, items);
+          } catch (Exception ex) {
+            log4j.error("Error parsing multipart request", ex);
+          }
         }
       }
     }
