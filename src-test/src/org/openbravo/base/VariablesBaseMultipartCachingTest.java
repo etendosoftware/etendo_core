@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.RequestContext;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.junit.After;
 import org.junit.Before;
@@ -79,7 +80,7 @@ public class VariablesBaseMultipartCachingTest {
     List<FileItem> expectedItems = Collections.singletonList(mockFileItem);
 
     mockedServletFileUploadStatic.when(
-        () -> ServletFileUpload.isMultipartContent(any())).thenReturn(true);
+        () -> ServletFileUpload.isMultipartContent(any(RequestContext.class))).thenReturn(true);
     when(mockRequest.getAttribute(VariablesBase.MULTIPART_ITEMS_REQUEST_ATTR)).thenReturn(null);
 
     try (MockedConstruction<ServletFileUpload> mockedUpload = mockConstruction(
@@ -111,7 +112,7 @@ public class VariablesBaseMultipartCachingTest {
     List<FileItem> cachedItems = Collections.singletonList(mockFileItem);
 
     mockedServletFileUploadStatic.when(
-        () -> ServletFileUpload.isMultipartContent(any())).thenReturn(true);
+        () -> ServletFileUpload.isMultipartContent(any(RequestContext.class))).thenReturn(true);
     when(mockRequest.getAttribute(
         VariablesBase.MULTIPART_ITEMS_REQUEST_ATTR)).thenReturn(cachedItems);
 
@@ -137,7 +138,7 @@ public class VariablesBaseMultipartCachingTest {
   public void testNonMultipartRequestSkipsParsing() {
     // Given
     mockedServletFileUploadStatic.when(
-        () -> ServletFileUpload.isMultipartContent(any())).thenReturn(false);
+        () -> ServletFileUpload.isMultipartContent(any(RequestContext.class))).thenReturn(false);
 
     // When
     VariablesBase variables = new VariablesBase(mockRequest);
