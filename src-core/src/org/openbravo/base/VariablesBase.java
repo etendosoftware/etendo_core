@@ -45,6 +45,14 @@ import org.openbravo.utils.FormatUtilities;
  * 
  */
 public class VariablesBase {
+  /**
+   * Request attribute key used to cache the parsed multipart FileItem list. When VariablesBase
+   * parses a multipart request, it stores the result here so downstream handlers (e.g.
+   * BaseProcessActionHandler) can reuse it without attempting to re-read the already-exhausted
+   * InputStream.
+   */
+  public static final String MULTIPART_ITEMS_REQUEST_ATTR = "org.openbravo.multipart.items";
+
   HttpSession session;
   HttpServletRequest httpRequest;
   private String postDataHash = null;
@@ -85,6 +93,7 @@ public class VariablesBase {
         ServletFileUpload upload = new ServletFileUpload(factory);
         try {
           items = upload.parseRequest(request);
+          request.setAttribute(MULTIPART_ITEMS_REQUEST_ATTR, items);
         } catch (Exception ex) {
           log4j.error("Error parsing multipart request", ex);
         }
