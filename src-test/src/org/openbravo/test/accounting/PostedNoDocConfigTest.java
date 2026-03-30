@@ -167,6 +167,10 @@ public class PostedNoDocConfigTest extends WeldBaseTest {
       OBDal.getInstance().flush();
       OBDal.getInstance().commitAndClose();
 
+      // Mark the newly created material transaction as cost-calculated, since the costing
+      // background may fail in environments where the organization is not a legal entity.
+      TestCostingUtils.markPreExistingTransactionsAsProcessed();
+
       OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
           TestConstants.Clients.FB_GRP, ORGANIZATION_SPAIN);
       TestCostingUtils.runCostingBackground();
