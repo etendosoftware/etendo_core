@@ -50,6 +50,9 @@ public class VariablesBaseMultipartCachingTest {
   private AutoCloseable mocks;
   private MockedStatic<ServletFileUpload> mockedServletFileUploadStatic;
 
+  /**
+   * Initializes Mockito mocks and stubs common request behavior before each test.
+   */
   @Before
   public void setUp() {
     mocks = MockitoAnnotations.openMocks(this);
@@ -60,6 +63,12 @@ public class VariablesBaseMultipartCachingTest {
     when(mockRequest.getAttribute("stateless")).thenReturn(null);
   }
 
+  /**
+   * Closes all Mockito resources after each test.
+   *
+   * @throws Exception
+   *     if an error occurs while closing mocks
+   */
   @After
   public void tearDown() throws Exception {
     if (mockedServletFileUploadStatic != null) {
@@ -73,6 +82,9 @@ public class VariablesBaseMultipartCachingTest {
   /**
    * Verifies that on the first instantiation with a multipart request, {@code VariablesBase}
    * parses the stream and stores the resulting {@code FileItem} list as a request attribute.
+   *
+   * @throws Exception
+   *     if an error occurs during mock setup or assertion
    */
   @Test
   public void testMultipartItemsParsedAndCachedOnFirstInstantiation() throws Exception {
@@ -105,6 +117,9 @@ public class VariablesBaseMultipartCachingTest {
    * instantiation reuses the cached list without attempting to re-read the stream.
    *
    * <p>This is the core regression test for ETP-3613.
+   *
+   * @throws Exception
+   *     if an error occurs during mock setup or assertion
    */
   @Test
   public void testCachedMultipartItemsReusedWithoutReParsing() throws Exception {
