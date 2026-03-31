@@ -37,6 +37,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.VariablesBase;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.Check;
 import org.openbravo.client.application.Parameter;
@@ -304,9 +305,15 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     Map<String, Object> parameters = new HashMap<>();
     String fileName;
     try {
-      FileItemFactory factory = new DiskFileItemFactory();
-      ServletFileUpload upload = new ServletFileUpload(factory);
-      List<FileItem> items = upload.parseRequest(request);
+      // Reuse items already parsed by VariablesBase (e.g. during JWT auth) to avoid
+      // reading an already-exhausted InputStream (ETP-3613).
+      @SuppressWarnings("unchecked")
+      List<FileItem> items = (List<FileItem>) request.getAttribute(VariablesBase.MULTIPART_ITEMS_REQUEST_ATTR);
+      if (items == null) {
+        FileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        items = upload.parseRequest(request);
+      }
 
       for (FileItem item : items) {
         if (item.isFormField()) {

@@ -565,7 +565,6 @@ spec:
             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Generating JaCoCo report\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
             echo "---------------------- Run jacocoRootReport ----------------------"
             sh """
-            su etendo
             cd ${REPO_NAME}
             ./gradlew jacocoRootReport --info
             """
