@@ -82,6 +82,10 @@ OB.Utilities.Action.set('showMsgInView', function(paramObj) {
 //               Typically it is used in 'error' cases with 'retryExecution' set as 'true'
 OB.Utilities.Action.set('showMsgInProcessView', function(paramObj) {
   var processView = paramObj._processView;
+  if (!processView) {
+    OB.Utilities.Action.execute('showMsgInView', paramObj);
+    return;
+  }
   if (processView.messageBar && paramObj.force === true) {
     processView.messageBar.setMessage(
       paramObj.msgType,
