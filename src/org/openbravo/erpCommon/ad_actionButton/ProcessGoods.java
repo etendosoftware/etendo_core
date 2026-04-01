@@ -224,9 +224,10 @@ public class ProcessGoods extends HttpSecureAppServlet {
 
       if (invoiceIfPossible && GOODS_SHIPMENT_WINDOW.equals(strWindowId)
           && !"Error".equalsIgnoreCase(myMessage.getType())) {
-        myMessage = createInvoice(vars, goodsShipmentInOut);
-        log4j.debug(myMessage.getMessage());
-        vars.setMessage(strTabId, myMessage);
+        final OBError invoiceResult = tryCreateInvoice(vars, goodsShipmentInOut, strM_Inout_ID);
+        if (invoiceResult != null) {
+          vars.setMessage(strTabId, invoiceResult);
+        }
       }
 
       String strWindowPath = Utility.getTabURL(strTabId, "R", true);
@@ -235,7 +236,8 @@ public class ProcessGoods extends HttpSecureAppServlet {
       }
       printPageClosePopUp(response, vars, strWindowPath);
 
-    } catch (ServletException | ParseException ex) {
+    } catch (Exception ex) {
+      OBDal.getInstance().rollbackAndClose();
       generateErrorProcessReceipt(response, vars, strTabId, ex);
     }
   }
@@ -274,13 +276,38 @@ public class ProcessGoods extends HttpSecureAppServlet {
   }
 
   private void generateErrorProcessReceipt(final HttpServletResponse response,
-      final VariablesSecureApp vars, final String strTabId, Exception ex) throws IOException {
+      final VariablesSecureApp vars, final String strTabId, Exception ex)
+      throws IOException, ServletException {
     final OBError myMessage;
     myMessage = Utility.translateError(this, vars, vars.getLanguage(), ex.getMessage());
     if (!myMessage.isConnectionAvailable()) {
       bdErrorConnection(response);
     } else {
       vars.setMessage(strTabId, myMessage);
+      printPageClosePopUp(response, vars);
+    }
+  }
+
+  /**
+   * Attempts to create an invoice from the given goods shipment. If invoice creation fails, the
+   * failure is logged as a warning and the current shipment processing message is preserved.
+   * Invoice creation is optional and must not interrupt the shipment completion flow.
+   * @param vars the {@link VariablesSecureApp} containing the current request context
+   * @param goodsShipmentInOut the {@link ShipmentInOut} from which the invoice will be generated
+   * @param strM_Inout_ID  the ID of the shipment, used for logging purposes
+   * @return the invoice creation {@link OBError} message on success, or {@code currentMessage} if
+   *   invoice creation fails
+   */
+  private OBError tryCreateInvoice(final VariablesSecureApp vars,
+      final ShipmentInOut goodsShipmentInOut, final String strM_Inout_ID) {
+    try {
+      final OBError invoiceMessage = createInvoice(vars, goodsShipmentInOut);
+      log4j.debug(invoiceMessage.getMessage());
+      return invoiceMessage;
+    } catch (Exception invoiceEx) {
+      log4j.warn("Invoice creation failed for shipment {}: {}", strM_Inout_ID,
+          invoiceEx.getMessage());
+      return null;
     }
   }
 

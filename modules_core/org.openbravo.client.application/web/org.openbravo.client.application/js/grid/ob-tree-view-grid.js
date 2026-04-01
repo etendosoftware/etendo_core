@@ -155,14 +155,24 @@ isc.OBTreeViewGrid.addProperties({
       }
       if (response.error.type === 'tooManyNodes') {
         errorMessage = 'OBUIAPP_TooManyNodes';
+        me.view.messageBar.setMessage(
+          'error',
+          null,
+          OB.I18N.getLabel(errorMessage)
+        );
       } else if (response.error.type === 'user' && response.error.message) {
-        errorMessage = response.error.message;
+        me.view.messageBar.setMessage(
+          'error',
+          null,
+          response.error.message
+        );
+      } else if (response.error.type === 'Error' && response.error.message) {
+        me.view.messageBar.setMessage(
+          'error',
+          null,
+          response.error.message
+        );
       }
-      me.view.messageBar.setMessage(
-        'error',
-        null,
-        OB.I18N.getLabel(errorMessage)
-      );
     };
 
     ds.updateData = function(updatedRecord, callback, requestProperties) {

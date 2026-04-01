@@ -57,6 +57,7 @@ import org.openbravo.test.webservice.WSAddRecordWithComputedColumns;
 import org.openbravo.test.webservice.WSReadTest;
 import org.openbravo.test.webservice.WSReadableClientsTest;
 import org.openbravo.test.webservice.WSUpdateTest;
+import com.etendoerp.common.rest.MessagesTrlWebServiceTest;
 import org.openbravo.test.webservice.WSWithNoActiveDalObjects;
 import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
 
@@ -87,6 +88,7 @@ import org.openbravo.test.webservice.WebServicesWithNoActiveFilterTest;
     TestComboDatasource.class, //
     FKDropDownDatasource.class, //
     JSONWebServices.class, //
+    MessagesTrlWebServiceTest.class, //
     FICTest.class, //
     HQLDataSourceTest.class, //
     LogDatasourceTest.class, //

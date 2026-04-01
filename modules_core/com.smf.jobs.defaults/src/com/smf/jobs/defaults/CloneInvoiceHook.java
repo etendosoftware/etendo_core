@@ -72,9 +72,6 @@ public class CloneInvoiceHook extends CloneRecordHook {
         objCloneInvoice.setGrandTotalAmount(BigDecimal.ZERO);
         objCloneInvoice.setSummedLineAmount(BigDecimal.ZERO);
 
-        // save the cloned invoice object
-        OBDal.getInstance().save(objCloneInvoice);
-
         // get the lines associated with the invoice and clone them to the new
         // invoice line.
         for (InvoiceLine invLine : objInvoice.getInvoiceLineList()) {
@@ -95,8 +92,6 @@ public class CloneInvoiceHook extends CloneRecordHook {
             objCloneInvLine.setUpdatedBy(currentUser);
             objCloneInvoice.getInvoiceLineList().add(objCloneInvLine);
             objCloneInvLine.setInvoice(objCloneInvoice);
-
-            OBDal.getInstance().save(invLine);
         }
 
         OBDal.getInstance().save(objCloneInvoice);

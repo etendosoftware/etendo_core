@@ -37,6 +37,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.VariablesBase;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.util.Check;
 import org.openbravo.client.application.Parameter;
@@ -304,9 +305,15 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     Map<String, Object> parameters = new HashMap<>();
     String fileName;
     try {
-      FileItemFactory factory = new DiskFileItemFactory();
-      ServletFileUpload upload = new ServletFileUpload(factory);
-      List<FileItem> items = upload.parseRequest(request);
+      // Reuse items already parsed by VariablesBase (e.g. during JWT auth) to avoid
+      // reading an already-exhausted InputStream (ETP-3613).
+      @SuppressWarnings("unchecked")
+      List<FileItem> items = (List<FileItem>) request.getAttribute(VariablesBase.MULTIPART_ITEMS_REQUEST_ATTR);
+      if (items == null) {
+        FileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        items = upload.parseRequest(request);
+      }
 
       for (FileItem item : items) {
         if (item.isFormField()) {
@@ -348,37 +355,66 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
    *
    */
   public static boolean hasAccess(Process processDefinition, Map<String, Object> parameters) {
+    Logger hasAccessLog = LogManager.getLogger(BaseProcessActionHandler.class);
+
+    hasAccessLog.info("hasAccess() CHECK START - process: {} (id: {})",
+        processDefinition.getIdentifier(), processDefinition.getId());
+    hasAccessLog.debug("hasAccess() OBContext - user: {}, role: {}, userLevel: {}, client: {}, org: {}",
+        OBContext.getOBContext().getUser().getIdentifier(),
+        OBContext.getOBContext().getRole().getIdentifier(),
+        OBContext.getOBContext().getUserLevel(),
+        OBContext.getOBContext().getCurrentClient().getIdentifier(),
+        OBContext.getOBContext().getCurrentOrganization().getIdentifier());
+    hasAccessLog.debug("hasAccess() parameters keys: {}", parameters.keySet());
+
     // Check Process Definition Access Level
     String userLevel = OBContext.getOBContext().getUserLevel();
     int accessLevel = Integer.parseInt(processDefinition.getDataAccessLevel());
+    hasAccessLog.debug("hasAccess() Access level check - userLevel: '{}', processAccessLevel: {}",
+        userLevel, accessLevel);
     if (!EntityAccessChecker.hasCorrectAccessLevel(userLevel, accessLevel)) {
+      hasAccessLog.debug("hasAccess() DENIED at access level check");
       return false;
     }
+    hasAccessLog.debug("hasAccess() Access level check PASSED");
+
     // Check Process Definition Permission
     String windowId = (String) parameters.get("windowId");
+    hasAccessLog.debug("hasAccess() windowId from parameters: '{}'", windowId);
     if (windowId != null && !"null".equals(windowId)) {
       Window window = OBDal.getInstance().get(Window.class, windowId);
+      hasAccessLog.debug("hasAccess() Window resolved: {}", window != null ? window.getIdentifier() : "NULL");
 
       boolean checkPermission = processDefinition.isRequiresExplicitAccessPermission();
+      hasAccessLog.debug("hasAccess() requiresExplicitAccessPermission: {}", checkPermission);
 
       if (!checkPermission) {
         try {
-          checkPermission = Preferences.YES.equals(Preferences.getPreferenceValue("SecuredProcess",
+          String securedPref = Preferences.getPreferenceValue("SecuredProcess",
               true, OBContext.getOBContext().getCurrentClient(),
               OBContext.getOBContext().getCurrentOrganization(), OBContext.getOBContext().getUser(),
-              OBContext.getOBContext().getRole(), window));
+              OBContext.getOBContext().getRole(), window);
+          hasAccessLog.debug("hasAccess() SecuredProcess preference value: '{}'", securedPref);
+          checkPermission = Preferences.YES.equals(securedPref);
         } catch (PropertyException e) {
+          hasAccessLog.debug("hasAccess() SecuredProcess preference not set (PropertyException)");
           // do nothing, property is not set so securedProcess is false
         }
       }
+      hasAccessLog.debug("hasAccess() checkPermission after SecuredProcess eval: {}", checkPermission);
       if (!checkPermission) {
         // check if window is accessible
         OBCriteria<WindowAccess> qAccess = OBDal.getInstance().createCriteria(WindowAccess.class);
         qAccess.add(Restrictions.eq(WindowAccess.PROPERTY_WINDOW, window));
         qAccess
             .add(Restrictions.eq(WindowAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
-        return qAccess.count() > 0;
+        long windowAccessCount = qAccess.count();
+        hasAccessLog.debug("hasAccess() Window access count for role: {} -> returning {}",
+            windowAccessCount, windowAccessCount > 0);
+        return windowAccessCount > 0;
       }
+    } else {
+      hasAccessLog.debug("hasAccess() No windowId -> will check ProcessAccess directly");
     }
 
     // The process now can be:
@@ -388,7 +424,10 @@ public abstract class BaseProcessActionHandler extends BaseActionHandler {
     OBCriteria<ProcessAccess> qAccess = OBDal.getInstance().createCriteria(ProcessAccess.class);
     qAccess.add(Restrictions.eq(ProcessAccess.PROPERTY_OBUIAPPPROCESS, processDefinition));
     qAccess.add(Restrictions.eq(ProcessAccess.PROPERTY_ROLE, OBContext.getOBContext().getRole()));
-    return qAccess.count() > 0;
+    long processAccessCount = qAccess.count();
+    hasAccessLog.debug("hasAccess() ProcessAccess count for role: {} -> returning {}",
+        processAccessCount, processAccessCount > 0);
+    return processAccessCount > 0;
   }
 
   /**

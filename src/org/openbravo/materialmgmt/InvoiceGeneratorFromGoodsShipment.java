@@ -19,6 +19,8 @@
 package org.openbravo.materialmgmt;
 
 import java.math.BigDecimal;
+import java.sql.BatchUpdateException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -76,6 +78,8 @@ import org.openbravo.service.db.DbUtility;
 public class InvoiceGeneratorFromGoodsShipment {
   private static final Logger log = LogManager.getLogger();
   private static final String POS_ORDER = "WR";
+  private static final String ERROR_PREFIX = "ERROR:";
+  private static final String WHERE_MARKER = "\n  Where:";
 
   private String shipmentId;
   private Invoice invoice;
@@ -200,11 +204,11 @@ public class InvoiceGeneratorFromGoodsShipment {
   /**
    * Creates a Sales Invoice from Goods Shipment, considering the invoice terms of available orders
    * linked to the shipment lines.
-   * 
+   *
    * @param doProcessInvoice
    *          if true the invoice will be automatically processed, otherwise it will remain in draft
    *          status
-   * 
+   *
    * @return The invoice created
    */
   public Invoice createInvoiceConsideringInvoiceTerms(boolean doProcessInvoice) {
@@ -216,11 +220,49 @@ public class InvoiceGeneratorFromGoodsShipment {
       }
     } catch (Exception e) {
       OBDal.getInstance().rollbackAndClose();
-      Throwable ex = DbUtility.getUnderlyingSQLException(e);
-      throw new OBException(OBMessageUtils.translateError(ex.getMessage()).getMessage());
+      String errorMessage = extractDatabaseErrorMessage(e);
+      throw new OBException(OBMessageUtils.translateError(errorMessage).getMessage());
     }
 
     return invoice;
+  }
+
+  /**
+   * Extracts the most relevant error message from a database exception, handling trigger errors
+   * and batch update exceptions properly.
+   * @param e The exception to extract the message from
+   * @return The extracted error message
+   */
+  protected String extractDatabaseErrorMessage(Exception e) {
+    Throwable current = e;
+    String triggerErrorMessage = null;
+    while (current != null) {
+      if (current instanceof BatchUpdateException) {
+        BatchUpdateException batchEx = (BatchUpdateException) current;
+        SQLException nextEx = batchEx.getNextException();
+        if (nextEx != null && nextEx.getMessage() != null) {
+          triggerErrorMessage = nextEx.getMessage();
+          if (triggerErrorMessage.contains(ERROR_PREFIX)) {
+            int errorStart = triggerErrorMessage.indexOf(ERROR_PREFIX);
+            int whereStart = triggerErrorMessage.indexOf(WHERE_MARKER);
+            int extractStart = errorStart + ERROR_PREFIX.length();
+            if (whereStart > errorStart) {
+              triggerErrorMessage = triggerErrorMessage.substring(extractStart, whereStart).trim();
+            } else {
+              triggerErrorMessage = triggerErrorMessage.substring(extractStart).trim();
+            }
+          }
+          break;
+        }
+      }
+      current = current.getCause();
+    }
+    if (StringUtils.isNotBlank(triggerErrorMessage)) {
+      return triggerErrorMessage;
+    }
+    Throwable ex = DbUtility.getUnderlyingSQLException(e);
+    String message = ex != null ? ex.getMessage() : null;
+    return StringUtils.isNotBlank(message) ? message : "Unknown database error";
   }
 
   private Invoice createInvoiceIfPossible() {
@@ -440,6 +482,7 @@ public class InvoiceGeneratorFromGoodsShipment {
     checkInvoiceHasAllMandatoryFields(newInvoice);
 
     OBDal.getInstance().save(newInvoice);
+    OBDal.getInstance().flush();
     return newInvoice;
   }
 
