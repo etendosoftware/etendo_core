@@ -47,7 +47,7 @@ def isFirstAnalysisForBranch(branch, sonarProjectKey, sonarToken, sonarServer) {
 def getCoverageWithRetry(branch, checkCommit, sonarProjectKey, sonarToken, sonarServer, gitCommit) {
   int maxRetries = 5
   float coverage = -1
-  def encodedBranch = URLEncoder.encode(branch, "UTF-8")
+  def encodedBranch = branch.replace('%', '%25').replace('#', '%23').replace(' ', '%20').replace('/', '%2F')
 
   // Only check if it's the first analysis when we need a specific commit
   def isFirstAnalysis = false
