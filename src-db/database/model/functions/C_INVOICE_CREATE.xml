@@ -404,9 +404,8 @@
                 v_DocType_ID := NULL;
 
                 -- Step 1a: Business partner's doc type
-                BEGIN
+                FOR Cur_BP_DocType IN (
                   SELECT bpd.c_doctype_id
-                    INTO v_DocType_ID
                     FROM c_bpartner_doctype bpd
                    WHERE bpd.isactive = 'Y'
                      AND bpd.c_bpartner_id = Cur_Order.C_BPartner_ID
@@ -415,17 +414,16 @@
                      AND bpd.c_doctype_id IS NOT NULL
                      AND COALESCE(bpd.isforceautomation, 'N') = 'Y'
                      AND AD_ISORGINCLUDED(Cur_Order.AD_Org_ID, bpd.ad_org_id, bpd.ad_client_id) <> -1
-                   ORDER BY AD_ISORGINCLUDED(Cur_Order.AD_Org_ID, bpd.ad_org_id, bpd.ad_client_id) ASC;
-                EXCEPTION
-                WHEN OTHERS THEN
-                  v_DocType_ID := NULL;
-                END;
+                   ORDER BY AD_ISORGINCLUDED(Cur_Order.AD_Org_ID, bpd.ad_org_id, bpd.ad_client_id) ASC
+                ) LOOP
+                  v_DocType_ID := Cur_BP_DocType.c_doctype_id;
+                  EXIT;
+                END LOOP;
 
                 -- Step 1b: Business partner's doc type fallback
                 IF v_DocType_ID IS NULL THEN
-                  BEGIN
+                  FOR Cur_BP_DocType IN (
                     SELECT bpd.c_doctype_id
-                      INTO v_DocType_ID
                       FROM c_bpartner_doctype bpd
                      WHERE bpd.isactive = 'Y'
                        AND bpd.c_bpartner_id = Cur_Order.C_BPartner_ID
@@ -434,11 +432,11 @@
                        AND bpd.c_doctype_id IS NOT NULL
                        AND COALESCE(bpd.isforceautomation, 'N') = 'Y'
                        AND bpd.ad_org_id = '0'
-                     ORDER BY 1;
-                  EXCEPTION
-                  WHEN OTHERS THEN
-                    v_DocType_ID := NULL;
-                  END;
+                     ORDER BY 1
+                  ) LOOP
+                    v_DocType_ID := Cur_BP_DocType.c_doctype_id;
+                    EXIT;
+                  END LOOP;
                 END IF;
 
                 -- Step 2: C_DocTypeInvoice_ID from the order's document type
