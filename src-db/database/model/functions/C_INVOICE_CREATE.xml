@@ -60,6 +60,7 @@
     v_NoRecNotComplDelivered NUMBER:=0;
     -- Orders to process
     Cur_Order RECORD;
+    Cur_BP_DocType RECORD;
     --
     v_NextNo VARCHAR2(32);
     v_DocType_ID VARCHAR2(32);
