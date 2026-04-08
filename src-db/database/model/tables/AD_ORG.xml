@@ -93,14 +93,6 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="C_EXTBP_ENABLED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
-        <default><![CDATA[N]]></default>
-        <onCreateDefault><![CDATA['N']]></onCreateDefault>
-      </column>
-      <column name="C_EXTBP_CONFIG_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
       <foreign-key foreignTable="AD_CLIENT" name="AD_ORG_AD_CLIENT">
         <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
       </foreign-key>
@@ -122,9 +114,6 @@
       <foreign-key foreignTable="AD_ORG" name="AD_ORG_CALENDAROWNER_ORG">
         <reference local="AD_CALENDAROWNER_ORG_ID" foreign="AD_ORG_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="C_EXTBP_CONFIG" name="AD_ORG_EXTBPCONF_FK">
-        <reference local="C_EXTBP_CONFIG_ID" foreign="C_EXTBP_CONFIG_ID"/>
-      </foreign-key>
       <foreign-key foreignTable="C_CALENDAR" name="AD_ORG_INHERITEDCALENDAR">
         <reference local="AD_INHERITEDCALENDAR_ID" foreign="C_CALENDAR_ID"/>
       </foreign-key>
@@ -139,7 +128,6 @@
         <unique-column name="VALUE"/>
       </unique>
       <check name="AD_ORG_CALENDAR_CHECK"><![CDATA[ISPERIODCONTROLALLOWED = 'Y' AND C_CALENDAR_ID IS NOT NULL OR C_CALENDAR_ID IS NULL]]></check>
-      <check name="AD_ORG_EXTBPENABLED_CH"><![CDATA[C_EXTBP_ENABLED IN ('Y', 'N')]]></check>
       <check name="AD_ORG_ISACTIVE_CHECK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
       <check name="AD_ORG_ISPERIODCONTROL_CHECK"><![CDATA[ISPERIODCONTROLALLOWED IN ('Y', 'N')]]></check>
       <check name="AD_ORG_ISREADY_CHECK"><![CDATA[ISREADY IN ('Y', 'N')]]></check>
