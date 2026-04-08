@@ -165,14 +165,6 @@
         <default/>
         <onCreateDefault/>
       </column>
-      <column name="C_EXTBP_ENABLED" primaryKey="false" required="true" type="CHAR" size="1" autoIncrement="false">
-        <default><![CDATA[N]]></default>
-        <onCreateDefault><![CDATA['N']]></onCreateDefault>
-      </column>
-      <column name="C_EXTBP_CONFIG_ID" primaryKey="false" required="false" type="VARCHAR" size="32" autoIncrement="false">
-        <default/>
-        <onCreateDefault/>
-      </column>
       <foreign-key foreignTable="AD_CLIENT" name="AD_CLIENT_CLIENTINFO">
         <reference local="AD_CLIENT_ID" foreign="AD_CLIENT_ID"/>
       </foreign-key>
@@ -248,9 +240,6 @@
       <foreign-key foreignTable="AD_TREE" name="AD_CLIENTINFO_TREE_USER2">
         <reference local="AD_TREE_USER2_ID" foreign="AD_TREE_ID"/>
       </foreign-key>
-      <foreign-key foreignTable="C_EXTBP_CONFIG" name="C_CLINFO_EXTBPCONF_FK">
-        <reference local="C_EXTBP_CONFIG_ID" foreign="C_EXTBP_CONFIG_ID"/>
-      </foreign-key>
       <foreign-key foreignTable="C_UOM" name="C_UOM_LENGTH_AD_CLIENTINFO">
         <reference local="C_UOM_LENGTH_ID" foreign="C_UOM_ID"/>
       </foreign-key>
@@ -268,8 +257,6 @@
       <check name="AD_CLIENTINFO_ALLOWNEGATIV_CHK"><![CDATA[ALLOWNEGATIVESTOCK IN ('Y', 'N')]]></check>
       <check name="AD_CLIENTINFO_CHECKINOUTOR_CHK"><![CDATA[CHECKINOUTORG IN ('Y', 'N')]]></check>
       <check name="AD_CLIENTINFO_CHECKORDEROR_CHK"><![CDATA[CHECKORDERORG IN ('Y', 'N')]]></check>
-      <check name="AD_CLIENTINFO_EXTBPCONF_CH"><![CDATA[C_EXTBP_ENABLED = 'N' AND C_EXTBP_CONFIG_ID IS NULL OR C_EXTBP_ENABLED = 'Y' AND C_EXTBP_CONFIG_ID IS NOT NULL]]></check>
-      <check name="AD_CLIENTINFO_EXTBPENABL_CH"><![CDATA[C_EXTBP_ENABLED IN ('Y', 'N')]]></check>
       <check name="AD_CLIENTINFO_ISACTIVE_CHK"><![CDATA[ISACTIVE IN ('Y', 'N')]]></check>
       <check name="AD_CLIENTINFO_ISDISCOUNTLI_CHK"><![CDATA[ISDISCOUNTLINEAMT IN ('Y', 'N')]]></check>
     </table>
