@@ -70,6 +70,17 @@ pipeline {
             env.FAILED_SUITES = "" // List to collect failed test suites
             sh "printenv"
 
+            echo "--------------- Checking branch type ---------------"
+            // Skip version-style hotfix branches (e.g. hotfix/25.4.12).
+            // Only Jira-style hotfix branches run tests: hotfix/#12-ETP-900, hotfix/ETP-212.
+            def versionHotfixPattern = /^hotfix\/\d+\.\d+(\.\d+)*$/
+            if (env.GIT_BRANCH ==~ versionHotfixPattern) {
+              echo "⏭️ Version hotfix branch detected (${env.GIT_BRANCH}). Skipping pipeline."
+              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped - version hotfix branch\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
+              currentBuild.result = ABORTED
+              return
+            }
+
             echo "--------------- Checking if pipeline should be skipped ---------------"
             def changedFiles = sh(
               script: "git diff --name-only HEAD~1 HEAD",

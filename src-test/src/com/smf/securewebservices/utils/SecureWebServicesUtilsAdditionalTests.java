@@ -2,6 +2,7 @@ package com.smf.securewebservices.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
@@ -24,6 +25,7 @@ import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.access.UserRoles;
+import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.Warehouse;
 
@@ -170,5 +172,85 @@ public class SecureWebServicesUtilsAdditionalTests {
 
     String result = SecureWebServicesUtils.getExceptionMessage(mockThrowable);
     assertEquals("SQL Error", result);
+  }
+
+  /**
+   * Tests that getOrganizationWarehouses(org, client) filters out warehouses belonging to a
+   * different client. Regression test for ETP-3676: when the root org (*) is active,
+   * getOrganizationWarehouses() ran in admin mode without client restriction and could return
+   * warehouses from unrelated clients. The fallback warehouseList.get(0) would then encode a
+   * cross-client warehouse in the JWT token.
+   *
+   * <p>Given: two warehouses exist — one for clientA and one for clientB.
+   * When: getOrganizationWarehouses is called with clientA as filter.
+   * Then: only the warehouse belonging to clientA is returned.
+   */
+  @Test
+  public void testGetOrganizationWarehousesFiltersOnClient() {
+    try (MockedStatic<SecureWebServicesUtils> mockedUtils = mockStatic(SecureWebServicesUtils.class)) {
+      // GIVEN
+      Organization mockOrg = mock(Organization.class);
+      Client clientA = mock(Client.class);
+      Client clientB = mock(Client.class);
+      when(clientA.getId()).thenReturn("clientA");
+      when(clientB.getId()).thenReturn("clientB");
+
+      Warehouse whClientA = mock(Warehouse.class);
+      when(whClientA.getId()).thenReturn("wh-clientA");
+      when(whClientA.getClient()).thenReturn(clientA);
+
+      Warehouse whClientB = mock(Warehouse.class);
+      when(whClientB.getId()).thenReturn("wh-clientB");
+      when(whClientB.getClient()).thenReturn(clientB);
+
+      List<Warehouse> allWarehouses = new ArrayList<>();
+      allWarehouses.add(whClientA);
+      allWarehouses.add(whClientB);
+
+      // Simulate: unfiltered call returns both; filtered call returns only clientA's
+      mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg))
+          .thenReturn(allWarehouses);
+      List<Warehouse> filteredWarehouses = new ArrayList<>();
+      filteredWarehouses.add(whClientA);
+      mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg, clientA))
+          .thenReturn(filteredWarehouses);
+
+      // WHEN
+      List<Warehouse> result = SecureWebServicesUtils.getOrganizationWarehouses(mockOrg, clientA);
+
+      // THEN: only the warehouse belonging to clientA is returned
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertEquals("wh-clientA", result.get(0).getId());
+      assertTrue("Returned warehouse must belong to clientA",
+          "clientA".equals(result.get(0).getClient().getId()));
+    }
+  }
+
+  /**
+   * Tests that getOrganizationWarehouses(org) — the no-client overload — retains backward
+   * compatibility and returns warehouses from all clients (null filter).
+   */
+  @Test
+  public void testGetOrganizationWarehousesNoClientFilterRetainsAllWarehouses() {
+    try (MockedStatic<SecureWebServicesUtils> mockedUtils = mockStatic(SecureWebServicesUtils.class)) {
+      // GIVEN
+      Organization mockOrg = mock(Organization.class);
+      Warehouse wh1 = mock(Warehouse.class);
+      Warehouse wh2 = mock(Warehouse.class);
+      List<Warehouse> allWarehouses = new ArrayList<>();
+      allWarehouses.add(wh1);
+      allWarehouses.add(wh2);
+
+      mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg))
+          .thenReturn(allWarehouses);
+
+      // WHEN
+      List<Warehouse> result = SecureWebServicesUtils.getOrganizationWarehouses(mockOrg);
+
+      // THEN: all warehouses returned (no client restriction)
+      assertNotNull(result);
+      assertEquals(2, result.size());
+    }
   }
 }
