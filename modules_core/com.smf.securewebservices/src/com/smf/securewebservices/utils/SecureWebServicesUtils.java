@@ -45,6 +45,7 @@ import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
 import org.openbravo.model.ad.access.User;
 import org.openbravo.model.ad.access.UserRoles;
+import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
 import org.openbravo.model.common.enterprise.OrganizationTree;
 import org.openbravo.model.common.enterprise.Warehouse;
@@ -585,7 +586,7 @@ public class SecureWebServicesUtils {
 			Warehouse defaultWarehouse, Role selectedRole) {
 		Warehouse selectedWarehouse = null;
 		Client client = selectedRole != null ? selectedRole.getClient() : null;
-		List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg, client);
+		List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg);
 		// if warehouse is valid, select
 		if (warehouse != null)
 			for (Warehouse wh : warehouseList) {
@@ -598,13 +599,30 @@ public class SecureWebServicesUtils {
 		if (selectedWarehouse == null) {
 			if (defaultWarehouse != null) {
 				selectedWarehouse = defaultWarehouse;
-			} else if (!warehouseList.isEmpty()) {
-				selectedWarehouse = warehouseList.get(0);
 			} else {
-				String errorMessage = String.format("SWS - The selected organization (\"%s\") has no warehouses", selectedOrg.getId());
-				log.error(errorMessage);
-				throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_OrgHasNoRole",
-						OBContext.getOBContext().getLanguage().getLanguage()));
+				// Prefer warehouses belonging to the role's client to prevent cross-client
+				// selection when admin mode returns warehouses from multiple clients.
+				// Fall back to the full list only when no client-specific warehouse exists.
+				List<Warehouse> clientWarehouses = new ArrayList<>();
+				if (client != null) {
+					for (Warehouse wh : warehouseList) {
+						if (client.getId().equals(wh.getClient().getId())) {
+							clientWarehouses.add(wh);
+						}
+					}
+				} else {
+					clientWarehouses = warehouseList;
+				}
+				if (!clientWarehouses.isEmpty()) {
+					selectedWarehouse = clientWarehouses.get(0);
+				} else if (!warehouseList.isEmpty()) {
+					selectedWarehouse = warehouseList.get(0);
+				} else {
+					String errorMessage = String.format("SWS - The selected organization (\"%s\") has no warehouses", selectedOrg.getId());
+					log.error(errorMessage);
+					throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_OrgHasNoRole",
+							OBContext.getOBContext().getLanguage().getLanguage()));
+				}
 			}
 		}
 		return selectedWarehouse;
