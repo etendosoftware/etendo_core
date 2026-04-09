@@ -426,6 +426,24 @@ public class Restrictions {
   }
 
   /**
+   * Apply a constraint expressed in SQL, with {alias} as a placeholder for the entity's table alias.
+   *
+   * <p>Example:
+   * <pre>{@code
+   * Restrictions.sqlRestriction("exists (select 1 from ad_user_roles ur where ur.ad_user_id = {alias}.ad_user_id)")
+   * }</pre>
+   *
+   * <p>Note: requires that the root entity has an explicit alias set (e.g. via
+   * {@code OBCriteria} which defaults to {@code "e"}).
+   *
+   * @param sql The SQL restriction fragment. Use {@code {alias}} as placeholder for the table alias.
+   * @return Restriction
+   */
+  public static Restriction sqlRestriction(String sql) {
+    return new SqlRestriction(sql);
+  }
+
+  /**
    * Apply an "equal" constraint to the named property, or "is null" if value is null
    *
    * @param propertyName The name of the property
@@ -846,6 +864,27 @@ public class Restrictions {
       }
 
       return cb.or(predicates);
+    }
+  }
+
+  // SQL restriction implementation
+  static class SqlRestriction implements Restriction {
+    private final String sql;
+
+    SqlRestriction(String sql) {
+      this.sql = sql;
+    }
+
+    @Override
+    public <T> Predicate toPredicate(CriteriaBuilder cb, Root<T> root) {
+      String alias = root.getAlias();
+      String processedSql = sql.replace("{alias}", alias != null ? alias : "this_");
+      if (cb instanceof org.hibernate.query.criteria.HibernateCriteriaBuilder) {
+        org.hibernate.query.criteria.HibernateCriteriaBuilder hcb =
+            (org.hibernate.query.criteria.HibernateCriteriaBuilder) cb;
+        return cb.isTrue(hcb.sql(processedSql, Boolean.class));
+      }
+      throw new IllegalStateException("sqlRestriction requires HibernateCriteriaBuilder");
     }
   }
 
