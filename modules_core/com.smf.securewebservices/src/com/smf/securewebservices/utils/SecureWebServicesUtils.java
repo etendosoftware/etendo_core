@@ -120,12 +120,28 @@ public class SecureWebServicesUtils {
 	 * @return A list of warehouses associated with the given organization and its child organizations.
 	 */
 	public static List<Warehouse> getOrganizationWarehouses(Organization org) {
+		return getOrganizationWarehouses(org, null);
+	}
+
+	/**
+	 * Retrieves the list of warehouses associated with a given organization and its child organizations,
+	 * optionally filtered by client. When {@code client} is non-null only warehouses belonging to that
+	 * client are returned, preventing cross-client warehouse selection when the root org (*) is active.
+	 *
+	 * @param org    The organization for which to retrieve the associated warehouses.
+	 * @param client The client to filter warehouses by, or {@code null} to return all clients.
+	 * @return A list of warehouses associated with the given organization and its child organizations.
+	 */
+	public static List<Warehouse> getOrganizationWarehouses(Organization org, Client client) {
 		List<Organization> childrenOrg = getChildrenOrganizations(org);
 		List<Warehouse> warehouses = null;
 		OBContext.setAdminMode();
 		try {
 			OBCriteria<Warehouse> crit = OBDal.getInstance().createCriteria(Warehouse.class);
 			crit.add(Restrictions.in(Warehouse.PROPERTY_ORGANIZATION, childrenOrg));
+			if (client != null) {
+				crit.add(Restrictions.eq(Warehouse.PROPERTY_CLIENT, client));
+			}
 			crit.setFilterOnReadableClients(false);
 			crit.setFilterOnReadableOrganization(false);
 			warehouses = crit.list();
@@ -471,7 +487,7 @@ public class SecureWebServicesUtils {
 			Warehouse defaultWarehouse = user.getDefaultWarehouse();
 			Role selectedRole = getRole(role, userRoleList, defaultWsRole, defaultRole);
 			Organization selectedOrg = getOrganization(org, selectedRole, defaultRole, defaultOrg);
-			selectedWarehouse = getWarehouse(warehouse, selectedOrg, defaultWarehouse);
+			selectedWarehouse = getWarehouse(warehouse, selectedOrg, defaultWarehouse, selectedRole);
 
 			String privateKey = config.getPrivateKey();
 			Algorithm algorithm;
@@ -566,9 +582,10 @@ public class SecureWebServicesUtils {
 	 * @throws OBException If the organization has no available warehouses.
 	 */
 	private static Warehouse getWarehouse(Warehouse warehouse, Organization selectedOrg,
-			Warehouse defaultWarehouse) {
+			Warehouse defaultWarehouse, Role selectedRole) {
 		Warehouse selectedWarehouse = null;
-		List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg);
+		Client client = selectedRole != null ? selectedRole.getClient() : null;
+		List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg, client);
 		// if warehouse is valid, select
 		if (warehouse != null)
 			for (Warehouse wh : warehouseList) {
