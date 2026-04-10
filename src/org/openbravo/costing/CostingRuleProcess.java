@@ -209,7 +209,7 @@ public class CostingRuleProcess implements Process {
                   "   and p.organization.id in (:porgs)" +
                   "   and exists (" +
                   "     select 1 from MaterialMgmtMaterialTransaction as trx" +
-                  "      where trx.product = p" +
+                  "      where trx.product.id = p.id" +
                   "        and trx.organization.id in (:childOrgs)" +
                   "     )";
     //@formatter:on
@@ -232,7 +232,7 @@ public class CostingRuleProcess implements Process {
                   "   and p.organization.id in (:porgs)" +
                   "   and exists (" +
                   "     select 1 from MaterialMgmtMaterialTransaction as trx " +
-                  "      where trx.product = p" +
+                  "      where trx.product.id = p.id" +
                   "        and trx.organization.id in (:childOrgs)" +
                   "        and trx.isCostCalculated = false" +
                   "     )";

@@ -36,10 +36,21 @@ public class InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest extends OB
 
   private InvoiceFromGoodsShipmentDefaultValueFilterExpression filterExpression;
 
+  /**
+   * Overrides the default test user context set by {@link OBBaseTest#setUp()} to use
+   * the QA Admin context required by these tests.
+   *
+   * <p>Overriding {@code setTestUserContext()} rather than {@code setUp()} ensures that
+   * every code path that initializes the OBContext — including
+   * {@code DalCleanupExtension.beforeTestExecution()} — uses the correct context,
+   * regardless of the order in which the JUnit 5 lifecycle methods are invoked.
+   *
+   * <p>The {@code filterExpression} field is initialized here because it depends on
+   * the QA Admin context being set first, and this method is called as part of the
+   * {@code setUp()} lifecycle before each test.
+   */
   @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void setTestUserContext() {
     setQAAdminContext();
     filterExpression = new InvoiceFromGoodsShipmentDefaultValueFilterExpression();
   }

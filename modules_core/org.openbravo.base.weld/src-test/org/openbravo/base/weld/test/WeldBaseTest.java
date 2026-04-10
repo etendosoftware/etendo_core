@@ -35,6 +35,7 @@ import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.weld.WeldUtils;
@@ -141,6 +142,7 @@ public class WeldBaseTest extends OBBaseTest {
    * automatically via @BeforeEach with higher priority.
    */
   @BeforeEach
+  @Order(1)
   protected void ensureWeldInitialized() {
     initializeWeldComponents();
   }
