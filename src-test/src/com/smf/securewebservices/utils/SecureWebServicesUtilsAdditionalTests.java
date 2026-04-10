@@ -3,8 +3,10 @@ package com.smf.securewebservices.utils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.BatchUpdateException;
@@ -20,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockedStatic;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.ad.access.Role;
 import org.openbravo.model.ad.access.RoleOrganization;
@@ -186,44 +189,47 @@ public class SecureWebServicesUtilsAdditionalTests {
    * Then: only the warehouse belonging to clientA is returned.
    */
   @Test
+  @SuppressWarnings("unchecked")
   public void testGetOrganizationWarehousesFiltersOnClient() {
     try (MockedStatic<SecureWebServicesUtils> mockedUtils = mockStatic(SecureWebServicesUtils.class)) {
       // GIVEN
       Organization mockOrg = mock(Organization.class);
       Client clientA = mock(Client.class);
-      Client clientB = mock(Client.class);
-      when(clientA.getId()).thenReturn("clientA");
-      when(clientB.getId()).thenReturn("clientB");
+
+      // Mock getChildrenOrganizations (dependency of the real method)
+      Organization childOrg = mock(Organization.class);
+      List<Organization> childOrgs = new ArrayList<>();
+      childOrgs.add(childOrg);
+      mockedUtils.when(() -> SecureWebServicesUtils.getChildrenOrganizations(mockOrg))
+          .thenReturn(childOrgs);
+
+      // Invoke the real two-arg implementation
+      mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg, clientA))
+          .thenCallRealMethod();
+
+      // Mock OBDal criteria chain to return clientA's warehouse (simulating DB-level filtering)
+      OBDal mockDal = mock(OBDal.class);
+      mockedOBDal.when(OBDal::getInstance).thenReturn(mockDal);
+
+      OBCriteria<Warehouse> mockCriteria = (OBCriteria<Warehouse>) mock(OBCriteria.class);
+      when(mockDal.createCriteria(Warehouse.class)).thenReturn(mockCriteria);
+      when(mockCriteria.add(any())).thenReturn(mockCriteria);
 
       Warehouse whClientA = mock(Warehouse.class);
       when(whClientA.getId()).thenReturn("wh-clientA");
-      when(whClientA.getClient()).thenReturn(clientA);
-
-      Warehouse whClientB = mock(Warehouse.class);
-      when(whClientB.getId()).thenReturn("wh-clientB");
-      when(whClientB.getClient()).thenReturn(clientB);
-
-      List<Warehouse> allWarehouses = new ArrayList<>();
-      allWarehouses.add(whClientA);
-      allWarehouses.add(whClientB);
-
-      // Simulate: unfiltered call returns both; filtered call returns only clientA's
-      mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg))
-          .thenReturn(allWarehouses);
       List<Warehouse> filteredWarehouses = new ArrayList<>();
       filteredWarehouses.add(whClientA);
-      mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg, clientA))
-          .thenReturn(filteredWarehouses);
+      when(mockCriteria.list()).thenReturn(filteredWarehouses);
 
       // WHEN
       List<Warehouse> result = SecureWebServicesUtils.getOrganizationWarehouses(mockOrg, clientA);
 
-      // THEN: only the warehouse belonging to clientA is returned
+      // THEN: real method executed; returns what the DB (criteria) returned
       assertNotNull(result);
       assertEquals(1, result.size());
       assertEquals("wh-clientA", result.get(0).getId());
-      assertTrue("Returned warehouse must belong to clientA",
-          "clientA".equals(result.get(0).getClient().getId()));
+      // Verify criteria was invoked with the client restriction
+      verify(mockCriteria, org.mockito.Mockito.atLeast(2)).add(any());
     }
   }
 
@@ -242,15 +248,20 @@ public class SecureWebServicesUtilsAdditionalTests {
       allWarehouses.add(wh1);
       allWarehouses.add(wh2);
 
+      // Invoke the real no-arg overload (delegates to two-arg with null)
       mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg))
+          .thenCallRealMethod();
+      // Mock the two-arg dependency it delegates to (null = no client restriction)
+      mockedUtils.when(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg, null))
           .thenReturn(allWarehouses);
 
       // WHEN
       List<Warehouse> result = SecureWebServicesUtils.getOrganizationWarehouses(mockOrg);
 
-      // THEN: all warehouses returned (no client restriction)
+      // THEN: delegates to two-arg with null, returning all warehouses (no client filter)
       assertNotNull(result);
       assertEquals(2, result.size());
+      mockedUtils.verify(() -> SecureWebServicesUtils.getOrganizationWarehouses(mockOrg, null));
     }
   }
 }

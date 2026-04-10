@@ -135,7 +135,7 @@ public class SecureWebServicesUtils {
 	 */
 	public static List<Warehouse> getOrganizationWarehouses(Organization org, Client client) {
 		List<Organization> childrenOrg = getChildrenOrganizations(org);
-		List<Warehouse> warehouses = null;
+		List<Warehouse> warehouses = new ArrayList<>();
 		OBContext.setAdminMode();
 		try {
 			OBCriteria<Warehouse> crit = OBDal.getInstance().createCriteria(Warehouse.class);
@@ -584,48 +584,70 @@ public class SecureWebServicesUtils {
 	 */
 	private static Warehouse getWarehouse(Warehouse warehouse, Organization selectedOrg,
 			Warehouse defaultWarehouse, Role selectedRole) {
-		Warehouse selectedWarehouse = null;
 		Client client = selectedRole != null ? selectedRole.getClient() : null;
 		List<Warehouse> warehouseList = SecureWebServicesUtils.getOrganizationWarehouses(selectedOrg);
-		// if warehouse is valid, select
-		if (warehouse != null)
-			for (Warehouse wh : warehouseList) {
-				if (StringUtils.equals(wh.getId(), warehouse.getId())) {
-					selectedWarehouse = warehouse;
-					break;
-				}
-			}
-		// if not valid select default warehouse for the selected org
+		Warehouse selectedWarehouse = findWarehouseInList(warehouse, warehouseList);
 		if (selectedWarehouse == null) {
-			if (defaultWarehouse != null) {
-				selectedWarehouse = defaultWarehouse;
-			} else {
-				// Prefer warehouses belonging to the role's client to prevent cross-client
-				// selection when admin mode returns warehouses from multiple clients.
-				// Fall back to the full list only when no client-specific warehouse exists.
-				List<Warehouse> clientWarehouses = new ArrayList<>();
-				if (client != null) {
-					for (Warehouse wh : warehouseList) {
-						if (client.getId().equals(wh.getClient().getId())) {
-							clientWarehouses.add(wh);
-						}
-					}
-				} else {
-					clientWarehouses = warehouseList;
-				}
-				if (!clientWarehouses.isEmpty()) {
-					selectedWarehouse = clientWarehouses.get(0);
-				} else if (!warehouseList.isEmpty()) {
-					selectedWarehouse = warehouseList.get(0);
-				} else {
-					String errorMessage = String.format("SWS - The selected organization (\"%s\") has no warehouses", selectedOrg.getId());
-					log.error(errorMessage);
-					throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_OrgHasNoRole",
-							OBContext.getOBContext().getLanguage().getLanguage()));
-				}
-			}
+			selectedWarehouse = defaultWarehouse != null
+					? defaultWarehouse
+					: pickFallbackWarehouse(warehouseList, client, selectedOrg);
 		}
 		return selectedWarehouse;
+	}
+
+	/**
+	 * Returns the given warehouse if it exists in the list, or {@code null} otherwise.
+	 */
+	private static Warehouse findWarehouseInList(Warehouse warehouse, List<Warehouse> warehouseList) {
+		if (warehouse == null) {
+			return null;
+		}
+		for (Warehouse wh : warehouseList) {
+			if (StringUtils.equals(wh.getId(), warehouse.getId())) {
+				return wh;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Selects a fallback warehouse from the list, preferring the role's client to prevent
+	 * cross-client selection when admin mode returns warehouses from multiple clients.
+	 * Falls back to the first warehouse in the list if no client-specific one is found.
+	 *
+	 * @throws OBException if the organization has no warehouses at all.
+	 */
+	private static Warehouse pickFallbackWarehouse(List<Warehouse> warehouseList, Client client,
+			Organization selectedOrg) {
+		List<Warehouse> clientWarehouses = filterWarehousesByClient(warehouseList, client);
+		if (!clientWarehouses.isEmpty()) {
+			return clientWarehouses.get(0);
+		}
+		if (!warehouseList.isEmpty()) {
+			return warehouseList.get(0);
+		}
+		String errorMessage = String.format("SWS - The selected organization (\"%s\") has no warehouses",
+				selectedOrg.getId());
+		log.error(errorMessage);
+		throw new OBException(Utility.messageBD(new DalConnectionProvider(), "SMFSWS_OrgHasNoRole",
+				OBContext.getOBContext().getLanguage().getLanguage()));
+	}
+
+	/**
+	 * Returns warehouses from the list that belong to the given client.
+	 * If {@code client} is {@code null}, returns the full list unchanged.
+	 */
+	private static List<Warehouse> filterWarehousesByClient(List<Warehouse> warehouseList, Client client) {
+		if (client == null) {
+			return warehouseList;
+		}
+		List<Warehouse> filtered = new ArrayList<>();
+		for (Warehouse wh : warehouseList) {
+			if (client.getId().equals(wh.getClient().getId())) {
+				filtered.add(wh);
+			}
+		}
+		return filtered;
 	}
 
 	/**
