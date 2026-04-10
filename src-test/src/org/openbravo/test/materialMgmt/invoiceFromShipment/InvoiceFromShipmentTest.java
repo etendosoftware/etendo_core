@@ -83,10 +83,23 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
   private static final String AFTER_ORDER_DELIVERY = "O";
   private static final String PRICE_LIST_SALES_ID = "4028E6C72959682B01295ADC1D55022B";
 
+  /**
+   * Overrides the default test user context set by {@link OBBaseTest#setUp()} so that
+   * every code path that initializes the OBContext — including
+   * {@code DalCleanupExtension.beforeTestExecution()} — uses the QA Admin context
+   * required by these tests.
+   *
+   * <p>Overriding {@code setTestUserContext()} rather than {@code setUp()} is necessary
+   * in JUnit 5 + Arquillian because {@code setUp()} overrides are not reliably invoked
+   * by Arquillian's lifecycle: the parent {@code @BeforeEach setUp()} runs independently
+   * and may overwrite the subclass context after it has been set. Overriding
+   * {@code setTestUserContext()} guarantees the correct context regardless of invocation
+   * order, and also ensures that other {@code @BeforeEach} and {@code @AfterEach} methods
+   * in this subclass (such as {@code tearDown()}) are properly registered and executed
+   * by the JUnit 5 + Arquillian lifecycle.
+   */
   @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void setTestUserContext() {
     initializeInvoiceFromShipmentContext();
   }
 
@@ -120,7 +133,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
    */
   @Test
   public void invoiceFromShipment_001() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -172,7 +184,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   @Test
   public void invoiceFromShipment_002() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -235,7 +246,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   @Test
   public void invoiceFromShipment_003() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -292,7 +302,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   @Test
   public void invoiceFromShipment_004() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -386,7 +395,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   @Test
   public void invoiceFromShipment_005() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -453,7 +461,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   @Test
   public void invoiceFromShipment_006() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -528,7 +535,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
    */
   @Test
   public void invoiceFromShipment_007() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -596,7 +602,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
 
   @Test
   public void invoiceFromShipment_008() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
       final Product product = TestUtils.cloneProduct(T_SHIRTS_PRODUCT_ID,
@@ -650,7 +655,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
    */
   @Test
   public void invoiceFromShipment_009() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 
@@ -704,7 +708,6 @@ public class InvoiceFromShipmentTest extends WeldBaseTest {
    */
   @Test
   public void invoiceFromShipment_010() {
-    initializeInvoiceFromShipmentContext();
     OBContext.setAdminMode();
     try {
 

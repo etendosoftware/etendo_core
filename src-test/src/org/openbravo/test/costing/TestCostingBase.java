@@ -138,20 +138,6 @@ public class TestCostingBase extends WeldBaseTest {
         }
 
         OBDal.getInstance().flush();
-        OBDal.getInstance().commitAndClose();
-
-        // Un-validate existing costing rules so CostingRuleProcess does not enter the
-        // transition path (which creates closing/opening inventories and fails for
-        // products without average cost data like Laptop, Soccer Ball, etc.)
-        TestCostingUtils.unvalidateExistingCostingRules();
-
-        // Reset isCostCalculated for all transactions so checkNoTrxWithCostCalculated passes
-        TestCostingUtils.resetTransactionsCostCalculated();
-
-        // Re-establish OBContext after JDBC operations
-        OBContext.setOBContext(TestCostingConstants.ADMIN_USER_ID,
-            TestCostingConstants.QATESTING_ROLE_ID, TestCostingConstants.QATESTING_CLIENT_ID,
-            TestCostingConstants.SPAIN_ORGANIZATION_ID);
 
         // Create costing rule
         CostingRule costingRule = OBProvider.getInstance().get(CostingRule.class);
@@ -166,20 +152,10 @@ public class TestCostingBase extends WeldBaseTest {
         OBDal.getInstance().save(costingRule);
         OBDal.getInstance().flush();
         OBDal.getInstance().refresh(costingRule);
-
-        String costingRuleId = costingRule.getId();
-        OBDal.getInstance().commitAndClose();
-
-        // Validate the costing rule. Since there is no previous validated rule,
-        // CostingRuleProcess skips transition logic (no closing/opening inventories).
-        TestCostingUtils.validateCostingRule(costingRuleId);
+        TestCostingUtils.runCostingBackground();
+        TestCostingUtils.validateCostingRule(costingRule.getId());
 
         OBDal.getInstance().commitAndClose();
-
-        // After validation, mark all pre-existing transactions as processed and
-        // cost-calculated so CostingBackground in individual tests won't try to
-        // recalculate them (which would fail for products without cost data).
-        TestCostingUtils.markPreExistingTransactionsAsProcessed();
       } catch (Exception e) {
         throw new OBException(e);
       }
