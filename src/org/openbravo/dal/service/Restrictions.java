@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.openbravo.base.exception.OBException;
 
 /**
  * Factory class for creating Restriction instances.
@@ -444,6 +445,19 @@ public class Restrictions {
   }
 
   /**
+   * Apply a constraint expressed in SQL with positional parameters ({@code ?} placeholders).
+   * Parameters are bound safely via the Hibernate criteria API, preventing SQL injection.
+   *
+   * @param sql    The SQL restriction fragment. Use {@code {alias}} for the table alias and
+   *               {@code ?} for each positional parameter.
+   * @param values Values to bind in order of the {@code ?} placeholders.
+   * @return Restriction
+   */
+  public static Restriction sqlRestriction(String sql, Object... values) {
+    return new SqlRestriction(sql, values);
+  }
+
+  /**
    * Apply an "equal" constraint to the named property, or "is null" if value is null
    *
    * @param propertyName The name of the property
@@ -870,9 +884,16 @@ public class Restrictions {
   // SQL restriction implementation
   static class SqlRestriction implements Restriction {
     private final String sql;
+    private final Object[] values;
 
     SqlRestriction(String sql) {
       this.sql = sql;
+      this.values = null;
+    }
+
+    SqlRestriction(String sql, Object[] values) {
+      this.sql = sql;
+      this.values = values;
     }
 
     @Override
@@ -882,9 +903,16 @@ public class Restrictions {
       if (cb instanceof org.hibernate.query.criteria.HibernateCriteriaBuilder) {
         org.hibernate.query.criteria.HibernateCriteriaBuilder hcb =
             (org.hibernate.query.criteria.HibernateCriteriaBuilder) cb;
+        if (values != null && values.length > 0) {
+          Expression<?>[] args = new Expression[values.length];
+          for (int i = 0; i < values.length; i++) {
+            args[i] = cb.literal(values[i]);
+          }
+          return cb.isTrue(hcb.sql(processedSql, Boolean.class, args));
+        }
         return cb.isTrue(hcb.sql(processedSql, Boolean.class));
       }
-      throw new IllegalStateException("sqlRestriction requires HibernateCriteriaBuilder");
+      throw new OBException("sqlRestriction requires HibernateCriteriaBuilder");
     }
   }
 
