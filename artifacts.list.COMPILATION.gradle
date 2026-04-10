@@ -143,7 +143,7 @@ List<String> _dependenciesListCOMPILATION = [
   'org.reflections:reflections:0.10.2',
 
   // Serialization
-  'com.thoughtworks.xstream:xstream:1.4.12',
+  'com.thoughtworks.xstream:xstream:1.4.21',
 
   // Miscellaneous Utilities
   'com.github.virtuald:curvesapi:1.08',
