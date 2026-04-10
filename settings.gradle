@@ -12,6 +12,9 @@ pluginManagement {
         maven {
             url = 'https://repo.futit.cloud/repository/maven-public-snapshots'
         }
+        maven {
+            url = 'https://repo.futit.cloud/repository/smf-snapshots'
+        }
     }
 }
 
