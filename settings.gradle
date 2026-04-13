@@ -1,10 +1,4 @@
 pluginManagement {
-    def gradleProps = new Properties()
-    def propsFile = new File(settings.settingsDir, 'gradle.properties')
-    if (propsFile.exists()) {
-        propsFile.withInputStream { gradleProps.load(it) }
-    }
-
     repositories {
         mavenCentral()
         gradlePluginPortal()
@@ -17,17 +11,6 @@ pluginManagement {
         }
         maven {
             url = 'https://repo.futit.cloud/repository/maven-public-snapshots'
-        }
-        maven {
-            url = 'https://repo.futit.cloud/repository/smf-snapshots'
-            def nexUser = gradleProps.getProperty('nexusUser', '')
-            def nexPass = gradleProps.getProperty('nexusPassword', '')
-            if (nexUser) {
-                credentials {
-                    username = nexUser
-                    password = nexPass
-                }
-            }
         }
     }
 }
