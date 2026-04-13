@@ -390,6 +390,47 @@ criteria.add(Restrictions.sqlRestriction(
 
 ---
 
+### 13. `org.hibernate.criterion.Criterion` in Mockito tests
+
+The `org.hibernate.criterion.Criterion` interface was removed in Hibernate 6. Test files that used it as a type argument in Mockito matchers or `ArgumentCaptor` fail to compile because the class no longer exists on the classpath.
+
+#### How to migrate
+
+Replace all occurrences of `Criterion` with `Restriction` (from `org.openbravo.dal.service`). The `Restriction` import is typically already present if the production code under test was already migrated (see [Change 1](#1-orghibernatecriterionrestrictions--orgopenbravodalservicerestrictions)).
+
+```java title="Before (Hibernate 5.x)"
+import org.hibernate.criterion.Criterion; // often missing — was resolved transitively
+
+when(criteria.add(any(Criterion.class))).thenReturn(criteria);
+
+ArgumentCaptor<Criterion> captor = ArgumentCaptor.forClass(Criterion.class);
+List<Criterion> captured = captor.getAllValues();
+```
+
+```java title="After (Hibernate 6.x)"
+import org.openbravo.dal.service.Restriction; // already present after Change 1
+
+when(criteria.add(any(Restriction.class))).thenReturn(criteria);
+
+ArgumentCaptor<Restriction> captor = ArgumentCaptor.forClass(Restriction.class);
+List<Restriction> captured = captor.getAllValues();
+```
+
+The same applies to `verify()` calls:
+
+```java title="Before"
+verify(criteria, times(2)).add(any(Criterion.class));
+```
+
+```java title="After"
+verify(criteria, times(2)).add(any(Restriction.class));
+```
+
+!!! info "No import to remove"
+    Most affected files never had an explicit `import org.hibernate.criterion.Criterion;` — the class was resolved transitively from `hibernate-core`. After removing that dependency the symbol disappears. Simply add (or confirm) the `import org.openbravo.dal.service.Restriction;` line.
+
+---
+
 *More migration changes will be added to this guide as the migration progresses.*
 
 ---
