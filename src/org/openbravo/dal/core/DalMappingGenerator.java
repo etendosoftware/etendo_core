@@ -26,6 +26,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -320,6 +321,31 @@ public class DalMappingGenerator implements OBSingleton {
             + p.getEntity().getName() + "-->" + NL;
       }
     }
+
+    // Guard: skip FK properties whose getter is absent from the compiled entity class.
+    // This prevents a Hibernate NPE in MetadataContext.wrapUp (via
+    // AttributeFactory.determineSingularAssociationAttributeType) when AD_COLUMN still
+    // carries a stale FK entry that was removed in the current module version but whose
+    // DELETE is deferred to dml_contract.sql (applied in a later release).
+    Class<?> mappingClass = p.getEntity().getMappingClass();
+    if (mappingClass != null && !p.isOneToOne()) {
+      String getterSetterName = p.getGetterSetterName();
+      String getterName = (p.isBoolean() ? "is" : "get")
+          + getterSetterName.substring(0, 1).toUpperCase()
+          + getterSetterName.substring(1);
+      try {
+        mappingClass.getDeclaredMethod(getterName);
+      } catch (NoSuchMethodException e) {
+        log.warn(
+            "Skipping stale FK mapping for property '{}' on entity '{}': getter '{}' not found "
+                + "in compiled class '{}'. The AD_COLUMN record is orphaned — apply "
+                + "dml_contract.sql to remove it.",
+            p.getName(), p.getEntity().getName(), getterName, mappingClass.getName());
+        return "<!-- Skipped stale FK property '" + p.getName() + "' on '"
+            + p.getEntity().getName() + "' — getter '" + getterName + "' not found -->" + NL;
+      }
+    }
+
     final StringBuilder sb = new StringBuilder();
     if (p.isOneToOne()) {
       final String name = p.getSimpleTypeName().substring(0, 1).toLowerCase()
