@@ -431,6 +431,72 @@ verify(criteria, times(2)).add(any(Restriction.class));
 
 ---
 
+### 14. Jakarta Servlet 6.0: test methods calling removed interface methods
+
+When test files call `isRequestedSessionIdFromUrl()`, `getRealPath(String)`, or `getSessionContext()` on a variable typed as the servlet interface (`HttpServletRequest`, `ServletRequest`, or `HttpSession`), they fail to compile because those methods were removed from the interface in Jakarta Servlet 6.0.
+
+#### How to migrate
+
+**`isRequestedSessionIdFromUrl()` and `getRealPath(String)` on `HttpServletRequest` / `ServletRequest`**
+
+Remove the assertions entirely — the methods no longer exist on the interface:
+
+```java title="Before"
+assertFalse(req.isRequestedSessionIdFromUrl());
+// ...
+assertNull(req.getRealPath("/any"));
+```
+
+```java title="After"
+// both lines removed — isRequestedSessionIdFromUrl() and getRealPath() no
+// longer exist on the HttpServletRequest / ServletRequest interface
+```
+
+**`getSessionContext()` on `HttpSession`**
+
+Remove test methods that verify `getSessionContext()`. The method was removed from `HttpSession` in Jakarta Servlet 6.0 and from `LegacyHttpSessionAdapter` as part of Change 6:
+
+```java title="Before"
+@Test
+public void getSessionContextShouldReturnNull() {
+    assertNull(session.getSessionContext());
+}
+
+@Test(expected = IllegalStateException.class)
+public void getSessionContextAfterInvalidateShouldThrowException() {
+    session.invalidate();
+    session.getSessionContext();
+}
+```
+
+```java title="After"
+// both test methods removed — getSessionContext() no longer exists
+```
+
+---
+
+### 15. Kafka `Admin.describeTopics()` ambiguous overload in Mockito
+
+Kafka 3.x added a second overload `describeTopics(TopicCollection)` alongside the existing `describeTopics(Collection<String>)`. Mockito's untyped `any()` matcher becomes ambiguous when both overloads are present, causing a compilation error.
+
+#### How to migrate
+
+Qualify the matcher with the concrete type to disambiguate:
+
+```java title="Before"
+when(mockAdminClient.describeTopics(any())).thenReturn(...);
+when(mockAdminClient.describeTopics(any()).all()).thenReturn(...);
+```
+
+```java title="After"
+when(mockAdminClient.describeTopics(any(java.util.Collection.class))).thenReturn(...);
+when(mockAdminClient.describeTopics(any(java.util.Collection.class)).all()).thenReturn(...);
+```
+
+No new import is needed — `java.util.Collection` can be used as a fully-qualified name inline.
+
+---
+
 *More migration changes will be added to this guide as the migration progresses.*
 
 ---
