@@ -431,6 +431,29 @@ verify(criteria, times(2)).add(any(Restriction.class));
 
 ---
 
+### 13b. `org.hibernate.Criteria` unused import in test files
+
+`org.hibernate.Criteria` (the legacy criteria interface) was removed in Hibernate 6. Test files that carry a leftover `import org.hibernate.Criteria;` fail to compile even when the symbol is never referenced in the code body — the import line alone is enough to break the build.
+
+#### How to migrate
+
+Simply remove the import. The actual criteria work goes through `OBCriteria` (Etendo's JPA-backed wrapper) — no replacement needed:
+
+```java title="Before"
+import org.hibernate.Criteria; // unused — but still causes compilation failure
+import org.openbravo.dal.service.OBCriteria;
+```
+
+```java title="After"
+// import org.hibernate.Criteria; removed
+import org.openbravo.dal.service.OBCriteria;
+```
+
+!!! tip "Quick scan"
+    Run `grep -r "import org.hibernate.Criteria" modules/` to find all affected test files in one pass.
+
+---
+
 ### 14. Jakarta Servlet 6.0: test methods calling removed interface methods
 
 When test files call `isRequestedSessionIdFromUrl()`, `getRealPath(String)`, or `getSessionContext()` on a variable typed as the servlet interface (`HttpServletRequest`, `ServletRequest`, or `HttpSession`), they fail to compile because those methods were removed from the interface in Jakarta Servlet 6.0.
@@ -494,6 +517,52 @@ when(mockAdminClient.describeTopics(any(java.util.Collection.class)).all()).then
 ```
 
 No new import is needed — `java.util.Collection` can be used as a fully-qualified name inline.
+
+---
+
+### 16. Integration tests: HTTP test utilities crashing on non-JSON responses
+
+Integration tests that make real HTTP calls (e.g. to `/webhooks/*`) use utility methods that read the response body and parse it as JSON. After the migration, certain error responses may be returned as HTML (Tomcat error pages or authentication-filter redirects) instead of JSON. When the utility method tries to parse HTML as JSON, Jackson throws `JsonParseException: Unexpected character ('<' (code 60))`, and the test fails with an unrelated-looking error that hides the real HTTP status code.
+
+#### How to migrate
+
+Wrap the JSON parse in a `try/catch` so that non-JSON responses produce a meaningful failure message:
+
+```java title="Before — crashes with JsonParseException on HTML responses"
+JsonNode jsonNode = objectMapper.readTree(errorContent.toString());
+return new WebhookHttpResponse(responseCode, jsonNode.get("message").asText());
+```
+
+```java title="After — fails with actionable message on non-JSON body"
+String errorBody = errorContent.toString();
+try {
+    JsonNode jsonNode = objectMapper.readTree(errorBody);
+    return new WebhookHttpResponse(responseCode, jsonNode.get("message").asText());
+} catch (Exception jsonEx) {
+    // Server returned non-JSON (e.g. HTML error page from authentication filter).
+    log4j.error("Non-JSON error response (HTTP " + responseCode + "): " + errorBody);
+    fail("Expected JSON from endpoint but got HTTP " + responseCode +
+        ". Response (first 500 chars): " +
+        errorBody.substring(0, Math.min(500, errorBody.length())));
+}
+```
+
+Also add a null-guard on `getErrorStream()`, which returns `null` when the server returns no error body:
+
+```java title="Null-guard"
+java.io.InputStream errorStream = con.getErrorStream();
+if (errorStream == null) {
+    fail("Server returned HTTP " + responseCode + " with no error body — endpoint may not be reachable");
+    return null;
+}
+```
+
+!!! warning "Root cause: authentication filter intercepting the request"
+    An HTML response on an endpoint that should return JSON usually means an authentication or security filter is intercepting the request before it reaches the servlet. For Etendo webhook endpoints (`/webhooks/*`), verify that:
+
+    1. The `WebhookServiceHandler` servlet is registered in `web.xml` at `/webhooks/*`.
+    2. Any authentication filter that wraps servlet requests has been fully migrated from `javax.servlet.*` to `jakarta.servlet.*`.
+    3. The security bypass for the `/webhooks/*` URL pattern is still active after the migration (check `AD_MODEL_OBJECT_MAPPING` and any filter `url-pattern` excludes).
 
 ---
 
