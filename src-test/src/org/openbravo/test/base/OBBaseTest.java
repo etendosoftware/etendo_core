@@ -44,6 +44,7 @@ import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
 import org.junit.BeforeClass;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -374,6 +375,7 @@ public class OBBaseTest {
    * @see TestLogAppender
    */
   @BeforeClass
+  @BeforeAll
   public static void classSetUp() throws Exception {
     initializeTestLogAppender();
     staticInitializeDalLayer();
