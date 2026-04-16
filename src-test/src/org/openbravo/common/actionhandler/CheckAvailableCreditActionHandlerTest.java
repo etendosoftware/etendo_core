@@ -3,9 +3,7 @@ package org.openbravo.common.actionhandler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,7 +86,7 @@ public class CheckAvailableCreditActionHandlerTest {
     JSONObject result = invokeExecute(data.toString());
 
     assertNotNull(result);
-    assertEquals(true, result.get(AVAILABLE_CREDIT));
+    assertTrue((Boolean) result.get(AVAILABLE_CREDIT));
     verify(mockScroll).close();
   }
   /**
@@ -110,7 +108,7 @@ public class CheckAvailableCreditActionHandlerTest {
     JSONObject result = invokeExecute(data.toString());
 
     assertNotNull(result);
-    assertEquals(false, result.get(AVAILABLE_CREDIT));
+    assertFalse((Boolean) result.get(AVAILABLE_CREDIT));
     verify(mockScroll).close();
   }
   /**
@@ -127,7 +125,7 @@ public class CheckAvailableCreditActionHandlerTest {
     JSONObject result = invokeExecute(data.toString());
 
     assertNotNull(result);
-    assertEquals(false, result.get(AVAILABLE_CREDIT));
+    assertFalse((Boolean) result.get(AVAILABLE_CREDIT));
   }
   /**
    * Execute with scroll exception returns false.
@@ -148,7 +146,7 @@ public class CheckAvailableCreditActionHandlerTest {
     JSONObject result = invokeExecute(data.toString());
 
     assertNotNull(result);
-    assertEquals(false, result.get(AVAILABLE_CREDIT));
+    assertFalse((Boolean) result.get(AVAILABLE_CREDIT));
     verify(mockScroll).close();
   }
   /**

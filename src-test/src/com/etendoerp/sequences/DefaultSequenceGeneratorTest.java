@@ -2,6 +2,7 @@ package com.etendoerp.sequences;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
@@ -73,9 +74,7 @@ public class DefaultSequenceGeneratorTest {
 
   @Test
   public void testGetValueGeneratorReturnsNonNull() {
-    assertNull(null); // Placeholder - getValueGenerator returns a method reference
-    // Just verify it doesn't throw
-    instance.getValueGenerator();
+    assertNotNull(instance.getValueGenerator());
   }
 
   /**

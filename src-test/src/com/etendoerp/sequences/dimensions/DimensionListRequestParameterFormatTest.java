@@ -5,8 +5,10 @@
 package com.etendoerp.sequences.dimensions;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -51,7 +53,7 @@ public class DimensionListRequestParameterFormatTest {
     String result = instance.transformKey(AD_CLIENT_ID);
     assertNotNull(result);
     // The result should start with "inp"
-    assertEquals(true, result.startsWith("inp"));
+    assertTrue(result.startsWith("inp"));
   }
   /** Transform key with external module prefix. */
 
@@ -60,9 +62,9 @@ public class DimensionListRequestParameterFormatTest {
     // Em_Dbpref_Column_Name_Id should have the EM prefix truncated
     String result = instance.transformKey("Em_Dbpref_Column_Name_Id");
     assertNotNull(result);
-    assertEquals(true, result.startsWith("inp"));
+    assertTrue(result.startsWith("inp"));
     // Should NOT contain "em" prefix in the result
-    assertEquals(false, result.startsWith("inpem"));
+    assertFalse(result.startsWith("inpem"));
   }
   /** Set dimension transforming key stores with transformed key. */
 

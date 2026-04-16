@@ -23,14 +23,14 @@ import org.objenesis.ObjenesisStd;
 import org.openbravo.scheduling.ProcessBundle;
 import org.openbravo.scheduling.ProcessLogger;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import com.smf.jobs.ActionResult;
 import com.smf.jobs.JobManager;
 import com.smf.jobs.model.JobResult;
-
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.ArrayList;
 /** Tests for {@link BackgroundRunner}. */
 
 @RunWith(MockitoJUnitRunner.Silent.class)
