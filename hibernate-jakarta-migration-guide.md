@@ -560,6 +560,33 @@ public void getSessionContextAfterInvalidateShouldThrowException() {
 
 ---
 
+### 14b. `FIN_Utility.isPeriodOpen(...)` now expects `Date`
+
+Some module tests still mock the old signature of `FIN_Utility.isPeriodOpen(client, documentType, org, dateAsString)`. In Etendo 27 the method expects a `java.util.Date` as the fourth argument.
+
+#### How to migrate
+
+Update Mockito stubs/verifications to use `Date` matchers:
+
+```java title="Before"
+mockedFinUtility.when(() -> FIN_Utility.isPeriodOpen(
+    anyString(), anyString(), anyString(), anyString())).thenReturn(true);
+```
+
+```java title="After"
+mockedFinUtility.when(() -> FIN_Utility.isPeriodOpen(
+    anyString(), anyString(), anyString(), any(java.util.Date.class))).thenReturn(true);
+```
+
+This applies equally to exact matchers on the document type, for example:
+
+```java title="After"
+mockedFinUtility.when(() -> FIN_Utility.isPeriodOpen(
+    anyString(), eq("SOO"), anyString(), any(java.util.Date.class))).thenReturn(true);
+```
+
+---
+
 ### 15. Kafka `Admin.describeTopics()` ambiguous overload in Mockito
 
 Kafka 3.x added a second overload `describeTopics(TopicCollection)` alongside the existing `describeTopics(Collection<String>)`. Mockito's untyped `any()` matcher becomes ambiguous when both overloads are present, causing a compilation error.
