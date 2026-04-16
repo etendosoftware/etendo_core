@@ -59,8 +59,8 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
-        TestConstants.Clients.FB_GRP, TestConstants.Orgs.FB_GROUP);
+    OBContext.setOBContext(TestConstants.Users.SYSTEM, TestConstants.Roles.SYS_ADMIN,
+        TestConstants.Clients.SYSTEM, TestConstants.Orgs.MAIN);
     VariablesSecureApp vars = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
         OBContext.getOBContext().getCurrentClient().getId(),
         OBContext.getOBContext().getCurrentOrganization().getId());
@@ -132,8 +132,7 @@ public class SecureWebServicesUtilsTest extends WeldBaseTest {
     OBDal.getInstance().save(pref);
     OBDal.getInstance().flush();
     OBDal.getInstance().commitAndClose();
-    OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN,
-        TestConstants.Clients.FB_GRP, TestConstants.Orgs.FB_GROUP);
+    OBContext.setOBContext(TestConstants.Users.SYSTEM);
   }
 
   /**
