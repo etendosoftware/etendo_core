@@ -70,30 +70,30 @@ pipeline {
             env.FAILED_SUITES = "" // List to collect failed test suites
             sh "printenv"
 
+            def skipConditions = load "${pwd()}/pipelines/unittests/utils/skipConditions.groovy"
+
+            echo "--------------- Checking branch type ---------------"
+            if (skipConditions.skipIfVersionHotfix(env.GIT_BRANCH, REPO_NAME, COMMIT_SUCCESS_STATUS, ACCESS_TOKEN, GIT_COMMIT, BUILD_URL, CONTEXT_BUILD)) {
+              return
+            }
+
             echo "--------------- Checking if pipeline should be skipped ---------------"
             def changedFiles = sh(
               script: "git diff --name-only HEAD~1 HEAD",
               returnStdout: true
-            ).trim()
+            ).trim().split('\n') as List
 
             echo "Files changed in last commit: ${changedFiles}"
 
-            // Check if only JenkinsfileOracle was changed
-            def filesList = changedFiles.split('\n')
-            def onlyOracleJenkinsfile = filesList.size() == 1 && filesList[0] == "pipelines/unittests/JenkinsfileOracle"
-
-            if (onlyOracleJenkinsfile) {
-              echo "⏭️ Only pipelines/unittests/JenkinsfileOracle was changed. Skipping pipeline execution."
-
-              sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_SUCCESS_STATUS} \"Pipeline skipped\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
-
-              echo "✅ Pipeline execution aborted successfully. Commit marked as success."
-              currentBuild.result = ABORTED
+            def allowedFiles = [
+              "pipelines/unittests/JenkinsfileOracle"
+            ]
+            if (skipConditions.skipIfOnlyAllowedFilesChanged(changedFiles, allowedFiles, REPO_NAME, COMMIT_SUCCESS_STATUS, "Pipeline skipped", ACCESS_TOKEN, GIT_COMMIT, BUILD_URL, CONTEXT_BUILD)) {
               return
-            } else {
-              echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
-              currentBuild.result = SUCCESS
             }
+
+            echo "✅ Pipeline will continue - Changes detected in other files or multiple files changed."
+            currentBuild.result = SUCCESS
           } catch (Exception e) {
             echo "❌ Error in pipeline skip condition check: ${e.getMessage()}"            
             env.ERROR_MESSAGE = "Pipeline Check Failed"
@@ -243,31 +243,8 @@ pipeline {
                       sh "GIT_SSH_COMMAND=\"ssh -i ${keyfile} -o \"UserKnownHostsFile=/dev/null\" -o \"StrictHostKeyChecking=no\"\" git clone ${PLUGIN_URL} ${PLUGIN_NAME}"
                     }
 
-                    if (!(env.GIT_BRANCH.contains("-Y")) && !(env.GIT_BRANCH.startsWith("release")) && !(env.GIT_BRANCH.startsWith("main" )) && !(env.GIT_BRANCH.startsWith("master")) && !(env.GIT_BRANCH.startsWith("hotfix"))) {
-                        if (isFeatureBranch && epicKey) {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.DEVELOP_BRANCH}
-                            """
-                        } else {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.DEVELOP_BRANCH}
-                            """
-                        }
-                    } else if (env.GIT_BRANCH.contains("-Y") || env.GIT_BRANCH.startsWith("release")) {
-                        if (isFeatureBranch && epicKey) {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.EPIC_BRANCH} || git checkout ${env.BACKPORT_BRANCH}
-                            """
-                        } else {
-                            sh """
-                            cd ${PLUGIN_NAME}
-                            git checkout ${env.BACKPORT_BRANCH}
-                            """
-                        }
-                    }
+                    def pluginBranchCheckout = load "${rootDir}/pipelines/unittests/utils/pluginBranchCheckout.groovy"
+                    pluginBranchCheckout.run(isFeatureBranch, epicKey)
 
                     sh """
                     cd ${PLUGIN_NAME}
