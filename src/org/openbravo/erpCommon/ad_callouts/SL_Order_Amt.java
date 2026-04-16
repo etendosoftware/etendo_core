@@ -175,7 +175,11 @@ public class SL_Order_Amt extends SimpleCallout {
         || StringUtils.equals(strChanged, "inplinenetamt") || forceSetPriceStd) {
       log4j.debug("priceActual:" + priceActual);
       if (!cancelPriceAd) {
-        priceStd = PriceAdjustment.calculatePriceStd(order, product, qtyOrdered, priceActual);
+        // Keep the current base price when the current final price is already fully explained by
+        // the existing price adjustments. Reversing from the rounded final price can drift it.
+        if (!isPriceAdjustmentAlreadyApplied(order, product, qtyOrdered, priceStd, priceActual)) {
+          priceStd = PriceAdjustment.calculatePriceStd(order, product, qtyOrdered, priceActual);
+        }
         // Check whether price adjustment sets priceStd as Zero
         calcDiscount = priceStd.compareTo(priceActual) == 0 || BigDecimal.ZERO.compareTo(priceStd) != 0;
       } else {
@@ -206,8 +210,11 @@ public class SL_Order_Amt extends SimpleCallout {
         grossBaseUnitPrice = grossUnitPrice;
         priceStd = netUnitPrice;
       } else {
-        grossBaseUnitPrice = PriceAdjustment.calculatePriceStd(order, product, qtyOrdered,
-            grossUnitPrice);
+        if (!isPriceAdjustmentAlreadyApplied(order, product, qtyOrdered, grossBaseUnitPrice,
+            grossUnitPrice)) {
+          grossBaseUnitPrice = PriceAdjustment.calculatePriceStd(order, product, qtyOrdered,
+              grossUnitPrice);
+        }
         BigDecimal baseGrossAmount = grossBaseUnitPrice.multiply(qtyOrdered)
             .setScale(stdPrecision, RoundingMode.HALF_UP);
         BigDecimal baseAmount = FinancialUtils.calculateNetAmtFromGross(strTaxId, baseGrossAmount,
@@ -237,8 +244,12 @@ public class SL_Order_Amt extends SimpleCallout {
         || StringUtils.equals(strChanged, INPQTYORDERED)) {
       BigDecimal priceList = isTaxIncludedPriceList ? grossPriceList : netPriceList;
       BigDecimal unitPrice = isTaxIncludedPriceList ? grossBaseUnitPrice : priceStd;
+      BigDecimal finalPrice = isTaxIncludedPriceList ? grossUnitPrice : priceActual;
       BigDecimal discount = priceList.compareTo(BigDecimal.ZERO) == 0 || !calcDiscount
           ? BigDecimal.ZERO
+          : isDiscountAlreadyApplied(order, product, qtyOrdered, priceList, newDiscount, finalPrice,
+              cancelPriceAd, pricePrecision)
+              ? newDiscount
           : priceList.subtract(unitPrice)
           .multiply(new BigDecimal("100"))
           .divide(priceList, stdPrecision, RoundingMode.HALF_UP);
@@ -258,9 +269,7 @@ public class SL_Order_Amt extends SimpleCallout {
       }
 
       if (origDiscount.compareTo(newDiscount) != 0) {
-        BigDecimal baseUnitPrice = priceList
-            .subtract(priceList.multiply(newDiscount).divide(new BigDecimal("100")))
-            .setScale(pricePrecision, RoundingMode.HALF_UP);
+        BigDecimal baseUnitPrice = calculateNewUnitPrice(newDiscount, priceList, pricePrecision);
         if (isTaxIncludedPriceList) {
           grossUnitPrice = PriceAdjustment.calculatePriceActual(order, product, qtyOrdered,
               baseUnitPrice);
@@ -374,9 +383,33 @@ public class SL_Order_Amt extends SimpleCallout {
     info.addResult("dummy", null);
   }
 
-  private BigDecimal calculateNewUnitPrice(BigDecimal newDiscount, BigDecimal priceList) {
+  private BigDecimal calculateNewUnitPrice(BigDecimal newDiscount, BigDecimal priceList,
+      int pricePrecision) {
     return priceList.subtract(newDiscount
         .multiply(priceList)
-        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN));
+        .divide(BigDecimal.valueOf(100)))
+        .setScale(pricePrecision, RoundingMode.HALF_UP);
+  }
+
+  private boolean isPriceAdjustmentAlreadyApplied(Order order, Product product, BigDecimal qtyOrdered,
+      BigDecimal basePrice, BigDecimal finalPrice) {
+    return order != null && product != null && qtyOrdered != null && basePrice != null
+        && finalPrice != null
+        && PriceAdjustment.calculatePriceActual(order, product, qtyOrdered, basePrice)
+            .compareTo(finalPrice) == 0;
+  }
+
+  private boolean isDiscountAlreadyApplied(Order order, Product product, BigDecimal qtyOrdered,
+      BigDecimal priceList, BigDecimal discount, BigDecimal finalPrice, boolean cancelPriceAd,
+      int pricePrecision) {
+    if (priceList == null || discount == null || finalPrice == null
+        || (!cancelPriceAd && (order == null || product == null || qtyOrdered == null))) {
+      return false;
+    }
+
+    BigDecimal basePrice = calculateNewUnitPrice(discount, priceList, pricePrecision);
+    BigDecimal expectedFinalPrice = cancelPriceAd ? basePrice
+        : PriceAdjustment.calculatePriceActual(order, product, qtyOrdered, basePrice);
+    return expectedFinalPrice.compareTo(finalPrice) == 0;
   }
 }
