@@ -39,6 +39,7 @@ import org.apache.logging.log4j.Logger;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.Hibernate;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.model.Entity;
 import org.openbravo.base.model.ModelProvider;
@@ -71,7 +72,11 @@ import org.openbravo.erpCommon.ad_callouts.SimpleCallout;
 import org.openbravo.erpCommon.ad_callouts.SimpleCalloutInformationProvider;
 import org.openbravo.erpCommon.utility.Utility;
 import org.openbravo.model.ad.datamodel.Column;
+import org.openbravo.model.ad.domain.Callout;
+import org.openbravo.model.ad.domain.ModelImplementation;
+import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.ad.domain.ReferencedTable;
+import org.openbravo.model.ad.domain.Validation;
 import org.openbravo.model.ad.ui.AuxiliaryInput;
 import org.openbravo.model.ad.ui.Field;
 import org.openbravo.model.ad.ui.Tab;
@@ -1686,24 +1691,45 @@ public class FormInitializationComponent extends BaseActionHandler {
    * @return true if it is should be fired.
    */
   private boolean isShouldBeFired(String calloutClassName, Column col) {
-    return !calloutClassName
-        .equals(col.getCallout().getADModelImplementationList().get(0).getJavaClassName());
+    String currentCalloutClassName = getCalloutClassName(col);
+    return currentCalloutClassName == null || !calloutClassName.equals(currentCalloutClassName);
   }
 
   private void addCalloutToList(Column col, List<String> listOfCallouts,
       List<String> lastFieldChangedList) {
-    if (col.getCallout().getADModelImplementationList() == null
-        || col.getCallout().getADModelImplementationList().size() == 0) {
+    String calloutClassNameToCall = getCalloutClassName(col);
+    if (calloutClassNameToCall == null) {
       log.info("The callout of the column " + col.getDBColumnName()
           + " doesn't have a corresponding model object, and therefore cannot be executed.");
     } else {
-      String calloutClassNameToCall = col.getCallout()
-          .getADModelImplementationList()
-          .get(0)
-          .getJavaClassName();
       listOfCallouts.add(calloutClassNameToCall);
       lastFieldChangedList.add("inp" + Sqlc.TransformaNombreColumna(col.getDBColumnName()));
     }
+  }
+
+  private String getCalloutClassName(Column col) {
+    Callout callout = col.getCallout();
+    if (callout == null) {
+      return null;
+    }
+    if (!Hibernate.isInitialized(callout) && callout.getId() != null) {
+      Callout managedCallout = OBDal.getInstance().get(Callout.class, callout.getId());
+      if (managedCallout != null) {
+        callout = managedCallout;
+      }
+    }
+    if (callout.getADModelImplementationList() == null || callout.getADModelImplementationList().isEmpty()) {
+      return null;
+    }
+    ModelImplementation modelImplementation = callout.getADModelImplementationList().get(0);
+    if (!Hibernate.isInitialized(modelImplementation) && modelImplementation.getId() != null) {
+      ModelImplementation managedImplementation = OBDal.getInstance().get(ModelImplementation.class,
+          modelImplementation.getId());
+      if (managedImplementation != null) {
+        modelImplementation = managedImplementation;
+      }
+    }
+    return modelImplementation.getJavaClassName();
   }
 
   private String pickDependantColumn(List<String> sortedColumns, List<String> columns,
@@ -1761,12 +1787,36 @@ public class FormInitializationComponent extends BaseActionHandler {
 
     Column c = field.getColumn();
     String val = "";
-    if (c.getValidation() != null && c.getValidation().getValidationCode() != null) {
-      val += c.getValidation().getValidationCode();
+    if (c.getValidation() != null) {
+      Validation validation = c.getValidation();
+      if (!Hibernate.isInitialized(validation) && validation.getId() != null) {
+        Validation managedValidation = OBDal.getInstance().get(Validation.class, validation.getId());
+        if (managedValidation != null) {
+          validation = managedValidation;
+        }
+      }
+      if (validation.getValidationCode() != null) {
+        val += validation.getValidationCode();
+      }
     }
-    if (c.getReference().getId().equals("18")) {
-      if (c.getReferenceSearchKey() != null) {
-        for (ReferencedTable t : c.getReferenceSearchKey().getADReferencedTableList()) {
+    Reference reference = c.getReference();
+    if (!Hibernate.isInitialized(reference) && reference.getId() != null) {
+      Reference managedReference = OBDal.getInstance().get(Reference.class, reference.getId());
+      if (managedReference != null) {
+        reference = managedReference;
+      }
+    }
+    if (reference.getId().equals("18")) {
+      Reference referenceSearchKey = c.getReferenceSearchKey();
+      if (referenceSearchKey != null) {
+        if (!Hibernate.isInitialized(referenceSearchKey) && referenceSearchKey.getId() != null) {
+          Reference managedReferenceSearchKey = OBDal.getInstance().get(Reference.class,
+              referenceSearchKey.getId());
+          if (managedReferenceSearchKey != null) {
+            referenceSearchKey = managedReferenceSearchKey;
+          }
+        }
+        for (ReferencedTable t : referenceSearchKey.getADReferencedTableList()) {
           val += " AND " + t.getSQLWhereClause();
         }
       }

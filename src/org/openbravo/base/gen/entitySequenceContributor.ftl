@@ -29,7 +29,8 @@ public class ${entity.simpleClassName}SequenceContributor implements MetadataCon
                 // Add sequence number generator to property ${p.name}
                 sequencedProperty = "${p.name}";
                 generator = new ${p.getSequenceGeneratorClassName()}(sequencedProperty);
-                entity.getProperty(sequencedProperty).setValueGenerationStrategy(generator);
+                final DefaultSequenceGenerator finalGenerator = generator;
+                entity.getProperty(sequencedProperty).setValueGeneratorCreator(context -> finalGenerator);
 
                 <#if p.DBSequenceName?has_content>
                 // Register the non transactional db sequence

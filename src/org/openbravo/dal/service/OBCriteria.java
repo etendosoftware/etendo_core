@@ -121,6 +121,7 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<E> cq = cb.createQuery(entityClass);
     Root<E> root = cq.from(entityClass);
+    root.alias(alias);
 
     applyAliases(root);
     applyPredicates(cb, cq, root);
@@ -246,6 +247,7 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<Long> cq = cb.createQuery(Long.class);
     Root<E> root = cq.from(entityClass);
+    root.alias(alias);
 
     cq.select(cb.count(root));
     applyPredicates(cb, cq, root);
@@ -278,6 +280,7 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<E> cq = cb.createQuery(entityClass);
     Root<E> root = cq.from(entityClass);
+    root.alias(alias);
 
     applyPredicates(cb, cq, root);
     applyAliases(root);
@@ -596,6 +599,7 @@ public class OBCriteria<E extends BaseOBObject> {
     CriteriaBuilder cb = session.getCriteriaBuilder();
     CriteriaQuery<E> cq = cb.createQuery(entityClass);
     Root<E> root = cq.from(entityClass);
+    root.alias(alias);
 
     applyPredicates(cb, cq, root);
     applyAliases(root);

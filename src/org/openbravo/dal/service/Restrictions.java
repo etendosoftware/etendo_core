@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.openbravo.base.exception.OBException;
 
 /**
  * Factory class for creating Restriction instances.
@@ -423,6 +424,37 @@ public class Restrictions {
    */
   public static Restriction not(Restriction restriction) {
     return new NotRestriction(restriction);
+  }
+
+  /**
+   * Apply a constraint expressed in SQL, with {alias} as a placeholder for the entity's table alias.
+   *
+   * <p>Example:
+   * <pre>{@code
+   * Restrictions.sqlRestriction("exists (select 1 from ad_user_roles ur where ur.ad_user_id = {alias}.ad_user_id)")
+   * }</pre>
+   *
+   * <p>Note: requires that the root entity has an explicit alias set (e.g. via
+   * {@code OBCriteria} which defaults to {@code "e"}).
+   *
+   * @param sql The SQL restriction fragment. Use {@code {alias}} as placeholder for the table alias.
+   * @return Restriction
+   */
+  public static Restriction sqlRestriction(String sql) {
+    return new SqlRestriction(sql);
+  }
+
+  /**
+   * Apply a constraint expressed in SQL with positional parameters ({@code ?} placeholders).
+   * Parameters are bound safely via the Hibernate criteria API, preventing SQL injection.
+   *
+   * @param sql    The SQL restriction fragment. Use {@code {alias}} for the table alias and
+   *               {@code ?} for each positional parameter.
+   * @param values Values to bind in order of the {@code ?} placeholders.
+   * @return Restriction
+   */
+  public static Restriction sqlRestriction(String sql, Object... values) {
+    return new SqlRestriction(sql, values);
   }
 
   /**
@@ -846,6 +878,41 @@ public class Restrictions {
       }
 
       return cb.or(predicates);
+    }
+  }
+
+  // SQL restriction implementation
+  static class SqlRestriction implements Restriction {
+    private final String sql;
+    private final Object[] values;
+
+    SqlRestriction(String sql) {
+      this.sql = sql;
+      this.values = null;
+    }
+
+    SqlRestriction(String sql, Object[] values) {
+      this.sql = sql;
+      this.values = values;
+    }
+
+    @Override
+    public <T> Predicate toPredicate(CriteriaBuilder cb, Root<T> root) {
+      String alias = root.getAlias();
+      String processedSql = sql.replace("{alias}", alias != null ? alias : "this_");
+      if (cb instanceof org.hibernate.query.criteria.HibernateCriteriaBuilder) {
+        org.hibernate.query.criteria.HibernateCriteriaBuilder hcb =
+            (org.hibernate.query.criteria.HibernateCriteriaBuilder) cb;
+        if (values != null && values.length > 0) {
+          Expression<?>[] args = new Expression[values.length];
+          for (int i = 0; i < values.length; i++) {
+            args[i] = cb.literal(values[i]);
+          }
+          return cb.isTrue(hcb.sql(processedSql, Boolean.class, args));
+        }
+        return cb.isTrue(hcb.sql(processedSql, Boolean.class));
+      }
+      throw new OBException("sqlRestriction requires HibernateCriteriaBuilder");
     }
   }
 
