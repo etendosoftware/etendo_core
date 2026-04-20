@@ -101,11 +101,10 @@ public class CostingRuleProcess implements Process {
 
       final CostingRule prevCostingRule = getPreviousRule(rule);
       boolean existsPreviousRule = prevCostingRule != null;
-      boolean existsTransactions = existsTransactions(naturalOrgs, childOrgs);
       if (existsPreviousRule) {
         // Product with costing rule. All trx must be calculated.
         checkAllTrxCalculated(naturalOrgs, childOrgs);
-      } else if (existsTransactions) {
+      } else if (existsTransactions(naturalOrgs, childOrgs)) {
         // Product configured to have cost not calculated cannot have transactions with cost
         // calculated.
         checkNoTrxWithCostCalculated(naturalOrgs, childOrgs);

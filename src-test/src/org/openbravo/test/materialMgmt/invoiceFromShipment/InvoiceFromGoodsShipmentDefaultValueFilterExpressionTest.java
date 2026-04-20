@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
@@ -139,4 +140,16 @@ public class InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest extends OB
 
     assertThrows(OBException.class, () -> filterExpression.getExpression(requestMap));
   }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBContext.setAdminMode(true);
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
 }

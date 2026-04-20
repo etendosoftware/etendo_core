@@ -40,6 +40,7 @@ import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.KernelUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.transaction.InternalMovement;
 
@@ -90,10 +91,24 @@ public abstract class ReferencedInventoryTest extends WeldBaseTest {
         equalTo(expectedNumberOfLines));
   }
 
-  @After
   @AfterEach
-  public void clearSession() {
-    OBDal.getInstance().getSession().clear();
+  @After
+  public void cleanUpCreatedTestData() {
+    OBContext.setAdminMode(true);
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  @Override
+  protected void afterTestExecution(ExtensionContext context) {
+    // Ensure rollback runs even if @AfterEach is skipped (Arquillian quirk)
+    if (SessionHandler.isSessionHandlerPresent()) {
+      SessionHandler.getInstance().setDoRollback(true);
+    }
+    super.afterTestExecution(context);
   }
 
   @Override

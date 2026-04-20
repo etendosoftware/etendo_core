@@ -23,16 +23,15 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.weld.test.ParameterCdiTest;
 import org.openbravo.base.weld.test.ParameterCdiTestRule;
-import org.openbravo.client.myob.WidgetURL;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
@@ -136,5 +135,11 @@ public class ReferencedInventoryBoxForcedReservation extends ReferencedInventory
         reservation);
     assertThat("Reservation must have 1 line",
         reservation.getMaterialMgmtReservationStockList().size(), equalTo(1));
+  }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBDal.getInstance().rollbackAndClose();
   }
 }

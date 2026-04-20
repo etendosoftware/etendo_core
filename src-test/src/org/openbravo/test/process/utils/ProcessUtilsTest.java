@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.openbravo.base.secureApp.VariablesSecureApp;
@@ -30,10 +30,14 @@ public class ProcessUtilsTest extends OBBaseTest {
   public static final String ERROR = "error";
   public static final String SUCCESS = "success";
 
+  /**
+   * Overrides setTestUserContext() to configure the test OBContext before each test.
+   * Using setTestUserContext() instead of setUp() ensures the context is set correctly
+   * within the JUnit 5 + Arquillian lifecycle, avoiding issues where the parent setUp()
+   * could be invoked after a subclass override and overwrite the configured OBContext.
+   */
   @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void setTestUserContext() {
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
         TestConstants.Orgs.ESP_NORTE);
     OBContext currentContext = OBContext.getOBContext();

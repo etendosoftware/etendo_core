@@ -12,7 +12,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.ProcessOrderUtil;
 import org.openbravo.base.weld.WeldUtils;
@@ -46,15 +46,13 @@ public class PurchaseOrderStatus extends WeldBaseTest {
   private WeldUtils weldUtils;
 
   /**
-   * Initializes OBContext and secure app variables before each test.
-   *
-   * @throws Exception
-   *     if setup fails
+   * Overrides setTestUserContext() to configure the test OBContext before each test.
+   * Using setTestUserContext() instead of setUp() ensures the context is set correctly
+   * within the JUnit 5 + Arquillian lifecycle, avoiding issues where the parent setUp()
+   * could be invoked after a subclass override and overwrite the configured OBContext.
    */
   @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void setTestUserContext() {
     Utils.initializeTestContext();
   }
 

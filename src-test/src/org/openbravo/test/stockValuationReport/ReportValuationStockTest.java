@@ -13,7 +13,7 @@ import java.util.Map;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.client.application.ReportDefinition;
@@ -42,10 +42,14 @@ public class ReportValuationStockTest extends OBBaseTest {
     deleteTestWarehouse(warehouse.getId());
   }
 
+  /**
+   * Overrides setTestUserContext() to configure the test OBContext before each test.
+   * Using setTestUserContext() instead of setUp() ensures the context is set correctly
+   * within the JUnit 5 + Arquillian lifecycle, avoiding issues where the parent setUp()
+   * could be invoked after a subclass override and overwrite the configured OBContext.
+   */
   @Override
-  @BeforeEach
-  public void setUp() throws Exception {
-    super.setUp();
+  protected void setTestUserContext() {
     OBContext.setOBContext(TestConstants.Users.ADMIN, TestConstants.Roles.FB_GRP_ADMIN, TestConstants.Clients.FB_GRP,
         TestConstants.Orgs.US_WEST);
     OBContext currentContext = OBContext.getOBContext();

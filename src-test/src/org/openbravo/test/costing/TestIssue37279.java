@@ -21,6 +21,8 @@ package org.openbravo.test.costing;
 
 import java.math.BigDecimal;
 
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -378,6 +380,12 @@ public class TestIssue37279 extends TestCostingBase {
     } finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBDal.getInstance().rollbackAndClose();
   }
 
 }
