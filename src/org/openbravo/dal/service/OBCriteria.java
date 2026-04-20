@@ -649,7 +649,11 @@ public class OBCriteria<E extends BaseOBObject> {
   }
 
   public void setProjection(Projection projection) {
-    this.projection.setProjection(projection);
+    if (this.projection == null) {
+      this.projection = new ProjectionEntry(projection);
+    } else {
+      this.projection.setProjection(projection);
+    }
   }
 
   // Inner classes

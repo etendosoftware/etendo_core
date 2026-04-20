@@ -227,12 +227,8 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
     obc.add(Restrictions.eq(FIN_PaymentSchedInvV.PROPERTY_INVOICE, invoice));
     obc.setProjection(Projections.max(FIN_PaymentSchedInvV.PROPERTY_LASTPAYMENT));
     obc.setMaxResults(1);
-    Date o = obc.uniqueResult(Date.class);
-    if (o != null) {
-      return o;
-    } else {
-      return null;
-    }
+    List<?> results = obc.list();
+    return results.isEmpty() ? null : (Date) results.get(0);
   }
 
   private static HashMap<String, BigDecimal> getOldflowAmounts(List<DebtPayment> debtPayments,
