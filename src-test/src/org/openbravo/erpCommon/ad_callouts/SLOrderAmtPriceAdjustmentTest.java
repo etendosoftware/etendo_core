@@ -90,6 +90,9 @@ public class SLOrderAmtPriceAdjustmentTest {
   private PriceList priceList;
   private SL_Order_Amt callout;
 
+  /**
+   * Initializes the callout instance and captures every result written during each test.
+   */
   @Before
   public void setUp() {
     callout = new SL_Order_Amt();

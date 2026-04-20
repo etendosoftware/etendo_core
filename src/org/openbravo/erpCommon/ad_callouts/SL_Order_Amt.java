@@ -245,14 +245,15 @@ public class SL_Order_Amt extends SimpleCallout {
       BigDecimal priceList = isTaxIncludedPriceList ? grossPriceList : netPriceList;
       BigDecimal unitPrice = isTaxIncludedPriceList ? grossBaseUnitPrice : priceStd;
       BigDecimal finalPrice = isTaxIncludedPriceList ? grossUnitPrice : priceActual;
-      BigDecimal discount = priceList.compareTo(BigDecimal.ZERO) == 0 || !calcDiscount
-          ? BigDecimal.ZERO
-          : isDiscountAlreadyApplied(order, product, qtyOrdered, priceList, newDiscount, finalPrice,
-              cancelPriceAd, pricePrecision)
-              ? newDiscount
-          : priceList.subtract(unitPrice)
-          .multiply(new BigDecimal("100"))
-          .divide(priceList, stdPrecision, RoundingMode.HALF_UP);
+      BigDecimal discount = BigDecimal.ZERO;
+      if (priceList.compareTo(BigDecimal.ZERO) != 0 && calcDiscount) {
+        BigDecimal basePrice = calculateNewUnitPrice(newDiscount, priceList, pricePrecision);
+        if (isDiscountAlreadyApplied(order, product, qtyOrdered, basePrice, finalPrice, cancelPriceAd)) {
+          discount = newDiscount;
+        } else {
+          discount = calculateDiscountFromPrices(priceList, unitPrice, stdPrecision);
+        }
+      }
       log4j.debug("Discount rounded: " + discount.toString());
       info.addResult(INPDISCOUNT, discount);
 
@@ -383,33 +384,87 @@ public class SL_Order_Amt extends SimpleCallout {
     info.addResult("dummy", null);
   }
 
-  private BigDecimal calculateNewUnitPrice(BigDecimal newDiscount, BigDecimal priceList,
-      int pricePrecision) {
-    return priceList.subtract(newDiscount
-        .multiply(priceList)
-        .divide(BigDecimal.valueOf(100)))
-        .setScale(pricePrecision, RoundingMode.HALF_UP);
+  /**
+   * Calculates the base unit price that corresponds to the manual discount entered by the user.
+   *
+   * @param newDiscount
+   *     manual discount percentage entered in the line
+   * @param priceList
+   *     list price used as the reference for the discount calculation
+   * @param pricePrecision
+   *     currency price precision applied to the resulting base price
+   * @return the base unit price before applying any price adjustment
+   */
+  private BigDecimal calculateNewUnitPrice(BigDecimal newDiscount, BigDecimal priceList, int pricePrecision) {
+    return priceList.subtract(newDiscount.multiply(priceList).divide(BigDecimal.valueOf(100))).setScale(pricePrecision,
+        RoundingMode.HALF_UP);
   }
 
+  /**
+   * Calculates the manual discount percentage implied by a list price and a base unit price.
+   *
+   * @param priceList
+   *     list price used as the discount reference
+   * @param unitPrice
+   *     base unit price after applying the manual discount only
+   * @param stdPrecision
+   *     standard precision used to round the resulting discount percentage
+   * @return the manual discount percentage represented by the provided prices
+   */
+  private BigDecimal calculateDiscountFromPrices(BigDecimal priceList, BigDecimal unitPrice, int stdPrecision) {
+    return priceList.subtract(unitPrice).multiply(new BigDecimal("100")).divide(priceList, stdPrecision,
+        RoundingMode.HALF_UP);
+  }
+
+  /**
+   * Checks whether the current final price already matches the result of applying active price
+   * adjustments to the provided base price.
+   *
+   * @param order
+   *     order used to resolve the applicable price adjustments
+   * @param product
+   *     product whose price adjustments are evaluated
+   * @param qtyOrdered
+   *     quantity used during price adjustment evaluation
+   * @param basePrice
+   *     base price before applying price adjustments
+   * @param finalPrice
+   *     current final price present in the line
+   * @return {@code true} when the final price is already explained by the active price adjustments
+   */
   private boolean isPriceAdjustmentAlreadyApplied(Order order, Product product, BigDecimal qtyOrdered,
       BigDecimal basePrice, BigDecimal finalPrice) {
-    return order != null && product != null && qtyOrdered != null && basePrice != null
-        && finalPrice != null
-        && PriceAdjustment.calculatePriceActual(order, product, qtyOrdered, basePrice)
-            .compareTo(finalPrice) == 0;
+    return order != null && product != null && qtyOrdered != null && basePrice != null && finalPrice != null && PriceAdjustment.calculatePriceActual(
+        order, product, qtyOrdered, basePrice).compareTo(finalPrice) == 0;
   }
 
-  private boolean isDiscountAlreadyApplied(Order order, Product product, BigDecimal qtyOrdered,
-      BigDecimal priceList, BigDecimal discount, BigDecimal finalPrice, boolean cancelPriceAd,
-      int pricePrecision) {
-    if (priceList == null || discount == null || finalPrice == null
-        || (!cancelPriceAd && (order == null || product == null || qtyOrdered == null))) {
+  /**
+   * Checks whether the current final price is already explained by the current manual discount and
+   * the active price adjustments.
+   *
+   * @param order
+   *     order used to resolve the applicable price adjustments
+   * @param product
+   *     product whose price adjustments are evaluated
+   * @param qtyOrdered
+   *     quantity used during price adjustment evaluation
+   * @param basePrice
+   *     base price resulting from the current manual discount
+   * @param finalPrice
+   *     current final price present in the line
+   * @param cancelPriceAd
+   *     flag indicating whether price adjustments are disabled for the line
+   * @return {@code true} when the current final price is already explained by the current manual
+   *     discount and the active price adjustments
+   */
+  private boolean isDiscountAlreadyApplied(Order order, Product product, BigDecimal qtyOrdered, BigDecimal basePrice,
+      BigDecimal finalPrice, boolean cancelPriceAd) {
+    if (basePrice == null || finalPrice == null || (!cancelPriceAd && (order == null || product == null || qtyOrdered == null))) {
       return false;
     }
 
-    BigDecimal basePrice = calculateNewUnitPrice(discount, priceList, pricePrecision);
-    BigDecimal expectedFinalPrice = cancelPriceAd ? basePrice
-        : PriceAdjustment.calculatePriceActual(order, product, qtyOrdered, basePrice);
+    BigDecimal expectedFinalPrice = cancelPriceAd ? basePrice : PriceAdjustment.calculatePriceActual(order, product,
+        qtyOrdered, basePrice);
     return expectedFinalPrice.compareTo(finalPrice) == 0;
   }
 }
