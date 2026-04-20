@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jboss.arquillian.junit5.ArquillianExtension;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -112,12 +112,6 @@ public class ReversePaymentTest extends WeldBaseTest {
       log.error("Failed to set test context", e);
       throw new RuntimeException("Cannot set test context", e);
     }
-  }
-
-  @BeforeEach
-  @Override
-  public void setUp() throws Exception {
-    super.setUp();
   }
 
   /**

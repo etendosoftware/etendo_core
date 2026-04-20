@@ -199,6 +199,9 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     // Price List
     PriceListTest.class, //
 
+    // costing
+    TestCosting.class, //
+
     // CopyFromOrders refactor
     CopyLinesFromOrdersTest.class,
 
@@ -214,9 +217,6 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // grid configuration
     ConfigurableTransactionalFilters.class,
-
-    // costing
-    TestCosting.class, //
 
     // Taxes
     TaxesTest.class, //

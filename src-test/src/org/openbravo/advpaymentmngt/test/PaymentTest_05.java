@@ -30,7 +30,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.dao.AdvPaymentMngtDao;
 import org.openbravo.advpaymentmngt.process.FIN_AddPayment;
@@ -97,16 +97,6 @@ public class PaymentTest_05 extends WeldBaseTest {
       log.error("Failed to set test context", e);
       throw new RuntimeException("Cannot set test context", e);
     }
-  }
-
-  /**
-   * Initial Set up for each test.
-   */
-  @BeforeEach
-  @Override
-  public void setUp() throws Exception {
-    // Call parent setUp which handles OBContext initialization
-    super.setUp();
   }
 
   /**

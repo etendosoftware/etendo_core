@@ -40,6 +40,7 @@ public class ReferencedInventoryFullBoxTest extends ReferencedInventoryBoxTest {
       for (String toBinId : BINS) {
         testBox(toBinId, product[0], product[1], PARAMS.qtyToBox, null, false);
         OBDal.getInstance().getSession().clear();
+        OBDal.getInstance().rollbackAndClose();
       }
     }
   }

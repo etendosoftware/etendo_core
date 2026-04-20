@@ -276,6 +276,25 @@ public class TestCostingUtils {
     }
   }
 
+
+  private static Product newCloneCostingProduct(Product product, String name, int num, String productType){
+    Product productClone = (Product) DalUtil.copy(product, false);
+    setGeneralData(productClone);
+
+    productClone.setSearchKey(name + "-" + num);
+    productClone.setName(name + "-" + num);
+    productClone.setMaterialMgmtMaterialTransactionList(null);
+    productClone.setProductType(productType);
+    OBDal.getInstance().save(productClone);
+    return productClone;
+  }
+
+  private static Product newCloneCostingProduct(String name, int num, String productType){
+    Product product = OBDal.getInstance()
+        .get(Product.class, TestCostingConstants.COSTING_PRODUCT_ID);
+    return newCloneCostingProduct(product, name, num, productType);
+  }
+
   // Create a new product cloning costing Product 1
   private static Product cloneProduct(String name, int num, String productType,
       BigDecimal purchasePrice, BigDecimal salesPrice, BigDecimal cost, String costType, int year,
@@ -283,14 +302,7 @@ public class TestCostingUtils {
     try {
       Product product = OBDal.getInstance()
           .get(Product.class, TestCostingConstants.COSTING_PRODUCT_ID);
-      Product productClone = (Product) DalUtil.copy(product, false);
-      setGeneralData(productClone);
-
-      productClone.setSearchKey(name + "-" + num);
-      productClone.setName(name + "-" + num);
-      productClone.setMaterialMgmtMaterialTransactionList(null);
-      productClone.setProductType(productType);
-      OBDal.getInstance().save(productClone);
+      Product productClone = newCloneCostingProduct(product, name, num, productType);
 
       if (productIdList.isEmpty()) {
 
@@ -411,17 +423,7 @@ public class TestCostingUtils {
       String currencyId) {
     try {
       int num = TestCostingUtils.getNumberOfCostingProducts(name);
-      Product product = OBDal.getInstance()
-          .get(Product.class, TestCostingConstants.COSTING_PRODUCT_ID);
-      Product productClone = (Product) DalUtil.copy(product, false);
-      setGeneralData(productClone);
-
-      productClone.setSearchKey(name + "-" + num);
-      productClone.setName(name + "-" + num);
-      productClone.setMaterialMgmtMaterialTransactionList(null);
-      productClone.setProductType(productType);
-      OBDal.getInstance().save(productClone);
-
+      Product productClone = newCloneCostingProduct(name, num, productType);
       StringBuffer where = new StringBuffer();
       where.append(" as pp ");
       where.append(" join pp." + ProductPrice.PROPERTY_PRICELISTVERSION + " as plv");
@@ -872,7 +874,6 @@ public class TestCostingUtils {
       BigDecimal price, BigDecimal quantity) {
     try {
       completeDocument(goodsReceipt);
-      OBDal.getInstance().commitAndClose();
       runCostingBackground();
       ShipmentInOut receipt = OBDal.getInstance().get(ShipmentInOut.class, goodsReceipt.getId());
       postDocument(receipt);

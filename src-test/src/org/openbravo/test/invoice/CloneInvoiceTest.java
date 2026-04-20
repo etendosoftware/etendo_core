@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.openbravo.advpaymentmngt.test.TestUtility;
 import org.openbravo.advpaymentmngt.test.Value;
@@ -63,25 +63,19 @@ public class CloneInvoiceTest extends WeldBaseTest {
   private String financialAccountId;
 
   /**
-   * This method is used to set up the context for the invoice cloning test.
-   * It is annotated with @BeforeEach, meaning it is run before each test method in this class.
-   * <p>
-   * It first calls the setUp method of the superclass to perform any setup operations defined there.
-   * Then it calls the TestUtility.setTestContext method to set up the test context.
-   * <p>
-   * A VariablesSecureApp object is created with the IDs of the current user, client, organization, and role.
-   * The RequestContext's VariableSecureApp is then set to this object.
-   * <p>
-   * The session values for the format output, group separator, and decimal separator for the general quantity edition are set.
-   * These values are used to format the output of quantities in the system.
-   *
-   * @throws Exception
-   *     If there is an error during the setup.
+   * Overrides setTestUserContext() to configure the test OBContext before each test.
+   * Using setTestUserContext() instead of a custom @BeforeEach that called super.setUp()
+   * ensures the context is set correctly within the JUnit 5 + Arquillian lifecycle,
+   * avoiding double invocation of setUp() and the risk of the parent overwriting the
+   * configured OBContext.
    */
-  @BeforeEach
-  public void setUpCloneInvoice() throws Exception {
-    super.setUp();
-    TestUtility.setTestContext();
+  @Override
+  protected void setTestUserContext() {
+    try {
+      TestUtility.setTestContext();
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to set test context", e);
+    }
     VariablesSecureApp vsa = new VariablesSecureApp(
         OBContext.getOBContext().getUser().getId(),
         OBContext.getOBContext().getCurrentClient().getId(),

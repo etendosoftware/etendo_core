@@ -25,6 +25,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -175,9 +177,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(1).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment2, product.getId(),
           documentPostAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -330,9 +329,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(1).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment2, product.getId(),
           documentPostAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -483,9 +479,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(1).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment2, product.getId(),
           documentPostAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -737,9 +730,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(2).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment3, product.getId(),
           documentPostAssertList3);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -946,9 +936,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList2.get(2).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment3, product.getId(),
           documentPostAssertList3);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1076,9 +1063,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(0).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment1, product.getId(),
           documentPostAssertList1);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1190,9 +1174,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
       CostAdjustment costAdjustment = OBDal.getInstance()
           .get(CostAdjustment.class, costAdjustmentList.get(0).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment, product.getId(), documentPostAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1294,9 +1275,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
       CostAdjustment costAdjustment = OBDal.getInstance()
           .get(CostAdjustment.class, costAdjustmentList.get(0).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment, product.getId(), documentPostAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1390,9 +1368,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
       CostAdjustment costAdjustment = OBDal.getInstance()
           .get(CostAdjustment.class, costAdjustmentList.get(0).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment, product.getId(), documentPostAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1468,9 +1443,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
 
       // Assert cost adjustment
       assertEquals(TestCostingUtils.getCostAdjustment(product.getId()), null);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1610,9 +1582,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(1).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment2, product.getId(),
           documentPostAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1879,9 +1848,6 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
       CostAdjustment costAdjustment1 = OBDal.getInstance()
           .get(CostAdjustment.class, costAdjustmentList1.get(0).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment1, null, documentPostAssertList1);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1890,6 +1856,12 @@ public class TestCostingNoSourceAdjustments extends TestCostingBase {
     finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBDal.getInstance().rollbackAndClose();
   }
 
 }

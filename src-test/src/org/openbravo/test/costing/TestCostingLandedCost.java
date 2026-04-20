@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -169,9 +171,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity2.multiply(price6).add(quantity2.multiply(price2).negate()), day0, true, false));
       costAdjustmentAssertList2.add(costAdjustmentAssertLineList21);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList2, costAdjustmentAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -313,9 +312,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           false));
       costAdjustmentAssertList2.add(costAdjustmentAssertLineList21);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList2, costAdjustmentAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -537,9 +533,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           DOLLAR_ID, "LC", amount10, day3, true, false));
       costAdjustmentAssertList2.add(costAdjustmentAssertLineList24);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList2, costAdjustmentAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -639,9 +632,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity1.multiply(price4).add(quantity1.multiply(price1).negate()), day1, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList1);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -719,9 +709,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity1.multiply(price4).add(quantity1.multiply(price1).negate()), day2, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList1);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -823,9 +810,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity1.multiply(price6).add(quantity1.multiply(price1).negate()), day1, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList1);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -927,9 +911,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity1.multiply(price6).add(quantity1.multiply(price1).negate()), day1, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList1);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1042,9 +1023,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           .add(new CostAdjustmentAssert(transactionList.get(0), "LC", amount3, day1, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList3);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1229,9 +1207,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(2).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment3, product.getId(),
           documentPostAssertList3);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1327,9 +1302,6 @@ public class TestCostingLandedCost extends TestCostingBase {
 
       // Assert cost adjustment 2
       assertEquals(TestCostingUtils.getCostAdjustment(product2.getId()), null);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1511,9 +1483,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           amount3.negate(), day1, true, false, "VO"));
       costAdjustmentAssertList2.add(costAdjustmentAssertLineList26);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList2, costAdjustmentAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1694,9 +1663,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           .add(new CostAdjustmentAssert(transactionList2.get(0), "LC", amount2, day1, true, false));
       costAdjustmentAssertList2.add(costAdjustmentAssertLineList23);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList2, costAdjustmentAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1785,9 +1751,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           "LC", quantity1.multiply(price4), day1, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList2);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1864,9 +1827,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           "LC", quantity1.multiply(price2), day2, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList2);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -1955,9 +1915,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           "LC", quantity1.multiply(price4), day1, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList2);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -2034,9 +1991,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           "LC", quantity1.multiply(price2), day2, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList2);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -2141,9 +2095,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList.get(0).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment1, product.getId(),
           documentPostAssertList1);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -2371,9 +2322,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           "VO"));
       costAdjustmentAssertList2.add(costAdjustmentAssertLineList23);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList2, costAdjustmentAssertList2);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -2707,9 +2655,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           .get(CostAdjustment.class, costAdjustmentList2.get(2).getId());
       TestCostingUtils.assertDocumentPost(costAdjustment1, product2.getId(),
           documentPostAssertList1);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -2801,9 +2746,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity1.multiply(price6).add(quantity1.multiply(price1).negate()), day1, true, false));
       costAdjustmentAssertList.add(costAdjustmentAssertLineList1);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList, costAdjustmentAssertList);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -3002,9 +2944,6 @@ public class TestCostingLandedCost extends TestCostingBase {
 
       // Assert cost adjustment 3
       assertEquals(TestCostingUtils.getCostAdjustment(product3.getId()), null);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -3208,9 +3147,6 @@ public class TestCostingLandedCost extends TestCostingBase {
 
       // Assert cost adjustment 3
       assertEquals(TestCostingUtils.getCostAdjustment(product3.getId()), null);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -3417,9 +3353,6 @@ public class TestCostingLandedCost extends TestCostingBase {
 
       // Assert cost adjustment 3
       assertEquals(TestCostingUtils.getCostAdjustment(product3.getId()), null);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -3628,9 +3561,6 @@ public class TestCostingLandedCost extends TestCostingBase {
 
       // Assert cost adjustment 3
       assertEquals(TestCostingUtils.getCostAdjustment(product3.getId()), null);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -3866,9 +3796,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity5.multiply(price10).add(quantity5.multiply(price3).negate()), day3, true, false));
       costAdjustmentAssertList3.add(costAdjustmentAssertLineList13);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList3, costAdjustmentAssertList3);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -4102,9 +4029,6 @@ public class TestCostingLandedCost extends TestCostingBase {
           quantity5.multiply(price10).add(quantity5.multiply(price3).negate()), day3, true, false));
       costAdjustmentAssertList3.add(costAdjustmentAssertLineList13);
       TestCostingUtils.assertCostAdjustment(costAdjustmentList3, costAdjustmentAssertList3);
-
-      OBDal.getInstance().commitAndClose();
-
     } catch (Exception e) {
       System.out.println(e.getMessage());
       throw new OBException(e);
@@ -4113,6 +4037,12 @@ public class TestCostingLandedCost extends TestCostingBase {
     finally {
       OBContext.restorePreviousMode();
     }
+  }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBDal.getInstance().rollbackAndClose();
   }
 
 }

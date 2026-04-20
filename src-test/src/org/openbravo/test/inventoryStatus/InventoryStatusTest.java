@@ -36,6 +36,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -121,7 +122,7 @@ public class InventoryStatusTest extends WeldBaseTest {
   private static String productIS004ID;
 
   @Override
-  protected void beforeTestExecution(org.junit.jupiter.api.extension.ExtensionContext context) {
+  protected void beforeTestExecution(ExtensionContext context) {
     super.beforeTestExecution(context);
     log.info("Initializing Inventory Status Test ...");
     OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID, LANGUAGE_CODE);

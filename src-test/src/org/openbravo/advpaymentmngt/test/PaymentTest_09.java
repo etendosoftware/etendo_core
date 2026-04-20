@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.openbravo.advpaymentmngt.process.FIN_ExecutePayment;
 import org.openbravo.advpaymentmngt.utility.FIN_Utility;
 import org.openbravo.base.provider.OBProvider;
@@ -109,16 +109,6 @@ public class PaymentTest_09 extends OBBaseTest {
       log.error("Failed to set test context", e);
       throw new RuntimeException("Cannot set test context", e);
     }
-  }
-
-  /**
-   * Initial Set up for each test.
-   */
-  @BeforeEach
-  @Override
-  public void setUp() throws Exception {
-    // Call parent setUp which handles OBContext initialization
-    super.setUp();
   }
 
   @Test
