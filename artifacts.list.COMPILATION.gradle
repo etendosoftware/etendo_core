@@ -51,7 +51,6 @@ List<String> _dependenciesListCOMPILATION = [
   'com.sun.xml.fastinfoset:FastInfoset:1.2.15',
   'nekohtml:nekohtml:0.9.5',
   'org.apache.xmlbeans:xmlbeans:5.1.1',
-  'org.apache.poi:ooxml-schemas:1.4',
   'org.dom4j:dom4j:2.2.0',
   'xerces:xercesImpl:2.9.0',
 
