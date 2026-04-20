@@ -31,6 +31,7 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.shrinkwrap.api.Filters;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
@@ -74,7 +75,13 @@ public class WeldBaseTest extends OBBaseTest {
       archive = ShrinkWrap.create(JavaArchive.class);
 
       // add all beans without exclusions so cdi can also be used for *test* packages
-      archive.addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
+      archive.addAsManifestResource(
+          new StringAsset("<beans bean-discovery-mode=\"all\" version=\"4.0\""
+              + " xmlns=\"https://jakarta.ee/xml/ns/jakartaee\""
+              + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+              + " xsi:schemaLocation=\"https://jakarta.ee/xml/ns/jakartaee"
+              + " https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd\"/>"),
+          "beans.xml");
 
       // include all classes deployed in webapp container
       archive.as(ExplodedImporter.class).importDirectory(sourcePath + "/build/classes/", Filters.exclude("/groovy/*"));
