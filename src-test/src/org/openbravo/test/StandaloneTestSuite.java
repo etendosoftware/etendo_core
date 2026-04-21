@@ -20,10 +20,53 @@
 package org.openbravo.test;
 
 import org.junit.platform.suite.api.SelectClasses;
-import org.junit.platform.suite.api.SelectPackages;
 import org.junit.platform.suite.api.Suite;
 import org.openbravo.advpaymentmngt.suite.AdvPaymentMngtTestSuite;
 import org.openbravo.authentication.hashing.PasswordHashing;
+import org.openbravo.base.secureApp.AllowedCrossDomainsHandlerTest;
+import org.openbravo.base.secureApp.VariablesHistoryTest;
+import org.openbravo.cluster.ClusterServiceManagerTest;
+import org.openbravo.cluster.ClusterServiceTest;
+import org.openbravo.cluster.ClusterServiceThreadTest;
+import org.openbravo.cluster.JmxClusterServiceManagerTest;
+import org.openbravo.common.actionhandler.AgingGeneralLedgerByOrganizationActionHandlerTest;
+import org.openbravo.common.actionhandler.CancelAndReplaceGetCancelledOrderLineTest;
+import org.openbravo.common.actionhandler.CancelAndReplaceSalesOrderTest;
+import org.openbravo.common.actionhandler.CashflowForecastReportActionHandlerTest;
+import org.openbravo.common.actionhandler.ConfirmCancelAndReplaceSalesOrderTest;
+import org.openbravo.common.actionhandler.CopyFromOrdersActionHandlerTest;
+import org.openbravo.common.actionhandler.CopyProcessPlanVersionTest;
+import org.openbravo.common.actionhandler.GetConvertedQtyActionHandlerTest;
+import org.openbravo.common.actionhandler.InvoiceFromShipmentActionHandlerTest;
+import org.openbravo.common.actionhandler.KillProcessTest;
+import org.openbravo.common.actionhandler.ManagePrereservationActionHandlerTest;
+import org.openbravo.common.actionhandler.ManageReservationActionHandlerTest;
+import org.openbravo.common.actionhandler.OrderCreatePOLinesTest;
+import org.openbravo.common.actionhandler.RelateProductCatTaxToServiceProductTest;
+import org.openbravo.common.actionhandler.RelateProductsToServiceProductTest;
+import org.openbravo.common.actionhandler.ReservedGoodMovementActionHandlerTest;
+import org.openbravo.common.actionhandler.ResetAccountingHandlerTest;
+import org.openbravo.common.actionhandler.ServiceRelatedLinePriceActionHandlerTest;
+import org.openbravo.common.actionhandler.createlinesfromprocess.InOutLineDataTest;
+import org.openbravo.common.datasource.InOutLinePEHQLTransformerTest;
+import org.openbravo.common.datasource.OrderLinePEHQLTransformerTest;
+import org.openbravo.common.datasource.OrderLinePickEditTransformerTest;
+import org.openbravo.common.datasource.ReturnToFromCustomerVendorHQLTransformerTest;
+import org.openbravo.common.datasource.ReturnToFromCustomerVendorOrphanHQLTransformerTest;
+import org.openbravo.common.datasource.ServiceModifyTaxProductCategoryTransformerTest;
+import org.openbravo.common.filterexpression.AgingOrganizationFilterExpressionTest;
+import org.openbravo.costing.CostAdjustmentProcessHandlerTest;
+import org.openbravo.erpCommon.ad_process.ScheduleProcessTest;
+import org.openbravo.portal.PortalEmailBodyTest;
+import org.openbravo.role.inheritance.RecalculatePermissionsHandlerTest;
+import org.openbravo.role.inheritance.RoleInheritanceWarningFICExtensionTest;
+import org.openbravo.service.centralrepository.CentralRepositoryPrivateMethodsTest;
+import org.openbravo.service.centralrepository.CentralRepositoryTest;
+import org.openbravo.service.centralrepository.ModuleDependencyTest;
+import org.openbravo.service.centralrepository.ModuleInstallDetailTest;
+import org.openbravo.service.centralrepository.ModuleTest;
+import org.openbravo.service.centralrepository.SimpleModuleTest;
+import org.openbravo.service.db.ClientImportProcessorTest;
 import org.openbravo.base.weld.test.testinfrastructure.CdiInfrastructure;
 import org.openbravo.base.weld.test.testinfrastructure.DalPersistanceEventTest;
 import org.openbravo.base.weld.test.testinfrastructure.ParameterizedCdi;
@@ -70,7 +113,13 @@ import org.openbravo.test.cancelandreplace.CancelAndReplaceTest;
 import org.openbravo.test.centralbroker.CentralBrokerTest;
 import org.openbravo.test.conversionratedoc.ConversionRateDocUniqueTestSuite;
 import org.openbravo.test.copyLinesFromOrders.CopyLinesFromOrdersTest;
-import org.openbravo.test.costing.TestCosting;
+import org.openbravo.test.costing.TestCostingLandedCost;
+import org.openbravo.test.costing.TestCostingNoSourceAdjustments;
+import org.openbravo.test.costing.TestCostingSourceAdjustments;
+import org.openbravo.test.costing.TestIssue37033;
+import org.openbravo.test.costing.TestIssue37279;
+import org.openbravo.test.costing.TestIssue39616;
+import org.openbravo.test.costing.TestIssue39888;
 import org.openbravo.test.createInvoiceFromOrder.CreateOrderFromQuotationTest;
 import org.openbravo.test.createlinesfrom.CreateLinesFromTest;
 import org.openbravo.test.dal.AdminContextTest;
@@ -200,7 +249,13 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
     PriceListTest.class, //
 
     // costing
-    TestCosting.class, //
+    TestCostingSourceAdjustments.class, //
+    TestCostingNoSourceAdjustments.class, //
+    TestCostingLandedCost.class, //
+    TestIssue37033.class, //
+    TestIssue37279.class, //
+    TestIssue39616.class, //
+    TestIssue39888.class, //
 
     // CopyFromOrders refactor
     CopyLinesFromOrdersTest.class,
@@ -466,19 +521,72 @@ import org.openbravo.userinterface.selectors.test.ExpressionsTest;
 
     // RptMA_ProcessPlan
     RptMA_ProcessPlanTest.class,
-})
-@SelectPackages({"org.openbravo.service.centralrepository",
-    "org.openbravo.service.db",
-    "org.openbravo.erpCommon.ad_process",
-    "org.openbravo.common.actionhandler",
-    "org.openbravo.common.filterexpression",
-    "org.openbravo.common.datasource",
-    "org.openbravo.portal",
-    "org.openbravo.costing",
-    "org.openbravo.cluster",
-    "org.openbravo.role.inheritance",
-    "org.openbravo.base.secureApp",
 
+    // base.secureApp
+    AllowedCrossDomainsHandlerTest.class,
+    VariablesHistoryTest.class,
+
+    // cluster
+    ClusterServiceManagerTest.class,
+    ClusterServiceTest.class,
+    ClusterServiceThreadTest.class,
+    JmxClusterServiceManagerTest.class,
+
+    // common.actionhandler
+    AgingGeneralLedgerByOrganizationActionHandlerTest.class,
+    CancelAndReplaceGetCancelledOrderLineTest.class,
+    CancelAndReplaceSalesOrderTest.class,
+    CashflowForecastReportActionHandlerTest.class,
+    ConfirmCancelAndReplaceSalesOrderTest.class,
+    CopyFromOrdersActionHandlerTest.class,
+    CopyProcessPlanVersionTest.class,
+    GetConvertedQtyActionHandlerTest.class,
+    InOutLineDataTest.class,
+    InvoiceFromShipmentActionHandlerTest.class,
+    KillProcessTest.class,
+    ManagePrereservationActionHandlerTest.class,
+    ManageReservationActionHandlerTest.class,
+    OrderCreatePOLinesTest.class,
+    RelateProductCatTaxToServiceProductTest.class,
+    RelateProductsToServiceProductTest.class,
+    ReservedGoodMovementActionHandlerTest.class,
+    ResetAccountingHandlerTest.class,
+    ServiceRelatedLinePriceActionHandlerTest.class,
+
+    // common.datasource
+    InOutLinePEHQLTransformerTest.class,
+    OrderLinePEHQLTransformerTest.class,
+    OrderLinePickEditTransformerTest.class,
+    ReturnToFromCustomerVendorHQLTransformerTest.class,
+    ReturnToFromCustomerVendorOrphanHQLTransformerTest.class,
+    ServiceModifyTaxProductCategoryTransformerTest.class,
+
+    // common.filterexpression
+    AgingOrganizationFilterExpressionTest.class,
+
+    // costing
+    CostAdjustmentProcessHandlerTest.class,
+
+    // erpCommon.ad_process
+    ScheduleProcessTest.class,
+
+    // portal
+    PortalEmailBodyTest.class,
+
+    // role.inheritance
+    RecalculatePermissionsHandlerTest.class,
+    RoleInheritanceWarningFICExtensionTest.class,
+
+    // service.centralrepository
+    CentralRepositoryPrivateMethodsTest.class,
+    CentralRepositoryTest.class,
+    ModuleDependencyTest.class,
+    ModuleInstallDetailTest.class,
+    ModuleTest.class,
+    SimpleModuleTest.class,
+
+    // service.db
+    ClientImportProcessorTest.class,
 })
 public class StandaloneTestSuite {
 }

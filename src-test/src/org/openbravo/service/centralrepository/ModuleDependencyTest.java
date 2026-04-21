@@ -15,7 +15,7 @@ import org.openbravo.base.exception.OBException;
  * Unit tests for the ModuleDependency class.
  * Verifies the behavior of JSON parsing and object manipulation methods.
  */
-class ModuleDependencyTest {
+public class ModuleDependencyTest {
 
   /**
    * Tests the fromJson method with a valid JSON array.

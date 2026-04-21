@@ -24,7 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * handling in the current node, processing state, and deregistration.
  */
 @ExtendWith(MockitoExtension.class)
-class ClusterServiceTest {
+public class ClusterServiceTest {
 
   private static final String NODE_ID = "node123";
   private static final String NODE_NAME = "testNode";
