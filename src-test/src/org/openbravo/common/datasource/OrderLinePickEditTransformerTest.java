@@ -36,7 +36,7 @@ import org.openbravo.model.materialmgmt.transaction.ShipmentInOutLine;
  * including Sales Order Lines tab and Return From Customer Lines tab.
  */
 @ExtendWith(MockitoExtension.class)
-class OrderLinePickEditTransformerTest {
+public class OrderLinePickEditTransformerTest {
   private static final String  ORDER_LINE_ID = "TEST_ORDERLINE_ID";
 
   @Mock
