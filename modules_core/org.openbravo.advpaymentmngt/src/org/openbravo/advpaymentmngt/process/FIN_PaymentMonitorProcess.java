@@ -108,7 +108,10 @@ public class FIN_PaymentMonitorProcess extends DalBaseProcess {
           "      )" +
           "    ))" +
           "    or (i.outstandingAmount <> 0 and i.lastCalculatedOnDate is null)" +
-          "    or (i.paymentComplete = true and i.finalSettlementDate is null and i.outstandingAmount = 0)";
+          "    or (i.paymentComplete = true and i.finalSettlementDate is null and i.outstandingAmount = 0)" +
+          "    or (i.paymentComplete = false" +
+          "        and i.lastCalculatedOnDate is not null" +
+          "        and cast(i.lastCalculatedOnDate as date) < current_date())";
       //@formatter:on
 
       if (migration != null) {
