@@ -43,6 +43,7 @@ import org.openbravo.dal.service.OBDao;
 import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.SequenceIdData;
 import org.openbravo.materialmgmt.ReservationUtils;
+import org.openbravo.materialmgmt.refinventory.ReferencedInventoryUtil;
 import org.openbravo.model.ad.domain.Preference;
 import org.openbravo.model.ad.system.Client;
 import org.openbravo.model.common.enterprise.Organization;
@@ -96,15 +97,15 @@ class ReferencedInventoryTestUtils {
   private static boolean existsReservationsPreference() {
     Client client = OBDal.getInstance().get(Client.class, QA_CLIENT_ID);
     Organization organization = OBDal.getInstance().get(Organization.class, ORG_STAR_ID);
-    // Value property is defined as CLOB in Oracle, this is why it is needed this expression to
-    // convert it to a char first
+    // Value (searchKey) is a CLOB in Oracle, so we cannot use Restrictions.eq on it.
+    // Filter by other fields and check the value in Java.
     OBCriteria<Preference> criteria = OBDal.getInstance().createCriteria(Preference.class);
     criteria.add(Restrictions.eq(Preference.PROPERTY_PROPERTY, RESERVATIONS_PREFERENCE));
-    // TODO: Check if addEqual works for CLOB fields in other databases
-    criteria.add(Restrictions.eq(Preference.PROPERTY_SEARCHKEY, "Y"));
     criteria.add(Restrictions.eq(Preference.PROPERTY_CLIENT, client));
     criteria.add(Restrictions.eq(Preference.PROPERTY_ORGANIZATION, organization));
-    return !criteria.list().isEmpty();
+    return criteria.list()
+        .stream()
+        .anyMatch(p -> "Y".equals(p.getSearchKey()));
   }
 
   private static void createReservationsPreference() {
@@ -142,9 +143,10 @@ class ReferencedInventoryTestUtils {
     refInv.setClient(OBContext.getOBContext().getCurrentClient());
     refInv.setOrganization(OBDal.getInstance().getProxy(Organization.class, orgId));
     refInv.setReferencedInventoryType(refInvType);
-    refInv.setSearchKey(
-        refInvType.getSequence() == null ? StringUtils.left(UUID.randomUUID().toString(), 30)
-            : "<to be replaced>");
+    final String searchKey = refInvType.getSequence() == null
+        ? StringUtils.left(UUID.randomUUID().toString(), 30)
+        : ReferencedInventoryUtil.getProposedValueFromSequenceOrNull(refInvType.getId(), true);
+    refInv.setSearchKey(searchKey);
     OBDal.getInstance().save(refInv);
     assertThat("Referenced Inventory is successfully created", refInv, notNullValue());
     assertThat("Referenced Inventory is empty", refInv.getMaterialMgmtStorageDetailList(), empty());

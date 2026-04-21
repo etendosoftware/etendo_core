@@ -170,12 +170,10 @@ public class LCMatchingProcess {
     final String hql =
                   "select sum(rla.amount) as amt" +
                   "  , rla.goodsShipmentLine.id as receipt" +
-                  "  , (" +
-                  "      select transactionProcessDate " + 
-                  "        from MaterialMgmtMaterialTransaction as transaction " +
-                  "       where goodsShipmentLine.id = rla.goodsShipmentLine.id" +
-                  "    ) as trxprocessdate" +
+                  "  , min(trx.transactionProcessDate) as trxprocessdate" +
                   "  from LandedCostReceiptLineAmt as rla" +
+                  "  join MaterialMgmtMaterialTransaction as trx" +
+                  "    on trx.goodsShipmentLine.id = rla.goodsShipmentLine.id" +
                   " where rla.landedCostCost.id = :lccId" +
                   "   and rla.isMatchingAdjustment = true " +
                   " group by rla.goodsShipmentLine.id" +

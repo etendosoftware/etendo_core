@@ -4,32 +4,32 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
  * All portions are Copyright (C) 2015-2018 Openbravo SLU
- * All Rights Reserved. 
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 package org.openbravo.test.role.inheritance;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.Rule;
-import org.junit.jupiter.api.Test;
-import org.openbravo.base.weld.test.ParameterCdiTest;
-import org.openbravo.base.weld.test.ParameterCdiTestRule;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -37,84 +37,78 @@ import org.openbravo.model.ad.access.Role;
 
 /**
  * Test case for deleted access propagation
- * 
+ *
  * We have a role which inherits from three different templates. All these templates have permission
  * to the same particular access.
- * 
+ *
  * We are removing the access for each template starting from the one with highest priority. Thus
  * the inherited access for the role will be updated with every deletion.
- * 
- * 
+ *
+ *
  */
 public class DeletedAccessPropagation extends WeldBaseTest {
-  private final List<String> ORGANIZATIONS = Arrays.asList("F&B España - Región Norte",
+  private static final List<String> ORGANIZATIONS = Arrays.asList("F&B España - Región Norte",
       "F&B España - Región Sur");
-  private final List<String> WINDOWS = Arrays.asList("Sales Invoice", "Sales Order");
-  private final List<String> TABS = Arrays.asList("Bank Account", "Basic Discount");
-  private final List<String> FIELDS = Arrays.asList("Business Partner Category", "Commercial Name");
-  private final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants");
-  private final List<String> FORMS = Arrays.asList("About", "Heartbeat");
-  private final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect");
-  private final List<String> VIEWS = Arrays.asList("OBUIAPP_AlertManagement",
+  private static final List<String> WINDOWS = Arrays.asList("Sales Invoice", "Sales Order");
+  private static final List<String> TABS = Arrays.asList("Bank Account", "Basic Discount");
+  private static final List<String> FIELDS = Arrays.asList("Business Partner Category", "Commercial Name");
+  private static final List<String> REPORTS = Arrays.asList("Alert Process", "Create Variants");
+  private static final List<String> FORMS = Arrays.asList("About", "Heartbeat");
+  private static final List<String> WIDGETS = Arrays.asList("Best Sellers", "Invoices to collect");
+  private static final List<String> VIEWS = Arrays.asList("OBUIAPP_AlertManagement",
       RoleInheritanceTestUtils.DUMMY_VIEW_IMPL_NAME);
-  private final List<String> PROCESSES = Arrays.asList("Create Purchase Order Lines",
+  private static final List<String> PROCESSES = Arrays.asList("Create Purchase Order Lines",
       "Grant Portal Access");
-  private final List<String> TABLES = Arrays.asList("AD_User", "C_Order");
-  private final List<String> ALERTS = Arrays.asList("Alert Taxes: Inversión del Sujeto Pasivo",
+  private static final List<String> TABLES = Arrays.asList("AD_User", "C_Order");
+  private static final List<String> ALERTS = Arrays.asList("Alert Taxes: Inversión del Sujeto Pasivo",
       "CUSTOMER WITHOUT ACCOUNTING");
-  private final List<String> PREFERENCES = Arrays.asList("AllowAttachment", "AllowDelete");
+  private static final List<String> PREFERENCES = Arrays.asList("AllowAttachment", "AllowDelete");
 
-  private final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS, FIELDS,
+  private static final List<List<String>> ACCESSES = Arrays.asList(ORGANIZATIONS, WINDOWS, TABS, FIELDS,
       REPORTS, FORMS, WIDGETS, VIEWS, PROCESSES, TABLES, ALERTS, PREFERENCES);
-  private static int testCounter = 0;
 
-  /** defines the values the parameter will take. */
-  @Rule
-  public ParameterCdiTestRule<String> parameterValuesRule = new ParameterCdiTestRule<String>(
-      RoleInheritanceTestUtils.ACCESS_NAMES);
-
-  /** this field will take the values defined by parameterValuesRule field. */
-  private @ParameterCdiTest String parameter;
-
-  @BeforeEach
-  public void createDummyView() {
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
     RoleInheritanceTestUtils.createDummyView();
   }
 
-  @AfterEach
-  public void removeDummyView() {
+  @Override
+  protected void afterTestExecution(ExtensionContext context) {
     RoleInheritanceTestUtils.removeDummyView();
+    super.afterTestExecution(context);
   }
 
   /**
    * Test case for deleted access propagation
    */
-  @Test
-  public void checkPropagationOfDeletedAccess() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("accessParameters")
+  public void checkPropagationOfDeletedAccess(String parameter, List<String> accesses) {
     Role role = null;
     Role template1 = null;
     Role template2 = null;
     Role template3 = null;
     try {
       OBContext.setAdminMode(true);
-      // Create roles
-      role = RoleInheritanceTestUtils.createRole("role", RoleInheritanceTestUtils.CLIENT_ID,
+      // Create roles with unique names to avoid constraint violations between parameterized runs
+      String suffix = "_" + parameter + "_" + System.nanoTime();
+      role = RoleInheritanceTestUtils.createRole("role" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleId = role.getId();
-      template1 = RoleInheritanceTestUtils.createRole("template1",
+      template1 = RoleInheritanceTestUtils.createRole("template1" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template1Id = template1.getId();
-      template2 = RoleInheritanceTestUtils.createRole("template2",
+      template2 = RoleInheritanceTestUtils.createRole("template2" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template2Id = template2.getId();
-      template3 = RoleInheritanceTestUtils.createRole("template3",
+      template3 = RoleInheritanceTestUtils.createRole("template3" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template3Id = template3.getId();
 
-      List<String> accesses = ACCESSES.get(testCounter);
       // Add accesses
       RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(0));
       RoleInheritanceTestUtils.addAccess(parameter, template1, accesses.get(1));
@@ -167,8 +161,6 @@ public class DeletedAccessPropagation extends WeldBaseTest {
       assertThat("Inherited access updated properly after third removal", result4,
           equalTo(expected4));
 
-      testCounter++;
-
     } finally {
       // Delete roles
       RoleInheritanceTestUtils.deleteRole(role);
@@ -180,5 +172,11 @@ public class DeletedAccessPropagation extends WeldBaseTest {
 
       OBContext.restorePreviousMode();
     }
+  }
+
+  private static Stream<Arguments> accessParameters() {
+    return IntStream.range(0, RoleInheritanceTestUtils.ACCESS_NAMES.size())
+        .mapToObj(index -> Arguments.of(RoleInheritanceTestUtils.ACCESS_NAMES.get(index),
+            ACCESSES.get(index)));
   }
 }

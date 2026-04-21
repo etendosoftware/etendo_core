@@ -1,14 +1,16 @@
 package org.openbravo.test.materialMgmt.invoiceFromShipment;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -29,20 +31,28 @@ public class InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest extends OB
   private static final String TEST_FILTER_EXPRESSION_SAME = "TestFilterExpression_Same";
   private static final String CONTEXT = "context";
 
-  private static final String CLIENT_ID = "4028E6C72959682B01295A070852010D";
-  private static final String ORG_ID = "357947E87C284935AD1D783CF6F099A1";
-  private static final String USER_ID = "100";
-  private static final String ROLE_ID = "4028E6C72959682B01295A071429011E";
-
   private static final String GOODS_SHIPMENT_ID = "8BEAC8CAFFCE444FA15D0170F897B641";
   private static final String SALES_ORDER = "5B29AF263D004CD3830D4F9B23C17DFD";
   private static final String T_SHIRTS_PRODUCT_ID = "0CF7C882B8BD4D249F3BCC8727A736D1";
 
   private InvoiceFromGoodsShipmentDefaultValueFilterExpression filterExpression;
 
-  @Before
-  public void setUp() {
-    OBContext.setOBContext(USER_ID, ROLE_ID, CLIENT_ID, ORG_ID);
+  /**
+   * Overrides the default test user context set by {@link OBBaseTest#setUp()} to use
+   * the QA Admin context required by these tests.
+   *
+   * <p>Overriding {@code setTestUserContext()} rather than {@code setUp()} ensures that
+   * every code path that initializes the OBContext — including
+   * {@code DalCleanupExtension.beforeTestExecution()} — uses the correct context,
+   * regardless of the order in which the JUnit 5 lifecycle methods are invoked.
+   *
+   * <p>The {@code filterExpression} field is initialized here because it depends on
+   * the QA Admin context being set first, and this method is called as part of the
+   * {@code setUp()} lifecycle before each test.
+   */
+  @Override
+  protected void setTestUserContext() {
+    setQAAdminContext();
     filterExpression = new InvoiceFromGoodsShipmentDefaultValueFilterExpression();
   }
 
@@ -122,13 +132,24 @@ public class InvoiceFromGoodsShipmentDefaultValueFilterExpressionTest extends OB
   /**
    * Tests the filter expression with an invalid request map
    */
-  @Test(expected = OBException.class)
+  @Test
   public void testFilterExpressionWithInvalidRequest() {
     // Prepare an invalid request map
     Map<String, String> requestMap = new HashMap<>();
     requestMap.put(CONTEXT, "{ invalid JSON }");
 
-    // Execute the filter expression - should throw OBException
-    filterExpression.getExpression(requestMap);
+    assertThrows(OBException.class, () -> filterExpression.getExpression(requestMap));
   }
+
+  @AfterEach
+  @After
+  public void cleanUpCreatedTestData() {
+    OBContext.setAdminMode(true);
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
 }

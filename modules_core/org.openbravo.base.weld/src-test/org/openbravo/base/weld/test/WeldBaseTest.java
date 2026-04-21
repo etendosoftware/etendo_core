@@ -30,11 +30,12 @@ import org.apache.logging.log4j.Logger;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.shrinkwrap.api.Filters;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.EmptyAsset;
+import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.importer.ExplodedImporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.base.session.SessionFactoryController;
 import org.openbravo.base.weld.WeldUtils;
@@ -73,8 +74,16 @@ public class WeldBaseTest extends OBBaseTest {
           .getProperty("source.path");
       archive = ShrinkWrap.create(JavaArchive.class);
 
-      // add all beans without exclusions so cdi can also be used for *test* packages
-      archive.addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
+      // In CDI 4.0 (Jakarta), an empty beans.xml defaults to bean-discovery-mode="annotated",
+      // which only discovers classes with bean-defining annotations. We need "all" mode to
+      // discover event handlers and other beans without explicit CDI annotations on them.
+      archive.addAsManifestResource(
+          new StringAsset("<beans bean-discovery-mode=\"all\" version=\"4.0\""
+              + " xmlns=\"https://jakarta.ee/xml/ns/jakartaee\""
+              + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+              + " xsi:schemaLocation=\"https://jakarta.ee/xml/ns/jakartaee"
+              + " https://jakarta.ee/xml/ns/jakartaee/beans_4_0.xsd\"/>"),
+          "beans.xml");
 
       // include all classes deployed in webapp container
       archive.as(ExplodedImporter.class).importDirectory(sourcePath + "/build/classes/", Filters.exclude("/groovy/*"));
@@ -133,6 +142,7 @@ public class WeldBaseTest extends OBBaseTest {
    * automatically via @BeforeEach with higher priority.
    */
   @BeforeEach
+  @Order(1)
   protected void ensureWeldInitialized() {
     initializeWeldComponents();
   }
@@ -140,11 +150,19 @@ public class WeldBaseTest extends OBBaseTest {
   /**
    * Initialize Weld components once the CDI beans have been injected.
    * This is safe to call multiple times - it only initializes once.
+   *
+   * Note: We do NOT call initializeDalLayer() here because:
+   * 1. The DAL is already initialized by @BeforeAll classSetUp() -> ensureDalInitialized()
+   * 2. initializeDalLayer() resets DalLayerInitializer.initialized to false, which causes
+   *    ensureDalInitialized() in DalCleanupExtension.beforeTestExecution() to reinitialize
+   *    the SessionFactory with a NEW OBInterceptor that doesn't have the listener set.
+   * 3. Since DalCleanupExtension is a @RegisterExtension (field-level) and WeldInitializerExtension
+   *    is @ExtendWith (class-level), this callback runs BEFORE DalCleanupExtension, so the
+   *    interceptor listener we set here would be lost on the new OBInterceptor.
    */
   protected void initializeWeldComponents() {
     if (!initialized && beanManager != null && kernelInitializer != null && weldUtils != null) {
       try {
-        initializeDalLayer();
         WeldUtils.setStaticInstanceBeanManager(beanManager);
         kernelInitializer.setInterceptor();
         weldUtils.setBeanManager(beanManager);

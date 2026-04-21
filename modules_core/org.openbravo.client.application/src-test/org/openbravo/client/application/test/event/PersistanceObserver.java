@@ -35,6 +35,7 @@ public class PersistanceObserver extends ObserverBaseTest {
 
   @Test
   public void checkDirtyShouldNotExecuteUpdateObservers() {
+    resetObservers();
     OBContext.setAdminMode(false);
 
     observerExecutionType = ObserverExecutionType.CREATE_NOTE;
@@ -48,6 +49,7 @@ public class PersistanceObserver extends ObserverBaseTest {
 
   @Test
   public void checkDirtyShouldNotExecuteInsertObservers() {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.ON_NOOP;
     OBContext.setAdminMode(false);
     OrderLine ol = OBProvider.getInstance().get(OrderLine.class);
@@ -63,6 +65,7 @@ public class PersistanceObserver extends ObserverBaseTest {
 
   @Test
   public void checkDirtyShouldNotExecuteDeleteObservers() {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.ON_NOOP;
     OBContext.setAdminMode(false);
     OrderLine ol = pickARandomOrderLine();
@@ -78,6 +81,7 @@ public class PersistanceObserver extends ObserverBaseTest {
 
   @Test
   public void flushShouldExecuteUpdateObserversOnce() {
+    resetObservers();
     OBContext.setAdminMode(false);
 
     observerExecutionType = ObserverExecutionType.CREATE_NOTE;
@@ -96,6 +100,7 @@ public class PersistanceObserver extends ObserverBaseTest {
 
   @Test
   public void commitAndCloseShouldExecuteUpdateObserversOnce() {
+    resetObservers();
     OBContext.setAdminMode(false);
 
     observerExecutionType = ObserverExecutionType.CREATE_NOTE;
@@ -114,6 +119,7 @@ public class PersistanceObserver extends ObserverBaseTest {
 
   @Test
   public void flushShouldExecuteInsertObservers() {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.ON_NOOP;
     OBContext.setAdminMode(false);
     OrderLine ol = OBProvider.getInstance().get(OrderLine.class);
@@ -132,6 +138,7 @@ public class PersistanceObserver extends ObserverBaseTest {
 
   @Test
   public void flushShouldExecuteDeleteObservers() {
+    resetObservers();
     observerExecutionType = ObserverExecutionType.ON_NOOP;
     OBContext.setAdminMode(false);
     OrderLine ol = pickARandomOrderLine();

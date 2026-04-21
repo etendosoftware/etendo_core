@@ -22,10 +22,12 @@ package org.openbravo.test.costing;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.base.weld.test.WeldBaseTest;
@@ -45,13 +47,15 @@ import org.openbravo.model.materialmgmt.cost.CostingRule;
 import org.openbravo.test.costing.utils.TestCostingConstants;
 import org.openbravo.test.costing.utils.TestCostingUtils;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestCostingBase extends WeldBaseTest {
 
-  @Before
+  @RegisterExtension
+  final BeforeTestExecutionCallback costingSetup = (ExtensionContext context) -> {
+    setInitialConfiguration();
+  };
+
   public void setInitialConfiguration() {
-    // FIXME: Change setInitialConfiguration to @BeforeClass and remove runBefore flag
-    // once https://issues.openbravo.com/view.php?id=36326 is fixed
     if (TestCostingConstants.runBefore) {
       try {
 
@@ -153,7 +157,6 @@ public class TestCostingBase extends WeldBaseTest {
 
         OBDal.getInstance().commitAndClose();
       } catch (Exception e) {
-        System.out.println(e.getMessage());
         throw new OBException(e);
       }
 
@@ -164,7 +167,7 @@ public class TestCostingBase extends WeldBaseTest {
     }
   }
 
-  @AfterClass
+  @AfterAll
   public static void setFinalConfiguration() {
     try {
       // Set System context

@@ -33,6 +33,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.query.Query;
 import org.openbravo.base.exception.OBException;
 import org.openbravo.client.application.Parameter;
+import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.utility.ComboTableData;
@@ -211,19 +212,24 @@ public class ApplicationDictionaryCachedStructures {
         return;
       }
 
-      Window window = OBDal.getInstance().get(Window.class, windowId);
-      if (window == null) {
-        return;
-      }
+      OBContext.setAdminMode(true);
+      try {
+        Window window = OBDal.getInstance().get(Window.class, windowId);
+        if (window == null) {
+          return;
+        }
 
-      initializeDALObject(window.getModule());
-      for (Tab tab : window.getADTabList()) {
-        initializeTab(tab);
-      }
+        initializeDALObject(window.getModule());
+        for (Tab tab : window.getADTabList()) {
+          initializeTab(tab);
+        }
 
-      synchronized (initializedWindows) {
-        initializedWindows.add(windowId);
-        windowMap.put(windowId, window);
+        synchronized (initializedWindows) {
+          initializedWindows.add(windowId);
+          windowMap.put(windowId, window);
+        }
+      } finally {
+        OBContext.restorePreviousMode();
       }
     }
   }

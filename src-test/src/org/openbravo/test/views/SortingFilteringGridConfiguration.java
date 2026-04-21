@@ -19,7 +19,6 @@
 
 package org.openbravo.test.views;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
@@ -73,13 +72,22 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
       before = getNumberOfGridConfigurations();
       if (before != 0) {
         log.info("[GridConfigTest] Found {} existing grid configuration records. Attempting cleanup...", before);
-        for (org.openbravo.client.application.GCSystem sys : OBDal.getInstance().createCriteria(org.openbravo.client.application.GCSystem.class).list()) {
-          OBDal.getInstance().remove(sys);
+        // First remove GCField records (child records must be removed before parents)
+        for (GCField field : OBDal.getInstance().createCriteria(GCField.class).list()) {
+          OBDal.getInstance().remove(field);
         }
-        for (org.openbravo.client.application.GCTab tabCfg : OBDal.getInstance().createCriteria(org.openbravo.client.application.GCTab.class).list()) {
+        OBDal.getInstance().flush();
+        // Then remove GCTab records, but preserve core/default configurations
+        for (GCTab tabCfg : OBDal.getInstance().createCriteria(GCTab.class).list()) {
           OBDal.getInstance().remove(tabCfg);
         }
         OBDal.getInstance().flush();
+        // Finally remove GCSystem records
+        for (GCSystem sys : OBDal.getInstance().createCriteria(GCSystem.class).list()) {
+          OBDal.getInstance().remove(sys);
+        }
+        OBDal.getInstance().flush();
+        OBDal.getInstance().commitAndClose();
         after = getNumberOfGridConfigurations();
         log.info("[GridConfigTest] Cleanup done. Grid configuration count now: {}", after);
       } else {
@@ -111,8 +119,33 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
 
   @AfterAll
   public static void cleanUp() {
-    // Only restore core module flag if we changed it; skip if new configs were created during test (unlikely) or core already was in development.
-    if (getNumberOfGridConfigurations() > 0 || Boolean.TRUE.equals(coreWasInDevelopment)) {
+    // Clean up any grid configurations that might have been created during tests
+    OBContext.setAdminMode(true);
+    try {
+      // Remove all GCField records first (children before parents)
+      for (GCField field : OBDal.getInstance().createCriteria(GCField.class).list()) {
+        OBDal.getInstance().remove(field);
+      }
+      OBDal.getInstance().flush();
+      // Remove all GCTab records
+      for (GCTab tabCfg : OBDal.getInstance().createCriteria(GCTab.class).list()) {
+        OBDal.getInstance().remove(tabCfg);
+      }
+      OBDal.getInstance().flush();
+      // Remove all GCSystem records
+      for (GCSystem sys : OBDal.getInstance().createCriteria(GCSystem.class).list()) {
+        OBDal.getInstance().remove(sys);
+      }
+      OBDal.getInstance().flush();
+      OBDal.getInstance().commitAndClose();
+    } catch (Exception e) {
+      log.error("[GridConfigTest] Exception during final cleanup", e);
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+
+    // Restore core module flag
+    if (Boolean.TRUE.equals(coreWasInDevelopment)) {
       return;
     }
     OBContext.setAdminMode(true);
@@ -123,7 +156,6 @@ public class SortingFilteringGridConfiguration extends GridConfigurationTest {
     } finally {
       OBContext.restorePreviousMode();
     }
-
   }
 
   private enum ColumnLevel {

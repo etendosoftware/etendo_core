@@ -101,11 +101,10 @@ public class CostingRuleProcess implements Process {
 
       final CostingRule prevCostingRule = getPreviousRule(rule);
       boolean existsPreviousRule = prevCostingRule != null;
-      boolean existsTransactions = existsTransactions(naturalOrgs, childOrgs);
       if (existsPreviousRule) {
         // Product with costing rule. All trx must be calculated.
         checkAllTrxCalculated(naturalOrgs, childOrgs);
-      } else if (existsTransactions) {
+      } else if (existsTransactions(naturalOrgs, childOrgs)) {
         // Product configured to have cost not calculated cannot have transactions with cost
         // calculated.
         checkNoTrxWithCostCalculated(naturalOrgs, childOrgs);
@@ -208,9 +207,9 @@ public class CostingRuleProcess implements Process {
                   "   and p.stocked = true" +
                   "   and p.organization.id in (:porgs)" +
                   "   and exists (" +
-                  "     select 1 from MaterialMgmtMaterialTransaction" +
-                  "      where product = p" +
-                  "        and organization.id in (:childOrgs)" +
+                  "     select 1 from MaterialMgmtMaterialTransaction as trx" +
+                  "      where trx.product.id = p.id" +
+                  "        and trx.organization.id in (:childOrgs)" +
                   "     )";
     //@formatter:on
 
@@ -232,7 +231,7 @@ public class CostingRuleProcess implements Process {
                   "   and p.organization.id in (:porgs)" +
                   "   and exists (" +
                   "     select 1 from MaterialMgmtMaterialTransaction as trx " +
-                  "      where trx.product = p" +
+                  "      where trx.product.id = p.id" +
                   "        and trx.organization.id in (:childOrgs)" +
                   "        and trx.isCostCalculated = false" +
                   "     )";

@@ -4,25 +4,25 @@
  * Version  1.1  (the  "License"),  being   the  Mozilla   Public  License
  * Version 1.1  with a permitted attribution clause; you may not  use this
  * file except in compliance with the License. You  may  obtain  a copy of
- * the License at http://www.openbravo.com/legal/license.html 
+ * the License at http://www.openbravo.com/legal/license.html
  * Software distributed under the License  is  distributed  on  an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
  * License for the specific  language  governing  rights  and  limitations
- * under the License. 
- * The Original Code is Openbravo ERP. 
- * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2015 Openbravo SLU 
- * All Rights Reserved. 
+ * under the License.
+ * The Original Code is Openbravo ERP.
+ * The Initial Developer of the Original Code is Openbravo SLU
+ * All portions are Copyright (C) 2015 Openbravo SLU
+ * All Rights Reserved.
  * Contributor(s):  ______________________________________.
  ************************************************************************
  */
 package org.openbravo.test.role.inheritance;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
@@ -42,11 +42,12 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
     Role template = null;
     try {
       OBContext.setAdminMode(true);
-      inherited = RoleInheritanceTestUtils.createRole("testRole",
+      String suffix = "_" + System.nanoTime();
+      inherited = RoleInheritanceTestUtils.createRole("testRole" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           false);
       String inheritedId = inherited.getId();
-      template = RoleInheritanceTestUtils.createRole("testTemplateRole",
+      template = RoleInheritanceTestUtils.createRole("testTemplateRole" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String templateId = template.getId();
@@ -87,11 +88,12 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
     Role template2 = null;
     try {
       OBContext.setAdminMode(true);
-      template1 = RoleInheritanceTestUtils.createRole("template1",
+      String suffix = "_" + System.nanoTime();
+      template1 = RoleInheritanceTestUtils.createRole("template1" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template1Id = template1.getId();
-      template2 = RoleInheritanceTestUtils.createRole("template2",
+      template2 = RoleInheritanceTestUtils.createRole("template2" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template2Id = template2.getId();
@@ -136,16 +138,17 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
     Role roleD = null;
     try {
       OBContext.setAdminMode(true);
-      roleA = RoleInheritanceTestUtils.createRole("roleA", RoleInheritanceTestUtils.CLIENT_ID,
+      String suffix = "_" + System.nanoTime();
+      roleA = RoleInheritanceTestUtils.createRole("roleA" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleAId = roleA.getId();
-      roleB = RoleInheritanceTestUtils.createRole("roleB", RoleInheritanceTestUtils.CLIENT_ID,
+      roleB = RoleInheritanceTestUtils.createRole("roleB" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleBId = roleB.getId();
-      roleC = RoleInheritanceTestUtils.createRole("roleC", RoleInheritanceTestUtils.CLIENT_ID,
+      roleC = RoleInheritanceTestUtils.createRole("roleC" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleCId = roleC.getId();
-      roleD = RoleInheritanceTestUtils.createRole("roleD", RoleInheritanceTestUtils.CLIENT_ID,
+      roleD = RoleInheritanceTestUtils.createRole("roleD" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleDId = roleD.getId();
 
@@ -208,16 +211,17 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
     Role roleD = null;
     try {
       OBContext.setAdminMode(true);
-      roleA = RoleInheritanceTestUtils.createRole("roleA", RoleInheritanceTestUtils.CLIENT_ID,
+      String suffix = "_" + System.nanoTime();
+      roleA = RoleInheritanceTestUtils.createRole("roleA" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleAId = roleA.getId();
-      roleB = RoleInheritanceTestUtils.createRole("roleB", RoleInheritanceTestUtils.CLIENT_ID,
+      roleB = RoleInheritanceTestUtils.createRole("roleB" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleBId = roleB.getId();
-      roleC = RoleInheritanceTestUtils.createRole("roleC", RoleInheritanceTestUtils.CLIENT_ID,
+      roleC = RoleInheritanceTestUtils.createRole("roleC" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleCId = roleC.getId();
-      roleD = RoleInheritanceTestUtils.createRole("roleD", RoleInheritanceTestUtils.CLIENT_ID,
+      roleD = RoleInheritanceTestUtils.createRole("roleD" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleDId = roleD.getId();
 
@@ -279,16 +283,17 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
     Role roleD = null;
     try {
       OBContext.setAdminMode(true);
-      roleA = RoleInheritanceTestUtils.createRole("roleA", RoleInheritanceTestUtils.CLIENT_ID,
+      String suffix = "_" + System.nanoTime();
+      roleA = RoleInheritanceTestUtils.createRole("roleA" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleAId = roleA.getId();
-      roleB = RoleInheritanceTestUtils.createRole("roleB", RoleInheritanceTestUtils.CLIENT_ID,
+      roleB = RoleInheritanceTestUtils.createRole("roleB" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleBId = roleB.getId();
-      roleC = RoleInheritanceTestUtils.createRole("roleC", RoleInheritanceTestUtils.CLIENT_ID,
+      roleC = RoleInheritanceTestUtils.createRole("roleC" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleCId = roleC.getId();
-      roleD = RoleInheritanceTestUtils.createRole("roleD", RoleInheritanceTestUtils.CLIENT_ID,
+      roleD = RoleInheritanceTestUtils.createRole("roleD" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String roleDId = roleD.getId();
 
@@ -347,10 +352,11 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
     Role role = null;
     try {
       OBContext.setAdminMode(true);
-      template = RoleInheritanceTestUtils.createRole("template", RoleInheritanceTestUtils.CLIENT_ID,
+      String suffix = "_" + System.nanoTime();
+      template = RoleInheritanceTestUtils.createRole("template" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, true);
       String templateId = template.getId();
-      role = RoleInheritanceTestUtils.createRole("role", RoleInheritanceTestUtils.CLIENT_ID,
+      role = RoleInheritanceTestUtils.createRole("role" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true, false);
       String roleId = role.getId();
 
@@ -394,8 +400,9 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
     Role template2 = null;
     try {
       OBContext.setAdminMode(true);
+      String suffix = "_" + System.nanoTime();
       // Try to create an automatic template
-      template = RoleInheritanceTestUtils.createRole("template", RoleInheritanceTestUtils.CLIENT_ID,
+      template = RoleInheritanceTestUtils.createRole("template" + suffix, RoleInheritanceTestUtils.CLIENT_ID,
           RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", false, true);
       String templateId = template.getId();
       try {
@@ -409,7 +416,7 @@ public class RoleInheritanceRestrictions extends WeldBaseTest {
       assertThat("A template role can not be automatic", template, equalTo(null));
 
       // Create a manual template
-      template2 = RoleInheritanceTestUtils.createRole("template2",
+      template2 = RoleInheritanceTestUtils.createRole("template2" + suffix,
           RoleInheritanceTestUtils.CLIENT_ID, RoleInheritanceTestUtils.ASTERISK_ORG_ID, " C", true,
           true);
       String template2Id = template2.getId();

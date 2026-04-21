@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -19,20 +19,21 @@ import static org.mockito.Mockito.when;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.openbravo.base.provider.OBProvider;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBDao;
-import org.openbravo.dal.service.Restrictions;
 import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.materialmgmt.ReservationUtils;
 import org.openbravo.model.common.enterprise.Organization;
@@ -46,7 +47,8 @@ import org.openbravo.model.materialmgmt.onhandquantity.ReservationStock;
  * Verifies the behavior of the methods responsible for managing prereserved stock lines
  * and handling JSON requests.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ManagePrereservationActionHandlerTest {
   private MockedStatic<OBDal> mockedOBDal;
   private MockedStatic<OBDao> mockedOBDao;
@@ -87,7 +89,7 @@ public class ManagePrereservationActionHandlerTest {
    * @throws Exception
    *     if an error occurs during setup
    */
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     mockedOBDal = mockStatic(OBDal.class);
     mockedOBDao = mockStatic(OBDao.class);
@@ -110,7 +112,7 @@ public class ManagePrereservationActionHandlerTest {
    * @throws Exception
    *     if an error occurs during teardown
    */
-  @After
+  @AfterEach
   public void tearDown() throws Exception {
     if (mockedOBDal != null) {
       mockedOBDal.close();
@@ -158,15 +160,14 @@ public class ManagePrereservationActionHandlerTest {
 
     OBCriteria<ReservationStock> critRS = mock(OBCriteria.class);
     when(obDal.createCriteria(ReservationStock.class)).thenReturn(critRS);
-    when(critRS.add(Restrictions.eq(anyString(), any()))).thenReturn(critRS);
-    when(critRS.add(Restrictions.isNull(anyString()))).thenReturn(critRS);
+    when(critRS.add(any())).thenReturn(critRS);
     List<ReservationStock> emptyList = new ArrayList<>();
     when(critRS.list()).thenReturn(emptyList);
 
     JSONObject result = handlerUnderTest.doExecute(parameters, jsonContent.toString());
 
-    assertNotNull("Result should not be null", result);
-    assertEquals("Result should be the same as the input", jsonContent.toString(), result.toString());
+    assertNotNull(result, "Result should not be null");
+    assertEquals(jsonContent.toString(), result.toString(), "Result should be the same as the input");
 
     mockedOBContext.verify(() -> OBContext.setAdminMode(true));
     mockedOBContext.verify(OBContext::restorePreviousMode);
@@ -214,7 +215,7 @@ public class ManagePrereservationActionHandlerTest {
     verify(obDal, times(1)).save(orderLine);
     verify(obDal, times(1)).flush();
 
-    assertEquals("All IDs should have been processed", initialIdListSize, 2);
+    assertEquals(initialIdListSize, 2, "All IDs should have been processed");
   }
 
   /**
@@ -254,7 +255,7 @@ public class ManagePrereservationActionHandlerTest {
 
     handlerUnderTest.managePrereservedStockLines(jsonRequest, orderLine, idList);
 
-    assertEquals("ID list should be empty after processing", 0, idList.size());
+    assertEquals(0, idList.size(), "ID list should be empty after processing");
 
     verify(reservationStock).setAllocated(allocated);
     verify(reservationStock).setQuantity(new BigDecimal(reservedQty));
@@ -262,7 +263,7 @@ public class ManagePrereservationActionHandlerTest {
     verify(obDal).save(reservationStock);
     verify(obDal).flush();
 
-    assertEquals("Unexpected initial ID list size", 1, initialIdListSize);
+    assertEquals(1, initialIdListSize, "Unexpected initial ID list size");
   }
 
   /**
@@ -308,8 +309,8 @@ public class ManagePrereservationActionHandlerTest {
 
     handlerUnderTest.managePrereservedStockLines(jsonRequest, orderLine, idList);
 
-    assertEquals("Stock list should have one item after processing", initialListSize + 1, reservationStockList.size());
-    assertTrue("Stock list should contain the new reservation stock", reservationStockList.contains(reservationStock));
+    assertEquals(initialListSize + 1, reservationStockList.size(), "Stock list should have one item after processing");
+    assertTrue(reservationStockList.contains(reservationStock), "Stock list should contain the new reservation stock");
 
     verify(reservationStock).setReservation(reservation);
     verify(reservationStock).setOrganization(organization);
@@ -348,7 +349,7 @@ public class ManagePrereservationActionHandlerTest {
 
     JSONObject result = handlerUnderTest.doExecute(parameters, jsonContent.toString());
 
-    assertNotNull("Result should not be null", result);
+    assertNotNull(result, "Result should not be null");
 
     mockedOBContext.verify(() -> OBContext.setAdminMode(true));
     mockedOBContext.verify(OBContext::restorePreviousMode);

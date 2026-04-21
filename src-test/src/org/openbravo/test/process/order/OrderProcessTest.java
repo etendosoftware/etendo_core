@@ -26,16 +26,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.order.Order;
@@ -51,7 +49,6 @@ import org.openbravo.test.base.OBBaseTest;
  * 
  * 
  */
-@RunWith(Parameterized.class)
 public class OrderProcessTest extends OBBaseTest {
   private static final Logger log = LogManager.getLogger();
 
@@ -70,33 +67,29 @@ public class OrderProcessTest extends OBBaseTest {
   private String documentStatusFinal;
   private String documentAction;
 
-  public OrderProcessTest(String testNumber, String testDescription, String documentStatusInitial,
-      String documentStatusFinal, String documentAction) {
+  static Stream<Arguments> params() {
+    return Stream.of(
+        Arguments.of("01", "Check Order status: Not Confirmed -> Booked", "NC", "CO", "CO"),
+        Arguments.of("02", "Check Order status: Not Confirmed -> Closed", "NC", "CL", "CL"),
+        Arguments.of("03", "Check Order status: Not Confirmed -> Automatic Evaluation", "NC", "AE", "RJ"),
+        Arguments.of("04", "Check Order status: Automatic Evaluation -> Not Confirmed", "AE", "NC", "CO"),
+        Arguments.of("05", "Check Order status: Automatic Evaluation -> Closed", "AE", "CL", "CL"),
+        Arguments.of("06", "Check Order status: Automatic Evaluation -> Manual Evaluation", "AE", "ME", "RJ"),
+        Arguments.of("07", "Check Order status: Manual Evaluation -> Booked", "ME", "CO", "CO"),
+        Arguments.of("08", "Check Order status: Manual Evaluation -> Closed", "ME", "CL", "CL"),
+        Arguments.of("09", "Check Order status: Manual Evaluation -> Automatic Evaluation", "ME", "AE", "RJ")
+    );
+  }
+
+  @ParameterizedTest(name = "idx:{0} name:{1}")
+  @MethodSource("params")
+  public void testCOrderPostProcess(String testNumber, String testDescription,
+      String documentStatusInitial, String documentStatusFinal, String documentAction) {
     this.testNumber = testNumber;
     this.testDescription = testDescription;
     this.documentStatusInitial = documentStatusInitial;
     this.documentStatusFinal = documentStatusFinal;
     this.documentAction = documentAction;
-  }
-
-  @Parameters(name = "idx:{0} name:{1}")
-  public static Collection<Object[]> params() {
-    Object[][] params = new Object[][] {
-        { "01", "Check Order status: Not Confirmed -> Booked", "NC", "CO", "CO" }, //
-        { "02", "Check Order status: Not Confirmed -> Closed", "NC", "CL", "CL" }, //
-        { "03", "Check Order status: Not Confirmed -> Automatic Evaluation", "NC", "AE", "RJ" }, //
-        { "04", "Check Order status: Automatic Evaluation -> Not Confirmed", "AE", "NC", "CO" }, //
-        { "05", "Check Order status: Automatic Evaluation -> Closed", "AE", "CL", "CL" }, //
-        { "06", "Check Order status: Automatic Evaluation -> Manual Evaluation", "AE", "ME", "RJ" },
-        { "07", "Check Order status: Manual Evaluation -> Booked", "ME", "CO", "CO" }, //
-        { "08", "Check Order status: Manual Evaluation -> Closed", "ME", "CL", "CL" }, //
-        { "09", "Check Order status: Manual Evaluation -> Automatic Evaluation", "ME", "AE", "RJ" }, //
-    };
-    return Arrays.asList(params);
-  }
-
-  @Test
-  public void testCOrderPostProcess() {
     setQAAdminContext();
     Order testOrder = createOrder();
     updateOrderStatus(testOrder);

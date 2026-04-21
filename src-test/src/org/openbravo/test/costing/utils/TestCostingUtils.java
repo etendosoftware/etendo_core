@@ -19,11 +19,11 @@
 
 package org.openbravo.test.costing.utils;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -276,6 +276,25 @@ public class TestCostingUtils {
     }
   }
 
+
+  private static Product newCloneCostingProduct(Product product, String name, int num, String productType){
+    Product productClone = (Product) DalUtil.copy(product, false);
+    setGeneralData(productClone);
+
+    productClone.setSearchKey(name + "-" + num);
+    productClone.setName(name + "-" + num);
+    productClone.setMaterialMgmtMaterialTransactionList(null);
+    productClone.setProductType(productType);
+    OBDal.getInstance().save(productClone);
+    return productClone;
+  }
+
+  private static Product newCloneCostingProduct(String name, int num, String productType){
+    Product product = OBDal.getInstance()
+        .get(Product.class, TestCostingConstants.COSTING_PRODUCT_ID);
+    return newCloneCostingProduct(product, name, num, productType);
+  }
+
   // Create a new product cloning costing Product 1
   private static Product cloneProduct(String name, int num, String productType,
       BigDecimal purchasePrice, BigDecimal salesPrice, BigDecimal cost, String costType, int year,
@@ -283,14 +302,7 @@ public class TestCostingUtils {
     try {
       Product product = OBDal.getInstance()
           .get(Product.class, TestCostingConstants.COSTING_PRODUCT_ID);
-      Product productClone = (Product) DalUtil.copy(product, false);
-      setGeneralData(productClone);
-
-      productClone.setSearchKey(name + "-" + num);
-      productClone.setName(name + "-" + num);
-      productClone.setMaterialMgmtMaterialTransactionList(null);
-      productClone.setProductType(productType);
-      OBDal.getInstance().save(productClone);
+      Product productClone = newCloneCostingProduct(product, name, num, productType);
 
       if (productIdList.isEmpty()) {
 
@@ -411,17 +423,7 @@ public class TestCostingUtils {
       String currencyId) {
     try {
       int num = TestCostingUtils.getNumberOfCostingProducts(name);
-      Product product = OBDal.getInstance()
-          .get(Product.class, TestCostingConstants.COSTING_PRODUCT_ID);
-      Product productClone = (Product) DalUtil.copy(product, false);
-      setGeneralData(productClone);
-
-      productClone.setSearchKey(name + "-" + num);
-      productClone.setName(name + "-" + num);
-      productClone.setMaterialMgmtMaterialTransactionList(null);
-      productClone.setProductType(productType);
-      OBDal.getInstance().save(productClone);
-
+      Product productClone = newCloneCostingProduct(name, num, productType);
       StringBuffer where = new StringBuffer();
       where.append(" as pp ");
       where.append(" join pp." + ProductPrice.PROPERTY_PRICELISTVERSION + " as plv");
@@ -2357,10 +2359,8 @@ public class TestCostingUtils {
       parameters.add(order.getId());
       parameters.add("N");
       final String procedureName = "c_order_post1";
-      CallStoredProcedure.getInstance().call(procedureName, parameters, null, true, false);
+      CallStoredProcedure.getInstance().call(procedureName, parameters, null, false, false);
 
-      OBDal.getInstance().save(order);
-      OBDal.getInstance().flush();
       OBDal.getInstance().refresh(order);
     } catch (Exception e) {
       throw new OBException(e);

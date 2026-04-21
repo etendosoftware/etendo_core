@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.openbravo.client.application.GCField;
 import org.openbravo.client.application.GCSystem;
 import org.openbravo.client.application.GCTab;
 import org.openbravo.client.application.window.StandardWindowComponent;
@@ -51,7 +52,8 @@ public class GridConfigurationTest extends OBBaseTest {
       OBCriteria<GCSystem> systemGridConfig = OBDal.getInstance().createCriteria(GCSystem.class);
       OBCriteria<GCTab> tabGridConfig = OBDal.getInstance().createCriteria(GCTab.class);
       tabGridConfig.add(Restrictions.not(Restrictions.in(GCTab.PROPERTY_ID, CORE_DEFAULT_GRID_CONFIGS)));
-      return systemGridConfig.count() + tabGridConfig.count();
+      OBCriteria<GCField> fieldGridConfig = OBDal.getInstance().createCriteria(GCField.class);
+      return systemGridConfig.count() + tabGridConfig.count() + fieldGridConfig.count();
     } finally {
       OBContext.restorePreviousMode();
     }

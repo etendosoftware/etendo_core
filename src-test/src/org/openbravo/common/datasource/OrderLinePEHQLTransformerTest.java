@@ -168,7 +168,7 @@ public class OrderLinePEHQLTransformerTest {
 
     String result = transformer.transformHqlQuery(baseHqlQuery, requestParameters, queryNamedParameters);
 
-    assertTrue(result.contains("ic.orderDate >= (now()-30)"));
+    assertTrue(result.contains("ic.orderDate >= (substract_days(now(), 30))"));
   }
 
   /**

@@ -339,7 +339,11 @@ public class DalUtil {
   public static BaseOBObject copy(BaseOBObject source, boolean copyChildren, boolean resetId,
       Map<BaseOBObject, BaseOBObject> fromTo) {
 
-    final BaseOBObject target = (BaseOBObject) OBProvider.getInstance().get(source.getEntityName());
+    Class<?> sourceClass = source.getClass();
+    if (source instanceof HibernateProxy) {
+      sourceClass = ((HibernateProxy) source).getHibernateLazyInitializer().getPersistentClass();
+    }
+    final BaseOBObject target = (BaseOBObject) OBProvider.getInstance().get(sourceClass.getName());
     fromTo.put(source, target);
     for (final Property p : source.getEntity().getProperties()) {
       final Object value = source.getValue(p.getName());

@@ -155,7 +155,7 @@ pipeline {
               def stackConfiguration = stackConfig.resolveStackConfiguration(env.FROM_BACKPORT, env.FROM_PRERELEASE)
 
               env.JAVA_HOME = "/usr/lib/jvm/jdk-17.0.13"
-              env.TOMCAT_URL = "https://dlcdn.apache.org/tomcat/tomcat-11/v11.0.15/bin/apache-tomcat-11.0.15.tar.gz"
+              env.TOMCAT_URL = "https://dlcdn.apache.org/tomcat/tomcat-11/v11.0.21/bin/apache-tomcat-11.0.21.tar.gz"
               env.STACK_TYPE = "PRERELEASE 27Q1"
 
               echo "Stack Type: ${env.STACK_TYPE}"
@@ -513,7 +513,6 @@ pipeline {
             sh "./pipelines/unittests/build-update.sh ${REPO_NAME} ${COMMIT_INPROGRESS_STATUS} \"Generating JaCoCo report\" ${ACCESS_TOKEN} ${GIT_COMMIT} ${BUILD_URL} \"${CONTEXT_BUILD}\""
             echo "---------------------- Run jacocoRootReport ----------------------"
             sh """
-            su etendo
             cd ${REPO_NAME}
             ./gradlew jacocoRootReport --info
             """

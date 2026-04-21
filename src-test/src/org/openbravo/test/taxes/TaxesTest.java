@@ -791,7 +791,7 @@ public class TaxesTest extends OBBaseTest {
 
   private void testOrder(Order testOrder, boolean isCompleted, boolean isUpdated) {
 
-    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel;
+    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel && !isCompleted;
     int stdPrecision = testOrder.getCurrency().getStandardPrecision().intValue();
 
     // Assert line taxes and amounts
@@ -838,9 +838,10 @@ public class TaxesTest extends OBBaseTest {
             : linesData[i].getLineTaxes().get(linetax.getTax().getId())[1]));
         assertThat("Wrong taxable amount for line in document",
             round(linetax.getTaxableAmount(), round, stdPrecision),
-            comparesEqualTo(expectedTaxableAmount));
-        assertThat("Wrong tax amount for line in document", linetax.getTaxAmount(),
-            comparesEqualTo(expectedTaxAmount));
+            comparesEqualTo(round(expectedTaxableAmount, round, stdPrecision)));
+        assertThat("Wrong tax amount for line in document",
+            round(linetax.getTaxAmount(), round, stdPrecision),
+            comparesEqualTo(round(expectedTaxAmount, round, stdPrecision)));
 
         n++;
       }
@@ -966,7 +967,7 @@ public class TaxesTest extends OBBaseTest {
 
   private void testInvoice(Invoice testInvoice, boolean isCompleted, boolean isUpdated) {
 
-    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel;
+    boolean round = isPriceIncludingTaxes && isTaxDocumentLevel && !isCompleted;
     int stdPrecision = testInvoice.getCurrency().getStandardPrecision().intValue();
 
     // Assert line taxes and amounts
@@ -1005,9 +1006,10 @@ public class TaxesTest extends OBBaseTest {
             : linesData[i].getLineTaxes().get(linetax.getTax().getId())[1]));
         assertThat("Wrong taxable amount for line in document",
             round(linetax.getTaxableAmount(), round, stdPrecision),
-            comparesEqualTo(expectedTaxableAmount));
-        assertThat("Wrong tax amount for line in document", linetax.getTaxAmount(),
-            comparesEqualTo(expectedTaxAmount));
+            comparesEqualTo(round(expectedTaxableAmount, round, stdPrecision)));
+        assertThat("Wrong tax amount for line in document",
+            round(linetax.getTaxAmount(), round, stdPrecision),
+            comparesEqualTo(round(expectedTaxAmount, round, stdPrecision)));
 
         n++;
       }

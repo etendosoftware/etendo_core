@@ -32,11 +32,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openbravo.base.secureApp.VariablesSecureApp;
 import org.openbravo.base.weld.test.WeldBaseTest;
 import org.openbravo.client.kernel.KernelUtils;
 import org.openbravo.client.kernel.RequestContext;
 import org.openbravo.dal.core.OBContext;
+import org.openbravo.dal.core.SessionHandler;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.materialmgmt.transaction.InternalMovement;
 
@@ -71,16 +75,9 @@ public abstract class ReferencedInventoryTest extends WeldBaseTest {
   }
 
   @Before
+  @BeforeEach
   public void initialize() {
-    boolean awoIsInstalled = isAwoInstalled();
-    assumeThat("Auto-Disabled test case as incompatible with AWO (found to be installed) ", awoIsInstalled, is(false));
-
-    setUserContext(QA_TEST_ADMIN_USER_ID);
-    VariablesSecureApp vsa = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
-        OBContext.getOBContext().getCurrentClient().getId(),
-        OBContext.getOBContext().getCurrentOrganization().getId());
-    RequestContext.get().setVariableSecureApp(vsa);
-    ReferencedInventoryTestUtils.initializeReservationsPreferenceIfDoesnotExist();
+    initReferencedInventoryContext();
   }
 
   void assertsGoodsMovementIsProcessed(final InternalMovement boxMovement) {
@@ -94,9 +91,44 @@ public abstract class ReferencedInventoryTest extends WeldBaseTest {
         equalTo(expectedNumberOfLines));
   }
 
+  @AfterEach
   @After
-  public void clearSession() {
-    OBDal.getInstance().getSession().clear();
+  public void cleanUpCreatedTestData() {
+    OBContext.setAdminMode(true);
+    try {
+      OBDal.getInstance().rollbackAndClose();
+    } finally {
+      OBContext.restorePreviousMode();
+    }
+  }
+
+  @Override
+  protected void afterTestExecution(ExtensionContext context) {
+    // Ensure rollback runs even if @AfterEach is skipped (Arquillian quirk)
+    if (SessionHandler.isSessionHandlerPresent()) {
+      SessionHandler.getInstance().setDoRollback(true);
+    }
+    super.afterTestExecution(context);
+  }
+
+  @Override
+  protected void beforeTestExecution(ExtensionContext context) {
+    super.beforeTestExecution(context);
+    // Ensure QA context even if @BeforeEach is not executed by the runner
+    initReferencedInventoryContext();
+  }
+
+  private void initReferencedInventoryContext() {
+    boolean awoIsInstalled = isAwoInstalled();
+    assumeThat("Auto-Disabled test case as incompatible with AWO (found to be installed) ",
+        awoIsInstalled, is(false));
+
+    setQAAdminContext();
+    VariablesSecureApp vsa = new VariablesSecureApp(OBContext.getOBContext().getUser().getId(),
+        OBContext.getOBContext().getCurrentClient().getId(),
+        OBContext.getOBContext().getCurrentOrganization().getId());
+    RequestContext.get().setVariableSecureApp(vsa);
+    ReferencedInventoryTestUtils.initializeReservationsPreferenceIfDoesnotExist();
   }
 
 }
